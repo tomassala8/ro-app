@@ -1,0 +1,16 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+// Mismo render real y DOM sintético reproducible de 213; no red ni snapshot real.
+let setup=fs.readFileSync(__dirname+'/pruebas_paneles_control_213.cjs','utf8').split('let count=0;')[0];
+setup=setup.replace("const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');",'');
+const box={require,__dirname,console,fs,vm,assert,URL};vm.createContext(box);vm.runInContext(setup+';globalThis.cx=c;globalThis.make=h;globalThis.textOf=text;globalThis.findOf=find;',box);
+const c=box.cx;Object.assign(c,{tiles:xs=>box.make('tiles',{},xs),tile:o=>box.make('tile',{config:o},o.etiqueta,o.valor,o.contexto),panel:(o,...cs)=>box.make('panel',{config:o},...cs),vacioLinea:t=>box.make('empty',{},t),tablaApilable:o=>box.make('table',{config:o}),chipEstado:(a,b)=>box.make('chip',{},b),grafico:o=>box.make('graph',{config:o}),window:{matchMedia:()=>({matches:false})},variacion:(a,b)=>(a-b)/b*100});
+const P={id:'7d',desde:'2026-09-26',hasta:'2026-10-02',comparar:'anterior',comp:{desde:'2026-09-19',hasta:'2026-09-25'}};
+const run=(account,extra={})=>{const z=box.make('main');const f={leido:'2026-10-03T09:00:00Z',errores:[],gasto_serie:{},periodos:{'2026-09-26|2026-10-02':{cuenta:account,campaign:{a:account}},'2026-09-19|2026-09-25':{cuenta:{leads:2,impresiones:20,gasto:5,clics_enlace:1}}},campanas:{a:{nombre:'Fixture',estado:'ACTIVE'}},...extra};c.pintarMeta(z,f,P,'campanas',{}, {repintar(){}});return z;};
+let n=0;
+let z=run({});let cards=box.findOf(z,x=>x.tag==='tile');assert.equal(cards.find(x=>x.attrs.config.etiqueta==='Leads registrados en Meta').attrs.config.estado,'gris');assert(box.textOf(z).includes('Sin dato'));n++;
+z=run({leads:0,impresiones:0,clics_enlace:0,gasto:0});cards=box.findOf(z,x=>x.tag==='tile');assert.equal(cards.find(x=>x.attrs.config.etiqueta==='Leads registrados en Meta').attrs.config.valor,'0');assert.equal(box.findOf(z,x=>x.tag==='table')[0].attrs.config.filas.length,1);n++;
+z=run({leads:0.5,impresiones:'20',gasto:NaN});cards=box.findOf(z,x=>x.tag==='tile');assert(cards.filter(x=>['Leads registrados en Meta','Impresiones','Coste por lead de Meta'].includes(x.attrs.config.etiqueta)).every(x=>x.attrs.config.estado==='gris'));n++;
+z=run({leads:1,impresiones:20,gasto:50,clics_enlace:1});assert(!box.textOf(z).includes('35'));assert.equal(box.findOf(z,x=>x.tag==='tile').find(x=>x.attrs.config.etiqueta==='Coste por lead de Meta').attrs.config.estado,'gris');n++;
+z=run({leads:1,impresiones:20,gasto:50,clics_enlace:1},{errores:['fallo']});cards=box.findOf(z,x=>x.tag==='tile');assert(cards.every(x=>!x.attrs.config.comparacion));assert(box.textOf(z).includes('cobertura parcial'));assert.equal(cards.find(x=>x.attrs.config.etiqueta==='Coste por lead de Meta').attrs.config.estado,'gris');n++;
+z=run({}, {periodos:{},serie:{a:{'2026-10-01':[0,0,0,0]}},gasto_serie:undefined});assert(!box.findOf(z,x=>x.tag==='tile').some(x=>x.attrs.config.etiqueta.includes('Coste')));const gr=box.findOf(z,x=>x.tag==='graph')[0].attrs.config;assert.equal(gr.series[0].y[0],null);assert.equal(gr.series[0].y[5],0);assert.equal(gr.series.length,1);n++;
+console.log(n+' pruebas render real216 PASS');
