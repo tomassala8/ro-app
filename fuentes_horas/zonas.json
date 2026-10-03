@@ -1,0 +1,8 @@
+{
+ "_que_es": "Zona horaria de cada persona para decidir a qué DÍA de trabajo pertenece cada registro de horas (ClickUp lo da en milisegundos; el panel cortaba a la hora de Madrid). El MES y los totales siguen en hora de Madrid, como ClickUp y el resto de la app. personas.json no tiene zona todavía: cuando E0 la añada (campo «zona»), manda la suya.",
+ "_por_defecto": "America/Argentina/Buenos_Aires",
+ "_fuente_por_defecto": "supuesta: el equipo trabaja desde Argentina y Venezuela (memoria de Tomás, 7-ago); sin dato por persona, Argentina. Que Cecilia confirme.",
+ "tomas": {"zona": "Europe/Madrid", "fuente": "vive en España"},
+ "manuel": {"zona": "Europe/Madrid", "fuente": "reside en España (decisiones organizativas de Tomás)"},
+ "yadibeth": {"zona": "America/Caracas", "fuente": "Venezuela (decisiones organizativas de Tomás)"}
+}

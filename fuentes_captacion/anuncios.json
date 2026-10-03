@@ -1,0 +1,5649 @@
+{
+ "generado": "2026-10-03 03:21",
+ "datos_hasta": "2026-10-02",
+ "ventanas": {
+  "7d": [
+   "2026-09-26",
+   "2026-10-02"
+  ],
+  "7d_prev": [
+   "2026-09-19",
+   "2026-09-25"
+  ],
+  "30d": [
+   "2026-09-03",
+   "2026-10-02"
+  ]
+ },
+ "llamadas_meta": 132,
+ "cuentas": {
+  "akua": {
+   "cuenta_id": "act_973541661536558",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120253189896440184",
+      "nombre": "AKUA_PANEL-01",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 345.87,
+      "impresiones": 26247,
+      "clics": 425,
+      "ctr": 1.62,
+      "frecuencia": 2.23,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120253246199770184",
+      "nombre": "AKUA_REEL_1",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 171.34,
+      "impresiones": 10038,
+      "clics": 147,
+      "ctr": 1.46,
+      "frecuencia": 2.08,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120253564547980184",
+      "nombre": "AKUA_Estático_Depender",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 1.28,
+      "impresiones": 65,
+      "clics": 1,
+      "ctr": 1.54,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120253189896440184",
+      "nombre": "AKUA_PANEL-01",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 396.0,
+      "impresiones": 29113,
+      "clics": 427,
+      "ctr": 1.47,
+      "frecuencia": 2.33,
+      "leads": 8.0
+     },
+     {
+      "ad_id": "120253246199770184",
+      "nombre": "AKUA_REEL_1",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 101.61,
+      "impresiones": 4934,
+      "clics": 90,
+      "ctr": 1.82,
+      "frecuencia": 1.81,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120253564547980184",
+      "nombre": "AKUA_Estático_Depender",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 5.23,
+      "impresiones": 281,
+      "clics": 3,
+      "ctr": 1.07,
+      "frecuencia": 1.69,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120253189476340184",
+      "nombre": "AKUA_PANEL-01",
+      "conjunto": "Leads-Frio_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 95.6,
+      "impresiones": 4900,
+      "clics": 71,
+      "ctr": 1.45,
+      "frecuencia": 1.9,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120253189896440184",
+      "nombre": "AKUA_PANEL-01",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 1086.66,
+      "impresiones": 78001,
+      "clics": 1259,
+      "ctr": 1.61,
+      "frecuencia": 3.38,
+      "leads": 22.0
+     },
+     {
+      "ad_id": "120253246199770184",
+      "nombre": "AKUA_REEL_1",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 577.74,
+      "impresiones": 26559,
+      "clics": 475,
+      "ctr": 1.79,
+      "frecuencia": 2.71,
+      "leads": 11.0
+     },
+     {
+      "ad_id": "120253246297750184",
+      "nombre": "AKUA_REEL_1",
+      "conjunto": "Leads-Frio_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 7.94,
+      "impresiones": 221,
+      "clics": 1,
+      "ctr": 0.45,
+      "frecuencia": 1.1,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253304219100184",
+      "nombre": "AKUA_Menos caos",
+      "conjunto": "Leads-Frio_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.08,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253379559770184",
+      "nombre": "AKUA_Control de rentabilidad",
+      "conjunto": "Leads-Frio_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.06,
+      "impresiones": 4,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253379610190184",
+      "nombre": "AKUA_Control de rentabilidad",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.89,
+      "impresiones": 34,
+      "clics": 1,
+      "ctr": 2.94,
+      "frecuencia": 1.17,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253189896410184",
+      "nombre": "AKUA_CLAIM-02",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.46,
+      "impresiones": 224,
+      "clics": 5,
+      "ctr": 2.23,
+      "frecuencia": 1.87,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253304312450184",
+      "nombre": "AKUA_Menos caos",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.13,
+      "impresiones": 11,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.1,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253189546150184",
+      "nombre": "AKUA_RENT-03",
+      "conjunto": "Leads-Frio_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.14,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253190028790184",
+      "nombre": "AKUA_RENT-01",
+      "conjunto": "Leads-Frio",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 4.73,
+      "impresiones": 166,
+      "clics": 1,
+      "ctr": 0.6,
+      "frecuencia": 1.14,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253190158350184",
+      "nombre": "AKUA_PRECIO-01",
+      "conjunto": "Leads-Frio",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 347.35,
+      "impresiones": 18632,
+      "clics": 251,
+      "ctr": 1.35,
+      "frecuencia": 2.44,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120253564505500184",
+      "nombre": "AKUA_Estático_Algo se pierde",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 0.48,
+      "impresiones": 134,
+      "clics": 4,
+      "ctr": 2.99,
+      "frecuencia": 1.65,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253564547980184",
+      "nombre": "AKUA_Estático_Depender",
+      "conjunto": "Leads-Look a Like_DEMO",
+      "campana": "AKUA-Leads_DEMO",
+      "campaign_id": "120253188362100184",
+      "gasto": 7.92,
+      "impresiones": 461,
+      "clics": 7,
+      "ctr": 1.52,
+      "frecuencia": 1.73,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253580093190184",
+      "nombre": "AKUA_DOCUMENTACIÓN SOLOS-01",
+      "conjunto": "Leads-Frio",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 24.25,
+      "impresiones": 882,
+      "clics": 16,
+      "ctr": 1.81,
+      "frecuencia": 1.61,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253580263240184",
+      "nombre": "AKUA_PERSEGUIR-01",
+      "conjunto": "Leads-Frio",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 73.36,
+      "impresiones": 2108,
+      "clics": 26,
+      "ctr": 1.23,
+      "frecuencia": 1.98,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120253665137160184",
+      "nombre": "AKUA_PERSEGUIR-01",
+      "conjunto": "Look a like",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 6.28,
+      "impresiones": 153,
+      "clics": 3,
+      "ctr": 1.96,
+      "frecuencia": 1.35,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665137170184",
+      "nombre": "AKUA_DOCUMENTACIÓN SOLOS-01",
+      "conjunto": "Look a like",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 2.22,
+      "impresiones": 59,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.4,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665137190184",
+      "nombre": "AKUA_PRECIO-01",
+      "conjunto": "Look a like",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 61.22,
+      "impresiones": 3678,
+      "clics": 40,
+      "ctr": 1.09,
+      "frecuencia": 1.48,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665137200184",
+      "nombre": "AKUA_RENT-01",
+      "conjunto": "Look a like",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 3.82,
+      "impresiones": 51,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.38,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665153530184",
+      "nombre": "AKUA_RENT-01",
+      "conjunto": "Remarketing Demo",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 0.44,
+      "impresiones": 11,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.83,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665153540184",
+      "nombre": "AKUA_PRECIO-01",
+      "conjunto": "Remarketing Demo",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 39.21,
+      "impresiones": 2113,
+      "clics": 26,
+      "ctr": 1.23,
+      "frecuencia": 1.46,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665153560184",
+      "nombre": "AKUA_DOCUMENTACIÓN SOLOS-01",
+      "conjunto": "Remarketing Demo",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 0.43,
+      "impresiones": 15,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.07,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253665153570184",
+      "nombre": "AKUA_PERSEGUIR-01",
+      "conjunto": "Remarketing Demo",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 0.63,
+      "impresiones": 27,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253685044750184",
+      "nombre": "AKUA_LA IA TRABAJANDO A TU DESPACHO",
+      "conjunto": "Leads-Frio",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 20.42,
+      "impresiones": 640,
+      "clics": 5,
+      "ctr": 0.78,
+      "frecuencia": 1.28,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120253695804230184",
+      "nombre": "AKUA_LA IA TRABAJANDO A TU DESPACHO",
+      "conjunto": "Leads-Frio_Angulos 2",
+      "campana": "AKUA-Leads_FEETRIAL",
+      "campaign_id": "120253190028770184",
+      "gasto": 58.5,
+      "impresiones": 1686,
+      "clics": 24,
+      "ctr": 1.42,
+      "frecuencia": 1.52,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Leads-Look a Like_DEMO",
+     "aprendizaje": "FAIL"
+    }
+   ]
+  },
+  "innova_scala": {
+   "cuenta_id": "act_2496685560673972",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120230179912120605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 16.98,
+      "impresiones": 155,
+      "clics": 1,
+      "ctr": 0.65,
+      "frecuencia": 1.26,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120230180052130605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 18.87,
+      "impresiones": 350,
+      "clics": 3,
+      "ctr": 0.86,
+      "frecuencia": 1.14,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120245282630490605",
+      "nombre": "Pieza 3 - Junio",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 255.45,
+      "impresiones": 4529,
+      "clics": 78,
+      "ctr": 1.72,
+      "frecuencia": 1.37,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120247543611580605",
+      "nombre": "Pieza 3 - Julio - Variantes de piezas 3 y 1 - LAL y RMKT",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 31.29,
+      "impresiones": 944,
+      "clics": 20,
+      "ctr": 2.12,
+      "frecuencia": 1.14,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102995990605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.19,
+      "impresiones": 19,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248530607130605",
+      "nombre": "Reel 31/08",
+      "conjunto": "Intereses",
+      "campana": "Crecimiento de comunidad_Instagram",
+      "campaign_id": "120248530580630605",
+      "gasto": 30.59,
+      "impresiones": 10991,
+      "clics": 257,
+      "ctr": 2.34,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102884320605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 1.07,
+      "impresiones": 9,
+      "clics": 1,
+      "ctr": 11.11,
+      "frecuencia": 1.12,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102924990605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.63,
+      "impresiones": 6,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248530580610605",
+      "nombre": "Reel 16/09",
+      "conjunto": "Intereses",
+      "campana": "Crecimiento de comunidad_Instagram",
+      "campaign_id": "120248530580630605",
+      "gasto": 8.49,
+      "impresiones": 3052,
+      "clics": 71,
+      "ctr": 2.33,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248577616650605",
+      "nombre": "Pagas 300 €/mes a tu gestoría",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 44.95,
+      "impresiones": 620,
+      "clics": 6,
+      "ctr": 0.97,
+      "frecuencia": 1.52,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248578386360605",
+      "nombre": "Un CFO externo",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 1.65,
+      "impresiones": 24,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.41,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120230180052130605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 30.19,
+      "impresiones": 440,
+      "clics": 3,
+      "ctr": 0.68,
+      "frecuencia": 1.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120245282630490605",
+      "nombre": "Pieza 3 - Junio",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 166.24,
+      "impresiones": 3125,
+      "clics": 67,
+      "ctr": 2.14,
+      "frecuencia": 1.51,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120247543611580605",
+      "nombre": "Pieza 3 - Julio - Variantes de piezas 3 y 1 - LAL y RMKT",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 118.19,
+      "impresiones": 1842,
+      "clics": 40,
+      "ctr": 2.17,
+      "frecuencia": 1.5,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120248102884320605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.14,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102924990605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.17,
+      "impresiones": 7,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102995990605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.35,
+      "impresiones": 6,
+      "clics": 1,
+      "ctr": 16.67,
+      "frecuencia": 1.2,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120230179912120605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 3.39,
+      "impresiones": 60,
+      "clics": 2,
+      "ctr": 3.33,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810380605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 22.81,
+      "impresiones": 365,
+      "clics": 12,
+      "ctr": 3.29,
+      "frecuencia": 1.25,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810390605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 77.93,
+      "impresiones": 1201,
+      "clics": 47,
+      "ctr": 3.91,
+      "frecuencia": 1.62,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120248470810470605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 0.08,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810890605",
+      "nombre": "ADS-24-INNOVA-MAR.mp4 - Copia",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 52.67,
+      "impresiones": 1301,
+      "clics": 10,
+      "ctr": 0.77,
+      "frecuencia": 1.19,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120248470810910605",
+      "nombre": "ADS-18-INNOVA-MAR-F.mp4 - Copia 3",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 8.84,
+      "impresiones": 147,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.17,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810690605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 0.09,
+      "impresiones": 4,
+      "clics": 1,
+      "ctr": 25.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248530607130605",
+      "nombre": "Reel 31/08",
+      "conjunto": "Intereses",
+      "campana": "Crecimiento de comunidad_Instagram",
+      "campaign_id": "120248530580630605",
+      "gasto": 5.02,
+      "impresiones": 990,
+      "clics": 27,
+      "ctr": 2.73,
+      "frecuencia": 1.03,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120230179912120605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 30.64,
+      "impresiones": 435,
+      "clics": 7,
+      "ctr": 1.61,
+      "frecuencia": 1.31,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120245282630490605",
+      "nombre": "Pieza 3 - Junio",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 725.45,
+      "impresiones": 12472,
+      "clics": 234,
+      "ctr": 1.88,
+      "frecuencia": 1.96,
+      "leads": 17.0
+     },
+     {
+      "ad_id": "120248102924990605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 41.57,
+      "impresiones": 731,
+      "clics": 10,
+      "ctr": 1.37,
+      "frecuencia": 1.44,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120247543611580605",
+      "nombre": "Pieza 3 - Julio - Variantes de piezas 3 y 1 - LAL y RMKT",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 248.55,
+      "impresiones": 4342,
+      "clics": 84,
+      "ctr": 1.93,
+      "frecuencia": 1.63,
+      "leads": 5.0
+     },
+     {
+      "ad_id": "120248102936620605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.0,
+      "impresiones": 1,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102995990605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 1.03,
+      "impresiones": 40,
+      "clics": 2,
+      "ctr": 5.0,
+      "frecuencia": 1.03,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481440605",
+      "nombre": "Pieza 3 - Junio",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.35,
+      "impresiones": 16,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481460605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 134.6,
+      "impresiones": 2152,
+      "clics": 15,
+      "ctr": 0.7,
+      "frecuencia": 1.43,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481570605",
+      "nombre": "IMG 2",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.27,
+      "impresiones": 6,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481580605",
+      "nombre": "Campaña de I+D+i",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 1.01,
+      "impresiones": 46,
+      "clics": 2,
+      "ctr": 4.35,
+      "frecuencia": 1.02,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120230180052130605",
+      "nombre": "Video 3 - Copia",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 66.7,
+      "impresiones": 1029,
+      "clics": 10,
+      "ctr": 0.97,
+      "frecuencia": 1.3,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481540605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.03,
+      "impresiones": 3,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248213481470605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike de clientes reales",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 0.03,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248102884320605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 5.03,
+      "impresiones": 103,
+      "clics": 2,
+      "ctr": 1.94,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810380605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 22.81,
+      "impresiones": 365,
+      "clics": 12,
+      "ctr": 3.29,
+      "frecuencia": 1.25,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810390605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 77.93,
+      "impresiones": 1201,
+      "clics": 47,
+      "ctr": 3.91,
+      "frecuencia": 1.62,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120248470810470605",
+      "nombre": "MIX 2 · RENTABILIDAD Y CONTROL",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 0.08,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810890605",
+      "nombre": "ADS-24-INNOVA-MAR.mp4 - Copia",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 52.67,
+      "impresiones": 1301,
+      "clics": 10,
+      "ctr": 0.77,
+      "frecuencia": 1.19,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120248470810910605",
+      "nombre": "ADS-18-INNOVA-MAR-F.mp4 - Copia 3",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 8.84,
+      "impresiones": 147,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.17,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248470810690605",
+      "nombre": "MIX 1 · ANTICIPACIÓN Y PLANIFICACIÓN",
+      "conjunto": "Leads-Lookalike1+Remarketing",
+      "campana": "INNOVA-Leads_Test creativos",
+      "campaign_id": "120248470810360605",
+      "gasto": 0.09,
+      "impresiones": 4,
+      "clics": 1,
+      "ctr": 25.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248530607130605",
+      "nombre": "Reel 31/08",
+      "conjunto": "Intereses",
+      "campana": "Crecimiento de comunidad_Instagram",
+      "campaign_id": "120248530580630605",
+      "gasto": 35.61,
+      "impresiones": 11981,
+      "clics": 284,
+      "ctr": 2.37,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248530580610605",
+      "nombre": "Reel 16/09",
+      "conjunto": "Intereses",
+      "campana": "Crecimiento de comunidad_Instagram",
+      "campaign_id": "120248530580630605",
+      "gasto": 8.49,
+      "impresiones": 3052,
+      "clics": 71,
+      "ctr": 2.33,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248577616650605",
+      "nombre": "Pagas 300 €/mes a tu gestoría",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 44.95,
+      "impresiones": 620,
+      "clics": 6,
+      "ctr": 0.97,
+      "frecuencia": 1.52,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248578386360605",
+      "nombre": "Un CFO externo",
+      "conjunto": "Leads-Frio",
+      "campana": "INNOVA-Leads",
+      "campaign_id": "120223354872980605",
+      "gasto": 1.65,
+      "impresiones": 24,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.41,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [
+    {
+     "id": "120230180052110605",
+     "nombre": "AD-01-LO_QUE_NECESITAS_PRESENTARLE_A_TUS_INVERSORES",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-03-27 12:46",
+     "motivo": null
+    },
+    {
+     "id": "120223354872960605",
+     "nombre": "IMG 2",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:47",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120230179912100605",
+     "nombre": "IMG 2",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:46",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120230180052080605",
+     "nombre": "AD-03-SI_LLEVAR_TU_MISMO_LAS_FINANZAS",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:46",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120230180052090605",
+     "nombre": "AD-05-LA_SOLUCION_A_MEDIDA",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:46",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120230179912060605",
+     "nombre": "AD-05-LA_SOLUCION_A_MEDIDA",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:46",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120223817404470605",
+     "nombre": "Video 3 - Copia",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:44",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120228906635310605",
+     "nombre": "AD-05-LA_SOLUCION_A_MEDIDA",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:44",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120228906244710605",
+     "nombre": "AD-03-SI_LLEVAR_TU_MISMO_LAS_FINANZAS",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:44",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "120227684986270605",
+     "nombre": "AD-02-TU_ASESOR_FINANCIERO_SOLO_TE_DA_NUMEROS",
+     "estado": "DISAPPROVED",
+     "desde": "2026-02-19 15:43",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    }
+   ],
+   "conjuntos": [
+    {
+     "nombre": "Leads-Frio",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "consulting_f": {
+   "cuenta_id": "act_1494528262358151",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120250138599310541",
+      "nombre": "Video",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 8.33,
+      "impresiones": 259,
+      "clics": 4,
+      "ctr": 1.54,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724810541",
+      "nombre": "Creativo 35 años gestionando empresas en Madrid",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 0.36,
+      "impresiones": 12,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724820541",
+      "nombre": "Video",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 121.81,
+      "impresiones": 3579,
+      "clics": 72,
+      "ctr": 2.01,
+      "frecuencia": 1.68,
+      "leads": 6.0
+     },
+     {
+      "ad_id": "120251735724800541",
+      "nombre": "Mix cuestionario",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 0.55,
+      "impresiones": 3,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120250138599310541",
+      "nombre": "Video",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 116.17,
+      "impresiones": 2219,
+      "clics": 31,
+      "ctr": 1.4,
+      "frecuencia": 1.44,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120251226051060541",
+      "nombre": "Mix cuestionario",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 3.87,
+      "impresiones": 64,
+      "clics": 2,
+      "ctr": 3.12,
+      "frecuencia": 1.64,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724800541",
+      "nombre": "Mix cuestionario",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 2.46,
+      "impresiones": 88,
+      "clics": 4,
+      "ctr": 4.55,
+      "frecuencia": 1.6,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724810541",
+      "nombre": "Creativo 35 años gestionando empresas en Madrid",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 31.5,
+      "impresiones": 807,
+      "clics": 14,
+      "ctr": 1.73,
+      "frecuencia": 1.68,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724820541",
+      "nombre": "Video",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 6.61,
+      "impresiones": 222,
+      "clics": 5,
+      "ctr": 2.25,
+      "frecuencia": 1.31,
+      "leads": 2.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120250137743410541",
+      "nombre": "Creativo 35 años gestionando empresas en Madrid",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 0.7,
+      "impresiones": 33,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.1,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250138599310541",
+      "nombre": "Video",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 295.51,
+      "impresiones": 6559,
+      "clics": 99,
+      "ctr": 1.51,
+      "frecuencia": 1.91,
+      "leads": 8.0
+     },
+     {
+      "ad_id": "120251226051060541",
+      "nombre": "Mix cuestionario",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 24.51,
+      "impresiones": 489,
+      "clics": 6,
+      "ctr": 1.23,
+      "frecuencia": 1.59,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724800541",
+      "nombre": "Mix cuestionario",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 3.01,
+      "impresiones": 91,
+      "clics": 4,
+      "ctr": 4.4,
+      "frecuencia": 1.6,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724810541",
+      "nombre": "Creativo 35 años gestionando empresas en Madrid",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 31.86,
+      "impresiones": 819,
+      "clics": 14,
+      "ctr": 1.71,
+      "frecuencia": 1.69,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251735724820541",
+      "nombre": "Video",
+      "conjunto": "Abierto",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120250137743420541",
+      "gasto": 128.42,
+      "impresiones": 3801,
+      "clics": 77,
+      "ctr": 2.03,
+      "frecuencia": 1.72,
+      "leads": 8.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Abierto",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Intereses",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "concilia": {
+   "cuenta_id": "act_2266585850842024",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "52723991783130",
+      "nombre": "Concilia-Dolor1_Sabes cuánto ganó",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 44.88,
+      "impresiones": 2782,
+      "clics": 77,
+      "ctr": 2.77,
+      "frecuencia": 1.08,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "52723982331130",
+      "nombre": "Concilia-Identidad1_Montaste tu empresa",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 72.97,
+      "impresiones": 3207,
+      "clics": 107,
+      "ctr": 3.34,
+      "frecuencia": 1.4,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52723991783130",
+      "nombre": "Concilia-Dolor1_Sabes cuánto ganó",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 0.3,
+      "impresiones": 14,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "52723982331130",
+      "nombre": "Concilia-Identidad1_Montaste tu empresa",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 100.68,
+      "impresiones": 4651,
+      "clics": 160,
+      "ctr": 3.44,
+      "frecuencia": 1.52,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "52723990908330",
+      "nombre": "Concilia-Identidad2_más tiempo para ti",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 0.14,
+      "impresiones": 17,
+      "clics": 2,
+      "ctr": 11.76,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52723991506530",
+      "nombre": "Concilia-Identidad2_más tiempo para ti",
+      "conjunto": "Leads-Intereses",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 1.23,
+      "impresiones": 79,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.08,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52723991783130",
+      "nombre": "Concilia-Dolor1_Sabes cuánto ganó",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 64.48,
+      "impresiones": 3644,
+      "clics": 110,
+      "ctr": 3.02,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52723992786930",
+      "nombre": "Concilia-Dolor1_Sabes cuánto ganó",
+      "conjunto": "Leads-Intereses",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 1.0,
+      "impresiones": 28,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.08,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52723992828330",
+      "nombre": "Concilia-Dolor2_Facturo bien",
+      "conjunto": "Leads-FR",
+      "campana": "Concilia-Leads",
+      "campaign_id": "52723982331330",
+      "gasto": 0.01,
+      "impresiones": 6,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.0,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Leads-FR",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "orejana": {
+   "cuenta_id": "act_2114196209169605",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120252111920410445",
+      "nombre": "ORE_A01_DECISIONES_V00_ORIGINAL",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 127.35,
+      "impresiones": 5255,
+      "clics": 84,
+      "ctr": 1.6,
+      "frecuencia": 1.32,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120252111990490445",
+      "nombre": "Tienes 35 empleados en Segovia",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 18.2,
+      "impresiones": 380,
+      "clics": 5,
+      "ctr": 1.32,
+      "frecuencia": 1.41,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252112026670445",
+      "nombre": "Cambiar de asesoría da menos trabajo del que parece",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 13.7,
+      "impresiones": 282,
+      "clics": 6,
+      "ctr": 2.13,
+      "frecuencia": 1.4,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252552823290445",
+      "nombre": "ORE_A04_RENTABILIDAD_V01_GRAFICO",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 35.12,
+      "impresiones": 1003,
+      "clics": 15,
+      "ctr": 1.5,
+      "frecuencia": 1.42,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120252552852210445",
+      "nombre": "ORE_A01_DECISIONES_V01_TEXTO",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 21.55,
+      "impresiones": 625,
+      "clics": 10,
+      "ctr": 1.6,
+      "frecuencia": 1.4,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120252552864820445",
+      "nombre": "ORE_A03_CONTRATACION_V01_PERSONAS",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 2.0,
+      "impresiones": 26,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120252111990490445",
+      "nombre": "Tienes 35 empleados en Segovia",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 11.04,
+      "impresiones": 393,
+      "clics": 5,
+      "ctr": 1.27,
+      "frecuencia": 1.36,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252112026670445",
+      "nombre": "Cambiar de asesoría da menos trabajo del que parece",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 7.01,
+      "impresiones": 246,
+      "clics": 2,
+      "ctr": 0.81,
+      "frecuencia": 1.49,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252111920410445",
+      "nombre": "ORE_A01_DECISIONES_V00_ORIGINAL",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 33.27,
+      "impresiones": 1110,
+      "clics": 31,
+      "ctr": 2.79,
+      "frecuencia": 1.65,
+      "leads": 1.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120252111990490445",
+      "nombre": "Tienes 35 empleados en Segovia",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 29.24,
+      "impresiones": 773,
+      "clics": 10,
+      "ctr": 1.29,
+      "frecuencia": 1.59,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252112026670445",
+      "nombre": "Cambiar de asesoría da menos trabajo del que parece",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 20.71,
+      "impresiones": 528,
+      "clics": 8,
+      "ctr": 1.52,
+      "frecuencia": 1.63,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252111920410445",
+      "nombre": "ORE_A01_DECISIONES_V00_ORIGINAL",
+      "conjunto": "Leads-Intereses",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 160.62,
+      "impresiones": 6365,
+      "clics": 115,
+      "ctr": 1.81,
+      "frecuencia": 1.47,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120252552823290445",
+      "nombre": "ORE_A04_RENTABILIDAD_V01_GRAFICO",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 35.12,
+      "impresiones": 1003,
+      "clics": 15,
+      "ctr": 1.5,
+      "frecuencia": 1.42,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120252552852210445",
+      "nombre": "ORE_A01_DECISIONES_V01_TEXTO",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 21.55,
+      "impresiones": 625,
+      "clics": 10,
+      "ctr": 1.6,
+      "frecuencia": 1.4,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120252552864820445",
+      "nombre": "ORE_A03_CONTRATACION_V01_PERSONAS",
+      "conjunto": "Test creativos",
+      "campana": "OREJANA-Leads",
+      "campaign_id": "120252111920400445",
+      "gasto": 2.0,
+      "impresiones": 26,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Test creativos",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "ecom_advisory": {
+   "cuenta_id": "act_1263010012550119",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120251287748190216",
+      "nombre": "Reel 24/06",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 167.33,
+      "impresiones": 8420,
+      "clics": 142,
+      "ctr": 1.69,
+      "frecuencia": 1.57,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120252623119530216",
+      "nombre": "Reel 03/09",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.33,
+      "impresiones": 22,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623198610216",
+      "nombre": "03/09",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 2.53,
+      "impresiones": 129,
+      "clics": 1,
+      "ctr": 0.78,
+      "frecuencia": 1.4,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120251287748190216",
+      "nombre": "Reel 24/06",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 115.88,
+      "impresiones": 6232,
+      "clics": 92,
+      "ctr": 1.48,
+      "frecuencia": 1.41,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120251498244900216",
+      "nombre": "Reel 24/06",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 33.33,
+      "impresiones": 1582,
+      "clics": 19,
+      "ctr": 1.2,
+      "frecuencia": 1.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623119530216",
+      "nombre": "Reel 03/09",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 3.74,
+      "impresiones": 157,
+      "clics": 1,
+      "ctr": 0.64,
+      "frecuencia": 1.28,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623198610216",
+      "nombre": "03/09",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.35,
+      "impresiones": 17,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120251287748190216",
+      "nombre": "Reel 24/06",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 414.46,
+      "impresiones": 21808,
+      "clics": 357,
+      "ctr": 1.64,
+      "frecuencia": 1.89,
+      "leads": 14.0
+     },
+     {
+      "ad_id": "120251498244890216",
+      "nombre": "Propuesta video nuevo Julio",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.78,
+      "impresiones": 38,
+      "clics": 1,
+      "ctr": 2.63,
+      "frecuencia": 1.09,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251498244900216",
+      "nombre": "Reel 24/06",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 170.81,
+      "impresiones": 11774,
+      "clics": 161,
+      "ctr": 1.37,
+      "frecuencia": 1.56,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120252623119530216",
+      "nombre": "Reel 03/09",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 18.66,
+      "impresiones": 860,
+      "clics": 12,
+      "ctr": 1.4,
+      "frecuencia": 1.47,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623198610216",
+      "nombre": "03/09",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 15.83,
+      "impresiones": 863,
+      "clics": 13,
+      "ctr": 1.51,
+      "frecuencia": 1.48,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623290810216",
+      "nombre": "Reel 03/09 Azul",
+      "conjunto": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.78,
+      "impresiones": 80,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.18,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252623424390216",
+      "nombre": "03/09 Azul",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.64,
+      "impresiones": 44,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.1,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120252466850090216",
+      "nombre": "Reel 24/08 Cambio de Gestoría",
+      "conjunto": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+      "campana": "Clientes Potenciales",
+      "campaign_id": "120241586913180216",
+      "gasto": 0.23,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Conjunto de Anuncios 4: Remarketing + Look a Like",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Conjunto de Anuncios 2: Intereses \"Amazon FBA\" & Marketplaces",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "bit_24": {
+   "cuenta_id": "act_418315178715618",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120250049783590176",
+      "nombre": "Diriges un equipo de ventas y todo acaba en tu movil?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 27.47,
+      "impresiones": 461,
+      "clics": 6,
+      "ctr": 1.3,
+      "frecuencia": 1.81,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051502070176",
+      "nombre": "¿Tu empresa vende con datos de clientes dispersos?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 28.65,
+      "impresiones": 559,
+      "clics": 6,
+      "ctr": 1.07,
+      "frecuencia": 1.55,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051534550176",
+      "nombre": "Tu empresa necesita un CRM",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 10.35,
+      "impresiones": 173,
+      "clics": 4,
+      "ctr": 2.31,
+      "frecuencia": 1.43,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051561310176",
+      "nombre": "Tu bitrix24 puede hacer más",
+      "conjunto": "Remarketing + look a like",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 84.01,
+      "impresiones": 1513,
+      "clics": 22,
+      "ctr": 1.45,
+      "frecuencia": 1.96,
+      "leads": 1.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120249943667230176",
+      "nombre": "VibePlus_AD1",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 21.72,
+      "impresiones": 3224,
+      "clics": 19,
+      "ctr": 0.59,
+      "frecuencia": 2.35,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120249946588930176",
+      "nombre": "VibePlus_AD2",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 94.26,
+      "impresiones": 15468,
+      "clics": 120,
+      "ctr": 0.78,
+      "frecuencia": 3.12,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120250015533560176",
+      "nombre": "VibePlus_AD3",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 40.2,
+      "impresiones": 5990,
+      "clics": 41,
+      "ctr": 0.68,
+      "frecuencia": 2.26,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250049783590176",
+      "nombre": "Diriges un equipo de ventas y todo acaba en tu movil?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 4.61,
+      "impresiones": 102,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.27,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051502070176",
+      "nombre": "¿Tu empresa vende con datos de clientes dispersos?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 3.61,
+      "impresiones": 46,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.07,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051534550176",
+      "nombre": "Tu empresa necesita un CRM",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 5.11,
+      "impresiones": 76,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051561310176",
+      "nombre": "Tu bitrix24 puede hacer más",
+      "conjunto": "Remarketing + look a like",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 13.42,
+      "impresiones": 421,
+      "clics": 4,
+      "ctr": 0.95,
+      "frecuencia": 1.02,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120248770225080176",
+      "nombre": "Mix de estáticos",
+      "conjunto": "BBDD",
+      "campana": "Clientes Potenciales_MCP",
+      "campaign_id": "120248680007140176",
+      "gasto": 35.17,
+      "impresiones": 1717,
+      "clics": 25,
+      "ctr": 1.46,
+      "frecuencia": 2.2,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248820308570176",
+      "nombre": "Mix de estáticos",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_MCP",
+      "campaign_id": "120248680007140176",
+      "gasto": 10.76,
+      "impresiones": 424,
+      "clics": 9,
+      "ctr": 2.12,
+      "frecuencia": 1.54,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120248820385930176",
+      "nombre": "Mix de estáticos",
+      "conjunto": "Decisores de empresa interesados en IA + automatización",
+      "campana": "Clientes Potenciales_MCP",
+      "campaign_id": "120248680007140176",
+      "gasto": 1.66,
+      "impresiones": 81,
+      "clics": 1,
+      "ctr": 1.23,
+      "frecuencia": 1.12,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120249372875040176",
+      "nombre": "Mix de estáticos Agosto",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_MCP",
+      "campaign_id": "120248680007140176",
+      "gasto": 56.4,
+      "impresiones": 2111,
+      "clics": 30,
+      "ctr": 1.42,
+      "frecuencia": 1.78,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120249376709890176",
+      "nombre": "Mix de estáticos Agosto",
+      "conjunto": "Decisores de empresa interesados en IA + automatización",
+      "campana": "Clientes Potenciales_MCP",
+      "campaign_id": "120248680007140176",
+      "gasto": 125.07,
+      "impresiones": 4320,
+      "clics": 107,
+      "ctr": 2.48,
+      "frecuencia": 1.9,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120249943667230176",
+      "nombre": "VibePlus_AD1",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 23.13,
+      "impresiones": 3470,
+      "clics": 21,
+      "ctr": 0.61,
+      "frecuencia": 2.43,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120249946588930176",
+      "nombre": "VibePlus_AD2",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 98.2,
+      "impresiones": 16128,
+      "clics": 126,
+      "ctr": 0.78,
+      "frecuencia": 3.22,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120250015533560176",
+      "nombre": "VibePlus_AD3",
+      "conjunto": "VibePlus_Adquisición_Intereses",
+      "campana": "Bit24_VibePlus",
+      "campaign_id": "120249943667240176",
+      "gasto": 40.2,
+      "impresiones": 5990,
+      "clics": 41,
+      "ctr": 0.68,
+      "frecuencia": 2.26,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250049783590176",
+      "nombre": "Diriges un equipo de ventas y todo acaba en tu movil?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 32.08,
+      "impresiones": 563,
+      "clics": 6,
+      "ctr": 1.07,
+      "frecuencia": 1.86,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051502070176",
+      "nombre": "¿Tu empresa vende con datos de clientes dispersos?",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 32.26,
+      "impresiones": 605,
+      "clics": 6,
+      "ctr": 0.99,
+      "frecuencia": 1.55,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051534550176",
+      "nombre": "Tu empresa necesita un CRM",
+      "conjunto": "Intereses",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 15.46,
+      "impresiones": 249,
+      "clics": 4,
+      "ctr": 1.61,
+      "frecuencia": 1.47,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250051561310176",
+      "nombre": "Tu bitrix24 puede hacer más",
+      "conjunto": "Remarketing + look a like",
+      "campana": "Bit24_VibePlus_Test2",
+      "campaign_id": "120250049783580176",
+      "gasto": 97.43,
+      "impresiones": 1934,
+      "clics": 26,
+      "ctr": 1.34,
+      "frecuencia": 1.72,
+      "leads": 1.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [
+    {
+     "id": "23851910246070175",
+     "nombre": "Anuncio Oferta Bit24",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-10-19 16:21",
+     "motivo": null
+    },
+    {
+     "id": "23851452078610175",
+     "nombre": "Nuevo anuncio de Tráfico",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-08-31 23:45",
+     "motivo": null
+    },
+    {
+     "id": "23850722913030175",
+     "nombre": "Nuevo anuncio de Generación de clientes potenciales",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-06-12 00:18",
+     "motivo": null
+    },
+    {
+     "id": "23850722956450175",
+     "nombre": "Nuevo anuncio de Generación de clientes potenciales - Copia",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-06-11 01:00",
+     "motivo": null
+    },
+    {
+     "id": "23850722926970175",
+     "nombre": "Nuevo anuncio de Generación de clientes potenciales - Copia",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-06-10 19:42",
+     "motivo": null
+    },
+    {
+     "id": "23850722926960175",
+     "nombre": "Nuevo anuncio de Generación de clientes potenciales - Copia",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-06-10 18:32",
+     "motivo": null
+    },
+    {
+     "id": "23850327731590175",
+     "nombre": "Anuncio Oferta Bit24",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-04-18 23:58",
+     "motivo": null
+    },
+    {
+     "id": "23849921344940175",
+     "nombre": "Anuncio San Valentin",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-02-15 14:03",
+     "motivo": null
+    },
+    {
+     "id": "23849551234250175",
+     "nombre": "Ad_ Final de año",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-12-30 14:36",
+     "motivo": null
+    },
+    {
+     "id": "23849421630730175",
+     "nombre": "Adset1",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-12-14 15:21",
+     "motivo": null
+    },
+    {
+     "id": "23849341905980175",
+     "nombre": "Lead_Bit24_1%ParWeb_Latam+Esp",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-12-07 09:22",
+     "motivo": null
+    },
+    {
+     "id": "23848652744080175",
+     "nombre": "Ads OPkzko",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-09-10 15:36",
+     "motivo": null
+    },
+    {
+     "id": "23847176386100175",
+     "nombre": "Default name - Tráfico",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-03-16 10:04",
+     "motivo": null
+    },
+    {
+     "id": "23847176818670175",
+     "nombre": "Default name - Tráfico",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-03-15 20:41",
+     "motivo": null
+    },
+    {
+     "id": "23846554784690175",
+     "nombre": "Default name - Tráfico",
+     "estado": "WITH_ISSUES",
+     "desde": "2021-01-11 15:59",
+     "motivo": null
+    },
+    {
+     "id": "23845995312770175",
+     "nombre": "Webinar 03/11/2020",
+     "estado": "WITH_ISSUES",
+     "desde": "2020-11-01 12:04",
+     "motivo": null
+    },
+    {
+     "id": "23845663675390175",
+     "nombre": "Nuevo anuncio",
+     "estado": "WITH_ISSUES",
+     "desde": "2020-09-25 14:28",
+     "motivo": null
+    },
+    {
+     "id": "23844389212600175",
+     "nombre": "Publicación: \"¿Te interesa saber más de Bitrix24? El próximo...\"",
+     "estado": "WITH_ISSUES",
+     "desde": "2020-03-29 15:06",
+     "motivo": null
+    },
+    {
+     "id": "23844247028380175",
+     "nombre": "Webinar a Visitantes",
+     "estado": "WITH_ISSUES",
+     "desde": "2020-03-06 19:12",
+     "motivo": null
+    },
+    {
+     "id": "23843849263660175",
+     "nombre": "Publicación: \"¡Precio mínimo histórico! Juego de cuchillos WMF...\"",
+     "estado": "DISAPPROVED",
+     "desde": "2019-11-07 02:57",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "23843676274080175",
+     "nombre": "Ebook 5 pasos CRM",
+     "estado": "WITH_ISSUES",
+     "desde": "2019-09-20 20:36",
+     "motivo": null
+    },
+    {
+     "id": "23843689396280175",
+     "nombre": "Usuarios que han abierto el formulario",
+     "estado": "DISAPPROVED",
+     "desde": "2019-09-19 17:28",
+     "motivo": " Los anuncios no deben promocionar productos, servicios, planes u ofertas mediante prácticas engañosas. Esto incluye el uso de enlaces visibles que no reflejen con precisión la URL y el anunciante o la empresa asociados."
+    }
+   ],
+   "conjuntos": [
+    {
+     "nombre": "Evento",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "emex": {
+   "cuenta_id": "act_125546504832976",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120251126660910690",
+      "nombre": "EMEX_A1-Especialista_Tarjeta",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 7.17,
+      "impresiones": 207,
+      "clics": 5,
+      "ctr": 2.42,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126665120690",
+      "nombre": "EMEX_A1-Especialista_POV",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 36.06,
+      "impresiones": 2736,
+      "clics": 63,
+      "ctr": 2.3,
+      "frecuencia": 1.21,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120251126667210690",
+      "nombre": "EMEX_A1-Especialista_Nota",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 4.35,
+      "impresiones": 63,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126673090690",
+      "nombre": "EMEX_A2-IVA_Tarjeta",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 32.73,
+      "impresiones": 2348,
+      "clics": 67,
+      "ctr": 2.85,
+      "frecuencia": 1.1,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120251126677810690",
+      "nombre": "EMEX_A2-IVA_Nota",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 6.9,
+      "impresiones": 205,
+      "clics": 2,
+      "ctr": 0.98,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126683110690",
+      "nombre": "EMEX_A3-Colaboradores_Nota",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 22.61,
+      "impresiones": 1473,
+      "clics": 32,
+      "ctr": 2.17,
+      "frecuencia": 1.15,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126684270690",
+      "nombre": "EMEX_A3-Colaboradores_POV",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 21.94,
+      "impresiones": 1406,
+      "clics": 40,
+      "ctr": 2.84,
+      "frecuencia": 1.14,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120251126678610690",
+      "nombre": "EMEX_A2-IVA_POV",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 1.82,
+      "impresiones": 86,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126679430690",
+      "nombre": "EMEX_A3-Colaboradores_Tarjeta",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 1.18,
+      "impresiones": 55,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120250968467860690",
+      "nombre": "F1_AD3_AsesoriaDental_marca/plana",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 11.1,
+      "impresiones": 236,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.27,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250969351930690",
+      "nombre": "F1_AD1_AsesoriaDental_Sector",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 16.65,
+      "impresiones": 427,
+      "clics": 9,
+      "ctr": 2.11,
+      "frecuencia": 1.54,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250969462940690",
+      "nombre": "F1_AD2_AsesoriaDental_Contraste",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 36.63,
+      "impresiones": 893,
+      "clics": 23,
+      "ctr": 2.58,
+      "frecuencia": 1.55,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120250968467860690",
+      "nombre": "F1_AD3_AsesoriaDental_marca/plana",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 18.09,
+      "impresiones": 393,
+      "clics": 6,
+      "ctr": 1.53,
+      "frecuencia": 1.36,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250969351930690",
+      "nombre": "F1_AD1_AsesoriaDental_Sector",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 19.77,
+      "impresiones": 484,
+      "clics": 9,
+      "ctr": 1.86,
+      "frecuencia": 1.58,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250969462940690",
+      "nombre": "F1_AD2_AsesoriaDental_Contraste",
+      "conjunto": "F1_Entrada_AsesoriaDental_3disenos_ES",
+      "campana": "Emex-Leads",
+      "campaign_id": "120250968467870690",
+      "gasto": 54.13,
+      "impresiones": 1209,
+      "clics": 32,
+      "ctr": 2.65,
+      "frecuencia": 1.61,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126660910690",
+      "nombre": "EMEX_A1-Especialista_Tarjeta",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 7.17,
+      "impresiones": 207,
+      "clics": 5,
+      "ctr": 2.42,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126665120690",
+      "nombre": "EMEX_A1-Especialista_POV",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 36.06,
+      "impresiones": 2736,
+      "clics": 63,
+      "ctr": 2.3,
+      "frecuencia": 1.21,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "120251126667210690",
+      "nombre": "EMEX_A1-Especialista_Nota",
+      "conjunto": "A1-Especialista",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 4.35,
+      "impresiones": 63,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126673090690",
+      "nombre": "EMEX_A2-IVA_Tarjeta",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 32.73,
+      "impresiones": 2348,
+      "clics": 67,
+      "ctr": 2.85,
+      "frecuencia": 1.1,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120251126677810690",
+      "nombre": "EMEX_A2-IVA_Nota",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 6.9,
+      "impresiones": 205,
+      "clics": 2,
+      "ctr": 0.98,
+      "frecuencia": 1.05,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126683110690",
+      "nombre": "EMEX_A3-Colaboradores_Nota",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 22.61,
+      "impresiones": 1473,
+      "clics": 32,
+      "ctr": 2.17,
+      "frecuencia": 1.15,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126684270690",
+      "nombre": "EMEX_A3-Colaboradores_POV",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 21.94,
+      "impresiones": 1406,
+      "clics": 40,
+      "ctr": 2.84,
+      "frecuencia": 1.14,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120251126678610690",
+      "nombre": "EMEX_A2-IVA_POV",
+      "conjunto": "A2-IVA",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 1.82,
+      "impresiones": 86,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251126679430690",
+      "nombre": "EMEX_A3-Colaboradores_Tarjeta",
+      "conjunto": "A3-Colaboradores",
+      "campana": "EMEX_Leads_Test-Angulos_Oct26",
+      "campaign_id": "120251125817120690",
+      "gasto": 1.18,
+      "impresiones": 55,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "A3-Colaboradores",
+     "aprendizaje": "LEARNING"
+    },
+    {
+     "nombre": "A1-Especialista",
+     "aprendizaje": "LEARNING"
+    },
+    {
+     "nombre": "[17/05/2020] Promoción de http://www.msasesores.es/",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "enero",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Enero",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Diciembre",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Noviembre",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Pymes-Diciembre",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Autónomos",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Noviembre",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "ES - 18+",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "busbac": {
+   "cuenta_id": "act_1553055809937096",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120250333106590419",
+      "nombre": "AD 1 - Acompañamiento y decisión",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 23.03,
+      "impresiones": 317,
+      "clics": 8,
+      "ctr": 2.52,
+      "frecuencia": 1.56,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250334166080419",
+      "nombre": "AD 2 - Prevención y anticipación",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 8.81,
+      "impresiones": 134,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.34,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250334426230419",
+      "nombre": "AD 3 - Control y visibilidad",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 71.14,
+      "impresiones": 1311,
+      "clics": 16,
+      "ctr": 1.22,
+      "frecuencia": 1.73,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [],
+    "30d": [
+     {
+      "ad_id": "120250333106590419",
+      "nombre": "AD 1 - Acompañamiento y decisión",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 23.03,
+      "impresiones": 317,
+      "clics": 8,
+      "ctr": 2.52,
+      "frecuencia": 1.56,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250334166080419",
+      "nombre": "AD 2 - Prevención y anticipación",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 8.81,
+      "impresiones": 134,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.34,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120250334426230419",
+      "nombre": "AD 3 - Control y visibilidad",
+      "conjunto": "Frío | Vallès + Baix Llobregat",
+      "campana": "BUSBAC | Leads | Cambio de asesoría",
+      "campaign_id": "120250333106600419",
+      "gasto": 71.14,
+      "impresiones": 1311,
+      "clics": 16,
+      "ctr": 1.22,
+      "frecuencia": 1.73,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Frío | Vallès + Baix Llobregat",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "joan_lluis_vives": {
+   "cuenta_id": "act_1286738199070565",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120250230653510061",
+      "nombre": "Ayudas a la conciliación - Orgánico",
+      "conjunto": "LLV - Subvenciones",
+      "campana": "LLV | Subvenciones Baleares | Alcance",
+      "campaign_id": "120250230653500061",
+      "gasto": 61.91,
+      "impresiones": 62983,
+      "clics": 173,
+      "ctr": 0.27,
+      "frecuencia": 1.56,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120250230653510061",
+      "nombre": "Ayudas a la conciliación - Orgánico",
+      "conjunto": "LLV - Subvenciones",
+      "campana": "LLV | Subvenciones Baleares | Alcance",
+      "campaign_id": "120250230653500061",
+      "gasto": 12.5,
+      "impresiones": 14370,
+      "clics": 30,
+      "ctr": 0.21,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "120250230653510061",
+      "nombre": "Ayudas a la conciliación - Orgánico",
+      "conjunto": "LLV - Subvenciones",
+      "campana": "LLV | Subvenciones Baleares | Alcance",
+      "campaign_id": "120250230653500061",
+      "gasto": 74.41,
+      "impresiones": 77353,
+      "clics": 203,
+      "ctr": 0.26,
+      "frecuencia": 1.84,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "LLV - Subvenciones",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "kiosko_box": {
+   "cuenta_id": "act_292218051469540",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120211276644420658",
+      "nombre": "Visit 30",
+      "conjunto": "Visit 30",
+      "campana": "Kiosko - RMKT - New",
+      "campaign_id": "120211276644250658",
+      "gasto": 20.45,
+      "impresiones": 5461,
+      "clics": 152,
+      "ctr": 2.78,
+      "frecuencia": 1.34,
+      "leads": 19.0
+     },
+     {
+      "ad_id": "120236954097310658",
+      "nombre": "Video - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 411.45,
+      "impresiones": 208608,
+      "clics": 4426,
+      "ctr": 2.12,
+      "frecuencia": 1.44,
+      "leads": 582.0
+     },
+     {
+      "ad_id": "120236954097320658",
+      "nombre": "Imagen Estatica - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 0.91,
+      "impresiones": 351,
+      "clics": 12,
+      "ctr": 3.42,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120236955244790658",
+      "nombre": "Video - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 2.77,
+      "impresiones": 662,
+      "clics": 18,
+      "ctr": 2.72,
+      "frecuencia": 1.3,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120236955244800658",
+      "nombre": "Imagen Estatica - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 3.19,
+      "impresiones": 940,
+      "clics": 23,
+      "ctr": 2.45,
+      "frecuencia": 1.84,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120236957639850658",
+      "nombre": "Video  - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 132.88,
+      "impresiones": 45911,
+      "clics": 1582,
+      "ctr": 3.45,
+      "frecuencia": 1.75,
+      "leads": 212.0
+     },
+     {
+      "ad_id": "120236957639860658",
+      "nombre": "Imagen Estatica - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 1.66,
+      "impresiones": 862,
+      "clics": 27,
+      "ctr": 3.13,
+      "frecuencia": 1.23,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120241679335190658",
+      "nombre": "Amparo - Video Storytelling 1 - Mayo 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 149.17,
+      "impresiones": 49503,
+      "clics": 2062,
+      "ctr": 4.17,
+      "frecuencia": 1.23,
+      "leads": 230.0
+     },
+     {
+      "ad_id": "120242038997120658",
+      "nombre": "Video - Como hacer tu pedido",
+      "conjunto": "Contenido Amparo",
+      "campana": "Tráfico - Perfil IG",
+      "campaign_id": "120242038997110658",
+      "gasto": 34.37,
+      "impresiones": 12510,
+      "clics": 970,
+      "ctr": 7.75,
+      "frecuencia": 1.09,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120247007854340658",
+      "nombre": "Video Unboxing 1 - Septiembre 2026 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 164.44,
+      "impresiones": 14143,
+      "clics": 2071,
+      "ctr": 14.64,
+      "frecuencia": 1.53,
+      "leads": 276.0
+     },
+     {
+      "ad_id": "120247014502340658",
+      "nombre": "Amparo - Video Storytelling 2 - Septiembre 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 0.5,
+      "impresiones": 158,
+      "clics": 3,
+      "ctr": 1.9,
+      "frecuencia": 1.07,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120247014732390658",
+      "nombre": "Video Storytelling 2 - Septiembre 2026 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 35.48,
+      "impresiones": 11857,
+      "clics": 306,
+      "ctr": 2.58,
+      "frecuencia": 1.51,
+      "leads": 40.0
+     },
+     {
+      "ad_id": "120247014788310658",
+      "nombre": "Video  2 - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 3.65,
+      "impresiones": 1662,
+      "clics": 35,
+      "ctr": 2.11,
+      "frecuencia": 1.24,
+      "leads": 7.0
+     },
+     {
+      "ad_id": "120247014936090658",
+      "nombre": "Video 2 - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 135.53,
+      "impresiones": 37929,
+      "clics": 1087,
+      "ctr": 2.87,
+      "frecuencia": 3.4,
+      "leads": 88.0
+     },
+     {
+      "ad_id": "120247015046400658",
+      "nombre": "Imagen Estatica - Septiembre 2026 - Box 500 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 60.39,
+      "impresiones": 17382,
+      "clics": 336,
+      "ctr": 1.93,
+      "frecuencia": 3.73,
+      "leads": 34.0
+     },
+     {
+      "ad_id": "120247016916160658",
+      "nombre": "Video - Septiembre 2026 - Box 300 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 8.64,
+      "impresiones": 2042,
+      "clics": 45,
+      "ctr": 2.2,
+      "frecuencia": 2.04,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120247007902270658",
+      "nombre": "Video 1  - Septiembre 2026 - Box 300 - PT - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 0.11,
+      "impresiones": 46,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.1,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "120211276644420658",
+      "nombre": "Visit 30",
+      "conjunto": "Visit 30",
+      "campana": "Kiosko - RMKT - New",
+      "campaign_id": "120211276644250658",
+      "gasto": 21.51,
+      "impresiones": 6214,
+      "clics": 175,
+      "ctr": 2.82,
+      "frecuencia": 1.46,
+      "leads": 29.0
+     },
+     {
+      "ad_id": "120236954097310658",
+      "nombre": "Video - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 437.23,
+      "impresiones": 206658,
+      "clics": 4796,
+      "ctr": 2.32,
+      "frecuencia": 1.39,
+      "leads": 503.0
+     },
+     {
+      "ad_id": "120236954097320658",
+      "nombre": "Imagen Estatica - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 1.14,
+      "impresiones": 305,
+      "clics": 9,
+      "ctr": 2.95,
+      "frecuencia": 1.08,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120236955244790658",
+      "nombre": "Video - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 15.22,
+      "impresiones": 4321,
+      "clics": 91,
+      "ctr": 2.11,
+      "frecuencia": 1.79,
+      "leads": 8.0
+     },
+     {
+      "ad_id": "120236955244800658",
+      "nombre": "Imagen Estatica - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 1.28,
+      "impresiones": 410,
+      "clics": 13,
+      "ctr": 3.17,
+      "frecuencia": 1.64,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120236957639850658",
+      "nombre": "Video  - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 130.21,
+      "impresiones": 36519,
+      "clics": 1548,
+      "ctr": 4.24,
+      "frecuencia": 1.61,
+      "leads": 173.0
+     },
+     {
+      "ad_id": "120236957639860658",
+      "nombre": "Imagen Estatica - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 1.51,
+      "impresiones": 886,
+      "clics": 12,
+      "ctr": 1.35,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120241679335190658",
+      "nombre": "Amparo - Video Storytelling 1 - Mayo 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 125.52,
+      "impresiones": 30936,
+      "clics": 1977,
+      "ctr": 6.39,
+      "frecuencia": 1.31,
+      "leads": 179.0
+     },
+     {
+      "ad_id": "120242038997120658",
+      "nombre": "Video - Como hacer tu pedido",
+      "conjunto": "Contenido Amparo",
+      "campana": "Tráfico - Perfil IG",
+      "campaign_id": "120242038997110658",
+      "gasto": 35.14,
+      "impresiones": 12165,
+      "clics": 1015,
+      "ctr": 8.34,
+      "frecuencia": 1.09,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120247007854340658",
+      "nombre": "Video Unboxing 1 - Septiembre 2026 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 76.22,
+      "impresiones": 15891,
+      "clics": 717,
+      "ctr": 4.51,
+      "frecuencia": 1.45,
+      "leads": 100.0
+     },
+     {
+      "ad_id": "120247007902270658",
+      "nombre": "Video 1  - Septiembre 2026 - Box 300 - PT - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 8.94,
+      "impresiones": 2216,
+      "clics": 75,
+      "ctr": 3.38,
+      "frecuencia": 1.56,
+      "leads": 13.0
+     },
+     {
+      "ad_id": "120247014732390658",
+      "nombre": "Video Storytelling 2 - Septiembre 2026 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 63.02,
+      "impresiones": 20612,
+      "clics": 505,
+      "ctr": 2.45,
+      "frecuencia": 1.43,
+      "leads": 60.0
+     },
+     {
+      "ad_id": "120247014788310658",
+      "nombre": "Video  2 - AO 2026 - PT",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS - PT Campaña Campaña",
+      "campaign_id": "120223944036640658",
+      "gasto": 1.31,
+      "impresiones": 612,
+      "clics": 21,
+      "ctr": 3.43,
+      "frecuencia": 1.16,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120247014936090658",
+      "nombre": "Video 2 - AO 2026",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 111.31,
+      "impresiones": 34878,
+      "clics": 795,
+      "ctr": 2.28,
+      "frecuencia": 2.55,
+      "leads": 54.0
+     },
+     {
+      "ad_id": "120247015046400658",
+      "nombre": "Imagen Estatica - Septiembre 2026 - Box 500 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 82.5,
+      "impresiones": 23879,
+      "clics": 434,
+      "ctr": 1.82,
+      "frecuencia": 3.67,
+      "leads": 60.0
+     },
+     {
+      "ad_id": "120247016916160658",
+      "nombre": "Video - Septiembre 2026 - Box 300 - 100k",
+      "conjunto": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña COMPRA - Rocket",
+      "campaign_id": "120223943930890658",
+      "gasto": 3.81,
+      "impresiones": 1033,
+      "clics": 19,
+      "ctr": 1.84,
+      "frecuencia": 1.51,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "120247014502340658",
+      "nombre": "Amparo - Video Storytelling 2 - Septiembre 2026",
+      "conjunto": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+      "campana": "PROSP - Advantage+ Campaña LEADS Campaña",
+      "campaign_id": "120222914152110658",
+      "gasto": 1.08,
+      "impresiones": 323,
+      "clics": 14,
+      "ctr": 4.33,
+      "frecuencia": 1.05,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "120242039910910658",
+      "nombre": "Video - Tipo de persona",
+      "conjunto": "Contenido Amparo",
+      "campana": "Tráfico - Perfil IG",
+      "campaign_id": "120242038997110658",
+      "gasto": 0.01,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [
+    "30d: An unknown error occurred"
+   ],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [
+    {
+     "id": "120242039910910658",
+     "nombre": "Video - Tipo de persona",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-09-26 13:07",
+     "motivo": null
+    },
+    {
+     "id": "120217224354490658",
+     "nombre": "L1_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-05-08 17:55",
+     "motivo": null
+    },
+    {
+     "id": "120220925644690658",
+     "nombre": "Visits180 - SEO",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-04-17 12:25",
+     "motivo": null
+    },
+    {
+     "id": "120220925167010658",
+     "nombre": "L1_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-04-17 12:14",
+     "motivo": null
+    },
+    {
+     "id": "120217225702810658",
+     "nombre": "Engagers60",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-31 09:45",
+     "motivo": null
+    },
+    {
+     "id": "120217224354480658",
+     "nombre": "L2_5_30",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-19 11:24",
+     "motivo": null
+    },
+    {
+     "id": "120217224354520658",
+     "nombre": "L2_5_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-19 11:24",
+     "motivo": null
+    },
+    {
+     "id": "23849394351850657",
+     "nombre": "Leads 180",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-04 22:41",
+     "motivo": null
+    },
+    {
+     "id": "23849409659260657",
+     "nombre": "L1 Lead 90",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-04 22:37",
+     "motivo": null
+    },
+    {
+     "id": "23849656231540657",
+     "nombre": "L1 Lead 180",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-03-04 22:37",
+     "motivo": null
+    },
+    {
+     "id": "120213480172160658",
+     "nombre": "L1_30",
+     "estado": "WITH_ISSUES",
+     "desde": "2025-01-05 12:31",
+     "motivo": null
+    },
+    {
+     "id": "23849382658460657",
+     "nombre": "Visit 30",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-09-30 10:47",
+     "motivo": null
+    },
+    {
+     "id": "23849394562400657",
+     "nombre": "L1 Compradores 180",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-09-03 12:22",
+     "motivo": null
+    },
+    {
+     "id": "120210333668660658",
+     "nombre": "L2_5_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-08-20 15:04",
+     "motivo": null
+    },
+    {
+     "id": "120209119774430658",
+     "nombre": "Visits180 - SEO",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-06-17 10:04",
+     "motivo": null
+    },
+    {
+     "id": "120209119774400658",
+     "nombre": "Engagers60",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-06-17 10:04",
+     "motivo": null
+    },
+    {
+     "id": "120207579846530658",
+     "nombre": "Visit & Leads 15",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-06-06 09:30",
+     "motivo": null
+    },
+    {
+     "id": "120204795647330658",
+     "nombre": "L1_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2024-02-11 09:31",
+     "motivo": null
+    },
+    {
+     "id": "120201076622680658",
+     "nombre": "L2_5_30",
+     "estado": "WITH_ISSUES",
+     "desde": "2023-12-10 19:29",
+     "motivo": null
+    },
+    {
+     "id": "120200332554770658",
+     "nombre": "L1_90",
+     "estado": "WITH_ISSUES",
+     "desde": "2023-11-23 08:40",
+     "motivo": null
+    },
+    {
+     "id": "120200333023030658",
+     "nombre": "Video_Views_365",
+     "estado": "WITH_ISSUES",
+     "desde": "2023-11-15 19:28",
+     "motivo": null
+    },
+    {
+     "id": "23849382634860657",
+     "nombre": "Lead 15",
+     "estado": "WITH_ISSUES",
+     "desde": "2022-01-27 19:31",
+     "motivo": null
+    }
+   ],
+   "conjuntos": [
+    {
+     "nombre": "Contenido Amparo",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña LEADS - PT Campaña Conjunto de anuncios",
+     "aprendizaje": "SUCCESS"
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña COMPRA Campaña Conjunto de anuncios",
+     "aprendizaje": "SUCCESS"
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña LEADS Conjunto de anuncios",
+     "aprendizaje": "SUCCESS"
+    },
+    {
+     "nombre": "Leads180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180 - SEO",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Video_Views_365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers60",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ COMPRA - Semana Santa 2025 Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ LEADS - Semana Santa 2025 Campaña Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña COMRPA - PRIMAVERA 2025 Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_180_PT",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers60",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - Flash Sales Febrero 2025 Campaña - Compra Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - Flash Sales Febrero 2025 Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_180_PT",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - SAN VALENTIN 2025 Compra Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - SAN VALENTIN 2025 Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_180_PT",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers60",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Leads180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180 - SEO",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Video_Views_365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - REBAJAS 2025 Campaña Lead Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - REBAJAS 2025 Compra  Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_180_PT",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Video_Views_365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers60",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180 - SEO",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Leads180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Intereses_Padres",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Intereses_Regalos",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - XMAS 2024 Campaña Compra Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - Black Week 2024 - Lead Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - XMAS 2024 Campaña Compra Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_180_PT",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Leads180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Video_Views_365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers60",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180 - SEO",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit180",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Engagers365",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Intereses_Regalos",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Intereses_Padres",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_30",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L1_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "L2_5_90",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - Black Week 2024 - Lead Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "PROSP - Advantage+ Campaña - Black Week 2024 Conjunto de anuncios",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Visit 30",
+     "aprendizaje": null
+    }
+   ],
+   "fuente_id": "meta_anuncios",
+   "hora_error": "2026-10-03 03:21"
+  },
+  "gac": {
+   "cuenta_id": "act_28911839",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "6984011956881",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 320.8,
+      "impresiones": 69926,
+      "clics": 883,
+      "ctr": 1.26,
+      "frecuencia": 1.33,
+      "leads": 105.0
+     },
+     {
+      "ad_id": "6986783011681",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 38.88,
+      "impresiones": 611,
+      "clics": 5,
+      "ctr": 0.82,
+      "frecuencia": 7.97,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 14.37,
+      "impresiones": 210,
+      "clics": 3,
+      "ctr": 1.43,
+      "frecuencia": 3.54,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6984011767881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.23,
+      "impresiones": 39,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990955589681",
+      "nombre": "ANG 1 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 1.39,
+      "impresiones": 64,
+      "clics": 3,
+      "ctr": 4.69,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990964865881",
+      "nombre": "ANG 2 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 5.5,
+      "impresiones": 148,
+      "clics": 15,
+      "ctr": 10.14,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990964887881",
+      "nombre": "ANG 4 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 27.28,
+      "impresiones": 1089,
+      "clics": 48,
+      "ctr": 4.41,
+      "frecuencia": 1.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990965197281",
+      "nombre": "ANG 3 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 11.53,
+      "impresiones": 450,
+      "clics": 20,
+      "ctr": 4.44,
+      "frecuencia": 1.14,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966153481",
+      "nombre": "ANG 5 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 0.21,
+      "impresiones": 54,
+      "clics": 2,
+      "ctr": 3.7,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966153881",
+      "nombre": "ANG 3 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 8.41,
+      "impresiones": 1030,
+      "clics": 64,
+      "ctr": 6.21,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154081",
+      "nombre": "ANG 4 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 6.81,
+      "impresiones": 429,
+      "clics": 17,
+      "ctr": 3.96,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154281",
+      "nombre": "ANG 2 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 2.83,
+      "impresiones": 152,
+      "clics": 7,
+      "ctr": 4.61,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154481",
+      "nombre": "ANG 1 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 1.17,
+      "impresiones": 50,
+      "clics": 3,
+      "ctr": 6.0,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990965125081",
+      "nombre": "ANG 5 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 0.9,
+      "impresiones": 43,
+      "clics": 2,
+      "ctr": 4.65,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987859439081",
+      "nombre": "Reel 1B",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.3,
+      "impresiones": 28,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.03,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987858807681",
+      "nombre": "Reel 1A",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.23,
+      "impresiones": 4,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010881",
+      "nombre": "PIEZA SUELTA Checklist / comprobación",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.68,
+      "impresiones": 17,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.7,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010681",
+      "nombre": "MIX 1 Segunda Oportunidad + especialización",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.02,
+      "impresiones": 1,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011081",
+      "nombre": "MIX 2 Cercanía + trato humano + Barcelona",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.03,
+      "impresiones": 3,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 3.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987860028081",
+      "nombre": "Reel 1C",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.01,
+      "impresiones": 1,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "6984011767881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.26,
+      "impresiones": 30,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.02,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6984011956881",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 133.58,
+      "impresiones": 19337,
+      "clics": 283,
+      "ctr": 1.46,
+      "frecuencia": 1.26,
+      "leads": 43.0
+     },
+     {
+      "ad_id": "6987859439081",
+      "nombre": "Reel 1B",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.35,
+      "impresiones": 37,
+      "clics": 1,
+      "ctr": 2.7,
+      "frecuencia": 1.15,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010681",
+      "nombre": "MIX 1 Segunda Oportunidad + especialización",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.4,
+      "impresiones": 19,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.38,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011681",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 15.33,
+      "impresiones": 292,
+      "clics": 10,
+      "ctr": 3.42,
+      "frecuencia": 5.13,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "6986783011881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 11.78,
+      "impresiones": 161,
+      "clics": 1,
+      "ctr": 0.62,
+      "frecuencia": 3.6,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987858807681",
+      "nombre": "Reel 1A",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.13,
+      "impresiones": 3,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011081",
+      "nombre": "MIX 2 Cercanía + trato humano + Barcelona",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.88,
+      "impresiones": 33,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.54,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010881",
+      "nombre": "PIEZA SUELTA Checklist / comprobación",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.16,
+      "impresiones": 6,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.2,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987860028081",
+      "nombre": "Reel 1C",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.02,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "6984011767881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 38.44,
+      "impresiones": 5385,
+      "clics": 75,
+      "ctr": 1.39,
+      "frecuencia": 1.36,
+      "leads": 8.0
+     },
+     {
+      "ad_id": "6984011956881",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 639.81,
+      "impresiones": 111624,
+      "clics": 1548,
+      "ctr": 1.39,
+      "frecuencia": 1.76,
+      "leads": 212.0
+     },
+     {
+      "ad_id": "6984012187481",
+      "nombre": "Reel 20/08",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.4,
+      "impresiones": 30,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987198475881",
+      "nombre": "MIX 2 Cercanía + trato humano + Barcelona - Nuevo",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.52,
+      "impresiones": 22,
+      "clics": 1,
+      "ctr": 4.55,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987858807681",
+      "nombre": "Reel 1A",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 1.29,
+      "impresiones": 72,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6987859439081",
+      "nombre": "Reel 1B",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 4.97,
+      "impresiones": 421,
+      "clics": 8,
+      "ctr": 1.9,
+      "frecuencia": 1.26,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "6987860028081",
+      "nombre": "Reel 1C",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.38,
+      "impresiones": 38,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010681",
+      "nombre": "MIX 1 Segunda Oportunidad + especialización",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.42,
+      "impresiones": 20,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011681",
+      "nombre": "Reel 19/06",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 54.84,
+      "impresiones": 923,
+      "clics": 15,
+      "ctr": 1.63,
+      "frecuencia": 10.86,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "6986783011881",
+      "nombre": "Reel 28/07",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 26.15,
+      "impresiones": 372,
+      "clics": 4,
+      "ctr": 1.08,
+      "frecuencia": 5.55,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990955589681",
+      "nombre": "ANG 1 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 1.39,
+      "impresiones": 64,
+      "clics": 3,
+      "ctr": 4.69,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990964865881",
+      "nombre": "ANG 2 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 5.5,
+      "impresiones": 148,
+      "clics": 15,
+      "ctr": 10.14,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990964887881",
+      "nombre": "ANG 4 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 27.28,
+      "impresiones": 1089,
+      "clics": 48,
+      "ctr": 4.41,
+      "frecuencia": 1.22,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990965197281",
+      "nombre": "ANG 3 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 11.53,
+      "impresiones": 450,
+      "clics": 20,
+      "ctr": 4.44,
+      "frecuencia": 1.14,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966153481",
+      "nombre": "ANG 5 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 0.21,
+      "impresiones": 54,
+      "clics": 2,
+      "ctr": 3.7,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966153881",
+      "nombre": "ANG 3 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 8.41,
+      "impresiones": 1030,
+      "clics": 64,
+      "ctr": 6.21,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154081",
+      "nombre": "ANG 4 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 6.81,
+      "impresiones": 429,
+      "clics": 17,
+      "ctr": 3.96,
+      "frecuencia": 1.16,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154281",
+      "nombre": "ANG 2 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 2.83,
+      "impresiones": 152,
+      "clics": 7,
+      "ctr": 4.61,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990966154481",
+      "nombre": "ANG 1 - AD 1",
+      "conjunto": "Intereses Concursal",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 1.17,
+      "impresiones": 50,
+      "clics": 3,
+      "ctr": 6.0,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783011081",
+      "nombre": "MIX 2 Cercanía + trato humano + Barcelona",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.91,
+      "impresiones": 36,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 2.77,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6990965125081",
+      "nombre": "ANG 5 - AD 1",
+      "conjunto": "Advantage+ Testeo Ángulos",
+      "campana": "CBO - TESTEO ÁNGULOS - 01/10 NEXO JURÍDICO",
+      "campaign_id": "6990955589481",
+      "gasto": 0.9,
+      "impresiones": 43,
+      "clics": 2,
+      "ctr": 4.65,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986736467881",
+      "nombre": "MIX 1 Segunda Oportunidad + especialización",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.63,
+      "impresiones": 17,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.06,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986737818881",
+      "nombre": "MIX 2 Cercanía + trato humano + Barcelona",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.1,
+      "impresiones": 7,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986738348281",
+      "nombre": "PIEZA SUELTA Checklist / comprobación",
+      "conjunto": "Leads-Intereses",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.43,
+      "impresiones": 26,
+      "clics": 1,
+      "ctr": 3.85,
+      "frecuencia": 1.24,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "6986783010881",
+      "nombre": "PIEZA SUELTA Checklist / comprobación",
+      "conjunto": "Leads-Remarketing CRM",
+      "campana": "GAC-Leads",
+      "campaign_id": "6983431534481",
+      "gasto": 0.84,
+      "impresiones": 23,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.77,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "America/Los_Angeles",
+   "convertida_a_madrid": true,
+   "problemas": [
+    {
+     "id": "6986737818881",
+     "nombre": "MIX 2 Cercanía + trato humano + Barcelona",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-09-09 03:51",
+     "motivo": null
+    },
+    {
+     "id": "6741092806281",
+     "nombre": "Anuncio 2",
+     "estado": "DISAPPROVED",
+     "desde": "2026-08-25 06:16",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6977359939081",
+     "nombre": "06/08 LSO Orgánico 2",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-08-25 05:17",
+     "motivo": null
+    },
+    {
+     "id": "6981881853281",
+     "nombre": "18/08 LSO Orgánico 5",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-08-25 05:16",
+     "motivo": null
+    },
+    {
+     "id": "6979399523681",
+     "nombre": "12/08 LSO Orgánico 3",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-08-25 05:16",
+     "motivo": null
+    },
+    {
+     "id": "6982436499481",
+     "nombre": "20/08 LSO Orgánico 7",
+     "estado": "WITH_ISSUES",
+     "desde": "2026-08-25 05:16",
+     "motivo": null
+    },
+    {
+     "id": "6168752004881",
+     "nombre": "Fb + IG Stories",
+     "estado": "DISAPPROVED",
+     "desde": "2022-11-01 14:00",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6193519313081",
+     "nombre": "Carrrousel",
+     "estado": "DISAPPROVED",
+     "desde": "2020-10-19 07:25",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6155886418281",
+     "nombre": "2a Oportunidad Animación FB+IG",
+     "estado": "DISAPPROVED",
+     "desde": "2020-09-30 14:29",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6168758711881",
+     "nombre": "Animación FB+IG",
+     "estado": "DISAPPROVED",
+     "desde": "2020-09-30 14:29",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6084208742081",
+     "nombre": "Publicación: \"¿Sabías que es posible cancelar tus deudas y...\"",
+     "estado": "DISAPPROVED",
+     "desde": "2018-04-25 23:41",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6083958303681",
+     "nombre": "Publicación: \"¿Sabías que es posible cancelar tus deudas y...\"",
+     "estado": "DISAPPROVED",
+     "desde": "2018-04-24 06:00",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6082794870481",
+     "nombre": "Publicación: \"¿Te imaginas poder cancelar todas tus deudas y...\"",
+     "estado": "DISAPPROVED",
+     "desde": "2018-04-14 06:56",
+     "motivo": " Parece que tu anuncio incluye contenido que no está permitido en las plataformas de anuncios de Meta. Esto va en contra de nuestras Normas de publicidad, Normas comunitarias o Condiciones del servicio. Accede al Inicio "
+    },
+    {
+     "id": "6013936398681",
+     "nombre": "Publicación: /gacgrup/posts/664267103627903 para fans",
+     "estado": "DISAPPROVED",
+     "desde": "2014-05-16 01:50",
+     "motivo": null
+    },
+    {
+     "id": "6013936396281",
+     "nombre": "Publicación: /gacgrup/posts/664267103627903 para otros usuarios",
+     "estado": "DISAPPROVED",
+     "desde": "2014-05-16 01:50",
+     "motivo": null
+    }
+   ],
+   "conjuntos": [
+    {
+     "nombre": "Intereses Concursal",
+     "aprendizaje": "LEARNING"
+    },
+    {
+     "nombre": "Advantage+ Testeo Ángulos",
+     "aprendizaje": "LEARNING"
+    },
+    {
+     "nombre": "Leads-LAL 1% Ganados",
+     "aprendizaje": "FAIL"
+    },
+    {
+     "nombre": "Leads-Intereses",
+     "aprendizaje": "SUCCESS"
+    }
+   ]
+  },
+  "gestanex": {
+   "cuenta_id": "act_873105875233187",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "52607890674584",
+      "nombre": "Test Manus Agosto",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 1.25,
+      "impresiones": 66,
+      "clics": 1,
+      "ctr": 1.52,
+      "frecuencia": 1.74,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52611878570584",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 16.88,
+      "impresiones": 853,
+      "clics": 25,
+      "ctr": 2.93,
+      "frecuencia": 1.74,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52611882652384",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 62.42,
+      "impresiones": 2738,
+      "clics": 84,
+      "ctr": 3.07,
+      "frecuencia": 1.76,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "52613740628984",
+      "nombre": "Mix Videos N°2",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 4.14,
+      "impresiones": 213,
+      "clics": 3,
+      "ctr": 1.41,
+      "frecuencia": 1.63,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52613741143584",
+      "nombre": "Mix Videos N°2",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 49.91,
+      "impresiones": 2538,
+      "clics": 39,
+      "ctr": 1.54,
+      "frecuencia": 1.92,
+      "leads": 1.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "52598824440584",
+      "nombre": "Mix creativos",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 0.98,
+      "impresiones": 33,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.27,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52607890674584",
+      "nombre": "Test Manus Agosto",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 5.26,
+      "impresiones": 241,
+      "clics": 3,
+      "ctr": 1.24,
+      "frecuencia": 3.3,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52611878570584",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 17.15,
+      "impresiones": 725,
+      "clics": 16,
+      "ctr": 2.21,
+      "frecuencia": 1.78,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "52611882652384",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 118.28,
+      "impresiones": 4171,
+      "clics": 121,
+      "ctr": 2.9,
+      "frecuencia": 2.19,
+      "leads": 8.0
+     },
+     {
+      "ad_id": "52609344869784",
+      "nombre": "Mix Eficiencia / Escala",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 0.52,
+      "impresiones": 8,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "52598824440584",
+      "nombre": "Mix creativos",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 220.52,
+      "impresiones": 7051,
+      "clics": 116,
+      "ctr": 1.65,
+      "frecuencia": 2.85,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52607889767184",
+      "nombre": "Test Manus Agosto",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 238.81,
+      "impresiones": 11049,
+      "clics": 156,
+      "ctr": 1.41,
+      "frecuencia": 1.91,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52607890674584",
+      "nombre": "Test Manus Agosto",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 65.88,
+      "impresiones": 2851,
+      "clics": 40,
+      "ctr": 1.4,
+      "frecuencia": 2.65,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "52607890674784",
+      "nombre": "Mix creativos",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 0.51,
+      "impresiones": 24,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.04,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52609344869784",
+      "nombre": "Mix Eficiencia / Escala",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 37.29,
+      "impresiones": 1228,
+      "clics": 15,
+      "ctr": 1.22,
+      "frecuencia": 1.82,
+      "leads": 1.0
+     },
+     {
+      "ad_id": "52609345982784",
+      "nombre": "Mix Eficiencia / Escala",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 0.73,
+      "impresiones": 90,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.27,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52611878570584",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 35.47,
+      "impresiones": 1650,
+      "clics": 44,
+      "ctr": 2.67,
+      "frecuencia": 2.17,
+      "leads": 3.0
+     },
+     {
+      "ad_id": "52611882652384",
+      "nombre": "Mix Videos",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 186.05,
+      "impresiones": 7065,
+      "clics": 212,
+      "ctr": 3.0,
+      "frecuencia": 2.58,
+      "leads": 11.0
+     },
+     {
+      "ad_id": "52613740628984",
+      "nombre": "Mix Videos N°2",
+      "conjunto": "Cargos + Socio Demo - Madrid",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 4.14,
+      "impresiones": 213,
+      "clics": 3,
+      "ctr": 1.41,
+      "frecuencia": 1.63,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52613741143584",
+      "nombre": "Mix Videos N°2",
+      "conjunto": "Cargos + Socio Demo",
+      "campana": "RO_Clientes Potenciales",
+      "campaign_id": "52598824440784",
+      "gasto": 49.91,
+      "impresiones": 2538,
+      "clics": 39,
+      "ctr": 1.54,
+      "frecuencia": 1.92,
+      "leads": 1.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Cargos + Socio Demo - Madrid",
+     "aprendizaje": "FAIL"
+    },
+    {
+     "nombre": "Cargos + Socio Demo",
+     "aprendizaje": "FAIL"
+    }
+   ]
+  },
+  "laver": {
+   "cuenta_id": "act_1591667929090671",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "52565587610548",
+      "nombre": "El Metal Sube",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 17.31,
+      "impresiones": 2059,
+      "clics": 24,
+      "ctr": 1.17,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565603342748",
+      "nombre": "Horas taller",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 9.34,
+      "impresiones": 483,
+      "clics": 13,
+      "ctr": 2.69,
+      "frecuencia": 1.14,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52565603837348",
+      "nombre": "Anuncio Literal",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 8.04,
+      "impresiones": 431,
+      "clics": 9,
+      "ctr": 2.09,
+      "frecuencia": 1.09,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565735422548",
+      "nombre": "Foto CEO nóminas",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 6.69,
+      "impresiones": 508,
+      "clics": 7,
+      "ctr": 1.38,
+      "frecuencia": 1.07,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565739135948",
+      "nombre": "Foto CEO literal",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 75.11,
+      "impresiones": 7629,
+      "clics": 149,
+      "ctr": 1.95,
+      "frecuencia": 1.2,
+      "leads": 2.0
+     }
+    ],
+    "7d_prev": [
+     {
+      "ad_id": "52562873957148",
+      "nombre": "Laver - Dolor accidente / recargo",
+      "conjunto": "Laver - Frío - Ángulo 1",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 38.22,
+      "impresiones": 2174,
+      "clics": 43,
+      "ctr": 1.98,
+      "frecuencia": 1.5,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562886566748",
+      "nombre": "Laver - Cumplimiento convenio",
+      "conjunto": "Laver - Frío - Ángulo 2",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 15.22,
+      "impresiones": 443,
+      "clics": 3,
+      "ctr": 0.68,
+      "frecuencia": 1.26,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562931604548",
+      "nombre": "Laver - Cumplimiento convenio_IA",
+      "conjunto": "Laver - Frío - Ángulo 2",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 27.87,
+      "impresiones": 578,
+      "clics": 6,
+      "ctr": 1.04,
+      "frecuencia": 1.45,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562932488148",
+      "nombre": "Laver - Dolor accidente / recargo_IA - Copia",
+      "conjunto": "Laver - Frío - Ángulo 1",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 0.16,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     }
+    ],
+    "30d": [
+     {
+      "ad_id": "52562886566748",
+      "nombre": "Laver - Cumplimiento convenio",
+      "conjunto": "Laver - Frío - Ángulo 2",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 22.06,
+      "impresiones": 761,
+      "clics": 8,
+      "ctr": 1.05,
+      "frecuencia": 1.37,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562873957148",
+      "nombre": "Laver - Dolor accidente / recargo",
+      "conjunto": "Laver - Frío - Ángulo 1",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 45.23,
+      "impresiones": 2770,
+      "clics": 58,
+      "ctr": 2.09,
+      "frecuencia": 1.51,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562932136948",
+      "nombre": "Laver - Dolor accidente / recargo_IA",
+      "conjunto": "Laver - Frío - Ángulo 1",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 0.01,
+      "impresiones": 2,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.0,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562932488148",
+      "nombre": "Laver - Dolor accidente / recargo_IA - Copia",
+      "conjunto": "Laver - Frío - Ángulo 1",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 0.39,
+      "impresiones": 21,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.17,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52562931604548",
+      "nombre": "Laver - Cumplimiento convenio_IA",
+      "conjunto": "Laver - Frío - Ángulo 2",
+      "campana": "Laver-Leads",
+      "campaign_id": "52562873957548",
+      "gasto": 27.87,
+      "impresiones": 578,
+      "clics": 6,
+      "ctr": 1.04,
+      "frecuencia": 1.45,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565587610548",
+      "nombre": "El Metal Sube",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 17.31,
+      "impresiones": 2059,
+      "clics": 24,
+      "ctr": 1.17,
+      "frecuencia": 1.13,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565603342748",
+      "nombre": "Horas taller",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 9.34,
+      "impresiones": 483,
+      "clics": 13,
+      "ctr": 2.69,
+      "frecuencia": 1.14,
+      "leads": 2.0
+     },
+     {
+      "ad_id": "52565603837348",
+      "nombre": "Anuncio Literal",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 8.04,
+      "impresiones": 431,
+      "clics": 9,
+      "ctr": 2.09,
+      "frecuencia": 1.09,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565735422548",
+      "nombre": "Foto CEO nóminas",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 6.69,
+      "impresiones": 508,
+      "clics": 7,
+      "ctr": 1.38,
+      "frecuencia": 1.07,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "52565739135948",
+      "nombre": "Foto CEO literal",
+      "conjunto": "Leads-Frio",
+      "campana": "LAVER-Leads",
+      "campaign_id": "52565587610748",
+      "gasto": 75.11,
+      "impresiones": 7629,
+      "clics": 149,
+      "ctr": 1.95,
+      "frecuencia": 1.2,
+      "leads": 2.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Leads-Frio",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "deudot": {
+   "cuenta_id": "act_105489791447612",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120246821162310449",
+      "nombre": "Reel 29/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 21.37,
+      "impresiones": 457,
+      "clics": 7,
+      "ctr": 1.53,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120246821207450449",
+      "nombre": "Reel 24/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 30.13,
+      "impresiones": 1098,
+      "clics": 18,
+      "ctr": 1.64,
+      "frecuencia": 1.16,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120246821183380449",
+      "nombre": "Reel 25/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 7.95,
+      "impresiones": 215,
+      "clics": 3,
+      "ctr": 1.4,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     }
+    ],
+    "7d_prev": [],
+    "30d": [
+     {
+      "ad_id": "120246821162310449",
+      "nombre": "Reel 29/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 21.37,
+      "impresiones": 457,
+      "clics": 7,
+      "ctr": 1.53,
+      "frecuencia": 1.23,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120246821207450449",
+      "nombre": "Reel 24/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 30.13,
+      "impresiones": 1098,
+      "clics": 18,
+      "ctr": 1.64,
+      "frecuencia": 1.16,
+      "leads": 4.0
+     },
+     {
+      "ad_id": "120246821183380449",
+      "nombre": "Reel 25/09",
+      "conjunto": "Intereses",
+      "campana": "Clientes Potenciales_2026",
+      "campaign_id": "120246821162300449",
+      "gasto": 7.95,
+      "impresiones": 215,
+      "clics": 3,
+      "ctr": 1.4,
+      "frecuencia": 1.11,
+      "leads": 0.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "America/Los_Angeles",
+   "convertida_a_madrid": true,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "Intereses",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Views",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Nuevo conjunto de anuncios de Interacción",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Nuevo conjunto de anuncios de Tráfico",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    },
+    {
+     "nombre": "Instagram Post",
+     "aprendizaje": null
+    }
+   ]
+  },
+  "accompany": {
+   "cuenta_id": "act_1078316251839123",
+   "ventanas": {
+    "7d": [
+     {
+      "ad_id": "120251061512120462",
+      "nombre": "Accompany-Broad-Spanish bureaucracy",
+      "conjunto": "BROAD | ICP INTERNACIONAL",
+      "campana": "Accompany-Leads",
+      "campaign_id": "120251061512110462",
+      "gasto": 0.11,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.25,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251062090960462",
+      "nombre": "Accompany-Broad-Plain English",
+      "conjunto": "BROAD | ICP INTERNACIONAL",
+      "campana": "Accompany-Leads",
+      "campaign_id": "120251061512110462",
+      "gasto": 41.22,
+      "impresiones": 1865,
+      "clics": 31,
+      "ctr": 1.66,
+      "frecuencia": 1.91,
+      "leads": 1.0
+     }
+    ],
+    "7d_prev": [],
+    "30d": [
+     {
+      "ad_id": "120251061512120462",
+      "nombre": "Accompany-Broad-Spanish bureaucracy",
+      "conjunto": "BROAD | ICP INTERNACIONAL",
+      "campana": "Accompany-Leads",
+      "campaign_id": "120251061512110462",
+      "gasto": 0.11,
+      "impresiones": 5,
+      "clics": 0,
+      "ctr": 0.0,
+      "frecuencia": 1.25,
+      "leads": 0.0
+     },
+     {
+      "ad_id": "120251062090960462",
+      "nombre": "Accompany-Broad-Plain English",
+      "conjunto": "BROAD | ICP INTERNACIONAL",
+      "campana": "Accompany-Leads",
+      "campaign_id": "120251061512110462",
+      "gasto": 41.22,
+      "impresiones": 1865,
+      "clics": 31,
+      "ctr": 1.66,
+      "frecuencia": 1.91,
+      "leads": 1.0
+     }
+    ]
+   },
+   "errores": [],
+   "zona_horaria": "Europe/Madrid",
+   "convertida_a_madrid": false,
+   "problemas": [],
+   "conjuntos": [
+    {
+     "nombre": "BROAD | ICP INTERNACIONAL",
+     "aprendizaje": null
+    }
+   ]
+  }
+ }
+}

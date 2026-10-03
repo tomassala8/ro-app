@@ -1,0 +1,44 @@
+{
+ "que_es": "Correcciones de puesto, jefe, etiquetas y notas sobre la fase 0 y la plantilla (antes escritas en build_data.py: CORRECCIONES_ROL, CORRECCIONES_JEFE, ETIQUETAS). build_data.py las aplica al generar data/personas.json. Lo que se cambie después en Ajustes queda en el historial de la base y manda sobre esto.",
+ "origen": "N9 (2-oct-2026). Tomás, 2-oct tarde: Jerónimo jefe de SEO; Coti deja la jefatura de SEO; Miguel 100 % GoHighLevel; Camilo transversal; Lara redes + outreach (C2 de Mili). 2-oct noche (auditoría 36, D4, decisión firmada): Agus solo técnica de altas; Musashi y Proincentiva ya son de Natalia.",
+ "puestos": {
+  "miguel_vargas": [
+   "especialista_ghl"
+  ],
+  "lara": [
+   "redes",
+   "outreach"
+  ],
+  "jeronimo": [
+   "jefa_seo",
+   "seo",
+   "ficha_google"
+  ],
+  "constanza": [
+   "proyectos",
+   "account"
+  ],
+  "camilo": [
+   "produccion"
+  ],
+  "agustina": [
+   "tecnico_altas"
+  ]
+ },
+ "jefes": {
+  "jeronimo": "mili",
+  "constanza": "tomas",
+  "carlos_viur": "jeronimo",
+  "macarena": "jeronimo",
+  "miguel_vargas": "yessica",
+  "camilo": "mili"
+ },
+ "etiquetas": {
+  "camilo": [
+   "transversal"
+  ]
+ },
+ "notas": {
+  "agustina": null
+ }
+}

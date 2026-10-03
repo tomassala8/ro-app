@@ -1,0 +1,27 @@
+{
+ "_que_es": "Estado de cobro de los impagos que se sabe por fuera de Holded (memoria de Tomás y del equipo). Solo lectura para la app: lo que se haga desde la pantalla va a la cola de acciones (simulada) y se lee de servir.py. Claves = número de factura de Holded.",
+ "actualizado": "2026-10-03",
+ "facturas": {
+  "A-26-117": {
+   "estado": "monitorio",
+   "ex_cliente": true,
+   "ultima_accion": "Liquidación de cierre enviada con plazo hasta el jueves 1-oct",
+   "fecha": "2026-09-24",
+   "siguiente": "Sin pago a 3-oct: rectificativa de 2.014,65 €, burofax y monitorio (lo decide Tomás)",
+   "nota": "Taller del Patinete (Power Global Innovation). Baja el 31-ago."
+  },
+  "A-26-040": {
+   "estado": "decide Tomás",
+   "ex_cliente": true,
+   "ultima_accion": "Recibo de la cuota de agosto devuelto por el banco",
+   "fecha": "2026-08-08",
+   "siguiente": "Va dentro de la liquidación de cierre: ajustarla con la rectificativa cuando se decida el monitorio",
+   "nota": "Taller del Patinete (Power Global Innovation)."
+  },
+  "A-26-001": {
+   "estado": "decide Tomás",
+   "siguiente": "Más de 60 días: decidir si se corta, plan de pago o se da por perdida (109 €)",
+   "nota": "IP Forense: tiene además otra factura de septiembre y una de junio de 2025 sin cobrar."
+  }
+ }
+}

@@ -1,0 +1,3 @@
+Clientes: 68 · GA4 32 · GSC 30 · Meta 28 · GHL 39 · Metricool 23
+  meta kiosko-box
+data/paneles/ escrito: 68 clientes

@@ -1,0 +1,1298 @@
+{
+ "_que_es": "Grafo de la tubería única (C5). Orden de E1: externos.py → snov/por_cliente.py → captacion.py → build_data.py → generar_datos.py --en-vivo meta → generadores de módulo (con la cadena del panel de dirección) → verdad → catálogo, emergencia y foto → Mi día. Cada paso: comando por modo (ligero = cada hora 7-23 h sin créditos ni lecturas masivas; completo = 6:00 y 14:00, todo en vivo; crudo = sin red, desde lo último guardado, para pruebas). null = el paso no corre en ese modo. «salidas» = lo que se protege con «último dato bueno» (si el paso falla, se restaura la versión anterior entera). «cada_min» = no repetir si ya fue bien hace menos de eso (horario por fuente). «ghl_agencia» = usa la llave que rota (se presta con bloqueo). «activo»: false = módulo en obra (C1); se activa cuando su dueño lo cierre. Marcadores: {PY} python, {APP}, {HERR} ~/RO_HERRAMIENTAS, {PROYECTO}, {CRUDOS}. Una sola pasada coherente: todos los pasos reciben la misma hora de datos (RO_HORA_DATOS). Validación (auditoría 35): además de código, JSON roto y secretos, una salida vacía ({}, o lista que se queda sin filas; salvo «vacio_ok»), sin sus «claves_minimas» o con un «recuento» que cae más de «caida_max» es un fallo y se restaura. «vigilar_fuentes» (capa E1): fuente caída → último dato bueno marcado «dato_viejo» con «caida» y aviso, sin bloquear dependientes. «errores_de_fuente»: el generador apunta «hora_error» en la fuente que no pudo leer (y conserva su último dato bueno); la tubería lo cuenta como fallo de esa fuente (vuelta «con_fallos», aviso) sin restaurar ni bloquear.",
+ "reintentos": {
+  "veces": 3,
+  "esperas_s": [
+   30,
+   120,
+   480
+  ]
+ },
+ "pasos": [
+  {
+   "id": "salud_conexiones",
+   "modulo": "conexiones (N11: salud de todas las conexiones)",
+   "ligero": [
+    "{PY}",
+    "despliegue/salud_conexiones.py"
+   ],
+   "completo": [
+    "{PY}",
+    "despliegue/salud_conexiones.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "despliegue/salud_conexiones.py",
+    "--sin-red"
+   ],
+   "salidas": [
+    "data/conexiones"
+   ],
+   "timeout": 120,
+   "depende": [],
+   "aunque_falle": true,
+   "claves_minimas": {
+    "data/conexiones/salud.json": [
+     "generado",
+     "resumen",
+     "conexiones"
+    ]
+   },
+   "nota": "N11 (2-oct): lo PRIMERO de cada vuelta. Una lectura barata por conexión (26), renueva los tokens de acceso de 1 h a los que les quedan < 20 min (caché compartida) y avisa al dueño si una conexión que la app usa se cae. Nunca escribe en herramientas externas. Una conexión caída no falla el paso (sale 0): solo falla si no puede escribir data/conexiones/salud.json."
+  },
+  {
+   "id": "lector_externos",
+   "fuente": "Google, Metricool, GHL agencia (externos.py)",
+   "ligero": [
+    "{PY}",
+    "{HERR}/externos.py"
+   ],
+   "completo": [
+    "{PY}",
+    "{HERR}/externos.py"
+   ],
+   "crudo": null,
+   "ghl_agencia": true,
+   "salidas": [
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json",
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/emparejamientos.json"
+   ],
+   "timeout": 900,
+   "depende": [],
+   "cada_min": 360,
+   "nota": "Orden de E1 (1): externos.py primero. Google, Metricool y GHL de agencia (llave que rota: préstamo con bloqueo). En la ligera, como mucho cada 6 h. Medido el 2-oct: externos.py 11 min y por_cliente.py 2 min.",
+   "claves_minimas": {
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json": [
+     "generado",
+     "clientes"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ],
+   "errores_de_fuente": true
+  },
+  {
+   "id": "lector_snov",
+   "fuente": "Snov.io por cliente (snov/por_cliente.py)",
+   "ligero": [
+    "{PY}",
+    "{HERR}/snov/por_cliente.py"
+   ],
+   "completo": [
+    "{PY}",
+    "{HERR}/snov/por_cliente.py"
+   ],
+   "crudo": null,
+   "cada_min": 360,
+   "salidas": [
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json"
+   ],
+   "timeout": 600,
+   "depende": [
+    "lector_externos"
+   ],
+   "nota": "Orden de E1 (2): justo después de externos.py, porque externos.py borra el bloque de Snov al reescribir. Medido el 2-oct: externos.py 11 min y por_cliente.py 2 min.",
+   "claves_minimas": {
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json": [
+     "generado",
+     "clientes"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/externos.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
+  },
+  {
+   "id": "lector_captacion",
+   "fuente": "Meta + GHL agencia",
+   "ligero": [
+    "{PY}",
+    "{HERR}/captacion/captacion.py"
+   ],
+   "completo": [
+    "{PY}",
+    "{HERR}/captacion/captacion.py"
+   ],
+   "crudo": null,
+   "ghl_agencia": true,
+   "salidas": [
+    "{PROYECTO}/20_FASE2_CAPTACION/captacion.json"
+   ],
+   "timeout": 900,
+   "depende": [
+    "lector_externos",
+    "lector_snov"
+   ],
+   "cada_min": 180,
+   "nota": "Orden de E1 (3): Meta + embudo y citas de GHL de agencia (préstamo con bloqueo). En la ligera, como mucho cada 3 h.",
+   "claves_minimas": {
+    "{PROYECTO}/20_FASE2_CAPTACION/captacion.json": [
+     "generado",
+     "clientes",
+     "resumen"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "{PROYECTO}/20_FASE2_CAPTACION/captacion.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    }
+   ]
+  },
+  {
+   "id": "lector_chat_clickup",
+   "fuente": "ClickUp (chat por cliente)",
+   "ligero": null,
+   "completo": [
+    "{PY}",
+    "{HERR}/clickup_api/chat.py"
+   ],
+   "crudo": null,
+   "salidas": [
+    "{CRUDOS}/HERRAMIENTA_RO_2026-10-02/chat.json"
+   ],
+   "timeout": 600,
+   "depende": []
+  },
+  {
+   "id": "lector_clickup_equipo",
+   "fuente": "ClickUp (tareas y horas)",
+   "ligero": null,
+   "completo": [
+    "{PY}",
+    "fuentes_produccion/extraer_clickup.py",
+    "todo"
+   ],
+   "crudo": null,
+   "salidas": [
+    "fuentes_produccion/_cache"
+   ],
+   "timeout": 3600,
+   "depende": [],
+   "nota_timeout": "3-oct: tareas (~18 min con los 429 de ClickUp) + horas desde el 1-abr no caben en 1200 s"
+  },
+  {
+   "id": "lector_anuncios_meta",
+   "fuente": "Meta (anuncios y conjuntos)",
+   "ligero": null,
+   "completo": [
+    "{PY}",
+    "fuentes_captacion/anuncios_meta.py"
+   ],
+   "crudo": null,
+   "salidas": [
+    "fuentes_captacion/anuncios.json"
+   ],
+   "timeout": 600,
+   "depende": [],
+   "claves_minimas": {
+    "fuentes_captacion/anuncios.json": [
+     "generado",
+     "cuentas"
+    ]
+   },
+   "errores_de_fuente": true
+  },
+  {
+   "id": "lector_hoja_informes",
+   "fuente": "Zoho Sheet «Informes mensuales» (W5, por API)",
+   "ligero": [
+    "{PY}",
+    "fuentes_informes/importar_hoja_w5.py",
+    "--zoho"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_informes/importar_hoja_w5.py",
+    "--zoho"
+   ],
+   "crudo": null,
+   "cada_min": 180,
+   "salidas": [
+    "data/informes/historico.json"
+   ],
+   "timeout": 300,
+   "depende": [],
+   "nota": "Lee SOLO la hoja «Informes mensuales» (nunca «Credenciales»). En la ligera, como mucho cada 3 h."
+  },
+  {
+   "id": "panel_v29",
+   "fuente": "Panel de resultados v29/v30 (rehacer_v2.sh)",
+   "ligero": [
+    "sh",
+    "-c",
+    "cd \"{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA\" && {PY} build_financiero.py && {PY} build_captacion_extra.py >/dev/null && {PY} render_v2.py"
+   ],
+   "salidas": [
+    "{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA/financiero_ro.json",
+    "{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA/captacion_extra.json",
+    "{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA/panel_v2.html"
+   ],
+   "timeout": 600,
+   "depende": [],
+   "nota": "rehacer_v2.sh SIN «_plantilla/montar_v2.py»: montar_v2 rehace la plantilla desde _plantilla/ y BORRA la pestaña «Atribución» (atr) del v30, que solo existe en panel_template_v2.html (comprobado el 2-oct a las 17:27: se restauró). Sin zsh y sin la copia a la carpeta temporal de otra sesión. 0 llamadas a API.",
+   "completo": [
+    "sh",
+    "-c",
+    "cd \"{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA\" && {PY} build_financiero.py && {PY} build_captacion_extra.py >/dev/null && {PY} render_v2.py"
+   ],
+   "crudo": [
+    "sh",
+    "-c",
+    "cd \"{CRUDOS}/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA\" && {PY} build_financiero.py && {PY} build_captacion_extra.py >/dev/null && {PY} render_v2.py"
+   ]
+  },
+  {
+   "id": "whatsapp",
+   "modulo": "comun",
+   "ligero": [
+    "{PY}",
+    "fuentes_whatsapp/generar_whatsapp.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_whatsapp/generar_whatsapp.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_whatsapp/generar_whatsapp.py"
+   ],
+   "salidas": [
+    "data/whatsapp"
+   ],
+   "timeout": 60,
+   "depende": []
+  },
+  {
+   "id": "base",
+   "modulo": "comun (E0)",
+   "ligero": [
+    "{PY}",
+    "build_data.py"
+   ],
+   "completo": [
+    "{PY}",
+    "build_data.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "build_data.py"
+   ],
+   "salidas": [
+    "data/clientes.json",
+    "data/alarmas.json",
+    "data/logos.json",
+    "data/personas.json",
+    "data/asignaciones.json",
+    "data/para_confirmar.json",
+    "data/ids_clientes.json",
+    "data/meta.json"
+   ],
+   "timeout": 120,
+   "depende": [
+    "whatsapp",
+    "lector_captacion"
+   ],
+   "recuento": [
+    {
+     "fichero": "data/clientes.json",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/personas.json",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
+  },
+  {
+   "id": "capa_e1",
+   "modulo": "comun (E1)",
+   "ligero": [
+    "{PY}",
+    "fuentes/generar_datos.py",
+    "--en-vivo",
+    "meta"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes/generar_datos.py",
+    "--en-vivo",
+    "meta,zoom,seranking,windsor"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes/generar_datos.py"
+   ],
+   "salidas": [
+    "data/clientes",
+    "data/indice_clientes.json",
+    "data/fuentes.json",
+    "data/emparejamientos.json"
+   ],
+   "timeout": 300,
+   "depende": [
+    "base",
+    "lector_externos",
+    "lector_snov",
+    "lector_captacion"
+   ],
+   "nota": "Orden de E1 (5): --en-vivo meta (en la completa, también Zoom, SE Ranking y Windsor, que gastan créditos).",
+   "claves_minimas": {
+    "data/fuentes.json": [
+     "generado",
+     "fuentes"
+    ],
+    "data/indice_clientes.json": []
+   },
+   "vigilar_fuentes": {
+    "fichero": "data/fuentes.json",
+    "fichas": "data/clientes",
+    "caida_max": 0.5,
+    "minimo_antes": 4,
+    "nota": "Auditoría 35 (A5): si una fuente que estaba «bien» sale «sin_conectar»/«rota» o pierde más de la mitad de sus clientes con dato (Meta caído, token caducado), la tubería restaura el último dato bueno de la capa E1, lo marca «dato_viejo» con «caida» (desde, motivo) en fuentes.json y en cada ficha, y avisa. Sus dependientes sí corren. Una baja a propósito: --aceptar-caida <id>."
+   }
+  },
+  {
+   "id": "bandeja",
+   "modulo": "bandeja",
+   "ligero": [
+    "{PY}",
+    "fuentes_bandeja/generar_bandeja.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_bandeja/generar_bandeja.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_bandeja/generar_bandeja.py",
+    "--ficheros"
+   ],
+   "salidas": [
+    "data/bandeja"
+   ],
+   "timeout": 900,
+   "depende": [
+    "capa_e1"
+   ],
+   "nota": "Desk en vivo + Zadarma (1 consulta). El 2-oct a las 18:10 pasó de 300 s en vivo: tiempo máximo 900 s.",
+   "claves_minimas": {
+    "data/bandeja/bandeja.json": [
+     "generado",
+     "fuentes",
+     "correos",
+     "llamadas",
+     "triaje",
+     "resumen"
+    ],
+    "data/bandeja/por_cliente.json": [
+     "generado",
+     "clientes"
+    ]
+   },
+   "errores_de_fuente": true
+  },
+  {
+   "id": "informes",
+   "modulo": "informes-mensuales",
+   "ligero": [
+    "{PY}",
+    "fuentes_informes/generar_informes.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_informes/generar_informes.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_informes/generar_informes.py",
+    "--ficheros"
+   ],
+   "salidas": [
+    "data/informes"
+   ],
+   "timeout": 900,
+   "depende": [
+    "capa_e1",
+    "lector_hoja_informes"
+   ]
+  },
+  {
+   "id": "captacion",
+   "modulo": "captacion",
+   "ligero": [
+    "{PY}",
+    "fuentes_captacion/generar_captacion.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_captacion/generar_captacion.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_captacion/generar_captacion.py"
+   ],
+   "salidas": [
+    "data/captacion"
+   ],
+   "timeout": 120,
+   "depende": [
+    "capa_e1",
+    "lector_anuncios_meta"
+   ],
+   "claves_minimas": {
+    "data/captacion/captacion.json": [
+     "generado",
+     "fuentes",
+     "clientes",
+     "resumen"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/captacion/captacion.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    },
+    {
+     "fichero": "data/captacion/captacion.json",
+     "ruta": "resumen.clientes_con_meta",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    }
+   ],
+   "errores_de_fuente": true
+  },
+  {
+   "id": "ficha",
+   "modulo": "ficha",
+   "ligero": [
+    "{PY}",
+    "fuentes_ficha/generar_ficha.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_ficha/generar_ficha.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_ficha/generar_ficha.py"
+   ],
+   "salidas": [
+    "data/ficha"
+   ],
+   "timeout": 120,
+   "depende": [
+    "capa_e1",
+    "lector_chat_clickup"
+   ]
+  },
+  {
+   "id": "nuevos",
+   "modulo": "clientes-nuevos",
+   "ligero": [
+    "{PY}",
+    "fuentes_nuevos/generar_nuevos.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_nuevos/generar_nuevos.py",
+    "--en-vivo"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_nuevos/generar_nuevos.py"
+   ],
+   "ghl_agencia_en": [
+    "completo"
+   ],
+   "salidas": [
+    "data/nuevos",
+    "fuentes_nuevos/_crudo"
+   ],
+   "timeout": 1200,
+   "depende": [
+    "capa_e1"
+   ],
+   "nota_timeout": "3-oct: en vivo, las 66 subcuentas de GHL tardan 6-8 min; con Sign, ClickUp, Meta y DNS no cabe en 600 s"
+  },
+  {
+   "id": "crm",
+   "modulo": "salud-crm",
+   "ligero": [
+    "{PY}",
+    "fuentes_crm/generar_crm.py",
+    "--desde-crudo"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_crm/generar_crm.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_crm/generar_crm.py",
+    "--desde-crudo"
+   ],
+   "ghl_agencia_en": [
+    "completo"
+   ],
+   "salidas": [
+    "data/crm",
+    "fuentes_crm/_crudo"
+   ],
+   "timeout": 900,
+   "depende": [
+    "capa_e1",
+    "lector_captacion"
+   ],
+   "nota_ligero": "R16b: en ligero, --desde-crudo (la última lectura en vivo de GHL de _privado/ghl_vivo.json, con su hora) y no --sin-vivo, que dejaba la Salud del CRM sin leads sin tocar ni citas hasta la vuelta completa."
+  },
+  {
+   "id": "seo",
+   "modulo": "seo-web",
+   "ligero": [
+    "{PY}",
+    "fuentes_seo/generar_seo.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_seo/generar_seo.py",
+    "--en-vivo",
+    "gsc,monitor"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_seo/generar_seo.py"
+   ],
+   "salidas": [
+    "data/seo",
+    "fuentes_seo/_cache"
+   ],
+   "timeout": 600,
+   "depende": [
+    "capa_e1"
+   ]
+  },
+  {
+   "id": "redes",
+   "modulo": "redes",
+   "ligero": [
+    "{PY}",
+    "fuentes_redes/generar_redes.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_redes/generar_redes.py",
+    "--en-vivo"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_redes/generar_redes.py"
+   ],
+   "salidas": [
+    "data/redes",
+    "fuentes_redes/_cache"
+   ],
+   "timeout": 600,
+   "depende": [
+    "capa_e1"
+   ]
+  },
+  {
+   "id": "reuniones",
+   "modulo": "reuniones",
+   "ligero": [
+    "{PY}",
+    "fuentes_reuniones/generar_reuniones.py",
+    "--ficheros"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_reuniones/generar_reuniones.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_reuniones/generar_reuniones.py",
+    "--ficheros"
+   ],
+   "salidas": [
+    "data/reuniones",
+    "fuentes_reuniones/_cache"
+   ],
+   "timeout": 300,
+   "depende": [
+    "capa_e1"
+   ]
+  },
+  {
+   "id": "incidencias",
+   "modulo": "incidencias",
+   "ligero": [
+    "{PY}",
+    "fuentes_incidencias/generar_incidencias.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_incidencias/generar_incidencias.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_incidencias/generar_incidencias.py",
+    "--sin-vivo"
+   ],
+   "salidas": [
+    "data/incidencias",
+    "fuentes_incidencias/primera_vez.json"
+   ],
+   "timeout": 300,
+   "depende": [
+    "capa_e1"
+   ]
+  },
+  {
+   "id": "produccion",
+   "modulo": "produccion",
+   "ligero": [
+    "{PY}",
+    "fuentes_produccion/generar_produccion.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_produccion/generar_produccion.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_produccion/generar_produccion.py"
+   ],
+   "salidas": [
+    "data/produccion"
+   ],
+   "timeout": 300,
+   "depende": [
+    "capa_e1",
+    "lector_clickup_equipo"
+   ]
+  },
+  {
+   "id": "horas",
+   "modulo": "horas",
+   "ligero": [
+    "{PY}",
+    "fuentes_horas/generar_horas.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_horas/generar_horas.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_horas/generar_horas.py"
+   ],
+   "salidas": [
+    "data/horas"
+   ],
+   "timeout": 300,
+   "depende": [
+    "produccion"
+   ]
+  },
+  {
+   "id": "personas",
+   "modulo": "personas",
+   "ligero": [
+    "{PY}",
+    "fuentes_personas/generar_personas.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_personas/generar_personas.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_personas/generar_personas.py"
+   ],
+   "salidas": [
+    "data/personas_m20"
+   ],
+   "timeout": 120,
+   "depende": [
+    "base",
+    "horas"
+   ]
+  },
+  {
+   "id": "decisiones",
+   "modulo": "decisiones",
+   "ligero": [
+    "{PY}",
+    "fuentes_decisiones/generar_decisiones.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_decisiones/generar_decisiones.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_decisiones/generar_decisiones.py"
+   ],
+   "salidas": [
+    "data/decisiones"
+   ],
+   "timeout": 120,
+   "depende": [
+    "personas"
+   ]
+  },
+  {
+   "id": "conexiones",
+   "modulo": "ajustes",
+   "ligero": [
+    "{PY}",
+    "fuentes_ajustes/generar_conexiones.py",
+    "--desde-salud"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_ajustes/generar_conexiones.py",
+    "--desde-salud"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_ajustes/generar_conexiones.py",
+    "--desde-salud"
+   ],
+   "salidas": [
+    "data/ajustes"
+   ],
+   "timeout": 180,
+   "depende": [
+    "capa_e1",
+    "salud_conexiones"
+   ],
+   "nota": "N11: ya no llama a nada; rehace data/ajustes/conexiones.json (formato de M22) desde data/conexiones/salud.json."
+  },
+  {
+   "id": "verificar_envios",
+   "modulo": "envios (envíos verificados, 3-oct)",
+   "ligero": [
+    "{PY}",
+    "despliegue/verificar_envios.py"
+   ],
+   "completo": [
+    "{PY}",
+    "despliegue/verificar_envios.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "despliegue/verificar_envios.py",
+    "--sin-red"
+   ],
+   "salidas": [],
+   "timeout": 300,
+   "depende": [
+    "salud_conexiones",
+    "bandeja"
+   ],
+   "aunque_falle": true,
+   "nota": "Envíos verificados: cada acción que manda algo fuera tiene su envío; con un canal ACTIVO (interruptor + RO_ENVIOS_REALES=si) manda los pendientes, relee en la herramienta (solo lectura) que están en el hilo con texto y destinatario correctos, detecta rebotes, reintenta una vez lo seguro sin duplicar y avisa a quien lo mandó y a Agus. Hoy, en simulación: solo sincroniza y cuenta (no llama a nada). Idempotente: se puede repetir."
+  },
+  {
+   "id": "ventas",
+   "modulo": "setters · ventas-ro · prospeccion",
+   "ligero": [
+    "{PY}",
+    "fuentes_ventas/generar_ventas_ro.py",
+    "--sin-snov"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_ventas/generar_ventas_ro.py"
+   ],
+   "crudo": null,
+   "salidas": [
+    "data/ventas_ro"
+   ],
+   "timeout": 600,
+   "depende": [
+    "base"
+   ],
+   "nota": "GHL de la subcuenta de RO (GHL_PIT_NEW, no rota) y Zadarma (1 consulta). Snov solo en la completa."
+  },
+  {
+   "id": "informe",
+   "modulo": "informe-cliente",
+   "ligero": [
+    "{PY}",
+    "fuentes_informe/generar_informe.py",
+    "--cache"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_informe/generar_informe.py",
+    "--cache"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_informe/generar_informe.py",
+    "--cache"
+   ],
+   "salidas": [
+    "data/informe"
+   ],
+   "timeout": 300,
+   "depende": [
+    "capa_e1"
+   ],
+   "nota": "Como en recarga.json (--cache); su dueño decide si la completa va en vivo."
+  },
+  {
+   "id": "agenda",
+   "modulo": "agenda",
+   "ligero": [
+    "{PY}",
+    "fuentes_agenda/generar_agenda.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_agenda/generar_agenda.py"
+   ],
+   "crudo": null,
+   "salidas": [
+    "data/agenda"
+   ],
+   "timeout": 300,
+   "depende": [
+    "base"
+   ],
+   "nota": "Zoho CRM (eventos) y GHL de la subcuenta de RO (GHL_PIT_NEW, no rota)."
+  },
+  {
+   "id": "chat_equipo",
+   "modulo": "chat-equipo",
+   "ligero": [
+    "{PY}",
+    "fuentes_chat_equipo/generar_chat_equipo.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_chat_equipo/generar_chat_equipo.py"
+   ],
+   "crudo": null,
+   "salidas": [
+    "data/chat_equipo"
+   ],
+   "timeout": 600,
+   "depende": [
+    "base"
+   ],
+   "nota": "ClickUp con la llave propia (nunca el conector de Claude). Lee la llave del llavero directamente: en el servidor, pendiente de pasar a config.secreto()."
+  },
+  {
+   "id": "dinero",
+   "modulo": "dinero-cliente · finanzas",
+   "ligero": [
+    "{PY}",
+    "fuentes_dinero/generar_dinero.py",
+    "--sin-red"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_dinero/generar_dinero.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_dinero/generar_dinero.py",
+    "--sin-red"
+   ],
+   "salidas": [
+    "data/dinero_cliente",
+    "data/finanzas",
+    "fuentes_dinero/_cache"
+   ],
+   "timeout": 300,
+   "depende": [
+    "capa_e1",
+    "panel_v29"
+   ]
+  },
+  {
+   "id": "sueldos",
+   "modulo": "sueldos (almacén privado)",
+   "ligero": [
+    "{PY}",
+    "fuentes_sueldos/generar_sueldos.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_sueldos/generar_sueldos.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_sueldos/generar_sueldos.py"
+   ],
+   "cada_min": 1440,
+   "salidas": [
+    "data/sueldos"
+   ],
+   "timeout": 120,
+   "depende": [
+    "base"
+   ],
+   "nota": "Lee el Excel de salarios (sin la hoja de cuentas bancarias). Una vez al día."
+  },
+  {
+   "id": "paneles",
+   "modulo": "paneles por cliente (GA, GSC, Meta, GHL, Metricool…)",
+   "ligero": [
+    "{PY}",
+    "fuentes_paneles/generar_paneles.py",
+    "--cache"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_paneles/generar_paneles.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_paneles/generar_paneles.py",
+    "--cache"
+   ],
+   "ghl_agencia_en": [
+    "completo"
+   ],
+   "salidas": [
+    "data/paneles",
+    "fuentes_paneles/_cache"
+   ],
+   "timeout": 1800,
+   "depende": [
+    "capa_e1"
+   ],
+   "nota": "Ligera: desde _cache (0 llamadas). Completa: en vivo (GHL de agencia con la llave prestada y bloqueo)."
+  },
+  {
+   "id": "modular",
+   "modulo": "N5 Modular DS (webs)",
+   "ligero": [
+    "sh",
+    "-c",
+    "{PY} fuentes_modular/generar_modular.py"
+   ],
+   "completo": [
+    "sh",
+    "-c",
+    "{PY} fuentes_modular/generar_modular.py --certificados"
+   ],
+   "crudo": [
+    "sh",
+    "-c",
+    "if [ -f fuentes_modular/_cache/volcado.json ]; then {PY} fuentes_modular/generar_modular.py --desde-cache; else {PY} fuentes_modular/generar_modular.py; fi"
+   ],
+   "salidas": [
+    "data/modular"
+   ],
+   "timeout": 600,
+   "depende": [],
+   "nota": "Sin clave (modulards_api_key) el propio generador escribe «sin_conectar» con la instrucción para Tomás y sale bien: no es un fallo."
+  },
+  {
+   "id": "panel_direccion",
+   "modulo": "panel-direccion (solo Tomás)",
+   "ligero": [
+    "{PY}",
+    "fuentes_panel_direccion/generar_panel_direccion.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_panel_direccion/generar_panel_direccion.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_panel_direccion/generar_panel_direccion.py"
+   ],
+   "salidas": [
+    "data/panel_direccion"
+   ],
+   "timeout": 600,
+   "depende": [
+    "panel_v29"
+   ],
+   "nota": "Pinta el panel v30 con Chrome sin ventana. En el servidor necesita la ruta de Chrome de la imagen (hoy fija a /Applications/…): pendiente de su dueño."
+  },
+  {
+   "id": "atajos",
+   "modulo": "en-rojo (atajos a las herramientas)",
+   "ligero": [
+    "{PY}",
+    "fuentes_en_rojo/generar_atajos.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_en_rojo/generar_atajos.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_en_rojo/generar_atajos.py"
+   ],
+   "salidas": [
+    "data/en_rojo"
+   ],
+   "timeout": 120,
+   "aunque_falle": true,
+   "depende": [
+    "ficha",
+    "crm",
+    "seo",
+    "redes",
+    "captacion",
+    "nuevos"
+   ]
+  },
+  {
+   "id": "verdad",
+   "modulo": "comun (E0 ronda 5: una sola verdad)",
+   "ligero": [
+    "{PY}",
+    "fuentes_verdad/generar_verdad.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_verdad/generar_verdad.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_verdad/generar_verdad.py"
+   ],
+   "salidas": [
+    "data/verdad"
+   ],
+   "timeout": 120,
+   "depende": [
+    "agenda",
+    "atajos",
+    "bandeja",
+    "base",
+    "capa_e1",
+    "captacion",
+    "chat_equipo",
+    "conexiones",
+    "crm",
+    "decisiones",
+    "dinero",
+    "ficha",
+    "horas",
+    "incidencias",
+    "informe",
+    "informes",
+    "modular",
+    "nuevos",
+    "panel_direccion",
+    "paneles",
+    "personas",
+    "produccion",
+    "redes",
+    "reuniones",
+    "seo",
+    "sueldos",
+    "ventas",
+    "whatsapp"
+   ],
+   "nota": "Una sola verdad por cliente: va DESPUÉS de todos los generadores de módulo y ANTES de Mi día. Corre aunque falle alguno (lee su último dato bueno).",
+   "aunque_falle": true
+  },
+  {
+   "id": "catalogo",
+   "modulo": "indicadores",
+   "ligero": [
+    "{PY}",
+    "generar_catalogo.py"
+   ],
+   "completo": [
+    "{PY}",
+    "generar_catalogo.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "generar_catalogo.py"
+   ],
+   "salidas": [
+    "indicadores.json"
+   ],
+   "timeout": 60,
+   "depende": [],
+   "aunque_falle": true
+  },
+  {
+   "id": "emergencia",
+   "modulo": "página de emergencia por persona (doc. 26, C.4)",
+   "ligero": null,
+   "completo": [
+    "{PY}",
+    "despliegue/emergencia.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "despliegue/emergencia.py"
+   ],
+   "salidas": [
+    "{ESTADO}/emergencia"
+   ],
+   "timeout": 120,
+   "siempre_al_final": true,
+   "depende": [
+    "base",
+    "ficha",
+    "crm",
+    "seo",
+    "redes"
+   ],
+   "nota": "Solo enlaces. Subirla a Cloudflare Pages y a ClickUp NO lo hace este paso (ver DESPLIEGUE.md).",
+   "aunque_falle": true
+  },
+  {
+   "id": "foto",
+   "modulo": "historia",
+   "ligero": [
+    "{PY}",
+    "foto_diaria.py"
+   ],
+   "completo": [
+    "{PY}",
+    "foto_diaria.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "foto_diaria.py"
+   ],
+   "salidas": [
+    "historia"
+   ],
+   "timeout": 120,
+   "siempre_al_final": true,
+   "depende": [
+    "verdad",
+    "catalogo"
+   ],
+   "aunque_falle": true
+  },
+  {
+   "id": "primera_semana",
+   "modulo": "primera-semana (A10)",
+   "ligero": [
+    "{PY}",
+    "fuentes_equipo/generar_primera_semana.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_equipo/generar_primera_semana.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_equipo/generar_primera_semana.py"
+   ],
+   "salidas": [
+    "data/primera_semana"
+   ],
+   "timeout": 30,
+   "aunque_falle": true
+  },
+  {
+   "id": "alertas",
+   "modulo": "alertas (lo que lee Mi día)",
+   "ligero": [
+    "{PY}",
+    "fuentes_alertas/generar_alertas.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_alertas/generar_alertas.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_alertas/generar_alertas.py"
+   ],
+   "salidas": [
+    "data/alertas",
+    "fuentes_alertas/estado_alertas.json"
+   ],
+   "timeout": 300,
+   "aunque_falle": true,
+   "siempre_al_final": true,
+   "depende": [
+    "verdad"
+   ],
+   "nota": "Al final: no recalcula, lee lo que dejan los módulos y la verdad. Va justo antes de Mi día."
+  },
+  {
+   "id": "consejos",
+   "modulo": "consejos de la IA («Qué haría yo hoy aquí»)",
+   "ligero": [
+    "{PY}",
+    "fuentes_consejos/generar_consejos.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_consejos/generar_consejos.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_consejos/generar_consejos.py"
+   ],
+   "salidas": [
+    "data/consejos"
+   ],
+   "timeout": 300,
+   "aunque_falle": true,
+   "siempre_al_final": true,
+   "depende": [
+    "alertas",
+    "verdad"
+   ],
+   "nota": "N12: reglas sobre lo ya generado; sin red. Va tras alertas y antes de Mi día."
+  },
+  {
+   "id": "mi_dia",
+   "modulo": "mi-dia",
+   "ligero": [
+    "{PY}",
+    "fuentes_mi_dia/generar_mi_dia.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_mi_dia/generar_mi_dia.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_mi_dia/generar_mi_dia.py"
+   ],
+   "salidas": [
+    "data/mi_dia"
+   ],
+   "timeout": 180,
+   "aunque_falle": true,
+   "siempre_al_final": true,
+   "depende": [
+    "verdad",
+    "alertas",
+    "foto"
+   ],
+   "nota": "Orden de E1 (9): el último de todos. Lee data/ y la foto de historia/ que deja el paso anterior."
+  }
+ ]
+}

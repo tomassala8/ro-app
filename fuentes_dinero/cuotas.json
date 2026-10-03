@@ -1,0 +1,275 @@
+{
+ "generado": "2026-10-03 03:23",
+ "mes": "2026-10",
+ "regla": "Cuota de cada cliente: línea recurrente de octubre en el Airtable de Sofía (suma de sus sociedades); si no tiene, su factura de octubre en Holded. La misma para toda la app (fuentes_dinero/cuotas.json).",
+ "cuotas": {
+  "jenasa": {
+   "cuota": 2500.0,
+   "fuente": "Airtable (proyecto con fin, cuota de octubre)"
+  },
+  "abner-advisory": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "accompany": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "agc": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "billeo": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "busbac": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "centro-consulting": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "cib-partners": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "concilia": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "conficonsulting": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "consulting-f": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "deudot": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "emex": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "fitec-asesores": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "garmande": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "geslabor": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "gestio-plural": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "greconsult": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "imfor-asesores": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "impulsa-cfo": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "laver": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "lobo": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "marlex-consulting": {
+   "cuota": 1470.0,
+   "fuente": "Acuerdo firmado, aún sin ficha en Airtable (1.470 €)"
+  },
+  "musashi-consultores": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "proincentiva": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "romero-martinez": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "think-value": {
+   "cuota": 1470.0,
+   "fuente": "Acuerdo firmado, aún sin ficha en Airtable (1.470 €)"
+  },
+  "tst-consulting": {
+   "cuota": 1470.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "akua": {
+   "cuota": 1290.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "bit-24": {
+   "cuota": 1270.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "octoedro": {
+   "cuota": 1270.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "prodegest": {
+   "cuota": 1270.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "gac": {
+   "cuota": 1205.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "orejana": {
+   "cuota": 1050.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "innova-scala": {
+   "cuota": 1030.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "aster-asesoria": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "ayg-asesores": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "bonet-asesores": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "ecija-advisory": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "fusterguell": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "oteca": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "torrevieja-consult": {
+   "cuota": 999.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "optimalia": {
+   "cuota": 990.0,
+   "fuente": "Airtable (proyecto con fin, cuota de octubre)"
+  },
+  "aselegal": {
+   "cuota": 970.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "sol-4": {
+   "cuota": 970.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "kiosko-box": {
+   "cuota": 917.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "xterna": {
+   "cuota": 819.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "asetra": {
+   "cuota": 790.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "tribulex": {
+   "cuota": 750.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "avantik": {
+   "cuota": 731.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "joan-lluis-vives": {
+   "cuota": 730.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "adade-zaragoza": {
+   "cuota": 711.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "segu-assessors": {
+   "cuota": 711.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "ecom-advisory": {
+   "cuota": 670.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "finexen": {
+   "cuota": 670.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "gestanex": {
+   "cuota": 670.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "christian-sanchez": {
+   "cuota": 520.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "ahedo": {
+   "cuota": 484.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "mg-economistes": {
+   "cuota": 484.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "j-d-consulting": {
+   "cuota": 254.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "ip-forense": {
+   "cuota": 206.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "sintaer": {
+   "cuota": 67.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "liebana-consulting": {
+   "cuota": 52.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "gomez-y-carvacho": {
+   "cuota": 47.0,
+   "fuente": "Airtable (línea de octubre)"
+  },
+  "campalans": {
+   "cuota": null,
+   "fuente": "sin línea en Airtable ni factura en Holded"
+  },
+  "pgb-auditores": {
+   "cuota": null,
+   "fuente": "sin línea en Airtable ni factura en Holded"
+  },
+  "quique-gomez-barreda": {
+   "cuota": null,
+   "fuente": "sin línea en Airtable ni factura en Holded"
+  }
+ }
+}

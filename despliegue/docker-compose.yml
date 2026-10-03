@@ -1,0 +1,52 @@
+# despliegue/docker-compose.yml · ALTERNATIVA a Render: un servidor propio (Hetzner CX23, Alemania). Carril C5.
+# Misma imagen y misma base que en Render. Sin puertos abiertos a internet: el equipo entra por Cloudflare Tunnel
+# (cloudflared) detrás de Access, y servir.py valida el sello en cada petición igual que en Render.
+# Las tareas NO corren aquí dentro: las lanza systemd (servidor/*.timer) con «docker compose run --rm tarea <modo>».
+# Uso (en el servidor, dentro de la carpeta que arma preparar_contexto.sh, con un fichero .env al lado):
+#   docker compose up -d base app tunel
+#   docker compose run --rm tarea ligera
+name: ro
+
+services:
+  base:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ro
+      POSTGRES_USER: ro
+      POSTGRES_PASSWORD: ${RO_PG_CLAVE:?pon RO_PG_CLAVE en .env}
+    volumes: [ "base:/var/lib/postgresql/data" ]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U ro -d ro"], interval: 10s, retries: 10 }
+
+  app:
+    build: { context: ., dockerfile: Dockerfile }
+    image: ro-app:actual
+    restart: unless-stopped
+    command: ["web"]
+    environment:
+      RO_MODO: servidor
+      PORT: "8770"
+      DATABASE_URL: postgresql://ro:${RO_PG_CLAVE}@base:5432/ro
+      RO_CF_EQUIPO: ${RO_CF_EQUIPO:?}
+      RO_CF_AUD: ${RO_CF_AUD:?}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+    depends_on: { base: { condition: service_healthy } }
+    expose: [ "8770" ]                 # solo para el túnel; nada publicado en el servidor
+
+  tunel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment: { TUNNEL_TOKEN: "${CF_TUNEL_TOKEN:?}" }   # el túnel apunta a http://app:8770
+    depends_on: [ app ]
+
+  tarea:                               # «docker compose run --rm tarea ligera|completa|noche»
+    image: ro-app:actual
+    profiles: [ "tareas" ]
+    env_file: [ ".env" ]               # las llaves de las herramientas (META_TOKEN, ZOHO_…): ver render.yaml, grupo ro-llaves
+    environment:
+      DATABASE_URL: postgresql://ro:${RO_PG_CLAVE}@base:5432/ro
+    depends_on: { base: { condition: service_healthy } }
+
+volumes:
+  base: {}

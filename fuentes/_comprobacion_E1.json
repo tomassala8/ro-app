@@ -1,0 +1,1001 @@
+{
+ "fecha": "2026-10-02 22:24",
+ "semilla": 20261002,
+ "muestra": [
+  "conficonsulting",
+  "cib-partners",
+  "mg-economistes",
+  "emex",
+  "liebana-consulting",
+  "deudot",
+  "segu-assessors",
+  "akua",
+  "joan-lluis-vives",
+  "geslabor"
+ ],
+ "arreglos_auditoria": [
+  {
+   "prueba": "Kiosko Box con la cuenta «Josep SG» y gasto",
+   "ok": true,
+   "detalle": "act_292218051469540 · 5563.11 € en 35 días"
+  },
+  {
+   "prueba": "FusterGüell con la propiedad de Analytics 480200463",
+   "ok": true,
+   "detalle": "bien"
+  },
+  {
+   "prueba": "FusterGüell con su marca de Metricool por id",
+   "ok": true,
+   "detalle": "bien"
+  },
+  {
+   "prueba": "Consulting F con la landing como fuente parcial (a medias, «solo la landing»)",
+   "ok": true,
+   "detalle": "bien/medias · a_cero/medias"
+  },
+  {
+   "prueba": "Consulting F con la misma subcuenta de GHL en resumen y embudo",
+   "ok": true,
+   "detalle": "bien"
+  },
+  {
+   "prueba": "Musashi: Analytics como aviso rojo, no cero gris",
+   "ok": true,
+   "detalle": "sin medir desde hace más de un mes: 27 usuarios en los 30 días anteriores y ninguno en los últimos 30 (la etiqueta de Analytics dejó de medir)"
+  },
+  {
+   "prueba": "Musashi sin Bautista (baja) en su equipo",
+   "ok": true,
+   "detalle": "eulimar"
+  },
+  {
+   "prueba": "Concilia con publicidad «sí» y aviso de pago pendiente solo si la cuenta lo está",
+   "ok": true,
+   "detalle": "gasto en su cuenta de Meta (122.66 € en el último periodo)"
+  },
+  {
+   "prueba": "GAC: aviso de zona horaria de Meta",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "prueba": "Search Console con «datos hasta» (retraso de Google descontado)",
+   "ok": true,
+   "detalle": "31/31"
+  },
+  {
+   "prueba": "Asetra con el sitio de Search Console que tiene datos (asetra.net, sin www)",
+   "ok": true,
+   "detalle": "https://asetra.net/ · 702 clics"
+  },
+  {
+   "prueba": "musashi-consultores: Search Console con el sitio que tiene datos",
+   "ok": true,
+   "detalle": "https://musashi.es/ · bien"
+  },
+  {
+   "prueba": "greconsult: Search Console con el sitio que tiene datos",
+   "ok": true,
+   "detalle": "https://www.greconsult.com/ · bien"
+  },
+  {
+   "prueba": "busbac: Search Console con el sitio que tiene datos",
+   "ok": true,
+   "detalle": "https://busbac.es/ · bien"
+  },
+  {
+   "prueba": "Ninguna cuenta de Meta con más de 500 € en 30 días sin cliente (fuera: ex clientes y la cuenta de RO)",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "prueba": "Taller del Patinete fuera de dudas y alertas",
+   "ok": true,
+   "detalle": ""
+  },
+  {
+   "prueba": "Cada fuente emparejada con su «Abrir en …»",
+   "ok": true,
+   "detalle": "[]"
+  },
+  {
+   "prueba": "Notas sin códigos internos ni nombres de fichero",
+   "ok": true,
+   "detalle": "[]"
+  }
+ ],
+ "cotejo": [
+  {
+   "cliente": "conficonsulting",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": null,
+   "origen": null,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "sin tarea",
+   "origen": "sin tarea",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 2,
+   "origen": 2,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 2,
+   "origen": 2,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "conficonsulting",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": null,
+   "origen": null,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "sin tarea",
+   "origen": "sin tarea",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 3,
+   "origen": 3,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "cib-partners",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 484.0,
+   "origen": 484.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 12.8,
+   "origen": 12.8,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 33,
+   "origen": 33,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "en curso",
+   "origen": "en curso",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 6,
+   "origen": 6,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "ga4",
+   "que": "usuarios 30 d",
+   "app": 550.0,
+   "origen": 550.0,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "gsc",
+   "que": "clics 30 d",
+   "app": 355,
+   "origen": 355,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 484.0,
+   "origen": 484.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "mg-economistes",
+   "fuente": "seranking",
+   "que": "palabras seguidas",
+   "app": 59,
+   "origen": 59,
+   "estado": "rota",
+   "hora": "2026-10-02 14:25",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 22.0,
+   "origen": 22.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 60,
+   "origen": 60,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "sin tarea",
+   "origen": "sin tarea",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 4,
+   "origen": 4,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 11,
+   "origen": 11,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 7,
+   "origen": 7,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "meta",
+   "que": "gasto mes anterior",
+   "app": 115.34,
+   "origen": 115.34,
+   "estado": "bien",
+   "hora": "2026-10-02 18:05",
+   "coincide": true
+  },
+  {
+   "cliente": "emex",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 52.0,
+   "origen": 52.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 0,
+   "origen": 0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "sin tarea",
+   "origen": "sin tarea",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 2,
+   "origen": 2,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "liebana-consulting",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 52.0,
+   "origen": 52.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 40.4,
+   "origen": 40.4,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 69,
+   "origen": 69,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "en curso",
+   "origen": "en curso",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 2,
+   "origen": 2,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 5,
+   "origen": 5,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "meta",
+   "que": "gasto mes anterior",
+   "app": 14.67,
+   "origen": 14.67,
+   "estado": "bien",
+   "hora": "2026-10-02 18:05",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "deudot",
+   "fuente": "seranking",
+   "que": "palabras seguidas",
+   "app": 25,
+   "origen": 25,
+   "estado": "rota",
+   "hora": "2026-10-02 14:25",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 711.0,
+   "origen": 711.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 29.8,
+   "origen": 29.8,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 33,
+   "origen": 33,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "en curso",
+   "origen": "en curso",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 8,
+   "origen": 8,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 2,
+   "origen": 2,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "ga4",
+   "que": "usuarios 30 d",
+   "app": 1312.0,
+   "origen": 1312.0,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "gsc",
+   "que": "clics 30 d",
+   "app": 891,
+   "origen": 891,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 3,
+   "origen": 3,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 711.0,
+   "origen": 711.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "segu-assessors",
+   "fuente": "seranking",
+   "que": "palabras seguidas",
+   "app": 272,
+   "origen": 272,
+   "estado": "rota",
+   "hora": "2026-10-02 14:25",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 1270.0,
+   "origen": 1270.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 32.1,
+   "origen": 32.1,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 33,
+   "origen": 33,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "en curso",
+   "origen": "en curso",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 5,
+   "origen": 5,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 35,
+   "origen": 35,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "meta",
+   "que": "gasto mes anterior",
+   "app": 2343.73,
+   "origen": 2343.73,
+   "estado": "bien",
+   "hora": "2026-10-02 18:05",
+   "coincide": true
+  },
+  {
+   "cliente": "akua",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1290.0,
+   "origen": 1290.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": 730.0,
+   "origen": 730.0,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 20.8,
+   "origen": 20.8,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "tareas",
+   "que": "creadas mes anterior",
+   "app": 30,
+   "origen": 30,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "en curso",
+   "origen": "en curso",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 3,
+   "origen": 3,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 8,
+   "origen": 8,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "ga4",
+   "que": "usuarios 30 d",
+   "app": 520.0,
+   "origen": 520.0,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "gsc",
+   "que": "clics 30 d",
+   "app": 285,
+   "origen": 285,
+   "estado": "bien",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "meta",
+   "que": "gasto mes anterior",
+   "app": 55.2,
+   "origen": 55.2,
+   "estado": "bien",
+   "hora": "2026-10-02 18:05",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 730.0,
+   "origen": 730.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  },
+  {
+   "cliente": "joan-lluis-vives",
+   "fuente": "seranking",
+   "que": "palabras seguidas",
+   "app": 88,
+   "origen": 88,
+   "estado": "rota",
+   "hora": "2026-10-02 14:25",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "cartera",
+   "que": "cuota",
+   "app": null,
+   "origen": null,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:28",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "horas",
+   "que": "horas mes anterior",
+   "app": 4.1,
+   "origen": 4.1,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 09:16",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "informes",
+   "que": "informe sep",
+   "app": "sin tarea",
+   "origen": "sin tarea",
+   "estado": "bien",
+   "hora": "2026-10-02 00:00",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "desk",
+   "que": "tickets abiertos",
+   "app": 2,
+   "origen": 2,
+   "estado": "dato_viejo",
+   "hora": "2026-10-02 07:00",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "zadarma",
+   "que": "contestadas sep",
+   "app": 5,
+   "origen": 5,
+   "estado": "bien",
+   "hora": "2026-10-02 06:25",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "ghl",
+   "que": "contactos",
+   "app": 0,
+   "origen": 0,
+   "estado": "a_cero",
+   "hora": "2026-10-02 19:11",
+   "coincide": true
+  },
+  {
+   "cliente": "geslabor",
+   "fuente": "libro",
+   "que": "cuota actual",
+   "app": 1470.0,
+   "origen": 1470.0,
+   "estado": "bien",
+   "hora": "2026-10-01 08:07",
+   "coincide": true
+  }
+ ],
+ "coinciden": 86,
+ "total": 86,
+ "meta_en_vivo": [
+  {
+   "cliente": "emex",
+   "cuenta": "act_125546504832976",
+   "app_gasto_sep": 115.34,
+   "meta_api_gasto_sep": 115.34,
+   "coincide_1pct": true,
+   "nota": null
+  },
+  {
+   "cliente": "deudot",
+   "cuenta": "act_105489791447612",
+   "app_gasto_sep": 14.67,
+   "meta_api_gasto_sep": 16.83,
+   "coincide_1pct": false,
+   "nota": "Captación pasa el día a hora de Madrid y la API da el mes en la zona de la cuenta: la diferencia es esperable"
+  },
+  {
+   "cliente": "akua",
+   "cuenta": "act_973541661536558",
+   "app_gasto_sep": 2343.73,
+   "meta_api_gasto_sep": 2343.73,
+   "coincide_1pct": true,
+   "nota": null
+  }
+ ],
+ "bloques_sin_sello": [],
+ "escaner": [],
+ "emparejamientos_copiados": {}
+}

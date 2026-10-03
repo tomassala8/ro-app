@@ -1,0 +1,1495 @@
+{
+ "_meta": {
+  "que_es": "Configuración de M1 «Mi día»: para cada uno de los 21 puestos, el número que manda (catálogo de indicadores de E0) y sus bloques en orden de frecuencia (máximo 7, fichas G1-G3). Se edita a mano sin tocar código: cambiar el orden, quitar o poner un bloque del catálogo «bloques».",
+  "fuente": "00_MAPA_DE_ROLES_Y_PERMISOS.md §1 + 10_FICHAS/G1-G3 («Mi día», máx. 7 bloques en orden) + 18_PETICIONES_ANTERIORES_REPASO.md (peticiones 1, 8, 13, 16, 19, 20 y «Mi día más visual»)",
+  "editado": "2026-10-02",
+  "como_se_edita": "puestos.<puesto>.bloques = lista de ids de «bloques» (o {\"id\": ..., \"titulo\": ...} para cambiar el título). Un id que no exista sale como «bloque desconocido» y no rompe nada. alcance: «mio» (lo suyo), «equipo» (su gente) o «todo» (lo que su puesto ve)."
+ },
+ "comun": {
+  "max_bloques": 7,
+  "max_filas": 5,
+  "max_primero": 3,
+  "vuelve_arriba_h": 48,
+  "regla_vuelve_arriba": "Lo que la persona marcó como «Pedido» hace 48 h o más y sigue saliendo en el dato de hoy vuelve arriba con «Toca escalarlo» (petición 19). Si ya no sale, se cuenta como resuelto con el dato del día (contraste).",
+  "lo_mio_departamentos": {
+   "_que_es": "V2 · quien tiene varios puestos ve en cada pestaña de Mi día solo las alertas de estos departamentos (null = todas). Con un solo puesto no se filtra.",
+   "direccion": null,
+   "account": [
+    "accounts"
+   ],
+   "finanzas_direccion": [
+    "administracion"
+   ],
+   "ventas_ro": [],
+   "proyectos": [
+    "redes",
+    "direccion",
+    "altas",
+    "accounts"
+   ],
+   "jefa_publicidad": [
+    "publicidad"
+   ],
+   "trafficker": [
+    "publicidad"
+   ],
+   "jefa_crm": [
+    "crm"
+   ],
+   "especialista_ghl": [
+    "crm"
+   ],
+   "outreach": [],
+   "jefa_seo": [
+    "seo",
+    "web"
+   ],
+   "seo": [
+    "seo"
+   ],
+   "ficha_google": [],
+   "web": [
+    "web"
+   ],
+   "redes": [
+    "redes"
+   ],
+   "produccion": [],
+   "operaciones": null,
+   "rrhh": [
+    "rrhh"
+   ],
+   "administracion": [
+    "administracion"
+   ],
+   "tecnico_altas": [
+    "altas"
+   ]
+  },
+  "max_bloques_vista": {
+   "_que_es": "V2 (M9): piezas a la vista en Mi día, contando «Lo mío», el número que manda y el consejo: el resto, plegado en «Más de tu día».",
+   "escritorio": 4,
+   "movil": 3
+  }
+ },
+ "fuentes": {
+  "captacion/captacion": {
+   "modulo": "captacion",
+   "nombre": "Captación"
+  },
+  "crm/crm": {
+   "modulo": "salud-crm",
+   "nombre": "Salud del CRM"
+  },
+  "bandeja/bandeja": {
+   "modulo": "bandeja",
+   "nombre": "Bandeja"
+  },
+  "nuevos/nuevos": {
+   "modulo": "clientes-nuevos",
+   "nombre": "Clientes nuevos"
+  },
+  "informes/informes": {
+   "modulo": "informes-mensuales",
+   "nombre": "Informes mensuales"
+  },
+  "reuniones/reuniones": {
+   "modulo": "reuniones",
+   "nombre": "Reuniones"
+  },
+  "produccion/produccion": {
+   "modulo": "produccion",
+   "nombre": "Producción"
+  },
+  "horas/horas": {
+   "modulo": "horas",
+   "nombre": "Horas y productividad"
+  },
+  "personas_m20/equipo": {
+   "modulo": "personas",
+   "nombre": "Personas"
+  },
+  "personas_m20/contratacion": {
+   "modulo": "ajustes",
+   "nombre": "Ajustes · contratación"
+  },
+  "decisiones/reloj": {
+   "modulo": "decisiones",
+   "nombre": "Decisiones y rastro"
+  },
+  "ventas_ro/setters": {
+   "modulo": "setters",
+   "nombre": "Mi día del setter"
+  },
+  "ventas_ro/ventas_ro": {
+   "modulo": "ventas-ro",
+   "nombre": "Ventas de RO"
+  },
+  "ventas_ro/outreach": {
+   "modulo": "prospeccion",
+   "nombre": "Prospección y outreach"
+  },
+  "seo/seo": {
+   "modulo": "seo-web",
+   "nombre": "SEO, ficha y webs"
+  },
+  "seo/webs": {
+   "modulo": "seo-web",
+   "nombre": "SEO, ficha y webs"
+  },
+  "redes/redes": {
+   "modulo": "redes",
+   "nombre": "Redes"
+  },
+  "incidencias/incidencias": {
+   "modulo": "incidencias",
+   "nombre": "Incidencias"
+  },
+  "dinero_cliente/dinero_cliente": {
+   "modulo": "dinero-cliente",
+   "nombre": "Dinero por cliente"
+  },
+  "finanzas/finanzas": {
+   "modulo": "finanzas",
+   "nombre": "Finanzas de la empresa"
+  },
+  "mi_dia/cambios": {
+   "modulo": "mi-dia",
+   "puestos": [
+    "direccion"
+   ],
+   "nombre": "Mi día · cambios"
+  },
+  "mi_dia/ronda_mili": {
+   "modulo": "mi-dia",
+   "puestos": [
+    "operaciones",
+    "direccion"
+   ],
+   "nombre": "Mi día · ronda de Mili"
+  },
+  "verdad/equipo": {
+   "modulo": "horas",
+   "nombre": "Horas (quién no imputó ayer)"
+  },
+  "finanzas/direccion": {
+   "modulo": "finanzas",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "nombre": "Finanzas de la empresa (dirección)"
+  },
+  "verdad/clientes": {
+   "nombre": "Verdad única de clientes"
+  }
+ },
+ "bloques": {
+  "cambios_ayer": {
+   "titulo": "Lo que ha cambiado desde ayer",
+   "icono": "hist",
+   "ruta": "decisiones",
+   "frecuencia": "cada mañana"
+  },
+  "decisiones_48h": {
+   "titulo": "Decisiones que te esperan",
+   "icono": "flag",
+   "ruta": "decisiones",
+   "frecuencia": "cada día"
+  },
+  "resultados_ayer": {
+   "titulo": "Resultados de los clientes ayer",
+   "icono": "target",
+   "ruta": "captacion",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "captacion_ro": {
+   "titulo": "Captación de RO",
+   "icono": "megafono",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada día"
+  },
+  "caja": {
+   "titulo": "Caja",
+   "icono": "cartera",
+   "ruta": "finanzas",
+   "frecuencia": "cada día"
+  },
+  "equipo_tomas": {
+   "titulo": "Equipo",
+   "icono": "eq",
+   "ruta": "personas",
+   "frecuencia": "cada día"
+  },
+  "encargos_fuegos": {
+   "titulo": "Encargos y fuegos abiertos",
+   "icono": "fire",
+   "ruta": "incidencias",
+   "frecuencia": "cada día"
+  },
+  "fin_beneficio": {
+   "titulo": "Beneficio del mes frente a plan",
+   "icono": "euro",
+   "ruta": "finanzas",
+   "frecuencia": "cada mes"
+  },
+  "fin_rentabilidad": {
+   "titulo": "Rentabilidad por cliente",
+   "icono": "grafico",
+   "ruta": "dinero-cliente",
+   "frecuencia": "cada semana"
+  },
+  "fin_servicio": {
+   "titulo": "Rentabilidad por servicio y nicho",
+   "icono": "capas",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "No existe el dato «servicio contratado por cliente» en ninguna herramienta: sin él no se reparte el coste por servicio.",
+   "quien": "Tomás (decide si se carga a mano en Ajustes)",
+   "ruta": "finanzas"
+  },
+  "fin_caja_meses": {
+   "titulo": "Meses de caja y reservas",
+   "icono": "cartera",
+   "ruta": "finanzas",
+   "frecuencia": "cada semana"
+  },
+  "fin_equipo": {
+   "titulo": "Peso del equipo sobre los ingresos",
+   "icono": "eq",
+   "ruta": "finanzas",
+   "frecuencia": "cada mes"
+  },
+  "fin_recurrente": {
+   "titulo": "Cuota recurrente acumulada",
+   "icono": "sube",
+   "ruta": "finanzas",
+   "frecuencia": "cada día"
+  },
+  "fin_valor_cliente": {
+   "titulo": "Valor y coste del cliente",
+   "icono": "crown",
+   "ruta": "finanzas",
+   "frecuencia": "cada mes"
+  },
+  "adm_calendario": {
+   "titulo": "Calendario administrativo de hoy",
+   "icono": "cal",
+   "ruta": "finanzas",
+   "frecuencia": "cada día"
+  },
+  "adm_cobros": {
+   "titulo": "Cobros y devueltos",
+   "icono": "euro",
+   "ruta": "finanzas",
+   "frecuencia": "cada día"
+  },
+  "adm_impagos": {
+   "titulo": "Impagos por antigüedad",
+   "icono": "alert",
+   "ruta": "finanzas",
+   "frecuencia": "cada semana"
+  },
+  "adm_firmas": {
+   "titulo": "Firmados sin alta en facturación",
+   "icono": "doc",
+   "ruta": "finanzas",
+   "frecuencia": "cada día"
+  },
+  "adm_bajas": {
+   "titulo": "Bajas y cambios de cuota del mes",
+   "icono": "baja",
+   "ruta": "finanzas",
+   "frecuencia": "cada mes"
+  },
+  "adm_meta": {
+   "titulo": "Facturas de Meta sin contabilizar",
+   "icono": "doc",
+   "ruta": "finanzas",
+   "frecuencia": "cada mes"
+  },
+  "adm_conciliacion": {
+   "titulo": "Conciliación por banco",
+   "icono": "base",
+   "ruta": "finanzas",
+   "frecuencia": "cada semana"
+  },
+  "ronda_mili": {
+   "titulo": "Tu ronda de hoy",
+   "icono": "check",
+   "ruta": "en-rojo",
+   "frecuencia": "cada mañana"
+  },
+  "clientes_esperando": {
+   "titulo": "Clientes esperando",
+   "icono": "inbox",
+   "ruta": "bandeja",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "rojos_cartera": {
+   "titulo": "Clientes en crítico",
+   "icono": "fire",
+   "ruta": "en-rojo",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "nuevos_resumen": {
+   "titulo": "Nuevos, de la firma al día 90",
+   "icono": "rocket",
+   "ruta": "clientes-nuevos",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "produccion_ops": {
+   "titulo": "Producción: revisiones y bloqueos",
+   "icono": "capas",
+   "ruta": "produccion",
+   "frecuencia": "cada día"
+  },
+  "equipo_control": {
+   "titulo": "El equipo, día a día",
+   "icono": "eq",
+   "ruta": "incidencias",
+   "frecuencia": "cada día"
+  },
+  "para_tomas": {
+   "titulo": "Para Tomás",
+   "icono": "send",
+   "ruta": "decisiones",
+   "frecuencia": "cada semana"
+  },
+  "rojos_visto_coti": {
+   "titulo": "Críticos esperando tu «Visto»",
+   "icono": "ojo",
+   "ruta": "en-rojo",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "nuevos_garantia": {
+   "titulo": "Clientes nuevos y garantía",
+   "icono": "rocket",
+   "ruta": "clientes-nuevos",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "resultados_nuevos": {
+   "titulo": "Resultados de los nuevos",
+   "icono": "target",
+   "ruta": "captacion",
+   "frecuencia": "cada día"
+  },
+  "semaforo_cartera": {
+   "titulo": "Gravedad de toda la cartera",
+   "icono": "heart",
+   "ruta": "en-rojo",
+   "frecuencia": "cada semana"
+  },
+  "resultados_nicho": {
+   "titulo": "Resultados por nicho",
+   "icono": "capas",
+   "ruta": "captacion",
+   "frecuencia": "cada semana"
+  },
+  "gatillos_motor": {
+   "titulo": "Gatillos del Motor",
+   "icono": "zap",
+   "ruta": "dinero-cliente",
+   "frecuencia": "cada semana"
+  },
+  "aprobaciones_coti": {
+   "titulo": "Tus aprobaciones",
+   "icono": "check",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Newsletter, campañas normativas y auditoría del mes no tienen todavía una cola en ninguna herramienta. Se apuntan en la tarea de ClickUp hasta que la app pueda escribir en ClickUp.",
+   "quien": "Coti",
+   "ruta": "produccion"
+  },
+  "personas_alerta": {
+   "titulo": "Personas en alerta",
+   "icono": "alert",
+   "ruta": "personas",
+   "frecuencia": "cada día"
+  },
+  "carga_personas": {
+   "titulo": "Carga de quien lleva clientes",
+   "icono": "medidor",
+   "ruta": "personas",
+   "frecuencia": "cada semana"
+  },
+  "imputa_ayer": {
+   "titulo": "Quién imputa y quién no",
+   "icono": "clock",
+   "ruta": "horas",
+   "frecuencia": "cada día"
+  },
+  "ausencias": {
+   "titulo": "Ausencias de hoy y 2 semanas",
+   "icono": "cal",
+   "ruta": "personas",
+   "frecuencia": "cada día"
+  },
+  "horas_raras": {
+   "titulo": "Horas raras por revisar",
+   "icono": "clock",
+   "ruta": "horas",
+   "frecuencia": "cada semana"
+  },
+  "contratacion": {
+   "titulo": "Contratación",
+   "icono": "users",
+   "ruta": "ajustes",
+   "frecuencia": "cada semana"
+  },
+  "uno_a_uno": {
+   "titulo": "1:1 y ronda con las jefas",
+   "icono": "chat",
+   "ruta": "personas",
+   "frecuencia": "cada semana"
+  },
+  "primero_cartera": {
+   "titulo": "Lo primero que hacer hoy",
+   "icono": "zap",
+   "ruta": "en-rojo",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "clientes_tarjetas": {
+   "titulo": "Tus clientes",
+   "icono": "cli",
+   "ruta": "ficha",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "bandeja_mia": {
+   "titulo": "Bandeja",
+   "icono": "inbox",
+   "ruta": "bandeja",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "resultados_mios": {
+   "titulo": "Resultados de tus despachos",
+   "icono": "target",
+   "ruta": "captacion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "reuniones_ciclo": {
+   "titulo": "Reuniones con tus clientes",
+   "icono": "video",
+   "ruta": "reuniones",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "trabajo_account": {
+   "titulo": "Trabajo: revisiones e informes",
+   "icono": "capas",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "cumplimiento": {
+   "titulo": "Tu cumplimiento",
+   "icono": "medidor",
+   "ruta": "incidencias",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "cuentas_problema": {
+   "titulo": "Clientes en crítico y publicidad urgente",
+   "icono": "alert",
+   "ruta": "captacion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "tabla_cuentas": {
+   "titulo": "Tus cuentas",
+   "icono": "res",
+   "ruta": "captacion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "anomalias": {
+   "titulo": "Cambios bruscos con motivo",
+   "icono": "sube",
+   "ruta": "captacion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "embudo_cuentas": {
+   "titulo": "Embudo por cuenta",
+   "icono": "cap",
+   "ruta": "captacion",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "creatividades": {
+   "titulo": "Creatividades",
+   "icono": "spark",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "quincenales": {
+   "titulo": "Próximas quincenales",
+   "icono": "cal",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "La quincenal con informe no se apunta todavía en ninguna herramienta (indicador «a medias»). Captación prepara el informe del periodo; la fecha la marca el trafficker.",
+   "quien": "Valeria",
+   "ruta": "captacion"
+  },
+  "arranques": {
+   "titulo": "Arranques en curso",
+   "icono": "rocket",
+   "ruta": "clientes-nuevos",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "tabla_trafficker": {
+   "titulo": "Por trafficker",
+   "icono": "users",
+   "ruta": "captacion",
+   "frecuencia": "cada semana"
+  },
+  "fabrica_anuncios": {
+   "titulo": "Fábrica de anuncios del lunes",
+   "icono": "spark",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "El ranking de candidatos y el paso de elegido a publicado no se guardan en ninguna herramienta. Llega cuando la app pueda escribir en Meta.",
+   "quien": "Valeria",
+   "ruta": "captacion"
+  },
+  "carga_trafficker": {
+   "titulo": "Carga por trafficker",
+   "icono": "medidor",
+   "ruta": "captacion",
+   "frecuencia": "cada semana"
+  },
+  "circuito_roto": {
+   "titulo": "Circuito roto",
+   "icono": "plug",
+   "ruta": "salud-crm",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "flujos_error": {
+   "titulo": "Flujos con error",
+   "icono": "alert",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "GoHighLevel no deja leer los flujos ni su «Needs Review» con el permiso actual (falta el permiso de lectura de flujos). Mientras, se revisan dentro de GHL.",
+   "quien": "Tomás (falta un permiso de GoHighLevel)",
+   "ruta": "salud-crm"
+  },
+  "leads_sin_tocar": {
+   "titulo": "Leads sin tocar a las 24 h",
+   "icono": "clock",
+   "ruta": "salud-crm",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "citas_sin_estado": {
+   "titulo": "Citas sin estado marcado",
+   "icono": "cal",
+   "ruta": "salud-crm",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "whatsapp_fallidos": {
+   "titulo": "WhatsApp fallidos",
+   "icono": "wa",
+   "ruta": "salud-crm",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "correo_rebotes": {
+   "titulo": "Correo: rebotes por proveedor",
+   "icono": "mail",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Los rebotes y aperturas por proveedor de las subcuentas no salen por la API con el permiso actual. El medidor de entregabilidad de RO solo mide la cuenta de RO.",
+   "quien": "Yessica",
+   "ruta": "salud-crm"
+  },
+  "montajes": {
+   "titulo": "Altas en montaje",
+   "icono": "base",
+   "ruta": "salud-crm",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "subcuentas_rojo": {
+   "titulo": "Subcuentas en rojo",
+   "icono": "fire",
+   "ruta": "salud-crm",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "tabla_especialista": {
+   "titulo": "Por especialista",
+   "icono": "users",
+   "ruta": "salud-crm",
+   "frecuencia": "cada semana"
+  },
+  "asistencia_velocidad": {
+   "titulo": "Asistencia y velocidad de contacto",
+   "icono": "medidor",
+   "ruta": "salud-crm",
+   "frecuencia": "cada semana"
+  },
+  "fuegos_crm": {
+   "titulo": "Fuegos escalados",
+   "icono": "fire",
+   "ruta": "incidencias",
+   "frecuencia": "cada día"
+  },
+  "carga_crm": {
+   "titulo": "Carga por especialista",
+   "icono": "medidor",
+   "ruta": "salud-crm",
+   "frecuencia": "cada semana"
+  },
+  "altas_linea": {
+   "titulo": "Altas en curso",
+   "icono": "rocket",
+   "ruta": "clientes-nuevos",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "accesos_pendientes": {
+   "titulo": "Accesos pendientes",
+   "icono": "key",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada día"
+  },
+  "casillas_tecnicas": {
+   "titulo": "Casillas técnicas por alta",
+   "icono": "check",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada día"
+  },
+  "conexiones_caidas": {
+   "titulo": "Conexiones caídas en las subcuentas",
+   "icono": "plug",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada día"
+  },
+  "talleres_semana": {
+   "titulo": "Talleres y onboarding de la semana",
+   "icono": "video",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada semana"
+  },
+  "bloqueos_meta": {
+   "titulo": "Bloqueos de Meta",
+   "icono": "candado",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada día"
+  },
+  "carga_altas": {
+   "titulo": "Tu carga de altas",
+   "icono": "medidor",
+   "ruta": "clientes-nuevos",
+   "frecuencia": "cada semana"
+  },
+  "seo_rojos": {
+   "titulo": "Clientes de SEO en rojo",
+   "icono": "fire",
+   "ruta": "seo-web",
+   "alcance": "todo",
+   "frecuencia": "cada día"
+  },
+  "seo_mis_clientes": {
+   "titulo": "Tus clientes con semáforo",
+   "icono": "globe",
+   "ruta": "seo-web",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "webs_caidas": {
+   "titulo": "Webs caídas o con aviso",
+   "icono": "mundo_web",
+   "ruta": "seo-web",
+   "frecuencia": "cada día"
+  },
+  "palabras_mov": {
+   "titulo": "Palabras que suben y bajan",
+   "icono": "sube",
+   "ruta": "seo-web",
+   "frecuencia": "cada día"
+  },
+  "mes1_sin_palabras": {
+   "titulo": "Altas del mes 1 sin palabras",
+   "icono": "rocket",
+   "ruta": "seo-web",
+   "frecuencia": "cada semana"
+  },
+  "celula": {
+   "titulo": "Tu célula",
+   "icono": "users",
+   "ruta": "produccion",
+   "alcance": "equipo",
+   "frecuencia": "cada día"
+  },
+  "contenidos_plan": {
+   "titulo": "Contenidos frente al plan",
+   "icono": "doc",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "El plan de contenidos del mes no está en un formato que se pueda leer (cada cliente lo lleva en su documento). Se mide cuando el plan viva en ClickUp con fecha.",
+   "quien": "Coti",
+   "ruta": "produccion"
+  },
+  "carga_gente": {
+   "titulo": "Carga de tu gente",
+   "icono": "medidor",
+   "ruta": "produccion",
+   "alcance": "equipo",
+   "frecuencia": "cada semana"
+  },
+  "tecnico_web": {
+   "titulo": "Bloque técnico",
+   "icono": "aj",
+   "ruta": "seo-web",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "cosecha": {
+   "titulo": "Cosecha: posiciones 5-20",
+   "icono": "grafico",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "Las URL en posición 5-20 con 300 impresiones o más salen en la pantalla de SEO por cliente (Search Console). Aquí llega cuando SEO marque cuáles ya se han tocado.",
+   "quien": "Coti",
+   "ruta": "seo-web"
+  },
+  "resenas": {
+   "titulo": "Reseñas sin responder",
+   "icono": "star",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "La ficha de Google (Google Business Profile) no está conectada: las reseñas llegan cuando se conecte.",
+   "quien": "Tomás (falta conectar la ficha de Google)",
+   "ruta": "seo-web"
+  },
+  "fichas_sin_actividad": {
+   "titulo": "Fichas sin publicación ni foto",
+   "icono": "pin",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Sin conexión con Google Business Profile no se sabe la última publicación de cada ficha.",
+   "quien": "Tomás (falta conectar la ficha de Google)",
+   "ruta": "seo-web"
+  },
+  "maps_posicion": {
+   "titulo": "Posición en Maps",
+   "icono": "pin",
+   "ruta": "seo-web",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "voz_local": {
+   "titulo": "Cuota de voz local",
+   "icono": "grafico",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "El barrido de rejilla se hace a mano; no hay una serie guardada que leer.",
+   "quien": "SEO del cliente",
+   "ruta": "seo-web"
+  },
+  "semaforo4_ficha": {
+   "titulo": "Semáforo de 4 de la ficha",
+   "icono": "flag",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Llamadas, clics a la web, conversión y peso de Maps salen de Google Business Profile: fase 2.",
+   "quien": "Tomás (falta conectar la ficha de Google)",
+   "ruta": "seo-web"
+  },
+  "formularios": {
+   "titulo": "Formularios que no llegan a GHL",
+   "icono": "plug",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "El contacto de prueba de punta a punta no está automatizado. Mientras, Captación avisa cuando Meta da leads que no llegan a GoHighLevel.",
+   "quien": "Agus",
+   "ruta": "captacion"
+  },
+  "certificados": {
+   "titulo": "Certificados que caducan",
+   "icono": "candado",
+   "ruta": "seo-web",
+   "frecuencia": "cada semana"
+  },
+  "webs_lentas": {
+   "titulo": "Webs lentas",
+   "icono": "clock",
+   "ruta": "seo-web",
+   "frecuencia": "cada semana"
+  },
+  "spam_web": {
+   "titulo": "Spam inyectado o URL ajenas",
+   "icono": "escudo",
+   "ruta": "seo-web",
+   "frecuencia": "cada día"
+  },
+  "redes_huecos": {
+   "titulo": "Clientes con huecos",
+   "icono": "cal",
+   "ruta": "redes",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "redes_fallidas": {
+   "titulo": "Publicaciones que no salieron",
+   "icono": "alert",
+   "ruta": "redes",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "redes_aprobacion": {
+   "titulo": "Pendientes de aprobación",
+   "icono": "check",
+   "ruta": "redes",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "redes_mejor_peor": {
+   "titulo": "Lo que mejor y peor funcionó",
+   "icono": "star",
+   "ruta": "redes",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "paquete_validacion": {
+   "titulo": "Paquete mensual de validación",
+   "icono": "doc",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "El envío del paquete del día 20 ± 1 no deja rastro que se pueda leer (va por correo o WhatsApp). Se marca en la tarea de ClickUp.",
+   "quien": "Redes",
+   "ruta": "redes"
+  },
+  "cola_mia": {
+   "titulo": "Tu cola de hoy y de la semana",
+   "icono": "capas",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "devueltas": {
+   "titulo": "Piezas devueltas",
+   "icono": "volver",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "bloqueadas": {
+   "titulo": "Bloqueadas por el cliente",
+   "icono": "candado",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "piezas_rendimiento": {
+   "titulo": "Cómo rinden tus piezas",
+   "icono": "grafico",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada semana"
+  },
+  "gates": {
+   "titulo": "Controles de calidad pendientes",
+   "icono": "escudo",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Los controles de calidad (estáticos, cuadrícula, revisión final) no dejan todavía un resultado que leer. Salen aquí cuando cada control deje su resultado en la tarea de ClickUp.",
+   "quien": "Coti",
+   "ruta": "produccion"
+  },
+  "ficha_marca": {
+   "titulo": "Ficha de marca del cliente",
+   "icono": "libro",
+   "pendiente": true,
+   "medible": "medias",
+   "texto": "La ficha de marca está en la carpeta de cada cliente; se abre desde la ficha del cliente (pestaña Accesos y contrato).",
+   "quien": "Account",
+   "ruta": "produccion"
+  },
+  "tareas_mias": {
+   "titulo": "Tus tareas de hoy",
+   "icono": "check",
+   "ruta": "produccion",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "horas_mias": {
+   "titulo": "Tus horas",
+   "icono": "clock",
+   "ruta": "horas",
+   "alcance": "mio",
+   "frecuencia": "cada día"
+  },
+  "setter_llamar": {
+   "titulo": "Leads para llamar ya",
+   "icono": "phone",
+   "ruta": "setters",
+   "frecuencia": "cada hora"
+  },
+  "setter_segundas": {
+   "titulo": "Segundas llamadas que vencen",
+   "icono": "clock",
+   "ruta": "setters",
+   "frecuencia": "cada día"
+  },
+  "setter_citas": {
+   "titulo": "Citas de hoy y mañana por confirmar",
+   "icono": "cal",
+   "ruta": "setters",
+   "frecuencia": "cada día"
+  },
+  "setter_pasadas": {
+   "titulo": "Citas pasadas sin resultado",
+   "icono": "flag",
+   "ruta": "setters",
+   "frecuencia": "cada día"
+  },
+  "setter_marcador": {
+   "titulo": "Tu marcador del día",
+   "icono": "medidor",
+   "ruta": "setters",
+   "frecuencia": "cada hora"
+  },
+  "setter_perdidas": {
+   "titulo": "Llamadas perdidas o sin ficha",
+   "icono": "phone",
+   "ruta": "setters",
+   "frecuencia": "cada día"
+  },
+  "setter_informe": {
+   "titulo": "Informe de fin de día",
+   "icono": "doc",
+   "ruta": "setters",
+   "frecuencia": "cada día"
+  },
+  "vro_hoy": {
+   "titulo": "Reuniones de hoy",
+   "icono": "video",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada día"
+  },
+  "vro_propuestas": {
+   "titulo": "Propuestas sin abrir o sin respuesta",
+   "icono": "doc",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada día"
+  },
+  "vro_contratos": {
+   "titulo": "Contratos enviados sin firmar",
+   "icono": "editar",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada día"
+  },
+  "vro_embudo": {
+   "titulo": "Embudo del mes con ritmo",
+   "icono": "cap",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada día"
+  },
+  "vro_costes": {
+   "titulo": "Coste por cita y por cliente",
+   "icono": "euro",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada semana"
+  },
+  "vro_huecos": {
+   "titulo": "Huecos libres de 45 min",
+   "icono": "cal",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada semana"
+  },
+  "vro_bajas": {
+   "titulo": "Bajas en los primeros 90 días",
+   "icono": "baja",
+   "ruta": "ventas-ro",
+   "frecuencia": "cada mes"
+  },
+  "out_sin_dueno": {
+   "titulo": "Respuestas sin dueño",
+   "icono": "chat",
+   "ruta": "prospeccion",
+   "frecuencia": "cada día"
+  },
+  "out_positivas": {
+   "titulo": "Positivas que no están en GHL",
+   "icono": "plug",
+   "ruta": "prospeccion",
+   "frecuencia": "cada día"
+  },
+  "out_reuniones": {
+   "titulo": "Reuniones conseguidas esta semana",
+   "icono": "video",
+   "pendiente": true,
+   "medible": "no",
+   "texto": "Las reuniones que salen del outreach no llevan origen en GoHighLevel (0 contactos con origen outreach). Llegan cuando se etiquete el origen o con la hoja semanal declarada (D-71).",
+   "quien": "Yessica",
+   "ruta": "prospeccion"
+  },
+  "out_salud": {
+   "titulo": "Salud del envío",
+   "icono": "escudo",
+   "ruta": "prospeccion",
+   "frecuencia": "cada día"
+  },
+  "out_campanas": {
+   "titulo": "Campañas de hoy",
+   "icono": "send",
+   "ruta": "prospeccion",
+   "frecuencia": "cada día"
+  },
+  "out_hoja": {
+   "titulo": "Hoja semanal",
+   "icono": "doc",
+   "ruta": "prospeccion",
+   "frecuencia": "cada semana"
+  }
+ },
+ "puestos": {
+  "direccion": {
+   "numero": {
+    "indicador": "direccion.beneficio_del_mes",
+    "calculo": "beneficio_mes",
+    "titulo": "Beneficio del mes",
+    "meta": "Camino de 30.000 €/mes a fin de 2027",
+    "icono": "euro"
+   },
+   "bloques": [
+    "cambios_ayer",
+    "decisiones_48h",
+    "resultados_ayer",
+    "captacion_ro",
+    "caja",
+    "equipo_tomas",
+    "encargos_fuegos"
+   ]
+  },
+  "finanzas_direccion": {
+   "numero": {
+    "indicador": "finanzas_direccion.beneficio_del_mes_sobre_ingresos",
+    "calculo": "beneficio_pct",
+    "titulo": "Beneficio sobre ingresos",
+    "meta": "Verde ≥ 20 %",
+    "icono": "grafico"
+   },
+   "bloques": [
+    "fin_beneficio",
+    "fin_rentabilidad",
+    "fin_servicio",
+    "fin_caja_meses",
+    "fin_equipo",
+    "fin_recurrente",
+    "fin_valor_cliente"
+   ]
+  },
+  "administracion": {
+   "numero": {
+    "indicador": "administracion.de_cuota_cobrada",
+    "calculo": "cuota_cobrada",
+    "titulo": "Cuota del mes cobrada el día 10",
+    "meta": "Verde ≥ 95 %",
+    "icono": "euro"
+   },
+   "bloques": [
+    "adm_calendario",
+    "adm_cobros",
+    "adm_impagos",
+    "adm_firmas",
+    "adm_bajas",
+    "adm_meta",
+    "adm_conciliacion"
+   ]
+  },
+  "operaciones": {
+   "numero": {
+    "indicador": "operaciones.altas_en_plazo_no_1_del_viernes",
+    "calculo": "altas_en_plazo",
+    "titulo": "Altas encendidas el día 10",
+    "meta": "Día 10, límite 12 (D-28)",
+    "icono": "rocket"
+   },
+   "bloques": [
+    "ronda_mili",
+    "clientes_esperando",
+    "rojos_cartera",
+    "nuevos_resumen",
+    "produccion_ops",
+    "equipo_control",
+    "para_tomas"
+   ]
+  },
+  "proyectos": {
+   "numero": {
+    "indicador": "proyectos.garantia_cumplida",
+    "calculo": "garantia",
+    "titulo": "Nuevos con 2 reuniones válidas en 30 días",
+    "meta": "Garantía (D-30)",
+    "icono": "crown"
+   },
+   "bloques": [
+    "rojos_visto_coti",
+    "nuevos_garantia",
+    "resultados_nuevos",
+    "semaforo_cartera",
+    "resultados_nicho",
+    "gatillos_motor",
+    "aprobaciones_coti"
+   ]
+  },
+  "rrhh": {
+   "numero": {
+    "indicador": "rrhh.personas_en_alerta_sin_plan",
+    "calculo": "alerta_sin_plan",
+    "titulo": "Personas en alerta sin plan en 7 días",
+    "meta": "Verde 0",
+    "icono": "alert"
+   },
+   "bloques": [
+    "personas_alerta",
+    "carga_personas",
+    "imputa_ayer",
+    "ausencias",
+    "horas_raras",
+    "contratacion",
+    "uno_a_uno"
+   ]
+  },
+  "account": {
+   "numero": {
+    "indicador": "account.resultados_de_su_cartera_frente_a_objetivo",
+    "calculo": "resultados_cartera",
+    "titulo": "Resultados de tus clientes frente a objetivo",
+    "meta": "Verde ≥ 70 % (propuesta sin firmar)",
+    "icono": "target",
+    "proxy": "cartera_salud",
+    "nota": "R13: la salud de la cartera pasa a segundo indicador (sale debajo como «Mientras»)."
+   },
+   "bloques": [
+    "resultados_mios",
+    "clientes_tarjetas",
+    "bandeja_mia",
+    "reuniones_ciclo",
+    "trabajo_account",
+    "cumplimiento"
+   ],
+   "arriba": "resultados_mios",
+   "_r12": "Auditoría final A3/A4: los resultados de sus despachos van arriba, antes que la salud; «Lo primero que hacer hoy» (alarmas de las 07:00) sale: las urgencias son las de Alertas («Mis alertas»), un solo contador."
+  },
+  "trafficker": {
+   "numero": {
+    "indicador": "trafficker.de_cuentas_con_coste_por_cita_en_objetivo_el_que",
+    "calculo": "cita_objetivo_mias",
+    "titulo": "Tus cuentas con coste por cita en objetivo",
+    "meta": "Verde ≥ 70 %",
+    "icono": "target"
+   },
+   "bloques": [
+    "cuentas_problema",
+    "tabla_cuentas",
+    "anomalias",
+    "embudo_cuentas",
+    "creatividades",
+    "quincenales",
+    "arranques"
+   ]
+  },
+  "jefa_publicidad": {
+   "numero": {
+    "indicador": "jefa_publicidad.de_cuentas_de_la_casa_en_objetivo_el_que_manda",
+    "calculo": "cita_objetivo_casa",
+    "titulo": "Cuentas de la casa en objetivo",
+    "meta": "Verde ≥ 70 %",
+    "icono": "target"
+   },
+   "bloques": [
+    {
+     "id": "cuentas_problema",
+     "titulo": "Fuegos de toda la casa: clientes en crítico",
+     "alcance": "todo"
+    },
+    "tabla_trafficker",
+    {
+     "id": "anomalias",
+     "alcance": "todo"
+    },
+    {
+     "id": "arranques",
+     "alcance": "todo"
+    },
+    "resultados_nicho",
+    "fabrica_anuncios",
+    "carga_trafficker"
+   ]
+  },
+  "especialista_ghl": {
+   "numero": {
+    "indicador": "especialista_ghl.asistencia_a_las_citas_de_sus_despachos_el_que_m",
+    "calculo": "asistencia_mia",
+    "titulo": "Asistencia a las citas de tus despachos",
+    "meta": "Verde ≥ 75 % (D-45)",
+    "icono": "cal"
+   },
+   "bloques": [
+    "circuito_roto",
+    "flujos_error",
+    "leads_sin_tocar",
+    "citas_sin_estado",
+    "whatsapp_fallidos",
+    "correo_rebotes",
+    "montajes"
+   ]
+  },
+  "jefa_crm": {
+   "numero": {
+    "indicador": "jefa_crm.de_subcuentas_con_el_crm_en_verde_el_que_manda",
+    "calculo": "crm_verde",
+    "titulo": "Subcuentas con el CRM en verde",
+    "meta": "Verde ≥ 80 %",
+    "icono": "base"
+   },
+   "bloques": [
+    "subcuentas_rojo",
+    "tabla_especialista",
+    "asistencia_velocidad",
+    {
+     "id": "montajes",
+     "alcance": "todo"
+    },
+    {
+     "id": "whatsapp_fallidos",
+     "alcance": "todo",
+     "titulo": "WhatsApp y correo"
+    },
+    "fuegos_crm",
+    "carga_crm"
+   ]
+  },
+  "tecnico_altas": {
+   "numero": {
+    "indicador": "tecnico_altas.altas_encendidas_en_plazo_el_que_manda",
+    "calculo": "altas_en_plazo",
+    "titulo": "Altas encendidas en plazo",
+    "meta": "Día 10, límite 12 (D-28)",
+    "icono": "rocket"
+   },
+   "bloques": [
+    "altas_linea",
+    "accesos_pendientes",
+    "casillas_tecnicas",
+    "conexiones_caidas",
+    "talleres_semana",
+    "bloqueos_meta",
+    "carga_altas"
+   ]
+  },
+  "jefa_seo": {
+   "numero": {
+    "indicador": null,
+    "calculo": "seo_verde",
+    "titulo": "Clientes de SEO en verde",
+    "meta": "Clics que no caen y ninguna palabra clave fuera del top 10 (00 §1)",
+    "icono": "globe",
+    "medible": "medias",
+    "umbral": "Bien desde el 80 % · mal bajo el 60 % (el mismo de SEO, ficha y webs)",
+    "_r12": "Auditoría final B-A05: misma base (clientes medibles), umbral y sello que la pantalla de SEO."
+   },
+   "bloques": [
+    "seo_rojos",
+    "webs_caidas",
+    {
+     "id": "palabras_mov",
+     "alcance": "todo"
+    },
+    "mes1_sin_palabras",
+    "celula",
+    "contenidos_plan",
+    "carga_gente"
+   ]
+  },
+  "seo": {
+   "numero": {
+    "indicador": "seo.top_5_de_las_15_palabras",
+    "calculo": "top5_mios",
+    "titulo": "Palabras en top 5 de las 15 del informe",
+    "meta": "Frente al mes anterior",
+    "icono": "sube"
+   },
+   "bloques": [
+    "seo_mis_clientes",
+    {
+     "id": "palabras_mov",
+     "alcance": "mio"
+    },
+    "tareas_mias",
+    "tecnico_web",
+    "contenidos_plan",
+    "cosecha",
+    "horas_mias"
+   ]
+  },
+  "ficha_google": {
+   "numero": {
+    "indicador": "ficha_google.tasa_de_llamada",
+    "calculo": "fase2",
+    "titulo": "Tasa de llamada de la ficha",
+    "meta": "Verde > 7 %",
+    "icono": "phone"
+   },
+   "bloques": [
+    "resenas",
+    "fichas_sin_actividad",
+    "maps_posicion",
+    "voz_local",
+    "semaforo4_ficha",
+    {
+     "id": "tareas_mias",
+     "titulo": "Tareas del ciclo mensual"
+    },
+    "horas_mias"
+   ]
+  },
+  "web": {
+   "numero": {
+    "indicador": "web.disponibilidad",
+    "calculo": "webs_verde",
+    "titulo": "Webs que responden",
+    "meta": "≥ 99,9 %, mirada desde fuera y desde RO",
+    "icono": "mundo_web",
+    "medible": "medias",
+    "umbral": "Verde: todas responden · rojo: alguna caída",
+    "formula": "Webs que responden desde la IP de RO (el mismo número que manda de la pantalla SEO, ficha y webs). La disponibilidad del 99,9 % mirada desde fuera llega con el despliegue.",
+    "_v2": "C-8: el mismo número que su pantalla de trabajo (60 de 64), no «Fase 2»."
+   },
+   "bloques": [
+    {
+     "id": "webs_caidas",
+     "alcance": "mio"
+    },
+    "formularios",
+    {
+     "id": "certificados",
+     "alcance": "mio"
+    },
+    {
+     "id": "webs_lentas",
+     "alcance": "mio"
+    },
+    {
+     "id": "spam_web",
+     "alcance": "mio"
+    },
+    "tareas_mias",
+    "horas_mias"
+   ],
+   "_r12": "Auditoría final C-M2: sus webs (asignaciones de web y SEO) primero; las caídas del resto de la casa, en una fila de guardia."
+  },
+  "redes": {
+   "numero": {
+    "indicador": "redes.calendario_de_14_dias_cubierto",
+    "calculo": "redes_14",
+    "titulo": "Clientes con los próximos 14 días cubiertos",
+    "meta": "Verde 100 %",
+    "icono": "cal"
+   },
+   "bloques": [
+    "redes_huecos",
+    "redes_fallidas",
+    "redes_aprobacion",
+    "redes_mejor_peor",
+    "paquete_validacion",
+    "tareas_mias",
+    "horas_mias"
+   ]
+  },
+  "produccion": {
+   "numero": {
+    "indicador": "produccion.indice_de_rendimiento_de_sus_anuncios",
+    "calculo": "indice_piezas",
+    "titulo": "Rendimiento de tus anuncios (índice)",
+    "meta": "Frente a la media de la cuenta = 100, sin euros",
+    "icono": "spark"
+   },
+   "bloques": [
+    "cola_mia",
+    "devueltas",
+    "bloqueadas",
+    "piezas_rendimiento",
+    "gates",
+    "ficha_marca",
+    "horas_mias"
+   ]
+  },
+  "setters": {
+   "numero": {
+    "indicador": "setters.reuniones_celebradas_al_mes",
+    "calculo": "setter_celebradas",
+    "titulo": "Reuniones celebradas con cualificados al mes",
+    "meta": "Verde ≥ 12",
+    "icono": "auricular"
+   },
+   "bloques": [
+    "setter_llamar",
+    "setter_segundas",
+    "setter_citas",
+    "setter_pasadas",
+    "setter_marcador",
+    "setter_perdidas",
+    "setter_informe"
+   ]
+  },
+  "ventas_ro": {
+   "numero": {
+    "indicador": "ventas_ro.cierre_sobre_celebradas",
+    "calculo": "cierre_celebradas",
+    "titulo": "Cierre sobre reuniones celebradas",
+    "meta": "Verde ≥ 33 % (D-63)",
+    "icono": "megafono"
+   },
+   "bloques": [
+    "vro_hoy",
+    "vro_propuestas",
+    "vro_contratos",
+    "vro_embudo",
+    "vro_costes",
+    "vro_huecos",
+    "vro_bajas"
+   ]
+  },
+  "outreach": {
+   "numero": {
+    "calculo": "out_por_clasificar",
+    "titulo": "Respuestas de prospección por clasificar",
+    "medible": "hoy",
+    "umbral": "Verde: ninguna sin clasificar · ámbar: alguna de hoy · rojo: alguna con más de 24 h",
+    "formula": "Respuestas de Snov.io de los últimos 30 días que nadie ha clasificado ni tiene dueño, con las reuniones conseguidas por outreach al lado.",
+    "fuente": "Snov.io (respuestas) + GoHighLevel (origen outreach) · cada recarga",
+    "indicador_catalogo": "outreach.reuniones_por_1_000_contactos",
+    "nota": "R13: el del catálogo (reuniones por 1.000 contactos) no se puede medir hasta que exista la hoja semanal y la etiqueta de origen; mientras, manda lo que sí se mide.",
+    "icono": "send"
+   },
+   "bloques": [
+    "out_sin_dueno",
+    "out_positivas",
+    "out_reuniones",
+    "out_salud",
+    "out_campanas",
+    "out_hoja",
+    "horas_mias"
+   ]
+  }
+ }
+}

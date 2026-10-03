@@ -1,0 +1,145 @@
+# despliegue/render.yaml · DESPLIEGUE PRINCIPAL (decisión del documento 26: todo en Render, Frankfurt). Carril C5.
+# Render lo lee de la raíz del repositorio (preparar_contexto.sh lo copia allí). Nada de esto está creado todavía:
+# lo crea Tomás con «New › Blueprint» cuando abra la cuenta Pro (T3). Referencia: https://render.com/docs/blueprint-spec
+#
+#   ro-app             servicio web: servir.py + permisos.py en modo servidor (solo con sello de Cloudflare Access)
+#   ro-ligera          cada hora de 7 a 23 h de España: tubería ligera
+#   ro-completa        6:00 y 14:00: tubería completa (lectores en bruto, créditos, CRM en vivo)
+#   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
+#   ro-base            UNA sola Postgres: rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con
+#                      bloqueo y los datos de cada módulo por versión (despliegue/publicacion.py)
+#
+# Horarios en UTC (Render no admite zona horaria). Con horario de verano (UTC+2) caen a su hora; en invierno (UTC+1)
+# una hora antes. La ligera cubre de 5 a 22 UTC para tapar los dos casos. Render no lanza dos vueltas del MISMO
+# cron a la vez; entre crons distintos manda el bloqueo de la base (la segunda sale bien sin hacer nada).
+
+previews:
+  generation: manual            # entornos de vista previa por cambio (plan Pro), a petición
+
+databases:
+  - name: ro-base
+    region: frankfurt
+    plan: basic-1gb             # ligera: basic-256mb
+    databaseName: ro
+    user: ro
+    postgresMajorVersion: "16"
+    ipAllowList: []             # sin acceso desde internet: solo la red privada de Render
+
+envVarGroups:
+  - name: ro-comun
+    envVars:
+      - key: RO_ENTORNO
+        value: produccion
+      - key: TZ
+        value: Europe/Madrid
+  - name: ro-llaves             # se rellenan a mano en el panel (sync: false = nunca en el repositorio)
+    envVars:
+      - { key: CLICKUP_API_TOKEN, sync: false }
+      - { key: ZOHO_CLIENT_ID, sync: false }
+      - { key: ZOHO_CLIENT_SECRET, sync: false }
+      - { key: ZOHO_REFRESH_TOKEN, sync: false }
+      - { key: GHL_APP_CLIENT_ID, sync: false }
+      - { key: GHL_APP_CLIENT_SECRET, sync: false }
+      # ghl_app_refresh_token NO va aquí: rota en cada uso y vive en la base con bloqueo (llave_ghl.py sembrar, T6)
+      - { key: GHL_AGENCY_PIT, sync: false }
+      - { key: GHL_PIT_NEW, sync: false }
+      - { key: META_TOKEN, sync: false }          # el de USUARIO DE SISTEMA (T5), sin caducidad
+      - { key: META_APP_SECRET, sync: false }
+      - { key: GOOGLE_CLIENT_ID, sync: false }
+      - { key: GOOGLE_CLIENT_SECRET, sync: false }
+      - { key: GOOGLE_REFRESH_TOKEN, sync: false }
+      - { key: METRICOOL_TOKEN, sync: false }
+      - { key: METRICOOL_USER_ID, sync: false }
+      - { key: ZOOM_ACCOUNT_ID, sync: false }
+      - { key: ZOOM_CLIENT_ID, sync: false }
+      - { key: ZOOM_CLIENT_SECRET, sync: false }
+      - { key: SNOV_CLIENT_ID, sync: false }
+      - { key: SNOV_CLIENT_SECRET, sync: false }
+      - { key: SERANKING_PROJECT_KEY, sync: false }
+      - { key: SERANKING_DATA_KEY, sync: false }
+      - { key: WINDSOR_API_KEY, sync: false }
+      - { key: HOLDED_API_KEY, sync: false }
+      - { key: AIRTABLE_TOKEN, sync: false }
+      - { key: ZADARMA_KEY, sync: false }
+      - { key: ZADARMA_SECRET, sync: false }
+  - name: ro-vigilancia
+    envVars:
+      - { key: SENTRY_DSN, sync: false }          # DSN de errores de Better Stack (SDK de Sentry). Vacío = sin envío
+      - { key: RO_LATIDO_URL, sync: false }       # latido de Better Stack de la tubería (si falta, avisa)
+      - { key: RO_AVISOS_WEBHOOK, sync: false }   # opcional: avisos «para avisar» hacia correo/ClickUp
+      - { key: RO_R2_ENDPOINT, sync: false }      # https://<cuenta>.eu.r2.cloudflarestorage.com (jurisdicción UE)
+      - { key: RO_R2_BUCKET, sync: false }
+      - { key: RO_R2_KEY_ID, sync: false }
+      - { key: RO_R2_SECRET, sync: false }
+
+services:
+  - type: web
+    name: ro-app
+    runtime: docker
+    region: frankfurt
+    plan: standard              # ligera: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh web
+    healthCheckPath: /vivo
+    autoDeploy: false           # se publica a mano tras la batería en verde en la vista previa (DESPLIEGUE.md)
+    envVars:
+      - { key: RO_MODO, value: servidor }
+      - { key: RO_CF_EQUIPO, sync: false }        # nombre del equipo de Zero Trust (<equipo>.cloudflareaccess.com)
+      - { key: RO_CF_AUD, sync: false }           # etiqueta AUD de la aplicación de Access
+      # Ronda 11 (A8, auditoría 35): el Origin que manda el navegador en los POST. Sin esto, todos los botones (acciones,
+      # decisiones, Ajustes, «Ver datos», IA) dan 403 «Origen no permitido». Varios, separados por comas.
+      - { key: RO_ORIGEN_APP, value: "https://app.rankingonline.app" }
+      - key: DATABASE_URL
+        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-comun
+      - fromGroup: ro-vigilancia
+    # La web NO lleva las llaves de las herramientas: los botones dejan acciones simuladas y la tubería es quien lee.
+
+  - type: cron
+    name: ro-ligera
+    runtime: docker
+    region: frankfurt
+    plan: standard              # 1 CPU y 2 GB (Chrome sin cabeza solo en «noche»)
+    schedule: "30 5-22 * * *"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh ligera
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves
+      - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-completa
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    schedule: "0 4,12 * * *"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh completa
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves
+      - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-noche
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    schedule: "0 1 * * *"
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh noche
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves     # comprobar.py lee Meta (3 lecturas)
+      - fromGroup: ro-vigilancia

@@ -1,0 +1,110 @@
+{
+ "generado": "2026-10-02 17:26",
+ "subcuentas": {
+  "akua": {
+   "sub_id": "yK2tjVqKQGT6AF2HRYaN",
+   "contactos_total": 35,
+   "error": null
+  },
+  "innova_scala": {
+   "sub_id": "tmt3WdUDLrJySFevkmL6",
+   "contactos_total": 833,
+   "error": null
+  },
+  "consulting_f": {
+   "sub_id": "xtSjLv44F9uT5sDpXnHC",
+   "contactos_total": 463,
+   "error": null
+  },
+  "concilia": {
+   "sub_id": "Yr0Zu9PTLM4wCrEUGBJb",
+   "contactos_total": 4,
+   "error": null
+  },
+  "orejana": {
+   "sub_id": "idYHf4ZeanPL3qgAgEu9",
+   "contactos_total": 5,
+   "error": null
+  },
+  "ecom_advisory": {
+   "sub_id": "CTZgtI28sBhiv504sPBb",
+   "contactos_total": 230,
+   "error": null
+  },
+  "busbac": {
+   "sub_id": "tyu8qOc7SmtWBk1F6Mzv",
+   "contactos_total": 6,
+   "error": null
+  },
+  "laver": {
+   "sub_id": "ckRArROeaoPBjvj0iqMS",
+   "contactos_total": 14,
+   "error": null
+  },
+  "gac": {
+   "sub_id": "BqXT3zoMAgq8CPScW7xe",
+   "contactos_total": 1,
+   "error": null
+  },
+  "emex": {
+   "sub_id": "Gfn97a0R6ipQ5yr4wKWC",
+   "contactos_total": 7,
+   "error": null
+  },
+  "deudot": {
+   "sub_id": "8fLesVCLxnC00n4yPO3x",
+   "contactos_total": 5,
+   "error": null
+  },
+  "musashi_consultores": {
+   "sub_id": "WIJYvHcVYAKLnxGfvFen",
+   "contactos_total": 2481,
+   "error": null
+  },
+  "bonet_asesores": {
+   "sub_id": "f8ppbZxdoac11EIksFRD",
+   "contactos_total": 60,
+   "error": null
+  },
+  "lobo": {
+   "sub_id": "7X0tHMTkwaSl0pn7Eh0b",
+   "contactos_total": 12,
+   "error": null
+  },
+  "oteca": {
+   "sub_id": "4hThLNS46z0qxS0Tyf2y",
+   "contactos_total": 385,
+   "error": null
+  },
+  "centro_consulting": {
+   "sub_id": "JZo1RVFU49LVWQM7C9iT",
+   "contactos_total": 224,
+   "error": null
+  },
+  "adade_zaragoza": {
+   "sub_id": "AxLFHaNqyjtOOu8LZjyB",
+   "contactos_total": 83,
+   "error": null
+  },
+  "aster_asesoria": {
+   "sub_id": "k8Dnm3irj3ZUkdGCEVcB",
+   "contactos_total": 448,
+   "error": null
+  },
+  "aselegal": {
+   "sub_id": "1KUA4arniRjBA6abO2IP",
+   "contactos_total": 1729,
+   "error": null
+  },
+  "garmande": {
+   "sub_id": "ck5xZNKWAZtszM2tliL3",
+   "contactos_total": 1,
+   "error": null
+  },
+  "quique_gomez_barreda": {
+   "sub_id": "ggdqkfYNhF4qAPtjcIrv",
+   "contactos_total": 2,
+   "error": null
+  }
+ }
+}

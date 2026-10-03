@@ -1,0 +1,4 @@
+{
+ "_que": "Contactos y calendarios de una subcuenta que NO son del despacho (otro negocio o pruebas). Se mantiene a mano; lo revisa Agus. origen_contiene: texto del origen, de la fuente o de una etiqueta; calendario_contiene: nombre del calendario.",
+ "7X0tHMTkwaSl0pn7Eh0b": {"cliente": "Lobo", "origen_contiene": ["FisioExpo"], "calendario_contiene": ["FisioExpo"], "motivo": "Contactos y calendario de FisioExpo 2026 (otro negocio) dentro de la subcuenta de Lobo · auditoría de cifras del 2-oct"}
+}

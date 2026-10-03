@@ -1,0 +1,125 @@
+{
+ "_meta": {
+  "fuente": "14_GOOGLE_ADS_VIA_WINDSOR.md · muestra manual 2-oct (consulta a Windsor desde la sesión de Chrome de Tomás; la clave NO se guardó)",
+  "periodo": [
+   "2026-09-01",
+   "2026-09-30"
+  ],
+  "leido": "2026-10-02 14:04",
+  "uso": "Solo mientras no haya windsor_api_key en el llavero. Cuando exista, f_windsor.py usa ws.py y esta muestra deja de leerse."
+ },
+ "cuentas": [
+  {
+   "id": "6770967821",
+   "nombre": "AyG Asesores",
+   "coste": 1357.62,
+   "clics": 768,
+   "impresiones": 10985,
+   "conversiones": 32,
+   "ultimo_gasto": "2026-10-01"
+  },
+  {
+   "id": "9760002384",
+   "nombre": "Kiosko",
+   "coste": 608.3,
+   "clics": 1128,
+   "impresiones": 12582,
+   "conversiones": 321.1,
+   "ultimo_gasto": "2026-10-01"
+  },
+  {
+   "id": "7890594437",
+   "nombre": "Fountainhead Holding",
+   "coste": 308.1,
+   "clics": 129,
+   "impresiones": 3941,
+   "conversiones": 2,
+   "ultimo_gasto": "2026-09-28",
+   "gasto_2026": 1155
+  },
+  {
+   "id": "5960135207",
+   "nombre": "Consulting F",
+   "coste": 263.58,
+   "clics": 170,
+   "impresiones": 2960,
+   "conversiones": 4,
+   "ultimo_gasto": "2026-09-18",
+   "gasto_2026": 2956
+  },
+  {
+   "id": "3666356076",
+   "nombre": "GAC Economistas y Abogados",
+   "coste": 222.55,
+   "clics": 517,
+   "impresiones": 24084,
+   "conversiones": 2,
+   "ultimo_gasto": "2026-09-15",
+   "gasto_2026": 1691
+  },
+  {
+   "id": "2500131330",
+   "nombre": "Busbac Serveis",
+   "coste": 151.92,
+   "clics": 483,
+   "impresiones": 9661,
+   "conversiones": 0,
+   "ultimo_gasto": "2026-10-01"
+  },
+  {
+   "id": "2113117225",
+   "nombre": "Taller del Patinete",
+   "coste": 53.43,
+   "clics": 5191,
+   "impresiones": 12457,
+   "conversiones": 0,
+   "ultimo_gasto": "2026-10-01"
+  }
+ ],
+ "sin_gasto_en_septiembre": [
+  {
+   "id": null,
+   "nombre": "Aselegal",
+   "ultimo_gasto": "2026-07-30",
+   "gasto_2026": 2166
+  },
+  {
+   "id": null,
+   "nombre": "QC",
+   "ultimo_gasto": "2026-06-30",
+   "gasto_2026": 8902
+  },
+  {
+   "id": null,
+   "nombre": "FITEC Consultores",
+   "ultimo_gasto": "2026-06-03",
+   "gasto_2026": 1554
+  },
+  {
+   "id": null,
+   "nombre": "Greconsult",
+   "ultimo_gasto": "2026-05-25",
+   "gasto_2026": 2272
+  },
+  {
+   "id": null,
+   "nombre": "CE Consulting Zaragoza",
+   "ultimo_gasto": "2026-05-18",
+   "gasto_2026": 2492
+  },
+  {
+   "id": null,
+   "nombre": "BIT24",
+   "ultimo_gasto": "2026-03-19",
+   "gasto_2026": 511
+  }
+ ],
+ "no_estan_en_windsor": [
+  "Asetra",
+  "Oteca",
+  "MG Economistes"
+ ],
+ "tiktok": {
+  "estado": "sin datos: la consulta tardó demasiado y se cortó (2-oct)"
+ }
+}

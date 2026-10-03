@@ -1,0 +1,32 @@
+Clientes: 68 · GA4 32 · GSC 30 · Meta 28 · GHL 39 · Metricool 23
+  gsc busbac
+  gsc avantik
+  gsc adade-zaragoza
+  gsc aselegal
+  gsc bonet-asesores
+  gsc ayg-asesores
+  gsc asetra
+  gsc aster-asesoria
+  gsc fitec-asesores
+  gsc fusterguell
+  gsc ip-forense
+  gsc ecija-advisory
+  gsc innova-scala
+  gsc joan-lluis-vives
+  gsc optimalia
+  gsc kiosko-box
+  gsc mg-economistes
+  gsc greconsult
+  gsc laver
+  gsc romero-martinez
+  gsc octoedro
+  gsc musashi-consultores
+  gsc orejana
+  gsc oteca
+  gsc sol-4
+  gsc torrevieja-consult
+  gsc segu-assessors
+  gsc prodegest
+  gsc tribulex
+  gsc christian-sanchez
+data/paneles/ escrito: 68 clientes

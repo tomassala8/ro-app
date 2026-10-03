@@ -1,0 +1,2303 @@
+{
+  "_meta": {
+    "version": 2,
+    "fecha": "2026-10-02",
+    "que_es": "Matriz de permisos de ver del 00 §3 y de las decisiones D-10 y D-80 a D-92 (firmadas el 2-oct). La leen a la vez permisos.js (navegador y, más adelante, el Worker de Cloudflare) y permisos.py (servir.py). Un solo sitio para cambiar una regla.",
+    "como_se_lee": "Para cada tipo de dato, «si» es una lista de casos; gana el primero que se cumple. Un caso se cumple si se cumplen TODAS sus condiciones. Si ninguno se cumple: no, con el motivo «no». «nunca» = no para nadie, sin mirar nada más.",
+    "condiciones": {
+      "puestos": "la persona tiene alguno de estos puestos",
+      "ambito": "el ámbito de clientes más amplio de la persona es uno de estos",
+      "cartera": "true = el cliente está en su cartera (cualquier silla de sus puestos, más suplencias vigentes); «account», «trafficker»… = en esa silla concreta",
+      "propio": "el dato es de la propia persona (persona_id)",
+      "jefe": "la persona es jefa de la persona del dato (campo jefe de personas, o puesto de jefa de esa disciplina)",
+      "participante": "la persona está en dato.participantes",
+      "sin_cliente": "el dato no es de un cliente de la agencia (p. ej. un lead de RO)"
+    },
+    "nivel": "completo (por defecto) · enmascarado · resumen"
+  },
+  "puestos": [
+    {
+      "id": "direccion",
+      "nombre": "Dirección",
+      "nivel": 1,
+      "ambito": "todos",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "finanzas_direccion",
+      "nombre": "Finanzas de dirección",
+      "nivel": 1,
+      "ambito": "todos",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "administracion",
+      "nombre": "Administración y cobros",
+      "nivel": 6,
+      "ambito": "todos",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "operaciones",
+      "nombre": "Dirección de operaciones",
+      "nivel": 2,
+      "ambito": "todos",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "proyectos",
+      "nombre": "Proyectos y oferta",
+      "nivel": 2,
+      "ambito": "todos",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "rrhh",
+      "nombre": "RRHH",
+      "nivel": 6,
+      "ambito": "ninguno",
+      "grupo": "Dirección"
+    },
+    {
+      "id": "account",
+      "nombre": "Account / soporte",
+      "nivel": 4,
+      "ambito": "cartera",
+      "grupo": "Clientes"
+    },
+    {
+      "id": "trafficker",
+      "nombre": "Trafficker de Meta",
+      "nivel": 4,
+      "ambito": "cartera",
+      "grupo": "Publicidad y CRM"
+    },
+    {
+      "id": "jefa_publicidad",
+      "nombre": "Jefa de publicidad",
+      "nivel": 3,
+      "ambito": "disciplina",
+      "grupo": "Publicidad y CRM"
+    },
+    {
+      "id": "especialista_ghl",
+      "nombre": "Especialista en GoHighLevel",
+      "nivel": 4,
+      "ambito": "cartera",
+      "grupo": "Publicidad y CRM"
+    },
+    {
+      "id": "jefa_crm",
+      "nombre": "Jefa de CRM y outreach",
+      "nivel": 3,
+      "ambito": "disciplina",
+      "grupo": "Publicidad y CRM"
+    },
+    {
+      "id": "tecnico_altas",
+      "nombre": "Técnico de altas",
+      "nivel": 3,
+      "ambito": "todos",
+      "grupo": "Clientes"
+    },
+    {
+      "id": "jefa_seo",
+      "nombre": "Jefe de SEO",
+      "nivel": 3,
+      "ambito": "disciplina",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "seo",
+      "nombre": "SEO técnico y contenidos",
+      "nivel": 4,
+      "ambito": "cartera",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "ficha_google",
+      "nombre": "Ficha de Google",
+      "nivel": 4,
+      "ambito": "cartera",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "web",
+      "nombre": "Web",
+      "nivel": 5,
+      "ambito": "tareas",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "redes",
+      "nombre": "Redes",
+      "nivel": 5,
+      "ambito": "tareas",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "produccion",
+      "nombre": "Producción creativa",
+      "nivel": 5,
+      "ambito": "tareas",
+      "grupo": "SEO, web y redes"
+    },
+    {
+      "id": "setters",
+      "nombre": "Setters",
+      "nivel": 6,
+      "ambito": "ninguno",
+      "grupo": "Ventas de RO"
+    },
+    {
+      "id": "ventas_ro",
+      "nombre": "Ventas de RO",
+      "nivel": 1,
+      "ambito": "ninguno",
+      "grupo": "Ventas de RO"
+    },
+    {
+      "id": "outreach",
+      "nombre": "Outreach",
+      "nivel": 6,
+      "ambito": "ninguno",
+      "grupo": "Ventas de RO"
+    }
+  ],
+  "orden_ambitos": [
+    "ninguno",
+    "tareas",
+    "cartera",
+    "disciplina",
+    "todos"
+  ],
+  "_sillas": "Qué sillas de la tabla asignaciones dan cartera a cada puesto. «ghl» se mantiene por compatibilidad con la semilla antigua; la fase 0 escribe «crm».",
+  "sillas_de_puesto": {
+    "account": [
+      "account"
+    ],
+    "trafficker": [
+      "trafficker"
+    ],
+    "especialista_ghl": [
+      "crm",
+      "ghl"
+    ],
+    "seo": [
+      "seo"
+    ],
+    "ficha_google": [
+      "seo"
+    ],
+    "web": [
+      "web"
+    ],
+    "redes": [
+      "redes"
+    ],
+    "produccion": [
+      "produccion"
+    ],
+    "outreach": [
+      "outreach"
+    ]
+  },
+  "sillas": [
+    "account",
+    "trafficker",
+    "crm",
+    "seo",
+    "web",
+    "redes",
+    "produccion",
+    "outreach"
+  ],
+  "_jefe_de_puesto": "Jefa por disciplina (además del campo «jefe» de cada persona).",
+  "jefe_de_puesto": {
+    "jefa_publicidad": [
+      "trafficker"
+    ],
+    "jefa_seo": [
+      "seo",
+      "ficha_google",
+      "web"
+    ],
+    "jefa_crm": [
+      "especialista_ghl",
+      "outreach"
+    ]
+  },
+  "_equivalencias": "Cómo se traducen los puestos de 20_FASE0_DATOS/personas.json (organigrama) a los 21 puestos de la app. Lo aplica build_data.py.",
+  "equivalencias_fase0": {
+    "dirección": [
+      "direccion"
+    ],
+    "direccion": [
+      "direccion"
+    ],
+    "operaciones": [
+      "operaciones"
+    ],
+    "proyectos": [
+      "proyectos"
+    ],
+    "rrhh": [
+      "rrhh"
+    ],
+    "administracion": [
+      "administracion"
+    ],
+    "tecnico_altas": [
+      "tecnico_altas"
+    ],
+    "account": [
+      "account"
+    ],
+    "soporte": [
+      "account"
+    ],
+    "trafficker": [
+      "trafficker"
+    ],
+    "jefa_publicidad": [
+      "jefa_publicidad"
+    ],
+    "crm": [
+      "especialista_ghl"
+    ],
+    "jefa_crm": [
+      "jefa_crm"
+    ],
+    "jefa_seo": [
+      "jefa_seo"
+    ],
+    "seo": [
+      "seo",
+      "ficha_google"
+    ],
+    "web": [
+      "web"
+    ],
+    "redes": [
+      "redes"
+    ],
+    "copy": [
+      "produccion"
+    ],
+    "diseño": [
+      "produccion"
+    ],
+    "video": [
+      "produccion"
+    ],
+    "ux": [
+      "produccion"
+    ],
+    "setter": [
+      "setters"
+    ],
+    "outreach": [
+      "outreach"
+    ]
+  },
+  "_puestos_extra": "Puestos que no salen del organigrama: Tomás lleva además las finanzas de dirección (vista dentro de su puesto) y el cierre de ventas de RO (G3 «Closer»; nota de personas.json).",
+  "puestos_extra": {
+    "tomas": [
+      "finanzas_direccion",
+      "ventas_ro"
+    ]
+  },
+  "_datos_de_modulo": "Qué módulo da derecho a leer cada fichero data/<carpeta>/<fichero>.json (servir.py, /api/modulo). Basta con ver UNO de los módulos de la lista (cualquier nivel). Un fichero que no está aquí NO se sirve (403): quien cree uno nuevo lo añade aquí. Formato largo: { \"modulos\": [...], \"solo_todo_sin_cliente\": [listas] } = en esas listas, las filas sin cliente_id solo llegan a quien ve el módulo con nivel «todo» (D-P-BDJ, M12). Ronda 4: \"puestos\": [...] restringe el fichero a esos puestos (no hace falta \"modulos\"); \"filas_lead\": [listas] = con nivel «resumen» esas listas llegan vacías, y en cualquier lista se quitan las filas con datos de un lead concreto (telefono, nombre_lead, enlace_contacto…).",
+  "datos_de_modulo": {
+    "primera_semana/guias": {
+      "_r16": "R16 (N7, auditoría 35b): las guías de dirección llevan el objetivo de beneficio de la empresa («camino de 30.000 €/mes»): sin importes para quien no ve el dinero de la empresa.",
+      "modulos": [
+        "primera-semana",
+        "ajustes"
+      ],
+      "textos_sin_importes_salvo": "dinero_empresa"
+    },
+    "en_rojo/atajos": [
+      "en-rojo"
+    ],
+    "verdad/clientes": {
+      "_r16c": "R16c (3-oct, V2-C1/V2-C2): los setters no ven «En rojo», pero la carcasa pide la verdad a todos. Contrato: la setter recibe 200 con la lista común y el detalle VACÍOS (solo «generado» y «definiciones»), nunca 403 ni clientes.",
+      "modulos": [
+        "en-rojo"
+      ],
+      "vacio_para_puestos": {
+        "puestos": [
+          "setters"
+        ],
+        "deja": [
+          "generado",
+          "definiciones"
+        ]
+      }
+    },
+    "verdad/equipo": [
+      "horas",
+      "personas"
+    ],
+    "whatsapp/whatsapp": [
+      "en-rojo",
+      "ficha",
+      "bandeja",
+      "reuniones",
+      "informes-mensuales",
+      "mi-dia"
+    ],
+    "mi_dia/config": {
+      "_r11": "Ronda 11 (M5, auditoría 35): el objetivo de dinero de dirección («Camino de 30.000 €/mes») solo con importes para quien ve el dinero de la empresa.",
+      "modulos": [
+        "mi-dia"
+      ],
+      "ramas_sin_importes_salvo": {
+        "puestos.direccion": "dinero_empresa"
+      }
+    },
+    "mi_dia/cambios": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "mi_dia/ronda_mili": {
+      "puestos": [
+        "operaciones",
+        "direccion"
+      ]
+    },
+    "mi_dia/p_*": {
+      "_n10": "Auditoría 37 (causa 3): Mi día en un viaje. Resumen de la persona (su configuración y los ficheros de sus bloques, ya recortados para ella por fuentes_mi_dia/resumen_mi_dia.py con las mismas reglas de cada fichero). Solo lo recibe su dueño, nunca en «ver como»; el servidor lo vuelve a recortar al servirlo.",
+      "modulos": [
+        "mi-dia"
+      ],
+      "solo_propio": true
+    },
+    "mi_dia/puestos/*/p_*": {
+      "_n10": "Igual que mi_dia/p_*, uno por puesto (quien tiene varios cambia de puesto con los chips).",
+      "modulos": [
+        "mi-dia"
+      ],
+      "solo_propio": true
+    },
+    "ventas_ro/setters": {
+      "modulos": [
+        "setters"
+      ],
+      "_nombres_3oct": "3-oct (Tomás dirige a los setters, decisión del 2-oct): «tambien_puestos» = dirección y ventas de RO ven en claro nombre y despacho de los leads de los dos setters; cada setter, solo los suyos; jefa de CRM y operaciones siguen en «resumen» sin filas. Teléfono y correo, detrás de Llamar/Ver completo (ver_dato, con rastro). En «ver como» no se abre nada (dejaría rastro).",
+      "_e6": "Ronda de arreglos E6: con nivel «resumen» (Yessica, operaciones) solo viajan recuentos, sin filas de leads.",
+      "filas_lead": [
+        "leads",
+        "citas",
+        "pasadas",
+        "perdidas"
+      ],
+      "resumen": [
+        "generado",
+        "setters",
+        "recuento",
+        "marcador",
+        "avisos",
+        "reparto",
+        "enlaces"
+      ],
+      "nombres_dueno": [
+        {
+          "lista": "leads",
+          "almacen": "ventas_ro/_privado/setter_{setter}",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "setter",
+          "tambien_puestos": [
+            "direccion",
+            "ventas_ro"
+          ]
+        },
+        {
+          "lista": "citas",
+          "almacen": "ventas_ro/_privado/setter_{setter}",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "setter",
+          "tambien_puestos": [
+            "direccion",
+            "ventas_ro"
+          ]
+        },
+        {
+          "lista": "pasadas",
+          "almacen": "ventas_ro/_privado/setter_{setter}",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "setter",
+          "tambien_puestos": [
+            "direccion",
+            "ventas_ro"
+          ]
+        }
+      ]
+    },
+    "ventas_ro/ventas_ro": {
+      "modulos": [
+        "ventas-ro"
+      ],
+      "_e6": "Ronda de arreglos E6 (auditoría 27): quien ve Ventas de RO en «resumen» recibe el embudo y el tablero, sin filas de prospectos.",
+      "filas_lead": [
+        "hoy",
+        "propuestas",
+        "contratos"
+      ],
+      "resumen": [
+        "generado",
+        "panel_generado",
+        "meses",
+        "circuito",
+        "tablero_hoy",
+        "objetivo_firmados_mes",
+        "bajas_tempranas",
+        "avisos"
+      ],
+      "nombres_dueno": [
+        {
+          "lista": "hoy",
+          "almacen": "ventas_ro/_privado/ventas_tomas",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "ventas_ro"
+        },
+        {
+          "lista": "propuestas",
+          "almacen": "ventas_ro/_privado/ventas_tomas",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "ventas_ro"
+        },
+        {
+          "lista": "contratos",
+          "almacen": "ventas_ro/_privado/ventas_tomas",
+          "ruta": [
+            "leads",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "despacho_m": "despacho"
+          },
+          "dueno": "ventas_ro"
+        }
+      ]
+    },
+    "ventas_ro/outreach": {
+      "_r16c": "R16c (3-oct, V2-C2): el puesto outreach (Eulimar) recibe solo las campañas, respuestas y la tabla por cliente de SU cartera de outreach (silla «outreach» de asignaciones). Una fila sin cliente_id no llega. La jefa de CRM y dirección lo ven todo. La tabla «clientes» va por nombre: el servidor saca el cliente con fuentes_ventas/campana_cliente.py (la misma regla del generador).",
+      "modulos": [
+        "prospeccion"
+      ],
+      "solo_cartera_silla": {
+        "silla": "outreach",
+        "puestos": [
+          "outreach"
+        ],
+        "salvo_puestos": [
+          "direccion",
+          "jefa_crm"
+        ],
+        "listas": [
+          "respuestas",
+          "snov.campañas"
+        ],
+        "claves_por_nombre": [
+          "clientes"
+        ]
+      },
+      "_nombres_3oct": "3-oct: en la lista de respuestas, dirección (Tomás), la jefa de CRM (Yessica) y quien lleva el outreach de ese cliente (Eulimar, solo su cartera) ven nombre y empresa en claro (empresa = dominio del correo, nunca gmail/hotmail). El texto de la respuesta y el correo siguen detrás de «Ver respuesta» (ver_dato, con rastro). En «ver como» no se abre nada.",
+      "nombres_dueno": [
+        {
+          "lista": "respuestas",
+          "almacen": "ventas_ro/_privado/outreach_respuestas",
+          "ruta": [
+            "respuestas",
+            "{id}"
+          ],
+          "campos": {
+            "nombre_m": "nombre",
+            "empresa_m": "empresa"
+          },
+          "anadir": [
+            "empresa_m"
+          ],
+          "dueno": "outreach"
+        }
+      ]
+    },
+    "ventas_ro/meta": [
+      "setters",
+      "ventas-ro",
+      "prospeccion"
+    ],
+    "ficha/portal": [
+      "ficha"
+    ],
+    "ficha/correos": {
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "ficha/basica": [
+      "ficha"
+    ],
+    "objetivos/objetivos": {
+      "modulos": [
+        "ficha",
+        "clientes-nuevos"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "fuentes/hallazgos_medicion": {
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "ficha/informes": {
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "ficha/web": {
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "captacion/captacion": [
+      "captacion"
+    ],
+    "crm/crm": {
+      "modulos": [
+        "salud-crm"
+      ],
+      "filas_lead": [
+        "leads_sin_tocar",
+        "citas_sin_estado",
+        "oportunidades_paradas"
+      ],
+      "solo_todo_sin_cliente": [
+        "subcuentas",
+        "leads_sin_tocar",
+        "citas_sin_estado",
+        "oportunidades_paradas",
+        "hallazgos"
+      ]
+    },
+    "bandeja/bandeja": {
+      "modulos": [
+        "bandeja"
+      ],
+      "solo_todo_sin_cliente": [
+        "correos",
+        "llamadas",
+        "triaje"
+      ]
+    },
+    "bandeja/por_cliente": {
+      "modulos": [
+        "bandeja",
+        "ficha",
+        "mi-dia"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "seo/seo": [
+      "seo-web"
+    ],
+    "seo/webs": [
+      "seo-web"
+    ],
+    "modular/webs": {
+      "_n5": "Modular DS (32_MODULAR_DS.md): estado, copias, actualizaciones y seguridad de cada web. Lo pinta «SEO, ficha y webs» (pestaña Webs); dirección y operaciones lo ven entero por esa pantalla (nivel «todo»). Las webs sin cliente y las alertas sin cliente solo con nivel «todo».",
+      "modulos": [
+        "seo-web"
+      ],
+      "solo_todo_sin_cliente": [
+        "sin_cliente",
+        "alertas",
+        "clientes_sin_modular"
+      ]
+    },
+    "redes/redes": [
+      "redes"
+    ],
+    "informes/informes": [
+      "informes-mensuales"
+    ],
+    "reuniones/reuniones": {
+      "modulos": [
+        "reuniones"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "nuevos/nuevos": {
+      "modulos": [
+        "clientes-nuevos"
+      ],
+      "solo_todo_sin_cliente": [
+        "subcuentas",
+        "talleres",
+        "fuera"
+      ]
+    },
+    "informe/comun": [
+      "informe-cliente"
+    ],
+    "informe/paridad": [
+      "informe-cliente"
+    ],
+    "informe/p_2026-09": [
+      "informe-cliente"
+    ],
+    "informe/p_2026-08": [
+      "informe-cliente"
+    ],
+    "informe/p_2026-07": [
+      "informe-cliente"
+    ],
+    "informe/p_2026-06": [
+      "informe-cliente"
+    ],
+    "informe/p_u30": [
+      "informe-cliente"
+    ],
+    "informe/p_trim": [
+      "informe-cliente"
+    ],
+    "informe/i_*": {
+      "_n10": "Auditoría 37 (causa 5): índice ligero de cada periodo del informe (una fila por cliente con qué fuentes trae). Se recorta igual que p_<periodo>.",
+      "modulos": [
+        "informe-cliente"
+      ]
+    },
+    "informe/c_*/*": {
+      "_n10": "Auditoría 37 (causa 5): la fila de UN cliente de un periodo (informe/c_<periodo>/<cliente_id>), dentro de «filas» para que el servidor la quite si ese cliente no es de quien la pide. Se pide al abrir el cliente.",
+      "modulos": [
+        "informe-cliente"
+      ]
+    },
+    "paneles/indice": [
+      "paneles"
+    ],
+    "paneles/ga4/*": {
+      "modulos": [
+        "paneles"
+      ],
+      "excluir_puestos": [
+        "administracion",
+        "rrhh",
+        "especialista_ghl",
+        "jefa_crm",
+        "tecnico_altas",
+        "redes",
+        "produccion",
+        "setters",
+        "ventas_ro",
+        "outreach"
+      ]
+    },
+    "paneles/gsc/*": {
+      "modulos": [
+        "paneles"
+      ],
+      "excluir_puestos": [
+        "administracion",
+        "rrhh",
+        "trafficker",
+        "jefa_publicidad",
+        "especialista_ghl",
+        "jefa_crm",
+        "tecnico_altas",
+        "redes",
+        "produccion",
+        "setters",
+        "ventas_ro",
+        "outreach"
+      ]
+    },
+    "paneles/meta/*": {
+      "modulos": [
+        "paneles"
+      ],
+      "excluir_puestos": [
+        "administracion",
+        "rrhh",
+        "especialista_ghl",
+        "jefa_crm",
+        "jefa_seo",
+        "seo",
+        "ficha_google",
+        "web",
+        "redes",
+        "produccion",
+        "setters",
+        "ventas_ro",
+        "outreach"
+      ]
+    },
+    "paneles/ghl/*": {
+      "modulos": [
+        "paneles"
+      ],
+      "excluir_puestos": [
+        "administracion",
+        "rrhh",
+        "jefa_seo",
+        "seo",
+        "ficha_google",
+        "web",
+        "redes",
+        "produccion",
+        "setters",
+        "ventas_ro",
+        "outreach"
+      ]
+    },
+    "paneles/mc/*": {
+      "modulos": [
+        "paneles"
+      ],
+      "excluir_puestos": [
+        "administracion",
+        "rrhh",
+        "trafficker",
+        "jefa_publicidad",
+        "especialista_ghl",
+        "jefa_crm",
+        "tecnico_altas",
+        "seo",
+        "ficha_google",
+        "web",
+        "produccion",
+        "setters",
+        "ventas_ro",
+        "outreach"
+      ]
+    },
+    "paneles/empresa/desk": {
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "proyectos"
+      ],
+      "_n1": "Tickets por persona asignada: comparar personas (solo dirección, operaciones y proyectos)."
+    },
+    "paneles/empresa/zadarma": {
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "proyectos"
+      ],
+      "_n1": "Llamadas por extensión: comparar personas (solo dirección, operaciones y proyectos)."
+    },
+    "produccion/produccion": [
+      "produccion"
+    ],
+    "horas/horas": [
+      "horas"
+    ],
+    "incidencias/incidencias": {
+      "modulos": [
+        "incidencias"
+      ],
+      "solo_todo_sin_cliente": [
+        "incidencias",
+        "incongruencias",
+        "accesos",
+        "extensiones",
+        "vistos",
+        "traspasos"
+      ]
+    },
+    "dinero_cliente/dinero_cliente": {
+      "modulos": [
+        "dinero-cliente"
+      ],
+      "solo_todo_sin_cliente": [
+        "por_account",
+        "rentabilidad"
+      ],
+      "resumen": [
+        "formato",
+        "modulo",
+        "generado",
+        "mes_cuota",
+        "mes_horas",
+        "fuentes",
+        "clientes"
+      ]
+    },
+    "finanzas/finanzas": {
+      "modulos": [
+        "finanzas"
+      ],
+      "solo_todo_sin_cliente": [
+        "direccion"
+      ],
+      "claves_solo_tipo": {
+        "direccion": "dinero_empresa"
+      }
+    },
+    "finanzas/direccion": {
+      "puestos": [
+        "direccion",
+        "finanzas_direccion"
+      ],
+      "solo_real": true
+    },
+    "dinero_cliente/rentabilidad": {
+      "puestos": [
+        "direccion",
+        "finanzas_direccion",
+        "operaciones",
+        "proyectos"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/indice": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/empresa": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/captacion_sep": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/captacion_oct": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/captacion_todo": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/captacion_d14": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/captacion_d7": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "panel_direccion/original": {
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
+    "ventas_ro_extra/anuncios": {
+      "modulos": [
+        "ventas-ro"
+      ],
+      "solo_todo_sin_cliente": [
+        "conversiones"
+      ]
+    },
+    "personas_m20/equipo": [
+      "personas"
+    ],
+    "personas_m20/contratacion": {
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "rrhh"
+      ]
+    },
+    "decisiones/firmadas": {
+      "modulos": [
+        "decisiones"
+      ],
+      "filas_solo_tipo": [
+        {
+          "lista": "decisiones",
+          "campo": "tema",
+          "valores": [
+            "Objetivos y dinero",
+            "Ventas RO"
+          ],
+          "tipo": "dinero_empresa"
+        }
+      ],
+      "textos_sin_importes_salvo": "dinero_empresa"
+    },
+    "decisiones/reloj": [
+      "decisiones"
+    ],
+    "decisiones/direccion": {
+      "puestos": [
+        "direccion",
+        "operaciones"
+      ]
+    },
+    "ajustes/conexiones": [
+      "ajustes"
+    ],
+    "conexiones/salud": {
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "tecnico_altas"
+      ],
+      "_n11": "Salud de conexiones (despliegue/salud_conexiones.py): solo dirección, operaciones y el técnico (Agus)."
+    },
+    "agenda/agenda": {
+      "modulos": [
+        "agenda"
+      ],
+      "regla_persona": "agenda_persona",
+      "nombres_dueno": [
+        {
+          "lista": "eventos",
+          "almacen": "agenda/_privado/{persona_id}",
+          "ruta": [
+            "nombres",
+            "{persona_id}",
+            "con_quien",
+            "{id}"
+          ],
+          "campos": {
+            "con_quien_m": null
+          },
+          "dueno": "persona_id"
+        },
+        {
+          "lista": "eventos",
+          "almacen": "agenda/_privado/{persona_id}",
+          "ruta": [
+            "nombres",
+            "{persona_id}",
+            "titulos",
+            "{id}"
+          ],
+          "campos": {
+            "titulo": null
+          },
+          "dueno": "persona_id"
+        }
+      ]
+    },
+    "chat_equipo/p_*": {
+      "modulos": [
+        "chat-equipo"
+      ],
+      "solo_propio": true
+    },
+    "equipo/salida_accesos": {
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "rrhh"
+      ]
+    },
+    "alertas/p_*": {
+      "_n4": "Alertas del departamento (carril N4): cada uno recibe solo su fichero p_<id> (las suyas, las de su departamento si es jefe; Mili y Tomás todas). Lo lee también Mi día (bloque «Mis alertas»).",
+      "modulos": [
+        "alertas",
+        "mi-dia"
+      ],
+      "solo_propio": true
+    },
+    "alertas/alertas": {
+      "puestos": [
+        "direccion",
+        "operaciones"
+      ]
+    },
+    "finanzas/cuadre": {
+      "puestos": [
+        "direccion",
+        "finanzas_direccion"
+      ],
+      "solo_real": true
+    },
+    "finanzas/cuadre_facturacion": {
+      "modulos": [
+        "finanzas"
+      ]
+    },
+    "finanzas/impagos": {
+      "modulos": [
+        "finanzas"
+      ]
+    },
+    "finanzas/impagos_clientes": {
+      "modulos": [
+        "ficha",
+        "finanzas"
+      ]
+    }
+  },
+  "_modulos_sin_puesto": "R16c (3-oct): puestos que NO ven un módulo aunque el índice diga «*» (o el fichero del módulo diga otra cosa). Lo aplican permisos.py (cargar_modulos, y con él el menú que manda servir.py) y permisos.js (nivelModulo).",
+  "modulos_sin_puesto": {
+    "en-rojo": [
+      "setters"
+    ]
+  },
+  "_almacenes_privados": "Datos completos de leads (carpetas _privado/). Solo con /api/ver_dato y rastro. tipo = regla de «tipos» que decide; modulos = hay que ver alguno; dueno_setter = un fichero setter_<x> solo lo abre esa setter (o dirección y ventas de RO).",
+  "almacenes_privados": {
+    "sueldos/_privado/sueldos": {
+      "tipo": "sueldos",
+      "modulos": [
+        "personas",
+        "ajustes"
+      ]
+    },
+    "whatsapp/_privado/textos": {
+      "tipo": "mensaje_cliente",
+      "modulos": [
+        "ficha",
+        "bandeja",
+        "en-rojo",
+        "mi-dia"
+      ],
+      "cliente": "ref"
+    },
+    "ventas_ro/_privado/setter_*": {
+      "tipo": "lead",
+      "modulos": [
+        "setters"
+      ],
+      "dueno_setter": true
+    },
+    "ventas_ro/_privado/ventas_tomas": {
+      "tipo": "lead_ventas_ro",
+      "modulos": [
+        "ventas-ro"
+      ]
+    },
+    "ventas_ro/_privado/outreach_respuestas": {
+      "tipo": "lead_prospeccion",
+      "modulos": [
+        "prospeccion"
+      ],
+      "_r16c": "R16c: cada respuesta lleva su cliente_id en el propio almacén; el servidor lo lee de ahí (nunca del navegador). Outreach solo abre las de su cartera de outreach; el intento ajeno queda en el rastro.",
+      "cliente": {
+        "campo": "cliente_id"
+      }
+    },
+    "ficha/_privado/contactos": {
+      "tipo": "contactos_cliente",
+      "modulos": [
+        "ficha"
+      ],
+      "cliente": "ref"
+    },
+    "ficha/_privado/chat": {
+      "tipo": "chat_cliente",
+      "modulos": [
+        "ficha"
+      ],
+      "cliente": "ref"
+    },
+    "crm/_privado/leads": {
+      "tipo": "lead",
+      "modulos": [
+        "salud-crm"
+      ],
+      "cliente": {
+        "desde": "crm/crm",
+        "listas": [
+          "leads_sin_tocar",
+          "citas_sin_estado"
+        ],
+        "clave": "ref"
+      }
+    },
+    "agenda/_privado/*": {
+      "tipo": "solo_lo_tuyo",
+      "modulos": [
+        "agenda"
+      ],
+      "dueno": "fichero"
+    }
+  },
+  "_ficha_solo_contrato": "Ronda 5 (I-02): quien solo tiene estos puestos recibe de la ficha de E1 solo estas fuentes.",
+  "ficha_solo_contrato": {
+    "puestos": [
+      "administracion"
+    ],
+    "fuentes": [
+      "cartera",
+      "libro",
+      "arranque",
+      "asignaciones"
+    ]
+  },
+  "tipos": {
+    "sueldo": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "rrhh"
+          ],
+          "desenmascarable": true,
+          "motivo": "Sueldos: solo dirección y RRHH; abrirlos queda en el rastro."
+        }
+      ],
+      "no": "Los sueldos solo los ven dirección (Tomás) y RRHH (Cecilia).",
+      "origen": "Nueva regla de Tomás (2-oct): los sueldos entran en la app solo para dirección y RRHH. Sustituye a «nunca» (00 §3)."
+    },
+    "sueldos": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "rrhh"
+          ],
+          "desenmascarable": true,
+          "motivo": "Sueldos: solo dirección y RRHH; abrirlos queda en el rastro."
+        }
+      ],
+      "no": "Los sueldos solo los ven dirección (Tomás) y RRHH (Cecilia).",
+      "origen": "Nueva regla de Tomás (2-oct). En «ver como» mandan los permisos de la persona vista. La hoja «Cuentas bancarias» no se carga nunca."
+    },
+    "contrasena": {
+      "nunca": "Las contraseñas no entran nunca en la app. La ficha dice «acceso dado / falta».",
+      "origen": "00 §3 · R10"
+    },
+    "cliente_lista": {
+      "si": [
+        {}
+      ],
+      "origen": "D-90: todos ven la lista en rojo con motivo y responsable, sin dinero ni datos de leads"
+    },
+    "cliente_detalle": {
+      "si": [
+        {
+          "ambito": [
+            "todos",
+            "disciplina"
+          ]
+        },
+        {
+          "cartera": true
+        }
+      ],
+      "no": "El detalle de este cliente solo lo ve quien lo lleva.",
+      "origen": "00 §1-2 · D-81"
+    },
+    "alarma_detalle": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "proyectos",
+            "tecnico_altas",
+            "jefa_publicidad",
+            "jefa_crm",
+            "jefa_seo"
+          ]
+        },
+        {
+          "cartera": true
+        }
+      ],
+      "no": "La lista «En rojo» es común (motivo y responsable); el texto, la acción y el enlace de cada alarma, solo quien lleva el cliente, sus jefas, altas, operaciones y dirección.",
+      "origen": "D-90 (lista común sin detalle) · ficha G3 setters «clientes: ninguno» · pedido de E6 (2-oct)"
+    },
+    "cuota": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "administracion"
+          ]
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account"
+        }
+      ],
+      "no": "La cuota solo la ven dirección, operaciones, administración y el account del cliente.",
+      "origen": "00 §3 · D-80 · D-87 (la jefa de SEO no ve euros)"
+    },
+    "inversion": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "jefa_publicidad"
+          ]
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account"
+        },
+        {
+          "puestos": [
+            "trafficker"
+          ],
+          "cartera": "trafficker"
+        }
+      ],
+      "no": "La inversión publicitaria solo la ven publicidad, operaciones y quien lleva el cliente.",
+      "origen": "00 §3 · D-81 · D-87"
+    },
+    "rentabilidad_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "La rentabilidad por cliente es de dirección y operaciones (31,47 €/h, sin caja ni beneficio).",
+      "origen": "D-85"
+    },
+    "cobros": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "administracion"
+          ]
+        }
+      ],
+      "no": "Los cobros e impagos los ven dirección y administración.",
+      "origen": "00 §3 · D-86"
+    },
+    "caja": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "administracion"
+          ]
+        }
+      ],
+      "no": "Saldos y movimientos por banco: dirección y administración.",
+      "origen": "D-86"
+    },
+    "dinero_empresa": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion"
+          ]
+        }
+      ],
+      "no": "El dinero de la empresa (margen, beneficio, coste del equipo) solo lo ve Tomás.",
+      "origen": "00 §3 · D-85 · D-86"
+    },
+    "lead": {
+      "si": [
+        {
+          "puestos": [
+            "setters",
+            "ventas_ro",
+            "direccion"
+          ],
+          "sin_cliente": true,
+          "nivel": "enmascarado",
+          "desenmascarable": true,
+          "motivo": "Enmascarado por defecto; verlo completo queda en el rastro."
+        },
+        {
+          "puestos": [
+            "especialista_ghl",
+            "account"
+          ],
+          "cartera": true,
+          "nivel": "enmascarado",
+          "desenmascarable": true,
+          "motivo": "Enmascarado por defecto; verlo completo queda en el rastro."
+        },
+        {
+          "nivel": "enmascarado",
+          "motivo": "Datos de leads solo para quien los trabaja."
+        }
+      ],
+      "origen": "00 §3 · D-88 (nunca en informes al cliente)"
+    },
+    "lead_prospeccion": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "jefa_crm"
+          ],
+          "nivel": "enmascarado",
+          "desenmascarable": true,
+          "motivo": "Prospectos de outreach: enmascarados por defecto; verlos completos queda en el rastro."
+        },
+        {
+          "puestos": [
+            "outreach"
+          ],
+          "cartera": "outreach",
+          "nivel": "enmascarado",
+          "desenmascarable": true,
+          "motivo": "Prospectos de las campañas de tus clientes de outreach: enmascarados por defecto; verlos completos queda en el rastro."
+        }
+      ],
+      "no": "Los prospectos de outreach solo los ven completos dirección, la jefa de CRM y quien lleva el outreach de ese cliente.",
+      "origen": "G3 Outreach «completos los prospectos de sus campañas» · D-88 · propuesta 3 de E6 · R16c (3-oct): outreach, solo los de su cartera de outreach (extracto incluido)"
+    },
+    "lead_ventas_ro": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "ventas_ro"
+          ],
+          "nivel": "enmascarado",
+          "desenmascarable": true,
+          "motivo": "Enmascarado por defecto; verlo completo queda en el rastro."
+        }
+      ],
+      "no": "Los prospectos de las ventas de RO solo los ve completos quien cierra (Tomás).",
+      "origen": "G3 Closer · D-88"
+    },
+    "mensaje_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ],
+          "desenmascarable": true,
+          "motivo": "Textos de los grupos de WhatsApp: abrirlos queda en el rastro."
+        },
+        {
+          "cartera": true,
+          "desenmascarable": true,
+          "motivo": "Lo llevas tú: abrir los mensajes queda en el rastro."
+        }
+      ],
+      "no": "Los mensajes de WhatsApp del cliente solo los ven quien lo lleva, operaciones y dirección. El resto ve solo que hubo contacto o reunión.",
+      "origen": "18_PETICIONES_ANTERIORES_REPASO (contradicción 4) · E0 ronda 3"
+    },
+    "recargar": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "«Actualizar ahora» y los avisos de fuentes son de Mili y Tomás.",
+      "origen": "18_PETICIONES (puntos 1 y 2) · 07_SUPERPROMPT_AVISOS_Y_ACTUALIZAR · E0 ronda 3"
+    },
+    "horas_persona": {
+      "si": [
+        {
+          "propio": true
+        },
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "rrhh"
+          ]
+        },
+        {
+          "jefe": true
+        }
+      ],
+      "no": "Esto solo lo ven la persona, su jefe, operaciones, RRHH y dirección.",
+      "origen": "D-83 · D-84"
+    },
+    "notas_persona": {
+      "si": [
+        {
+          "propio": true
+        },
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "rrhh"
+          ]
+        },
+        {
+          "jefe": true
+        }
+      ],
+      "no": "Esto solo lo ven la persona, su jefe, operaciones, RRHH y dirección.",
+      "origen": "D-83"
+    },
+    "alarma_persona": {
+      "si": [
+        {
+          "propio": true
+        },
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "rrhh"
+          ]
+        },
+        {
+          "jefe": true
+        }
+      ],
+      "no": "Esto solo lo ven la persona, su jefe, operaciones, RRHH y dirección.",
+      "origen": "D-83"
+    },
+    "horas_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "proyectos",
+            "jefa_publicidad",
+            "jefa_seo",
+            "jefa_crm"
+          ]
+        },
+        {
+          "cartera": true
+        },
+        {
+          "puestos": [
+            "rrhh"
+          ],
+          "nivel": "resumen",
+          "motivo": "RRHH ve horas por persona y tipo de tarea; el cliente, en agregado."
+        }
+      ],
+      "no": "Las horas por cliente las ven quien lo lleva, sus jefas, operaciones y dirección.",
+      "origen": "D-84 · D-87 (horas consumidas frente a pautadas, sin euros)"
+    },
+    "comparar_personas": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "rrhh",
+            "jefa_publicidad",
+            "jefa_seo",
+            "jefa_crm"
+          ]
+        },
+        {
+          "puestos": [
+            "setters"
+          ],
+          "nivel": "resumen",
+          "motivo": "Marcador de setters: solo reuniones celebradas."
+        }
+      ],
+      "no": "Las comparaciones entre personas solo las ven jefes, operaciones, RRHH y dirección.",
+      "origen": "D-83"
+    },
+    "rendimiento_pieza": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "proyectos",
+            "jefa_publicidad"
+          ]
+        },
+        {
+          "cartera": true
+        },
+        {
+          "puestos": [
+            "produccion"
+          ],
+          "nivel": "resumen",
+          "motivo": "En índice frente a la media de la cuenta, sin euros del cliente."
+        }
+      ],
+      "no": "El rendimiento de los anuncios lo ven publicidad, producción (en índice) y quien lleva el cliente.",
+      "origen": "D-82"
+    },
+    "grabacion": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion"
+          ]
+        },
+        {
+          "participante": true
+        },
+        {
+          "jefe": true
+        }
+      ],
+      "no": "Las grabaciones solo las ven los participantes, su jefe y dirección.",
+      "origen": "00 §3"
+    },
+    "responder_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        },
+        {
+          "puestos": [
+            "jefa_publicidad",
+            "jefa_seo",
+            "jefa_crm"
+          ]
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account"
+        }
+      ],
+      "no": "Contestan al cliente desde la app su account, las jefas, operaciones y dirección. Nadie toca Meta ni GHL desde la app en la fase 1.",
+      "origen": "D-91"
+    },
+    "ver_como": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "«Ver como» es solo para Mili y Tomás.",
+      "origen": "Plan v2 E0 · auditoría C-03"
+    },
+    "ajustes_editar": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "Personas y asignaciones las mantienen Mili y Tomás.",
+      "origen": "D-01 · Plan v2 E0"
+    },
+    "catalogo_indicadores": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "El catálogo completo de indicadores es de Tomás y Mili; cada puesto recibe los suyos.",
+      "origen": "Plan v2 E0"
+    },
+    "rastro_todo": {
+      "si": [
+        {
+          "puestos": [
+            "direccion"
+          ]
+        }
+      ],
+      "no": "Cada uno ve su propio rastro; el de todos, Tomás.",
+      "origen": "00 §2 M21"
+    },
+    "editar_objetivo_alta": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ],
+          "motivo": "Dirección y operaciones cargan el objetivo de cualquier cliente."
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account",
+          "motivo": "Eres su account: cargas su objetivo."
+        },
+        {
+          "puestos": [
+            "proyectos",
+            "tecnico_altas"
+          ],
+          "cliente_nuevo": true,
+          "motivo": "Cliente en alta (menos de 90 días): proyectos fija el objetivo al vender y el técnico de altas lo carga en el arranque."
+        }
+      ],
+      "no": "El objetivo lo cargan su account, operaciones y dirección; en los clientes en alta, también proyectos y el técnico de altas. Tú lo ves, sin editar.",
+      "origen": "A4 (2-oct) + ajuste del coordinador: no quitar a Coti y Agus el objetivo de las altas que ya cargaban en Clientes nuevos"
+    },
+    "editar_objetivo_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ],
+          "motivo": "Dirección y operaciones (la jefa de los accounts) cargan el objetivo y el semáforo de cualquier cliente."
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account",
+          "motivo": "Eres su account: cargas su objetivo y pones su semáforo del lunes."
+        }
+      ],
+      "no": "El objetivo y el semáforo del lunes los cargan su account, su jefa (operaciones) y dirección. Tú lo ves, sin editar.",
+      "origen": "A4 (2-oct) · 43_IDEAS_MEJORA: objetivo del cliente y semáforo del lunes desde la ficha · guía de accounts (el semáforo del lunes se pone en la ficha) · D-03"
+    },
+    "contactos_cliente": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "proyectos"
+          ],
+          "desenmascarable": true,
+          "motivo": "Teléfonos y correos del cliente: abrirlos queda en el rastro."
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account",
+          "desenmascarable": true,
+          "motivo": "Eres su account: abrir sus contactos queda en el rastro."
+        }
+      ],
+      "no": "Los teléfonos y correos del cliente solo los ven su account, operaciones y dirección.",
+      "origen": "M4 (2-oct) · encargo de la pintura total: contactos solo para quien lleva el cliente, dirección y operaciones · D-10 · D-88 (rastro)"
+    },
+    "chat_cliente": {
+      "si": [
+        {
+          "ambito": [
+            "todos",
+            "disciplina"
+          ],
+          "desenmascarable": true
+        },
+        {
+          "cartera": true,
+          "desenmascarable": true
+        }
+      ],
+      "no": "El canal de ClickUp del cliente lo ve quien puede abrir su detalle.",
+      "origen": "M4 (2-oct) · igual que cliente_detalle (D-81), servido por almacén privado"
+    },
+    "solo_lo_tuyo": {
+      "si": [
+        {
+          "propio": true,
+          "desenmascarable": true,
+          "motivo": "Tus propios prospectos: abrirlos queda en el rastro."
+        }
+      ],
+      "no": "Los nombres de los prospectos de una agenda solo los abre su dueño.",
+      "origen": "Ronda 6 (M23 Agenda): «solo lo tuyo»."
+    },
+    "agenda_persona": {
+      "si": [
+        {
+          "propio": true
+        },
+        {
+          "jefe": true
+        },
+        {
+          "puestos": [
+            "operaciones",
+            "direccion"
+          ]
+        }
+      ],
+      "no": "La agenda de una persona la ven ella, su jefe, operaciones y dirección.",
+      "origen": "Ronda 6 (M23): RRHH no recibe todas las agendas."
+    },
+    "probar_conexiones": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones",
+            "tecnico_altas"
+          ]
+        }
+      ],
+      "no": "«Probar ahora» de Conexiones lo pulsan Agus (técnico), Mili y Tomás.",
+      "origen": "R15 · solo el paso salud_conexiones (no la recarga entera)"
+    },
+    "opiniones_ver": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones"
+          ]
+        }
+      ],
+      "no": "Los avisos de «Algo va mal / Tengo una idea» los leen Mili y Tomás (cada uno ve los suyos).",
+      "origen": "R15 · A7"
+    }
+  },
+  "_almacenes_cliente": "Ronda 6 (C4): «cliente» dice de dónde saca el SERVIDOR el cliente del dato: \"ref\" (el ref es el cliente) o {desde, listas, clave} (la fila con ese ref en un fichero del módulo). El cliente_id que manda el navegador no cuenta.",
+  "_datos_de_modulo_r6": "Ronda 6: «filas_solo_tipo» (filas de una lista solo para quien ve un tipo), «textos_sin_importes_salvo» (tapa importes en todos los textos salvo para quien ve ese tipo), «claves_solo_tipo» (una clave entera solo para un tipo) y «resumen» (claves que llegan con nivel resumen).",
+  "acciones_permitidas": {
+    "primera-semana": [
+      "primera_semana_paso"
+    ],
+    "setters": [
+      "resultado_llamada",
+      "confirmacion_cita",
+      "llamada_iniciada",
+      "whatsapp_abierto",
+      "correo_abierto"
+    ],
+    "ventas-ro": [
+      "llamada_iniciada",
+      "whatsapp_abierto"
+    ],
+    "prospeccion": [
+      "linkedin_abierto",
+      "correo_abierto"
+    ],
+    "chat-equipo": [
+      "chat_mensaje",
+      "chat_respuesta"
+    ],
+    "ajustes": [
+      "personas_ausencia",
+      "personas_1a1",
+      "personas_nota",
+      "personas_vacante",
+      "personas_salida"
+    ],
+    "_que_es": "Ronda 6 (M1/A5): tipos de acción que el navegador puede dejar en la cola «acciones» (lista blanca). Por módulo: añade «<id del módulo>: [tipos]». decidir solo la acepta el servidor si quien la manda es el destinatario.",
+    "_herramientas": [
+      "app",
+      "desk",
+      "clickup",
+      "ghl",
+      "meta",
+      "zadarma",
+      "sign",
+      "metricool",
+      "zoom",
+      "seranking",
+      "pagespeed",
+      "whatsapp",
+      "snov",
+      "holded",
+      "gmail"
+    ],
+    "horas": [
+      "hora_rara_correcto",
+      "hora_rara_hablar",
+      "hora_rara_error"
+    ],
+    "bandeja": [
+      "llamada_devuelta"
+    ],
+    "alertas": [
+      "alerta_vista",
+      "alerta_lo_tengo",
+      "alerta_resuelta",
+      "alerta_no_aplica",
+      "alerta_reabrir",
+      "alerta_posponer",
+      "alerta_lote"
+    ],
+    "produccion": [
+      "pieza_aprobar",
+      "pieza_pedir_cambios"
+    ],
+    "ficha": [
+      "semaforo_semanal"
+    ],
+    "*": [
+      "a_cero",
+      "acta",
+      "alta",
+      "alta_facturacion",
+      "analisis",
+      "analisis_mes",
+      "asignacion",
+      "asignar",
+      "asignar_respuesta",
+      "auditoria_semanal",
+      "avisar",
+      "aviso",
+      "aviso_account",
+      "aviso_impago_account",
+      "aviso_integracion",
+      "aviso_mili",
+      "baja",
+      "caida",
+      "caida_lo_tengo",
+      "casilla",
+      "casilla_montaje",
+      "causa",
+      "cerrar",
+      "cita",
+      "clasificar_respuesta",
+      "clasificar_reunion",
+      "cobro_reclamado",
+      "comentario",
+      "comprobar_posiciones",
+      "correo",
+      "crear_lista_onboarding",
+      "crear_reunion",
+      "decidir",
+      "decidir_incongruencia",
+      "decision_nueva",
+      "enviado_otra_via",
+      "escalar",
+      "estado_alta",
+      "fallida",
+      "fechas_dn",
+      "gestion_operaciones",
+      "hoja_semanal",
+      "hueco",
+      "informe_fin_de_dia",
+      "lead",
+      "llamada",
+      "llamar",
+      "marcar",
+      "marcar_cita",
+      "medir_velocidad",
+      "mensaje_chat",
+      "motivo",
+      "mover",
+      "mover_estado",
+      "mover_oportunidad",
+      "mover_tarjeta",
+      "no_aplica",
+      "no_cuadra",
+      "nota",
+      "nota_interna",
+      "objetivo_alta",
+      "otro_mes",
+      "parcial",
+      "paridad_comprobada",
+      "pasada",
+      "pedir_accesos",
+      "personas_plan",
+      "plan_de_cobro",
+      "programar",
+      "proponer_reasignacion",
+      "quincenal_hecha",
+      "quitar_acceso",
+      "recordarme",
+      "recordatorio_impago",
+      "recordatorio_seguimiento",
+      "reiterar",
+      "reprogramar_cita",
+      "resolver",
+      "responder",
+      "resultado",
+      "resultado_cita",
+      "revisar_oferta",
+      "revision_zadarma",
+      "ronda",
+      "tarea",
+      "traspaso",
+      "traspaso_revisado",
+      "ver_completo",
+      "visto",
+      "whatsapp",
+      "impago_estado",
+      "cuadre_decision"
+    ]
+  },
+  "rastro_navegador": [
+    "evento",
+    "alarma_vista",
+    "alerta_seo_vista",
+    "chat_abrir",
+    "demo",
+    "descargar_pdf",
+    "lead_desenmascarado",
+    "llamar",
+    "no_aplica",
+    "marcar",
+    "desmarcar",
+    "visto",
+    "abrir",
+    "copiar",
+    "whatsapp",
+    "correo",
+    "filtro",
+    "pestana",
+    "ia_usar",
+    "ia_descartar"
+  ],
+  "rastro_solo_servidor": [
+    "envio_reintento",
+    "envio_reintento_simulado",
+    "ver_dato",
+    "ver_dato_denegado",
+    "ver_como",
+    "lectura",
+    "decidir",
+    "decision_nueva",
+    "cambio_persona",
+    "asignacion_crear",
+    "asignacion_cerrar",
+    "asignacion_confirmar",
+    "para_confirmar",
+    "recarga_pedida",
+    "recarga_terminada",
+    "aviso_visto",
+    "denegado",
+    "importado",
+    "accion_simulada",
+    "ver_lead",
+    "ver_lead_denegado",
+    "ia_borrador",
+    "ia_copiloto",
+    "ia_denegado",
+    "ia_consejo",
+    "opinion_enviada",
+    "cliente_fijado",
+    "cliente_desfijado",
+    "buscar",
+    "zona_cambiada"
+  ],
+  "_solo_propio": "Ronda 6 (M24 Chat): «solo_propio» en datos_de_modulo = el fichero <carpeta>/p_<id> solo lo recibe esa persona. Sustituye a las 32 altas por persona. Las filas con «miembros» solo llegan a sus miembros.",
+  "_nombres_dueno": "Ronda 6 (auditoría 29, F-10): «nombres_dueno» en datos_de_modulo = el dueño del lead (su setter, ventas de RO en sus reuniones, la persona de la agenda) recibe el nombre completo sin pulsar; teléfono y correo siguen detrás de «Ver completo». Queda en el rastro.",
+  "_solo_real": "Ronda 7 (D-P-C2): «solo_real» = el puesto lo tiene que tener la persona que está delante de verdad (en «ver como» nunca se presta). Además, toda regla por puesto en «ver como» usa solo los puestos que tienen las dos personas.",
+  "_puestos_solo_tomas": "Ronda 11 (A3, auditoría 35): dar o quitar estos puestos, y cambiar puestos, estado (baja), jefe o correo de quien ya tiene uno, solo lo hace Tomás (dirección). operaciones da «ver como» y Ajustes; ventas_ro, los prospectos de Tomás; administración, los cobros.",
+  "puestos_solo_tomas": [
+    "direccion",
+    "finanzas_direccion",
+    "rrhh",
+    "operaciones",
+    "ventas_ro",
+    "administracion"
+  ],
+  "_zona_horaria": "Mi perfil (3-oct, encargo de Tomás «que el equipo pueda actualizar su timezone»). Quién cambia la zona horaria de una persona: ella misma (propia), su jefe directo (jefe_directo) y los puestos de «puestos» (Mili y Tomás). A una persona con puesto de mando (puestos_solo_tomas) solo se la cambia Tomás («mando_solo»), aunque ella siempre puede cambiar la suya. En «ver como» nunca se escribe. Vale cualquier zona IANA; «zonas_equipo» es la lista corta que sale arriba. Lo aplican altas_personas.py (puede_cambiar_zona, POST /api/perfil/zona) y modulos/mi_perfil.js (para enseñar el botón). Queda en el historial de personas y en el rastro (zona_cambiada, solo del servidor).",
+  "zona_horaria": {
+    "propia": true,
+    "jefe_directo": true,
+    "puestos": ["direccion", "operaciones"],
+    "mando_solo": ["direccion"],
+    "ver_como": false,
+    "zonas_equipo": [
+      ["Europe/Madrid", "España (Madrid)"],
+      ["Atlantic/Canary", "Canarias"],
+      ["America/Caracas", "Venezuela (Caracas)"],
+      ["America/Bogota", "Colombia (Bogotá)"],
+      ["America/Argentina/Buenos_Aires", "Argentina (Buenos Aires)"],
+      ["America/Mexico_City", "México (Ciudad de México)"],
+      ["America/Lima", "Perú (Lima)"],
+      ["America/Santiago", "Chile (Santiago)"],
+      ["America/Montevideo", "Uruguay (Montevideo)"],
+      ["America/Asuncion", "Paraguay (Asunción)"],
+      ["America/Santo_Domingo", "República Dominicana (Santo Domingo)"],
+      ["Asia/Makassar", "Bali (Indonesia)"]
+    ]
+  },
+  "_revision_piezas": "R14 (2-oct, idea B2): quién puede «Aprobar» o «Pedir cambios» en una pieza que espera revisión (Producción › Por revisar). Lo comprueban servir.py (al recibir la acción) y produccion.js (para enseñar los botones). Hoy solo deja la acción en la cola «acciones» en SIMULACIÓN con su rastro; escribir en ClickUp lo activa Tomás (B2, con el despliegue). Nadie se aprueba a sí mismo. «siempre» = puestos que pueden decidir en cualquier revisión interna. por_estado: revisa «account» = quien lleva el cliente en su silla de account; «puestos» = esos puestos; «persona» = esa persona. «a» = estado al que pasaría en ClickUp (propuesta; lo confirma Tomás). Los estados que esperan al cliente no se aprueban desde la app. R16 (N11): en «revisión técnica» cada jefa revisa solo las piezas de su área (areas_tecnica: puesto del autor, o que el autor la tenga de jefa directa).",
+  "revision_piezas": {
+    "siempre": [
+      "direccion",
+      "operaciones"
+    ],
+    "por_estado": {
+      "revisión project manager": {
+        "revisa": "account",
+        "texto": "Account del cliente",
+        "a": "enviar  cliente"
+      },
+      "revisión técnica": {
+        "revisa": "puestos",
+        "puestos": [
+          "jefa_publicidad",
+          "jefa_crm",
+          "jefa_seo"
+        ],
+        "texto": "Revisión técnica (jefa del área)",
+        "a": "revisión project manager"
+      },
+      "revisión mili": {
+        "revisa": "persona",
+        "persona": "mili",
+        "texto": "Mili",
+        "a": "revisión project manager"
+      },
+      "revisión tomás": {
+        "revisa": "persona",
+        "persona": "tomas",
+        "texto": "Tomás",
+        "a": "revisión project manager"
+      }
+    },
+    "pedir_cambios_a": "corrección",
+    "espera_cliente": [
+      "revisión cliente",
+      "ver cliente",
+      "enviar  cliente",
+      "enviar cliente",
+      "campaña en curso"
+    ],
+    "areas_tecnica": {
+      "jefa_publicidad": [
+        "trafficker"
+      ],
+      "jefa_crm": [
+        "especialista_ghl",
+        "outreach"
+      ],
+      "jefa_seo": [
+        "seo",
+        "ficha_google",
+        "web"
+      ]
+    }
+  },
+  "_acciones_solo_puestos": "Ronda 11 (M1, auditoría 35): tipos de acción que, además de la lista blanca por pantalla, exigen uno de estos puestos a la persona REAL. Un account no encola bajas, cobros ni quitar accesos.",
+  "acciones_solo_puestos": {
+    "baja": [
+      "direccion",
+      "operaciones"
+    ],
+    "cobro_reclamado": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "plan_de_cobro": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "recordatorio_impago": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "aviso_impago_account": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "alta_facturacion": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "quitar_acceso": [
+      "direccion",
+      "operaciones",
+      "proyectos",
+      "rrhh"
+    ],
+    "asignacion": [
+      "direccion",
+      "operaciones"
+    ],
+    "asignar": [
+      "direccion",
+      "operaciones",
+      "proyectos"
+    ],
+    "impago_estado": [
+      "direccion",
+      "finanzas_direccion",
+      "administracion"
+    ],
+    "cuadre_decision": [
+      "direccion",
+      "finanzas_direccion"
+    ]
+  },
+  "_envios": "Envíos verificados (3-oct, envios.py): cada envío (correo de Desk, WhatsApp, GHL) nace SOLO de una acción de la cola de un tipo de «tipos_envio»; el destinatario y el remitente los pone el servidor; el navegador solo manda el id para «Reintentar» (simulado hasta que Tomás active los envíos). Cada uno ve sus envíos; «ven_todos_puestos», todos (el texto, solo si además abre ese cliente). Si un envío falla, aviso a quien lo mandó y a «avisar_a» en «canal_avisos» (copia en «canal_avisos_copia»). «reintentos_max»: reintentos automáticos de un error seguro (red), mirando antes si ya llegó.",
+  "envios": {
+    "tipos_envio": {
+      "desk": [
+        "responder",
+        "correo"
+      ],
+      "whatsapp": [
+        "responder",
+        "whatsapp",
+        "mensaje"
+      ],
+      "ghl": [
+        "responder",
+        "correo",
+        "whatsapp",
+        "mensaje"
+      ]
+    },
+    "ven_todos_puestos": [
+      "direccion",
+      "operaciones",
+      "tecnico_altas"
+    ],
+    "reintentan_puestos": [
+      "direccion",
+      "operaciones",
+      "tecnico_altas"
+    ],
+    "activa": "tomas",
+    "avisar_a": [
+      "agustina"
+    ],
+    "canal_avisos": "avisos-direccion",
+    "canal_avisos_copia": "avisos-altas",
+    "reintentos_max": 1
+  },
+  "_acciones_con_efecto_fuera": "R16 (N4, auditoría 35b): lo que sale de la app (WhatsApp, correo, llamadas, GHL, Metricool, Zoom, chat de ClickUp…) exige un cliente que la persona REAL lleve (su cartera, de cualquier silla, o un puesto de «lleva_puestos»). En «tipos_destinatario», el objeto no puede ser una dirección o un teléfono escritos a mano y, en WhatsApp y GHL, el servidor tiene que reconocer el grupo o el contacto. «clickup_tarea»: la tarea la saca el servidor de Producción; una pieza que espera revisión solo cambia con pieza_aprobar/pieza_pedir_cambios, y una tarea la mueve o comenta su autor, su jefe, operaciones o dirección.",
+  "acciones_con_efecto_fuera": {
+    "tipos": [
+      "whatsapp",
+      "correo",
+      "llamar",
+      "llamada",
+      "mover_oportunidad",
+      "marcar_cita",
+      "reprogramar_cita",
+      "programar",
+      "mensaje_chat",
+      "crear_reunion",
+      "resultado_cita",
+      "pedir_accesos",
+      "recordatorio_seguimiento"
+    ],
+    "tipos_destinatario": [
+      "whatsapp",
+      "correo",
+      "llamar",
+      "llamada"
+    ],
+    "herramientas": [
+      "ghl",
+      "whatsapp",
+      "gmail",
+      "metricool",
+      "zoom"
+    ],
+    "clickup_tarea": [
+      "mover_estado",
+      "mover_tarjeta",
+      "mover",
+      "comentario"
+    ],
+    "lleva_puestos": [
+      "direccion",
+      "operaciones",
+      "jefa_publicidad",
+      "jefa_crm",
+      "jefa_seo"
+    ]
+  },
+  "_acciones_repetidas_segundos": "Ronda 11 (M1): la misma acción (quién + herramienta + tipo + objeto + texto) dentro de estos segundos no deja otra fila: se devuelve la que ya había («repetida»).",
+  "acciones_repetidas_segundos": 120,
+  "_acciones_regla_cliente": "A4 (2-oct): tipos de acción que, además de la lista blanca y de poder abrir el cliente, exigen esta regla de «tipos» sobre SU cliente (cliente_id obligatorio). El objetivo y el semáforo del lunes: su account, operaciones y dirección.",
+  "acciones_regla_cliente": {
+    "objetivo_alta": "editar_objetivo_alta",
+    "semaforo_semanal": "editar_objetivo_cliente"
+  },
+  "_acciones_vista_previa_recortada": "A4 (2-oct): al LEER /api/acciones, la vista previa de estos tipos sale recortada como cualquier dato del cliente (coste_*, cpl_*, inversion_* y presupuesto solo a quien ve su inversión).",
+  "acciones_vista_previa_recortada": [
+    "objetivo_alta",
+    "semaforo_semanal"
+  ]
+}

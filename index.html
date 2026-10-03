@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#0f1645">
+<meta name="robots" content="noindex, nofollow">
+<title>App RO</title>
+<!-- Ronda 14 (velocidad, auditoría 37). Con servir.py, la línea MAPA se cambia por el mapa de versiones (import map) y cada
+     fichero propio se pide como «nombre?v=<huella>» con caché de un año; la de PRECARGA, por la petición de la sesión, que
+     sale a la vez que el código. Con python3 -m http.server se quedan como comentarios y todo funciona igual. -->
+<!--MAPA-->
+<link rel="preload" href="fuentes_web/montserrat-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="estilos.css">
+<link rel="modulepreload" href="app.js">
+<link rel="modulepreload" href="carcasa.js">
+<link rel="modulepreload" href="datos.js">
+<link rel="modulepreload" href="permisos.js">
+<link rel="modulepreload" href="componentes.js">
+<link rel="modulepreload" href="modulos/indice.js">
+<link rel="modulepreload" href="modulos/ia_componentes.js">
+<link rel="modulepreload" href="modulos/mi_dia.js">
+<link rel="modulepreload" href="modulos/mi_dia_bloques.js">
+<!--PRECARGA-->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230f1645'/%3E%3Cpath d='M16 4l10 6v12l-10 6-10-6V10z' fill='white'/%3E%3Crect x='11' y='17' width='2.6' height='5' fill='%2316205e'/%3E%3Crect x='14.7' y='13.5' width='2.6' height='8.5' fill='%2316205e'/%3E%3Crect x='18.4' y='11' width='2.6' height='11' fill='%2316205e'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="saltar" href="#main">Saltar al contenido</a>
+<div class="app">
+  <nav class="side" aria-label="Menú principal">
+    <a class="brand" href="#/" aria-label="Ranking Online, ir al inicio">
+      <svg class="marca" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2l12 7v14l-12 7-12-7V9z" fill="#fff"/><rect x="10" y="17" width="3" height="6" fill="#16205e"/><rect x="14.5" y="13" width="3" height="10" fill="#16205e"/><rect x="19" y="10" width="3" height="13" fill="#16205e"/></svg>
+      <span><span class="nombre">Ranking Online</span><small></small></span>
+    </a>
+    <div class="nav" id="nav"></div>
+    <div class="side-foot">
+      <div class="yo">
+        <span class="av" id="yo-av" aria-hidden="true">·</span>
+        <div><b id="quien">…</b><small id="quien-puesto"></small></div>
+      </div>
+      <details class="frescura" id="frescura"><summary>Datos</summary></details>
+      <span>Rastro de esta sesión: <b id="rastro-n">0</b></span>
+      <span class="leyenda"><i aria-hidden="true"></i>Pantalla prevista, sin construir</span>
+      <span>Prototipo local · sin escritura real</span>
+    </div>
+  </nav>
+  <div class="velo" id="velo" hidden></div>
+  <div class="content">
+    <!-- Ronda 9 (auditoría 30, P0-3): cabecera de UNA fila de 64 px en todos los anchos. «Ver como», el estado de la
+         recarga y el rastro van al menú de la persona (avatar ▾); «Actualizar ahora» es un icono ↻. -->
+    <header class="topbar">
+      <div class="topbar-in">
+        <button class="bt menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="nav" aria-label="Menú">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span class="menu-txt">Menú</span>
+        </button>
+        <div class="titulo">
+          <h1 id="titulo">Cargando…</h1>
+          <p class="sub" id="subtitulo"></p>
+        </div>
+        <div class="topbar-acc" id="topbar-acc"><span class="chip gris dato-guardado" id="dato-guardado" role="status" hidden></span></div>
+        <button class="buscar-btn" id="buscar" type="button" aria-haspopup="dialog" aria-label="Buscar o hacer algo: clientes, correos, tareas, alertas…">
+          <svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <span>Buscar o hacer algo</span><kbd id="kbd-k">⌘K</kbd>
+        </button>
+        <div class="yo-menu" id="yo-menu">
+          <button class="yo-btn" id="yo-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="yo-pop" aria-label="Tu menú: ver como, actualizar y rastro">
+            <span class="av av-top" id="av-top" aria-hidden="true">·</span>
+            <svg class="i s" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="yo-pop" id="yo-pop" hidden>
+            <div class="yo-pop-cab"><b id="yo-pop-nombre"></b><small id="yo-pop-puesto"></small></div>
+            <div class="vercomo" id="vercomo" hidden></div>
+            <div class="yo-pop-recarga" id="yo-pop-recarga" hidden></div>
+            <a class="yo-pop-l" id="yo-pop-rastro" href="#/decisiones" hidden>Decisiones y rastro</a>
+            <p class="yo-pop-pie">Rastro de esta sesión: <b id="yo-pop-n">0</b> · prototipo local</p>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="barra-ctx" id="barra-ctx" hidden><div class="barra-ctx-in" id="barra-ctx-in"></div></div>
+    <div class="banda-vercomo" id="banda" role="status" hidden></div>
+    <main id="main" tabindex="-1"></main>
+  </div>
+</div>
+
+<div class="paleta-fondo" id="paleta" hidden>
+  <div class="paleta" role="dialog" aria-modal="true" aria-label="Buscar">
+    <input id="paleta-q" type="text" role="combobox" aria-expanded="true" aria-controls="paleta-lista" aria-autocomplete="list" placeholder="Busca un cliente, un correo, una tarea… o escribe «contestar», «fijar», «posponer»" autocomplete="off">
+    <ul id="paleta-lista" role="listbox" aria-label="Resultados"></ul>
+    <div class="pie"><span><kbd>↑</kbd> <kbd>↓</kbd> moverse</span><span><kbd>↵</kbd> abrir</span><span><kbd>Esc</kbd> cerrar</span><span>Solo lo que tu puesto puede ver</span></div>
+  </div>
+</div>
+
+<script type="module" src="carcasa.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+</html>

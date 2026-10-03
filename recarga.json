@@ -1,0 +1,41 @@
+{
+  "_que_es": "Pasos del botón «Actualizar ahora» (servir.py, solo Mili y Tomás). Desde el 2-oct (C5) hay UNA sola tubería: este botón lanza despliegue/tuberia.py, la misma que corre por horario, con su orden (el de E1: externos → Snov → captación → base → capa E1 → módulos → verdad → catálogo y foto → Mi día), sus reintentos, su bloqueo (si ya hay una vuelta en marcha, no se lanza otra: sale con 75) y su «último dato bueno». Los pasos y el horario de cada fuente están en despliegue/pasos.json. Modo «ligera»: nada que gaste créditos (SE Ranking, Windsor). Cada generador es SOLO LECTURA de sus herramientas. La lista anterior de pasos sueltos está en el historial del carril C5 (_ESTADO_C5.md).",
+  "ligera": [
+    {
+      "id": "tuberia_ligera",
+      "cmd": [
+        "python3",
+        "despliegue/tuberia.py",
+        "--ligero",
+        "--quien",
+        "servir"
+      ],
+      "timeout": 5400
+    }
+  ],
+  "completa": [
+    {
+      "id": "tuberia_completa",
+      "cmd": [
+        "python3",
+        "despliegue/tuberia.py",
+        "--completo",
+        "--quien",
+        "servir"
+      ],
+      "timeout": 10800
+    }
+  ],
+  "_fuera_de_la_ligera": "Lo que gasta créditos o hace lecturas masivas (SE Ranking, Windsor, CRM en vivo con ≈700 lecturas de GHL, Search Console y Metricool en vivo, extracción de ClickUp de horas y tareas, anuncios de Meta, Snov en Ventas) va en la completa: a las 6:00 y a las 14:00, o con el modo «completa».",
+  "conexiones": [
+    {
+      "id": "salud_conexiones",
+      "cmd": [
+        "python3",
+        "despliegue/salud_conexiones.py"
+      ],
+      "timeout": 180
+    }
+  ],
+  "_conexiones": "R15: «Probar ahora» de Ajustes › Conexiones (Agus, Mili y Tomás): SOLO la salud de las conexiones (≈26 lecturas baratas, solo lectura), nunca la vuelta entera."
+}

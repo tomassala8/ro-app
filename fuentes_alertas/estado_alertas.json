@@ -1,0 +1,3428 @@
+{
+ "web_caida:busbac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La web de Busbac no responde: falla la conexión segura (https).",
+  "departamento": "web",
+  "cliente_id": "busbac",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_medicion:busbac:0": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Busbac: La web no responde por https.",
+  "departamento": "web",
+  "cliente_id": "busbac",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_spam:musashi-consultores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Musashi Consultores tiene enlaces de spam (apuestas, casinos).",
+  "departamento": "web",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_medicion:musashi-consultores:0": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores: Medición bloqueada por el banner de cookies.",
+  "departamento": "web",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_caida:abner-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La web de Abner Advisory no responde: error 404 (la portada no existe).",
+  "departamento": "web",
+  "cliente_id": "abner-advisory",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_spam:geslabor": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Geslabor tiene enlaces de spam (bet365, casino, casinos, tragaperras).",
+  "departamento": "web",
+  "cliente_id": "geslabor",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_caida:marlex-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La web de Marlex Consulting no responde: el dominio no existe (no resuelve en DNS).",
+  "departamento": "web",
+  "cliente_id": "marlex-consulting",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_caida:tst-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La web de TST Consulting no responde: falla la conexión segura (https).",
+  "departamento": "web",
+  "cliente_id": "tst-consulting",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:ahedo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de Ahedo caduca en 26 días (2026-10-28).",
+  "departamento": "web",
+  "cliente_id": "ahedo",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:aster-asesoria": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Aster Asesoría tarda 5,8 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "aster-asesoria",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:billeo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Billeo tarda 7,1 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "billeo",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:consulting-f": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Consulting F tarda 5,9 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "consulting-f",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:deudot": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Deudot tarda 9 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "deudot",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:fitec-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Fitec Asesores tarda 5,5 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de GAC tarda 5,5 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "gac",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:ip-forense": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de IP Forense tarda 5,3 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "ip-forense",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:j-d-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de J&D Consulting caduca en 27 días (2026-10-29).",
+  "departamento": "web",
+  "cliente_id": "j-d-consulting",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:laver": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de Laver caduca en 21 días (2026-10-23).",
+  "departamento": "web",
+  "cliente_id": "laver",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:octoedro": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Octoedro tarda 7,9 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "octoedro",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:proincentiva": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de Proincentiva caduca en 15 días (2026-10-17).",
+  "departamento": "web",
+  "cliente_id": "proincentiva",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:segu-assessors": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de Segú Assessors caduca en 15 días (2026-10-17).",
+  "departamento": "web",
+  "cliente_id": "segu-assessors",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:sol-4": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Sol-4 tarda 6,2 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "sol-4",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_certificado:torrevieja-consult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "El certificado de Torrevieja Consult caduca en 29 días (2026-10-31).",
+  "departamento": "web",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_lenta:tribulex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "La portada de Tribulex tarda 8,9 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "tribulex",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_medicion:ecija-advisory:0": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "ECIJA Advisory: Analytics en una cuenta ajena.",
+  "departamento": "web",
+  "cliente_id": "ecija-advisory",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "web_medicion:fusterguell:0": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "FusterGüell: Doble Analytics.",
+  "departamento": "web",
+  "cliente_id": "fusterguell",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:asetra": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Asetra: «asetra» sale del top 10 (hace 7 días 2, hoy 47).",
+  "departamento": "seo",
+  "cliente_id": "asetra",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:bit-24": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "BIT 24: «bitrix24 login» sale del top 10 (hace 7 días 6, hoy 17).",
+  "departamento": "seo",
+  "cliente_id": "bit-24",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:ahedo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ahedo: «despacho de asesores» sale del top 10 (hace 7 días 8, hoy 14).",
+  "departamento": "seo",
+  "cliente_id": "ahedo",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC: «ley de la segunda oportunidad abogados barcelona» sale del top 10 (hace 7 días 8, hoy 30).",
+  "departamento": "seo",
+  "cliente_id": "gac",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:ecom-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: «gestión fiscal inventario ecommerce» sale del top 10 (hace 7 días 5, hoy 15).",
+  "departamento": "seo",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:fitec-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Fitec Asesores: «presupuesto asesoría empresas vigo» sale del top 10 (hace 7 días 5, hoy 44).",
+  "departamento": "seo",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:octoedro": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Octoedro: Clics −40 % semana contra semana (15 → 9).",
+  "departamento": "seo",
+  "cliente_id": "octoedro",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:orejana": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Orejana: «Gestoría mercantil en segovia» sale del top 10 (hace 7 días 1, hoy 20).",
+  "departamento": "seo",
+  "cliente_id": "orejana",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:prodegest": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Prodegest: «asesoría integral para pymes en Terrassa» sale del top 10 (hace 7 días 4, hoy 17).",
+  "departamento": "seo",
+  "cliente_id": "prodegest",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_rojo:xterna": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Xterna: «gestoria pymes barcelona» sale del top 10 (hace 7 días 1, hoy 17).",
+  "departamento": "seo",
+  "cliente_id": "xterna",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:accompany": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Accompany: «tax spain» no aparece en la comprobación (hace 7 días 7): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "accompany",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:adade-zaragoza": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Adade Zaragoza: «asesoria laboral en zaragoza» no aparece en la comprobación (hace 7 días 4): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:aselegal": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aselegal: «asesoria juridica sevilla» no aparece en la comprobación (hace 7 días 8): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "aselegal",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:aster-asesoria": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aster Asesoría: «gestoria asociaciones» no aparece en la comprobación (hace 7 días 3): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "aster-asesoria",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:avantik": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Avantik: «asesoría fiscal» no aparece en la comprobación (hace 7 días 4): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "avantik",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:ayg-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "AyG Asesores: «asesoría contable» no aparece en la comprobación (hace 7 días 7): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:bonet-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Bonet Asesores: «asesoramiento contable» no aparece en la comprobación (hace 7 días 3): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:busbac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Busbac: «asesoría de empresas en rubí» no aparece en la comprobación (hace 7 días 8): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "busbac",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:centro-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Centro Consulting: «asesoria contable zaragoza» no aparece en la comprobación (hace 7 días 8): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:christian-sanchez": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Christian Sanchez: «gestoria marratxi» no aparece en la comprobación (hace 7 días 3): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "christian-sanchez",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:ecija-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "ECIJA Advisory: Clics −12,9 % semana contra semana (294 → 256).",
+  "departamento": "seo",
+  "cliente_id": "ecija-advisory",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:fusterguell": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "FusterGüell: «gestoria cardedeu» no aparece en la comprobación (hace 7 días 4): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "fusterguell",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:gestanex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Gestanex: Ninguna de las 15 palabras del informe está en el top 10.",
+  "departamento": "seo",
+  "cliente_id": "gestanex",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:greconsult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Greconsult: Ninguna de las 15 palabras del informe está en el top 10.",
+  "departamento": "seo",
+  "cliente_id": "greconsult",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:ip-forense": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "IP Forense: «psicologia forense» no aparece en la comprobación (hace 7 días 3): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "ip-forense",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:j-d-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "J&D Consulting: «contabilidad farmacia» no aparece en la comprobación (hace 7 días 6): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "j-d-consulting",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:joan-lluis-vives": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Joan Lluís Vives: «despacho economistas palma» no aparece en la comprobación (hace 7 días 2): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:kiosko-box": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Kiosko Box: «fotos imprimir» no aparece en la comprobación (hace 7 días 10): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "kiosko-box",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:laver": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Laver: Ninguna de las 15 palabras del informe está en el top 10.",
+  "departamento": "seo",
+  "cliente_id": "laver",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:mg-economistes": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "MG Economistes: «itp alicante» no aparece en la comprobación (hace 7 días 2): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "mg-economistes",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:musashi-consultores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores: «asesoria laboral malaga» no aparece en la comprobación (hace 7 días 6): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:oteca": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Oteca: «asesoria autonomos» no aparece en la comprobación (hace 7 días 4): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "oteca",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:romero-martinez": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Romero Martínez: Ninguna de las 15 palabras del informe está en el top 10.",
+  "departamento": "seo",
+  "cliente_id": "romero-martinez",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:segu-assessors": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Segú Assessors: «asesoria extranjeria» no aparece en la comprobación (hace 7 días 1): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "segu-assessors",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:sol-4": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Sol-4: Ninguna de las 15 palabras del informe está en el top 10.",
+  "departamento": "seo",
+  "cliente_id": "sol-4",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:torrevieja-consult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Torrevieja Consult: «abogado extranjeria torrevieja» no aparece en la comprobación (hace 7 días 7): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "seo_ambar:tribulex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Tribulex: «asesoria murcia» no aparece en la comprobación (hace 7 días 9): mirar en Google antes de actuar.",
+  "departamento": "seo",
+  "cliente_id": "tribulex",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_critico:akua": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Akua: Coste por lead (7 días), 2,5 veces el techo.",
+  "departamento": "publicidad",
+  "cliente_id": "akua",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_critico:consulting-f": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Consulting F: Ningún lead ha llegado a cita en 90 días (ni en el embudo ni en el calendario): el despacho no trabaja los leads.",
+  "departamento": "crm",
+  "cliente_id": "consulting-f",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_critico:innova-scala": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Innova Scala: Coste por lead (7 días), 2,9 veces el techo.",
+  "departamento": "publicidad",
+  "cliente_id": "innova-scala",
+  "dueno_id": "valeria",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:bit-24": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "BIT 24: Ayer no gastó nada: campañas paradas, sin saldo o rechazadas.",
+  "departamento": "publicidad",
+  "cliente_id": "bit-24",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:busbac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Busbac: 7 días sin leads con gasto.",
+  "departamento": "publicidad",
+  "cliente_id": "busbac",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:ecom-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: Coste por lead (7 días), por encima del techo.",
+  "departamento": "publicidad",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:emex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Emex: Ningún lead ha pasado a cita en el embudo en 90 días, pero el calendario tiene 2 citas: el despacho no mueve las etapas.",
+  "departamento": "publicidad",
+  "cliente_id": "emex",
+  "dueno_id": "valeria",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC: Subcuenta de GoHighLevel sin usar (1 contacto en toda su historia): los 105 leads de Meta de 7 días no van a GoHighLevel. Confirmar con el cliente el servicio de CRM y dónde recibe los leads.",
+  "departamento": "crm",
+  "cliente_id": "gac",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:joan-lluis-vives": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Joan Lluís Vives: 7 días sin leads con gasto.",
+  "departamento": "publicidad",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:orejana": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Orejana: Coste por lead (7 días), por encima del techo.",
+  "departamento": "publicidad",
+  "cliente_id": "orejana",
+  "dueno_id": "valeria",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:adade-zaragoza": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Adade Zaragoza: hueco sin nada programado en los próximos 7 días (desde el 03-10).",
+  "departamento": "redes",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "lara",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:ahedo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ahedo: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "ahedo",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:aselegal": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aselegal: hueco sin nada programado en los próximos 7 días (desde el 08-10).",
+  "departamento": "redes",
+  "cliente_id": "aselegal",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:aselegal": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aselegal: 2 publicaciones fallidas; instagram se desconectó: el cliente tiene que reconectarlo.",
+  "departamento": "redes",
+  "cliente_id": "aselegal",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:asetra": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Asetra: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "asetra",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:aster-asesoria": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aster Asesoría: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "aster-asesoria",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:avantik": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Avantik: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "avantik",
+  "dueno_id": "lara",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:ayg-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "AyG Asesores: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:ayg-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "AyG Asesores: 1 publicación fallida; no hay página de Facebook conectada: el cliente tiene que reconectarla.",
+  "departamento": "redes",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:bit-24": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "BIT 24: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "bit-24",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:bit-24": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "BIT 24: 1 publicación fallida; no hay página de Facebook conectada: el cliente tiene que reconectarla.",
+  "departamento": "redes",
+  "cliente_id": "bit-24",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:bonet-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Bonet Asesores: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:centro-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Centro Consulting: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "lara",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:consulting-f": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Consulting F: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "consulting-f",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:deudot": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Deudot: hueco sin nada programado en los próximos 7 días (desde el 05-10).",
+  "departamento": "redes",
+  "cliente_id": "deudot",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:ecom-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "anderson",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:ecom-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: 1 publicación fallida; no hay página de Facebook conectada: el cliente tiene que reconectarla.",
+  "departamento": "redes",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "anderson",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:fitec-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Fitec Asesores: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:fitec-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Fitec Asesores: 1 publicación fallida; instagram se desconectó: el cliente tiene que reconectarlo.",
+  "departamento": "redes",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:fusterguell": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "FusterGüell: 2 huecos sin nada programado en los próximos 7 días (desde el 03-10).",
+  "departamento": "redes",
+  "cliente_id": "fusterguell",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:fusterguell": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "FusterGüell: 1 publicación fallida; instagram se desconectó: el cliente tiene que reconectarlo.",
+  "departamento": "redes",
+  "cliente_id": "fusterguell",
+  "dueno_id": "belen",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "gac",
+  "dueno_id": "anderson",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC: 1 publicación fallida; la sesión de Facebook caducó (cambio de contraseña): hay que reconectar.",
+  "departamento": "redes",
+  "cliente_id": "gac",
+  "dueno_id": "anderson",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:innova-scala": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Innova Scala: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "innova-scala",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:joan-lluis-vives": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Joan Lluís Vives: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "lara",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:musashi-consultores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:oteca": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Oteca: 2 huecos sin nada programado en los próximos 7 días (desde el 03-10).",
+  "departamento": "redes",
+  "cliente_id": "oteca",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:oteca": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Oteca: 2 publicaciones fallidas; la sesión de Facebook caducó (cambio de contraseña): hay que reconectar.",
+  "departamento": "redes",
+  "cliente_id": "oteca",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:romero-martinez": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Romero Martínez: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "romero-martinez",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:segu-assessors": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Segú Assessors: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "segu-assessors",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_hueco:torrevieja-consult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Torrevieja Consult: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
+  "departamento": "redes",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "redes_fallida:torrevieja-consult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Torrevieja Consult: 1 publicación fallida; no hay página de Facebook conectada: el cliente tiene que reconectarla.",
+  "departamento": "redes",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "kimberlyn",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:musashi-consultores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores está en crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca en crítico.",
+  "departamento": "accounts",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC está en crítico: Correos sin contestar desde hace 20 días laborables y su account lo marca en crítico.",
+  "departamento": "accounts",
+  "cliente_id": "gac",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:campalans": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Campalans está en crítico: Correos sin contestar desde hace 16 días laborables y sin reunión el mes pasado.",
+  "departamento": "accounts",
+  "cliente_id": "campalans",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:campalans": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Campalans: ninguna reunión el mes pasado (última, 2026-07-13).",
+  "departamento": "accounts",
+  "cliente_id": "campalans",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:pgb-auditores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "PGB Auditores está en crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca en crítico.",
+  "departamento": "accounts",
+  "cliente_id": "pgb-auditores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:tribulex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Tribulex está en crítico: Correos sin contestar desde hace 12 días laborables y sin reunión el mes pasado.",
+  "departamento": "accounts",
+  "cliente_id": "tribulex",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:tribulex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Tribulex: ninguna reunión el mes pasado (última, sin dato).",
+  "departamento": "accounts",
+  "cliente_id": "tribulex",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:consulting-f": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Consulting F: ninguna reunión el mes pasado (última, 2026-08-25).",
+  "departamento": "accounts",
+  "cliente_id": "consulting-f",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:joan-lluis-vives": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Joan Lluís Vives: ninguna reunión el mes pasado (última, sin dato).",
+  "departamento": "accounts",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:lobo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Lobo está en crítico: Alta en el día 19 sin encender (límite: día 12).",
+  "departamento": "accounts",
+  "cliente_id": "lobo",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:j-d-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "J&D Consulting: ninguna reunión el mes pasado (última, sin dato).",
+  "departamento": "accounts",
+  "cliente_id": "j-d-consulting",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_reunion:torrevieja-consult": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Torrevieja Consult: ninguna reunión el mes pasado (última, sin dato).",
+  "departamento": "accounts",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:cib-partners": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "CIB Partners está en crítico: Alta en el día 15 sin encender (límite: día 12).",
+  "departamento": "accounts",
+  "cliente_id": "cib-partners",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:abner-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Abner Advisory está en crítico: Alta en el día 15 sin encender (límite: día 12).",
+  "departamento": "accounts",
+  "cliente_id": "abner-advisory",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:gestio-plural": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Gestió Plural está en crítico: Alta en el día 17 sin encender (límite: día 12).",
+  "departamento": "accounts",
+  "cliente_id": "gestio-plural",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:garmande": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Garmande está en crítico: Alta en el día 32 sin encender (límite: día 12).",
+  "departamento": "accounts",
+  "cliente_id": "garmande",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:joan-lluis-vives": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Joan Lluís Vives: 2 correos sin contestar de más de 48 h; el más antiguo, 228 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:accompany": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Accompany: 48 correos sin contestar de más de 48 h (1 queja); el más antiguo, 227 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "accompany",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:aselegal": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Aselegal: 17 correos sin contestar de más de 48 h; el más antiguo, 226 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "aselegal",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:musashi-consultores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores: 23 correos sin contestar de más de 48 h (1 queja); el más antiguo, 220 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:fusterguell": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "FusterGüell: 6 correos sin contestar de más de 48 h; el más antiguo, 215 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "fusterguell",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:xterna": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Xterna: 5 correos sin contestar de más de 48 h; el más antiguo, 197 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "xterna",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:proincentiva": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Proincentiva: 12 correos sin contestar de más de 48 h (1 queja); el más antiguo, 169 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "proincentiva",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:consulting-f": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Consulting F: 6 correos sin contestar de más de 48 h (1 queja); el más antiguo, 154 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "consulting-f",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:oteca": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Oteca: 7 correos sin contestar de más de 48 h; el más antiguo, 152 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "oteca",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:busbac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Busbac: 14 correos sin contestar de más de 48 h; el más antiguo, 151 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "busbac",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:gac": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "GAC: 7 correos sin contestar de más de 48 h (1 queja); el más antiguo, 137 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "gac",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:sol-4": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Sol-4: 27 correos sin contestar de más de 48 h; el más antiguo, 136 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "sol-4",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:bonet-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Bonet Asesores: 17 correos sin contestar de más de 48 h; el más antiguo, 123 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:tribulex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Tribulex: 3 correos sin contestar de más de 48 h; el más antiguo, 123 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "tribulex",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:prodegest": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Prodegest: 11 correos sin contestar de más de 48 h (1 queja); el más antiguo, 123 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "prodegest",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:adade-zaragoza": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Adade Zaragoza: 1 correo sin contestar de más de 48 h (1 queja); el más antiguo, 101 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:optimalia": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Optimalia: 10 correos sin contestar de más de 48 h; el más antiguo, 79 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "optimalia",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:finexen": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Finexen: 5 correos sin contestar de más de 48 h; el más antiguo, 68 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "finexen",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:pgb-auditores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "PGB Auditores: 10 correos sin contestar de más de 48 h; el más antiguo, 62 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "pgb-auditores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:mg-economistes": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "MG Economistes: 4 correos sin contestar de más de 48 h; el más antiguo, 20 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "mg-economistes",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:laver": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Laver: 4 correos sin contestar de más de 48 h; el más antiguo, 20 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "laver",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:centro-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Centro Consulting: 1 correo sin contestar de más de 48 h; el más antiguo, 20 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:concilia": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Concilia: 2 correos sin contestar de más de 48 h; el más antiguo, 18 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "concilia",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:campalans": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Campalans: 4 correos sin contestar de más de 48 h; el más antiguo, 17 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "campalans",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:emex": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Emex: 1 correo sin contestar de más de 48 h; el más antiguo, 12 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "emex",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:lobo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Lobo: 6 correos sin contestar de más de 48 h; el más antiguo, 9 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "lobo",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:geslabor": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Geslabor: 1 correo sin contestar de más de 48 h; el más antiguo, 7 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "geslabor",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:impulsa-cfo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Impulsa CFO: 1 correo sin contestar de más de 48 h; el más antiguo, 6 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "impulsa-cfo",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:asetra": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Asetra: 1 correo sin contestar de más de 48 h; el más antiguo, 6 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "asetra",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:conficonsulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Conficonsulting: 1 correo sin contestar de más de 48 h; el más antiguo, 4 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "conficonsulting",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:fitec-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Fitec Asesores: 1 correo sin contestar de más de 48 h; el más antiguo, 2 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_llamadas:z-984555": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "9 llamadas perdidas del número ··· 984555 sin devolver; la última, el 29-09.",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_llamadas:z-203753": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "3 llamadas perdidas del número ··· 203753 sin devolver; la última, el 30-09.",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:accompany:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Accompany: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "accompany",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:asetra:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Asetra: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "asetra",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:bit-24:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "BIT 24: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "bit-24",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:campalans:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Campalans: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "campalans",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:christian-sanchez:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Christian Sanchez: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "christian-sanchez",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:ecom-advisory:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:j-d-consulting:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "J&D Consulting: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "j-d-consulting",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:marlex-consulting:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Marlex Consulting: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "marlex-consulting",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:musashi-consultores:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Musashi Consultores: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:proincentiva:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Proincentiva: el informe de agosto está hecho en ClickUp pero sin enviar desde Desk (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "proincentiva",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:quique-gomez-barreda:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Quique Gomez Barreda: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "quique-gomez-barreda",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_informe:tribulex:2026-08": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Tribulex: el informe de agosto está sin hacer ni enviar (plazo, día 5).",
+  "departamento": "accounts",
+  "cliente_id": "tribulex",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_config:i-5932b99ca6": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Llamadas entrantes que no llegan a ninguna extensión: 34 llamadas entrantes desde el 1-sep no sonaron en ninguna extensión (27 sin respuesta, 7 fallidas).",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-9ae93bbbf9": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de MG Economistes sin agente; el más antiguo lleva 21 días.",
+  "departamento": "accounts",
+  "cliente_id": "mg-economistes",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-7393c5daef": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de Concilia sin agente; el más antiguo lleva 19 días.",
+  "departamento": "accounts",
+  "cliente_id": "concilia",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-b57590d2af": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ticket de cliente sin agente > 4 h: 3 tickets de Lobo sin agente; el más antiguo lleva 9 días.",
+  "departamento": "accounts",
+  "cliente_id": "lobo",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-e5873d4f23": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de Geslabor sin agente; el más antiguo lleva 8 días.",
+  "departamento": "accounts",
+  "cliente_id": "geslabor",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_config:i-0c4ae5beca": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Desvío a una extensión que no existe: 6 llamadas entrantes fueron a las extensión(es) 01, 03, que no están entre las 14 de la centralita (100 a 113); 6 no se contestaron..",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:cib-partners": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "CIB Partners: día 15 sin campaña encendida (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "cib-partners",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:garmande": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Garmande: día 32 sin campaña encendida (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "garmande",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:laver": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Laver: encendida tarde, el día 18 (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "laver",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:lobo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Lobo: día 19 sin campaña encendida (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "lobo",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:deudot": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Deudot: encendida tarde, el día 16 (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "deudot",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:gestio-plural": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Gestió Plural: día 17 sin campaña encendida (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "gestio-plural",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_fuera_plazo:abner-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Abner Advisory: día 15 sin campaña encendida (límite, día 12).",
+  "departamento": "altas",
+  "cliente_id": "abner-advisory",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_sin_lista:conficonsulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Conficonsulting: Sin lista de onboarding en ClickUp a las 110 h de la firma.",
+  "departamento": "altas",
+  "cliente_id": "conficonsulting",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_sin_lista:tst-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "TST Consulting: Sin lista de onboarding en ClickUp a las 112 h de la firma.",
+  "departamento": "altas",
+  "cliente_id": "tst-consulting",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_sin_lista:impulsa-cfo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Impulsa CFO: Sin lista de onboarding en ClickUp a las 125 h de la firma.",
+  "departamento": "altas",
+  "cliente_id": "impulsa-cfo",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_sin_lista:imfor-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Imfor Asesores: Sin lista de onboarding en ClickUp a las 61 h de la firma.",
+  "departamento": "altas",
+  "cliente_id": "imfor-asesores",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "alta_sin_lista:billeo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Billeo: Sin lista de onboarding en ClickUp a las 110 h de la firma.",
+  "departamento": "altas",
+  "cliente_id": "billeo",
+  "dueno_id": "agustina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-001": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "IP Forense: la factura A-26-001 venció hace 63 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "ip-forense",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-040": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "POWER GLOBAL INNOVATION S.L.: la factura A-26-040 venció hace 56 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": null,
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-051": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "UHY FAY & CO AUDITORES ASESORES SLP: la factura A-26-051 venció hace 56 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": null,
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-088": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "IP Forense: la factura A-26-088 venció hace 29 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "ip-forense",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-105": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Ecom Advisory: la factura A-26-105 venció hace 29 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-118": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "AGC: la factura A-26-118 venció hace 4 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "agc",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:F-26-413": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Jesús Navarro (JENASA): la factura F-26-413 venció hace 3 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "jenasa",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:A-26-117": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "POWER GLOBAL INNOVATION S.L.: la factura A-26-117 venció hace 2 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": null,
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_sin_alta:think-value": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Think Value: firmado el 01-10 y todavía sin línea en facturación.",
+  "departamento": "administracion",
+  "cliente_id": "think-value",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_sin_alta:marlex-consulting": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Marlex Consulting: firmado el 01-10 y todavía sin línea en facturación.",
+  "departamento": "administracion",
+  "cliente_id": "marlex-consulting",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:mili": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Mili está en alerta: 8 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:constanza": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Coti está en alerta: 5 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:cecilia": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Cecilia está en alerta: 6 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:agustina": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Agus está en alerta: 11 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:carla": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Carla está en alerta: 6 clientes con correos de +48 h.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:lucia": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Lucía está en alerta: 5 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:casiana": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Casiana está en alerta: 4 clientes con correos de +48 h.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:facundo": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Facundo está en alerta: 11 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:natalia": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Natalia está en alerta: 6 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:candela": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Candela está en alerta: 8 tareas en revisión de +48 h.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_alerta:yessica": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Yessica está en alerta: 20 tareas arrastradas en su diario.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "rrhh_aniversario:lara:2026-10-07": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Lara cumple 2 años en RO en 4 días, el 07-10.",
+  "departamento": "rrhh",
+  "cliente_id": null,
+  "dueno_id": "cecilia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_decision:regla-altas-tarde": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "7 altas fuera de plazo: 5 sin encender y 2 encendidas tarde.",
+  "departamento": "direccion",
+  "cliente_id": null,
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_decision:regla-fuego-ayg-asesores": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "AyG Asesores: el cliente pide hablar contigo.",
+  "departamento": "direccion",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_decision:regla-fuego-ecija-advisory": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "ECIJA Advisory: el cliente pide hablar contigo.",
+  "departamento": "direccion",
+  "cliente_id": "ecija-advisory",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_decision:regla-fuego-kiosko-box": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Kiosko Box: el cliente pide hablar contigo.",
+  "departamento": "direccion",
+  "cliente_id": "kiosko-box",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_decision:acc-12": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Extensiones sin registrar y sin uso.",
+  "departamento": "direccion",
+  "cliente_id": null,
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_sin_account:campalans": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Campalans: mantenimiento sin account (confirmar que no necesita account).",
+  "departamento": "direccion",
+  "cliente_id": "campalans",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_sin_account:sintaer": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Sintaer: mantenimiento sin account (confirmar que no necesita account).",
+  "departamento": "direccion",
+  "cliente_id": "sintaer",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_sin_account:gomez-y-carvacho": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Gomez y Carvacho: sin account · para confirmar.",
+  "departamento": "direccion",
+  "cliente_id": "gomez-y-carvacho",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "dir_sin_account:volatt": {
+  "detectada": "2026-10-02 17:53",
+  "motivo": "Volatt: sin account · para confirmar.",
+  "departamento": "direccion",
+  "cliente_id": "volatt",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "_cerradas": [
+  {
+   "motivo": "Concilia está en crítico: Correos sin contestar desde hace 18 días laborables y captación en crítico.",
+   "departamento": "accounts",
+   "cliente_id": "concilia",
+   "dueno_id": "carla",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_critico:concilia",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "AyG Asesores: 7 correos sin contestar de más de 48 h; el más antiguo, 227 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "ayg-asesores",
+   "dueno_id": "casiana",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:ayg-asesores",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Greconsult: 3 correos sin contestar de más de 48 h; el más antiguo, 226 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "greconsult",
+   "dueno_id": "facundo",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:greconsult",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "ECIJA Advisory: 2 correos sin contestar de más de 48 h; el más antiguo, 226 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "ecija-advisory",
+   "dueno_id": "tomas",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:ecija-advisory",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Romero Martínez: 1 correo sin contestar de más de 48 h; el más antiguo, 224 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "romero-martinez",
+   "dueno_id": "lucia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:romero-martinez",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Innova Scala: 4 correos sin contestar de más de 48 h; el más antiguo, 224 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "innova-scala",
+   "dueno_id": "facundo",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:innova-scala",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Kiosko Box: 1 correo sin contestar de más de 48 h; el más antiguo, 175 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "kiosko-box",
+   "dueno_id": "constanza",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:kiosko-box",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "BIT 24: 15 correos sin contestar de más de 48 h; el más antiguo, 162 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "bit-24",
+   "dueno_id": "natalia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:bit-24",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Torrevieja Consult: 1 correo sin contestar de más de 48 h; el más antiguo, 153 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "torrevieja-consult",
+   "dueno_id": "lucia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:torrevieja-consult",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Aster Asesoría: 2 correos sin contestar de más de 48 h; el más antiguo, 143 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "aster-asesoria",
+   "dueno_id": "natalia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:aster-asesoria",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Avantik: 2 correos sin contestar de más de 48 h; el más antiguo, 118 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "avantik",
+   "dueno_id": "tomas",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:avantik",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Ecom Advisory: 1 correo sin contestar de más de 48 h; el más antiguo, 118 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "ecom-advisory",
+   "dueno_id": "natalia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:ecom-advisory",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Segú Assessors: 3 correos sin contestar de más de 48 h (1 queja); el más antiguo, 117 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "segu-assessors",
+   "dueno_id": "facundo",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:segu-assessors",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Ahedo: 3 correos sin contestar de más de 48 h; el más antiguo, 102 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "ahedo",
+   "dueno_id": "carla",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:ahedo",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Octoedro: 1 correo sin contestar de más de 48 h; el más antiguo, 84 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "octoedro",
+   "dueno_id": "lucia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:octoedro",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Liebana Consulting: 1 correo sin contestar de más de 48 h; el más antiguo, 75 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "liebana-consulting",
+   "dueno_id": "tomas",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:liebana-consulting",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Gestanex: 1 correo sin contestar de más de 48 h; el más antiguo, 70 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "gestanex",
+   "dueno_id": "carla",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:gestanex",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Akua: 4 correos sin contestar de más de 48 h; el más antiguo, 69 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "akua",
+   "dueno_id": "natalia",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:akua",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Garmande: 4 correos sin contestar de más de 48 h; el más antiguo, 45 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "garmande",
+   "dueno_id": "candela",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:garmande",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Volatt: 1 correo sin contestar de más de 48 h; el más antiguo, 34 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "volatt",
+   "dueno_id": "mili",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:volatt",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Quique Gomez Barreda: 1 correo sin contestar de más de 48 h; el más antiguo, 2 días laborables.",
+   "departamento": "accounts",
+   "cliente_id": "quique-gomez-barreda",
+   "dueno_id": "dana",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_correos:quique-gomez-barreda",
+   "cerrada": "2026-10-02 19:04",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Dana está en alerta: imputó 2.0 h la semana pasada (5 % de 40).",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:dana",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Valeria está en alerta: imputó 17.6 h la semana pasada (44 % de 40).",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:valeria",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Gustavo está en alerta: 7 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:gustavo",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Eulimar está en alerta: 3 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:eulimar",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Carlos V. está en alerta: 6 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:carlos_viur",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Miguel está en alerta: 12 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:miguel_vargas",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Manuel está en alerta: imputó 5.9 h la semana pasada (15 % de 40).",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:manuel",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Emanuel está en alerta: 3 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:emanuel",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Belén está en alerta: 3 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:belen",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Kimberlyn está en alerta: 10 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:kimberlyn",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Anderson está en alerta: 13 registros de horas fuera de lo normal.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "cecilia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_alerta:anderson",
+   "cerrada": "2026-10-02 21:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Agus no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "agustina",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:agustina:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Candela no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "candela",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:candela:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Carla no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "carla",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:carla:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Casiana no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "casiana",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:casiana:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Dana no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "dana",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:dana:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Facundo no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "facundo",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:facundo:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Lucía no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "lucia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:lucia:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Natalia no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "natalia",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:natalia:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Mili no imputó horas el 01-10.",
+   "departamento": "rrhh",
+   "cliente_id": null,
+   "dueno_id": "mili",
+   "detectada": "2026-10-02 17:53",
+   "id": "rrhh_no_imputa:mili:2026-10-01",
+   "cerrada": "2026-10-02 21:39",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Akua: 33 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "akua",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:akua",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Innova Scala: 31 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "innova-scala",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:innova-scala",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Torrevieja Consult: 28 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "torrevieja-consult",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:torrevieja-consult",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Ecom Advisory: 21 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "ecom-advisory",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:ecom-advisory",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Consulting F: 21 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "consulting-f",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:consulting-f",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Aster Asesoría: 9 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "aster-asesoria",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:aster-asesoria",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Adade Zaragoza: 7 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "adade-zaragoza",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:adade-zaragoza",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Laver: 5 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "laver",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:laver",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Musashi Consultores: 4 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "musashi-consultores",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:musashi-consultores",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Christian Sanchez: 4 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "christian-sanchez",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:christian-sanchez",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Orejana: 5 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "orejana",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:orejana",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Vallparadís: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:ayU74sG2qNhQo1AWlslm",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Concilia: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "concilia",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:concilia",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Emex: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "emex",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:emex",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Asesoría FITECC n/c: 2 leads de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:CYhcFzSDJRCVUs7su8ye",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Oteca: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "oteca",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:oteca",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "ISE Asesores: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:Vf3gDK3pKBJUdfo5VUZ7",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Centro Consulting: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "centro-consulting",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:centro-consulting",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Asesoría Toledo: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:0Y2M2OHivoqv4KuaOmk9",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Benavides Asociados: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:VkM4ygjsOUPqtFRpCftf",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Aselegal: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+   "departamento": "crm",
+   "cliente_id": "aselegal",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_tocar:aselegal",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Ecom Advisory: 17 citas de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "ecom-advisory",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:ecom-advisory",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Innova Scala: 5 citas de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "innova-scala",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:innova-scala",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Musashi Consultores: 3 citas de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "musashi-consultores",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:musashi-consultores",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Gestiona: 2 citas de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": null,
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:UiQ5o2vZTZlk0iipWmoj",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Quique Gomez Barreda: 2 citas de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "quique-gomez-barreda",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:quique-gomez-barreda",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Garmande: 1 cita de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "garmande",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:garmande",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Lobo: 1 cita de los últimos 14 días sin marcar si vino.",
+   "departamento": "crm",
+   "cliente_id": "lobo",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_citas_sin_estado:lobo",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Abner Advisory: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "abner-advisory",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:abner-advisory",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "AGC: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "agc",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:agc",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Fitec Asesores: la subcuenta de GoHighLevel no se usa (3 contactos).",
+   "departamento": "crm",
+   "cliente_id": "fitec-asesores",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:fitec-asesores",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Geslabor: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "geslabor",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:geslabor",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Billeo: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "billeo",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:billeo",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "CIB Partners: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "cib-partners",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:cib-partners",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Concilia: la subcuenta de GoHighLevel no se usa (4 contactos).",
+   "departamento": "crm",
+   "cliente_id": "concilia",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:concilia",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Conficonsulting: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "conficonsulting",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:conficonsulting",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "GAC: la subcuenta de GoHighLevel no se usa (1 contactos).",
+   "departamento": "crm",
+   "cliente_id": "gac",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:gac",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Garmande: la subcuenta de GoHighLevel no se usa (1 contactos).",
+   "departamento": "crm",
+   "cliente_id": "garmande",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:garmande",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Gestió Plural: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "gestio-plural",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:gestio-plural",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Quique Gomez Barreda: la subcuenta de GoHighLevel no se usa (2 contactos).",
+   "departamento": "crm",
+   "cliente_id": "quique-gomez-barreda",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:quique-gomez-barreda",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Impulsa CFO: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "impulsa-cfo",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:impulsa-cfo",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Musashi Consultores: fallan 5 de 11 WhatsApp (45,5 %).",
+   "departamento": "crm",
+   "cliente_id": "musashi-consultores",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_whatsapp:musashi-consultores",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Segú Assessors: la subcuenta de GoHighLevel no se usa (3 contactos).",
+   "departamento": "crm",
+   "cliente_id": "segu-assessors",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:segu-assessors",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "TST Consulting: la subcuenta de GoHighLevel no se usa (0 contactos).",
+   "departamento": "crm",
+   "cliente_id": "tst-consulting",
+   "dueno_id": "yessica",
+   "detectada": "2026-10-02 17:53",
+   "id": "crm_sin_usar:tst-consulting",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Laver: 7 días sin leads con gasto.",
+   "departamento": "publicidad",
+   "cliente_id": "laver",
+   "dueno_id": "valeria",
+   "detectada": "2026-10-02 17:53",
+   "id": "pub_atencion:laver",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "3 llamadas perdidas del número ··· 028865 sin devolver; la última, el 25-09.",
+   "departamento": "accounts",
+   "cliente_id": null,
+   "dueno_id": "mili",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_llamadas:z-028865",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Tickets abiertos a nombre de alguien que ya no está: 1 ticket de cliente siguen asignados a Alexandra Páez Berroterán (no está en el equipo) en 1 cliente: Fitec Asesores..",
+   "departamento": "accounts",
+   "cliente_id": null,
+   "dueno_id": "mili",
+   "detectada": "2026-10-02 17:53",
+   "id": "acc_config:i-531bd277d9",
+   "cerrada": "2026-10-03 02:07",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  }
+ ],
+ "pub_critico:concilia": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Concilia: Ningún lead ha llegado a cita en 90 días (ni en el embudo ni en el calendario): el despacho no trabaja los leads.",
+  "departamento": "publicidad",
+  "cliente_id": "concilia",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:accompany": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Accompany: captación en atencion.",
+  "departamento": "publicidad",
+  "cliente_id": "accompany",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:gestanex": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Gestanex: captación en atencion.",
+  "departamento": "publicidad",
+  "cliente_id": "gestanex",
+  "dueno_id": "lina",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "pub_atencion:kiosko-box": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Kiosko Box: captación en atencion.",
+  "departamento": "publicidad",
+  "cliente_id": "kiosko-box",
+  "dueno_id": "valeria",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:concilia": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Concilia está en crítico: Correos sin contestar desde hace 18 días laborables y captación en crítico.",
+  "departamento": "accounts",
+  "cliente_id": "concilia",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_critico:busbac": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Busbac está en crítico: 100 € o más gastados en Meta en 7 días y 0 leads.",
+  "departamento": "accounts",
+  "cliente_id": "busbac",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:ayg-asesores": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "AyG Asesores: 7 correos sin contestar de más de 48 h; el más antiguo, 227 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:greconsult": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Greconsult: 3 correos sin contestar de más de 48 h; el más antiguo, 226 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "greconsult",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:ecija-advisory": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "ECIJA Advisory: 2 correos sin contestar de más de 48 h; el más antiguo, 226 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "ecija-advisory",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:romero-martinez": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Romero Martínez: 1 correo sin contestar de más de 48 h; el más antiguo, 224 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "romero-martinez",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:innova-scala": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Innova Scala: 4 correos sin contestar de más de 48 h; el más antiguo, 224 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "innova-scala",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:kiosko-box": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Kiosko Box: 1 correo sin contestar de más de 48 h; el más antiguo, 175 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "kiosko-box",
+  "dueno_id": "constanza",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:bit-24": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "BIT 24: 15 correos sin contestar de más de 48 h; el más antiguo, 162 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "bit-24",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:torrevieja-consult": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Torrevieja Consult: 1 correo sin contestar de más de 48 h; el más antiguo, 153 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:aster-asesoria": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Aster Asesoría: 2 correos sin contestar de más de 48 h; el más antiguo, 143 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "aster-asesoria",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:avantik": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Avantik: 2 correos sin contestar de más de 48 h; el más antiguo, 118 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "avantik",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:ecom-advisory": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ecom Advisory: 1 correo sin contestar de más de 48 h; el más antiguo, 118 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:segu-assessors": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Segú Assessors: 3 correos sin contestar de más de 48 h (1 queja); el más antiguo, 117 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "segu-assessors",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:ahedo": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ahedo: 3 correos sin contestar de más de 48 h; el más antiguo, 102 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "ahedo",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:octoedro": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Octoedro: 1 correo sin contestar de más de 48 h; el más antiguo, 84 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "octoedro",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:liebana-consulting": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Liebana Consulting: 1 correo sin contestar de más de 48 h; el más antiguo, 75 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "liebana-consulting",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:gestanex": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Gestanex: 1 correo sin contestar de más de 48 h; el más antiguo, 70 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "gestanex",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:akua": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Akua: 4 correos sin contestar de más de 48 h; el más antiguo, 69 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "akua",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:garmande": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Garmande: 4 correos sin contestar de más de 48 h; el más antiguo, 45 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "garmande",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:volatt": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Volatt: 1 correo sin contestar de más de 48 h; el más antiguo, 34 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "volatt",
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:quique-gomez-barreda": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Quique Gómez Barreda: 1 correo sin contestar de más de 48 h; el más antiguo, 2 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "quique-gomez-barreda",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_correos:deudot": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Deudot: 1 correo sin contestar de más de 48 h; el más antiguo, 2 días laborables.",
+  "departamento": "accounts",
+  "cliente_id": "deudot",
+  "dueno_id": "dana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-86278d3b98": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 3 tickets de Greconsult sin agente; el más antiguo lleva 226 días.",
+  "departamento": "accounts",
+  "cliente_id": "greconsult",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-fc25c62b03": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de ECIJA Advisory sin agente; el más antiguo lleva 226 días.",
+  "departamento": "accounts",
+  "cliente_id": "ecija-advisory",
+  "dueno_id": "tomas",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-636dbc0ade": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 2 tickets de Aselegal sin agente; el más antiguo lleva 226 días.",
+  "departamento": "accounts",
+  "cliente_id": "aselegal",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-1da9679f40": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de Romero Martínez sin agente; el más antiguo lleva 224 días.",
+  "departamento": "accounts",
+  "cliente_id": "romero-martinez",
+  "dueno_id": "lucia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-aae0960776": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 5 tickets de Musashi Consultores sin agente; el más antiguo lleva 220 días.",
+  "departamento": "accounts",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-e96d96bab3": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 2 tickets de Busbac sin agente; el más antiguo lleva 151 días.",
+  "departamento": "accounts",
+  "cliente_id": "busbac",
+  "dueno_id": "casiana",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-e1d54a0523": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 18 tickets de Sol-4 sin agente; el más antiguo lleva 136 días.",
+  "departamento": "accounts",
+  "cliente_id": "sol-4",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-4c92ed5f23": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 2 tickets de Tribulex sin agente; el más antiguo lleva 123 días.",
+  "departamento": "accounts",
+  "cliente_id": "tribulex",
+  "dueno_id": "facundo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-f7ec837d5f": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de Ecom Advisory sin agente; el más antiguo lleva 118 días.",
+  "departamento": "accounts",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-cff39ebbba": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 1 ticket de Bonet Asesores sin agente; el más antiguo lleva 109 días.",
+  "departamento": "accounts",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-640f954eba": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 8 tickets de Optimalia sin agente; el más antiguo lleva 79 días.",
+  "departamento": "accounts",
+  "cliente_id": "optimalia",
+  "dueno_id": "carla",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-bbd2292019": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 4 tickets de Akua sin agente; el más antiguo lleva 70 días.",
+  "departamento": "accounts",
+  "cliente_id": "akua",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-f549fe6d7f": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 4 tickets de Finexen sin agente; el más antiguo lleva 68 días.",
+  "departamento": "accounts",
+  "cliente_id": "finexen",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-e1e5e031ac": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 6 tickets de PGB Auditores sin agente; el más antiguo lleva 63 días.",
+  "departamento": "accounts",
+  "cliente_id": "pgb-auditores",
+  "dueno_id": "natalia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_sin_agente:i-052f3f0fdd": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Ticket de cliente sin agente > 4 h: 3 tickets de Garmande sin agente; el más antiguo lleva 45 días.",
+  "departamento": "accounts",
+  "cliente_id": "garmande",
+  "dueno_id": "candela",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_config:i-78de532d15": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Tickets abiertos a nombre de alguien que ya no está: 16 tickets de cliente siguen asignados a Alejandro Carugatti (no está en el equipo) en 7 clientes: GAC, Segú Assessors, Oteca, Bonet Asesores, Prodegest, Avantik..",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "acc_config:i-fda1fc67ed": {
+  "detectada": "2026-10-03 02:07",
+  "motivo": "Tickets abiertos a nombre de alguien que ya no está: 5 tickets de cliente siguen asignados a Fernando Cagnoli (no está en el equipo) en 1 cliente: Accompany..",
+  "departamento": "accounts",
+  "cliente_id": null,
+  "dueno_id": "mili",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:akua": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Akua: 33 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "akua",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:innova-scala": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Innova Scala: 31 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "innova-scala",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:torrevieja-consult": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Torrevieja Consult: 28 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:consulting-f": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Consulting F: 21 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "consulting-f",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:ecom-advisory": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Ecom Advisory: 19 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:aster-asesoria": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Aster Asesoría: 8 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "aster-asesoria",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:adade-zaragoza": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Adade Zaragoza: 7 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:laver": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Laver: 5 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "laver",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:orejana": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Orejana: 5 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "orejana",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:christian-sanchez": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Christian Sanchez: 4 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "christian-sanchez",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:ayU74sG2qNhQo1AWlslm": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Vallparadís: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:concilia": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Concilia: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "concilia",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:emex": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Emex: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "emex",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:CYhcFzSDJRCVUs7su8ye": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Asesoría FITECC n/c: 2 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:musashi-consultores": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Musashi Consultores: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:oteca": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Oteca: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "oteca",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:Vf3gDK3pKBJUdfo5VUZ7": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "ISE Asesores: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:centro-consulting": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Centro Consulting: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:0Y2M2OHivoqv4KuaOmk9": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Asesoría Toledo: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:VkM4ygjsOUPqtFRpCftf": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Benavides Asociados: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_tocar:aselegal": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Aselegal: 1 lead de más de 24 h sin ningún intento en GoHighLevel.",
+  "departamento": "crm",
+  "cliente_id": "aselegal",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:ecom-advisory": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Ecom Advisory: 18 citas de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "ecom-advisory",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:innova-scala": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Innova Scala: 4 citas de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "innova-scala",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:musashi-consultores": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Musashi Consultores: 3 citas de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:UiQ5o2vZTZlk0iipWmoj": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Gestiona: 2 citas de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": null,
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:quique-gomez-barreda": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Quique Gómez Barreda: 2 citas de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "quique-gomez-barreda",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:garmande": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Garmande: 1 cita de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "garmande",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:lobo": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Lobo: 1 cita de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "lobo",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_citas_sin_estado:emex": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Emex: 1 cita de los últimos 14 días sin marcar si vino.",
+  "departamento": "crm",
+  "cliente_id": "emex",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:abner-advisory": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Abner Advisory: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "abner-advisory",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:agc": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "AGC: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "agc",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:fitec-asesores": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Fitec Asesores: la subcuenta de GoHighLevel no se usa (3 contactos).",
+  "departamento": "crm",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:geslabor": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Geslabor: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "geslabor",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:billeo": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Billeo: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "billeo",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:cib-partners": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "CIB Partners: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "cib-partners",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:concilia": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Concilia: la subcuenta de GoHighLevel no se usa (4 contactos).",
+  "departamento": "crm",
+  "cliente_id": "concilia",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:conficonsulting": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Conficonsulting: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "conficonsulting",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:gac": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "GAC: la subcuenta de GoHighLevel no se usa (1 contacto).",
+  "departamento": "crm",
+  "cliente_id": "gac",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:garmande": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Garmande: la subcuenta de GoHighLevel no se usa (1 contacto).",
+  "departamento": "crm",
+  "cliente_id": "garmande",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:gestio-plural": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Gestió Plural: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "gestio-plural",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:quique-gomez-barreda": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Quique Gómez Barreda: la subcuenta de GoHighLevel no se usa (2 contactos).",
+  "departamento": "crm",
+  "cliente_id": "quique-gomez-barreda",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:impulsa-cfo": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Impulsa CFO: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "impulsa-cfo",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_whatsapp:musashi-consultores": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Musashi Consultores: fallan 5 de 5 WhatsApp (100,0 %).",
+  "departamento": "crm",
+  "cliente_id": "musashi-consultores",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:segu-assessors": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "Segú Assessors: la subcuenta de GoHighLevel no se usa (3 contactos).",
+  "departamento": "crm",
+  "cliente_id": "segu-assessors",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "crm_sin_usar:tst-consulting": {
+  "detectada": "2026-10-03 02:11",
+  "motivo": "TST Consulting: la subcuenta de GoHighLevel no se usa (0 contactos).",
+  "departamento": "crm",
+  "cliente_id": "tst-consulting",
+  "dueno_id": "yessica",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:TRO24-00278": {
+  "detectada": "2026-10-03 03:47",
+  "motivo": "JULIET RAMIREZ HAIR STUDIO: la factura TRO24-00278 venció hace 633 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": null,
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:TRO25-0240": {
+  "detectada": "2026-10-03 03:47",
+  "motivo": "IP Forense: la factura TRO25-0240 venció hace 482 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": "ip-forense",
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ },
+ "adm_impago:TRO25-0361": {
+  "detectada": "2026-10-03 03:47",
+  "motivo": "NUBBA SPACES, S.L.: la factura TRO25-0361 venció hace 390 días y no está cobrada.",
+  "departamento": "administracion",
+  "cliente_id": null,
+  "dueno_id": "sofia",
+  "ultima_vez": "2026-10-03 03:47"
+ }
+}

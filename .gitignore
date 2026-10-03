@@ -1,0 +1,30 @@
+# Datos reales y generados: nunca al repositorio (los regenera la tubería en el servidor)
+data/
+historia/
+capturas/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+**/_privado/
+**/_cache/
+**/_crudo/
+despliegue/estado/
+fuentes*/_cache*/
+*.antes*
+__pycache__/
+*.pyc
+.DS_Store
+.env
+.env.*
+
+# Configuración que vive en data/ pero no es dato de cliente
+!data/
+data/*
+!data/mi_dia/
+data/mi_dia/*
+!data/mi_dia/config.json
+!data/departamentos.json
+!data/envios/
+data/envios/*
+!data/envios/interruptor.json
