@@ -10,7 +10,7 @@
 //   lineaFuentes()    un único chip «Datos al día» que despliega la hora de cada fuente (guía 3.6)
 //   punto()           punto de estado de 8 px (guía 3.8: estado de fila = punto + texto en tinta, no pastilla)
 
-import { h, fmt, icono, barraProgreso, frescura, grafico, cuentagotas as cuentagotasComun, selectorPersona as selectorPersonaComun, hoyMadrid, sumarDias } from '../componentes.js';
+import { h, fmt, icono, barraProgreso, frescura, grafico, cuentagotas as cuentagotasComun, selectorPersona as selectorPersonaComun, hoyMadrid, sumarDias, logoCliente, vacioLinea } from '../componentes.js';
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -235,4 +235,44 @@ export const zonaTxt = z => ZONA_TXT[z] || (z ? `hora de ${z.split('/').pop().re
  */
 export function etiquetasDe(ctx, id) {
   return (ctx.datos?.personas || []).find(p => p.id === id)?.etiquetas || [];
+}
+
+/**
+ * Ronda U · U3 (3-oct, cambio #13 del 50) · fichaMarca({ cliente, marca, pedidos, tarea, alias })
+ * La marca y el brief del cliente DENTRO de la tarea de producción, para no salir a ClickUp ni a Drive: logo, colores
+ * (muestra + código), tono, lo que nunca se dice, enlaces a la carpeta del cliente y a la última pieza aprobada, y el brief
+ * del último pedido de creatividades de publicidad. marca = fila de data/produccion/marca.json (fuentes_produccion/
+ * generar_marca.py); pedidos = acciones de Captación con vista_previa.pedido_creatividad. Solo clases comunes y tokens; los
+ * colores de la muestra son DATO del cliente, no del diseño de la app.
+ */
+export function fichaMarca({ cliente, marca, pedidos = [], tarea, alias = x => x } = {}) {
+  const m = marca || {};
+  const enlace = (href, ico, texto) => (href ? h('a', { class: 'bt mini', href, target: '_blank', rel: 'noopener' }, icono(ico), texto) : null);
+  const titulo = t => h('p', { class: 'titulo-seccion', style: { margin: '0' } }, t);
+  const colores = (m.colores || []).filter(c => /^#[0-9A-Fa-f]{6}$/.test(c));
+  const ped = pedidos[0] || null;
+  const vp = ped?.vp || {};
+  const bloques = [
+    h('div', { class: 'fila', style: { gap: S[3], flexWrap: 'nowrap', alignItems: 'center' } },
+      cliente ? logoCliente(cliente) : null,
+      h('div', { style: { minWidth: '0' } }, h('b', {}, `Marca de ${cliente?.nombre || m.nombre || 'el cliente'}`),
+        h('span', { class: 'sub', style: { display: 'block' } }, m.logo === false ? 'Sin logo en la app: pídelo al account' : 'Logo, colores y tono para esta pieza'))),
+    colores.length ? h('div', { class: 'pila', style: { gap: S[1] } }, titulo(`Colores · ${m.colores_de || 'de la marca'}`),
+      h('div', { class: 'fila', style: { gap: S[2] } }, colores.map(c => h('span', { class: 'fila', style: { gap: S[1], flexWrap: 'nowrap', fontVariantNumeric: 'tabular-nums' }, title: `Copiar ${c}` },
+        h('span', { 'aria-hidden': 'true', style: { width: '20px', height: '20px', borderRadius: R.s, border: '1px solid var(--line)', background: c, display: 'inline-block', flex: 'none' } }), h('span', { class: 'sub' }, c))))) : null,
+    m.tipografias?.length ? h('p', { class: 'sub', style: { margin: '0' } }, `Tipografías: ${m.tipografias.join(' · ')}`) : null,
+    m.tono ? h('div', { class: 'pila', style: { gap: S[1] } }, titulo('Tono'), h('p', { style: { margin: '0', maxWidth: '72ch' } }, m.tono)) : null,
+    m.vetado?.length ? h('div', { class: 'pila', style: { gap: S[1] } }, titulo('Lo que nunca se dice'),
+      h('ul', { style: { margin: '0', paddingLeft: S[5], display: 'grid', gap: S[1], maxWidth: '72ch' } }, m.vetado.map(v => h('li', {}, v)))) : null,
+    ped ? h('div', { class: 'pila', style: { gap: S[1] } }, titulo(`Brief de publicidad · ${alias(ped.quien)}${vp.para ? ` · para el ${vp.para.slice(8, 10)}-${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][Number(vp.para.slice(5, 7)) - 1] || ''}` : ''}`),
+      h('p', { style: { margin: '0', maxWidth: '72ch' } }, vp.brief || ped.texto), vp.anuncio ? h('p', { class: 'sub', style: { margin: '0' } }, `Sustituye a «${vp.anuncio}»`) : null) : null,
+    h('div', { class: 'fila', style: { gap: S[2] } },
+      enlace(m.carpeta, 'drive', 'Carpeta del cliente'),
+      m.ultima_aprobada ? enlace(m.ultima_aprobada.url, 'ok', 'Última pieza aprobada') : null,
+      enlace(m.web, 'globe', 'Web del cliente'),
+      tarea ? enlace(tarea.url || `https://app.clickup.com/t/${encodeURIComponent(tarea.id)}`, 'ext', 'Brief en ClickUp') : null),
+    m.ultima_aprobada ? h('p', { class: 'sub', style: { margin: '0' } }, `Última aprobada: «${m.ultima_aprobada.tarea}»${m.ultima_aprobada.dias !== null && m.ultima_aprobada.dias !== undefined ? ` · hace ${fmt.num(m.ultima_aprobada.dias, 0)} días` : ''}`) : null,
+    !m.tono && !colores.length ? vacioLinea('Falta el manual de marca de este cliente: lo sube el account a la carpeta del cliente.', { icono: 'info' }) : null,
+  ].filter(Boolean);
+  return h('div', { class: 'pila', 'data-ficha-marca': cliente?.id || '', style: { gap: S[3], padding: S[4], margin: `${S[2]} 0`, border: '1px solid var(--line)', borderRadius: R.m, background: 'var(--card-2)' } }, bloques);
 }

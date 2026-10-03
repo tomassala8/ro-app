@@ -198,3 +198,7 @@ Tras regenerar: siguen **82 móviles y 344 correos, 0 perdidos**. Escáner limpi
 - **39b-4 tickets · arreglado:** Rastro e Informes pintan «RO-6740» como enlace a la Bandeja (`conTickets`, zona de 32 px); «a rladrero/[correo]» → «al cliente».
 - **C-31 · arreglado:** la ficha básica oculta la barra de periodo. **39b-12 enlace «GSC» · no aparece ya** (facundo/greconsult a 390 sin toques pequeños). **C-20 tickets de 53×15** son del copiloto (ia_componentes): dudas.
 - **B-M7 · arreglado:** `motivoSinCartera(ctx)` (exportada aquí) da el motivo exacto en las pantallas vacías.
+
+## Puesta al día 3-oct-2026
+- **Bloque «Estado de la web (Modular)»** en la pestaña «Web y SEO» (`modulos/_modular.js → bloqueEstadoWeb`): cifras de la web, problemas con acción y dueño, o «Añadir a Modular» si la web no está. Detalle en `_ESTADO_modular.md`.
+- **Teléfonos de los contactos en formato internacional: en curso** en otro carril (`telefono.py`, `modulos/_telefono.js`).

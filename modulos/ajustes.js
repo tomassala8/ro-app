@@ -17,7 +17,7 @@ const PESTANAS = [
   { id: 'confirmar', texto: 'Para confirmar', icono: 'flag' },
   { id: 'ver-como', texto: 'Ver como', icono: 'ojo' },
   { id: 'avisos', texto: 'Avisos y recargas', icono: 'campana' },
-  { id: 'conexiones', texto: 'Conexiones y caducidad', icono: 'plug' },   // M22 (agente M20-M22): modulos/ajustes_conexiones.js
+  { id: 'conexiones', texto: 'Salud del sistema', icono: 'plug' },   // M22 (agente M20-M22): modulos/ajustes_conexiones.js
   { id: 'opiniones', texto: 'Algo va mal', icono: 'opinion' },             // R15b: lo que manda el equipo con el botón de la cabecera
 ];
 const SILLAS_NOMBRE = { account: 'Account', trafficker: 'Trafficker', crm: 'CRM (GHL)', ghl: 'CRM (GHL)', seo: 'SEO', web: 'Web', redes: 'Redes', produccion: 'Producción', outreach: 'Outreach' };

@@ -48,13 +48,13 @@ CON_CLIENTE = {"ficha", "en-rojo", "captacion", "seo-web", "redes", "clientes-nu
 TIPOS = {
     "acc_correos": ("Contesta hoy el correo más antiguo de {cliente}", "correos sin contestar", None),
     "acc_sin_agente": ("Asigna hoy un agente al ticket de {cliente} en Desk", None, None),
-    "acc_critico": ("Llama hoy a {cliente}: está en crítico", None, None),
+    "acc_critico": ("Llama hoy a {cliente}: es un cliente crítico", None, None),
     "acc_informe": ("Envía desde Desk el informe mensual de {cliente}", None, "informe_mensual"),
     "acc_sin_reunion": ("Agenda esta semana una reunión con {cliente}", None, "reunion"),
     "acc_llamadas": ("Devuelve hoy las llamadas perdidas", "llamadas perdidas", None),
     "acc_config": ("Corrige la configuración de Desk o Zadarma que deja llamadas sin atender", None, None),
     "alta_fuera_plazo": ("Enciende la campaña de {cliente} o escala hoy el motivo", "días desde la firma", "encendid"),
-    "alta_sin_lista": ("Crea hoy la lista de onboarding de {cliente} en ClickUp", None, None),
+    "alta_sin_lista": ("Crea hoy la lista de arranque de {cliente} en ClickUp", None, None),
     "adm_sin_alta": ("Da de alta a {cliente} en facturación", None, "altas_en_facturacion"),
     "adm_impago": ("Reclama hoy la factura vencida de {cliente}", "días vencida", "dias_de_cobro"),
     "dir_decision": ("Toma la decisión pendiente: {titulo}", None, None),
@@ -163,7 +163,7 @@ def _cifra(n, etiqueta):
 
 
 def _hm(t):
-    """«2026-10-02 18:05» → «18:05» si es hoy; «1-oct 09:38» si no."""
+    """«2026-10-02 18:05» → «18:05» si es hoy; «1-oct, 09:38» si no (44 §2.3)."""
     if not t:
         return None
     try:
@@ -173,23 +173,23 @@ def _hm(t):
     if d.date() == ahora_madrid().date():
         return d.strftime("%H:%M")
     meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"]
-    return f"{d.day}-{meses[d.month - 1]} {d.strftime('%H:%M')}"
+    return f"{d.day}-{meses[d.month - 1]}, {d.strftime('%H:%M')}"
 
 
 def _dia(d, ahora):
-    """«hoy», «ayer», «el vie 2» o «el 15-sep» (B2: sin minutos raros)."""
+    """«hoy», «ayer», «el vie 2-oct» o «el 15-sep» (B2: sin minutos raros; 44 §2.3)."""
     dd = (ahora.date() - d.date()).days
     if dd == 0:
         return "hoy"
     if dd == 1:
         return "ayer"
     if 0 < dd < 7:
-        return f"el {DIAS_CORTO[d.weekday()]} {d.day}"
+        return f"el {DIAS_CORTO[d.weekday()]} {d.day}-{MESES[d.month - 1]}"
     return f"el {d.day}-{MESES[d.month - 1]}"
 
 
 def _rel(d, ahora):
-    """Día relativo con la regla de fechas.relativo (componentes.js): «hoy», «ayer», «mañana», «el vie 2» (±6 días) o «28-sep»."""
+    """Día relativo con la regla de fechas.relativo (componentes.js): «hoy», «ayer», «mañana», «el vie 2-oct» (±6 días) o «28-sep»."""
     n = (ahora.date() - d.date()).days
     if n == 0:
         return "hoy"
@@ -198,8 +198,8 @@ def _rel(d, ahora):
     if n == -1:
         return "mañana"
     if abs(n) <= 6:
-        return f"el {DIAS_CORTO[d.weekday()]} {d.day}"
-    return f"{d.day}-{MESES[d.month - 1]}" + (f"-{str(d.year)[2:]}" if d.year != ahora.year else "")
+        return f"el {DIAS_CORTO[d.weekday()]} {d.day}-{MESES[d.month - 1]}"
+    return f"{d.day}-{MESES[d.month - 1]}" + (f"-{d.year}" if d.year != ahora.year else "")
 
 
 def vencida_txt(dv, ahora):
@@ -259,7 +259,18 @@ def _umbral(catalogo, sufijo):
     if not ind:
         return None
     nombre = re.sub(r"\b(\w+)( \1\b)+", r"\1", ind.get("nombre") or "", flags=re.I)   # «clave clave» → «clave»
-    return f"{nombre}: {ind.get('umbral')}"
+    return f"{nombre} · {niveles(ind.get('umbral'))}"
+
+
+def niveles(umbral):
+    """«≤ 15 / 16-60 / > 60» → «bien ≤ 15 · vigilar 16-60 · crítico > 60» (glosario 44 §2.1: Crítico / Vigilar / Bien).
+    Un tramo «—» no existe y no sale. Si no son tres tramos, el texto tal cual."""
+    t = str(umbral or "").strip()
+    partes = [x.strip() for x in t.split(" / ")]
+    if len(partes) != 3:
+        return t
+    baja = lambda x: x[0].lower() + x[1:] if len(x) > 1 and x[0].isupper() and x[1].islower() else x   # «Día 10» → «día 10»
+    return " · ".join(f"{n} {baja(x)}" for n, x in zip(("bien", "vigilar", "crítico"), partes) if x and x != "—")
 
 
 def _primer_enlace(a):
@@ -416,11 +427,11 @@ def de_verdad(persona, verdad_doc, ve_equipo, nombre, ahora):
             })
         if c.get("gravedad") == "critico" and c.get("account") == persona["id"]:
             # A2: al account, sus clientes críticos van antes que cualquier otra cosa (la vara es la de la verdad única)
-            mot = "; ".join(c.get("motivos") or []) or "La verdad única lo marca en crítico"
+            mot = "; ".join(c.get("motivos") or []) or "La verdad única lo marca como crítico"
             out.append({
                 "id": f"vd:critico:{cid}", "tipo": "critico_cliente", "pantallas": ["mi-dia", "ficha", "en-rojo"],
                 "cliente_id": cid, "cliente": c.get("nombre"),
-                "que": f"Llama hoy a {c.get('nombre')}: está en crítico",
+                "que": f"Llama hoy a {c.get('nombre')}: es un cliente crítico",
                 "porque": f"{mot.rstrip('.')}. Antes de hablar, mira en su ficha qué ha pasado y qué le vas a proponer.",
                 "cifra": None, "umbral": "Crítico: la regla de gravedad de la verdad única (la misma en toda la app)",
                 "fuente": {"texto": "Verdad única del cliente", "url": None},
@@ -577,9 +588,9 @@ def de_setters(persona, setters_doc):
             "id": f"st:llamar:{clave}", "tipo": "setter_llamar", "pantallas": ["setters"], "cliente_id": None, "cliente": None,
             "que": f"Llama ya a {pl(fila['llamar_ya'], 'lead', 'leads')} de tu lista, el más nuevo primero",
             "porque": "Primero los que tienen teléfono y, dentro, el más nuevo: el primer intento en menos de 5 minutos es el que más citas agenda.",
-            "cifra": f"{fila['llamar_ya']} por llamar", "pestana": {"sesion": "setters.pestana", "id": "llamar", "texto": "Llamar ya"}, "umbral": "Citas agendadas al día: verde ≥ 2 · ámbar 1 · rojo 0",
+            "cifra": f"{fila['llamar_ya']} por llamar", "pestana": {"sesion": "setters.pestana", "id": "llamar", "texto": "Llamar ya"}, "umbral": "Bien con 2 citas agendadas al día o más",
             "fuente": {"texto": "Mi día del setter (GoHighLevel)", "url": (setters_doc.get("enlaces") or {}).get("ghl_oportunidades")},
-            "ir": "#/setters", "ir_texto": "Ir a «Llamar ya»", "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "alta", "orden": 330, "personal": True,
+            "ir": "#/setters", "ir_texto": f"Ver {'el lead' if fila['llamar_ya'] == 1 else 'los ' + str(fila['llamar_ya'])} por llamar", "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "alta", "orden": 330, "personal": True,
             "requiere": ["setters"], "accion": None, "origen": "reglas",
         })
     sin_conf = [c for c in setters_doc.get("citas") or [] if c.get("setter") == clave and not c.get("confirmada_tel")]
@@ -590,9 +601,9 @@ def de_setters(persona, setters_doc):
             "que": f"Confirma por teléfono {'tu cita' if len(sin_conf) == 1 else f'tus {len(sin_conf)} citas'}{(' del ' + ' y el '.join(dias)) if dias else ''}",
             "pestana": {"sesion": "setters.pestana", "id": "citas", "texto": "Confirmar"},
             "porque": "Una cita confirmada por teléfono el día antes falla mucho menos que una que solo tiene el correo automático.",
-            "cifra": f"{len(sin_conf)} sin confirmar", "umbral": "Asistencia de sus citas: ≥ 80 % / 70-79 % / < 70 %",
+            "cifra": f"{len(sin_conf)} sin confirmar", "umbral": "Bien desde el 80 % de asistencia; vigilar del 70 al 79 %",
             "fuente": {"texto": "Calendario de GoHighLevel", "url": (setters_doc.get("enlaces") or {}).get("ghl_calendario")},
-            "ir": "#/setters", "ir_texto": "Ir a «Confirmar»", "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "media", "orden": 260, "personal": True,
+            "ir": "#/setters", "ir_texto": "Ver la cita por confirmar" if len(sin_conf) == 1 else f"Ver las {len(sin_conf)} citas por confirmar", "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "media", "orden": 260, "personal": True,
             "requiere": ["setters"], "accion": None, "origen": "reglas",
         })
     if any("xtensi" in (a or "") for a in setters_doc.get("avisos") or []):
@@ -633,8 +644,8 @@ def de_visto(persona, verdad_doc, vistos, ve_equipo):
         if c.get("gravedad") != "critico" or not cid or cid in (vistos or set()):
             continue
         out.append(_base(f"vd:visto:{cid}", "visto_critico", ["mi-dia", "en-rojo"],
-                         f"Da tu «Visto» al plan de {c.get('nombre')}: está en crítico",
-                         f"{'; '.join(c.get('motivos') or ['En crítico']).rstrip('.')}. Antes de que su account hable con el cliente, tu «Visto» con números y plan.",
+                         f"Da tu «Visto» al plan de {c.get('nombre')}: es un cliente crítico",
+                         f"{'; '.join(c.get('motivos') or ['Cliente crítico']).rstrip('.')}. Antes de que su account hable con el cliente, tu «Visto» con números y plan.",
                          cliente_id=cid, cliente=c.get("nombre"), dueno=persona["id"], grav_cliente="critico",
                          umbral="Crítico: la regla de gravedad de la verdad única", fuente={"texto": "Verdad única y En rojo", "url": None},
                          ir=f"#/en-rojo/{cid}", ir_texto="Abrir y marcar «Visto»", gravedad="alta", orden=335, requiere=["en-rojo"]))
@@ -703,7 +714,7 @@ def de_outreach(persona, out_doc, hechas, ahora):
                          "Clasifica " + ("la respuesta sin clasificar" if len(sin) == 1 else f"las {len(sin)} respuestas sin clasificar, la más antigua primero"),
                          f"La más antigua llegó {_dia(d, ahora) if d else 'hace días'} ({r0.get('campana') or 'sin campaña'}). Clasificada, la positiva pasa a su dueño en el día; sin clasificar, se enfría.",
                          dueno=persona["id"], cifra=pl(len(sin), "sin clasificar", "sin clasificar"),
-                         umbral="Respuesta positiva: con dueño antes de 4 h", ir="#/prospeccion", ir_texto="Ir a las respuestas",
+                         umbral="Respuesta positiva: con dueño antes de 4 h", ir="#/prospeccion", ir_texto="Ver las respuestas sin clasificar",
                          pestana={"sesion": "prospeccion.pestana", "id": r0.get("frente") or "clientes",
                                   "texto": "Campañas de RO" if r0.get("frente") == "ro" else "Campañas de clientes"},
                          fuente={"texto": "Snov.io y hoja de outreach", "url": None}, gravedad="alta" if len(sin) > 20 else "media",
@@ -714,7 +725,7 @@ def de_outreach(persona, out_doc, hechas, ahora):
         out.append(_base("or:positiva", "outreach_positiva", ["prospeccion", "mi-dia"],
                          f"Pon dueño hoy a {'la respuesta positiva' if len(pos) == 1 else f'las {len(pos)} respuestas positivas'} que esperan más de 4 h",
                          "Una respuesta positiva sin nadie que la llame en el día se pierde.", dueno=persona["id"],
-                         cifra=pl(len(pos), "positiva sin dueño", "positivas sin dueño"), ir="#/prospeccion", ir_texto="Ir a las respuestas",
+                         cifra=pl(len(pos), "positiva sin dueño", "positivas sin dueño"), ir="#/prospeccion", ir_texto="Ver las respuestas positivas",
                          fuente={"texto": "Snov.io y hoja de outreach", "url": None}, gravedad="alta", orden=340, requiere=["prospeccion"]))
     return out
 
@@ -736,9 +747,9 @@ def de_ventas(persona, v_doc, ahora):
         d = _fecha(x.get("cuando"))
         n = _nombre_lead(x)
         out.append(_base(f"vt:marcar:{x.get('id')}", "ventas_sin_marcar", pant,
-                         f"Marca cómo fue la reunión con {n or 'el prospecto'}",
+                         f"Marca cómo fue la reunión con {n or 'el lead'}",
                          f"Fue {_dia(d, ahora) if d else ''}{(' a las ' + d.strftime('%H:%M')) if d else ''} y sigue sin resultado: sin marcar, la asistencia y el coste por cita salen mal.",
-                         etiqueta=n, dueno=persona["id"], ir="#/ventas-ro", ir_texto="Ir a «Hoy»", pestana=hoy_p,
+                         etiqueta=n, dueno=persona["id"], ir="#/ventas-ro", ir_texto="Ver las reuniones sin marcar", pestana=hoy_p,
                          fuente={"texto": "GoHighLevel (Ventas de RO)", "url": x.get("ghl")}, gravedad="media", orden=285))
     for x in sorted([c for c in v_doc.get("contratos") or [] if (c.get("dias") or 0) >= 3], key=lambda c: -(c.get("dias") or 0)):
         n = _nombre_lead(x)
@@ -746,7 +757,7 @@ def de_ventas(persona, v_doc, ahora):
                          f"Llama hoy a {n or 'quien tiene el contrato'}: el contrato lleva {pl(x['dias'], 'día', 'días')} sin firmar",
                          "Un contrato enviado y sin firmar a los 3 días se enfría: una llamada corta para resolver la duda que lo frena.",
                          etiqueta=n, dueno=persona["id"], cifra=pl(x["dias"], "día sin firmar", "días sin firmar"), ir="#/ventas-ro",
-                         ir_texto="Ir a «Hoy»", pestana=hoy_p, fuente={"texto": "GoHighLevel (Contrato enviado)", "url": x.get("ghl")},
+                         ir_texto="Ver las firmas pendientes", pestana=hoy_p, fuente={"texto": "GoHighLevel (Contrato enviado)", "url": x.get("ghl")},
                          gravedad="alta", orden=300 + min(x["dias"], 20)))
     for x in sorted([c for c in v_doc.get("propuestas") or [] if not c.get("abierta") and (c.get("dias") or 0) >= 3], key=lambda c: -(c.get("dias") or 0)):
         n = _nombre_lead(x)
@@ -754,7 +765,7 @@ def de_ventas(persona, v_doc, ahora):
                          f"Llama a {n or 'quien tiene la propuesta'}: no ha abierto la propuesta en {pl(x['dias'], 'día', 'días')}",
                          "Una propuesta sin abrir a las 72 h casi nunca se firma sola: llama y pregunta si le llegó.",
                          etiqueta=n, dueno=persona["id"], cifra=pl(x["dias"], "día sin abrir", "días sin abrir"),
-                         umbral="Propuesta: abierta antes de 72 h", ir="#/ventas-ro", ir_texto="Ir a «Hoy»", pestana=hoy_p,
+                         umbral="Propuesta: abierta antes de 72 h", ir="#/ventas-ro", ir_texto="Ver las propuestas sin abrir", pestana=hoy_p,
                          fuente={"texto": "GoHighLevel (Propuesta enviada)", "url": x.get("ghl")}, gravedad="media",
                          orden=250 + min(x["dias"], 20)))
     return out

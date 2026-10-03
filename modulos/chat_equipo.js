@@ -595,10 +595,12 @@ function mensajeApp(S, c, m, hilo, { enHilo = false, donde, resultado = false } 
     const ev = h('div', { style: { padding: enHilo ? '0' : 'var(--s-2) var(--s-5)' } },
       h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--s-2)', border: 'var(--borde-suave)', background: 'var(--card-2)', borderRadius: 'var(--r-m)', padding: 'var(--s-2) var(--s-3)' } },
         h('span', { class: 'ico-c s' }, icono(m.icono || 'campana', { clase: 's' })),
-        h('span', { style: { flex: '1 1 220px', minWidth: '0', font: 'var(--t-cuerpo)', color: 'var(--ink)', overflowWrap: 'anywhere' } }, m.texto),
+        h('span', { style: { flex: '1 1 220px', minWidth: '0', font: 'var(--t-cuerpo)', color: 'var(--ink)', overflowWrap: 'anywhere', whiteSpace: 'pre-line' } }, m.texto),
         m.te_menciona ? chipEstado('ambar', 'Te menciona') : null,
         m.dueno_id ? h('span', { style: EST.meta }, `Dueño: ${S.ctx.nombre(m.dueno_id)}${m.vence ? ` · antes del ${plazoTxt(m.vence).slice(0, 5)}` : ''}`) : null,
-        m.ir ? h('a', { class: 'bt mini', style: { minHeight: 'var(--s-8)' }, href: m.ir }, icono('derecha'), 'Abrir el mensaje') : null,
+        // Avisos programados (3-oct): botones de acción del aviso («Imputar», «Semáforo de X»…); si no trae, el «Abrir» de siempre.
+        ...(m.botones?.length ? m.botones.map(b => h('a', { class: 'bt mini', style: { minHeight: 'var(--s-8)' }, href: b.ir || b.url, ...(b.url ? { target: '_blank', rel: 'noopener noreferrer' } : {}) }, icono(b.url ? 'ext' : 'derecha'), b.texto))
+          : [m.ir ? h('a', { class: 'bt mini', style: { minHeight: 'var(--s-8)' }, href: m.ir }, icono('derecha'), 'Abrir el mensaje') : null]),
         h('span', { style: { ...EST.meta, fontVariantNumeric: 'tabular-nums' } }, local(m.hora).slice(11))));
     return ev;
   }

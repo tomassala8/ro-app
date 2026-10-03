@@ -17,6 +17,25 @@ import {
   h, fmt, semaforo, tile, rejillaTarjetas, listaLoPrimero, tablaDensa, chipEstado, chipsFiltro, selectorCliente, vacio, vacioLinea,
   botonConfirmar, avisoParcial, logoCliente, panel, icono, iniciales, hoyMadrid,
 } from '../componentes.js';
+import { franjaCifras } from './_trabajo.js';
+import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
+import { botonDeshacer, conDeshacer } from './_deshacer.js';
+
+// Ronda U · U3 (3-oct, 50 §Redes): «Lo cubro» con fecha y quién en cada hueco (acción interna hueco_lo_cubro, con rastro).
+// Se ve en la celda del calendario («LA», quién lo cubre) hasta que Metricool lo confirme con algo programado.
+async function cargarCubiertos(ctx) {
+  const m = new Map();   // `${cliente_id}|${dia}` → { quien, creada }
+  if (!(ctx.servidor && ctx.api)) return m;
+  try {
+    for (const a of ((await ctx.api('acciones?modulo=redes')).acciones || []).slice().reverse()) {
+      if (a.tipo !== 'hueco_lo_cubro' || !a.cliente_id) continue;
+      let vp = {}; try { vp = JSON.parse(a.vista_previa || '{}'); } catch { vp = {}; }
+      for (const dia of (Array.isArray(vp.dias) ? vp.dias : [])) m.set(`${a.cliente_id}|${dia}`, { quien: a.quien, creada: a.creada });
+    }
+  } catch { /* sin acciones: nada cubierto */ }
+  return m;
+}
+const diasEntre = (desde, hasta) => { const out = []; let d = desde; for (let i = 0; i < 31 && d <= hasta; i++) { out.push(d); const x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + 1); d = x.toISOString().slice(0, 10); } return out; };
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -114,10 +133,12 @@ function pintarPortada(cont, ctx, d) {
   const pas = base.reduce((a, f) => a + f.pasadas_30, 0);
   const enFecha = pas ? Math.round((pub / pas) * 100) : null;
   ctx.titulo('Redes', `${base.length} clientes con marca en Metricool${deRedes ? ' · los de tu cartera' : ''} · del ${fDiaRO(hoy > m.ventana[0] ? hoy : m.ventana[0])} al ${fDiaRO(m.ventana[1])}`);
-  if (ctx.nivel === 'resumen') cont.append(avisoParcial('Tu puesto ve el resumen de Redes: cifras y calendario. El detalle de cada cliente lo ven su persona de redes y su account.', { tipo: 'info' }));
+  const ctxN = [];   // Ronda U (#1): cifras grandes, avisos y rendimiento DEBAJO del trabajo (Lo primero + calendario)
+  if (ctx.nivel === 'resumen') ctxN.push(avisoParcial('Tu puesto ve el resumen de Redes: cifras y calendario. El detalle de cada cliente lo ven su persona de redes y su account.', { tipo: 'info' }));
+  const lista = [];   // lo de trabajar, arriba
 
   // 1 · cifras (6 → rejilla de 3 + 3). Ventanas fijas: lo programado mira 14 días adelante; lo publicado, 30 días atrás.
-  cont.append(rejillaTarjetas([
+  ctxN.push(rejillaTarjetas([
     tile({ icono: 'cal', etiqueta: '14 días cubiertos', valor: fmt.pct(pct), unidad: `${verdes} de ${base.length}`, estado: pct === 100 ? 'verde' : rojos.length ? 'rojo' : 'ambar',
       contexto: deRedes ? `Número que manda · bien el 100 % · tu cartera de redes: ${base.length} con calendario en Metricool (${lleva} que llevas y ${base.length - lleva} en que ayudas)${sinMc.length ? ` · ${sinMc.length} sin marca, no cuentan` : ''}` : 'Número que manda · bien el 100 %', medible: 'medias', medibleDetalle: m.regla_hueco, frescura: fres, ir: 'Ver el calendario', alPulsar: () => document.getElementById('red-cal')?.scrollIntoView({ behavior: 'smooth' }) }),
     tile({ icono: 'alert', etiqueta: 'Hueco en 7 días', valor: rojos.length, unidad: `de ${base.length}`, estado: rojos.length ? 'rojo' : 'verde',
@@ -128,12 +149,14 @@ function pintarPortada(cont, ctx, d) {
     tile({ icono: 'check', etiqueta: 'En fecha · 30 días', valor: fmt.pct(enFecha), unidad: `${fmt.num(pub)} de ${fmt.num(pas)}`, estado: semaforo(enFecha, { verde: 100, ambar: 95 }), contexto: 'Bien el 100 % · mal por debajo del 95 %', medible: 'hoy', frescura: fres }),
   ]));
 
-  if (miCartera) cont.append(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, miCartera.texto, deRedes ? ' Las cifras de arriba cuentan los dos (la misma cartera que Mi día).' : ''));
-  if (m.hoy && m.hoy < hoy) cont.append(avisoParcial(`Datos de Metricool del ${diaTxt(m.hoy)} (${fDiaRO(m.hoy)}). El calendario empieza hoy, ${diaTxt(hoy)}: lo programado después de esa lectura todavía no sale.`, { tipo: 'info' }));
-  if (sinMc.length) cont.append(panel({ titulo: deRedes ? 'Tus clientes sin marca en Metricool' : 'Clientes con persona de redes y sin marca en Metricool', icono: 'plug', sub: 'Sin marca conectada no se puede ver su calendario: no cuentan en las cifras de arriba.' },
+  if (miCartera) ctxN.push(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, miCartera.texto, deRedes ? ' Las cifras de arriba cuentan los dos (la misma cartera que Mi día).' : ''));
+  if (m.hoy && m.hoy < hoy) ctxN.push(avisoParcial(`Datos de Metricool del ${diaTxt(m.hoy)} (${fDiaRO(m.hoy)}). El calendario empieza hoy, ${diaTxt(hoy)}: lo programado después de esa lectura todavía no sale.`, { tipo: 'info' }));
+  // Ronda U: el aviso de marcas sin Metricool, a una línea (antes 635 px encima del trabajo); el detalle, en el contexto
+  if (sinMc.length) lista.push(h('details', { class: 'que-es' }, h('summary', {}, `${fmt.plural(sinMc.length, 'cliente', 'clientes')} sin marca en Metricool: no salen en el calendario`),
+    h('div', { style: { marginTop: 'var(--s-2)' } }, panel({ titulo: deRedes ? 'Tus clientes sin marca en Metricool' : 'Clientes con persona de redes y sin marca en Metricool', icono: 'plug', sub: 'Sin marca conectada no se puede ver su calendario: no cuentan en las cifras de arriba.' },
     h('ul', { class: 'cuerpo', style: { listStyle: 'none', margin: '0', display: 'grid', gap: 'var(--s-2)' } }, sinMc.map(x => h('li', { class: 'fila', style: { gap: 'var(--s-2)', minHeight: '32px' } },
-      chipEstado('gris', x.cliente), h('span', { class: 'sub' }, deRedes ? (x.account_nombre ? `account: ${x.account_nombre}` : 'sin account') : `${x.redes_nombre || 'sin persona'}${x.account_nombre ? ` · account: ${x.account_nombre}` : ''}`))))));
-  cont.append(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: lo programado mira 14 días adelante y lo publicado, 30 días atrás (Metricool no da serie diaria por cliente).'));
+      chipEstado('gris', x.cliente), h('span', { class: 'sub' }, deRedes ? (x.account_nombre ? `account: ${x.account_nombre}` : 'sin account') : `${x.redes_nombre || 'sin persona'}${x.account_nombre ? ` · account: ${x.account_nombre}` : ''}`))))))));
+  ctxN.push(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: lo programado mira 14 días adelante y lo publicado, 30 días atrás (Metricool no da serie diaria por cliente).'));
 
   // 2 · lo primero hoy: fallidas y huecos en 7 días (máximo 7)
   const prim = [
@@ -142,7 +165,7 @@ function pintarPortada(cont, ctx, d) {
   ];
   const restoPrim = Math.max(0, prim.length - 7);
   const manana = dias14(hoy)[1];
-  cont.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: 'Fallidas y huecos en los próximos 7 días',
+  lista.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: 'Fallidas y huecos en los próximos 7 días · «Lo cubro» deja tu nombre en el hueco',
     pie: restoPrim ? h('span', {}, `${fmt.plural(restoPrim, 'cliente más', 'clientes más')} con hueco: en el calendario de abajo`) : null },
     listaLoPrimero(prim.slice(0, 7).map(({ f, tipo }, i, lista) => {
       const hu = f.huecos.find(x => x.en_7) || f.huecos[0];
@@ -153,11 +176,23 @@ function pintarPortada(cont, ctx, d) {
         estado: cuentagotas(urgente ? 'rojo' : 'ambar', i, lista.length), icono: tipo === 'fallida' ? 'cerrar' : 'cal',
         motivo: tipo === 'fallida' ? `${f.cliente} · publicación fallida` : `${f.cliente} · ${hu.dias} días sin nada (${fDiaRO(hu.desde)} → ${fDiaRO(hu.hasta)})`,
         detalle: tipo === 'fallida' ? `${fDiaRO(fa.dia)} · ${(fa.redes[0] || {}).detalle || fa.estado} · «${fa.texto}»` : [nom(ctx, f.redes_id) ? `Redes: ${nom(ctx, f.redes_id)}` : 'Sin persona de redes', nom(ctx, f.account_id) ? `account: ${nom(ctx, f.account_id)}` : null].filter(Boolean).join(' · '),
-        botones: masAcciones(
-          h('a', { class: 'bt mini', href: `#/redes/${f.cliente_id}` }, icono('cli'), 'Ver cliente'),
-          h('a', { href: f.prueba, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir en Metricool'),
-          botonConfirmar({ texto: tipo === 'fallida' ? 'Avisar al account' : 'Me encargo', pregunta: tipo === 'fallida' ? '¿Avisar con el motivo?' : '¿Te encargas tú?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-            alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: tipo === 'fallida' ? 'aviso_account' : 'hueco_lo_cubro', objeto: f.cliente, cliente_id: f.cliente_id, texto: tipo === 'fallida' ? (fa.redes[0] || {}).detalle : `Hueco ${hu.desde} → ${hu.hasta}`, vista_previa: tipo === 'fallida' ? `Aviso al account de ${f.cliente}: publicación fallida del ${fa.dia} (${(fa.redes[0] || {}).detalle}).` : `${ctx.persona.nombre} cubre el hueco de ${f.cliente} del ${hu.desde} al ${hu.hasta}.` }); return 'En la cola (simulación)'; } })),
+        // Ronda U (#4): el verbo a la vista y al primer clic con «Deshacer» 8 s (interno); «Ver cliente» y Metricool en «⋯»
+        botones: [
+          (() => {
+            const cubre = tipo === 'hueco' && hu ? d.cubiertos?.get(`${f.cliente_id}|${hu.desde}`) : null;
+            if (cubre) return h('span', { class: 'estado', style: { font: 'var(--t-meta)', color: 'var(--good-ink)', fontWeight: '600' } }, `✓ Lo cubre ${nom(ctx, cubre.quien) || cubre.quien}`);
+            return botonDeshacer({ texto: tipo === 'fallida' ? 'Avisar al account' : 'Lo cubro', hecho: tipo === 'fallida' ? 'Account avisado' : `Lo cubres tú (${fDiaRO(hu.desde)} → ${fDiaRO(hu.hasta)})`, pri: tipo !== 'fallida', icono: tipo === 'fallida' ? 'send' : 'cal', soloLectura: ctx.soloLectura,
+              alHacer: async () => {
+                const dias = tipo === 'fallida' ? [] : diasEntre(hu.desde, hu.hasta);
+                await ctx.accion({ herramienta: 'app', tipo: tipo === 'fallida' ? 'aviso_account' : 'hueco_lo_cubro', objeto: tipo === 'fallida' ? f.cliente : `${f.cliente} · ${hu.desde} → ${hu.hasta}`, cliente_id: f.cliente_id,
+                  texto: tipo === 'fallida' ? (fa.redes[0] || {}).detalle : `Hueco ${hu.desde} → ${hu.hasta}`,
+                  vista_previa: tipo === 'fallida' ? `Aviso al account de ${f.cliente}: publicación fallida del ${fa.dia} (${(fa.redes[0] || {}).detalle}).` : { desde: hu.desde, hasta: hu.hasta, dias, quien: ctx.persona.id, texto: `${ctx.nombre(ctx.persona.id)} cubre el hueco de ${f.cliente} del ${hu.desde} al ${hu.hasta}.` } });
+                for (const x of dias) d.cubiertos?.set(`${f.cliente_id}|${x}`, { quien: ctx.persona.id });
+                return tipo === 'fallida' ? 'Avisado en su Mi día' : 'Tu nombre queda en el hueco hasta que Metricool lo vea programado';
+              } });
+          })(),
+          ...masAcciones(h('a', { class: 'bt mini', href: `#/redes/${f.cliente_id}` }, icono('cli'), 'Ver cliente'),
+            h('a', { href: f.prueba, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir en Metricool'))],
       };
     }), { vacio: { titulo: 'Sin huecos ni fallidas', porque: 'Todos tus clientes tienen la semana cubierta.', celebrar: true } })));
 
@@ -197,9 +232,24 @@ function pintarPortada(cont, ctx, d) {
         dias.map(x => {
           const o = porDia.get(x); const hu = enHueco(x);
           const titulo = `${f.cliente} · ${fDiaRO(x)}: ${o ? `${fmt.plural(o.n, 'publicación', 'publicaciones')}${o.borr ? ` (${o.borr} por aprobar)` : ''}` : x > m.ventana[1] ? 'sin dato todavía (fuera de la última lectura de Metricool)' : hu ? (urgentes.has(x) ? 'hueco que hay que tapar ya' : 'hueco') : 'nada programado'}`;
-          return h('td', { style: centro, title: titulo },
-            o ? h('span', { class: `chip sin-punto ${o.borr === o.n ? 'azul' : 'verde'}`, 'aria-label': titulo }, String(o.n))
-              : punto(hu ? (urgentes.has(x) ? 'rojo' : 'ambar') : 'gris', titulo));
+          const cubre = !o && hu ? d.cubiertos?.get(`${f.cliente_id}|${x}`) : null;
+          const celda = h('td', { style: centro, title: cubre ? `${titulo} · lo cubre ${nom(ctx, cubre.quien) || cubre.quien}` : titulo });
+          if (o) celda.append(h('span', { class: `chip sin-punto ${o.borr === o.n ? 'azul' : 'verde'}`, 'aria-label': titulo }, String(o.n)));
+          else if (cubre) celda.append(h('span', { class: 'chip sin-punto azul', 'aria-label': `Lo cubre ${nom(ctx, cubre.quien) || cubre.quien}` }, iniciales(nom(ctx, cubre.quien) || cubre.quien)));
+          else if (hu && ctx.nivel !== 'resumen' && !ctx.soloLectura) {
+            // Ronda U: el hueco es una celda pulsable «Lo cubro» (ese día, con tu nombre); Deshacer 8 s
+            const b = h('button', { type: 'button', class: 'bt mini', 'data-cubro': `${f.cliente_id}|${x}`, title: `${titulo} · pulsa: lo cubro`, 'aria-label': `Lo cubro: ${f.cliente}, ${fDiaRO(x)}`,
+              style: { minWidth: 'var(--s-8)', minHeight: 'var(--s-8)', padding: '0', justifyContent: 'center' } }, punto(urgentes.has(x) ? 'rojo' : 'ambar'));
+            b.addEventListener('click', () => conDeshacer({
+              mensaje: `Cubres ${f.cliente} el ${fDiaRO(x)}`,
+              optimista: () => { d.cubiertos?.set(`${f.cliente_id}|${x}`, { quien: ctx.persona.id }); pintar(); },
+              revertir: () => { d.cubiertos?.delete(`${f.cliente_id}|${x}`); pintar(); },
+              hacer: () => ctx.accion({ herramienta: 'app', tipo: 'hueco_lo_cubro', objeto: `${f.cliente} · ${x}`, cliente_id: f.cliente_id, texto: `Hueco del ${x}`,
+                vista_previa: { desde: x, hasta: x, dias: [x], quien: ctx.persona.id, texto: `${ctx.nombre(ctx.persona.id)} cubre el ${x} de ${f.cliente}.` } }),
+            }));
+            celda.append(b);
+          } else celda.append(punto(hu ? (urgentes.has(x) ? 'rojo' : 'ambar') : 'gris', titulo));
+          return celda;
         }));
     });
     caja.replaceChildren(h('div', { class: 'tabla-scroll' }, h('table', { class: 'densa', 'aria-label': 'Calendario de los próximos 14 días' }, h('thead', {}, cab), h('tbody', {}, cuerpo))));
@@ -208,18 +258,19 @@ function pintarPortada(cont, ctx, d) {
   const leyenda = h('span', { class: 'fila', style: { gap: 'var(--s-2) var(--s-4)' } },
     h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'chip sin-punto verde' }, '2'), 'Programadas'),
     h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'chip sin-punto azul' }, '1'), 'Por aprobar'),
-    h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, punto('rojo'), 'Hueco hoy o mañana'),
+    h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, punto('rojo'), 'Hueco hoy o mañana (pulsa: lo cubro)'),
+    h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'chip sin-punto azul' }, 'LA'), 'Lo cubre alguien'),
     h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, punto('ambar'), 'Hueco más adelante'),
     h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, punto('gris'), 'Nada, sin llegar a hueco'));
   const cal = panel({ titulo: 'Calendario de los próximos 14 días', icono: 'cal', sub: 'Una fila por cliente; pulsa el nombre para ver su detalle. Ventana fija: de hoy a 13 días vista.', pie: leyenda },
     h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja);
   cal.id = 'red-cal';
-  cont.append(cal);
+  lista.splice(lista.length - 1, 0, cal);   // el calendario (la herramienta) arriba; «Lo primero» debajo
 
   // 4 · rendimiento de lo publicado (ventana fija de 30 días: Metricool no da serie diaria por cliente)
   const filasR = base.map(f => ({ ...f, ig: f.por_red.instagram?.tasa ?? null, li: f.por_red.linkedin?.tasa ?? null, fb: f.por_red.facebook?.tasa ?? null }));
   const celdaTasa = (v, um) => v === null ? h('span', { class: 'sub' }, '—') : chipEstado(semaforo(v, { verde: um, ambar: um / 2 }), `${fmt.num(v, 1)} %`);
-  cont.append(panel({ titulo: 'Rendimiento de lo publicado · 30 días', icono: 'grafico', sub: 'Interacción por red. Instagram y Facebook sobre alcance (bien desde 1,5 %); LinkedIn sobre impresiones (bien desde 3 %). Últimos 30 días, fijo.' },
+  ctxN.push(panel({ titulo: 'Rendimiento de lo publicado · 30 días', icono: 'grafico', sub: 'Interacción por red. Instagram y Facebook sobre alcance (bien desde 1,5 %); LinkedIn sobre impresiones (bien desde 3 %). Últimos 30 días, fijo.' },
     tablaDensa({
       filas: filasR, porPagina: 15, apilable: false, buscar: { campos: ['cliente', 'redes_quien'], placeholder: 'Buscar cliente o persona' }, filtros: esJefe(ctx) ? [{ clave: 'redes_quien', titulo: 'Lo lleva' }] : [],
       columnas: [
@@ -235,12 +286,19 @@ function pintarPortada(cont, ctx, d) {
     })));
 
   // 5 · lo que todavía no se mide, plegado al pie
-  cont.append(piePlegado('Todavía no se mide · 4 cosas (fase 2)', [
+  ctxN.push(piePlegado('Todavía no se mide · 4 cosas (fase 2)', [
     ['Volumen frente a lo pactado con cada cliente', 'cargar el plan de cada cliente; hoy se usa el de RO por defecto'],
     ['Aprobaciones atascadas más de 5 días', 'la API de Metricool no da el estado de aprobación'],
     ['Comentarios y mensajes respondidos en < 24 h', 'no está en el alcance de la API usada'],
     ['Paquete de validación del día 20', 'tarea con fecha en ClickUp'],
   ]));
+  const franja = franjaEnLinea(franjaCifras([
+    { etiqueta: 'Hueco en 7 días', valor: rojos.length, estado: rojos.length ? 'rojo' : '', alPulsar: () => elegirChip(cont, 'rojo') },
+    { etiqueta: 'Fallidas · 7 días', valor: fall7, estado: fall7 ? 'rojo' : '', alPulsar: () => elegirChip(cont, 'fallidas') },
+    { etiqueta: '14 días cubiertos', valor: fmt.pct(pct), titulo: `${verdes} de ${base.length} · bien el 100 %`, alPulsar: () => elegirChip(cont, '') },
+    { etiqueta: 'Por aprobar', valor: borr },
+  ], { etiqueta: 'Cifras (filtran el calendario)' }));
+  cont.append(pantallaAncha({ id: 'redes', filtros: franja, lista: h('div', { class: 'pila', style: { gap: 'var(--s-4)', minWidth: '0' } }, lista), contexto: ctxN, tituloContexto: 'Cifras, rendimiento y lo que falta por medir' }));
 }
 
 function elegirChip(cont, v) {
@@ -346,6 +404,7 @@ export default {
       return;
     }
     const [id] = ctx.params;
+    d.cubiertos = await cargarCubiertos(ctx);
     if (id) pintarDetalle(cont, ctx, d, id);
     else pintarPortada(cont, ctx, d);
   },

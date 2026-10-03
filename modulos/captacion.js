@@ -27,7 +27,11 @@ import {
   vacio, botonConfirmar, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales, pestanas, graficoSerie,
   variacion, fichaCatalogo, pieFase2, copiar, avisoFlotante, listaConIcono, selloMedible, limpiaTexto,
   barraProgreso, embudoBarras, ventanas, colorCifra, cifraPrincipal, vacioLinea, menuMas, esqueleto, rejillaTarjetas,
+  hoyMadrid, sumarDias,
 } from '../componentes.js';
+import { franjaCifras, barraAcciones } from './_trabajo.js';
+import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
+import { conDeshacer, botonDeshacer } from './_deshacer.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -312,7 +316,8 @@ async function pintarLista(cont, ctx, d) {
   const repintar = () => {
     const filas = alcance.valor() === 'mias' ? misFilas : alcance.valor() === 'apoyo' ? apoyoFilas : todas;
     zona.replaceChildren();
-    if (alcance.valor() === 'mias' && K.universo) zona.append(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, `${K.universo}.${K.cp ? ' «Mis cuentas» enseña las que tienen cuenta de Meta.' : ''}${apoyoFilas.length ? ` Las de apoyo, en «De apoyo».` : ''}`));
+    // Ronda U: la frase de la cartera va al contexto (debajo), no empuja la lista
+    K.nodoUniverso = alcance.valor() === 'mias' && K.universo ? h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, `${K.universo}.${K.cp ? ' «Mis cuentas» enseña las que tienen cuenta de Meta.' : ''}${apoyoFilas.length ? ` Las de apoyo, en «De apoyo».` : ''}`) : null;
     pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance.valor());
   };
   repintar();
@@ -352,7 +357,8 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
     e.currentTarget.firstChild.textContent = abrir ? 'Ver menos' : `Ver ${ocultas.length} más`;
   } } }, `Ver ${ocultas.length} más`) : null;
   // orden de la guía 3.6: lo que pide acción, primero; después la cifra que manda y 3 tarjetas de apoyo
-  zona.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: `${alcance === 'mias' ? 'Tus cuentas' : alcance === 'apoyo' ? 'Cuentas en las que ayudas' : alcance === 'trafficker' ? 'Sus cuentas' : 'Toda la casa'}: lo más grave arriba, con dónde se rompe` }, loPrimero, verMas ? h('footer', { class: 'panel-pie' }, h('span', {}, `${lista.length} casos en total`), verMas) : null));
+  const ctxN = K.nodoUniverso ? [K.nodoUniverso] : [];   // Ronda U: lo de leer va DEBAJO de la lista de cuentas (pantallaAncha), plegado
+  ctxN.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: `${alcance === 'mias' ? 'Tus cuentas' : alcance === 'apoyo' ? 'Cuentas en las que ayudas' : alcance === 'trafficker' ? 'Sus cuentas' : 'Toda la casa'}: lo más grave arriba, con dónde se rompe` }, loPrimero, verMas ? h('footer', { class: 'panel-pie' }, h('span', {}, `${lista.length} casos en total`), verMas) : null));
 
   // ---- 2 · la cifra que manda + 3 tarjetas de apoyo ----
   // Mientras ningún cliente tenga objetivo de coste por cita, manda el techo de 35 € por lead (no un «—»).
@@ -394,11 +400,12 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
       C.tiendas.length ? `De Meta, sin ${C.tiendas.map(c => c.nombre).join(', ')} (tienda online)` : (verDinero ? 'Gasto de todas las cuentas, en hora de Madrid' : null)].filter(Boolean).join(' · ') || null,
     medible: 'hoy',
   }));
-  zona.append(h('section', { class: 'pila', style: { gap: S[2] }, 'aria-label': 'Cifras del día' },
+  const secCifras = h('section', { class: 'pila', style: { gap: S[2] }, 'aria-label': 'Cifras del día' },
     rejillaTarjetas(t.map(x => { x.setAttribute('role', 'listitem'); return x; })),
     h('p', { class: 'sub', style: { margin: '0' } }, P ? `La tarjeta de leads y gasto sigue el periodo de arriba (${P.rango}, serie diaria de Meta hasta el ${fDiaRO(d.datos_hasta)}). Lo que se juzga va en ventana fija: crítico, techo y CRM a 7 días, coste por cita a 14 días y Google Ads de septiembre.`
-      : 'Ventanas fijas: leads y gasto de los últimos 7 días frente a los 7 anteriores, coste por cita a 14 días y Google Ads de septiembre.')));
-  zona.lastChild.firstChild.setAttribute('role', 'list');
+      : 'Ventanas fijas: leads y gasto de los últimos 7 días frente a los 7 anteriores, coste por cita a 14 días y Google Ads de septiembre.'));
+  secCifras.firstChild.setAttribute('role', 'list');
+  ctxN.push(secCifras);
   const avisoObjetivo = !resumenNivel && C.conObjetivo.length === 0 && nAct
     ? `Ningún cliente tiene cargado su objetivo de coste por cita ni de coste por lead. Hasta que el account lo cargue en el alta, se juzga con el techo general de ${techo} € por lead y con la red de seguridad de ${d.parametros.alarma_cita} € por cita; cada tarjeta de cliente lleva el aviso «objetivo sin cargar».` : null;
 
@@ -417,12 +424,11 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   });
   caja.id = 'cap-pestanas';
   caja.ids = pest.map(p => p.id);
-  zona.append(caja);
 
   // ---- 4 · cómo se mide (plegado al pie, con el aviso de objetivos y la regla de crítico) ----
   const inds = ['trafficker.de_cuentas_con_coste_por_cita_en_objetivo_el_que', 'trafficker.coste_por_lead_frente_al_objetivo_del_cliente', 'trafficker.leads_que_llegan_al_crm', 'trafficker.creatividad_cansada', 'jefa_publicidad.cuentas_en_rojo_por_trafficker']
     .map(id => ctx.indicador(id)).filter(Boolean);
-  zona.append(h('details', { class: 'panel', style: { padding: '0' } },
+  ctxN.push(h('details', { class: 'panel', style: { padding: '0' } },
     h('summary', { style: { padding: `${S[4]} ${S[5]}`, cursor: 'pointer', fontWeight: '700', display: 'flex', gap: S[2], alignItems: 'center', minHeight: '44px' } }, icono('medidor'), 'Cómo se mide cada cifra'),
     h('div', { class: 'cuerpo pila', style: { gap: S[3] } },
       avisoObjetivo ? avisoParcial(avisoObjetivo, { titulo: 'Objetivo sin cargar.' }) : null,
@@ -434,7 +440,16 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
       }))) : null)));
   const fase2 = (ctx.indicadores() || []).filter(i => i.modulo === 'captacion');
   const pie = pieFase2(fase2);
-  if (pie) zona.append(pie);
+  if (pie) ctxN.push(pie);
+  // franja de cifras (filtran la lista) · «Sin apuntar hoy» = cuentas con pauta sin bitácora de hoy
+  const sinHoy = filas.filter(c => c.meta_activa && !hoyBit(ctx, d, c.cliente_id)).length;
+  const franja = !resumenNivel ? franjaCifras([
+    { etiqueta: 'Clientes críticos', valor: C.criticos.length, estado: C.criticos.length ? 'rojo' : '', alPulsar: () => irAPestana(zona, 'cuentas', { gravedad: 'critico' }) },
+    { etiqueta: 'Sin apuntar hoy', valor: sinHoy, estado: sinHoy ? 'rojo' : '', titulo: 'Cuentas con pauta sin «qué cambio hoy» apuntado', alPulsar: () => irAPestana(zona, 'cuentas', { sinHoy: true }) },
+    { etiqueta: 'Creatividades cansadas', valor: C.cansadas + C.rechazados, estado: C.cansadas + C.rechazados ? 'rojo' : '', alPulsar: () => irAPestana(zona, 'creatividades') },
+    { etiqueta: 'En el CRM', valor: C.pctCrm === null ? 'sin dato' : pct(C.pctCrm), alPulsar: () => irAPestana(zona, 'despacho', { fuga: true }) },
+  ], { etiqueta: 'Cifras del día (filtran la lista)' }) : null;
+  zona.append(pantallaAncha({ id: 'captacion', filtros: franjaEnLinea(franja), lista: caja, contexto: ctxN, tituloContexto: 'Lo primero hoy, cifras y cómo se mide' }));
 }
 
 /** Botones de un caso de «Lo primero hoy»: uno principal («Abrir tarjeta») y el resto en el menú «⋯»
@@ -508,26 +523,28 @@ function pCuentas(el, ctx, d, filas, C, K) {
     const g = chipsG.valor(), cu = chipsC.valor(), p = chipsP.valor();
     let base = filas.filter(c => (!g || (c.gravedad || 'sin') === g) && (!cu.length || cu.every(k => c.cuello?.includes(k))) && (!p || c.plataformas?.includes(p)));
     if (f?.aviso === 'objetivo') base = base.filter(c => c.meta_activa && !c.objetivo?.cargado);
+    if (f?.sinHoy) base = base.filter(c => c.meta_activa && !hoyBit(ctx, d, c.cliente_id));
     const filasT = base.map(c => ({
       ...c, grav: gc(c).o * 10 + GRAV[c.severidad].o, pub: GRAV[c.severidad].o, motivo: (c.motivos || [])[0] ? textoMot(c.motivos[0]) : ((c.avisos || []).find(a => a.clase_id === 'integracion') ? textoMot(c.avisos.find(a => a.clase_id === 'integracion')) : ''),
       trafficker: nombre(d, c.equipo?.trafficker) || 'sin trafficker', account: nombre(d, c.equipo?.account) || 'sin account',
       leads7: c.leads?.['7d'] ?? null, gasto7: c.gasto?.['7d'] ?? null, cplref: c.cpl_resumen?.ref ?? null, cita: c.coste_por_cita?.coste_por_cita_14d ?? null,
     }));
+    const soloUnTrafficker = new Set(filasT.map(c => c.trafficker)).size <= 1;
     caja.replaceChildren(tablaDensa({
       filas: filasT, orden: { clave: 'grav', dir: 'asc' }, porPagina: 12,
       buscar: { campos: ['nombre', 'trafficker', 'account', 'motivo'], placeholder: 'Buscar cliente, trafficker o motivo' },
-      filtros: [{ clave: 'trafficker', titulo: 'Trafficker' }, { clave: 'account', titulo: 'Account' }],
+      filtros: [new Set(filasT.map(c => c.trafficker)).size > 1 ? { clave: 'trafficker', titulo: 'Trafficker' } : null, { clave: 'account', titulo: 'Account' }].filter(Boolean),
       columnas: [
         { clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c), c.nombre, c.nuevo ? chipEstado('azul', 'nuevo') : null, esTienda(c) ? h('span', { class: 'chip gris sin-punto', title: NOTA_TIENDA }, 'tienda online') : null) },
-        { clave: 'grav', titulo: 'Gravedad del cliente', celda: c => chipCli(c) },
-        { clave: 'pub', titulo: 'Publicidad', celda: c => chipPub(c) },
+        !(ctx.nivel === 'resumen') ? { clave: 'hoy', titulo: 'Qué cambió hoy', ordenable: false, celda: c => celdaHoy(ctx, d, c) } : null,
+        { clave: 'grav', titulo: 'Gravedad', celda: c => h('span', { style: { display: 'grid', gap: S[1], justifyItems: 'start' } }, chipCli(c), chipPub(c)) },
         { clave: 'motivo', titulo: 'Por qué', ordenable: false, celda: c => c.motivo ? h('span', { style: { display: 'grid', gap: S[1], minWidth: '240px' } }, h('span', {}, c.motivo),
           h('span', { class: 'fila', style: { gap: S[1] } }, (c.cuello || []).map(k => chipCuello(k)))) : h('span', { class: 'sub' }, c.meta_activa ? 'Publicidad sin motivos' : 'Sin pauta activa') },
         { clave: 'trafficker', titulo: 'Trafficker', celda: c => c.equipo?.trafficker ? h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(c.trafficker)), c.trafficker) : chipEstado('ambar', 'sin trafficker') },
         { clave: 'leads7', titulo: 'Leads · gasto 7 d', num: true, celda: c => c.leads7 === null ? '—' : h('span', { style: { display: 'inline-grid', justifyItems: 'end', gap: S[1] } }, h('span', { style: NOWRAP, title: esTienda(c) ? 'Conversiones del píxel (tienda online)' : null }, num(c.leads7), ' ', deltaMini(c.leads?.['7d'], c.leads?.['7d_prev'])), h('span', { class: 'sub', style: NOWRAP }, esTienda(c) ? 'conversiones' : c.dinero ? eur(c.gasto7) : 'gasto no visible')) },
         { clave: 'cplref', titulo: 'Coste por lead', num: true, celda: c => celdaCpl(c, techo) },
         { clave: 'cita', titulo: 'Por cita 14 d', num: true, celda: c => celdaCita(c, d) },
-      ],
+      ].filter(Boolean).filter(col => !(col.clave === 'trafficker' && soloUnTrafficker)),
       alPulsar: c => ctx.navegar(`captacion/${c.cliente_id}`),
       etiquetaFila: c => `${c.nombre}: cliente ${gc(c).t.toLowerCase()}, ${GRAV[c.severidad].t.toLowerCase()}. ${c.motivo}. Abrir tarjeta`,
       vacio: { titulo: 'Ninguna cuenta con estos filtros', porque: 'Cambia la gravedad o quita un filtro.' },
@@ -542,12 +559,34 @@ function pCuentas(el, ctx, d, filas, C, K) {
   pintar();
   const filtros = [chipsG, h('div', { class: 'fila', style: { gap: S[4] } }, chipsC, chipsP)];
   el.append(h('div', { class: 'panel' },
-    h('div', { class: 'cuerpo pila', style: { gap: S[2] } },
-      ...(movil ? [h('details', { class: 'que-es' },
-        h('summary', { style: { display: 'flex', alignItems: 'center', gap: S[2], minHeight: '44px', fontWeight: '600' } }, icono('filtro', { clase: 's' }), resumen),
-        h('div', { class: 'pila', style: { gap: S[2], marginTop: S[2] } }, ...filtros, hueSel))] : filtros),
+    h('div', { class: 'pila', style: { gap: S[2], padding: `${S[2]} var(--relleno) 0` } },
+      // Ronda U: los filtros, en una línea plegada también en el ordenador (antes 3 filas de chips encima de la tabla)
+      h('details', { class: 'que-es' },
+        h('summary', { style: { display: 'flex', alignItems: 'center', gap: S[2], minHeight: '36px', fontWeight: '600' } }, icono('filtro', { clase: 's' }), resumen,
+          h('span', { class: 'sub', style: { fontWeight: '400' } }, '· gravedad, dónde se rompe y plataforma')),
+        h('div', { class: 'pila', style: { gap: S[2], marginTop: S[2] } }, ...filtros, movil ? hueSel : null)),
       f?.aviso === 'objetivo' ? avisoParcial('Solo las cuentas activas sin objetivo de coste por cita cargado. Vuelve a «Captación» para quitar el filtro.', { tipo: 'info' }) : null),
     caja));
+}
+/** Celda «Qué cambió hoy»: lo apuntado hoy o el último apunte, y «Apuntar» (editor en la propia fila, sin abrir la tarjeta). */
+function celdaHoy(ctx, d, c) {
+  const caja = h('span', { style: { display: 'grid', gap: S[1], minWidth: '200px', maxWidth: '280px' }, on: { click: e => e.stopPropagation(), keydown: e => e.stopPropagation() } });
+  const pintar = () => {
+    const l = d.bitacora?.get(c.cliente_id) || [];
+    const hoyA = l.find(a => ctx.fechas?.esHoy?.(diaDe(a)));
+    const ult = hoyA || l[0];
+    const texto = ult ? h('span', { class: hoyA ? null : 'sub', style: { whiteSpace: 'normal', overflowWrap: 'anywhere' } }, hoyA ? '✓ ' : '', ult.texto, h('span', { class: 'sub' }, ` · ${cuandoBit(ctx, ult)}`))
+      : h('span', { class: 'sub' }, c.meta_activa ? 'Sin apuntar hoy' : 'Sin pauta');
+    const ed = h('div', { hidden: true });
+    const b = c.meta_activa && !ctx.soloLectura ? h('button', { type: 'button', class: 'bt mini', 'aria-expanded': 'false', on: { click: () => {
+      const abrir = ed.hidden; ed.hidden = !abrir; b.setAttribute('aria-expanded', String(abrir));
+      if (abrir && !ed.childNodes.length) ed.append(editorBitacora(ctx, d, c, { compacto: true, alHecho: pintar }));
+      if (abrir) ed.querySelector('input')?.focus();
+    } } }, icono('editar'), hoyA ? 'Añadir' : 'Apuntar') : null;
+    caja.replaceChildren(texto, b ? h('span', {}, b) : null, ed);
+  };
+  pintar();
+  return caja;
 }
 function deltaMini(a, b) {
   const v = variacion(a, b);
@@ -961,21 +1000,26 @@ function pintarTarjeta(cont, ctx, d, id) {
       medible: 'medias', medibleDetalle: 'Muestra manual de septiembre', estado: '', frescura: { fuente: 'Windsor · muestra manual', estado: 'viejo', fecha: '2026-10-02' } }));
   }
 
-  if (esTienda(c)) cont.append(avisoParcial(NOTA_TIENDA, { tipo: 'info', titulo: 'No cuenta en los leads de la casa.' }));
-  cont.append(tiles(t));
-  if (c.cuenta_meta?.convertida_a_madrid) {
-    cont.append(h('p', { class: 'sub', style: { margin: '0', display: 'flex', gap: S[2], alignItems: 'flex-start' } }, icono('info', { clase: 's' }),
-      h('span', {}, `Hora de Madrid: Meta cuenta esta cuenta en ${c.cuenta_meta.zona_horaria}; aquí cada día va en hora de Madrid y puede no casar al céntimo con el Administrador de anuncios.`)));
-  }
-
-  cont.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Qué pasa y dónde se rompe', icono: 'alert', sub: 'Motivos de la gravedad y avisos de integración y de datos' }, h('div', { class: 'cuerpo' }, motivos)),
-    panel({ titulo: 'Actuar', icono: 'zap', sub: 'Simulación: queda en la cola de acciones con su vista previa. No se toca Meta, GHL ni ClickUp.' }, h('div', { class: 'cuerpo' }, acciones(ctx, c, d)))));
+  // Ronda U (#11 y #14): arriba la barra de trabajo del trafficker (qué cambio hoy · pedir creatividades) y las pestañas;
+  // el resumen (cifras, motivos y «Actuar») es la primera pestaña, ya no empuja nada.
+  if (!(ctx.nivel === 'resumen')) cont.append(barraTarjeta(ctx, d, c));
+  const tResumen = el => {
+    if (esTienda(c)) el.append(avisoParcial(NOTA_TIENDA, { tipo: 'info', titulo: 'No cuenta en los leads de la casa.' }));
+    el.append(tiles(t));
+    if (c.cuenta_meta?.convertida_a_madrid) {
+      el.append(h('p', { class: 'sub', style: { margin: '0', display: 'flex', gap: S[2], alignItems: 'flex-start' } }, icono('info', { clase: 's' }),
+        h('span', {}, `Hora de Madrid: Meta cuenta esta cuenta en ${c.cuenta_meta.zona_horaria}; aquí cada día va en hora de Madrid y puede no casar al céntimo con el Administrador de anuncios.`)));
+    }
+    el.append(h('div', { class: 'dos', style: { marginTop: S[4] } },
+      panel({ titulo: 'Qué pasa y dónde se rompe', icono: 'alert', sub: 'Motivos de la gravedad y avisos de integración y de datos' }, h('div', { class: 'cuerpo' }, motivos)),
+      panel({ titulo: 'Actuar', icono: 'zap', sub: 'Simulación: queda en la cola de acciones con su vista previa. No se toca Meta, GHL ni ClickUp.' }, h('div', { class: 'cuerpo' }, acciones(ctx, c, d)))));
+  };
 
   // ---- pestañas de la tarjeta (diario → semanal) ----
   const p = pestanas({
-    clave: 'captacion.tarjeta', etiqueta: 'Detalle de la cuenta',
+    clave: 'captacion.tarjeta.v2', etiqueta: 'Detalle de la cuenta',
     pestanas: [
+      { id: 'resumen', texto: 'Resumen', icono: 'res', cuenta: (c.motivos || []).length, cuentaEstado: 'rojo' },
       { id: 'ventanas', texto: 'Gasto y leads', icono: 'grafico' },
       { id: 'embudo', texto: 'Embudo', icono: 'cap', cuenta: c.despacho?.estancados_72h || 0, cuentaEstado: 'rojo' },
       { id: 'campanas', texto: 'Campañas', icono: 'megafono', cuenta: (c.campanas || []).length },
@@ -984,7 +1028,7 @@ function pintarTarjeta(cont, ctx, d, id) {
       { id: 'quincenal', texto: 'Quincenal', icono: 'doc' },
       { id: 'historia', texto: 'Historia', icono: 'hist' },
     ],
-    pintar: (pid, el) => ({ ventanas: tVentanas, embudo: tEmbudo, campanas: tCampanas, anuncios: tAnuncios, metas: tMetas, quincenal: tQuincenal, historia: tHistoria })[pid](el, ctx, d, c),
+    pintar: (pid, el) => (pid === 'resumen' ? tResumen(el) : ({ ventanas: tVentanas, embudo: tEmbudo, campanas: tCampanas, anuncios: tAnuncios, metas: tMetas, quincenal: tQuincenal, historia: tHistoria })[pid](el, ctx, d, c)),
   });
   cont.append(p);
   cont.append(lineaFuentes([fuenteDe(d, 'meta'), fuenteDe(d, 'ghl'), fuenteDe(d, 'anuncios')],
@@ -1119,6 +1163,7 @@ function tAnuncios(el, ctx, d, c) {
     tile({ icono: 'star', etiqueta: 'Ganadoras', valor: a.ganadoras, estado: '', contexto: 'Gasto ≥ 10 veces el objetivo con coste ≤ objetivo', medible: 'hoy' }),
     tile({ icono: 'alert', etiqueta: 'Rechazados o con problemas', valor: a.problemas_total, estado: a.problemas_total ? 'rojo' : 'verde', contexto: `${a.aprendizaje_limitado} de ${a.conjuntos_con_dato} conjuntos en aprendizaje limitado`, medible: 'hoy' }),
   ]));
+  if (!ctx.soloLectura && ctx.nivel !== 'resumen') el.append(panel({ titulo: 'Pedir nuevas a producción', icono: 'send', sub: 'Con la cansada adjunta y el brief ya escrito.' }, h('div', { class: 'cuerpo' }, formPedido(ctx, d, c))));
   el.append(panel({ titulo: 'Anuncios · 7 días', icono: 'spark', sub: `${a.total_7d} con impresiones; ${a.sin_autor} sin iniciales de autor (desde el próximo lanzamiento)` },
     tablaApilable({ filas: a.anuncios, columnas: [
       { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.nombre), h('small', { class: 'sub' }, distingue(x))) },
@@ -1163,6 +1208,10 @@ function tQuincenal(el, ctx, d, c) {
     c.dinero && q.coste_por_cita_14d ? `· Coste por cita: ${eur(q.coste_por_cita_14d)}` : null,
     q.sin_estado_14d ? `· Ojo: ${q.sin_estado_14d} citas pasadas sin marcar si vinieron` : null,
     (c.motivos || []).length ? `· A trabajar: ${(c.motivos || []).map(textoMot).join(' · ')}` : '· Sin alertas abiertas',
+    ...(() => {   // Ronda U: lo que se cambió en la cuenta en el periodo (bitácora del trafficker)
+      const l = (d.bitacora?.get(c.cliente_id) || []).filter(a => diaDe(a) >= ini);
+      return l.length ? ['· Qué se cambió:', ...l.slice(0, 8).reverse().map(a => `   ${fDiaRO(diaDe(a))}: ${a.texto}`)] : ['· Qué se cambió: nada apuntado en la bitácora'];
+    })(),
   ].filter(Boolean);
   el.append(h('div', { class: 'dos' },
     panel({ titulo: 'Quincenal preparada', icono: 'doc', sub: 'Gasto, contactos, citas, coste por cita y asistencia del periodo, lista para la reunión del trafficker con el cliente.',
@@ -1176,6 +1225,11 @@ function tQuincenal(el, ctx, d, c) {
 }
 
 function tHistoria(el, ctx, d, c) {
+  // Ronda U: la bitácora «qué cambio hoy» (y los pedidos de creatividades) arriba de la historia
+  const pedidos = (d.pedidos?.get(c.cliente_id) || []).slice(0, 5);
+  el.append(h('div', { class: 'dos', style: { marginBottom: S[4] } },
+    panel({ titulo: 'Bitácora · qué se cambió', icono: 'editar', sub: 'Lo que el trafficker apunta cada día. Queda en el rastro.' }, h('div', { class: 'cuerpo' }, listaBitacora(ctx, d, c, 15))),
+    panel({ titulo: 'Creatividades pedidas', icono: 'spark' }, h('div', { class: 'cuerpo' }, pedidos.length ? listaConIcono(pedidos.map(p => ({ icono: 'spark', texto: p.texto, extra: `${cuandoBit(ctx, p)} · ${nombre(d, p.quien) || 'alguien'}` }))) : h('p', { class: 'sub', style: { margin: '0' } }, 'Ningún pedido en 14 días.')))));
   const hst = c.historia || {};
   const caja = (titulo, sub, cuerpo, est) => h('div', { style: { border: '1px solid var(--line)', borderRadius: 'var(--r-s)', padding: S[3], display: 'grid', gap: S[1], background: 'var(--card)', minWidth: '0' } },
     h('span', { class: 'sub', style: { fontWeight: '600' } }, titulo), est ? h('span', {}, chipEstado(GRAV[est]?.e || 'gris', GRAV[est]?.t || est)) : null, h('b', { style: NOWRAP }, cuerpo), sub ? h('span', { class: 'sub' }, sub) : null);
@@ -1186,6 +1240,139 @@ function tHistoria(el, ctx, d, c) {
   if (c.leads) cols.push(caja('Últimos 7 días', c.dinero ? `${eur(c.gasto?.['7d'])} · ${c.cpl?.['7d'] ? eur(c.cpl['7d']) + ' por lead' : 'sin leads'}` : null, `${num(c.leads['7d'])} leads`, c.severidad));
   el.append(cols.length ? h('div', { class: 'rejilla' }, cols) : vacio({ icono: 'hist', titulo: 'Sin historia todavía' }));
   el.append(avisoParcial('A 90 días y «qué se cambió» llegan con las fotos diarias de la app (empezaron el 2-oct) y con el rastro de acciones. Mientras, la foto del 17 de septiembre de la herramienta anterior hace de punto de comparación.', { tipo: 'info', titulo: 'Historia.' }));
+}
+
+// ================================================================== Ronda U · U3 (3-oct, cambio #11 del 50) · trafficker
+// 1) Bitácora diaria «qué cambio hoy» por cuenta: acción interna bitacora_cuenta (herramienta app, con rastro). Se ve en la
+//    lista de cuentas (columna «Hoy»), arriba de la tarjeta, en Historia y en la quincenal. La ficha del cliente la lee con
+//    el mismo dato (acciones del módulo captacion) desde bitacoraCuenta() exportada abajo.
+// 2) «Pedir creatividades»: brief a producción. Acción clickup/tarea con vista_previa.pedido_creatividad → sincronia.py la
+//    guarda como «crear tarea en la lista del cliente» (hoy simulado) y avisos.py la publica en #avisos-redes (producción).
+//    Es interno mientras la sincronía esté apagada: sin «¿Seguro?», con «Deshacer» 8 s.
+const CAMBIOS_RAPIDOS = ['Bajo el presupuesto', 'Subo el presupuesto', 'Pauso el anuncio cansado', 'Cambio el público', 'Pruebo una creatividad nueva', 'Sin cambios: dejo que aprenda'];
+const FORMATOS = [{ valor: 'estaticos', texto: 'Estáticos 4:5 y 9:16' }, { valor: 'video', texto: 'Vídeo corto' }, { valor: 'carrusel', texto: 'Carrusel' }];
+
+/** Lee las acciones del módulo (bitácora y pedidos), una vez por pantalla. */
+async function cargarBitacora(ctx, d) {
+  d.bitacora = new Map(); d.pedidos = new Map();
+  if (!(ctx.servidor && ctx.api)) return;
+  try {
+    const r = await ctx.api('acciones?modulo=captacion');
+    for (const a of (r.acciones || [])) {
+      if (!a.cliente_id) continue;
+      if (a.tipo === 'bitacora_cuenta') (d.bitacora.get(a.cliente_id) || d.bitacora.set(a.cliente_id, []).get(a.cliente_id)).push(a);
+      if (a.tipo === 'tarea' && String(a.vista_previa || '').includes('pedido_creatividad')) (d.pedidos.get(a.cliente_id) || d.pedidos.set(a.cliente_id, []).get(a.cliente_id)).push(a);
+    }
+    for (const m of [d.bitacora, d.pedidos]) for (const l of m.values()) l.sort((x, y) => String(y.creada).localeCompare(String(x.creada)));
+  } catch { /* sin acciones: la bitácora sale vacía */ }
+}
+/** La hora de la cola de acciones viene en UTC («2026-10-03 03:36:12»): día y hora en Madrid. */
+const madridDe = t => {
+  const s = String(t || '');
+  const d = new Date(s.replace(' ', 'T') + (/[zZ]$|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z'));
+  if (!s || Number.isNaN(+d)) return { dia: s.slice(0, 10), hora: s.slice(11, 16) };
+  const p = Object.fromEntries(new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+    .formatToParts(d).map(x => [x.type, x.value]));
+  return { dia: `${p.year}-${p.month}-${p.day}`, hora: `${p.hour}:${p.minute}` };
+};
+const diaDe = a => (a?._local ? String(a.creada || '').slice(0, 10) : madridDe(a?.creada).dia);
+const horaDe = a => (a?._local ? String(a.creada || '').slice(11, 16) : madridDe(a?.creada).hora);
+/** «hoy 10:12», «ayer 18:03», «2-oct». */
+function cuandoBit(ctx, a) {
+  const dia = diaDe(a);
+  if (ctx.fechas?.esHoy?.(dia)) return `hoy ${horaDe(a)}`;
+  if (ctx.fechas?.esAyer?.(dia)) return `ayer ${horaDe(a)}`;
+  return fDiaRO(dia);
+}
+const hoyBit = (ctx, d, cid) => (d.bitacora?.get(cid) || []).find(a => ctx.fechas?.esHoy?.(diaDe(a)));
+
+/** Apunta un cambio (optimista + Deshacer). alHecho() repinta lo que dependa de la bitácora. */
+function apuntarCambio(ctx, d, c, texto, alHecho) {
+  const a = { tipo: 'bitacora_cuenta', cliente_id: c.cliente_id, texto, quien: ctx.persona.id, creada: `${ctx.hoy || hoyMadrid()} ${new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date())}`, _local: true };
+  conDeshacer({
+    mensaje: `Apuntado en ${c.nombre}: «${texto.length > 40 ? texto.slice(0, 38) + '…' : texto}»`,
+    optimista: () => { const l = d.bitacora.get(c.cliente_id) || []; l.unshift(a); d.bitacora.set(c.cliente_id, l); alHecho?.(); },
+    revertir: () => { const l = d.bitacora.get(c.cliente_id) || []; d.bitacora.set(c.cliente_id, l.filter(x => x !== a)); alHecho?.(); },
+    hacer: () => ctx.accion({ herramienta: 'app', tipo: 'bitacora_cuenta', objeto: `${c.nombre} · qué cambió hoy`, cliente_id: c.cliente_id, texto,
+      vista_previa: `Bitácora de ${c.nombre} (${ctx.nombre(ctx.persona.id)}): «${texto}». Se ve en la tarjeta, en la ficha y en la quincenal.` }),
+  });
+}
+
+/** Editor «qué cambio hoy»: cambios rápidos (un clic los escribe) + texto + «Apuntar». */
+function editorBitacora(ctx, d, c, { alHecho, compacto } = {}) {
+  const campo = h('input', { type: 'text', maxlength: '300', placeholder: 'Qué cambias hoy en esta cuenta y por qué', 'aria-label': `Qué cambio hoy en ${c.nombre}`,
+    style: { flex: '1 1 260px', minWidth: '0', minHeight: 'var(--s-10)', padding: `${S[2]} ${S[3]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)', font: 'var(--t-cuerpo)' } });
+  const apuntar = h('button', { type: 'button', class: 'bt pri', 'aria-disabled': ctx.soloLectura ? 'true' : null, on: { click: () => {
+    if (ctx.soloLectura) return;
+    const t = campo.value.trim();
+    if (t.length < 3) { campo.focus(); campo.setAttribute('aria-invalid', 'true'); return; }
+    campo.removeAttribute('aria-invalid'); campo.value = '';
+    apuntarCambio(ctx, d, c, t, alHecho);
+  } } }, icono('editar'), 'Apuntar');
+  campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); apuntar.click(); } });
+  const rapidos = h('div', { class: 'fila', style: { gap: S[2] } }, CAMBIOS_RAPIDOS.map(t => h('button', { type: 'button', class: 'bt mini', 'data-cambio': t,
+    on: { click: () => { campo.value = campo.value.trim() ? `${campo.value.trim()} · ${t}` : t; campo.focus(); } } }, t)));
+  return h('div', { class: 'pila', style: { gap: S[2], minWidth: '0' } }, h('div', { class: 'fila', style: { gap: S[2], flexWrap: 'wrap' } }, campo, apuntar), compacto ? null : rapidos);
+}
+
+/** Últimos apuntes de la bitácora (lista con icono). */
+function listaBitacora(ctx, d, c, n = 3) {
+  const l = (d.bitacora?.get(c.cliente_id) || []).slice(0, n);
+  if (!l.length) return h('p', { class: 'sub', style: { margin: '0' } }, 'Todavía no hay nada apuntado en esta cuenta.');
+  return listaConIcono(l.map(a => ({ icono: 'editar', estado: ctx.fechas?.esHoy?.(diaDe(a)) ? 'verde' : null, texto: a.texto, extra: `${cuandoBit(ctx, a)} · ${nombre(d, a.quien) || 'alguien'}` })));
+}
+
+/** Formulario «Pedir creatividades a producción», con el brief ya escrito con lo que dice la cuenta. */
+function formPedido(ctx, d, c, { anuncio } = {}) {
+  const cansadas = (c.anuncios?.anuncios || []).filter(a => a.cansada || a.vigilar);
+  const base = anuncio || cansadas[0] || null;
+  const para = (() => { let f = ctx.hoy || hoyMadrid(); let n = 0; while (n < 3) { f = sumarDias(f, 1); const dw = new Date(f + 'T12:00:00').getDay(); if (dw !== 0 && dw !== 6) n++; } return f; })();
+  const motivos = (c.motivos || []).map(textoMot).slice(0, 2).join(' · ');
+  const brief = [
+    base ? `Sustituir «${base.nombre}» (${base.cansada ? 'cansada' : 'a vigilar'}${base.frecuencia_7d ? `, frecuencia ${num(base.frecuencia_7d, 1)}` : ''}${base.ctr_7d !== undefined ? `, ${num(base.ctr_7d, 2)} % de clics` : ''}).` : 'Creatividades nuevas para refrescar la cuenta.',
+    motivos ? `Qué pasa: ${motivos}.` : null,
+    c.nicho ? `Nicho: ${c.nicho}.` : null,
+    'Mantener la marca del cliente (logo, colores y tono en la tarea de producción).',
+  ].filter(Boolean).join(' ');
+  let formatos = ['estaticos'];
+  const chips = chipsFiltro({ etiqueta: 'Qué pides', multiple: true, valor: formatos, opciones: FORMATOS, alCambiar: v => { formatos = v; } });
+  const texto = h('textarea', { rows: 3, maxlength: '900', 'aria-label': 'Brief para producción', style: { width: '100%', padding: `${S[2]} ${S[3]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)', font: 'var(--t-cuerpo)' } }, brief);
+  const fecha = h('input', { type: 'date', value: para, min: ctx.hoy || hoyMadrid(), 'aria-label': 'Para cuándo', style: { minHeight: 'var(--s-10)', padding: `${S[1]} ${S[2]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)' } });
+  const yaPedidos = (d.pedidos?.get(c.cliente_id) || []).slice(0, 2);
+  const enviar = botonDeshacer({ texto: 'Pedir a producción', hecho: 'Pedido a producción', pri: true, mini: false, icono: 'send', soloLectura: ctx.soloLectura,
+    validar: () => (!formatos.length ? 'Elige qué pides' : texto.value.trim().length < 10 ? 'Escribe el brief' : null),
+    alHacer: async () => {
+      const txt = `${FORMATOS.filter(f => formatos.includes(f.valor)).map(f => f.texto).join(' + ')} para el ${fDiaRO(fecha.value)}. ${texto.value.trim()}`;
+      await ctx.accion({ herramienta: 'clickup', tipo: 'tarea', objeto: `Pedido de creatividades · ${c.nombre}`.slice(0, 200), cliente_id: c.cliente_id, texto: txt,
+        vista_previa: { pedido_creatividad: true, tarea: `Creatividades nuevas · ${c.nombre}`, para: fecha.value, formatos, anuncio: base?.nombre || null, brief: texto.value.trim().slice(0, 900), de: ctx.persona.id } });
+      const l = d.pedidos.get(c.cliente_id) || []; l.unshift({ texto: txt, creada: new Date().toISOString().replace('T', ' ').slice(0, 19), quien: ctx.persona.id }); d.pedidos.set(c.cliente_id, l);
+      return 'Pedido en #avisos-redes y en la cola de ClickUp (simulado)';
+    } });
+  return h('div', { class: 'pila', style: { gap: S[2] } },
+    chips, texto,
+    h('div', { class: 'fila', style: { gap: S[2] } }, h('label', { class: 'fila sub', style: { gap: S[2] } }, 'Para cuándo', fecha), enviar),
+    h('p', { class: 'sub', style: { margin: '0' } }, 'Llega a producción en #avisos-redes con este brief y queda como tarea de ClickUp en la lista del cliente (hoy en simulación). La marca del cliente la ven en su tarea.'),
+    yaPedidos.length ? h('p', { class: 'sub', style: { margin: '0' } }, `Ya pedido: ${yaPedidos.map(p => `${cuandoBit(ctx, p)} (${nombre(d, p.quien) || 'alguien'})`).join(' · ')}`) : null);
+}
+
+/** Barra de la tarjeta (molde: barraAcciones arriba y pegada): «Qué cambio hoy» y «Pedir creatividades». */
+function barraTarjeta(ctx, d, c) {
+  const zonaPedido = h('div', { hidden: true, style: { marginTop: S[3] } });
+  const zonaLista = h('div', { style: { marginTop: S[2] } });
+  const pintarLista = () => zonaLista.replaceChildren(listaBitacora(ctx, d, c, 2));
+  const botonPedir = h('button', { type: 'button', class: 'bt', 'aria-expanded': 'false', 'aria-disabled': ctx.soloLectura ? 'true' : null, on: { click: () => {
+    if (ctx.soloLectura) return;
+    const abrir = zonaPedido.hidden; zonaPedido.hidden = !abrir; botonPedir.setAttribute('aria-expanded', String(abrir));
+    if (abrir && !zonaPedido.childNodes.length) zonaPedido.append(formPedido(ctx, d, c));
+  } } }, icono('spark'), 'Pedir creatividades');
+  pintarLista();
+  const hoyA = hoyBit(ctx, d, c.cliente_id);
+  const barra = barraAcciones({ titulo: hoyA ? `Hoy en ${c.nombre}: ${hoyA.texto}` : `Qué cambio hoy en ${c.nombre}`, sub: hoyA ? `Apuntado ${cuandoBit(ctx, hoyA)}` : 'La guía pide apuntarlo cada mañana: se ve en la ficha y en la quincenal.',
+    acciones: [c.cuenta_meta?.enlace ? h('a', { class: 'bt', href: c.cuenta_meta.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en Meta') : null, botonPedir] });
+  barra.querySelector('.fila')?.after(h('div', { style: { marginTop: S[3] } }, editorBitacora(ctx, d, c, { alHecho: () => { pintarLista(); const t = barra.querySelector('b'); const n = hoyBit(ctx, d, c.cliente_id); if (t && n) t.textContent = `Hoy en ${c.nombre}: ${n.texto}`; } }), zonaLista, zonaPedido));
+  barra.style.position = 'static';   // el editor es alto: pegada arriba taparía la tarjeta; va la primera bajo la cabecera
+  barra.id = 'cap-barra';
+  return barra;
 }
 
 // ================================================================== módulo
@@ -1209,6 +1396,7 @@ export default {
       return;
     }
     PARAMS = d.parametros || null;
+    await cargarBitacora(ctx, d);
     const [id, extra] = ctx.params;
     if (id === '~trafficker' && extra) {
       // atajo desde «Por trafficker»: lista filtrada por esa persona

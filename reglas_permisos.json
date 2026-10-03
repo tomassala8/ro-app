@@ -643,6 +643,14 @@
         "triaje"
       ]
     },
+    "bandeja/hilos": {
+      "modulos": [
+        "bandeja"
+      ],
+      "solo_todo_sin_cliente": [
+        "hilos"
+      ]
+    },
     "bandeja/por_cliente": {
       "modulos": [
         "bandeja",
@@ -659,15 +667,64 @@
     "seo/webs": [
       "seo-web"
     ],
-    "modular/webs": {
-      "_n5": "Modular DS (32_MODULAR_DS.md): estado, copias, actualizaciones y seguridad de cada web. Lo pinta «SEO, ficha y webs» (pestaña Webs); dirección y operaciones lo ven entero por esa pantalla (nivel «todo»). Las webs sin cliente y las alertas sin cliente solo con nivel «todo».",
+    "hostinger/hostinger": {
+      "_hostinger": "Hostinger (56_INTEGRACIONES_HOSTINGER_Y_OTRAS.md): webs suspendidas, certificados y dominios por cliente (SEO, ficha y webs). Lo que no tiene cliente solo con nivel «todo». Los VPS y las renovaciones van aparte, en hostinger/cuenta.",
       "modulos": [
         "seo-web"
       ],
       "solo_todo_sin_cliente": [
         "sin_cliente",
+        "dominios_sin_cliente",
+        "alertas"
+      ]
+    },
+    "telefonos/dudosos": {
+      "_telefonos": "3-oct · Teléfonos que no cuadran con la regla común (prefijo internacional, sin espacios, extensión aparte), por cliente. Sin el número entero (solo las 3 últimas cifras y dónde corregirlo). Solo dirección y operaciones.",
+      "puestos": [
+        "direccion",
+        "finanzas_direccion",
+        "operaciones"
+      ]
+    },
+    "hostinger/cuenta": {
+      "_hostinger": "Cuenta de RO en Hostinger: VPS (también el del gestor de contraseñas: la app solo lee su estado) y renovaciones, sin importes. Solo dirección, operaciones y el técnico.",
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "tecnico_altas"
+      ]
+    },
+    "gbp/gbp": {
+      "_gbp": "Ficha de Google (Google Business Profile, ../57_GOOGLE_BUSINESS_PROFILE.md): reseñas, rendimiento y estado de la ficha por cliente. Lo pinta «SEO, ficha y webs» (pestaña Ficha de Google y detalle) y la ficha del cliente (Web y SEO): cada uno ve las filas de los clientes que abre. Las fichas sin cliente y las alertas sin cliente solo con nivel «todo».",
+      "modulos": [
+        "seo-web",
+        "ficha"
+      ],
+      "solo_todo_sin_cliente": [
+        "sin_cliente",
+        "clientes_sin_ficha",
+        "alertas"
+      ]
+    },
+    "modular/webs": {
+      "_n5": "Modular DS (32_MODULAR_DS.md): estado, copias, actualizaciones y seguridad de cada web. Lo pinta «SEO, ficha y webs» (pestaña Webs) y la ficha del cliente (pestaña Web y SEO, bloque «Estado de la web»): cada uno ve las filas de los clientes que abre; dirección y operaciones, todo. Las webs sin cliente y las alertas sin cliente solo con nivel «todo».",
+      "modulos": [
+        "seo-web",
+        "ficha"
+      ],
+      "solo_todo_sin_cliente": [
+        "sin_cliente",
         "alertas",
         "clientes_sin_modular"
+      ]
+    },
+    "modular/tablero": {
+      "_n5": "Tablero de webs del equipo web (3-oct): TODAS las webs de Modular con clave «cliente» (sin cliente_id), también las de fuera de su cartera y las sin cliente, para cubrir guardias. Solo web, jefe de SEO y web, operaciones y dirección.",
+      "puestos": [
+        "web",
+        "jefa_seo",
+        "direccion",
+        "operaciones"
       ]
     },
     "redes/redes": [
@@ -847,6 +904,16 @@
     "produccion/produccion": [
       "produccion"
     ],
+    "produccion/marca": [
+      "produccion"
+    ],
+    "produccion/marca/p_*": {
+      "_u3": "Ronda U · U3 (3-oct): marca del cliente (logo, colores, tono, lo vetado, carpeta y última pieza aprobada) de los clientes de las tareas y la cartera de cada persona, para la tarea de Producción. Solo lo recibe su dueño (fuentes_produccion/generar_marca.py).",
+      "modulos": [
+        "produccion"
+      ],
+      "solo_propio": true
+    },
     "horas/horas": [
       "horas"
     ],
@@ -900,6 +967,16 @@
       "solo_real": true
     },
     "dinero_cliente/rentabilidad": {
+      "puestos": [
+        "direccion",
+        "finanzas_direccion",
+        "operaciones",
+        "proyectos"
+      ],
+      "solo_real": true
+    },
+    "dinero_cliente/cohortes": {
+      "_v4": "Paneles v4 (3-oct): retención por mes de alta (% de clientes y % de la cuota de entrada que siguen). Sin nombres ni cliente_id; los mismos puestos que la rentabilidad.",
       "puestos": [
         "direccion",
         "finanzas_direccion",
@@ -1059,6 +1136,13 @@
         "operaciones",
         "rrhh"
       ]
+    },
+    "prioridades/p_*": {
+      "_cerebro_v2": "Cerebro de decisiones v2 (3-oct): la prioridad de cada cosa de esa persona (puntos, nivel, urgencia, esfuerzo, motivo en una línea; euros solo si ve la cuota de ese cliente). La escribe fuentes_consejos/generar_consejos.py y la lee «Lo mío» (Mi día) para ordenar. Solo la recibe su dueña.",
+      "modulos": [
+        "mi-dia"
+      ],
+      "solo_propio": true
     },
     "alertas/p_*": {
       "_n4": "Alertas del departamento (carril N4): cada uno recibe solo su fichero p_<id> (las suyas, las de su departamento si es jefe; Mili y Tomás todas). Lo lee también Mi día (bloque «Mis alertas»).",
@@ -1810,6 +1894,45 @@
       "no": "La agenda de una persona la ven ella, su jefe, operaciones y dirección.",
       "origen": "Ronda 6 (M23): RRHH no recibe todas las agendas."
     },
+    "modular_acceso": {
+      "si": [
+        {
+          "puestos": [
+            "web",
+            "jefa_seo",
+            "direccion"
+          ]
+        }
+      ],
+      "no": "El acceso de un clic al WordPress de una web (Modular DS) solo lo piden el equipo web, el jefe de SEO y web y dirección.",
+      "origen": "Encargo de Tomás 3-oct: «para el equipo de web el acceso a Modular de todos ellos». Lo da el servidor (fuentes_modular/acceso.py), con rastro."
+    },
+    "gbp_responder": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "operaciones",
+            "jefa_seo"
+          ]
+        },
+        {
+          "puestos": [
+            "ficha_google",
+            "seo"
+          ],
+          "cartera": "seo"
+        },
+        {
+          "puestos": [
+            "account"
+          ],
+          "cartera": "account"
+        }
+      ],
+      "no": "Proponen y guardan la respuesta a una reseña de Google la persona de SEO/ficha de Google del cliente, su account, el jefe de SEO, operaciones y dirección.",
+      "origen": "Encargo de Tomás 3-oct: «Google Business Profile sería bestial». Lo da el servidor (fuentes_gbp/servidor_gbp.py), con rastro; responder va en simulación."
+    },
     "probar_conexiones": {
       "si": [
         {
@@ -1841,6 +1964,21 @@
   "acciones_permitidas": {
     "primera-semana": [
       "primera_semana_paso"
+    ],
+    "_u3": "Ronda U · U3 (3-oct): «Revisado · motivo» en Salud del CRM, bitácora diaria y pedido de creatividades en Captación, «Lo cubro» en Redes. Todo interno (herramienta app).",
+    "seo-web": [
+      "web_revisado"
+    ],
+    "salud-crm": [
+      "revisado_lead",
+      "revisado_cita"
+    ],
+    "captacion": [
+      "bitacora_cuenta",
+      "pedido_creatividad"
+    ],
+    "redes": [
+      "hueco_lo_cubro"
     ],
     "setters": [
       "resultado_llamada",
@@ -1892,7 +2030,9 @@
       "hora_rara_error"
     ],
     "bandeja": [
-      "llamada_devuelta"
+      "llamada_devuelta",
+      "despachado",
+      "esperando_cliente"
     ],
     "alertas": [
       "alerta_vista",
@@ -2002,7 +2142,9 @@
       "visto",
       "whatsapp",
       "impago_estado",
-      "cuadre_decision"
+      "cuadre_decision",
+      "revisar_rebajas",
+      "revisar_rebajas_deshecho"
     ]
   },
   "rastro_navegador": [
@@ -2028,6 +2170,11 @@
     "ia_descartar"
   ],
   "rastro_solo_servidor": [
+    "gbp_borrador",
+    "gbp_respuesta_simulada",
+    "gbp_denegado",
+    "modular_acceso",
+    "modular_acceso_denegado",
     "envio_reintento",
     "envio_reintento_simulado",
     "ver_dato",
@@ -2053,11 +2200,19 @@
     "ia_copiloto",
     "ia_denegado",
     "ia_consejo",
+    "ia_topes_cambiados",
+    "ia_reabierta",
+    "ia_aviso_gasto",
+    "consejo_valorado",
     "opinion_enviada",
     "cliente_fijado",
     "cliente_desfijado",
     "buscar",
-    "zona_cambiada"
+    "zona_cambiada",
+    "aviso_programado_cambio",
+    "aviso_programado_hecho",
+    "avisos_programados",
+    "avisos_programados_ejecutar"
   ],
   "_solo_propio": "Ronda 6 (M24 Chat): «solo_propio» en datos_de_modulo = el fichero <carpeta>/p_<id> solo lo recibe esa persona. Sustituye a las 32 altas por persona. Las filas con «miembros» solo llegan a sus miembros.",
   "_nombres_dueno": "Ronda 6 (auditoría 29, F-10): «nombres_dueno» en datos_de_modulo = el dueño del lead (su setter, ventas de RO en sus reuniones, la persona de la agenda) recibe el nombre completo sin pulsar; teléfono y correo siguen detrás de «Ver completo». Queda en el rastro.",

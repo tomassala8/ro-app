@@ -37,6 +37,17 @@ ext = json.loads((HERRAMIENTA / "externos.json").read_text())["clientes"]
 cap = {c["nombre"]: c for c in json.loads(CAPTACION.read_text())["clientes"]}
 libro = json.loads(LIBRO.read_text())
 zoom = json.loads((AQUI / "_cache/zoom_grabaciones.json").read_text())["reuniones"]
+# 3-oct: cartera, horas, tareas, Desk y reuniones salen de los módulos (f_vivo.py): el origen es el fichero del módulo,
+# leído aquí directamente.
+_vc = json.loads((SALIDA / "verdad/clientes.json").read_text())
+verdad = {c["cliente_id"]: c for c in _vc["clientes"]}
+_pr = json.loads((SALIDA / "produccion/produccion.json").read_text())
+proy = {p["cliente_id"]: p for p in _pr["proyectos"]}
+band_n = {}
+for _x in json.loads((SALIDA / "bandeja/bandeja.json").read_text())["correos"]:
+    if _x.get("cliente_id"):
+        band_n[_x["cliente_id"]] = band_n.get(_x["cliente_id"], 0) + 1
+reus = {c["cliente_id"]: c for c in json.loads((SALIDA / "reuniones/reuniones.json").read_text())["clientes"]}
 srp = {p["id"]: p for p in json.loads((MUESTRAS / "seranking_proyectos_2026-10-02.json").read_text())["proyectos"]}
 md14 = (RAIZ / "14_GOOGLE_ADS_VIA_WINDSOR.md").read_text()
 
@@ -59,11 +70,12 @@ for cid in muestra:
     n = c["ids"]["panel"]
     F = c["fuentes"]
     chequeos = [
-        ("cartera", "cuota", g(F, "cartera", "datos", "cuota"), g(panel.get(n), "cuota")),
-        ("horas", "horas mes anterior", g(F, "horas", "datos", "horas_mes_ant"), g(panel.get(n), "horas_mes_ant")),
-        ("tareas", "creadas mes anterior", g(F, "tareas", "datos", "creadas_mes_ant"), g(flujo.get(n), "creadas_mes_ant")),
+        ("cartera", "cuota (verdad única)", g(F, "cartera", "datos", "cuota"), g(verdad.get(cid), "cuota")),
+        ("horas", "horas mes anterior (Producción)", g(F, "horas", "datos", "horas_mes_ant"), g(proy.get(cid), "horas_mes_ant")),
+        ("tareas", "creadas mes anterior (Producción)", g(F, "tareas", "datos", "creadas_mes_ant"), g(proy.get(cid), "creadas_mes_ant")),
         ("informes", "informe sep", g(F, "informes", "datos", "sep", "estado"), g(informes.get(n), "sep", "estado")),
-        ("desk", "tickets abiertos", g(F, "desk", "datos", "tickets_abiertos"), g(panel.get(n), "tickets_abiertos")),
+        ("desk", "correos abiertos (Bandeja)", g(F, "desk", "datos", "tickets_abiertos"), band_n.get(cid, 0)),
+        ("reuniones", "última reunión (Reuniones)", g(F, "reuniones", "datos", "ult_reunion"), g(reus.get(cid), "ultima")),
         ("zadarma", "contestadas sep", g(F, "zadarma", "datos", "septiembre", "contestadas"), g(zad.get(n), "contestadas")),
         ("ga4", "usuarios 30 d", g(F, "ga4", "datos", "actual", "usuarios"), g(ext.get(n), "ga", "actual", "usuarios")),
         ("gsc", "clics 30 d", g(F, "gsc", "datos", "actual", "clics"), g(ext.get(n), "gsc", "actual", "clics")),

@@ -814,6 +814,9 @@ def post(h, ruta, real, persona, b):
 
     if ruta == "/api/altas/alta":
         extra = set(b) - CLAVES_ALTA
+        if any(re.search(r"(?i)tel[eé]?f|^tel$|m[oó]vil|whatsapp|phone|extensi", k) for k in extra):
+            # Regla de teléfonos (3-oct): el alta no guarda teléfonos de personas (ni con «+34» ni sin él).
+            return h.responder(400, {"error": "Los teléfonos de las personas no se guardan en la app. Quita el teléfono y vuelve a guardar."})
         if extra:
             return h.responder(400, {"error": "Solo se guardan nombre, puesto, jefe, zona, fechas, cumpleaños, correo de entrada y cartera. Fuera: " + ", ".join(sorted(extra)) + "."})
         nombre = re.sub(r"\s+", " ", str(b.get("nombre") or "")).strip()

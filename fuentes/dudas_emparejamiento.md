@@ -1,6 +1,6 @@
 # Dudas de emparejamiento · para Agus
 
-**2026-10-03 03:26.** Las genera `generar_datos.py`. Se corrigen en `emparejamientos_manual.json` (por identificador) o en `universo.py` (alias del libro).
+**2026-10-03 06:33.** Las genera `generar_datos.py`. Se corrigen en `emparejamientos_manual.json` (por identificador) o en `universo.py` (alias del libro).
 
 ## Accesos que pedir al cliente
 

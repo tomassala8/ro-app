@@ -2,7 +2,7 @@
 """Barrido total de la app de RO (38 · dimensión 2 «Cero errores», método §1). SOLO LEE la app.
 
 Uso:
-  python3 despliegue/barrido_total.py --vuelta v0            # todo: 32 personas × rutas × 1440/1024/768/700/390
+  python3 despliegue/barrido_total.py --vuelta v0            # todo: 32 personas × rutas × 1440/1024/768/700/560/480/390
   python3 despliegue/barrido_total.py --vuelta v1 --personas lucia,tomas --hilos 4
   python3 despliegue/barrido_total.py --vuelta v0 --solo-informe   # rehace 39_BARRIDO_TOTAL.md desde los JSON
   python3 despliegue/barrido_total.py --vuelta v2 --puerto 9066     # R15a: otro puerto (por defecto 9000) si hay otro barrido
@@ -61,7 +61,8 @@ def borrar_capturas(vuelta):
             d.rmdir()
     return n, b
 # V3a: 768 (tableta) y 700 (vista previa del coordinador, ~706 px: ahí se salía el chip rojo de «Lo mío»).
-ANCHOS = [(1440, 900), (1024, 768), (768, 1024), (700, 900), (390, 844)]
+# Ronda U (3-oct): 560 y 480, la franja entre móvil y tableta donde las filas de «Lo mío» se rompían (título reducido a una letra).
+ANCHOS = [(1440, 900), (1024, 768), (768, 1024), (700, 900), (560, 900), (480, 900), (390, 844)]
 ANCHO_ANCHO, ANCHO_MOVIL = ANCHOS[0], ANCHOS[-1]   # pestañas, periodo, «Más» y plegables: solo 1440 y 390
 MIN_LIBRE = 1.5 * 1024 ** 3
 MAX_ALTO_CAPTURA = 4000

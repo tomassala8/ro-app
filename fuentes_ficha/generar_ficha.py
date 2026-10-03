@@ -45,6 +45,8 @@ AHORA = datetime.now().strftime("%Y-%m-%d %H:%M")
 
 sys.path.insert(0, str(APP))
 import escaner_secretos as ESC  # noqa: E402
+from telefono import Dudosos  # noqa: E402  regla común de teléfonos (3-oct)
+DUD = Dudosos("ficha")
 sys.path.insert(0, str(AQUI))
 from agenda_md import leer_agenda  # noqa: E402
 from personas_cliente import construir  # noqa: E402
@@ -209,6 +211,8 @@ def main():
             sin_agenda.append(cid)
         if ag or cts:
             r = construir(ag, cts, ROLES, doc.get("nombre") or "", cid)
+            for x in r.pop("telefonos_dudosos", []):      # no cuadran con la regla: fuera de la ficha, al informe de dirección y operaciones
+                DUD.anotar(cid, x["valor"], x["aviso"], x["donde"], doc.get("nombre"), x.get("quien"))
             r["titulo_documento"] = titulo
             privado_ct[cid] = {"datos": r}
             # cuadre contra el documento
@@ -333,6 +337,7 @@ def main():
     escribir(SALIDA / "basica.json", basica_doc)
     escribir(SALIDA / "informes.json", informes_doc)
     escribir(SALIDA / "_privado/contactos.json", {"_meta": {**meta, "que": "Contactos del cliente. Solo con /api/ver_dato (tipo contactos_cliente) y queda en el rastro."}, "clientes": privado_ct})
+    DUD.guardar()   # data/telefonos/dudosos.json (apartado «ficha»): solo dirección y operaciones
     escribir(SALIDA / "_privado/chat.json", {"_meta": {**meta, "que": "Canal de ClickUp del cliente. Solo con /api/ver_dato (tipo chat_cliente)."}, "clientes": privado_chat})
     sin_cliente = sorted(set(AG) - usados)
     (AQUI / "_cache").mkdir(exist_ok=True)

@@ -1,0 +1,325 @@
+{
+  "_meta": "Cerebro de decisiones v2 (3-oct-2026). Los 21 puestos de RO. Por puesto: «foco» (lo que un gran jefe de ese puesto le diría hoy, en una frase), «pesos» (puntos que suma cada tipo de consejo en ese puesto: lo que manda primero; las horas nunca), «reglas_jefe» (las reglas de criterio de reglas.json que más pesan en ese puesto, en orden) y «regla_de_tipo» (si en ese puesto un tipo se respalda con otra regla). Los pesos de V2-B (ia.PRIORIDAD) se conservan aquí y se suman a los de impacto. Un peso negativo (p. ej. «prod_revision» −90 en las jefas: lo de su área antes que las revisiones, 50_USABILIDAD §3) se resta aunque otro puesto de la persona no lo tenga.",
+  "puestos": {
+    "direccion": {
+      "nombre": "Dirección (Tomás)",
+      "foco": "Lo tuyo es decidir: decisiones con reloj, impagos largos y claves de conexión. Lo operativo lo lleva Mili.",
+      "pesos": {
+        "dir_decision": 260,
+        "adm_impago": 160,
+        "conexion": 40,
+        "ventas_contrato": 60,
+        "ventas_propuesta": 40
+      },
+      "reglas_jefe": [
+        "dir_decision_reloj",
+        "dir_muro",
+        "adm_cobro",
+        "ventas_contrato_3d"
+      ]
+    },
+    "finanzas_direccion": {
+      "nombre": "Finanzas de dirección",
+      "foco": "Cobra antes de crecer: un impago de más de 60 días es una decisión, no un recordatorio.",
+      "pesos": {
+        "adm_impago": 160,
+        "adm_sin_alta": 60
+      },
+      "reglas_jefe": [
+        "adm_cobro",
+        "adm_alta_facturacion"
+      ]
+    },
+    "operaciones": {
+      "nombre": "Operaciones (Mili)",
+      "foco": "Que ningún crítico se quede sin plan escrito y que cada persona sepa qué es lo suyo hoy.",
+      "pesos": {
+        "ops_cartera_riesgo": 120,
+        "acc_critico": 80,
+        "critico_cliente": 80,
+        "alta_fuera_plazo": 80,
+        "dir_sin_account": 70,
+        "bloqueo_callado": 40
+      },
+      "reglas_jefe": [
+        "ops_cartera_riesgo",
+        "rel_queja_llamada",
+        "arranque_dia_10",
+        "rel_bloqueo_callado"
+      ]
+    },
+    "rrhh": {
+      "nombre": "Recursos humanos (Cecilia)",
+      "foco": "Primero la persona en alerta: una conversación esta semana vale más que un recordatorio de horas.",
+      "pesos": {
+        "rrhh_alerta": 160,
+        "rrhh_aniversario": 40,
+        "rrhh_no_imputa": 0
+      },
+      "reglas_jefe": [
+        "rrhh_conversacion",
+        "rrhh_reconocimiento",
+        "horas_solo_aviso"
+      ]
+    },
+    "administracion": {
+      "nombre": "Administración (Sofía)",
+      "foco": "Factura vencida, reclamada hoy; alta nueva, dada de alta en facturación el mismo día.",
+      "pesos": {
+        "adm_impago": 160,
+        "adm_sin_alta": 120
+      },
+      "reglas_jefe": [
+        "adm_cobro",
+        "adm_alta_facturacion"
+      ]
+    },
+    "tecnico_altas": {
+      "nombre": "Técnico de altas (Agus)",
+      "foco": "Día 10 encendido, día 12 límite: lo que frena un arranque se escala hoy, no mañana.",
+      "pesos": {
+        "alta_fuera_plazo": 220,
+        "alta_sin_lista": 60,
+        "conexion": 30
+      },
+      "reglas_jefe": [
+        "arranque_dia_10",
+        "arranque_lista",
+        "conexion_clave"
+      ]
+    },
+    "proyectos": {
+      "nombre": "Proyectos (Coti)",
+      "foco": "Cada crítico con su «Visto»: números y plan antes de que su account hable con el cliente.",
+      "pesos": {
+        "visto_critico": 160,
+        "acc_critico": 60,
+        "critico_cliente": 60
+      },
+      "reglas_jefe": [
+        "proyectos_visto",
+        "rel_queja_llamada",
+        "arranque_dia_10"
+      ]
+    },
+    "account": {
+      "nombre": "Account",
+      "foco": "Tus críticos primero, por teléfono; luego los correos de más de 48 h. El silencio del cliente es una alarma.",
+      "pesos": {
+        "critico_cliente": 220,
+        "acc_critico": 220,
+        "acc_correos": 140,
+        "acc_sin_reunion": 60,
+        "acc_informe": 50,
+        "diag_citas_sin_ventas": 60,
+        "diag_leads_sin_citas": 30,
+        "prod_revision": 0
+      },
+      "reglas_jefe": [
+        "rel_queja_llamada",
+        "rel_correo_48h",
+        "rel_silencio_30d",
+        "diag_encaje_oferta",
+        "rel_informe_mensual"
+      ]
+    },
+    "jefa_publicidad": {
+      "nombre": "Jefa de publicidad (Valeria)",
+      "foco": "Mira la cartera de cada trafficker: con 2 cuentas en crítico se revisa con ella; con 4, se reparte.",
+      "pesos": {
+        "pub_critico": 140,
+        "jefa_cartera_roja": 120,
+        "fuga_integracion": 120,
+        "pub_atencion": 80,
+        "diag_pocos_leads": 120,
+        "prod_revision": -90
+      },
+      "reglas_jefe": [
+        "jefa_rojos_trafficker",
+        "diag_segmentacion",
+        "diag_fatiga",
+        "diag_fuga"
+      ]
+    },
+    "trafficker": {
+      "nombre": "Trafficker",
+      "foco": "Diagnostica de arriba abajo: ¿gasta?, ¿recoge el formulario?, ¿creatividad cansada?, ¿segmentación? Para en el primer eslabón roto.",
+      "pesos": {
+        "pub_critico": 140,
+        "diag_pocos_leads": 120,
+        "fuga_integracion": 100,
+        "pub_atencion": 80
+      },
+      "reglas_jefe": [
+        "diag_no_gasta",
+        "diag_formulario_roto",
+        "diag_fatiga",
+        "diag_segmentacion",
+        "diag_medicion"
+      ]
+    },
+    "jefa_crm": {
+      "nombre": "Jefa de CRM (Yessica)",
+      "foco": "La velocidad de contacto del despacho es la palanca: donde contactan tarde se pierden las citas.",
+      "pesos": {
+        "crm_sin_tocar": 120,
+        "fuga_integracion": 120,
+        "jefa_crm_velocidad": 110,
+        "crm_citas_sin_estado": 90,
+        "crm_whatsapp": 90,
+        "diag_leads_sin_citas": 100,
+        "outreach_positiva": 80,
+        "prod_revision": -90
+      },
+      "reglas_jefe": [
+        "jefa_crm_velocidad",
+        "diag_velocidad",
+        "crm_leads_sin_tocar",
+        "diag_citas_sin_marcar"
+      ]
+    },
+    "especialista_ghl": {
+      "nombre": "Especialista de GoHighLevel",
+      "foco": "Ningún lead más de 24 h sin un intento y ninguna cita sin marcar: sin eso no se sabe dónde se pierde la venta.",
+      "pesos": {
+        "crm_sin_tocar": 120,
+        "fuga_integracion": 120,
+        "diag_leads_sin_citas": 110,
+        "crm_citas_sin_estado": 90,
+        "crm_whatsapp": 90,
+        "diag_citas_sin_ventas": 60,
+        "crm_sin_usar": 30
+      },
+      "reglas_jefe": [
+        "crm_leads_sin_tocar",
+        "diag_velocidad",
+        "diag_citas_sin_marcar",
+        "diag_asistencia",
+        "diag_whatsapp"
+      ]
+    },
+    "jefa_seo": {
+      "nombre": "Jefa de SEO (Jerónimo)",
+      "foco": "Antes de tocar una web, comprueba en Google que la caída es real; después, lo que sale del top 10.",
+      "pesos": {
+        "web_caida": 160,
+        "web_spam": 120,
+        "seo_rojo": 100,
+        "web_certificado": 80,
+        "seo_ambar": 40,
+        "prod_revision": -90
+      },
+      "reglas_jefe": [
+        "seo_comprobar_google",
+        "seo_top10",
+        "web_caida",
+        "web_spam"
+      ]
+    },
+    "seo": {
+      "nombre": "SEO",
+      "foco": "Las palabras que dan citas primero; lo que se mueve un día no se toca hasta comprobarlo.",
+      "pesos": {
+        "seo_rojo": 100,
+        "seo_ambar": 40
+      },
+      "reglas_jefe": [
+        "seo_top10",
+        "seo_comprobar_google"
+      ]
+    },
+    "ficha_google": {
+      "nombre": "Ficha de Google",
+      "foco": "La ficha de Google es el escaparate local: reseñas contestadas y publicaciones cada semana.",
+      "pesos": {
+        "seo_rojo": 60,
+        "seo_ambar": 30
+      },
+      "reglas_jefe": [
+        "gmb_resenas",
+        "seo_comprobar_google"
+      ]
+    },
+    "web": {
+      "nombre": "Web",
+      "foco": "Una web caída o con spam se arregla hoy; la lentitud, esta semana; el certificado, antes de que caduque.",
+      "pesos": {
+        "web_caida": 200,
+        "web_spam": 150,
+        "web_certificado": 100,
+        "web_medicion": 80,
+        "web_lenta": 50
+      },
+      "reglas_jefe": [
+        "web_caida",
+        "web_spam",
+        "web_certificado",
+        "web_rendimiento"
+      ]
+    },
+    "redes": {
+      "nombre": "Redes",
+      "foco": "Lo que falló se vuelve a publicar hoy; el calendario de la semana, sin huecos.",
+      "pesos": {
+        "redes_fallida": 120,
+        "redes_hueco": 80
+      },
+      "reglas_jefe": [
+        "redes_fallida",
+        "redes_calendario"
+      ]
+    },
+    "produccion": {
+      "nombre": "Producción",
+      "foco": "Lo devuelto va antes que lo nuevo; si no llegas a un plazo, avisa hoy con una fecha nueva.",
+      "pesos": {
+        "prod_devuelta": 120,
+        "prod_vencida": 110,
+        "prod_hoy": 60
+      },
+      "reglas_jefe": [
+        "prod_devuelto_primero",
+        "prod_plazo_avisar"
+      ]
+    },
+    "setters": {
+      "nombre": "Setters",
+      "foco": "Velocidad: el lead más nuevo primero y el primer intento en minutos; la cita, confirmada por teléfono el día antes.",
+      "pesos": {
+        "setter_llamar": 120,
+        "setter_citas": 80
+      },
+      "reglas_jefe": [
+        "setter_velocidad",
+        "setter_confirmar",
+        "setter_marcador"
+      ]
+    },
+    "ventas_ro": {
+      "nombre": "Ventas de RO",
+      "foco": "Contrato enviado sin firmar a los 3 días, llamada; propuesta sin abrir a las 72 h, llamada; cada reunión, marcada.",
+      "pesos": {
+        "ventas_contrato": 120,
+        "ventas_sin_marcar": 100,
+        "ventas_propuesta": 90
+      },
+      "reglas_jefe": [
+        "ventas_contrato_3d",
+        "ventas_propuesta_72h",
+        "ventas_marcar_resultado"
+      ]
+    },
+    "outreach": {
+      "nombre": "Outreach",
+      "foco": "Una respuesta positiva sin dueño en 4 horas se enfría: clasifica primero, la más antigua delante.",
+      "pesos": {
+        "outreach_positiva": 140,
+        "outreach_clasificar": 120
+      },
+      "reglas_jefe": [
+        "outreach_positiva_4h",
+        "outreach_clasificar"
+      ]
+    }
+  }
+}

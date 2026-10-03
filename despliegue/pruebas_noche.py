@@ -908,6 +908,24 @@ def _sol_envios(tmp, caso):
     caso("envíos · hoy NINGÚN canal con envío real (interruptor apagado)", not it["reales"] and not it["fichero"], it)
 
 
+def _sol_sincronia(tmp, caso):
+    """Sincronía con ClickUp (3-oct): la prueba de extremo a extremo con un ClickUp SIMULADO (despliegue/reconciliar_clickup.py
+    --prueba-e2e, sobre una copia de la base en su carpeta temporal) y que hoy ClickUp real y el puente de chat están apagados."""
+    r = subprocess.run([sys.executable, str(AQUI / "reconciliar_clickup.py"), "--prueba-e2e", "--json"], cwd=APP, capture_output=True, text=True, timeout=300,
+                       env={k: v for k, v in os.environ.items() if k not in ("RO_CLICKUP_REAL", "RO_SINC_PUENTE_MODO")})
+    try:
+        d = json.loads((r.stdout.strip().splitlines() or ["{}"])[-1])
+    except ValueError:
+        d = {}
+    for c in d.get("casos") or []:
+        caso(f"sincronía · {c['caso']}", c["ok"], c.get("detalle"))
+    caso("sincronía · la prueba de extremo a extremo corre entera", r.returncode == 0 and d.get("casos"), (r.stdout + r.stderr)[-300:])
+    sys.path.insert(0, str(APP))
+    import sincronia as SI
+    it = SI.interruptor()
+    caso("sincronía · hoy ClickUp real APAGADO y puente de chat apagado", not it["reales"] and not it["fichero"] and it["chat_puente"] == "apagado", it)
+
+
 def solidez():
     tmp = Path(tempfile.mkdtemp(prefix="ro_solidez_"))
     os.chmod(tmp, 0o700)
@@ -917,7 +935,7 @@ def solidez():
         casos.append({"caso": nombre, "ok": bool(ok), "detalle": None if ok else sanear_detalle(detalle)})
         print(f"  {'✔' if ok else '✘'} {nombre}" + ("" if ok else f" · {sanear_detalle(detalle)}"))
     try:
-        for parte in (_sol_tuberia, _sol_generadores, _sol_generar_datos, _sol_externos, _sol_snov, _sol_llave_ghl, _sol_pegar, _sol_envios):
+        for parte in (_sol_tuberia, _sol_generadores, _sol_generar_datos, _sol_externos, _sol_snov, _sol_llave_ghl, _sol_pegar, _sol_envios, _sol_sincronia):
             try:
                 parte(tmp, caso)
             except Exception as e:

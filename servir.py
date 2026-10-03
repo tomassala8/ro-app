@@ -2985,6 +2985,17 @@ except ImportError:
 except Exception as _e:
     print("⚠️  Canales de avisos no cargados:", _e)
 
+# Avisos automáticos (3-oct) · /api/avisos_programados/* (avisos_programados.py): recordatorios programados en los canales
+# de la app (horas, semáforo del lunes, informe mensual, cierre de facturación, resúmenes). Va DESPUÉS de avisos.py.
+try:
+    if "avisos" in sys.modules:
+        import avisos_programados as AVISOS_PROG           # noqa: E402
+        AVISOS_PROG.enganchar(Manejador, sys.modules[__name__])
+except ImportError:
+    pass
+except Exception as _e:
+    print("⚠️  Avisos automáticos no cargados:", _e)
+
 # Envíos verificados (3-oct) · /api/envios/* (envios.py): ciclo de vida de cada envío, verificación y avisos. Hoy, simulado.
 try:
     import envios as ENVIOS                                # noqa: E402
@@ -2993,6 +3004,53 @@ except ImportError:
     pass
 except Exception as _e:
     print("⚠️  Envíos no cargados:", _e)
+
+# Sincronía con herramientas (3-oct) · /api/sincronia/* (sincronia.py): copia segura de cada cambio que va a ClickUp. Hoy, simulado.
+try:
+    import sincronia as SINCRONIA                          # noqa: E402
+    SINCRONIA.enganchar(Manejador, sys.modules[__name__])
+except ImportError:
+    pass
+except Exception as _e:
+    print("⚠️  Sincronía no cargada:", _e)
+
+# Vigía (3-oct) · GET /api/vigia y POST /api/vigia/probar (despliegue/vigia.py): «Salud del sistema». Sin él, nada cambia.
+try:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("vigia", AQUI / "despliegue" / "vigia.py")
+    VIGIA = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(VIGIA)
+    VIGIA.enganchar(Manejador, sys.modules[__name__])
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    print("⚠️  Vigía no cargado:", _e)
+
+# N5 Modular DS (3-oct) · POST /api/modular/acceso (fuentes_modular/acceso.py): «Entrar al WordPress» solo para web, jefe de
+# SEO y web y dirección, con rastro; apagado mientras la clave de Modular sea de solo lectura. Sin el fichero, nada cambia.
+try:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("modular_acceso", AQUI / "fuentes_modular" / "acceso.py")
+    MODULAR_ACCESO = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(MODULAR_ACCESO)
+    MODULAR_ACCESO.enganchar(Manejador, sys.modules[__name__])
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    print("⚠️  Acceso a Modular no cargado:", _e)
+
+# Ficha de Google (3-oct) · /api/gbp/* (fuentes_gbp/servidor_gbp.py): «Proponer respuesta» a una reseña con el cerebro de
+# reseñas y respuesta en SIMULACIÓN (cola de acciones, canal de Google apagado). Sin el fichero, nada cambia.
+try:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("servidor_gbp", AQUI / "fuentes_gbp" / "servidor_gbp.py")
+    SERVIDOR_GBP = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(SERVIDOR_GBP)
+    SERVIDOR_GBP.enganchar(Manejador, sys.modules[__name__])
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    print("⚠️  Ficha de Google (reseñas) no cargada:", _e)
 
 
 # A8 (2-oct noche) · Alertas: nadie pospone ni despacha en lote alertas ajenas (fuentes_alertas/guardia_alertas.py)

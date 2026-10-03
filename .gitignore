@@ -28,3 +28,14 @@ data/mi_dia/*
 !data/envios/
 data/envios/*
 !data/envios/interruptor.json
+
+# Ficheros con datos reales que viven fuera de data/ (3-oct, revisión antes de subir a GitHub)
+fuentes_gbp/*.json
+despliegue/lista_access.txt
+# Llaves y secretos: nunca al repositorio (viven en el llavero del Mac o en los secretos del servidor)
+*.pem
+*.key
+*.p12
+**/llavero*
+**/secretos*
+!escaner_secretos.py

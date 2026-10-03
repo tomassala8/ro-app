@@ -61,6 +61,9 @@ class UF:
 
 import json as _json
 from pathlib import Path as _Path
+import sys as _sys
+_sys.path.insert(1, str(_Path(__file__).resolve().parents[1]))
+from telefono import limpiar as _limpiar_tel   # noqa: E402  regla común de teléfonos (3-oct): «+34…» sin espacios, extensión aparte
 _MAN = _Path(__file__).resolve().parent / "_privado" / "contactos_manual.json"   # privado: el escáner y la subida no lo recorren
 MANUAL = _json.loads(_MAN.read_text()) if _MAN.exists() else {}
 
@@ -197,6 +200,7 @@ def construir(ag, portal_contactos, roles, nombre_cliente, cliente_id=None):
     for k in nodos:
         por_grupo.setdefault(uf.f(k), []).append(k)
     personas = []
+    tel_dudosos = []     # números que no cuadran con la regla: no se guardan; generar_ficha los pasa a data/telefonos/dudosos.json
     for g, ks in por_grupo.items():
         ns = [nodos[k] for k in ks]
         generico = (all(n.get("generico") for n in ns if n["tipo"] == "correo") and any(n["tipo"] == "correo" for n in ns)
@@ -288,11 +292,18 @@ def construir(ag, portal_contactos, roles, nombre_cliente, cliente_id=None):
                 dig = re.sub(r"\D", "", t)
                 if tel_norm(t) not in {tel_norm(m["tel"]) for m in ag["moviles"]} and any(nd in dig for nd in nucleos_doc):
                     mal_guardados.append(t); continue        # el mismo móvil mal guardado en el portal (p. ej. «+6559973830»)
-                tels.setdefault(tel_norm(t), {"tel": t, "fuente": f"Portal de clientes ({n.get('src') or 'portal'})", "whatsapp": None,
+                rt = _limpiar_tel(t)
+                if rt["motivo"] != "ok":
+                    tel_dudosos.append({"valor": t, "aviso": rt["aviso"], "donde": f"Portal de clientes ({n.get('src') or 'portal'})", "quien": elegido}); continue
+                tels.setdefault(tel_norm(t), {"tel": rt["telefono"], **({"extension": rt["extension"]} if rt["extension"] else {}), "fuente": f"Portal de clientes ({n.get('src') or 'portal'})", "whatsapp": None,
                                               "compartido": (compartidos.get(tel_norm(t)) or {}).get("nota")})
             if n.get("tel"):
                 wa = WA.search(n.get("fuente") or "")
-                tels[tel_norm(n["tel"])] = {"tel": n["tel"], "fuente": n.get("fuente") or "documento de móviles", "whatsapp": wa.group(1) if wa else None,
+                rt = _limpiar_tel(n["tel"])
+                if rt["motivo"] != "ok":
+                    tel_dudosos.append({"valor": n["tel"], "aviso": rt["aviso"], "donde": f"Documento de móviles ({n.get('fuente') or 'documento'})", "quien": elegido})
+                    continue
+                tels[tel_norm(n["tel"])] = {"tel": rt["telefono"], **({"extension": rt["extension"]} if rt["extension"] else {}), "fuente": n.get("fuente") or "documento de móviles", "whatsapp": wa.group(1) if wa else None,
                                             "etiqueta": n["nombres"][0] if n["nombres"] else None,
                                             "compartido": (compartidos.get(tel_norm(n["tel"])) or {}).get("nota"),
                                             "en_documento": True}
@@ -383,8 +394,20 @@ def construir(ag, portal_contactos, roles, nombre_cliente, cliente_id=None):
     notas = MANUAL.get("notas", {}).get(cliente_id) or notas
     ag = {**ag, "notas": notas}
     return {"personas": personas, "dudas": dudas, "uniones_pila": uniones_pila,
-            "sin_movil": not ag["moviles"], "fijos": ag.get("fijos", []), "notas": ag.get("notas", []),
+            "sin_movil": not ag["moviles"], "fijos": _fijos(ag.get("fijos", []), tel_dudosos), "telefonos_dudosos": tel_dudosos, "notas": ag.get("notas", []),
             "dominios": ag.get("dominios", []), "account_documento": ag.get("account")}
+
+
+def _fijos(fijos, dudosos):
+    """Fijos del documento con la regla común; los que no cuadran van a dudosos (no se guardan)."""
+    ok = []
+    for f in fijos or []:
+        r = _limpiar_tel(f)
+        if r["motivo"] == "ok":
+            ok.append(r["telefono"])          # la extensión (si la hay) no va dentro del número; el fijo se marca sin ella
+        elif r["motivo"] == "dudoso":
+            dudosos.append({"valor": f, "aviso": r["aviso"], "donde": "Documento de móviles (fijo)", "quien": None})
+    return ok
 
 
 def bonito(n):

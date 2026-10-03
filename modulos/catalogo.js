@@ -9,7 +9,58 @@ import {
   botonesContacto, barraEtapas, listaConIcono, avisoFlotante,
   // ronda 9 · guía de estilo (auditoría 30)
   grafico, colorCifra, cifraPrincipal, vacioLinea, menuMas, campoTexto, esqueleto, fmt,
+  // paneles v4 (3-oct) · paneles de dinero (48_BENCHMARK_DASHBOARDS.md §4)
+  tarjetaKpi, selectorComparar, cascada, barrasGanadoPerdido, mapaCalor, barraObjetivo, previsionCaja, barrasDivergentes,
+  barraApilada, minilinea, FUENTE_BANDAS, estadoObjetivo,
 } from '../componentes.js';
+
+/** Paneles v4 (3-oct): las piezas de los paneles de dinero con cifras de EJEMPLO (inventadas, redondas). */
+function panelesV4() {
+  const x12 = ['2025-10', '2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'];
+  const zonaKpi = h('div');
+  const pintarKpi = comp => zonaKpi.replaceChildren(h('div', { class: 'tiles' },
+    tarjetaKpi({ icono: 'escudo', etiqueta: 'Meses de caja (ejemplo)', valor: '1,5', unidad: 'meses', num: 1.5, estado: 'ambar', mejorSi: 'alto', comparar: comp,
+      serie: [2.4, 2.2, 2.0, 1.9, 2.1, 1.8, 1.7, 1.6, 1.7, 1.6, 1.5, 1.5], serieX: x12, formatoSerie: v => fmt.num(v, 1), umbralSerie: 2,
+      comparaciones: { mes_ant: { ref: 1.6, texto: 'frente a agosto', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` }, objetivo: { ref: 2, texto: 'frente al mínimo de 2 meses', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` } },
+      umbral: { texto: 'verde ≥ 2 meses · ámbar 1-2 · rojo < 1 (agencias)', fuente: 'David C. Baker', href: 'https://www.linkedin.com/pulse/eight-performance-benchmarks-your-financial-dashboard-david-c-baker' },
+      fuente: { texto: 'Holded (ejemplo)' }, contexto: 'Caja ÷ gasto medio del mes' }),
+    tarjetaKpi({ icono: 'eq', etiqueta: 'Peso del equipo (ejemplo)', valor: '60 %', num: 60, estado: 'ambar', mejorSi: 'bajo', comparar: comp,
+      serie: [52, 55, 58, 61, 57, 59, 62, 60, 58, 61, 63, 60], serieX: x12, formatoSerie: v => fmt.pct(v), umbralSerie: 55,
+      comparaciones: { mes_ant: { ref: 63, texto: 'frente a agosto', modo: 'puntos' }, anio_ant: { ref: 50, texto: 'frente a septiembre de 2025', modo: 'puntos' }, objetivo: { ref: 55, texto: 'frente al 55 %', modo: 'puntos' } },
+      umbral: { texto: 'verde ≤ 55 % · rojo > 65 %', fuente: 'Agency Management Institute', href: 'https://agencymanagementinstitute.com/video/payroll-ratios-whats-too-low/' } }),
+    tarjetaKpi({ icono: 'clock', etiqueta: 'Meses para recuperar la captación (ejemplo)', valor: '1,5', unidad: 'meses', num: 1.5, estado: 'gris', mejorSi: 'bajo', comparar: comp,
+      umbral: { texto: 'SaaS: ≤ 12 meses; sin dato fiable de agencias', colorea: false, fuente: 'Geckoboard', href: 'https://www.geckoboard.com/best-practice/kpi-examples/cac-payback-period/' } })));
+  const comp = selectorComparar({ clave: 'catalogo-comparar', alCambiar: pintarKpi });
+  pintarKpi(comp.valor());
+  return [
+    bloque('Tarjeta KPI · tarjetaKpi() + selectorComparar()', 'tarjetaKpi({ icono, etiqueta, valor, num, estado, mejorSi: alto|bajo|neutro, serie (12 meses), comparar, comparaciones: { mes_ant, anio_ant, objetivo: { ref, texto, modo } }, umbral: { texto, fuente, href, colorea }, fuente }) · la tercera, «no colorea» (gris)',
+      comp, zonaKpi, h('p', { class: 'sub' }, 'Minilínea suelta: minilinea(valores, { umbral })'), minilinea([3, 4, 3, 5, 6, 5, 7, 8], { umbral: 5, etiqueta: 'Ejemplo' })),
+    bloque('Cascada o puente · cascada()', 'cascada({ pasos: [{ texto, valor, tipo: total|cambio, estado: sube|sube2|ambar|baja }], formato }) · pasos en gris, sube en verde, baja en rojo; en el móvil, en filas',
+      h('div', { class: 'dos iguales' },
+        cascada({ titulo: 'Cuota del mes (ejemplo)', formato: v => fmt.eur(v), pasos: [{ texto: 'Cuota inicial', valor: 50000, tipo: 'total' }, { texto: 'Altas', valor: 6000 }, { texto: 'Subidas', valor: 2000, estado: 'sube2' },
+          { texto: 'Rebajas', valor: -2500, estado: 'ambar' }, { texto: 'Bajas', valor: -1500 }, { texto: 'Cuota final', valor: 54000, tipo: 'total' }] }),
+        cascada({ titulo: 'Beneficio del mes (ejemplo)', formato: v => fmt.eur(v), pasos: [{ texto: 'Ingresos', valor: 60000, tipo: 'total' }, { texto: 'Entrega', valor: -38000 },
+          { texto: 'Margen bruto', valor: 22000, tipo: 'total' }, { texto: 'Estructura', valor: -14000 }, { texto: 'Beneficio', valor: 8000, tipo: 'total' }] }))),
+    bloque('Ganado sobre cero, perdido bajo cero · barrasGanadoPerdido()', 'barrasGanadoPerdido({ x, ganado: [{ nombre, y, clase }], perdido: [...], enCurso: 1 }) · el periodo en curso, rayado; la línea es el neto',
+      barrasGanadoPerdido({ x: x12.slice(-6).concat('2026-10'), formato: v => fmt.eur(v), enCurso: 1,
+        ganado: [{ nombre: 'Altas', clase: 'sube', y: [2000, 1500, 0, 1900, 1300, 0, 7000] }, { nombre: 'Subidas', clase: 'sube2', y: [300, 1700, 700, 0, 1000, 2800, 0] }],
+        perdido: [{ nombre: 'Rebajas', clase: 'ambar', y: [3200, 1900, 400, 2300, 2700, 2000, 0] }, { nombre: 'Bajas', clase: 'baja', y: [3700, 0, 2000, 1100, 2200, 1500, 0] }] })),
+    bloque('Mapa de calor de cohortes · mapaCalor()', 'mapaCalor({ columnas, vistas: [{ valor, texto, filas: [{ etiqueta, n, valores }], media }] }) · un solo color, fila media, interruptor % clientes / % cuota',
+      mapaCalor({ clave: 'catalogo-calor', columnas: ['Mes 0', 'Mes 1', 'Mes 2', 'Mes 3', 'Mes 4'], vistas: [
+        { valor: 'cli', texto: '% de clientes', filas: [{ etiqueta: 'may 26 (ejemplo)', n: 4, valores: [100, 100, 75, 75, 50] }, { etiqueta: 'jun 26 (ejemplo)', n: 5, valores: [100, 80, 80, 60, null] }, { etiqueta: 'jul 26 (ejemplo)', n: 3, valores: [100, 100, null, null, null] }], media: [100, 92, 78, 67, 50] },
+        { valor: 'cuo', texto: '% de cuota', filas: [{ etiqueta: 'may 26 (ejemplo)', n: 4, valores: [100, 100, 81, 70, 52] }], media: [100, 100, 81, 70, 52] }] })),
+    bloque('Barra contra objetivo (bullet) · barraObjetivo()', 'barraObjetivo({ valor, objetivo, marcas, extra, formato }) · bandas de Databox: < 75 % rojo, 75-99 ámbar, ≥ 100 verde',
+      barraObjetivo({ etiqueta: 'Cuota (ejemplo)', valor: 70000, objetivo: 150000, formato: v => fmt.eur(v), extra: [{ valor: 76000, texto: 'Si firman' }], marcas: [{ valor: 95000, texto: 'Plan oct' }, { valor: 135000, texto: 'Plan nov' }] }),
+      h('p', { class: 'sub' }, `Estado contra el plan del mes (ejemplo, 70.000 de 95.000 €): ${estadoObjetivo(70000, 95000)} · fuente de las bandas: ${FUENTE_BANDAS.fuente}`)),
+    bloque('Previsión de caja · previsionCaja()', 'previsionCaja({ puntos: [{ fecha, saldo }], minimo, eventos }) · línea del mínimo discontinua y tramo rojo por debajo',
+      previsionCaja({ minimo: 90000, formato: v => fmt.eur(v), eventos: [{ fecha: '2026-11-02', texto: 'Cargo SEPA (ejemplo)' }],
+        puntos: Array.from({ length: 60 }, (_, i) => { const d = new Date(Date.UTC(2026, 9, 3 + i)); const f = d.toISOString().slice(0, 10); return { fecha: f, saldo: 60000 + (i >= 30 ? 65000 : 0) - i * 1500 }; }) })),
+    bloque('Ranking divergente · barrasDivergentes()', 'barrasDivergentes({ filas: [{ etiqueta, sub, valor }], formato, alPulsar }) · negativas a la izquierda en rojo',
+      barrasDivergentes({ formato: v => fmt.eur(v), filas: [{ etiqueta: 'Cliente A (ejemplo)', sub: 'Lucía', valor: -1200 }, { etiqueta: 'Cliente B (ejemplo)', valor: -300 }, { etiqueta: 'Cliente C (ejemplo)', valor: 450 }, { etiqueta: 'Cliente D (ejemplo)', valor: 980 }] })),
+    bloque('Antigüedad apilada · barraApilada()', 'barraApilada({ partes: [{ valor, texto, estado: gris|ambar|rojo-claro|rojo }] }) · los tramos de cobro de QuickBooks',
+      barraApilada({ formato: v => fmt.eur(v), partes: [{ valor: 11000, texto: '0-30 días', estado: 'gris' }, { valor: 5000, texto: '31-60 días', estado: 'ambar' }, { valor: 600, texto: '61-90 días', estado: 'rojo-claro' }, { valor: 1200, texto: 'Más de 90 días', estado: 'rojo' }] })),
+  ];
+}
 
 /** Barrido v1: el esqueleto de ejemplo ya no se pinta al entrar (la página parecía «cargando» para siempre y el
  *  barrido esperaba 10 s). Se enseña al pulsar y se quita solo a los 3 s. */
@@ -94,6 +145,7 @@ export default {
 
     cont.append(avisoParcial('Los ejemplos con cifras inventadas llevan «ejemplo». Los demás usan datos reales del panel v27.', { tipo: 'info', titulo: 'Catálogo vivo.' }));
     cont.append(...guiaEstilo());
+    cont.append(...panelesV4());
 
     // ---------------- ola 0 · sistema visual (2-oct) ----------------
     const vis = ctx.clientesVisibles.length ? ctx.clientesVisibles : ctx.clientes;
@@ -123,8 +175,8 @@ export default {
         { id: 'trabajo', texto: 'Trabajo', icono: 'check', cuenta: 14, cuentaEstado: 'rojo' }, { id: 'rastro', texto: 'Rastro', icono: 'hist' }],
         pintar: (id, z) => z.append(id === 'contactos'
           ? h('div', { style: { display: 'grid', gap: 'var(--s-6)', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', alignItems: 'start' } },
-              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '600 000 000', correo: 'ana@ejemplo.es', fuente: 'ejemplo, número inventado' }),
-              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '600 000 000', correo: 'ana@ejemplo.es', modo: 'cabecera' }))
+              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '611 11 11 11', correo: 'ana@ejemplo.es', fuente: 'ejemplo, número inventado' }),
+              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '611 11 11 11', correo: 'ana@ejemplo.es', modo: 'cabecera' }))
           : vacio({ icono: 'vacio', titulo: `Pestaña «${id}» de ejemplo`, texto: 'Cada módulo pinta aquí su contenido. Cambiar de pestaña es instantáneo.' })) })));
 
     cont.append(bloque('Selector de cliente y barra de etapas', 'selectorCliente({ clientes: ctx.clientesVisibles, actual, alElegir, detalle, insignia }) · barraEtapas(etapas?, actual)',

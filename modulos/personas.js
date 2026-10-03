@@ -6,13 +6,22 @@
 // (fuentes_personas/generar_personas.py). Lo que se apunta (ausencias, planes, 1:1, notas) va a la cola simulada de local.db.
 
 import {
-  fmt, tile, tiles, pestanas, chipsFiltro, chipEstado, tablaApilable, vacio, vacioLinea, panel, avisoParcial, botonConfirmar,
+  fmt, tile, tiles, pestanas, chipsFiltro, chipEstado, tablaApilable, vacio, vacioLinea, panel, avisoParcial,
   barraProgreso, lineaTiempo, copiar, avisoFlotante, icono, frescura, selloMedible, limpiaTexto, graficoSerie, deDondeSale, hoyMadrid,
 } from '../componentes.js';
 import { PUESTO } from '../permisos.js';
 import { h, elegir, estilosLocales, cabPersona, campo, dias, leerCola, vp } from './personas_comun.js';
 import { llevarA } from './_ir.js';
-import { lineaZona } from './mi_perfil.js';   // V3a: zona y hora local de cada persona («Caracas · 21:14 ahora»)
+import { lineaZona } from './mi_perfil.js';
+// Ronda U (50 #4, #14): «Guardar» al primer clic con «Deshacer» 8 s (antes «¿Guardar? Sí, guardar»: todo es interno), la
+// nota del mes como TABLA (persona · nota · hecho · acción · Guardar en la fila; antes un formulario a 2.624 px) y
+// «Copiar el recordatorio a todos» en Quién no imputa.
+import { botonDeshacer } from './_deshacer.js';
+import { franjaCifras, consejoCompacto } from './_trabajo.js';
+const TABS_PERSONAS = ['alerta', 'imputa', 'ausencias', 'carga', '1a1', 'notas', 'contratacion', 'salida', 'sueldos'];
+/** Guardar de un formulario interno: valida al pulsar (el error sale al lado) y escribe a los 8 s si nadie deshace. */
+const guardarU = ({ texto, hecho = 'Guardado', ctx, validar, hacer, mini = false, pri = true }) =>
+  botonDeshacer({ texto, hecho, mini, pri, soloLectura: ctx.soloLectura, validar, alHacer: hacer });   // V3a: zona y hora local de cada persona («Caracas · 21:14 ahora»)
 
 const CAP = { account: 12, trafficker: 16, crm: 16 };
 let CARTERAS = [];
@@ -120,6 +129,9 @@ export default {
     // manda (tú; tu equipo si eres jefa; Cecilia, Mili y Tomás, todas): otra id dice que no la puedes ver, sin datos.
     let pid = null;
     try { pid = ctx.params?.[0] ? decodeURIComponent(String(ctx.params[0]).split('?')[0]) : null; } catch { pid = null; }
+    // Ronda U (50 #5): #/personas/<pestaña> (notas, alerta, imputa…) abre ESA pestaña; #/personas/<id>, la ficha de esa persona
+    let tabInicial = null;
+    if (pid && TABS_PERSONAS.includes(pid) && !porId[pid]) { tabInicial = pid; pid = null; }
     if (pid && pid !== yo) {
       const otra = porId[pid];
       ctx.titulo('Personas', otra ? `${otra.alias} · ${puestosTxt(otra)} · su ficha: horas, carga, ausencias, 1:1 y notas` : 'Persona no disponible');
@@ -141,26 +153,17 @@ export default {
     // ---- 1 · cifras (lo de cada día arriba) ----
     let tabs;
     const ir = id => () => { tabs?.elegir(id); tabs?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-    cont.append(tiles([
-      tile({ icono: 'alert', etiqueta: 'En alerta y sin plan pasados 7 días', valor: vencidas.length, unidad: `de ${enAlerta.length} en alerta`,
-        estado: vencidas.length === 0 ? 'verde' : vencidas.length === 1 ? 'ambar' : 'rojo',
-        // V2 (A-M5): las tres cifras juntas y con su nombre: en alerta (todas) · sin plan (aún en plazo) · pasadas de 7 días
-        contexto: sinPlan.length ? `${enAlerta.length} en alerta: ${sinPlan.length} sin plan todavía (el primer plazo vence el ${fmt.fecha(addDias(minFecha(sinPlan.map(p => p.alerta.desde)), 7))}) y ${enAlerta.length - sinPlan.length} con plan` : 'Todas con conversación y plan',
-        medible: 'hoy', medibleDetalle: 'La alerta sale del panel; el plan se anota aquí', frescura: fr, ir: 'Ver personas en alerta', alPulsar: ir('alerta') }),
-      tile({ icono: 'capas', etiqueta: 'Por encima de su capacidad', valor: sobre.length, unidad: 'personas',
-        estado: sobre.length === 0 ? 'verde' : sobre.length === 1 ? 'ambar' : 'rojo', contexto: `Cartera: accounts > 12 proyectos · trafficker y CRM > 16${horasSobre ? ` · aparte, ${fmt.plural(horasSobre, 'persona', 'personas')} con más del 100 % de horas (solo aviso)` : ''}`,
-        medible: 'hoy', ir: 'Ver la carga', alPulsar: ir('carga') }),
-      tile({ icono: 'clock', etiqueta: 'Ayer sin imputar', valor: ceroAyer.length, unidad: `de ${cuentanEquipo}`,
-        estado: ceroAyer.length === 0 ? 'verde' : ceroAyer.length <= 3 ? 'ambar' : 'rojo', contexto: `Misma regla que Horas: 0 h el último día laborable · ${noAyer.length} por debajo de 8 h`,
-        medible: 'medias', medibleDetalle: 'Imputación del equipo ~52 %: orientativo', frescura: fr, ir: 'Ver quién no imputa', alPulsar: ir('imputa') }),
-      tile({ icono: 'cal', etiqueta: 'Ausencias en 14 días', valor: ausProx.length, unidad: ausProx.length === 1 ? 'ausencia' : 'ausencias',
-        estado: ausProx.some(a => !a.suplente) ? 'ambar' : '', contexto: ausProx.length ? `${ausProx.filter(a => !a.suplente).length} sin suplente` : 'Ninguna registrada todavía',
-        medible: 'hoy', medibleDetalle: 'Tabla propia de la app', ir: 'Ver ausencias', alPulsar: ir('ausencias') }),
-      tile({ icono: 'star', etiqueta: 'Nota del mes y 1:1', valor: conNota.length, unidad: `de ${activas.length} con nota`,
-        estado: conNota.length >= activas.length ? 'verde' : new Date().getDate() > 5 ? 'rojo' : 'ambar',
-        contexto: `Nota de ${mesTxt(mesNota)}: 100 % el día 5 · 1:1 del ${trimTxt(trimestre)}: ${con1a1.length} de ${activas.length}`,
-        medible: 'hoy', ir: 'Ver notas', alPulsar: ir('notas') }),
-    ]));
+    // Ronda U (molde): las cinco tarjetas (≈ 250 px) pasan a una franja de cifras que abre su pestaña; la lista va arriba.
+    const franja = franjaCifras([
+      { etiqueta: 'En alerta sin plan (+7 días)', valor: vencidas.length, estado: vencidas.length ? 'rojo' : '', alPulsar: ir('alerta'),
+        titulo: sinPlan.length ? `${enAlerta.length} en alerta: ${sinPlan.length} sin plan todavía y ${enAlerta.length - sinPlan.length} con plan` : 'Todas con conversación y plan' },
+      { etiqueta: 'Por encima de su capacidad', valor: sobre.length, estado: sobre.length > 1 ? 'rojo' : '', alPulsar: ir('carga'), titulo: 'Accounts > 12 proyectos · trafficker y CRM > 16' },
+      { etiqueta: 'Ayer sin imputar', valor: ceroAyer.length, estado: ceroAyer.length > 3 ? 'rojo' : '', alPulsar: ir('imputa'), titulo: `0 h el último día laborable · ${noAyer.length} por debajo de 8 h` },
+      { etiqueta: 'Ausencias en 14 días', valor: ausProx.length, alPulsar: ir('ausencias'), titulo: ausProx.length ? `${ausProx.filter(a => !a.suplente).length} sin suplente` : 'Ninguna registrada' },
+      { etiqueta: `Nota de ${mesTxt(mesNota)}`, valor: `${conNota.length}/${activas.length}`, estado: conNota.length < activas.length && new Date().getDate() > 5 ? 'rojo' : '', alPulsar: ir('notas'), titulo: `100 % el día 5 · 1:1 del ${trimTxt(trimestre)}: ${con1a1.length} de ${activas.length}` },
+    ], { etiqueta: 'Cifras del equipo (abren su pestaña)' });
+    cont.append(franja);
+    void tiles; void tile;
 
     // ---- 2 · pestañas por frecuencia: diario → semanal → mensual ----
     const lista = [
@@ -186,6 +189,8 @@ export default {
       if (id === 'sueldos') vistaSueldos(ctx, P, z);
     } });
     cont.append(tabs);
+    if (tabInicial && lista.some(x => x.id === tabInicial)) tabs.elegir(tabInicial);
+    consejoCompacto(cont, tabs);   // el consejo de la IA, plegado y debajo de la lista
     const cel = panelCelebraciones(ctx);
     if (cel) cont.append(cel);
     cont.append(h('p', { class: 'sub', style: { marginTop: 'var(--s-4)' } }, icono('candado', { clase: 's' }), veSueldos(ctx) ? ' Los sueldos solo se abren en su pestaña y queda en el rastro. Horas solo como aviso. ' : ' Sin sueldos ni dinero. Horas solo como aviso. ',
@@ -260,8 +265,8 @@ function tarjetaAlerta(ctx, p, pl) {
   const txt = h('textarea', { placeholder: 'Qué se habló, qué se le pide y para cuándo', 'aria-label': `Plan para ${p.alias}` });
   const rev = h('input', { type: 'date', value: addDias(hoyISO(), 7), 'aria-label': 'Fecha de revisión' });
   form.append(h('div', { class: 'pm-form' }, campo('Conversación y plan', txt, { ancho: true }), campo('Revisar el', rev),
-    botonConfirmar({ texto: 'Guardar plan', pregunta: `¿Guardar el plan de ${p.alias}?`, confirmar: 'Sí, guardar', soloLectura: ctx.soloLectura,
-      alConfirmar: () => { if (!txt.value.trim()) throw new Error('escribe la conversación y el plan'); return apuntar(ctx, 'plan', p.persona_id, txt.value.trim(), { plan: txt.value.trim(), revision: rev.value }); } })));
+    guardarU({ ctx, texto: 'Guardar plan', hecho: 'Plan guardado', validar: () => (!txt.value.trim() ? 'Escribe la conversación y el plan' : null),
+      hacer: () => apuntar(ctx, 'plan', p.persona_id, txt.value.trim(), { plan: txt.value.trim(), revision: rev.value }) })));
   return h('article', { class: `pm-tarjeta ${estado}` },
     cabPersona(p.nombre, puestosTxt(p), chipEstado(estado, pl ? 'con plan' : d >= 7 ? `${d} días sin plan` : `Plan pendiente · quedan ${7 - d} días`)),
     h('ul', { class: 'pm-motivos' }, p.alerta.motivos.map(m => h('li', {}, icono('alert'), motivoTxt(m)))),
@@ -308,6 +313,8 @@ function vistaImputa(ctx, imputan, P, fr) {
     avisoParcial('Las horas son solo un aviso de disciplina: con el 52 % imputado no miden rendimiento. Copia el recordatorio y mándaselo solo a quien no imputó. Pronto se enviará desde aquí.', { tipo: 'parcial', titulo: 'Horas incompletas.' }),
     panel({ titulo: 'Quién no imputa', icono: 'clock', sub: 'Ayer y esta semana, frente a 8 h al día', acciones: frescura(fr) }, h('div', { class: 'pm-pad' }, chips), zona,
       h('div', { class: 'fila', style: { marginTop: 'var(--s-3)' } },
+        // Ronda U (50 tarea 34): un solo clic para el recordatorio de todos los de la lista (uno por línea, con su nombre)
+        h('button', { type: 'button', class: 'bt pri', on: { click: () => { const l = imputan.filter(p => (p.horas.ayer ?? 0) < 8); copiar(l.map(recordatorio).join('\n\n'), `${l.length} recordatorios copiados`); } } }, icono('copy'), 'Copiar el recordatorio a todos'),
         h('button', { type: 'button', class: 'bt', disabled: true, title: 'Pronto: envío de recordatorios por ClickUp o correo' }, icono('send'), 'Enviar a todos (pronto)'),
         noImputan.length ? h('span', { class: 'sub' }, `No imputan por puesto: ${noImputan.map(p => p.alias).join(', ')}.`) : null)),
   ];
@@ -331,12 +338,15 @@ function vistaAusencias(ctx, P, ausencias, nombre) {
   const nota = h('input', { type: 'text', placeholder: 'Opcional' });
   const form = panel({ titulo: 'Registrar una ausencia', icono: 'mas', sub: 'Quien lleva clientes necesita suplente antes de empezar: la suplencia se crea en Asignaciones y caduca sola. Simulado hasta publicar la app.' },
     h('div', { class: 'pm-form' }, campo('Persona', per), campo('Tipo', tipo), campo('Desde', desde), campo('Hasta', hasta), campo('Suplente', sup), campo('Nota', nota),
-      botonConfirmar({ texto: 'Registrar ausencia', pregunta: '¿Registrar la ausencia?', confirmar: 'Sí, registrar', soloLectura: ctx.soloLectura,
-        alConfirmar: () => {
-          if (hasta.value < desde.value) throw new Error('la fecha de fin es anterior al inicio');
+      guardarU({ ctx, texto: 'Registrar ausencia', hecho: 'Ausencia registrada',
+        validar: () => {
+          if (hasta.value < desde.value) return 'La fecha de fin es anterior al inicio';
           const p = P.find(x => x.persona_id === per.value);
-          const lleva = Object.keys(p?.cartera || {}).length > 0;
-          if (lleva && !sup.value) throw new Error(`${p.alias} lleva clientes: elige suplente`);
+          if (Object.keys(p?.cartera || {}).length > 0 && !sup.value) return `${p.alias} lleva clientes: elige suplente`;
+          return null;
+        },
+        hacer: () => {
+          const p = P.find(x => x.persona_id === per.value);
           return apuntar(ctx, 'ausencia', per.value, `${tipo.value} de ${p.alias} del ${desde.value} al ${hasta.value}${sup.value ? ` · suplente ${sup.value}` : ''}`,
             { tipo: tipo.value, desde: desde.value, hasta: hasta.value, suplente: sup.value || null, nota: nota.value || null });
         } })));
@@ -401,42 +411,47 @@ function vista1a1(ctx, P, E, trimestre) {
       ] })),
     puede ? panel({ titulo: 'Anotar un 1:1 o la ronda', icono: 'editar', sub: 'Queda en la cola de la app con tu nombre y la hora (simulado hasta publicarla).' },
       h('div', { class: 'pm-form' }, campo('Con', per), campo('Puntos', puntos, { ancho: true }), campo('Pasa al siguiente', sig, { ancho: true }),
-        botonConfirmar({ texto: 'Guardar 1:1', pregunta: '¿Guardar el 1:1?', confirmar: 'Sí, guardar', soloLectura: ctx.soloLectura,
-          alConfirmar: () => { if (!puntos.value.trim()) throw new Error('escribe los puntos'); return apuntar(ctx, '1a1', per.value, puntos.value.trim(), { trimestre, puntos: puntos.value.trim(), siguiente: sig.value.trim() || null }); } }))) : null,
+        guardarU({ ctx, texto: 'Guardar 1:1', hecho: '1:1 guardado', validar: () => (!puntos.value.trim() ? 'Escribe los puntos' : null),
+          hacer: () => { return apuntar(ctx, '1a1', per.value, puntos.value.trim(), { trimestre, puntos: puntos.value.trim(), siguiente: sig.value.trim() || null }); } }))) : null,
   ].filter(Boolean);
 }
 
 // ======================================================================== Nota del mes
 function vistaNotas(ctx, P, mes) {
+  // Ronda U (50 #14, tarea 27): la nota del mes como TABLA. Cada persona sin nota lleva en su fila la nota, el hecho, la
+  // acción y «Guardar» (con «Deshacer» 8 s). Antes: un formulario al final, a 2.624 px, eligiendo a la persona en un menú.
   const puede = PUNTUAN.some(x => ctx.persona.puestos.includes(x));
   const filas = P.filter(p => p.estado === 'activo').map(p => {
     const n = p.apuntes.filter(a => a.tipo === 'nota' && (a.datos.mes || '').startsWith(mes)).slice(-1)[0];
     return { ...p, n };
   }).sort((a, b) => !!a.n - !!b.n || a.alias.localeCompare(b.alias, 'es'));
-  const per = h('select', {}, filas.filter(p => p.persona_id !== ctx.persona.id).map(p => h('option', { value: p.persona_id }, p.alias)));
-  const nota = h('input', { type: 'number', min: '1', max: '10', step: '1', value: '7' });
-  const hecho = h('textarea', { placeholder: 'El hecho que la justifica (con fecha o enlace)' });
-  const accion = h('input', { type: 'text', placeholder: 'Qué se le pide el mes que viene' });
+  const editable = p => puede && !p.n && p.persona_id !== ctx.persona.id && !ctx.soloLectura;
+  const campos = new Map();
+  const de = p => {
+    if (!campos.has(p.persona_id)) campos.set(p.persona_id, {
+      nota: h('input', { type: 'number', min: '1', max: '10', step: '1', placeholder: '1-10', 'aria-label': `Nota de ${p.alias} (1-10)`, style: { width: '72px', minHeight: 'var(--s-8)' } }),
+      hecho: h('input', { type: 'text', placeholder: 'El hecho (con fecha o enlace)', 'aria-label': `Hecho que justifica la nota de ${p.alias}`, style: { width: '100%', minWidth: '160px', minHeight: 'var(--s-8)' } }),
+      accion: h('input', { type: 'text', placeholder: 'Qué se le pide', 'aria-label': `Acción para ${p.alias}`, style: { width: '100%', minWidth: '140px', minHeight: 'var(--s-8)' } }),
+    });
+    return campos.get(p.persona_id);
+  };
+  const guardar = p => {
+    const c = de(p);
+    return guardarU({ ctx, texto: 'Guardar', hecho: 'Nota guardada', mini: true,
+      validar: () => { const n = Number(c.nota.value); return !(n >= 1 && n <= 10) ? 'La nota va de 1 a 10' : !c.hecho.value.trim() ? 'Falta el hecho' : null; },
+      hacer: () => { const n = Number(c.nota.value); return apuntar(ctx, 'nota', p.persona_id, `${n} · ${c.hecho.value.trim()}`, { mes, nota: n, hecho: c.hecho.value.trim(), accion: c.accion.value.trim() || null }); } });
+  };
   return [
-    avisoParcial('Puntúan Mili y las jefas (y Tomás); Cecilia consolida y vigila que esté hecha el día 5. Cada persona ve solo las suyas.', { tipo: 'info' }),
-    panel({ titulo: `Nota 1-10 de ${mesTxt(mes)}`, icono: 'star', sub: `${filas.filter(f => f.n).length} de ${filas.length} puntuadas · siempre con un hecho y una acción` },
+    panel({ titulo: `Nota 1-10 de ${mesTxt(mes)}`, icono: 'star', sub: `${filas.filter(f => f.n).length} de ${filas.length} puntuadas · siempre con un hecho y una acción · ${puede ? 'puntúa en la propia fila' : 'puntúan Mili, las jefas y Tomás'}` },
       tablaApilable({ filas, columnas: [
-        { clave: 'alias', titulo: 'Persona', principal: true },
-        { clave: 'puestos', titulo: 'Puesto', celda: p => h('span', { class: 'sub' }, puestosTxt(p)) },
-        { clave: 'n', titulo: 'Nota', num: true, celda: p => p.n ? chipEstado(p.n.datos.nota >= 7 ? 'verde' : p.n.datos.nota >= 5 ? 'ambar' : 'rojo', String(p.n.datos.nota)) : chipEstado('gris', 'sin nota') },
-        { clave: 'hecho', titulo: 'Hecho', celda: p => p.n ? p.n.datos.hecho : '—' },
-        { clave: 'quien', titulo: 'La puso', celda: p => p.n ? p.n.quien : '—' },
+        { clave: 'alias', titulo: 'Persona', principal: true, celda: p => h('span', {}, h('b', {}, p.alias), h('span', { class: 'sub', style: { display: 'block' } }, puestosTxt(p))) },
+        { clave: 'n', titulo: 'Nota', num: true, celda: p => p.n ? chipEstado(p.n.datos.nota >= 7 ? 'verde' : p.n.datos.nota >= 5 ? 'ambar' : 'rojo', String(p.n.datos.nota)) : editable(p) ? de(p).nota : chipEstado('gris', 'sin nota') },
+        { clave: 'hecho', titulo: 'Hecho', celda: p => p.n ? p.n.datos.hecho : editable(p) ? de(p).hecho : '—' },
+        { clave: 'accion', titulo: 'Acción', celda: p => p.n ? (p.n.datos.accion || '—') : editable(p) ? de(p).accion : '—' },
+        { clave: 'quien', titulo: '', celda: p => p.n ? h('span', { class: 'sub' }, `la puso ${p.n.quien}`) : editable(p) ? guardar(p) : null },
       ], vacio: { titulo: 'Sin personas' } })),
-    puede ? panel({ titulo: 'Puntuar', icono: 'editar', sub: 'Queda con tu nombre y la hora (simulado hasta publicar la app).' },
-      h('div', { class: 'pm-form' }, campo('Persona', per), campo('Nota (1-10)', nota), campo('Hecho', hecho, { ancho: true }), campo('Acción', accion, { ancho: true }),
-        botonConfirmar({ texto: 'Guardar nota', pregunta: '¿Guardar la nota?', confirmar: 'Sí, guardar', soloLectura: ctx.soloLectura,
-          alConfirmar: () => {
-            const n = Number(nota.value);
-            if (!(n >= 1 && n <= 10)) throw new Error('la nota va de 1 a 10');
-            if (!hecho.value.trim()) throw new Error('la nota necesita un hecho');
-            return apuntar(ctx, 'nota', per.value, `${n} · ${hecho.value.trim()}`, { mes, nota: n, hecho: hecho.value.trim(), accion: accion.value.trim() || null });
-          } }))) : null,
-  ].filter(Boolean);
+    avisoParcial('Puntúan Mili y las jefas (y Tomás); Cecilia consolida y vigila que esté hecha el día 5. Cada persona ve solo las suyas.', { tipo: 'info' }),
+  ];
 }
 
 // ======================================================================== Contratación
@@ -465,8 +480,8 @@ function vistaContratacion(ctx, C, P = []) {
         { clave: 'entra', titulo: 'Entra', celda: v => chipEstado(v.entra < hoy ? 'rojo' : dias(hoy, v.entra) <= 14 ? 'ambar' : 'gris', fmt.fecha(v.entra)) },
         { clave: 'fase', titulo: 'Fase', celda: v => h('span', { class: 'fila', title: fases.join(' → ') }, chipEstado('azul', v.fase), h('span', { class: 'sub' }, `paso ${fases.indexOf(v.fase) + 1} de ${fases.length}`)) },
         { clave: 'candidatos', titulo: 'Candidatos', num: true, celda: v => v.candidatos ?? chipEstado('gris', 'sin dato') },
-        { clave: 'acc', titulo: '', celda: v => botonConfirmar({ texto: 'Actualizar', mini: true, pregunta: `¿Marcar ${v.puesto} (oleada ${v.oleada}) en «entrevistas»?`, confirmar: 'Sí', soloLectura: ctx.soloLectura,
-          alConfirmar: () => apuntar(ctx, 'vacante', v.id, `${v.puesto} oleada ${v.oleada} → entrevistas`, { vacante: v.id, fase: 'entrevistas' }) }) },
+        { clave: 'acc', titulo: '', celda: v => botonDeshacer({ texto: 'Pasar a entrevistas', hecho: 'En entrevistas', soloLectura: ctx.soloLectura,
+          alHacer: () => apuntar(ctx, 'vacante', v.id, `${v.puesto} oleada ${v.oleada} → entrevistas`, { vacante: v.id, fase: 'entrevistas' }) }) },
       ] })),
     panel({ titulo: 'Calendario de reclutamiento', icono: 'cal', sub: 'Plan del 28-sep: todos formados antes de Accountex (18-19 nov)' },
       lineaTiempo(C.calendario.map(c => ({ fecha: c.fecha, titulo: c.texto, detalle: c.hasta ? `hasta el ${fmt.fecha(c.hasta)}` : null, estado: (c.hasta || c.fecha) < hoy ? 'verde' : c.fecha <= hoy ? 'ambar' : '' })))),
@@ -508,8 +523,8 @@ function pintarMiFicha(cont, ctx, p, ausencias, fr, mesNota, trimestre, otra = n
       mias.length ? tablaApilable({ filas: mias, columnas: [{ clave: 'tipo', titulo: 'Tipo', principal: true }, { clave: 'desde', titulo: 'Desde', celda: a => fmt.fecha(a.desde) }, { clave: 'hasta', titulo: 'Hasta', celda: a => fmt.fecha(a.hasta) }] })
         : vacio({ icono: 'cal', titulo: 'Sin ausencias registradas', texto: otra ? `${p.alias} las pide desde su ficha; las aprueba Cecilia y, si lleva clientes, Mili pone suplente.` : 'Pide aquí tus vacaciones; las aprueba Cecilia y, si llevas clientes, Mili pone suplente.' }),
       otra ? null : h('div', { class: 'pm-form', style: { marginTop: 'var(--s-3)' } }, campo('Tipo', tipo), campo('Desde', desde), campo('Hasta', hasta),
-        botonConfirmar({ texto: 'Pedir ausencia', pregunta: '¿Enviar la petición?', confirmar: 'Sí, pedir', soloLectura: ctx.soloLectura,
-          alConfirmar: () => apuntar(ctx, 'ausencia', p.persona_id, `${tipo.value} del ${desde.value} al ${hasta.value} (petición)`, { tipo: tipo.value, desde: desde.value, hasta: hasta.value, suplente: null, peticion: true }) }))),
+        guardarU({ ctx, texto: 'Pedir ausencia', hecho: 'Petición enviada a Cecilia', validar: () => (hasta.value < desde.value ? 'La fecha de fin es anterior al inicio' : null),
+          hacer: () => apuntar(ctx, 'ausencia', p.persona_id, `${tipo.value} del ${desde.value} al ${hasta.value} (petición)`, { tipo: tipo.value, desde: desde.value, hasta: hasta.value, suplente: null, peticion: true }) }))),
     panel({ titulo: `${T.tus} notas y 1:1`, icono: 'star', sub: otra ? `Solo las ven ${p.alias}, su jefa, Cecilia, Mili y Tomás` : 'Solo las ves tú, tu jefa, Cecilia, Mili y Tomás' },
       notas.length || unos.length ? lineaTiempo([...notas.map(n => ({ fecha: n.creada, titulo: `Nota ${n.datos.nota} · ${n.datos.mes}`, detalle: `${n.datos.hecho}${n.datos.accion ? ' · Acción: ' + n.datos.accion : ''}` })),
         ...unos.map(u => ({ fecha: u.creada, titulo: `1:1 con ${u.quien}`, detalle: u.datos.puntos }))].sort((a, b) => b.fecha.localeCompare(a.fecha)))
@@ -565,9 +580,9 @@ function vistaSalida(ctx, P, cola) {
         { clave: 'texto', titulo: 'Herramienta', principal: true, celda: f => h('span', {}, h('b', {}, f.texto), f.aplica ? null : h('span', { class: 'sub' }, ' · por si acaso')) },
         { clave: 'donde', titulo: 'Qué hacer', celda: f => h('span', { class: 'sub' }, f.donde) },
         { clave: 'href', titulo: 'Abrir en', celda: f => h('a', { class: 'bt mini', href: f.href, target: f.href.startsWith('#') ? null : '_blank', rel: f.href.startsWith('#') ? null : 'noopener' }, icono('ext'), f.href.startsWith('#') ? 'Abrir' : `${f.texto.split(' ')[0]} ↗`) },
-        { clave: 'hecho', titulo: 'Quitado', celda: f => f.hecho ? chipEstado('verde', 'quitado') : botonConfirmar({ texto: 'Marcar quitado', mini: true, soloLectura: ctx.soloLectura,
-          pregunta: `¿Acceso a ${f.texto} quitado a ${p.alias}?`, confirmar: 'Sí',
-          alConfirmar: () => apuntar(ctx, 'salida', p.persona_id, `Acceso a ${f.texto} quitado a ${p.alias}`, { herramienta: f.id }) }) },
+        { clave: 'hecho', titulo: 'Quitado', celda: f => f.hecho ? chipEstado('verde', 'quitado') : botonDeshacer({ texto: 'Marcar quitado', hecho: 'Quitado', soloLectura: ctx.soloLectura,
+          titulo: `Acceso a ${f.texto} quitado a ${p.alias}`,
+          alHacer: () => apuntar(ctx, 'salida', p.persona_id, `Acceso a ${f.texto} quitado a ${p.alias}`, { herramienta: f.id }) }) },
       ] }));
   };
   per.addEventListener('change', pintar);

@@ -139,13 +139,30 @@ REGLAS = [
      "regla": "La portada tarda más de 5 s en servirse (la velocidad real llega con PageSpeed).", "comprueba": "Baja de 5 s en la siguiente comprobación.", "fuente": "Monitor de webs"},
     {"id": "web_medicion", "dep": "web", "titulo": "Fallo de medición de Analytics", "gravedad": "media", "plazo_h": 72, "modulo": "seo-web", "ir": "seo-web",
      "regla": "La propiedad de Analytics no mide (banner de cookies, etiqueta o propiedad equivocada).", "comprueba": "Vuelven las sesiones en Analytics.", "fuente": "Revisión de Analytics del 2-oct (monitor de webs)"},
-    {"id": "web_modular", "dep": "web", "titulo": "Incidencia del gestor de webs", "gravedad": "media", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web",
-     "regla": "Modular DS avisa de caída, copia fallida, actualización pendiente o seguridad.", "comprueba": "Modular DS deja de avisar.", "fuente": "Modular DS (gestor de webs)"},
+    # Modular DS (N5, fuentes_modular/generar_modular.py → data/modular/webs.json › alertas): cuatro reglas, dueño = persona de web del cliente
+    {"id": "modular_caida", "dep": "web", "titulo": "Web caída (Modular)", "gravedad": "alta", "plazo_h": 4, "modulo": "seo-web", "ir": "seo-web/webs/{cid}",
+     "regla": "El monitor de Modular DS da la web por caída. Alta si tampoco responde desde la IP de RO; media si desde RO responde (monitor de Modular mal apuntado o bloqueo).", "comprueba": "Modular la vuelve a ver arriba en la siguiente lectura (cada hora).", "fuente": "Modular DS (gestor de webs)"},
+    {"id": "modular_copia", "dep": "web", "titulo": "Copia de seguridad atrasada (Modular)", "gravedad": "media", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web/webs/{cid}",
+     "regla": "La última copia buena tiene más de 2 días (alta desde 7 días o si no hay ninguna).", "comprueba": "Modular tiene una copia buena de menos de 2 días.", "fuente": "Modular DS (gestor de webs)"},
+    {"id": "modular_vulnerabilidad", "dep": "web", "titulo": "Vulnerabilidad crítica en la web (Modular)", "gravedad": "alta", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web/webs/{cid}",
+     "regla": "Modular DS ve al menos una vulnerabilidad de gravedad crítica en WordPress, un plugin o un tema.", "comprueba": "Modular deja de verla (componente actualizado o quitado).", "fuente": "Modular DS (gestor de webs)"},
+    {"id": "modular_certificado", "dep": "web", "titulo": "Certificado a punto de caducar (Modular)", "gravedad": "media", "plazo_h": 72, "modulo": "seo-web", "ir": "seo-web/webs/{cid}",
+     "regla": "El certificado que vigila Modular caduca en menos de 15 días (alta con 3 o menos). Si Modular no lo vigila, avisa el monitor de RO (regla «Certificado que caduca»).", "comprueba": "La fecha de caducidad pasa de 14 días.", "fuente": "Modular DS (gestor de webs)"},
+    {"id": "web_hosting", "dep": "web", "titulo": "Incidencia del hosting (Hostinger)", "gravedad": "media", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web",
+     "regla": "Hostinger avisa de web suspendida, certificado caducado o a punto de caducar (14 días; 3 = alta) o dominio del cliente que caduca (30 días; 7 = alta).", "comprueba": "La siguiente lectura de Hostinger deja de avisarlo.", "fuente": "Hostinger (API, solo lectura)"},
     # SEO
     {"id": "seo_rojo", "dep": "seo", "titulo": "Posiciones fuera del top 10 o caída de clics", "gravedad": "alta", "plazo_h": 72, "modulo": "seo-web", "ir": "seo-web/{cid}",
      "regla": "Una palabra del informe sale del top 10 (confirmado dos días) o los clics caen semana contra semana.", "comprueba": "El semáforo SEO del cliente deja de estar en rojo.", "fuente": "SEO (SE Ranking y Search Console)"},
     {"id": "seo_ambar", "dep": "seo", "titulo": "SEO a vigilar", "gravedad": "media", "plazo_h": 168, "modulo": "seo-web", "ir": "seo-web/{cid}",
      "regla": "Palabras que no aparecen en la comprobación, ninguna en el top 10 o clics a la baja.", "comprueba": "El semáforo SEO pasa a verde.", "fuente": "SEO (SE Ranking y Search Console)"},
+    # Ficha de Google (Google Business Profile · fuentes_gbp/generar_gbp.py → data/gbp/gbp.json › alertas). Dueño: SEO/ficha de
+    # Google del cliente (silla «seo»); copia al account del cliente (campo «copia_a»: la ve y le llega, sin ser dueño).
+    {"id": "gbp_resena", "dep": "seo", "titulo": "Reseña de 1-3 estrellas sin responder (ficha de Google)", "gravedad": "alta", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web/{cid}",
+     "regla": "Reseña de 1, 2 o 3 estrellas de los últimos 60 días sin respuesta del despacho. Alta pasadas 24 h; media antes.", "comprueba": "La siguiente lectura de Google trae la reseña respondida.", "fuente": "Google Business Profile (API, solo lectura)"},
+    {"id": "gbp_caida", "dep": "seo", "titulo": "Caída de llamadas o rutas desde la ficha de Google", "gravedad": "media", "plazo_h": 72, "modulo": "seo-web", "ir": "seo-web/{cid}",
+     "regla": "Llamadas o rutas desde la ficha caen más de un 30 % semana contra semana (alta desde un 60 %), con al menos 8 la semana anterior.", "comprueba": "La semana siguiente vuelve a menos de un 30 % de caída.", "fuente": "Google Business Profile (API, solo lectura)"},
+    {"id": "gbp_perfil", "dep": "seo", "titulo": "Ficha de Google suspendida, sin control o cambiada por Google", "gravedad": "alta", "plazo_h": 24, "modulo": "seo-web", "ir": "seo-web/{cid}",
+     "regla": "Google da la ficha por suspendida o deshabilitada (alta), sin control del negocio, marcada como cerrada, o ha cambiado datos por su cuenta (media).", "comprueba": "La siguiente lectura de Google la da en regla y sin cambios suyos.", "fuente": "Google Business Profile (API, solo lectura)"},
     # CRM
     {"id": "crm_sin_tocar", "dep": "crm", "titulo": "Leads sin tocar más de 24 h", "gravedad": "alta", "plazo_h": 24, "modulo": "salud-crm", "ir": "salud-crm/{sub}",
      "regla": "Leads de formulario o anuncio sin ningún intento apuntado en GoHighLevel pasadas 24 h.", "comprueba": "El recuento de leads sin tocar del cliente baja a 0.", "fuente": "Salud del CRM (GoHighLevel)"},
@@ -209,6 +226,10 @@ REGLAS = [
      "regla": "Decisión pendiente: 48 h para Tomás, 24 h para Coti.", "comprueba": "Tiene respuesta.", "fuente": "Decisiones y rastro"},
     {"id": "dir_sin_account", "dep": "direccion", "titulo": "Cliente sin account", "gravedad": "media", "plazo_h": 48, "modulo": "ajustes", "ir": "ajustes",
      "regla": "El cliente no tiene account principal vigente en asignaciones.", "comprueba": "Tiene account en Ajustes › Asignaciones.", "fuente": "Verdad única (asignaciones)"},
+    {"id": "hosting_cuenta", "dep": "direccion", "titulo": "Renovación o dominio de RO en Hostinger", "gravedad": "media", "plazo_h": 72, "modulo": "ajustes", "ir": "ajustes/conexiones/hostinger",
+     "regla": "Suscripción de Hostinger que vence en 30 días sin renovación automática (7 = alta), o dominio o web de la cuenta sin cliente caducado, suspendido o a punto de caducar.", "comprueba": "La siguiente lectura de Hostinger deja de avisarlo (la app no renueva nada).", "fuente": "Hostinger (API, solo lectura)"},
+    {"id": "hosting_vps", "dep": "conexiones", "titulo": "Servidor (VPS) de Hostinger con problemas", "gravedad": "alta", "plazo_h": 4, "modulo": "ajustes", "ir": "ajustes/conexiones/hostinger",
+     "regla": "VPS parado o con error, CPU media de la última hora ≥ 80 % (95 = alta), memoria ≥ 92 %, disco ≥ 80 % (90 = alta), copia de más de 8 días (15 = alta), operación fallida en 48 h o malware. Incluye el VPS del gestor de contraseñas: la app solo lo lee.", "comprueba": "La siguiente lectura de Hostinger lo da en verde.", "fuente": "Hostinger (API, solo lectura)"},
     # conexiones (A8): las manda ya hechas la salud de conexiones (N11) en el formato de N4; aquí no se recalcula nada
     {"id": "conexion_caida", "dep": "conexiones", "titulo": "Conexión caída o a punto de caducar", "gravedad": "alta", "plazo_h": 4, "modulo": "ajustes", "ir": "ajustes/conexiones",
      "regla": "Una conexión que la app usa está en rojo, o su llave caduca en 21 días o menos (salud de conexiones).", "comprueba": "La siguiente prueba de la conexión sale en verde.", "fuente": "Salud de conexiones (Ajustes)"},
@@ -389,22 +410,117 @@ def de_webs():
 
 
 def de_modular():
-    """Carril N5 (Modular DS): cuando entregue su lector, sus incidencias de web entran aquí sin tocar este motor.
-    Formato esperado (cualquiera de los dos): data/modular/modular.json → {"incidencias": [{cliente_id, tipo, texto, desde, url}]}
-    o data/webs_modular/webs_modular.json con la misma lista."""
-    for rel in ("modular/modular", "modular/incidencias", "webs_modular/webs_modular"):
-        doc = leer(rel)
-        if doc:
-            antes = len(ALERTAS)
-            for i, x in enumerate(doc.get("incidencias") or []):
-                cid = x.get("cliente_id") if x.get("cliente_id") in NOMBRE_CLI else None
-                alerta("web_modular", f"{x.get('cliente_id') or 'x'}:{x.get('tipo') or i}", x.get("texto") or "Modular DS avisa de un problema en la web.",
-                       cid=cid, desde=fecha(x.get("desde")), gravedad={"rojo": "alta", "ambar": "media"}.get(x.get("gravedad"), None),
-                       abrir_en=[{"herramienta": "modular", "texto": "Abrir en Modular DS", "url": x["url"]}] if x.get("url") else [])
-            coherencia("Incidencias de Modular DS", "Modular DS (gestor de webs)", len(doc.get("incidencias") or []), len(ALERTAS) - antes)
-            return fuente("Modular DS (gestor de webs)", rel, doc, len(ALERTAS) - antes)
-    FUENTES.append({"modulo": "Modular DS (gestor de webs)", "fichero": "data/modular/modular.json", "leido": False, "alertas": 0, "generado": None,
-                    "nota": "Esperando el lector de solo lectura de Modular DS: en cuanto deje sus incidencias, entran aquí."})
+    """Carril N5 (Modular DS): fuentes_modular/generar_modular.py → data/modular/webs.json › «alertas» (formato de FORMATO.md).
+    Entran cuatro: caída (web_caida), copia de más de 2 días o ninguna (copia_atrasada, copia_nunca), vulnerabilidad CRÍTICA
+    (vulnerabilidad en rojo) y certificado de menos de 15 días (certificado). El resto (actualizaciones, salud, enlaces) se
+    trabaja desde el tablero de Webs, sin alerta. Dueño: la persona de web del cliente (silla «web»); sin cliente o sin
+    persona, el jefe del departamento de web. Van a #avisos-web por avisos.py, como todas las del departamento."""
+    doc = leer("modular/webs")
+    if not doc or (doc.get("_meta") or {}).get("estado") != "conectado":
+        nota = ((doc or {}).get("_meta") or {}).get("que_hacer") or "Esperando data/modular/webs.json (fuentes_modular/generar_modular.py)."
+        return FUENTES.append({"modulo": "Modular DS (gestor de webs)", "fichero": "data/modular/webs.json", "leido": bool(doc), "alertas": 0,
+                               "generado": ((doc or {}).get("_meta") or {}).get("generado"), "nota": f"Modular sin conectar: {nota}"})
+    antes = len(ALERTAS)
+    nombre_web = {str(w.get("modular_id")): (w.get("cliente") or w.get("nombre") or w.get("dominio")) for w in (doc.get("webs") or []) + (doc.get("sin_cliente") or [])}
+    regla_de = {"web_caida": "modular_caida", "copia_nunca": "modular_copia", "copia_atrasada": "modular_copia", "certificado": "modular_certificado"}
+    esperadas = 0
+    for x in doc.get("alertas") or []:
+        regla = regla_de.get(x.get("regla"))
+        if x.get("regla") == "vulnerabilidad" and x.get("gravedad") == "rojo":
+            regla = "modular_vulnerabilidad"
+        if not regla:
+            continue
+        esperadas += 1
+        mid = str(x.get("id") or "").split(":")[-1]
+        cid = x.get("cliente_id") if x.get("cliente_id") in NOMBRE_CLI else None
+        quien = NOMBRE_CLI.get(cid) or nombre_web.get(mid) or x.get("web")
+        alerta(regla, f"{cid or x.get('web') or mid}", f"{quien}: {x.get('titulo', 'aviso de Modular')} · {x.get('texto') or ''}".strip(" ·"),
+               cid=cid, desde=fecha(x.get("desde")) or fecha(x.get("detectado")),
+               gravedad={"rojo": "alta", "ambar": "media"}.get(x.get("gravedad")),
+               abrir_en=[{"herramienta": "modular", "texto": "Abrir en Modular DS", "url": x.get("fuente_enlace") or "https://app.modulards.com/"}],
+               ir=f"seo-web/webs/{cid}" if cid else "seo-web/webs",
+               detalle=[x.get("que_hacer") and f"Qué hacer: {x['que_hacer']}", f"Web: {x.get('web')}" if x.get("web") else None],
+               extra={"web": x.get("web"), "modular_id": mid or None})
+    coherencia("Alertas de Modular DS (caída, copia > 2 días, vulnerabilidad crítica, certificado < 15 días)", "Modular DS (gestor de webs)",
+               esperadas, len(ALERTAS) - antes)
+    return fuente("Modular DS (gestor de webs)", "modular/webs", doc, len(ALERTAS) - antes)
+
+
+def de_hostinger():
+    """Hostinger (fuentes_hostinger/generar_hostinger.py → data/hostinger/hostinger.json · «alertas», formato N4).
+    Web de cliente → departamento web (persona de web del cliente) · VPS → Conexiones (Agus, técnico) · renovaciones y
+    dominios sin cliente → Dirección (Tomás). Sin token: ninguna alerta y la fuente dice «sin clave»."""
+    try:   # pruebas: RO_ALERTAS_HOSTINGER = fichero simulado (generar_hostinger.py --simulado --salida …)
+        doc = json.loads(Path(os.environ["RO_ALERTAS_HOSTINGER"]).read_text()) if os.environ.get("RO_ALERTAS_HOSTINGER") else leer("hostinger/hostinger")
+    except Exception:
+        doc = None
+    try:   # VPS y renovaciones viven aparte (cuenta.json, solo dirección, operaciones y técnico)
+        rc = (os.environ["RO_ALERTAS_HOSTINGER"].removesuffix(".json") + "_cuenta.json") if os.environ.get("RO_ALERTAS_HOSTINGER") else None
+        cta = json.loads(Path(rc).read_text()) if rc else leer("hostinger/cuenta")
+    except Exception:
+        cta = None
+    if doc and cta:
+        doc = {**doc, "alertas": (doc.get("alertas") or []) + (cta.get("alertas") or [])}
+    if doc and (doc.get("_meta") or {}).get("estado") == "simulado" and os.environ.get("RO_ALERTAS_HOSTINGER"):
+        doc["_meta"]["estado"] = "conectado"
+    antes = len(ALERTAS)
+    if not doc or (doc.get("_meta") or {}).get("estado") != "conectado":
+        nota = (doc or {}).get("_meta", {}).get("que_hacer") or "Esperando data/hostinger/hostinger.json."
+        return FUENTES.append({"modulo": "Hostinger (hosting, VPS y dominios)", "fichero": "data/hostinger/hostinger.json", "leido": bool(doc),
+                               "alertas": 0, "generado": (doc or {}).get("_meta", {}).get("generado"), "nota": "Sin clave · " + nota})
+    xs = [x for x in doc.get("alertas") or [] if isinstance(x, dict) and x.get("id")]
+    grav = {"rojo": "alta", "ambar": "media"}
+    for x in xs:
+        cid = x.get("cliente_id") if x.get("cliente_id") in NOMBRE_CLI else None
+        det = [x.get("titulo"), x.get("que_hacer") and f"Qué hacer: {x['que_hacer']}"]
+        ab = [{"herramienta": "hostinger", "texto": "Abrir hPanel", "url": x.get("fuente_enlace") or "https://hpanel.hostinger.com/"}]
+        if x.get("departamento") == "web" and cid:
+            alerta("web_hosting", f"{cid}:{x.get('regla')}:{x.get('objeto')}", x.get("texto") or "Hostinger avisa de un problema.", cid=cid,
+                   desde=fecha(x.get("desde")), gravedad=grav.get(x.get("gravedad")), abrir_en=ab, detalle=det, cifra=x.get("cifra"),
+                   extra={"web": x.get("objeto")})
+        elif x.get("departamento") == "conexiones":
+            alerta("hosting_vps", f"{x.get('regla')}:{x.get('objeto')}", x.get("texto") or "Hostinger avisa de un problema en un VPS.",
+                   desde=fecha(x.get("desde")), gravedad=grav.get(x.get("gravedad")), abrir_en=ab, detalle=det, cifra=x.get("cifra"),
+                   dueno="agustina")
+        else:
+            alerta("hosting_cuenta", f"{x.get('regla')}:{x.get('objeto')}", x.get("texto") or "Hostinger avisa de algo de la cuenta.",
+                   desde=fecha(x.get("desde")), gravedad=grav.get(x.get("gravedad")), abrir_en=ab, detalle=det, cifra=x.get("cifra"))
+    coherencia("Incidencias de Hostinger", "Hostinger (hosting, VPS y dominios)", len(xs), len(ALERTAS) - antes)
+    fuente("Hostinger (hosting, VPS y dominios)", "hostinger/hostinger", doc, len(ALERTAS) - antes)
+
+
+def de_gbp():
+    """Ficha de Google (fuentes_gbp/generar_gbp.py → data/gbp/gbp.json · «alertas», formato N4). Dueño: SEO/ficha de Google
+    del cliente; copia al account («copia_a»). Sin aprobación de Google: ninguna alerta y la fuente dice «pendiente»."""
+    try:   # pruebas: RO_ALERTAS_GBP = fichero simulado (generar_gbp.py --simulado --salida …)
+        doc = json.loads(Path(os.environ["RO_ALERTAS_GBP"]).read_text()) if os.environ.get("RO_ALERTAS_GBP") else leer("gbp/gbp")
+    except Exception:
+        doc = None
+    est = ((doc or {}).get("_meta") or {}).get("estado")
+    if est == "simulado" and os.environ.get("RO_ALERTAS_GBP"):
+        est = "conectado"
+    if est != "conectado":
+        nota = ((doc or {}).get("_meta") or {}).get("texto") or "Esperando data/gbp/gbp.json (fuentes_gbp/generar_gbp.py)."
+        return FUENTES.append({"modulo": "Ficha de Google (Business Profile)", "fichero": "data/gbp/gbp.json", "leido": bool(doc), "alertas": 0,
+                               "generado": ((doc or {}).get("_meta") or {}).get("generado"), "nota": nota})
+    antes = len(ALERTAS)
+    regla_de = {"resena_mala": "gbp_resena", "caida_llamadas": "gbp_caida", "caida_rutas": "gbp_caida",
+                "perfil_suspendido": "gbp_perfil", "datos_cambiados": "gbp_perfil"}
+    grav = {"rojo": "alta", "ambar": "media"}
+    xs = [x for x in doc.get("alertas") or [] if isinstance(x, dict) and x.get("id") and regla_de.get(x.get("regla"))
+          and x.get("cliente_id") in NOMBRE_CLI]
+    for x in xs:
+        cid = x["cliente_id"]
+        a = alerta(regla_de[x["regla"]], f"{cid}:{x.get('regla')}:{x.get('objeto')}", x.get("texto") or "La ficha de Google avisa de algo.",
+                   cid=cid, desde=fecha(x.get("desde")) or fecha(x.get("detectado")), gravedad=grav.get(x.get("gravedad")),
+                   abrir_en=[{"herramienta": "gbp", "texto": "Abrir Google Business", "url": x.get("fuente_enlace") or "https://business.google.com/locations"}],
+                   detalle=[x.get("titulo"), x.get("que_hacer") and f"Qué hacer: {x['que_hacer']}"], cifra=x.get("cifra"), dueno=x.get("dueno_id"),
+                   vence=x.get("vence"), extra={"resena_id": x.get("resena_id"), "copia_a": [p for p in (x.get("copia_a") or []) if p in PER]})
+        if a.get("dueno_id") in a.get("copia_a", []):
+            a["copia_a"] = [p for p in a["copia_a"] if p != a["dueno_id"]]
+    coherencia("Alertas de la ficha de Google (reseñas 1-3★, caídas > 30 %, ficha suspendida o cambiada)", "Ficha de Google (Business Profile)",
+               len(xs), len(ALERTAS) - antes)
+    fuente("Ficha de Google (Business Profile)", "gbp/gbp", doc, len(ALERTAS) - antes)
 
 
 # =================================================================== 2 · SEO
@@ -556,7 +672,7 @@ def de_accounts():
     for c in VERDAD.get("clientes", []):
         cid = c["cliente_id"]
         if c.get("gravedad") == "critico":
-            alerta("acc_critico", cid, f"{c['nombre']} está en crítico: {c['motivos'][0] if c.get('motivos') else 'ver motivos'}.", cid=cid,
+            alerta("acc_critico", cid, f"{c['nombre']} es un cliente crítico: {c['motivos'][0] if c.get('motivos') else 'ver motivos'}.", cid=cid,
                    detalle=c.get("motivos", [])[1:4], abrir_en=[abrir(cid, "clickup"), abrir(cid, "desk")])
         if c.get("sin_reunion_mes_pasado"):
             alerta("acc_sin_reunion", cid, f"{c['nombre']}: ninguna reunión el mes pasado (última, {c.get('ultima_reunion') or 'sin dato'}).", cid=cid,
@@ -844,6 +960,10 @@ def rutas_de(a):
         return f"decisiones/reloj/{a['id'].split(':', 1)[1]}", "Abrir la decisión", True, "decisiones", None   # R15a
     if t == "dir_sin_account":
         return (f"ajustes/asignaciones/{cid}" if cid else "ajustes/asignaciones"), "Asignar account", bool(cid), ficha("resumen"), None   # R15a
+    if t.startswith("gbp_"):   # SEO › detalle del cliente (pestaña de la ficha de Google); quien no ve SEO, a su ficha › Web
+        return (f"seo-web/{cid}" if cid else "seo-web"), "Ver su ficha de Google", bool(cid), ficha("web"), None
+    if t in ("hosting_vps", "hosting_cuenta"):   # Ajustes › Conexiones › Hostinger (la tarjeta de la conexión)
+        return "ajustes/conexiones/hostinger", "Ver Hostinger", True, "conexiones/hostinger", None
     if t == "conexion_caida":
         if a.get("conexion"):   # R15a: Ajustes › Conexiones abre la tarjeta por ruta; el técnico, su pantalla «Conexiones»
             return f"ajustes/conexiones/{a['conexion']}", "Abrir la conexión", True, f"conexiones/{a['conexion']}", None
@@ -1061,7 +1181,8 @@ def visibles(p, lista=None):
     out = []
     for a in (ALERTAS if lista is None else lista):
         suya = a["dueno_id"] == p["id"] or a.get("responsable_ahora") == p["id"]
-        if not (todo or suya or a["departamento"] in deps or (a["departamento"] == "rrhh" and "rrhh" in p.get("puestos", []))):
+        copia = p["id"] in (a.get("copia_a") or [])          # ficha de Google: el account del cliente la ve (sin ser dueño)
+        if not (todo or suya or copia or a["departamento"] in deps or (a["departamento"] == "rrhh" and "rrhh" in p.get("puestos", []))):
             continue
         if a["departamento"] == "rrhh" and a["tipo"] != "rrhh_no_imputa" and not (todo or "rrhh" in p.get("puestos", [])):
             continue      # personas en alerta, cumpleaños y aniversarios: Cecilia, Mili y Tomás
@@ -1134,7 +1255,7 @@ def bloque_mi_dia(vis, yo):
 # =================================================================== main
 def main():
     memoria = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
-    de_webs(); de_modular(); de_seo(); de_crm(); de_captacion(); de_redes(); de_accounts(); de_altas(); de_admin()
+    de_webs(); de_modular(); de_hostinger(); de_gbp(); de_seo(); de_crm(); de_captacion(); de_redes(); de_accounts(); de_altas(); de_admin()
     proximos = de_rrhh()
     de_direccion()
     de_salud()

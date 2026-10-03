@@ -42,3 +42,8 @@
 
 ## R16b (3-oct)
 - `probar_alertas.py` al día: arranca su propio `servir.py` (copia de local.db, `--bind 127.0.0.1`, puerto libre de `RO_PUERTOS_PRUEBA`, por defecto 9155-9159); tarjeta = `article[data-alerta]` (ya no `.al-card`); la setter recibe 403 en su fichero de alertas y ve «no es de tu puesto» (correcto). 154 comprobaciones en verde.
+
+## Puesta al día 3-oct-2026 · fuentes nuevas del motor
+- `de_modular()`: 4 reglas (web caída, copia atrasada o ninguna, vulnerabilidad crítica, certificado a < 15 días) → #avisos-web. Ver `_ESTADO_modular.md`.
+- `de_hostinger()`: lista, sin datos hasta que Tomás cree el token. Ver `_ESTADO_hostinger.md`.
+- `de_gbp()`: en curso (ficha de Google, pendiente de aprobación de Google).

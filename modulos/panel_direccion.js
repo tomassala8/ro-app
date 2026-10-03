@@ -24,6 +24,18 @@
 // son rangos que se puedan recalcular, así que no usa el periodo común (usa_periodo): «desde el 1-ago» y «desde el 14-sep» se perderían.
 
 import { plegarSecundarias } from '../componentes.js';   // V2-E (M17): plegado común en el móvil
+// Paneles v4 (48 §4.1, encargo del coordinador 3-oct) y Ronda U (50): arriba un RESUMEN nativo con la cifra que manda
+// (beneficio del último mes cerrado), la cuota contra el objetivo de diciembre, seis tarjetas con su línea de 12 meses,
+// comparación y umbral con fuente, «Lo que pide tu decisión» con su botón al lado, el puente de la cuota en cascada y los
+// clientes (altas y bajas, cohortes). Mismas cifras que Finanzas (beneficio ene-ago 93.492 €): no se recalcula nada, se leen
+// finanzas/direccion, cuadre, impagos, finanzas (admin) y ventas_ro. El panel portado (captación, empresa, original) sigue
+// detrás, en sus chips.
+import { tarjetaKpi, selectorComparar, lineaComparacion, minilinea, cascada, barraObjetivo, estadoObjetivo, barrasGanadoPerdido, mapaCalor,
+  listaLoPrimero, enlaceFuente } from '../componentes.js';
+import { FUENTES, UMBRALES, ESTADO, fuentesAlPie, mesMas, puenteCuota, separador } from './dinero_v4.js';
+import { botonDeshacer } from './_deshacer.js';
+import { consejoCompacto, filasFlexibles } from './_trabajo.js';
+const filasLP = (...a) => filasFlexibles(listaLoPrimero(...a));   // Ronda U: botones debajo cuando no caben, a cualquier ancho
 import { h, icono, fmt, tile, tiles, chipsFiltro, pestanas, panel, vacio, avisoParcial, frescura, selectorPeriodo, botonConfirmar,
   tablaApilable, chipEstado, colorCifra, cifraPrincipal, barraProgreso, grafico, menuMas, vacioLinea, esqueleto } from '../componentes.js';
 
@@ -48,6 +60,7 @@ const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNa
 const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
 const MUNDOS = [
+  { valor: 'resumen', texto: 'Resumen', icono: 'hoy' },
   { valor: 'captacion', texto: 'La captación', icono: 'target' },
   { valor: 'empresa', texto: 'La empresa', icono: 'euro' },
 ];
@@ -1033,13 +1046,14 @@ async function pintar(cont, ctx) {
   }
   const zona = h('div', { class: 'pila' });
   let actual = null;
-  const mundo = chipsFiltro({ opciones: MUNDOS, valor: 'captacion', clave: 'panel-direccion-mundo', etiqueta: 'Qué quieres ver', alCambiar: v => cambiar(v) });
+  const mundo = chipsFiltro({ opciones: MUNDOS, valor: 'resumen', clave: 'panel-direccion-mundo-v4', etiqueta: 'Qué quieres ver', alCambiar: v => cambiar(v) });
   async function cambiar(v) {
     actual = v;
     zona.replaceChildren();
     if (v === 'empresa') await pintarEmpresa(zona, ctx, ind);
     else if (v === 'original') await pintarOriginal(zona, ctx, ind);
-    else await pintarCaptacion(zona, ctx, ind);
+    else if (v === 'captacion') await pintarCaptacion(zona, ctx, ind);
+    else await pintarResumenV4(zona, ctx, { irA: x => { mundo.querySelectorAll('button').forEach(b => { if (b.textContent.startsWith(MUNDOS.find(m => m.valor === x)?.texto || '¿')) b.click(); }); } });
   }
   const mas = menuMas({ texto: 'Panel original', etiqueta: 'Panel original y descarga', items: [
     { texto: 'Panel original y descarga', icono: 'capas', alPulsar: () => cambiar('original') },
@@ -1047,8 +1061,153 @@ async function pintar(cont, ctx) {
   ] });
   cont.append(h('div', { class: 'fila' }, mundo, mas), zona, pieFuentes(ind));
   const inicial = mundo.valor();
-  await cambiar(inicial === 'original' ? 'captacion' : inicial);
+  await cambiar(inicial === 'original' ? 'resumen' : inicial);
   void actual;
+}
+
+// ===================================================================== Resumen v4 (48 §4.1)
+const MES_L = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+const nomMesV = m => (m ? MES_L[Number(String(m).slice(5, 7)) - 1] : '—');
+const pctV = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? '—' : `${fmt.num(v, d)} %`);
+const eurV = v => (v === null || v === undefined ? '—' : `${v < 0 ? '−' : ''}${fmt.eur(Math.abs(v))}`);
+const planDeV = t => { const m = /([\d.]+)\s*→\s*([\d.]+)\s*→\s*([\d.]+)/.exec(t || ''); return m ? m.slice(1, 4).map(x => Number(x.replace(/\./g, ''))) : []; };
+
+async function pintarResumenV4(zona, ctx, { irA } = {}) {
+  zona.append(esqueleto({ lineas: 2, tarjetas: 4 }));
+  const leer = n => ctx.datosModulo(n).catch(() => null);
+  const [f, cu, im, fin, vro] = await Promise.all([leerFinanzas(ctx), leer('finanzas/cuadre'), leer('finanzas/impagos'), leer('finanzas/finanzas'), ctx.veModulo('ventas-ro') ? leer('ventas_ro/ventas_ro') : null]);
+  const dir = Array.isArray(f?.direccion) ? f.direccion[0] : null;
+  if (!dir) { zona.replaceChildren(vacioLinea('Sin Finanzas de dirección: las cifras del resumen salen solo de allí y no se han podido leer.', { icono: 'alert', quien: 'Agus' })); return; }
+  const n = dir.numero || {}, cr = dir.cuota_recurrente || {}, cj = dir.caja || {}, eq = dir.equipo || {}, kpi = dir.kpi || {};
+  const a = fin?.admin || {}, imp = im?.resumen || {};
+  const B = cu?.beneficio?.meses || [];
+  const porMes = new Map(B.map(x => [x.m, x]));
+  const ultM = n.mes || '2026-08', prevM = mesMas(ultM, -1), anioM = mesMas(ultM, -12);
+  const m12 = Array.from({ length: 12 }, (_, i) => mesMas(ultM, i - 11));
+  const pygDe = new Map((dir.pyg || []).map(x => [x.m, x]));
+  const mb3 = m => { const w = [mesMas(m, -2), mesMas(m, -1), m].map(x => pygDe.get(x)).filter(Boolean); return w.length === 3 ? (100 * w.reduce((s2, x) => s2 + x.mb, 0)) / w.reduce((s2, x) => s2 + x.ing, 0) : null; };
+  const eqDe = new Map((cu?.equipo_mes || []).map(x => [x.m, x]));
+  const pesoDe = m => { const e = eqDe.get(m), b = porMes.get(m); return e && b?.ing && !b.estimado && e.estado !== 'provisional' ? (100 * e.usado) / b.ing : null; };
+  const [planOct, planNov] = planDeV(cr.plan_texto);
+  const P = puenteCuota(dir.puente || [], 6);
+  const pDe = new Map((dir.puente || []).map(x => [x.m, x]));
+  const perdidaDe = m => { const x = pDe.get(m); return x?.ini ? (100 * (-Math.min(0, x.bajadas || 0) - Math.min(0, x.bajas || 0))) / x.ini : null; };
+  const mesesV = vro?.meses || {};
+  const cpcDe = m => { const x = mesesV[m]; return x?.firmados ? x.inversion / x.firmados : null; };
+  const mVro = Object.keys(mesesV).sort().filter(m => mesesV[m]?.hasta && mesesV[m].hasta < (ctx.hoy || '9999')).pop() || '2026-09';
+
+  // ---- 1 · la cifra que manda + 2 · hacia el objetivo de diciembre
+  const comp = selectorComparar({ clave: 'panel-direccion-comparar', alCambiar: c => pintarCifras(c) });
+  const zonaCifras = h('div', { class: 'pila' });
+  const cifraQueManda = c => {
+    const ref = c === 'mes_ant' ? { ref: porMes.get(prevM)?.bai, texto: `frente a ${nomMesV(prevM)}` }
+      : c === 'anio_ant' ? { ref: porMes.get(anioM)?.bai, texto: `frente a ${nomMesV(anioM)} de ${anioM.slice(0, 4)} (estimado)` }
+        : { ref: n.plan_res, texto: `frente al plan del mes (${eurV(n.plan_res)})` };
+    return panel({ titulo: `Beneficio de ${nomMesV(ultM)} · la cifra que manda`, icono: 'grafico', sub: 'Último mes cerrado, con los gastos convertidos a euros factura a factura. El mismo número que Finanzas y Mi día.' },
+      h('div', { class: 'cuerpo pila' },
+        cifraPrincipal({ etiqueta: `Margen ${pctV(n.margen_pct)} sobre ${fmt.eur(n.ingresos)} de ingresos`, valor: eurV(n.beneficio), estado: colorCifra('beneficio', n.beneficio),
+          comparacion: lineaComparacion({ num: n.beneficio, ...ref, modo: 'abs', formato: v => fmt.eur(v), mejorSi: 'alto' }) || 'sin dato para comparar' }),
+        h('p', { class: 'sub' }, `Con el gasto sin factura: ${eurV(n.beneficio_real)} · enero-agosto: ${eurV(dir.anio?.bai)} (${pctV(kpi.bai)}) · ${eurV(dir.anio?.real)} con el gasto sin factura.`),
+        minilinea(m12.map(m => porMes.get(m)?.bai ?? null), { x: m12, formato: v => eurV(v), etiqueta: 'Beneficio de los 12 últimos meses (2025, estimado)', alto: 40 }),
+        h('p', { class: 'kpi-pie' }, h('span', {}, `Norte: ${n.objetivo_texto || '30.000 € de beneficio al mes a final de 2027'}`), h('a', { class: 'bt mini', href: '#/finanzas' }, icono('derecha', { clase: 's' }), 'Abrir Finanzas'))));
+  };
+  const panelCuota = panel({ titulo: 'Hacia el objetivo de diciembre', icono: 'sube', sub: cr.plan_texto || 'Cuota mensual contra el plan del mes y el objetivo de diciembre' },
+    h('div', { class: 'cuerpo pila' },
+      h('p', { class: 'fila' }, h('b', {}, `${fmt.eur(cr.cuota_mes)} al mes`), h('span', { class: 'sub' }, `${planOct ? `${fmt.pct((100 * cr.cuota_mes) / planOct)} del plan del mes · ` : ''}${fmt.pct((100 * cr.cuota_mes) / (cr.objetivo_dic || 1))} del objetivo de diciembre`)),
+      barraObjetivo({ etiqueta: 'Cuota del mes', valor: cr.cuota_mes, objetivo: planOct || cr.objetivo_dic, max: Math.max(cr.objetivo_dic || 0, planNov || 0) * 1.04, formato: v => fmt.eur(v),
+        etiquetaValor: 'Hoy', etiquetaObjetivo: 'Plan del mes', extra: cr.si_firman_mes ? [{ valor: cr.si_firman_mes, texto: `Si firman los ${(cr.pendientes || []).length}` }] : [],
+        marcas: [planNov ? { valor: planNov, texto: 'Plan de noviembre' } : null, cr.objetivo_dic ? { valor: cr.objetivo_dic, texto: 'Objetivo de diciembre' } : null].filter(Boolean) }),
+      h('p', { class: 'kpi-umbral' }, h('span', {}, `Umbral: ${UMBRALES.cuota_objetivo.texto}`), ' · ', enlaceFuente(FUENTES.databox.href, FUENTES.databox.fuente)),
+      h('div', { class: 'fila' }, ctx.veModulo('ventas-ro') && (cr.pendientes || []).length ? h('a', { class: 'bt mini pri', href: '#/ventas-ro' }, icono('phone', { clase: 's' }), `Llamar a los ${cr.pendientes.length} contratos pendientes`) : null,
+        h('a', { class: 'bt mini', href: '#/finanzas' }, icono('euro', { clase: 's' }), 'Ver la cuota línea a línea'))));
+
+  // ---- 3 · seis tarjetas
+  const tarjetas = c => {
+    const mbU = mb3(ultM), pesoU = eq.peso_ingresos ?? pesoDe(ultM);
+    const mesesCuo = Array.from({ length: 12 }, (_, i) => mesMas(ultM, i - 11));
+    const mV = Object.keys(mesesV).sort().filter(m => m <= mVro).slice(-12);
+    const cpc = cpcDe(mVro);
+    return h('div', { class: 'tiles', 'data-pd-tarjetas': '' },
+      tarjetaKpi({ icono: 'escudo', etiqueta: 'Caja y meses de caja', valor: fmt.num(cj.meses, 1), unidad: `meses · ${fmt.eur(cj.total)}`, num: cj.meses, estado: ESTADO.meses_caja(cj.meses), mejorSi: 'alto', comparar: c,
+        comparaciones: { mes_ant: { ref: cj.meses_31ago, texto: 'frente al 31-ago', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` }, anio_ant: { sinDato: 'Sin saldo de bancos de hace un año en la app' }, objetivo: { ref: 2, texto: 'frente al mínimo de 2 meses', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` } },
+        contexto: `Caja de hoy ÷ gasto medio ${fmt.eur(cj.gasto_medio)} al mes, si no entrara nada`, umbral: UMBRALES.meses_caja, fuente: { texto: 'Holded en vivo', href: '#/finanzas/cobros' }, alPulsar: () => { location.hash = '#/finanzas'; }, ir: 'Ver la caja a 90 días' }),
+      tarjetaKpi({ icono: 'euro', etiqueta: `Ingresos de ${nomMesV(ultM)}`, valor: fmt.eur(n.ingresos), num: n.ingresos, estado: '', mejorSi: 'alto', comparar: c,
+        serie: m12.map(m => porMes.get(m)?.ing ?? null), serieX: m12, formatoSerie: v => fmt.eur(v),
+        comparaciones: { mes_ant: { ref: porMes.get(prevM)?.ing, texto: `frente a ${nomMesV(prevM)}` }, anio_ant: { ref: porMes.get(anioM)?.ing, texto: `frente a ${nomMesV(anioM)} de ${anioM.slice(0, 4)}` }, objetivo: { ref: pygDe.get(ultM)?.plan_ing, texto: 'frente al plan del mes' } },
+        contexto: `Enero-agosto: ${fmt.eur(dir.anio?.ing)} · sin IVA`, umbral: { texto: 'Sin umbral propio: se lee contra el plan del mes', colorea: false }, fuente: { texto: 'Holded', href: '#/finanzas' } }),
+      tarjetaKpi({ icono: 'sube', etiqueta: 'Margen bruto · media de 3 meses', valor: pctV(mbU), num: mbU, estado: ESTADO.margen_bruto(mbU), mejorSi: 'alto', comparar: c,
+        serie: m12.map(mb3), serieX: m12, formatoSerie: v => pctV(v), umbralSerie: 35,
+        comparaciones: { mes_ant: { ref: mb3(prevM), texto: `frente a la media hasta ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025 no tiene el coste de entrega fiable' }, objetivo: { ref: 35, texto: 'frente al 35 %', modo: 'puntos' } },
+        contexto: `Ingresos menos el equipo de entrega · enero-agosto: ${pctV(kpi.mb)}`, umbral: UMBRALES.margen_bruto, fuente: { texto: 'cierre de Sofía', href: '#/finanzas/cuadre' } }),
+      tarjetaKpi({ icono: 'eq', etiqueta: 'Peso del equipo sobre ingresos', valor: pctV(pesoU), num: pesoU, estado: ESTADO.peso_equipo(pesoU), mejorSi: 'bajo', comparar: c,
+        serie: m12.map(m => (m >= '2026-01' ? pesoDe(m) : null)), serieX: m12, formatoSerie: v => pctV(v), umbralSerie: 55,
+        comparaciones: { mes_ant: { ref: pesoDe(prevM), texto: `frente a ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025: el equipo va repartido por ingresos' }, objetivo: { ref: 55, texto: 'frente al 55 %', modo: 'puntos' } },
+        contexto: `Año: ${pctV(kpi.peso_equipo_anio)} · solo agregado, nunca sueldos de una persona`, umbral: UMBRALES.peso_equipo, fuente: { texto: 'cierre de Sofía, solo totales', href: '#/finanzas/cuadre' } }),
+      tarjetaKpi({ icono: 'baja', etiqueta: 'Pérdida de cuota al mes', valor: pctV(P.perdida_pct), num: P.perdida_pct, estado: '', mejorSi: 'bajo', comparar: c,
+        serie: mesesCuo.map(perdidaDe), serieX: mesesCuo, formatoSerie: v => pctV(v),
+        comparaciones: { mes_ant: { num: perdidaDe(ultM), ref: perdidaDe(prevM), texto: `${nomMesV(ultM)} frente a ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: 'Sin la media de hace un año' }, objetivo: { sinDato: 'Sin objetivo firmado de pérdida de cuota' } },
+        contexto: `Media de 6 meses: rebajas ${pctV(P.rebajas_pct)} + bajas ${pctV(P.bajas_pct)} · subidas +${pctV(P.subidas_pct)} · 12 meses: −${fmt.eur(P.rebajas_12)} en rebajas, −${fmt.eur(P.bajas_12)} en bajas`,
+        umbral: UMBRALES.perdida_cuota, fuente: { texto: 'puente de Holded', href: '#/finanzas/ingresos' } }),
+      tarjetaKpi({ icono: 'target', etiqueta: `Coste de captar · ${nomMesV(mVro)}`, valor: cpc === null ? null : fmt.eur(cpc), num: cpc, sinDato: 'sin firmados en el mes', unidad: cpc === null ? '' : `${fmt.eur(mesesV[mVro]?.inversion)} ÷ ${mesesV[mVro]?.firmados}`,
+        estado: cpc === null ? '' : colorCifra('coste_cliente', cpc), mejorSi: 'bajo', comparar: c, serie: mV.map(cpcDe), serieX: mV, formatoSerie: v => fmt.eur(v), umbralSerie: 700,
+        comparaciones: { mes_ant: { ref: cpcDe(mesMas(mVro, -1)), texto: `frente a ${nomMesV(mesMas(mVro, -1))}`, formato: v => fmt.eur(v) }, anio_ant: { sinDato: 'El embudo de RO empieza en 2026' }, objetivo: { ref: 700, texto: 'frente a los 700 € de la regla', modo: 'abs', formato: v => fmt.eur(v) } },
+        contexto: 'Solo publicidad de Meta ÷ firmados (el coste completo de ventas aún no está separado)', umbral: { texto: 'RO: verde ≤ 700 € · ámbar hasta 840 € · rojo por encima · parar por encima de 2.500 €' },
+        fuente: { texto: 'Meta y GHL', href: '#/ventas-ro' }, alPulsar: () => { location.hash = '#/ventas-ro'; }, ir: 'Abrir Ventas de RO' }));
+  };
+  const pintarCifras = c => zonaCifras.replaceChildren(h('div', { class: 'dos iguales' }, cifraQueManda(c), panelCuota), tarjetas(c));
+
+  // ---- 5 · lo que pide tu decisión (máximo 5, con su botón al lado)
+  const vencidos60 = imp.mas_60 ?? a.impagos?.mas_60 ?? 0;
+  const sinAlta = a.firmas_sin_alta || [];
+  const decide = [
+    vencidos60 ? { estado: 'rojo', icono: 'alert', motivo: `${fmt.plural(vencidos60, 'recibo', 'recibos')} con más de 60 días`, detalle: `${fmt.eur(imp.vencido ?? a.impagos?.vencido_total)} vencidos en total · a 60 días decides tú: cortar, plan de pago o darlo por perdido.`,
+      botones: [h('a', { class: 'bt mini pri', href: '#/finanzas/impagos' }, icono('derecha', { clase: 's' }), 'Decidir los impagos')] } : null,
+    ...sinAlta.slice(0, 2).map(x => ({ estado: 'rojo', icono: 'doc', motivo: `${x.nombre} · firmado sin alta en facturación`, detalle: `Firmado el ${x.firma} · account ${x.account || 'sin account'}: no entra en la cuota que factura Sofía.`,
+      botones: [h('a', { class: 'bt mini', href: `#/finanzas/cobros/${encodeURIComponent(x.cliente_id)}` }, icono('derecha', { clase: 's' }), 'Abrir el cobro')] })),
+    cj.meses < 2 ? { estado: cj.meses < 1 ? 'rojo' : 'ambar', icono: 'escudo', motivo: `Caja para ${fmt.num(cj.meses, 1)} meses si no entrara nada`, detalle: 'Referencia de agencias: mínimo 2 meses de gasto fijo (3-4 si hay concentración).',
+      botones: [h('a', { class: 'bt mini', href: '#/finanzas' }, icono('derecha', { clase: 's' }), 'Ver la caja a 90 días')] } : null,
+    P.rebajas_pct > P.bajas_pct ? { estado: 'ambar', icono: 'baja', motivo: `Las rebajas de cuota pesan más que las bajas (${pctV(P.rebajas_pct)} frente a ${pctV(P.bajas_pct)} al mes)`, detalle: `−${fmt.eur(P.rebajas_12)} en 12 meses. ¿Reales (descuentos, cambios de plan) o ruido (prorrateos)?`,
+      botones: [botonDeshacer({ texto: 'Pedir a Mili que lo revise', hecho: 'Pedido a Mili', soloLectura: ctx.soloLectura,
+        alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'revisar_rebajas', objeto: 'rebajas_cuota', texto: `Revisar con los accounts las rebajas de cuota: ${pctV(P.rebajas_pct)} al mes, −${fmt.eur(P.rebajas_12)} en 12 meses. ¿Reales o ruido?`, vista_previa: { para: 'Mili', aviso: 'en su Mi día', desde: 'panel-direccion' } }); return 'Pedido a Mili (simulado)'; } })] } : null,
+  ].filter(Boolean).slice(0, 5);
+  const panelDecide = panel({ titulo: 'Lo que pide tu decisión', icono: 'flag', sub: 'Del dinero, lo que no se arregla solo · cada una con su botón' },
+    filasLP(decide, { vacio: { titulo: 'Nada del dinero espera tu decisión', porque: 'Sin impagos de 60 días, firmados sin alta ni caja por debajo de 2 meses.', celebrar: true } }));
+
+  // ---- 4 · de dónde sale el cambio de la cuota (cascada del último mes del puente)
+  const ultP = (dir.puente || []).at(-1);
+  const panelPuente = ultP ? panel({ titulo: `De dónde sale el cambio de la cuota · ${nomMesV(ultP.m)}`, icono: 'capas', sub: 'Cuota del mes anterior + altas + subidas − rebajas − bajas = cuota del mes (cuadra al euro con Holded)' },
+    h('div', { class: 'cuerpo pila' },
+      cascada({ zoom: true, formato: v => fmt.eur(v), pasos: [
+        { texto: `Cuota de ${nomMesV(mesMas(ultP.m, -1))}`, valor: ultP.ini, tipo: 'total' }, { texto: 'Altas', valor: ultP.altas || 0 }, { texto: 'Subidas', valor: ultP.subidas || 0, estado: 'sube2' },
+        { texto: 'Rebajas', valor: ultP.bajadas || 0, estado: 'ambar' }, { texto: 'Bajas', valor: ultP.bajas || 0 }, { texto: `Cuota de ${nomMesV(ultP.m)}`, valor: ultP.fin, tipo: 'total' }] }),
+      h('p', { class: 'kpi-pie' }, h('span', {}, 'Cómo se dibuja: '), enlaceFuente(FUENTES.chartmogul_mov.href, FUENTES.chartmogul_mov.fuente), enlaceFuente(FUENTES.pigment.href, FUENTES.pigment.fuente),
+        h('a', { class: 'bt mini', href: '#/finanzas/ingresos' }, icono('derecha', { clase: 's' }), 'Ver el puente de 12 meses')))) : null;
+
+  // ---- 7 · clientes: altas y bajas de 12 meses y cohortes
+  const AB = (dir.altas_bajas || []).filter(x => !x.curso).slice(-12);
+  const coh = await leer('dinero_cliente/cohortes');
+  const filasDe = blk => (blk?.filas || []).map(x => ({ etiqueta: `${nomMesV(x.m).slice(0, 3)} ${x.m.slice(2, 4)}`, n: x.n, valores: x.pct }));
+  const panelClientes = panel({ titulo: 'Clientes: altas, bajas y cuánto se quedan', icono: 'users', sub: 'Cada mes, los que entran sobre cero y los que se van debajo · y, por mes de alta, el % que sigue (un solo color: más oscuro = más se queda)' },
+    h('div', { class: 'cuerpo pila' },
+      AB.length ? barrasGanadoPerdido({ x: AB.map(x => x.m), formato: v => fmt.num(v), ganado: [{ nombre: 'Altas', clase: 'sube', y: AB.map(x => x.altas || 0) }], perdido: [{ nombre: 'Bajas', clase: 'baja', y: AB.map(x => -(x.bajas || 0)) }],
+        detalle: i => [`Clientes al cierre: ${AB[i]?.fin ?? '—'}`] }) : vacioLinea('Sin la serie de altas y bajas.'),
+      coh ? mapaCalor({ clave: 'panel-direccion-cohortes', columnas: Array.from({ length: coh.columnas || 13 }, (_, i) => `Mes ${i}`), titulo: 'Retención por mes de alta', vistas: [
+        { valor: 'clientes', texto: '% de clientes', icono: 'users', filas: filasDe(coh.clientes), media: coh.clientes?.media, nota: coh.clientes?.texto },
+        { valor: 'cuota', texto: '% de la cuota de entrada', icono: 'euro', filas: filasDe(coh.cuota_entrada), media: coh.cuota_entrada?.media, nota: coh.cuota_entrada?.texto }] }) : vacioLinea('Sin las cohortes de Dinero por cliente.'),
+      h('div', { class: 'fila' }, ctx.veModulo('en-rojo') ? h('a', { class: 'bt mini', href: '#/en-rojo' }, icono('alert', { clase: 's' }), 'Ver los clientes en riesgo hoy') : null,
+        ctx.veModulo('dinero-cliente') ? h('a', { class: 'bt mini', href: '#/dinero-cliente' }, icono('users', { clase: 's' }), 'Ver la rentabilidad por cliente') : null)));
+
+  zona.replaceChildren(
+    h('div', { class: 'dos', 'data-pd-arriba': '' }, h('div', { class: 'pila' }, h('div', { class: 'fila' }, comp), zonaCifras), panelDecide),
+    separador('El porqué de las cifras'),
+    h('div', { class: 'dos iguales' }, panelPuente, panel({ titulo: 'Captación de hoy', icono: 'target', sub: 'Coste por cliente firmado, publicidad, de qué anuncio y agenda: el panel portado' },
+      h('div', { class: 'cuerpo pila' }, h('p', { class: 'sub' }, 'La cadena del coste (publicidad → citas → firmados) con sus cinco fotos de periodo, tal cual el panel de resultados.'),
+        h('div', { class: 'fila' }, h('button', { type: 'button', class: 'bt mini pri', on: { click: () => irA?.('captacion') } }, icono('derecha', { clase: 's' }), 'Ver la captación'),
+          ctx.veModulo('ventas-ro') ? h('a', { class: 'bt mini', href: '#/ventas-ro' }, icono('phone', { clase: 's' }), 'Ventas de RO: a quién llamar') : null)))),
+    panelClientes,
+    fuentesAlPie(['baker', 'ami', 'ami_personal', 'parakeeto', 'scoro', 'saascapital', 'databox', 'chartmogul_mov', 'chartmogul_coh', 'pigment']));
+  pintarCifras(comp.valor());
+  consejoCompacto(zona, zona.firstElementChild);
 }
 
 // X6: los títulos de sección van como el resto de H2 de la app (15/700, en minúscula), no en mayúsculas de cabecera de tabla.

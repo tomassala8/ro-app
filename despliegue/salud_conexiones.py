@@ -368,8 +368,29 @@ def p_windsor():
 
 
 def p_modular():
-    _, _, ms = pedir("https://api.modulards.com/api/public/v1/sites?per_page=1", {"Authorization": "Bearer " + secreto("modulards_api_key"), "Accept": "application/json"})
-    return {"ms": ms, "detalle": "responde · webs legibles"}
+    """La misma lectura barata que ~/RO_HERRAMIENTAS/modular/md.py probar: /sites/count («per_page» no existe: daba 422)."""
+    d, _, ms = pedir("https://api.modulards.com/api/public/v1/sites/count",
+                     {"Authorization": "Bearer " + secreto("modulards_api_key"), "Accept": "application/json", "User-Agent": "RO-modular/1.0"})
+    n = ((d or {}).get("meta") or {}).get("count")
+    return {"ms": ms, "detalle": f"responde · {n} webs legibles con la clave de solo lectura" if n is not None else "responde · webs legibles"}
+
+
+def p_hostinger():
+    """La misma lectura barata que ~/RO_HERRAMIENTAS/hostinger/hg.py: lista de VPS (GET; el token no es de solo lectura,
+    pero la app solo hace GET)."""
+    d, _, ms = pedir("https://developers.hostinger.com/api/vps/v1/virtual-machines",
+                     {"Authorization": "Bearer " + secreto("hostinger_api_token"), "Accept": "application/json", "User-Agent": "RO-hostinger-lectura/1.0"})
+    n = len(d) if isinstance(d, list) else None
+    return {"ms": ms, "detalle": f"responde · {n} VPS legibles (la app solo lee)" if n is not None else "responde"}
+
+
+def p_gbp():
+    """Google Business Profile (ficha de Google): la misma lectura barata que ~/RO_HERRAMIENTAS/google/gbp.py comprobar
+    (lista de cuentas, GET). Mientras Google no apruebe el proyecto (cuota 0) sale «Pendiente de aprobación de Google»."""
+    gbp = _lector("google", "gbp")
+    t0 = time.time()
+    n = len(gbp.cuentas(gbp.acceso()))
+    return {"ms": int((time.time() - t0) * 1000), "detalle": f"responde · {n} cuenta(s) de Business Profile (la app solo lee)"}
 
 
 def p_anthropic():
@@ -517,6 +538,18 @@ CONEXIONES = [
     dict(id="modular", nombre="Modular DS (webs)", grupo="Webs", icono="mundo_web", llaves=["modulards_api_key"], prueba=p_modular,
          dueno="tomas", critica=False, que_da="caídas, copias, certificados y actualizaciones de las webs", modulos="Webs (N5), Alertas",
          renovar={"url": "https://app.modulards.com/", "donde": "Ajustes › API"}, pegar=f"{H}/modular/pegar.sh", caducidad="no caduca"),
+    dict(id="hostinger", nombre="Hostinger (hosting, VPS y dominios)", grupo="Webs", icono="mundo_web", llaves=["hostinger_api_token"], prueba=p_hostinger,
+         dueno="tomas", critica=False, que_da="estado de los VPS (también el del gestor de contraseñas), webs suspendidas, certificados, dominios y renovaciones",
+         modulos="Webs, Alertas", renovar={"url": "https://hpanel.hostinger.com/profile/api", "donde": "Perfil › API › crear token (con caducidad)"},
+         pegar=f"{H}/hostinger/pegar.sh", caducidad="la que se le ponga al crearla",
+         limite="90 consultas por minuto; el token NO es de solo lectura (Hostinger no lo permite): la app solo hace GET"),
+    dict(id="gbp", nombre="Google Business Profile (ficha de Google)", grupo="Google", icono="pin", llaves=["google_client_id", "google_client_secret", "google_gbp_refresh_token"],
+         prueba=p_gbp, dueno="tomas", critica=False, que_da="reseñas, llamadas, rutas, clics y estado de la ficha de Google de cada cliente",
+         modulos="SEO › Ficha de Google, Ficha del cliente, Alertas",
+         renovar={"url": "https://support.google.com/business/contact/api_default", "donde": "Google: formulario «Application for Basic API Access» (aprobación previa; 60 días de ficha verificada y web)"},
+         pegar="python3 ~/RO_HERRAMIENTAS/google/gbp.py instalar (cuando Google apruebe; elegir la cuenta que gestiona las fichas)",
+         caducidad="llave permanente mientras no se revoque · token de acceso de 1 h que se renueva solo",
+         limite="0 consultas hasta que Google apruebe; luego 300 por minuto. El permiso (business.manage) NO es de solo lectura: la app solo hace GET"),
     dict(id="anthropic", nombre="Anthropic (IA de la app)", grupo="IA", icono="spark", llaves=["anthropic_api_key"], prueba=p_anthropic, env_alt="ANTHROPIC_API_KEY",
          dueno="tomas", critica=False, que_da="borradores de Desk y copiloto del account", modulos="IA (N3)",
          renovar={"url": "https://console.anthropic.com/settings/keys", "donde": "Console › API keys"},
@@ -550,6 +583,8 @@ def llave_presente(c, nombre):
 
 def traducir(e, c):
     """(tipo, texto en llano, a quién le toca: 'llave' o 'tecnico')."""
+    if type(e).__name__ == "PendienteAprobacion":      # Google Business Profile: cuota 0 hasta que Google apruebe
+        return "pendiente", "Pendiente de aprobación de Google: el proyecto tiene cuota 0 hasta que Google conteste el formulario de acceso.", "llave"
     code = getattr(e, "code", None)
     if isinstance(e, urllib.error.HTTPError) or isinstance(code, int):
         if code == 401:
@@ -620,7 +655,7 @@ def evaluar(c):
         quien, paso = que_hacer(c, tipo, a_quien)
         color = "rojo" if c["critica"] else "ambar"
         fila.update({"color": color, "estado": tipo, "ok": False, "error_llano": llano,
-                     "titular": {"sin_permiso": "Sin permiso", "cupo": "Cupo agotado", "rechazo": "Rechaza la consulta"}.get(tipo, "No responde" if a_quien == "tecnico" else "La llave no vale")
+                     "titular": {"sin_permiso": "Sin permiso", "cupo": "Cupo agotado", "rechazo": "Rechaza la consulta", "pendiente": "Pendiente de aprobación de Google"}.get(tipo, "No responde" if a_quien == "tecnico" else "La llave no vale")
                                 + ("" if c["critica"] else " · hoy la app no la usa"),
                      "detalle": llano, "que_hacer": paso, "quien_id": quien})
         return fila

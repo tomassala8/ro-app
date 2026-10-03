@@ -984,7 +984,7 @@ def _v2c1():
         d6.append("Google Ads: el dueño no es «lo hace Tomás, lo comprueba Agus»")
     if "duenoConexion" not in js:
         d6.append("Captación no lee el dueño de la conexión de Conexiones")
-    if "sinTerminal(c.que_hacer)" not in cj:
+    if not _re.search(r"sinTerminal\(\w+\.que_hacer\)", cj):   # 3-oct: la variable puede llamarse c, f…
         d6.append("Conexiones enseña el «qué hacer» con órdenes de terminal")
     if _re.search(r"lo conecta Agus", js):
         d6.append("Captación dice «lo conecta Agus»")

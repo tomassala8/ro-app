@@ -95,6 +95,43 @@ Todavía no se ha desplegado nada ni se ha creado ninguna cuenta.
 
 ---
 
+## El vigía: que siempre haya alguien mirando (3-oct)
+
+`despliegue/vigia.py` comprueba **cada 10 minutos** que todo funciona, **aparte de la tubería** (la vigila a ella también). Lo enseña la pantalla **«Salud del sistema»** (Agus, Mili y Tomás).
+
+- **Qué mira.** Las 27 conexiones (una lectura barata cada una, sin gastar créditos; la llave de GoHighLevel que rota no se usa nunca, solo se mira su última rotación) y la app por dentro: la app web, la última vuelta de la tubería, envíos pendientes o fallidos, cambios sin reflejar en ClickUp y conflictos, la IA frente a su tope (en %), el disco, la base y la copia del día.
+- **Avisos** en `#avisos-altas`, agrupados: cuando algo pasa a rojo, a Agus; si sigue más de 1 h, a Mili y Tomás; cuando vuelve, aviso de recuperación. Nunca uno cada 10 minutos.
+- **Ajustes** en `data/vigia/config.json` (`cada_min`, `escalar_min`, cada cuánto se prueba lo que tiene cupo corto). Variables: `RO_VIGIA_APP_URL` (dirección interna de la app; vacío = no se mira), `RO_VIGIA_LATIDO_URL` (latido de Better Stack: si el vigía se para, avisa desde fuera).
+
+### En el Mac (local)
+
+```bash
+cd ~/Downloads/APP_RO_ROLES_Y_PERMISOS_2026-10-02/30_APP_PROTOTIPO
+python3 despliegue/vigia.py --bucle          # en una pestaña del Terminal; Ctrl+C para parar
+python3 despliegue/vigia.py                  # una sola vuelta
+python3 despliegue/vigia.py --solo clickup   # solo una fila (lo mismo que «Probar ahora»)
+python3 despliegue/vigia.py --prueba         # simulacro de caídas sobre una COPIA de la base (no avisa a nadie de verdad)
+```
+
+El bucle lanza cada vuelta en su propio proceso: si una se cuelga, la siguiente entra igual. Si dos coinciden, la segunda sale sin hacer nada (código 75).
+
+### En el servidor (Coolify): tarea programada cada 10 min
+
+En el recurso de la app › **Scheduled Tasks** › **Add**:
+
+| Campo | Valor |
+|---|---|
+| Name | `vigia` |
+| Command | `python3 despliegue/vigia.py --quien coolify` |
+| Frequency | `*/10 * * * *` |
+| Container | el de la app (`app`): así escribe en el mismo `data/vigia/` que lee la web |
+
+Variables del recurso: `RO_VIGIA_APP_URL=http://localhost:<PUERTO>/` y, cuando exista, `RO_VIGIA_LATIDO_URL` (un latido nuevo en Better Stack con periodo de 10 min y gracia de 15). La zona horaria del servidor en Coolify debe ser `Europe/Madrid` para que el cron cuadre con las horas de la pantalla (las horas del vigía ya van en hora de Madrid aunque no lo esté).
+
+Con cron normal (Hetzner sin Coolify): `*/10 * * * * cd /app && python3 despliegue/vigia.py --quien cron >> despliegue/estado/registros/vigia.log 2>&1`.
+
+---
+
 ## Volver atrás
 
 | Qué | Cómo | Quién |

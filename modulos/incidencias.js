@@ -18,6 +18,12 @@ import {
   h, fmt, tile, tiles, listaLoPrimero, chipEstado, chipsFiltro, vacio, botonConfirmar, avisoParcial, logoCliente, panel,
   frescura, icono, iniciales, pestanas, tablaDensa, copiar, avisoFlotante, barraEtapas, embudoBarras, fechas,
 } from '../componentes.js';
+// Ronda U (50 #4, #14): «Deshacer» en vez de «¿Seguro?» y el ciclo (avisar, escalar, resolver, no aplica) en una barra
+// fija ARRIBA del detalle (antes a 1.417 px). «Escalar» es el verbo de la fila cuando toca escalar: abre el detalle con el
+// formulario ya abierto (#/incidencias/<id>/escalar).
+import { botonDeshacer } from './_deshacer.js';
+import { barraAcciones, consejoCompacto, filasFlexibles } from './_trabajo.js';
+const filasLP = (...a) => filasFlexibles(listaLoPrimero(...a));   // Ronda U: botones debajo cuando no caben, a cualquier ancho
 import { conTickets, sinCodigos } from './_legible.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -225,13 +231,15 @@ export default {
       ctx.veModulo('alertas') ? ctx.datosModulo(`alertas/p_${ctx.persona.id}`).catch(() => null) : Promise.resolve(null),
       ctx.servidor && ctx.veModulo('alertas') ? ctx.api('acciones?modulo=alertas').then(r => r.acciones || []).catch(() => []) : Promise.resolve([]),
     ]).then(([A, acc]) => ({ A, acc }));
+    let abrirPrimero = ctx.params[1] === 'escalar' ? 'escalar_coti' : ['avisar', 'resolver', 'no_aplica', 'escalar_tomas'].includes(ctx.params[1]) ? ctx.params[1] : null;
     const rehacer = async () => {
       const S = crearEstado(ctx, D, await cargarAcciones());
+      S.abrirUnaVez = abrirPrimero; abrirPrimero = null;   // solo la primera vez: al guardar, el detalle se repinta sin el formulario
       S.rehacer = rehacer;
       S.alertas = alertas;
       const y = window.scrollY;
       cont.replaceChildren();
-      if (ctx.params[0]) pintarFicha(cont, S, ctx.params[0]);
+      if (ctx.params[0]) pintarFicha(cont, S, ctx.params[0], { abrir: S.abrirUnaVez });
       else pintarInicio(cont, S);
       for (const el of cont.children) el.style.minWidth = '0';
       window.scrollTo({ top: y });
@@ -312,7 +320,7 @@ function panelAlertasWeb(S, yaArriba = new Set()) {
   const sub = `${Object.keys(DEP_WEB).filter(cuenta).map(k => `${DEP_WEB[k]} ${cuenta(k)}`).join(' · ') || 'Nada abierto'}${abiertas.filter(pasada).length ? ` · ${abiertas.filter(pasada).length} con el plazo pasado` : ''} · lo más grave arriba`;
   const sec = panel({ titulo: 'Alertas de web y SEO', icono: 'campana', sub,
     acciones: ctx.veModulo('alertas') ? h('a', { class: 'bt mini', href: '#/alertas' }, icono('derecha'), `Ver las ${fmt.num(todas.length)} en Alertas`) : null },
-  listaLoPrimero(abiertas.slice(0, 5).map(a => {
+  filasLP(abiertas.slice(0, 5).map(a => {
     const chip = CHIP_ALERTA[a.est];
     return {
       estado: a.gravedad === 'alta' || pasada(a) ? 'rojo' : 'ambar', icono: a.departamento === 'web' ? 'globe' : 'buscar',
@@ -320,8 +328,8 @@ function panelAlertasWeb(S, yaArriba = new Set()) {
       detalle: [h('span', {}, conTickets(enDias(a.motivo))), h('span', { class: 'sub', style: { display: 'block' } }, `${DEP_WEB[a.departamento]} · lo lleva ${S.nom(a.responsable_ahora || a.dueno_id)}${a.venceD ? ` · ${pasada(a) ? 'plazo pasado' : 'vence'} ${fh(a.venceD)}` : ''}`), chip ? chipEstado(chip[0], chip[1]) : null],
       botones: [
         a.abrir?.[0]?.url ? h('a', { class: 'bt mini', href: a.abrir[0].url, target: '_blank', rel: 'noopener' }, icono('ext'), a.abrir[0].texto || 'Abrir en la herramienta') : null,
-        puede && a.est !== 'lo_tengo' ? botonConfirmar({ texto: 'Lo tengo', pregunta: '¿Te encargas tú?', confirmar: 'Sí', mini: true, alConfirmar: marcar(a, 'lo_tengo') }) : null,
-        puede ? botonConfirmar({ texto: 'Resuelta', pregunta: '¿Resuelta? Se comprueba con el dato siguiente', confirmar: 'Sí', mini: true, alConfirmar: marcar(a, 'resuelta') }) : null,
+        puede && a.est !== 'lo_tengo' ? botonDeshacer({ texto: 'Lo tengo', hecho: 'Lo tienes tú', alHacer: marcar(a, 'lo_tengo') }) : null,
+        puede ? botonDeshacer({ texto: 'Resuelta', hecho: 'Resuelta', titulo: 'Se comprueba con el dato siguiente', alHacer: marcar(a, 'resuelta') }) : null,
         puede ? noAplicaAlerta(a, marcar) : null,
       ],
     };
@@ -378,7 +386,7 @@ function pintarInicio(cont, S) {
   ];
   if (todo && (D.vistos || []).length) lista.push({ id: 'vistos', texto: 'Quién vio primero', icono: 'ojo' });
   if (todo) lista.push({ id: 'mes', texto: 'El mes', icono: 'cal' });
-  cont.append(pestanas({
+  const pest = pestanas({
     pestanas: lista, clave: 'incidencias.pestana', etiqueta: 'Apartados de incidencias',
     pintar: (id, zona) => {
       if (id === 'hoy') pintarHoy(zona, S, mias);
@@ -389,7 +397,9 @@ function pintarInicio(cont, S) {
       else if (id === 'mes') pintarMes(zona, S);
       for (const el of zona.children) el.style.minWidth = '0';
     },
-  }));
+  });
+  cont.append(pest);
+  consejoCompacto(cont, pest);   // Ronda U (molde): el consejo de la IA, plegado y debajo de la lista
 }
 
 // ------------------------------------------------------------------ Para Tomás
@@ -400,7 +410,7 @@ function pintarParaTomas(cont, S) {
   S.enParaTomas = new Set(paraTomas.map(i => i.id));   // A1: lo de aquí no se repite en «Lo primero hoy»
   if (!paraTomas.length && !delRastro.length) return;
   cont.append(panel({ titulo: 'Para Tomás', icono: 'crown', sub: 'Lo que Operaciones te ha escalado: problema, recomendación y reloj de 48 h. Si vence, sale en rojo.' },
-    paraTomas.length ? listaLoPrimero(paraTomas.map(i => ({
+    paraTomas.length ? filasLP(paraTomas.map(i => ({
       estado: i.relojEsc.vencido ? 'rojo' : 'ambar', icono: 'sube',
       motivo: `${i.cliente || i.afectado || 'Sistema'} · ${i.titulo}`,
       // V2 (barrido v1): los tickets RO-#### del texto, como enlace a ese correo en la Bandeja (nunca un número suelto)
@@ -413,6 +423,8 @@ function pintarParaTomas(cont, S) {
 const ultimaEsc = i => [...i.evs].reverse().find(e => e.paso === 'escalada') || {};
 
 // ------------------------------------------------------------------ Incidencias (hoy)
+/** Ronda U (50 #14): el verbo de la fila según el estado → [ruta, texto, icono]. */
+const VERBO_FILA = { toca_escalar: ['escalar', 'Escalar', 'sube'], sin_avisar: ['avisar', 'Avisar', 'send'], escalada_vencida: ['avisar', 'Reiterar', 'send'], reabierta: ['avisar', 'Avisar', 'send'] };
 function pintarHoy(zona, S, mias) {
   const { ctx, D, incs } = S;
   const todo = ctx.nivel === 'todo';
@@ -463,13 +475,16 @@ function pintarHoy(zona, S, mias) {
     .slice(0, 7);
   const enParaTomas = urgTodas.length - urgTodas.filter(i => !yaArriba.has(i.id)).length;
   zona.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: `${todo ? 'Lo que vuelve arriba: avisado hace más de 2 días sin cambio, sin avisar, reabierto por el dato o escalado sin respuesta (máximo 7)' : 'Lo tuyo que pide respuesta'}${enParaTomas ? ` · ${enParaTomas} más ya están en «Para Tomás», arriba` : ''}` },
-    listaLoPrimero(urg.map(i => ({
+    filasLP(urg.map(i => ({
       estado: ESTADO[i.estado].c === 'rojo' ? 'rojo' : 'ambar', icono: ICONO_ORIGEN[i.origen] || 'alert',
       motivo: `${i.cliente || i.afectado || 'Centralita y Desk'} · ${ESTADO[i.estado].t}`,
       detalle: `${i.titulo}. ${sugerencia(i)}`,
       botones: [
         todo ? h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(mensajeListo(i, S), 'Mensaje copiado') } }, icono('copy'), 'Mensaje listo') : null,
-        h('a', { class: 'bt mini pri', href: `#/incidencias/${i.id}`, 'aria-label': `Abrir la incidencia de ${i.cliente || i.afectado || 'la centralita'}` }, icono('derecha'), 'Abrir la incidencia'),
+        // Ronda U (50 #14): cuando toca escalar, el verbo de la fila es «Escalar» (abre el detalle con el formulario abierto)
+        // y cuando falta el aviso, «Avisar» (abre el detalle con el aviso escrito listo para copiar)
+        todo && VERBO_FILA[i.estado] && i.abierta ? h('a', { class: 'bt mini pri', href: `#/incidencias/${i.id}/${VERBO_FILA[i.estado][0]}`, 'aria-label': `${VERBO_FILA[i.estado][1]}: ${i.cliente || i.afectado || 'la centralita'}` }, icono(VERBO_FILA[i.estado][2]), VERBO_FILA[i.estado][1]) : null,
+        h('a', { class: `bt mini${todo && VERBO_FILA[i.estado] && i.abierta ? '' : ' pri'}`, href: `#/incidencias/${i.id}`, 'aria-label': `Abrir la incidencia de ${i.cliente || i.afectado || 'la centralita'}` }, icono('derecha'), todo && VERBO_FILA[i.estado] ? 'Abrir' : 'Abrir la incidencia'),
       ],
     })), { vacio: { titulo: 'Nada vuelve arriba hoy', porque: 'Todo lo avisado tiene menos de 2 días o ya está escalado con reloj.', celebrar: true } })));
   zona.append(tiles(t));
@@ -575,7 +590,7 @@ function mensajeListo(i, S) {
 }
 
 // ================================================================== ficha de una incidencia
-function pintarFicha(cont, S, id) {
+function pintarFicha(cont, S, id, { abrir = null } = {}) {
   const { ctx, D, incs, nom } = S;
   const i = incs.find(x => x.id === id);
   const volver = h('a', { class: 'bt', href: '#/incidencias' }, icono('volver'), 'Volver a Incidencias');
@@ -589,6 +604,11 @@ function pintarFicha(cont, S, id) {
   const esResp = i.responsable_id === ctx.persona.id && !ctx.soloLectura;
 
   cont.append(h('nav', { class: 'migas', 'aria-label': 'Migas' }, h('a', { href: '#/incidencias' }, icono('alert', { clase: 's' }), 'Incidencias'), h('span', { 'aria-hidden': 'true' }, '›'), h('span', { 'aria-current': 'page' }, i.cliente || i.afectado || 'Sistema')));
+
+  // ---- Ronda U (50 #14): la barra del ciclo, ARRIBA y fija (sticky), con el formulario que abre justo debajo
+  const barra = puede ? barraCiclo(i, S, abrir) : null;
+  if (barra) { cont.querySelector(':scope > nav.migas')?.remove(); cont.append(barra); consejoCompacto(cont, barra); }
+  else if (esResp && i.abierta) cont.append(panelRespuesta(i, S));
 
   // ---- cabecera
   const etapa = i.estado === 'no_aplica' ? -1 : i.estado === 'reabierta' ? 2 : i.estado === 'toca_escalar' ? (i.avisos.length > 1 ? 2 : 1) : est.i;
@@ -629,9 +649,7 @@ function pintarFicha(cont, S, id) {
       h('span', { class: 'ico-c s' }, icono(ic)), h('span', { style: { display: 'grid', gap: 'var(--s-1)', minWidth: '0' } }, h('span', { class: 'titulo-seccion' }, p), h('b', { style: { maxWidth: '72ch' } }, conTickets(sinCodigos(String(v ?? '')))), s ? h('span', { class: 'sub', style: { maxWidth: '72ch' } }, conTickets(sinCodigos(String(s)))) : null))))));
 
   // ---- acciones (Operaciones) o respuesta (responsable)
-  if (puede) cont.append(panelAcciones(i, S));
-  else if (esResp && i.abierta) cont.append(panelRespuesta(i, S));
-  else if (ctx.soloLectura) cont.append(avisoParcial('Estás en «ver como»: es solo lectura. Los botones del ciclo están apagados.', { tipo: 'info' }));
+  if (!puede && !(esResp && i.abierta) && ctx.soloLectura) cont.append(avisoParcial('Estás en «ver como»: es solo lectura. Los botones del ciclo están apagados.', { tipo: 'info' }));
 
   // ---- pruebas y números · historia
   const tickets = (i.tickets || []).map(t => h('li', {},
@@ -670,8 +688,24 @@ function historia(i, S) {
   }));
 }
 
+// ------------------------------------------------------------------ Ronda U · barra del ciclo arriba del detalle
+/** Los mismos botones que «Qué hago ahora», en la barra de acciones común (sticky bajo la cabecera). El formulario que
+ *  abre cada botón sale justo debajo de la barra, así que avisar, escalar o resolver no obliga a bajar. */
+function barraCiclo(i, S, abrirYa = null) {
+  const { ctx } = S;
+  const p = panelAcciones(i, S, { soloPartes: true });
+  const est = ESTADO[i.estado];
+  const caja = h('div', { class: 'pila', 'data-ciclo': '', style: { gap: 'var(--s-2)' } },
+    barraAcciones({ titulo: `${i.cliente || i.afectado || 'Sistema'} · ${est.t}`, sub: i.relojEsc ? `Reloj: ${i.relojEsc.texto}` : (sugerencia(i) || null), acciones: p.botones,
+      volver: { href: '#/incidencias', texto: 'Incidencias' } }),
+    p.zonaForm);
+  // en el móvil la barra parte en varias líneas: al abrir el formulario, su «Guardar» se trae a la vista (sin desplazarse a mano)
+  if (abrirYa && i.abierta) setTimeout(() => { p.abrir(abrirYa); setTimeout(() => p.zonaForm.querySelector('button[type=submit]')?.scrollIntoView({ block: 'nearest' }), 60); }, 0);
+  return caja;
+}
+
 // ------------------------------------------------------------------ panel de acciones (Operaciones)
-function panelAcciones(i, S) {
+function panelAcciones(i, S, { soloPartes = false } = {}) {
   const { ctx, nom } = S;
   const zonaForm = h('div');
   const abrir = tipo => { zonaForm.replaceChildren(formulario(tipo, i, S, () => zonaForm.replaceChildren())); zonaForm.querySelector('textarea, input, select')?.focus(); };
@@ -690,6 +724,7 @@ function panelAcciones(i, S) {
     !causaBloqueada ? bt('causa', 'flag', i.causa.confirmada ? 'Cambiar la causa' : 'Confirmar la causa') : h('span', { class: 'sub' }, 'Causa confirmada: solo Tomás la cambia'),
     ab ? bt('no_aplica', 'cerrar', 'No aplica') : null,
   ];
+  if (soloPartes) return { botones: botones.map(b => (b?.classList?.contains('bt') ? (b.classList.add('mini'), b) : b)), zonaForm, abrir };
   return panel({ titulo: 'Qué hago ahora', icono: 'zap', sub: 'Cada botón queda en el rastro con la hora del servidor. Nada se envía: el mensaje se copia y lo mandas tú.' },
     h('div', { class: 'fila', style: ACC }, botones), zonaForm);
 }
@@ -806,7 +841,7 @@ function pintarMapa(zona, S) {
     const r = reglas.find(x => x.k === sel.k); const f = filas.find(x => x.nombre_completo === sel.p);
     const al = (ctx.datos.alarmas || []).filter(a => a.ambito === 'cliente' && r.tipos.includes(a.tipo) && (f.persona_ref ? a.responsable_id === f.persona_ref : !a.responsable_id));
     lista.replaceChildren(panel({ titulo: `${f.nombre} · ${r.t} ${r.s}`, icono: 'filtro', sub: fmt.plural(al.length, 'alarma'), acciones: h('button', { type: 'button', class: 'bt mini', on: { click: () => { sel = { p: null, k: null }; pintarRejilla(); pintarAlarmas(); } } }, icono('cerrar'), 'Quitar el filtro') },
-      listaLoPrimero(al.map(a => ({ estado: a.gravedad === 'rojo' ? 'rojo' : 'ambar', icono: 'alert', motivo: `${a.cliente} · ${a.tipo}`, detalle: a.texto || 'El detalle lo ve quien lleva el cliente.',
+      filasLP(al.map(a => ({ estado: a.gravedad === 'rojo' ? 'rojo' : 'ambar', icono: 'alert', motivo: `${a.cliente} · ${a.tipo}`, detalle: a.texto || 'El detalle lo ve quien lleva el cliente.',
         botones: [a.enlace ? h('a', { class: 'bt mini', href: a.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Prueba') : null,
           S.incs.find(i => i.cliente_id === a.cliente_id) ? h('a', { class: 'bt mini', href: `#/incidencias/${S.incs.find(i => i.cliente_id === a.cliente_id).id}` }, icono('alert'), 'Incidencia') : null] })),
       { vacio: { titulo: 'Sin alarmas con detalle para tu puesto', porque: 'O está a cero, o son clientes que no ves.', celebrar: true } })));
@@ -880,7 +915,7 @@ function pintarIncongruencias(zona, S) {
   const pend = acc.filter(a => !a.ok);
   const ok = acc.filter(a => a.ok);
   zona.append(panel({ titulo: 'Accesos de quien ya no está', icono: 'escudo', sub: 'Personas de baja o que no están en el equipo y siguen con algo abierto en Desk, CRM, ClickUp o Zadarma (leído en vivo hoy).' },
-    pend.length ? listaLoPrimero(pend.map(a => {
+    pend.length ? filasLP(pend.map(a => {
       const d = decidida(a.id);
       return { estado: d ? 'hecho' : a.estado_herramienta === 'activo' ? 'rojo' : 'ambar', icono: 'key',
         motivo: `${a.persona} · ${a.herramienta} (${a.estado_herramienta})`, detalle: `${a.que_hacer}${a.estado_app ? ` En la app: ${a.estado_app}.` : ''}${d ? ` — Pedido por ${nom(d.quien)} el ${fh(d.t)}.` : ''}`,
@@ -912,8 +947,8 @@ function pintarIncongruencias(zona, S) {
         { clave: 'detalle', titulo: 'Qué no cuadra', celda: x => h('span', {}, nombresBien(x.detalle, PERSONAS)) },
         { clave: 'herramientas', titulo: 'Dónde', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, (x.herramientas || []).map(t => h('span', { class: 'chip gris sin-punto' }, icono(ICO_H[t] || 'aj', { clase: 's' }), TXT_H[t] || t))) },
         { clave: 'decide', titulo: 'Decide', celda: x => { const d = decidida(x.id); return d ? h('span', { class: 'pila', style: { gap: 'var(--s-1)' } }, chipEstado('verde', d.opcion || 'No aplica'), h('span', { class: 'sub' }, `${nom(d.quien)} · ${fh(d.t)}`)) : x.decide; } },
-        { clave: 'acc', titulo: '', ordenable: false, celda: x => decidida(x.id) || !puede ? null : h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, (x.opciones || []).filter(o => o !== 'No aplica').map(o => botonConfirmar({ texto: o, pregunta: '¿Decidido?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-          alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'decidir_incongruencia', objeto: x.id, cliente_id: x.cliente_id || null, texto: `${x.tipo} · ${x.cliente}: ${o}`, vista_previa: { opcion: o, tipo: x.tipo, detalle: x.detalle } }); setTimeout(() => S.rehacer(), 700); return 'Decidido'; } })),
+        { clave: 'acc', titulo: '', ordenable: false, celda: x => decidida(x.id) || !puede ? null : h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, (x.opciones || []).filter(o => o !== 'No aplica').map(o => botonDeshacer({ texto: o, hecho: 'Decidido', soloLectura: ctx.soloLectura,
+          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'decidir_incongruencia', objeto: x.id, cliente_id: x.cliente_id || null, texto: `${x.tipo} · ${x.cliente}: ${o}`, vista_previa: { opcion: o, tipo: x.tipo, detalle: x.detalle } }); setTimeout(() => S.rehacer(), 700); return 'Decidido'; } })),
           noAplica(x, S)) },
       ],
       vacio: { titulo: v === '__decididas' ? 'Todavía no has decidido ninguna' : 'Nada pendiente con este filtro', porque: 'Cada decisión queda en el rastro.', celebrar: v !== '__decididas' },
@@ -981,8 +1016,8 @@ function pintarTraspasos(zona, S) {
         { clave: 'estado_crm', titulo: 'CRM', celda: t => chip(t.estado_crm === 'sin dato' ? null : t.estado_crm) },
         { clave: '_e', titulo: 'Estado', valor: t => t._e.c, celda: t => h('span', { class: 'pila', style: { gap: 'var(--s-1)' } }, chipEstado(t._e.c, t._e.t),
           t.prueba ? h('a', { href: t.prueba, target: '_blank', rel: 'noopener', class: 'bt mini' }, icono('ext', { clase: 's' }), 'Ver prueba') : h('span', { class: 'sub', title: t.fuente }, 'sin prueba'),
-          puede && t._e.c !== 'verde' ? botonConfirmar({ texto: 'Revisado', pregunta: '¿Comprobado en todas las herramientas?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-            alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'traspaso_revisado', objeto: t.id, cliente_id: t.cliente_id, texto: `Traspaso ${t.cliente} revisado`, vista_previa: { de: t.de_id, a: t.a_id } }); setTimeout(() => S.rehacer(), 700); return 'Revisado'; } }) : null) },
+          puede && t._e.c !== 'verde' ? botonDeshacer({ texto: 'Revisado', hecho: 'Revisado', titulo: 'Comprobado en todas las herramientas', soloLectura: ctx.soloLectura,
+            alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'traspaso_revisado', objeto: t.id, cliente_id: t.cliente_id, texto: `Traspaso ${t.cliente} revisado`, vista_previa: { de: t.de_id, a: t.a_id } }); setTimeout(() => S.rehacer(), 700); return 'Revisado'; } }) : null) },
       ],
       vacio: { titulo: 'Ningún traspaso de tus clientes', porque: 'Cuando un cliente cambie de manos, aparecerá aquí con su fecha.', celebrar: true },
     })));

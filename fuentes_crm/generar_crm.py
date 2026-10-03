@@ -659,6 +659,21 @@ def main():
     tmp = SALIDA / "crm.json.tmp"
     tmp.write_text(json.dumps(salida, ensure_ascii=False, indent=1))
     tmp.replace(SALIDA / "crm.json")
+    # Regla común de teléfonos (3-oct, telefono.py): «+34…» sin espacios; lo que no cuadra no se guarda y va a
+    # data/telefonos/dudosos.json (apartado «crm», por cliente y sin el número entero).
+    from telefono import limpiar as limpiar_tel, Dudosos
+    dud_tel = Dudosos("crm")
+    nombre_de_cli = {f.get("cliente_id"): f.get("nombre") for f in filas if f.get("cliente_id")}
+    for p_ in privado["leads"].values():
+        d_ = dict(p_.get("datos") or {})
+        r_ = limpiar_tel(d_.get("telefono"))
+        if r_["motivo"] == "dudoso":
+            dud_tel.anotar(p_.get("cliente_id"), d_.get("telefono"), r_["aviso"], "Lead en la subcuenta de GoHighLevel del cliente (Salud del CRM)", nombre_de_cli.get(p_.get("cliente_id")))
+        d_["telefono"] = r_["telefono"]
+        if r_["extension"]:
+            d_["extension"] = r_["extension"]
+        p_["datos"] = d_
+    dud_tel.guardar()
     tmp = SALIDA / "_privado" / "leads.json.tmp"
     tmp.write_text(json.dumps({"_meta": {"que": "Datos de contacto de los leads sin tocar y de las citas sin estado. Solo con /api/ver_dato (D-88).", "generado": salida["generado"]}, **privado}, ensure_ascii=False))
     tmp.replace(SALIDA / "_privado" / "leads.json")

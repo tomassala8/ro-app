@@ -209,8 +209,9 @@ PRIMERO = {   # persona → tipos que pueden abrir su Mi día (lo que manda en s
     "lucia": {"acc_critico", "critico_cliente", "acc_correos"}, "candela": {"acc_critico", "critico_cliente", "acc_correos"},
     "agustina": {"alta_fuera_plazo"}, "tomas": {"dir_decision"}, "constanza": {"visto_critico", "acc_critico", "critico_cliente"},
     "camilo": {"prod_devuelta", "prod_vencida", "prod_hoy"}, "eulimar": {"outreach_clasificar", "outreach_positiva"},
-    "yessica": {"outreach_clasificar", "outreach_positiva", "crm_sin_tocar", "crm_citas_sin_estado", "crm_whatsapp", "fuga_integracion"},
-    "valeria": {"pub_critico", "pub_atencion", "fuga_integracion"}, "jeronimo": {"seo_rojo", "seo_ambar", "web_caida", "web_spam", "web_certificado"},
+    "yessica": {"outreach_clasificar", "outreach_positiva", "crm_sin_tocar", "crm_citas_sin_estado", "crm_whatsapp", "fuga_integracion",
+                "jefa_crm_velocidad", "diag_leads_sin_citas"},
+    "valeria": {"pub_critico", "pub_atencion", "fuga_integracion", "jefa_cartera_roja", "diag_pocos_leads"},   # 3-oct: + reglas de jefa (cerebro v2) "jeronimo": {"seo_rojo", "seo_ambar", "web_caida", "web_spam", "web_certificado"},
 }
 JEFAS = {"jefa_publicidad": {"trafficker"}, "jefa_crm": {"especialista_ghl", "outreach"}, "jefa_seo": {"seo", "ficha_google", "web"}}
 per_por_id = {x["id"]: x for x in json.loads((APP / "data/personas.json").read_text())}
@@ -302,18 +303,19 @@ if IAm.S is None:
     IAm.enganchar(SV.Manejador, SV)
 luc = SV.E.persona("lucia")
 cp_l = SV.P.contexto(luc, SV.E.crudo)
+_ORIG_IA = {k: getattr(IAm, k) for k in ("estado", "_guardar_vivo", "_vivo", "llamar")}   # se restauran para la sección 10
 IAm.estado = lambda: {"conectada": True, "modelo": "simulado", "motivo": None}
 IAm._guardar_vivo = lambda *a, **k: None
 IAm._vivo = lambda *a, **k: None
 base = IAm.consejo(luc, luc, cp_l, "mi-dia")
 refs = [c["id"] for c in base["consejos"]]
 IAm.llamar = lambda sis, ctx, esq, effort="low": ({"consejos": [
-    {"ref": refs[-1], "que": "Primero esto", "porque": "Texto con una cifra inventada: 999 leads."},
+    {"ref": refs[-1], "que": "Primero esto", "porque": "Texto con una cifra inventada: 987654 leads."},   # 3-oct: 999 coincidía con una cuota real
     {"ref": "inventado", "que": "Nada", "porque": "Nada"},
     {"ref": refs[0], "que": "Luego esto", "porque": base["consejos"][0]["porque"]}]}, "simulado")
 viv = IAm.consejo(luc, luc, cp_l, "mi-dia", con_ia=True)
 ok(viv["origen"] == "vivo" and [c["id"] for c in viv["consejos"]] == [refs[-1], refs[0]], "Con clave: la IA reordena los mismos candidatos y descarta un «ref» inventado")
-ok("999" not in json.dumps(viv["consejos"], ensure_ascii=False), "Con clave: una cifra que no estaba en el dato se descarta (queda el texto de la regla)")
+ok("987654" not in json.dumps(viv["consejos"], ensure_ascii=False), "Con clave: una cifra que no estaba en el dato se descarta (queda el texto de la regla)")
 viv_como = IAm.consejo(SV.E.persona("tomas"), luc, cp_l, "mi-dia", con_ia=True)
 ok(viv_como["origen"] == "reglas", "Con clave, en «ver como» no se genera nada nuevo")
 
@@ -324,6 +326,133 @@ _tab = MCm.tabla_fuentes({"fuentes": [{"id": "meta", "estado": "dato_viejo", "ho
                          None, {"conexiones": [{"id": "meta", "quien": "Agus"}]}, datetime.now())
 ok(_tab and _tab[0]["paso"] == "Meta caído desde las 21:05 · lo revisa Agus · mientras, cifras de las 18:05",
    f"«Qué hacer» ante Meta caído: «{_tab[0]['paso'] if _tab else '—'}»")
+
+# 9b. Cerebro de respuestas (3-oct): cada borrador cubre las preguntas del hilo, no inventa cifras, respeta permisos (cobros
+#     solo dirección y administración), no nombra a otros clientes ni sueldos, longitud según el tipo y nota de calidad visible.
+sys.path.insert(0, str(APP / "fuentes_ia" / "cerebro_respuestas"))
+import cerebro as CRm  # noqa: E402
+_RE_COBRO_T = re.compile(r"(?i)\b(factur\w*|cobr(?:o|os|ar|ado)\b|impag\w*|recibos?\b|transferencia|sepa|domiciliaci\w*)")
+_nombres = {c["id"]: c.get("nombre") for c in json.loads((APP / "data/clientes.json").read_text())}
+_pre_b2 = json.loads((APP / "data/ia/_privado/borradores.json").read_text()).get("borradores", {})
+ok(all(b.get("cerebro") for b in _pre_b2.values()), f"Cerebro · los {len(_pre_b2)} precalculados están hechos con el cerebro de respuestas")
+_malos = {"sin_nota": [], "preguntas": [], "inventa": [], "otro_cliente": [], "cobros": [], "sueldos": [], "corto": [], "paso": [], "fuga": [], "tipo": []}
+_vistos = 0
+for _yo, _lista in (("tomas", L.get("borradores", [])), ("lucia", LL.get("borradores", []))):
+    for _b in _lista:
+        s, r = pedir("/api/ia/borrador", _yo, {"ticket": _b["ticket"]})
+        if s != 200 or not r.get("ok"):
+            _malos["sin_nota"].append(_b["ticket"]); continue
+        _vistos += 1
+        cal = r.get("calidad") or {}
+        if not isinstance(cal.get("nota"), int):
+            _malos["sin_nota"].append(_b["ticket"])
+        if cal.get("preguntas_sin_cubrir"):
+            _malos["preguntas"].append(_b["ticket"])
+        if any(f.startswith("Cifras que no están") for f in cal.get("faltas", [])):
+            _malos["inventa"].append(_b["ticket"])
+        cuerpo = re.sub(r"\[[^\]]*\]", " ", r.get("cuerpo") or "")
+        propio = _nombres.get(r.get("cliente_id"))
+        otros = [n for cid, n in _nombres.items() if n and cid != r.get("cliente_id") and len(n) > 4 and n != propio
+                 and re.search(r"\b" + re.escape(n) + r"\b", cuerpo, re.I)]
+        if otros:
+            _malos["otro_cliente"].append((_b["ticket"], otros[:2]))
+        if _yo == "lucia" and _RE_COBRO_T.search(cuerpo):
+            _malos["cobros"].append(_b["ticket"])
+        if re.search(r"(?i)\b(sueldo|salario)s?\b", cuerpo):
+            _malos["sueldos"].append(_b["ticket"])
+        if any(f.startswith("Corto para el tipo") for f in cal.get("faltas", [])) and r.get("tipo") in ("queja", "resultados", "incidencia"):
+            _malos["corto"].append(_b["ticket"])
+        sp = r.get("siguiente_paso") or {}
+        if r.get("tipo") not in ("acuse", "automatico", "seguimiento") and not (sp.get("que") and sp.get("quien") and sp.get("cuando")):
+            _malos["paso"].append(_b["ticket"])
+        if limpio(r):
+            _malos["fuga"].append(_b["ticket"])
+        if not r.get("tipo") or not r.get("clasificacion"):
+            _malos["tipo"].append(_b["ticket"])
+ok(_vistos and not _malos["sin_nota"], f"Cerebro · {_vistos} borradores servidos con su nota «calidad del borrador» ({_malos['sin_nota'][:3] or 'todos'})")
+ok(not _malos["preguntas"], f"Cerebro · cada borrador contesta TODAS las preguntas y peticiones del hilo ({_malos['preguntas'][:3] or 'todos'})")
+ok(not _malos["inventa"], f"Cerebro · ninguna cifra del borrador falta en los datos del cliente o del hilo ({_malos['inventa'][:3] or 'ninguna'})")
+ok(not _malos["otro_cliente"], f"Cerebro · ningún borrador nombra a otro cliente ({_malos['otro_cliente'][:2] or 'ninguno'})")
+ok(not _malos["cobros"], f"Cerebro · a Lucía (no ve cobros) ningún borrador le habla de facturas, recibos ni transferencias ({_malos['cobros'][:3] or 'ninguno'})")
+ok(not _malos["sueldos"], "Cerebro · ningún borrador menciona sueldos")
+ok(not _malos["fuga"], f"Cerebro · ningún borrador lleva correos, teléfonos ni claves ({_malos['fuga'][:3] or 'limpios'})")
+ok(not _malos["corto"], f"Cerebro · quejas, incidencias y dudas de resultados no salen cortas por sistema ({_malos['corto'][:3] or 'ninguna'})")
+ok(not _malos["paso"], f"Cerebro · todo borrador que pide respuesta acaba con qué, quién y cuándo ({_malos['paso'][:3] or 'todos'})")
+ok(not _malos["tipo"], "Cerebro · cada borrador dice de qué tipo es el correo")
+_largos = sorted(len(re.findall(r"\w+", b.get("cuerpo", ""))) for b in _pre_b2.values() if b.get("tipo") in ("queja", "resultados"))
+_cortos = sorted(len(re.findall(r"\w+", b.get("cuerpo", ""))) for b in _pre_b2.values() if b.get("tipo") in ("acuse", "reunion"))
+ok(_largos and _cortos and _largos[len(_largos) // 2] > 2 * _cortos[len(_cortos) // 2],
+   f"Cerebro · la longitud depende del tipo (mediana quejas/resultados {_largos[len(_largos) // 2] if _largos else '—'} palabras; acuses/reuniones {_cortos[len(_cortos) // 2] if _cortos else '—'})")
+# Clasificador con hilos inventados (sin datos reales)
+def _h(*txts):
+    return [{"direccion": d, "de": ("Cliente" if d == "entrante" else "Agente"), "tipo_autor": ("END_USER" if d == "entrante" else "AGENT"), "texto": t} for d, t in txts]
+_casos = [
+    ("Seguimos sin leads", _h(("entrante", "Llevamos más de un mes sin contactos y nadie nos responde. ¿Qué pasa?")), "queja"),
+    ("Factura septiembre", _h(("entrante", "¿Me podéis enviar la factura de septiembre?")), "factura"),
+    ("Reunión", _h(("entrante", "¿Podemos mover la reunión del jueves al viernes a las 10?")), "reunion"),
+    ("RE: Textos", _h(("saliente", "Te mando los textos."), ("entrante", "Perfecto, muchas gracias!")), "acuse"),
+    ("Respuesta automática: fuera de la oficina", _h(("entrante", "Estoy fuera de la oficina hasta el lunes.")), "automatico"),
+    ("RE: Web", _h(("entrante", "La web no carga."), ("saliente", "Lo estamos mirando.")), "seguimiento"),
+    ("Formulario", _h(("entrante", "El formulario de la web no funciona desde ayer, no llegan los mensajes.")), "incidencia"),
+    ("Cambios en la web", _h(("entrante", "Por favor cambiad el texto del bloque de servicios y añadid el logo nuevo.")), "cambio"),
+    ("Campaña", _h(("entrante", "¿Cuántos leads ha traído la campaña este mes y a qué coste por contacto?")), "resultados"),
+    ("Contrato", _h(("entrante", "Queremos darnos de baja del servicio a final de mes.")), "baja"),
+]
+_mal_cl = [(a, CRm.clasificar(a, h_, {})["tipo"], t) for a, h_, t in _casos if CRm.clasificar(a, h_, {})["tipo"] != t]
+ok(not _mal_cl, f"Cerebro · el clasificador acierta los 10 tipos de prueba ({_mal_cl[:3] or 'todos'})")
+_pq = CRm.preguntas(_h(("entrante", "Hola. ¿Cuándo sale la campaña? Por favor, enviadme el informe de agosto. Gracias. Un saludo, Ana")))
+ok(len(_pq) == 2, f"Cerebro · saca las 2 peticiones de un correo con pregunta y petición ({len(_pq)})")
+# La nota caza lo malo: cifra inventada, otro cliente, cobros sin verlos, pregunta sin contestar, queja corta
+_ctx = {"clasificacion": {"tipo": "queja"}, "preguntas_del_cliente": ["¿Por qué no llegan contactos desde el día 3?"],
+        "responde": {"ve_cobros": False}, "cliente": {"captacion": {"leads_7d": 12, "hora": "2026-10-02 09:00"}}, "hilo": []}
+_b_malo = {"tipo": "queja", "cuerpo": "Hola Ana,\n\nHemos conseguido 57 contactos, igual que con Clínica Ejemplo. Te enviamos la factura.\n\nUn saludo,",
+           "puntos_del_cliente": [], "datos_citados": [], "siguiente_paso": {}, "huecos": []}
+_c = CRm.calidad(_b_malo, _ctx, ["Clínica Ejemplo"])
+ok(_c["nota"] == 0 and any("otro cliente" in f for f in _c["bloqueos"]) and any("no ve cobros" in f for f in _c["bloqueos"]),
+   "Cerebro · la nota bloquea (0) un borrador que nombra a otro cliente o habla de facturas sin verlas")
+_c2 = CRm.calidad({**_b_malo, "cuerpo": "Hola Ana,\n\nHemos conseguido 57 contactos.\n\nUn saludo,"}, _ctx, [])
+ok(any(f.startswith("Cifras que no están") for f in _c2["faltas"]) and any(f.startswith("No contesta") for f in _c2["faltas"])
+   and any(f.startswith("Corto para el tipo") for f in _c2["faltas"]) and _c2["nota"] < 70,
+   f"Cerebro · la nota señala la cifra inventada, la pregunta sin contestar y la queja corta (nota {_c2['nota']})")
+# Con clave (proveedor simulado): primer borrador flojo → se pide una segunda versión con lo que falta y se queda la mejor
+_t_luc = next((b["ticket"] for b in LL.get("borradores", []) if b.get("tipo") in ("queja", "incidencia", "resultados", "consulta", "cambio")), None)
+if _t_luc:
+    _llamadas = []
+    def _falso(sis, ctx, esq, effort="medium", tarea=None):
+        _llamadas.append(ctx)
+        base_ = {"tipo": ctx["clasificacion"]["tipo"] if ctx["clasificacion"]["tipo"] in CRm.ESQUEMA["properties"]["tipo"]["enum"] else "consulta",
+                 "asunto": "RE: prueba", "puntos_del_cliente": [{"punto": p, "como_queda": "Respondido"} for p in ctx["preguntas_del_cliente"]],
+                 "datos_citados": [], "huecos": [], "recomendacion": ""}
+        if len(_llamadas) == 1:
+            return {**base_, "cuerpo": "Hola,\n\nVale.\n\nUn saludo,", "siguiente_paso": {"que": "", "quien": "", "cuando": ""}}, "simulado"
+        return {**base_, "cuerpo": "Hola,\n\nLo reviso hoy con el equipo y te escribo [completar: día] con lo que hemos visto y lo que cambiamos.\n\nUn saludo,",
+                "siguiente_paso": {"que": "Revisar y escribir", "quien": "Lucía", "cuando": "[completar: día]"}}, "simulado"
+    IAm.llamar = _falso
+    IAm.estado = lambda: {"conectada": True, "modelo": "simulado", "motivo": None}
+    IAm._guardar_vivo = lambda *a, **k: None
+    IAm._vivo = lambda *a, **k: None
+    _r = IAm.borrador(luc, luc, cp_l, _t_luc, nuevo=True)
+    ok(len(_llamadas) == 2 and "revision_de_calidad" in _llamadas[1] and _r.get("origen") == "vivo" and "lo reviso hoy" in (_r.get("cuerpo") or "").lower(),
+       f"Cerebro · con clave, un borrador por debajo de 70 se rehace UNA vez con la lista de faltas y se sirve el mejor ({len(_llamadas)} llamadas)")
+    ok(isinstance((_r.get("calidad") or {}).get("nota"), int), "Cerebro · el borrador en vivo sale con su nota de calidad")
+    ok(all(k in _llamadas[0] for k in ("clasificacion", "preguntas_del_cliente", "cliente", "hilo")) and "produccion" in (_llamadas[0].get("cliente") or {}),
+       "Cerebro · el modelo recibe tipo, preguntas, hilo y TODO lo visible del cliente (con producción)")
+    ok(not limpio(_llamadas[0]), "Cerebro · el contexto que sale hacia el modelo no lleva correos, teléfonos ni claves")
+
+# 10. Gasto de IA (3-oct, ia_gasto.py): topes en euros, coste real, corte al 100 %, «ver como» sin gasto, respaldo, lotes, pantalla
+#     solo de Tomás. Proveedor SIMULADO: no sale ninguna llamada a Anthropic. Las pruebas viven en probar_gasto.py.
+for _k, _v in _ORIG_IA.items():
+    setattr(IAm, _k, _v)
+IAm._guardar_vivo = lambda *a, **k: None          # lo generado con el proveedor simulado no se guarda como «vivo»
+sys.path.insert(0, str(APP / "fuentes_ia"))
+import probar_gasto  # noqa: E402
+probar_gasto.correr(ok, SV, IAm, PUERTO, DB)
+
+# 11. Cerebro de decisiones v2 (3-oct): diagnóstico, prioridad correcta, sin fugas de importes, coherencia con la verdad única,
+#     prudencia, bucle de aprendizaje, copiloto por reglas y la IA simulada. Las pruebas viven en fuentes_consejos/probar_cerebro.py.
+sys.path.insert(0, str(APP / "fuentes_consejos"))
+import probar_cerebro  # noqa: E402
+probar_cerebro.correr(ok, pedir, SV, IAm, DB)
 
 print(f"\n{len(BIEN)} bien · {len(FALLOS)} mal")
 sys.exit(1 if FALLOS else 0)

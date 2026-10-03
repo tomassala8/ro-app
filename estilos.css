@@ -41,6 +41,10 @@
   --warn-line: #f3d9a4; --bad-line: #f2c4c4; --accent-line: #d5dbf7;
   /* series de gráfico (grafico() en componentes.js): azul de RO, naranja, verde azulado y gris de comparación */
   --serie-2: #e0792b; --serie-3: #159a80; --serie-4: #8a63c9; --serie-barra: #c9cff0;
+  /* Paneles v4 (3-oct): verde claro para «subidas» (ChartMogul: lo ganado en dos tonos), rojo claro para el tramo 61-90 días
+     de los cobros y la escala de UN color de los mapas de calor de cohortes (más oscuro = más se queda) */
+  --good-2: #7cc8a3; --bad-2: #e58b8b;
+  --calor-1: #eaedfc; --calor-2: #c9cff0; --calor-3: #97a2e2; --calor-4: #5c6bd0; --calor-5: #3040b5;
   /* ---- Ronda 9 · auditoría 30 (P0): guía de estilo. Ningún módulo escribe píxeles, colores ni sombras: solo tokens. ---- */
   /* tipografía · 7 tamaños: 11 · 12 · 13 · 15 · 20 · 24 · 32 (11 solo en MAYÚSCULAS y 700) */
   --fs-11: 12px; /* ronda 14 (barrido 39): nada de letra de 11 px; el nombre se queda por compatibilidad */ --fs-12: 12px; --fs-13: 13px; --fs-15: 15px; --fs-20: 20px; --fs-24: 24px; --fs-32: 32px;
@@ -680,6 +684,7 @@ main#main > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no esti
 .grafico .barra.neg { fill: var(--bad); }
 .grafico .barra.pos { fill: var(--good); }
 .grafico .barra.est { fill: var(--off); }
+.grafico .barra.amb { fill: var(--warn); }   /* paneles v4: barra en la banda ámbar de su umbral */
 .grafico text.eje-der { fill: var(--dim); }
 .grafico-ley i.b.pos, .grafico-burbuja i.b.pos { background: var(--good) !important; }
 .grafico-ley i.b.neg, .grafico-burbuja i.b.neg { background: var(--bad) !important; }
@@ -786,7 +791,7 @@ main#main > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no esti
 .barra-apil-ley li { display: inline-flex; align-items: center; gap: 6px; }
 .barra-apil-ley i { width: 10px; height: 10px; border-radius: var(--r-s); display: inline-block; }
 .barra-apil-ley b { color: var(--ink); font-weight: 700; }
-.barra-apil-ley small { color: var(--dim); }
+.barra-apil-ley small { color: var(--dim); font: var(--t-meta); }   /* paneles v4: el % salía a 10 px */
 .barra-apil .s-1 { background: var(--accent); } .barra-apil .s-2 { background: var(--serie-2); }
 .barra-apil .s-3 { background: var(--serie-3); } .barra-apil .s-4 { background: var(--serie-4); }
 .barra-apil .e-verde { background: var(--good); } .barra-apil .e-ambar { background: var(--warn); } .barra-apil .e-rojo { background: var(--bad); }
@@ -1103,3 +1108,145 @@ input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outlin
   time, .fecha, .comp, .fresco { white-space: nowrap; }
   table.densa th { position: static; }
 }
+
+
+/* ============ Paneles v4 (3-oct) · componentes de los paneles de dinero (componentes.js › PANELES V4) ============
+   tarjetaKpi · minilinea · cascada · barrasGanadoPerdido · mapaCalor · barraObjetivo · previsionCaja · barrasDivergentes.
+   Colores con significado: verde suma o va bien, rojo resta o actúa, ámbar vigila (rebajas), gris saldo o «no colorea». */
+.tile.kpi { gap: 4px; grid-template-columns: minmax(0, 1fr); }
+.tile.kpi > * { min-width: 0; }
+.kpi-pie .fresco { white-space: normal; }
+.kpi-spark { width: 100%; min-width: 0; margin: 4px 0 0; }
+.kpi-spark svg { display: block; overflow: visible; }
+.kpi-spark .linea { fill: none; stroke: var(--accent); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.kpi-spark .punto { fill: var(--card); stroke: var(--accent); stroke-width: 2; }
+.kpi-spark .umbral-l { stroke: var(--off); stroke-width: 1; stroke-dasharray: 3 3; }
+.kpi-umbral, .kpi-pie { font: var(--t-meta); color: var(--dim); margin: 0; overflow-wrap: anywhere; }
+.kpi-umbral.ref { font-style: italic; }
+.kpi-pie { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; }
+.fuente-a { font: var(--t-meta); font-weight: 600; }
+.tile .kpi-ir { border: 0; background: none; padding: 0; justify-self: start; cursor: pointer; font: var(--t-meta); font-weight: 600; min-height: 32px; }
+.tile.kpi.gris .tv { color: var(--ink); }
+/* cascada (puente) */
+.grafico .seg.total { fill: var(--off); }
+.grafico .seg.sube { fill: var(--good); }
+.grafico .seg.sube2 { fill: var(--good-2); }
+.grafico .seg.ambar { fill: var(--warn); }
+.grafico .seg.baja { fill: var(--bad); }
+.grafico .conector { stroke: var(--off); stroke-width: 1; stroke-dasharray: 3 3; }
+.grafico-nota { font: var(--t-meta); color: var(--dim); margin: 0; }
+.grafico-ley i.b.total, .grafico-burbuja i.b.total { background: var(--off) !important; }
+.grafico-ley i.b.sube, .grafico-burbuja i.b.sube { background: var(--good) !important; }
+.grafico-ley i.b.sube2, .grafico-burbuja i.b.sube2 { background: var(--good-2) !important; }
+.grafico-ley i.b.ambar, .grafico-burbuja i.b.ambar { background: var(--warn) !important; }
+.grafico-ley i.b.baja, .grafico-burbuja i.b.baja { background: var(--bad) !important; }
+.grafico-ley i.b.amb, .grafico-burbuja i.b.amb { background: var(--warn) !important; }
+.grafico-ley i.b.rayado { background: repeating-linear-gradient(45deg, var(--off) 0 2px, var(--card) 2px 4px) !important; }
+.grafico-ley i.b.ev { background: var(--card) !important; border: 2px solid var(--navy); border-radius: 50%; }
+.cascada-filas { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.cascada-filas li { display: grid; grid-template-columns: minmax(88px, 34%) minmax(0, 1fr) auto; gap: 8px; align-items: center; font: var(--t-meta); }
+.cascada-filas li.es-total { font-weight: 700; }
+.cascada-filas .cf-et { color: var(--mid); overflow-wrap: anywhere; }
+.cascada-filas li.es-total .cf-et { color: var(--ink); }
+.cf-pista { position: relative; height: 16px; background: var(--card-2); border-radius: var(--r-s); }
+.cf-seg { position: absolute; top: 0; bottom: 0; border-radius: var(--r-s); background: var(--off); }
+.cf-seg.sube { background: var(--good); } .cf-seg.sube2 { background: var(--good-2); } .cf-seg.ambar { background: var(--warn); } .cf-seg.baja { background: var(--bad); }
+.cf-cero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--mid); }
+.cf-v { color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* barras de lo ganado sobre cero y lo perdido bajo cero, con el periodo en curso rayado */
+.gp .seg.curso { opacity: .55; }
+.gp .rayado-l { stroke: var(--card); stroke-width: 2.5; }
+.gp .punto.curso { stroke-dasharray: 2 2; }
+/* mapa de calor de cohortes */
+.calor-scroll { overflow-x: auto; max-width: 100%; border: 1px solid var(--line-soft); border-radius: var(--r-m); }
+table.calor { border-collapse: separate; border-spacing: 2px; font: var(--t-meta); font-variant-numeric: tabular-nums; min-width: 100%; }
+table.calor th { font: var(--t-eyebrow); letter-spacing: .06em; text-transform: uppercase; color: var(--dim); text-align: left; padding: 4px 8px; white-space: nowrap; }
+table.calor th.num, table.calor td.num { text-align: right; }
+table.calor tbody th { font: var(--t-meta); letter-spacing: normal; text-transform: none; color: var(--mid); position: sticky; left: 0; background: var(--card); z-index: 1; }
+table.calor td { padding: 4px 8px; text-align: center; min-width: 48px; border-radius: var(--r-s); white-space: nowrap; }
+table.calor td.n { color: var(--dim); }
+table.calor tr.media th, table.calor tr.media td { font-weight: 700; color: var(--ink); }
+table.calor tr.media th { border-top: 2px solid var(--line); }
+.celda.nd { background: transparent; }
+.celda.c0 { background: var(--card-2); color: var(--mid); }
+.celda.c1 { background: var(--calor-1); color: var(--ink); }
+.celda.c2 { background: var(--calor-2); color: var(--ink); }
+.celda.c3 { background: var(--calor-3); color: var(--ink); }
+.celda.c4 { background: var(--calor-4); color: var(--card); }
+.celda.c5 { background: var(--calor-5); color: var(--card); }
+.calor-ley { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font: var(--t-meta); color: var(--dim); }
+.calor-ley i.celda { width: 16px; height: 12px; border-radius: var(--r-s); display: inline-block; }
+/* barra contra objetivo (bullet) */
+.bullet { display: grid; gap: 8px; min-width: 0; }
+.bullet-pista { position: relative; height: 24px; border-radius: var(--r-s); overflow: hidden; background: var(--card-2); }
+.bullet-pista .bb { position: absolute; top: 0; bottom: 0; }
+.bb.e-rojo { background: var(--bad-soft); } .bb.e-ambar { background: var(--warn-soft); } .bb.e-verde { background: var(--good-soft); } .bb.e-gris { background: var(--off-soft); }
+.bullet-pista .bv { position: absolute; left: 0; top: 8px; height: 8px; background: var(--navy); border-radius: var(--r-s); }
+.bullet-pista .bx { position: absolute; left: 0; top: 4px; height: 16px; border: 1.5px dashed var(--navy); border-radius: var(--r-s); }
+.bullet-pista .bm { position: absolute; top: 4px; bottom: 4px; width: 2px; background: var(--mid); }
+.bullet-pista .bo { position: absolute; top: 0; bottom: 0; width: 3px; background: var(--ink); }
+.bullet-ley { display: flex; flex-wrap: wrap; gap: 4px 16px; font: var(--t-meta); color: var(--mid); }
+.bullet-ley span { display: inline-flex; align-items: center; gap: 6px; }
+.bullet-ley i { display: inline-block; width: 12px; height: 8px; border-radius: var(--r-s); }
+.bullet-ley i.bv { background: var(--navy); }
+.bullet-ley i.bx { height: 12px; border: 1.5px dashed var(--navy); }
+.bullet-ley i.bm { width: 2px; height: 12px; background: var(--mid); border-radius: 0; }
+.bullet-ley i.bo { width: 3px; height: 12px; background: var(--ink); border-radius: 0; }
+/* previsión de caja con línea de mínimo */
+.prevision .zona-min { fill: var(--bad-soft); }
+.prevision .min-l { stroke: var(--bad); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.prevision .min-t { fill: var(--bad-ink); font-weight: 600; }
+.prevision .caja-l { stroke: var(--accent); }
+.prevision .caja-l.bajo { stroke: var(--bad); }
+.prevision .evento { fill: var(--card); stroke: var(--navy); stroke-width: 2; }
+/* barras divergentes (ranking con el cero en medio) */
+.diverg { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.diverg .dv-fila { display: grid; grid-template-columns: minmax(120px, 34%) minmax(0, 1fr) minmax(88px, auto); gap: 12px; align-items: center; width: 100%; border: 0; background: none; padding: 4px 8px; border-radius: var(--r-s); text-align: left; font: inherit; color: inherit; min-height: 32px; }
+.diverg button.dv-fila { cursor: pointer; }
+.diverg button.dv-fila:hover { background: var(--hover); }
+.dv-et { display: grid; min-width: 0; }
+.dv-et b { font: var(--t-h3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-et small { font: var(--t-meta); color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dv-pista { position: relative; height: 12px; background: var(--card-2); border-radius: var(--r-full); }
+.dv-b { position: absolute; top: 0; bottom: 0; border-radius: var(--r-full); }
+.dv-b.e-rojo { background: var(--bad); } .dv-b.e-verde { background: var(--good); } .dv-b.e-ambar { background: var(--warn); } .dv-b.e-gris { background: var(--off); } .dv-b.e-azul { background: var(--accent); }
+.dv-cero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--mid); }
+.dv-v { font-variant-numeric: tabular-nums; text-align: right; font-weight: 600; white-space: nowrap; }
+.dv-v.rojo { color: var(--bad-ink); }
+/* antigüedad de cobros: 61-90 días en rojo claro (barraApilada estado 'rojo-claro') */
+.barra-apil .e-rojo-claro { background: var(--bad-2); }
+/* una fuga destacada (las rebajas de cuota) */
+.fuga { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
+.fuga > div { border: 1px solid var(--line); border-radius: var(--r-m); padding: 12px; display: grid; gap: 4px; background: var(--card); }
+.fuga > div.mayor { border-color: var(--warn-line); background: var(--warn-soft); }
+.fuga b { font: var(--t-cifra); letter-spacing: -.015em; }
+.fuga span { font: var(--t-meta); color: var(--mid); }
+@media (max-width: 640px) {
+  .diverg .dv-fila { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 8px; }
+  .diverg .dv-pista { grid-column: 1 / -1; grid-row: 2; }
+}
+@media print { .calor-scroll { overflow: visible; } table.calor tbody th { position: static; } }
+
+/* 44 · I9 (3-oct): el dibujo del gráfico nunca más ancho que su caja (en el PDF se cortaba la última etiqueta) */
+.grafico-lienzo svg { max-width: 100%; height: auto; }
+/* 44 · V4 (3-oct): los botones del «Más» de una fila (Ventas de RO, Setters, Prospección) no se salen de la tarjeta */
+.mas-acc { min-width: 0; max-width: 100%; }
+.mas-acc[open] { flex-basis: 100%; }
+.mas-acc > .fila { max-width: 100%; justify-content: flex-start; }
+.mas-acc .bt { white-space: normal; max-width: 100%; text-align: left; }
+.menu-flot { max-width: min(360px, calc(100vw - 32px)); }
+.menu-flot > button, .menu-flot > a { white-space: normal; overflow-wrap: anywhere; min-width: 0; }
+
+/* la comparación de la cifra que manda (lineaComparacion fuera de una tarjeta) */
+.cifra-comp .tc { font-size: 13px; font-weight: 600; display: inline-flex; gap: 4px; align-items: baseline; flex-wrap: wrap; }
+.cifra-comp .tc .bien { color: var(--good-ink); } .cifra-comp .tc .mal { color: var(--bad-ink); } .cifra-comp .tc .igual { color: var(--dim); }
+.cifra-comp .tc em { font-style: normal; font-weight: 500; color: var(--dim); }
+.cifra-gris { font: var(--t-meta); color: var(--dim); }
+.kpi-nota { display: flex; gap: 6px; align-items: flex-start; font: var(--t-meta); color: var(--warn-ink); margin: 0; }
+.kpi-nota svg.i { flex: none; margin-top: 1px; }
+.tile.kpi .tx { -webkit-line-clamp: 3; }
+@media (max-width: 640px) { main#main .tiles:has(> .tile.kpi) { grid-template-columns: minmax(0, 1fr); } }   /* paneles v4: tarjetas KPI a todo el ancho en el móvil (umbral y fuente legibles) */
+/* paneles v4: la tabla larga plegada al final (Dinero por cliente) */
+.tabla-plegada { display: grid; gap: 12px; }
+.tabla-plegada > summary { list-style: none; cursor: pointer; justify-self: start; }
+.tabla-plegada > summary::-webkit-details-marker { display: none; }

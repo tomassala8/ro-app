@@ -58,3 +58,69 @@
 - **A-M11 boletines · arreglado:** `clasifica_asunto()` en el generador: boletines y circulares de marketing («¿Sabes…? Descúbrelo en esta guía», «Nota informativa», webinar, newsletter…) van a «Automáticos y reenvíos», con chip «Boletín: no cuenta»; no suben días ni gravedad. Un encargo sobre el boletín («Revisión de la newsletter mensual», «Pedido de aprobación - Newsletters») SÍ cuenta (antes iba como automático). Modo `--reclasificar` sin llamadas. Prueba en pruebas_coherencia (V2-C1).
 - **A-M11 «el más antiguo» de ⌘K · no aplica aquí** (la acción es de `ayudas.js`); la Bandeja ya da el más antiguo sin boletines en `por_cliente.json`.
 - **R16 · arreglado:** «Asignar» solo para dirección, operaciones y proyectos (detalle y reparto).
+
+# V5 · Bandeja para TRABAJAR (3-oct)
+Encargo de Tomás: «¿cómo puede ser que la parte de responder correos sea pequeñita y esté a la derecha?». Rehecha la pantalla de
+`modulos/bandeja.js` (vistas secundarias, reglas y datos de antes, intactos).
+
+**Cómo lo resuelven otros (fuentes abiertas):** tres zonas (lista · conversación con editor · ficha del cliente plegable) en Front
+(help.front.com/en/articles/3889728), Zendesk Agent Workspace (support.zendesk.com/hc/en-us/articles/4408821259930), Missive
+(missiveapp.com/docs/get-started/missive-interface) y Superhuman (help.superhuman.com/hc/en-us/articles/46005778939789); «enviar y
+siguiente» / qué pasa tras enviar en Help Scout (docs.helpscout.com/article/69-respond-to-conversations) y Zendesk
+(support.zendesk.com/hc/en-us/articles/4408829483930); «Enviar y archivar/snooze» en Front (help.front.com/en/articles/2431) y Missive
+(missiveapp.com/docs/core-features/triage-and-assignment); atajos j/k/r/e/a en Front (help.front.com/en/articles/2189), Help Scout
+(docs.helpscout.com/article/419-keyboard-shortcuts), Missive (missiveapp.com/docs/advanced-features/shortcuts) y Gmail
+(support.google.com/mail/answer/6594); plantillas con «/» en Front (help.front.com/en/articles/2230) y huecos que avisan en Superhuman
+(help.superhuman.com/hc/en-us/articles/46005686571149); estados «pendiente/esperando» que se reabren en Zendesk
+(support.zendesk.com/hc/en-us/articles/8263915942938); móvil con pestañas Conversación/Detalles en Zendesk
+(support.zendesk.com/hc/en-us/articles/4408825697434).
+
+**Qué hay ahora**
+- **Escritorio (contenido ≥ 1.000 px):** lista compacta a la izquierda (filtros Míos · Sin responder · Quejas · Esperando · Todos con
+  contador; «Más» con automáticos, más de un mes, ya hechos y las vistas de reparto, WhatsApp y de dónde sale; orden Urgencia | Más
+  antiguo; los sin cliente al final) · **centro**: cabecera (asunto, espera, queja, cliente, ticket ↗, account, estado de Desk, «3 de
+  17 ‹ ›») + acciones de un clic (Despachado e · Esperando p · Asignar a (solo quien puede) · Tarea en ClickUp · Avisar a su account ·
+  Más: No aplica con motivo, Cerrar, Abrir en Desk) + **hilo legible** (mensajes plegables, los dos últimos abiertos, «Desplegar
+  todo», pies legales y citas quitados) + **editor siempre a la vista** con el borrador de la IA ya dentro · derecha: **contexto del
+  cliente plegable** (gravedad y por qué, equipo, más correos suyos, impago si lo ve, campaña y leads 7 d, tareas en revisión y
+  bloqueadas, reuniones, enlaces a ficha/Desk/canal/GHL). Abierto por defecto si el contenido mide ≥ 1.280 px; se recuerda.
+- **1024:** lista + conversación; el contexto pasa a pestaña «Cliente»; acciones con icono. **390:** lista → conversación a pantalla
+  completa (sin cambiar de pantalla: `history`), editor fijo abajo, pestaña «Cliente».
+- **Editor (cerebro de respuestas, `/api/ia/borrador`):** «Calidad del borrador NN/100 · lista/revisar/rehacer» (la nota del servidor;
+  los huecos se cuentan en vivo), tipo de correo, «Lo que falta» (faltas que llevan al hueco, `[completar: …]` como botones, casillas de
+  huecos, recomendación interna, siguiente paso, datos citados, qué pedía el cliente), los `[…]` **resaltados en ámbar** dentro del
+  texto y **Enviar bloqueado** mientras quede uno (selecciona el primero). Si el cerebro dice «no hace falta responder», el botón
+  principal es **«Cerrar sin responder»** (⌘↵ hace el principal). Plantillas (menú y «/» al empezar una línea), adjuntos simulados
+  (solo el nombre va a la cola), firma de quien envía, Responder | Nota interna, ampliar. Crece con el texto (quejas de 160 palabras,
+  resultados de 200) dejando 160 px de hilo (96 px mientras escribes).
+- **Procesar la bandeja:** «Enviar y siguiente» abre el siguiente; j/k, r, e, a, p, z (deshacer), ⌘↵; atajos a la vista (letras en los
+  botones y pie de la lista). Lo que saca el correo (responder, despachado, esperando, no aplica, cerrar) usa **«Hecho · Deshacer»**
+  de `modulos/_deshacer.js` (8 s, se encola al cambiar de pantalla); el «¿Seguro?» solo vuelve si los envíos reales están activados
+  (`/api/envios → modo.reales`). Sin cliente no se contesta (el servidor daría 403): nota, asignar o despachado.
+- **Envíos:** todo sigue en simulación y pasa por `envios.py`; el hilo enseña «Desde la app» con el estado de cada envío (simulado /
+  pendiente / enviado / confirmado / fallido) y la hora local.
+- **Datos nuevos:** `fuentes_bandeja/generar_hilos.py` → `data/bandeja/hilos.json` (40 hilos, 158 mensajes, sin correos ni teléfonos;
+  recorte por `cliente_id`, sin cliente solo Operaciones y Dirección), dado de alta en `reglas_permisos.json → datos_de_modulo` y
+  lanzado al final de `generar_bandeja.py`. Acciones nuevas `despachado` y `esperando_cliente` en `acciones_permitidas.bandeja`.
+  Molde común: `plegarConsejo` de `_plegar_consejo.js` (el consejo en una línea, sin empujar la zona).
+
+**Medición (`fuentes_bandeja/medir_bandeja.py`, Chrome sin cabeza, base copiada en cada pasada, primero la tarea A de todos)**
+
+| 1440 × 900 | A · leer el más antiguo y dejar la respuesta lista | B · procesar 5 seguidos |
+|---|---|---|
+| lucia | 3 clics + 4 ruedas → **0 + 0** | 20 + 23 → **5 + 0** |
+| candela | 3 + 4 → **0 + 0** | 16 + 16 → **5 + 0** |
+| mili | 3 + 4 → **0 + 0** | 24 + 29 → **5 + 0** |
+| tomas | 3 + 4 → **2 + 0** (Sin responder + Más antiguo) | 25 + 26 → **5 + 0** |
+| yessica | 3 + 2 → **0 + 0** | 24 + 23 → **5 + 0** |
+
+A 1024 × 768: antes A 3 clics + 2-3 ruedas, B 21-25 clics + 11-20 ruedas → después igual que a 1440 (A 0-2 + 0, B 5 + 0). Con
+⌘↵ la B es 0 clics. A 390: 1 toque en la fila y el editor ya está abajo (probar_bandeja).
+
+**Pruebas:** `probar_bandeja.py` (8 personas × 1440/1024/390 + flujo) TODO BIEN · `pruebas_e0.py --puerto 9230` TODO BIEN (diseño
+estricto incluido) · `pruebas_seguridad.py` TODO BIEN · `pruebas_coherencia.py` sin errores (bandeja en verde) · `escaner_secretos.py
+--proyecto` limpio · `import('./modulos/bandeja.js')` sin errores. Servidor solo en 127.0.0.1:9230 con copia de `local.db`.
+Capturas `.jpg` en `capturas/_bandeja_v5/` (antes_*, cada persona a 1440/1024/390, hilo, tras enviar, vistas, móvil).
+
+**Pendiente / dudas (D-P-BDJ-5):** Mi día da por hecho cualquier acción de la Bandeja; `envios.py` debería rechazar `[…]` en el
+servidor; el hilo solo existe para 40 correos (el extractor de la IA tendría que bajar todos los pendientes).

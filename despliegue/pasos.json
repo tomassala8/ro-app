@@ -813,6 +813,53 @@
    "nota": "Envíos verificados: cada acción que manda algo fuera tiene su envío; con un canal ACTIVO (interruptor + RO_ENVIOS_REALES=si) manda los pendientes, relee en la herramienta (solo lectura) que están en el hilo con texto y destinatario correctos, detecta rebotes, reintenta una vez lo seguro sin duplicar y avisa a quien lo mandó y a Agus. Hoy, en simulación: solo sincroniza y cuenta (no llama a nada). Idempotente: se puede repetir."
   },
   {
+   "id": "reconciliar_clickup",
+   "modulo": "envios (sincronía con ClickUp, 3-oct)",
+   "ligero": [
+    "{PY}",
+    "despliegue/reconciliar_clickup.py"
+   ],
+   "completo": [
+    "{PY}",
+    "despliegue/reconciliar_clickup.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "despliegue/reconciliar_clickup.py",
+    "--sin-red"
+   ],
+   "salidas": [],
+   "timeout": 300,
+   "depende": [
+    "verificar_envios",
+    "produccion"
+   ],
+   "aunque_falle": true,
+   "nota": "Sincronía con ClickUp: cada acción del equipo que va a ClickUp tiene su cambio guardado en la base (copia segura, clave única). Con ClickUp ACTIVO (interruptor de Tomás + RO_CLICKUP_REAL=si + llave del usuario de servicio) despacha los pendientes en orden por tarea sin duplicar, relee en ClickUp (solo lectura) que cada cambio está, marca «conflicto» si alguien lo cambió allí después y avisa; reintenta lo caído. Publica una vez al día el informe «cambios sin reflejar» para Agus y Mili. Hoy, en simulación: sincroniza, cuenta y el informe (no llama a ClickUp). Idempotente."
+  },
+  {
+   "id": "copia_seguridad",
+   "modulo": "copias (copia diaria verificada de la base, 3-oct)",
+   "ligero": [
+    "{PY}",
+    "despliegue/copia_seguridad.py"
+   ],
+   "completo": [
+    "{PY}",
+    "despliegue/copia_seguridad.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "despliegue/copia_seguridad.py"
+   ],
+   "salidas": [],
+   "timeout": 300,
+   "depende": [],
+   "aunque_falle": true,
+   "cada_min": 720,
+   "nota": "Copia diaria de local.db y del estado de la tubería con la API de copia de SQLite, verificada (integridad y filas, también tras comprimir), en despliegue/estado/copias/AAAA-MM-DD. Rotación: 7 diarias + 4 semanales; tope 800 MB y nunca con menos de 1 GB libre. Si la de hoy ya está verificada, no hace nada. R2 apagado hasta RO_COPIA_R2=si con su llave. La lee el vigía (fila «Copia de seguridad del día»)."
+  },
+  {
    "id": "ventas",
    "modulo": "setters · ventas-ro · prospeccion",
    "ligero": [
@@ -997,7 +1044,7 @@
    "completo": [
     "sh",
     "-c",
-    "{PY} fuentes_modular/generar_modular.py --certificados"
+    "{PY} fuentes_modular/generar_modular.py --detalle 17"
    ],
    "crudo": [
     "sh",
@@ -1009,7 +1056,77 @@
    ],
    "timeout": 600,
    "depende": [],
-   "nota": "Sin clave (modulards_api_key) el propio generador escribe «sin_conectar» con la instrucción para Tomás y sale bien: no es un fallo."
+   "cada_min": 55,
+   "claves_minimas": {
+    "data/modular/webs.json": [
+     "_meta",
+     "webs",
+     "alertas"
+    ],
+    "data/modular/tablero.json": [
+     "_meta",
+     "webs"
+    ]
+   },
+   "nota": "Cada hora (ligera, 7-23 h): webs, caídas, copias, vulnerabilidades, actualizaciones y malware (≈ 8-10 GET) + detalle por turnos de 8 webs (disponibilidad 1 d/7 d/30 d, salud, enlaces rotos, certificado: ≈ 32 GET con pausa); la completa (6:00 y 14:00), 17 webs. No llama a /sites/count (eso lo hace el vigía cada 10 min) y, si el vigía ve la clave rota, no llama a la API y deja la última lectura buena. Sin clave (modulards_api_key) escribe «sin_conectar» con la instrucción para Tomás. Solo GET: nada se escribe en Modular. Antes de «alertas» (vía «verdad»): las alertas de Modular van a #avisos-web."
+  },
+  {
+   "id": "hostinger",
+   "modulo": "Hostinger (hosting, VPS y dominios)",
+   "ligero": [
+    "sh",
+    "-c",
+    "{PY} fuentes_hostinger/generar_hostinger.py"
+   ],
+   "completo": [
+    "sh",
+    "-c",
+    "{PY} fuentes_hostinger/generar_hostinger.py --ssl"
+   ],
+   "crudo": [
+    "sh",
+    "-c",
+    "if [ -f fuentes_hostinger/_cache/volcado.json ]; then {PY} fuentes_hostinger/generar_hostinger.py --desde-cache; else {PY} fuentes_hostinger/generar_hostinger.py; fi"
+   ],
+   "salidas": [
+    "data/hostinger"
+   ],
+   "timeout": 600,
+   "depende": [],
+   "nota": "Solo lectura (GET). Sin token (hostinger_api_token) el propio generador escribe «sin_conectar» con la instrucción para Tomás y sale bien: no es un fallo."
+  },
+  {
+   "id": "gbp",
+   "modulo": "Google Business Profile (ficha de Google)",
+   "ligero": [
+    "sh",
+    "-c",
+    "{PY} fuentes_gbp/generar_gbp.py"
+   ],
+   "completo": [
+    "sh",
+    "-c",
+    "{PY} fuentes_gbp/generar_gbp.py"
+   ],
+   "crudo": [
+    "sh",
+    "-c",
+    "if [ -f fuentes_gbp/_cache/volcado.json ]; then {PY} fuentes_gbp/generar_gbp.py --desde-cache; else {PY} fuentes_gbp/generar_gbp.py; fi"
+   ],
+   "salidas": [
+    "data/gbp"
+   ],
+   "timeout": 900,
+   "depende": [],
+   "cada_min": 1380,
+   "claves_minimas": {
+    "data/gbp/gbp.json": [
+     "_meta",
+     "clientes",
+     "alertas"
+    ]
+   },
+   "nota": "Una vez al día (cada_min 1380): cuentas, fichas, estado (suspendida, cambios de Google), rendimiento diario, búsquedas del mes y reseñas. Solo GET (el permiso de Google no es de solo lectura). Sin llave o sin aprobación de Google escribe «pendiente_aprobacion» con los pasos de Tomás y sale bien: no es un fallo. Antes de «verdad» y «alertas»: las de la ficha van a SEO/ficha de Google con copia al account."
   },
   {
    "id": "panel_direccion",
@@ -1097,6 +1214,8 @@
     "dinero",
     "ficha",
     "horas",
+    "hostinger",
+    "gbp",
     "incidencias",
     "informe",
     "informes",

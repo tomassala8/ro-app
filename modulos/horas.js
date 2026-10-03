@@ -9,8 +9,9 @@
 
 import {
   h, fmt, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, panel, frescura, icono, iniciales,
-  tablaDensa, botonConfirmar, copiar, fichaCatalogo, vacioLinea,
+  tablaDensa, copiar, fichaCatalogo, vacioLinea,
 } from '../componentes.js';
+import { botonDeshacer } from './_deshacer.js';   // Ronda U (50 #4)
 import { selectorPersona, barras, barraMini, S, R, punto, estadoTexto, lineaFuentes, zonaTxt, ancharBuscador, dosColumnas, esMovil } from './produccion_comun.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -372,8 +373,9 @@ export default {
           h('div', { class: 'fila', style: { gap: S[2], flex: 'none' } },
             r.url ? h('a', { class: 'bt mini', href: r.url, target: '_blank', rel: 'noopener' }, icono('ext'), 'ClickUp') : null,
             hecha ? chipEstado('verde', `${(hecha.tipo || '').replace('hora_rara_', '')} · ${hecha.quien}`) :
-              validar ? ['Correcto', 'Hablar', 'Error'].map(dec => botonConfirmar({ texto: dec, pregunta: `¿Marcar como «${dec}»?`, confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura, peligro: dec === 'Error',
-                alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: `hora_rara_${dec.toLowerCase()}`, objeto: r.id, texto: dec, vista_previa: { decision: dec, registro: r.id } }); hechas.set(r.id, { tipo: `hora_rara_${dec.toLowerCase()}`, quien: ctx.persona.alias || 'tú' }); return 'Apuntado (simulación)'; } })) : chipEstado('gris', 'Sin revisar')));
+              // Ronda U (50 #4): Correcto / Hablar / Error al primer clic, con «Deshacer» 8 s (antes «¿Marcar como…? Sí»)
+              validar ? ['Correcto', 'Hablar', 'Error'].map(dec => botonDeshacer({ texto: dec, hecho: dec, soloLectura: ctx.soloLectura, pri: dec === 'Correcto',
+                alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: `hora_rara_${dec.toLowerCase()}`, objeto: r.id, texto: dec, vista_previa: { decision: dec, registro: r.id } }); hechas.set(r.id, { tipo: `hora_rara_${dec.toLowerCase()}`, quien: ctx.persona.alias || 'tú' }); return 'Apuntado (simulación)'; } })) : chipEstado('gris', 'Sin revisar')));
       };
       pintarL();
       return h('div', {}, ul, rs.length > POR ? pie : null);

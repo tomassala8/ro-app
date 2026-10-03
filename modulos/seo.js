@@ -25,6 +25,11 @@ import {
   ventanas,
 } from '../componentes.js';
 import { llevarA, filaConTexto } from './_ir.js';
+import { franjaCifras, pantallaTrabajo, barraAcciones } from './_trabajo.js';
+import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
+import { botonDeshacer } from './_deshacer.js';
+import { cargarTablero, revisadas, accionesWeb, estadoWeb, botonAbrirModular, botonEntrar, botonCrearTarea, botonAvisarAccount, fDiaHora as fMod } from './_modular.js';
+import { pestanaFichaGoogle, bloqueFichaGoogle } from './_gbp_bloques.js';   // 3-oct · ficha de Google (Business Profile)
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -106,11 +111,14 @@ function rol(ctx) {
 
 // =================================================================== datos
 async function cargar(ctx) {
-  const [seo, webs, modular] = await Promise.all([
+  const [seo, webs, modular, tablero, rev] = await Promise.all([
     ctx.datosModulo('seo/seo').catch(e => ({ _error: e.message })),
     ctx.datosModulo('seo/webs').catch(e => ({ _error: e.message })),
     // Modular DS: si el fichero no llega (sin generar o sin alta en el servidor), se trata como «sin conectar»
     ctx.datosModulo('modular/webs').catch(e => ({ _meta: { estado: 'sin_conectar', motivo: e.message }, webs: [] })),
+    // Tablero del equipo web (3-oct): todas las webs de Modular, solo para web, jefe de SEO y web, operaciones y dirección
+    cargarTablero(ctx),
+    revisadas(ctx),
   ]);
   for (const f of seo.clientes || []) f.seo_quien = nom(ctx, f.seo_id) || 'Sin asignar';
   for (const w of webs.webs || []) w.web_quien = nom(ctx, w.web_id) || 'Sin asignar';
@@ -120,7 +128,8 @@ async function cargar(ctx) {
   const porCli = new Map(), porDom = new Map();
   if (conectado) for (const m of modular.webs || []) { if (m.cliente_id) porCli.set(m.cliente_id, m); if (m.dominio || m.url) porDom.set(dom(m.dominio || m.url), m); }
   for (const w of webs.webs || []) w.modular = conectado ? (porCli.get(w.cliente) || porDom.get(dom(w.url)) || null) : undefined;
-  return { seo, webs, modular: { conectado, meta: modular?._meta || {}, resumen: modular?.resumen || null } };
+  return { seo, webs, modular: { conectado, meta: modular?._meta || {}, resumen: modular?.resumen || null },
+    tablero: conectado && tablero?._meta?.estado === 'conectado' ? tablero : null, rev };
 }
 
 // =================================================================== portada
@@ -193,7 +202,7 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
     t.push(tile({ icono: 'escudo', etiqueta: 'Certificados ≤ 30 días', valor: cert, estado: cert ? 'ambar' : 'verde', contexto: 'Actuar con 7 días o menos', medible: 'hoy', frescura: fresMon,
       ir: 'Ver cuáles', alPulsar: () => irPestana(cont, 'webs', 'cert') }));
   }
-  cont.append(rejillaTarjetas(t));
+  const ctxN = [rejillaTarjetas(t)];   // Ronda U (#1): las tarjetas grandes y los avisos van debajo de la lista, plegados
 
   // ---------- aviso de calidad del dato (lo que NO es un problema del cliente)
   const totalDes = base.reduce((a, f) => a + ((f.visibilidad || {}).desaparecen || 0), 0);
@@ -201,10 +210,10 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const suben = conGsc.filter(f => (f.clics.var_mes || 0) > 0).length;
   if (r !== 'web' && totalDes > 50) {
     // R12: el mismo texto que lee Mi día (resumen.aviso_seranking) cuando se mira toda la cartera
-    cont.append(avisoParcial(todaLaCartera && R.aviso_seranking?.texto ? R.aviso_seranking.texto
+    ctxN.push(avisoParcial(todaLaCartera && R.aviso_seranking?.texto ? R.aviso_seranking.texto
       : `SE Ranking dejó de ver ${num(totalDes)} palabras de golpe esta semana, y los clics de Google suben en ${suben} de ${conGsc.length} clientes. Parece un fallo suyo: compruébalo en Google antes de tocar nada. Las palabras que hoy no ve no cuentan como caída.`, { titulo: 'Cuidado con el dato de SE Ranking.' }));
   }
-  if (r !== 'web') cont.append(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: SE Ranking da posiciones de hoy frente a hace 7 y 30 días, y Search Console, clics de 7 y 28 días (por días solo guarda 28).'));
+  if (r !== 'web') ctxN.push(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: SE Ranking da posiciones de hoy frente a hace 7 y 30 días, y Search Console, clics de 7 y 28 días (por días solo guarda 28).'));
 
   // ---------- 2 · pestañas (cada puesto abre en la suya)
   const inicial = r === 'web' ? 'webs' : 'seo';
@@ -218,7 +227,15 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
     pintar: (id, z) => (id === 'seo' ? pintarSeo(z, ctx, d, base, r) : id === 'webs' ? pintarWebs(z, ctx, d, r, webObjetivo) : pintarFicha(z, ctx, d, base)),
   });
   p.id = 'seo-pestanas';
-  cont.append(p);
+  // franja de cifras (llevan a su pestaña y filtro): lo que pide acción, primero
+  const franja = franjaEnLinea(franjaCifras([
+    { etiqueta: 'Webs en rojo', valor: websRojo.length, estado: websRojo.length ? 'rojo' : '', alPulsar: () => irPestana(cont, 'webs', 'rojo') },
+    { etiqueta: 'Sin responder', valor: caidas.length, estado: caidas.length ? 'rojo' : '', alPulsar: () => irPestana(cont, 'webs', 'caidas') },
+    r !== 'web' ? { etiqueta: 'Fuera del top 10', valor: fuera, estado: fuera ? 'rojo' : '', alPulsar: () => irPestana(cont, 'seo', 'rojo') } : null,
+    r !== 'web' ? { etiqueta: 'Clientes en verde', valor: pctVerde === null ? 'sin dato' : fmt.pct(pctVerde), titulo: enDuda ? 'A medias: SE Ranking en duda' : U.texto, alPulsar: () => irPestana(cont, 'seo') } : null,
+    { etiqueta: 'Fallos de medición', valor: avisosMed, alPulsar: () => irPestana(cont, 'webs', 'medicion') },
+  ], { etiqueta: 'Cifras (llevan a su lista)' }));
+  cont.append(pantallaAncha({ id: 'seo-web', filtros: franja, lista: p, contexto: ctxN, tituloContexto: 'Cifras, avisos del dato y cómo se mide' }));
   if (webObjetivo !== null) p.elegir('webs');
 }
 
@@ -230,7 +247,7 @@ function irPestana(cont, id, chip) {
     const b = [...p.querySelectorAll('.chips-f button')].find(x => x.dataset.v === chip);
     if (b && b.getAttribute('aria-pressed') !== 'true') b.click();
   }
-  p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (p.getBoundingClientRect().top > innerHeight * 0.6) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 function marcarChips(chips, opciones) {
   [...chips.querySelectorAll('button')].forEach((b, i) => { if (opciones[i]) b.dataset.v = opciones[i].valor; });
@@ -320,6 +337,94 @@ function pintarSeo(z, ctx, d, base, r) {
     ['Entregas SEO en plazo', 'faltan fecha y tipo en las tareas de ClickUp (módulo Producción)']]));
 }
 
+// ------------------------------------------------------------------ tablero del equipo web (Modular DS, 3-oct)
+// Encargo de Tomás: «para el equipo de web el acceso a Modular de todos ellos». El molde de trabajo (modulos/_trabajo.js):
+// franja de cifras que filtran · LA lista por urgencia (caídas, sin copia, vulnerabilidades críticas, certificados,
+// actualizaciones) con sus acciones al lado · el detalle de la web elegida a la derecha (debajo en el móvil).
+const PROB_FILTRO = {
+  urgentes: (w, rev) => (w.urgencia || 0) > 0 && !rev.has(String(w.modular_id)),
+  caidas: w => (w.problemas || []).some(p => p.clave === 'caida' || p.clave === 'caida_fuera'),
+  copia: w => (w.problemas || []).some(p => p.clave === 'sin_copia' || p.clave === 'copia_atrasada'),
+  critica: w => (w.vulnerabilidades?.criticas || 0) > 0,
+  cert: w => (w.certificado?.dias ?? 999) <= 14,
+  act: w => (w.actualizaciones?.pendientes || 0) >= 5,
+  revisadas: (w, rev) => rev.has(String(w.modular_id)),
+};
+function pintarTablero(z, ctx, d, r) {
+  const T = d.tablero, meta = T._meta || {}, rev = d.rev || new Map();
+  const webs = T.webs || [], fuera = T.fuera_de_modular || [];
+  const yo = ctx.persona.id;
+  const mias = webs.filter(w => w.dueno_id === yo).length + fuera.filter(f => f.dueno_id === yo).length;
+  let filtro = r === 'web' && mias ? 'mias' : 'urgentes';
+  let elegida = null;
+  const cuenta = k => webs.filter(w => PROB_FILTRO[k](w, rev)).length;
+  const franjaCaja = h('div', { style: { minWidth: '0' } });
+  const listaCaja = h('div', { class: 'pila', style: { gap: S[2], minWidth: '0' } });
+  const detalleCaja = h('div', { class: 'pila', 'data-webs-detalle': '', style: { gap: S[3], minWidth: '0' } });
+  const peor = w => ((w.problemas || []).find(p => p.gravedad === 'rojo') ? 'rojo' : (w.problemas || []).find(p => p.gravedad === 'ambar') ? 'ambar' : 'verde');
+  const nombre = w => w.cliente_nombre || w.nombre || w.dominio;
+  const pintarFranja = () => franjaCaja.replaceChildren(franjaEnLinea(franjaCifras([
+    { etiqueta: 'Por urgencia', valor: cuenta('urgentes'), estado: cuenta('urgentes') ? 'rojo' : '', activo: filtro === 'urgentes', alPulsar: () => elegir('urgentes') },
+    mias ? { etiqueta: 'Mis webs', valor: mias, activo: filtro === 'mias', alPulsar: () => elegir('mias') } : null,
+    { etiqueta: 'Caídas', valor: cuenta('caidas'), estado: cuenta('caidas') ? 'rojo' : '', activo: filtro === 'caidas', alPulsar: () => elegir('caidas') },
+    { etiqueta: 'Sin copia reciente', valor: cuenta('copia'), estado: cuenta('copia') ? 'rojo' : '', activo: filtro === 'copia', alPulsar: () => elegir('copia') },
+    { etiqueta: 'Vulnerabilidad crítica', valor: cuenta('critica'), estado: cuenta('critica') ? 'rojo' : '', activo: filtro === 'critica', alPulsar: () => elegir('critica') },
+    { etiqueta: 'Certificado < 15 días', valor: cuenta('cert'), estado: cuenta('cert') ? 'rojo' : '', activo: filtro === 'cert', alPulsar: () => elegir('cert') },
+    { etiqueta: 'Actualizaciones ≥ 5', valor: cuenta('act'), activo: filtro === 'act', alPulsar: () => elegir('act') },
+    { etiqueta: 'Fuera de Modular', valor: fuera.length, activo: filtro === 'fuera', alPulsar: () => elegir('fuera') },
+    rev.size ? { etiqueta: 'Revisadas hoy', valor: rev.size, activo: filtro === 'revisadas', alPulsar: () => elegir('revisadas') } : null,
+  ], { etiqueta: 'Webs por problema (filtran la lista)' })));
+  const verDetalle = (w, llevar = true) => {
+    elegida = w;
+    detalleCaja.replaceChildren(
+      barraAcciones({ titulo: nombre(w), sub: `${w.dominio} · lleva la web ${w.dueno || 'sin asignar'}`,
+        acciones: [botonAbrirModular(w), botonEntrar(ctx, w), botonCrearTarea(ctx, w), w.sin_cliente ? null : botonAvisarAccount(ctx, w)] }),
+      h('div', { class: 'panel' }, h('div', { class: 'cuerpo' }, estadoWeb(ctx, w, { meta, conAcciones: false, estrecho: true }))));
+    if (llevar && matchMedia('(max-width: 900px)').matches) detalleCaja.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+  const filaWeb = w => ({
+    estado: peor(w), icono: (w.problemas || [])[0] ? ({ caida: 'mundo_web', caida_fuera: 'mundo_web', sin_copia: 'drive', copia_atrasada: 'drive', vulnerabilidad: 'escudo', certificado: 'candado', malware: 'escudo' })[w.problemas[0].clave] || 'alert' : 'ok',
+    motivo: h('button', { type: 'button', class: 'enlace', title: 'Ver el estado completo de esta web', style: { background: 'none', border: '0', padding: '0', font: 'inherit', color: 'inherit', textAlign: 'left', cursor: 'pointer', ...TOQUE },
+      on: { click: () => verDetalle(w) } }, `${nombre(w)} · ${(w.problemas || [])[0]?.titulo || 'sin problemas abiertos'}`),
+    detalle: [w.dominio, `lleva la web ${w.dueno || 'sin asignar'}`, (w.problemas || []).filter(p => p.gravedad !== 'verde').length > 1 ? `${(w.problemas || []).filter(p => p.gravedad !== 'verde').length - 1} problemas más` : null,
+      w.monitor_ro ? (w.monitor_ro.responde ? 'desde RO responde' : 'desde RO no responde') : null, w.sin_cliente ? 'sin cliente' : null,
+      rev.get(String(w.modular_id)) ? `revisada por ${nom(ctx, rev.get(String(w.modular_id)).quien)} ${fMod(rev.get(String(w.modular_id)).cuando)}` : null].filter(Boolean).join(' · '),
+    botones: accionesWeb(ctx, w, { revisado: rev.get(String(w.modular_id)) || null, verDetalle: () => verDetalle(w),
+      alRevisar: () => { rev.set(String(w.modular_id), { quien: yo, cuando: new Date().toISOString() }); } }),
+  });
+  const filaFuera = f => ({
+    estado: 'ambar', icono: 'plug', motivo: `${f.cliente_nombre} · no está en Modular`,
+    detalle: [f.dominio, `lleva la web ${f.dueno || 'sin asignar'}`, f.monitor_ro ? (f.monitor_ro.responde ? 'desde RO responde' : `desde RO no responde (${f.monitor_ro.codigo || 'sin respuesta'})`) : null].filter(Boolean).join(' · '),
+    botones: [botonCrearTarea(ctx, { ...f, nombre: f.cliente_nombre, problemas: [{ clave: 'fuera', gravedad: 'ambar', titulo: 'Añadir a Modular', detalle: `${f.dominio} no está en Modular DS: sin copias, actualizaciones vigiladas ni aviso de caídas desde fuera.`, accion: f.accion, dueno: f.dueno }] },
+      { texto: 'Añadir a Modular' })],
+  });
+  const POR_PAG = 15;
+  let pagina = 1;
+  const pintarLista = () => {
+    const filas = filtro === 'fuera' ? fuera
+      : webs.filter(w => (filtro === 'mias' ? w.dueno_id === yo && (w.urgencia || 0) > 0 : PROB_FILTRO[filtro](w, rev)));
+    const extraMias = filtro === 'mias' ? fuera.filter(f => f.dueno_id === yo) : [];
+    const items = filtro === 'fuera' ? filas.map(filaFuera) : [...filas.map(filaWeb), ...extraMias.map(filaFuera)];
+    const total = items.length;
+    listaCaja.replaceChildren(
+      items.length ? listaLoPrimero(items.slice(0, POR_PAG * pagina), { subir: false }) : vacioLinea(filtro === 'revisadas' ? 'Nada revisado en las últimas 24 h.' : 'Ninguna web con este problema. Buena señal.', { icono: 'ok' }),
+      total > POR_PAG * pagina ? h('button', { type: 'button', class: 'bt mini', on: { click: () => { pagina += 1; pintarLista(); } } }, `Ver ${Math.min(POR_PAG, total - POR_PAG * pagina)} más (de ${total})`) : null);
+    const primera = filtro === 'fuera' ? null : filas[0];
+    if (!elegida || !filas.includes(elegida)) { if (primera) verDetalle(primera, false); else detalleCaja.replaceChildren(); }
+  };
+  function elegir(k) { filtro = k; pagina = 1; pintarFranja(); pintarLista(); }
+  pintarFranja();
+  pintarLista();
+  const R = T.resumen || {};
+  const cab = h('div', { class: 'fila sub', style: { gap: S[2] } }, frescura({ fuente: 'Modular DS', fecha: meta.leido || meta.generado }),
+    h('span', {}, `${num(webs.length)} webs en Modular · ${num(R.caidas_ahora ?? 0)} caídas ahora · ${num(R.con_vulnerabilidad_critica ?? 0)} con vulnerabilidad crítica · ${num(fuera.length)} webs de clientes fuera de Modular`),
+    meta.dato_viejo ? chipEstado('ambar', 'Dato de la última lectura buena') : null);
+  // Ronda U (#1): la primera fila a menos de 300 px · el resumen y la hora del dato van al pie del tablero
+  z.append(panel({ titulo: 'Tablero de webs (Modular)', icono: 'mundo_web', sub: 'La más urgente primero, con sus acciones. Pulsa el nombre para ver todo.' },
+    h('div', { class: 'cuerpo pila', style: { gap: S[3] } },
+      pantallaTrabajo({ id: 'webs-tablero', filtros: franjaCaja, lista: listaCaja, detalle: detalleCaja, consejo: false }), cab)));
+}
+
 // ------------------------------------------------------------------ pestaña Webs
 function pintarWebs(z, ctx, d, r, webObjetivo = null) {
   const webs = d.webs.webs || [];
@@ -328,21 +433,25 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
   const responde = w => w.comprobacion?.estado >= 200 && w.comprobacion?.estado < 400;
   // V2 · una sola regla de «lenta» (webs.json → _meta.lenta, la misma que Mi día y Alertas)
   const esLenta = w => (w.lenta !== undefined ? w.lenta : responde(w) && (w.comprobacion?.ms || 0) >= ((metaW.lenta || {}).umbral_ms || 5000));
+  // Tablero del equipo web (Modular DS): lo primero que se ve en la pestaña para web, jefe de SEO y web y dirección
+  if (d.tablero) pintarTablero(z, ctx, d, r);
   // lo primero: caídas, spam y certificados
   const rojas = webs.filter(w => w.estado === 'rojo').slice(0, 7);
-  z.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: 'Webs en rojo. «Lo tengo» evita que suba (a Agus, y a Mili a la hora).' },
+  z.append(panel({ titulo: d.tablero ? 'Monitor de RO · webs en rojo' : 'Lo primero hoy', icono: 'zap', sub: 'Webs en rojo desde la IP de RO (caídas, spam, certificados). «Lo tengo» evita que suba (a Agus, y a Mili a la hora).' },
     listaLoPrimero(rojas.map((w, i) => ({
       estado: cuentagotas('rojo', i, rojas.length), icono: w.motivo.includes('spam') ? 'escudo' : 'mundo_web',
       motivo: `${w.nombre} · ${w.motivo}`,
       detalle: [nom(ctx, w.web_id) ? `Web: ${nom(ctx, w.web_id)}` : 'Sin persona de web asignada', w.web_aviso && nom(ctx, w.web_id) ? w.web_aviso : null, w.con_campana ? 'tiene campaña encendida: avisar también a publicidad y CRM' : null, w.comprobacion?.hora ? `comprobado ${w.comprobacion.hora.slice(11, 16)}` : null,
         w.modular?.disponibilidad?.estado === 'up' && !responde(w) ? 'Modular la ve arriba desde fuera: bloqueada solo para RO' : null].filter(Boolean).join(' · '),
-      botones: masAcciones(
-        botonConfirmar({ texto: 'Lo tengo', pregunta: '¿Te encargas tú?', confirmar: 'Sí, mío', mini: true, soloLectura: ctx.soloLectura,
-          alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'caida_lo_tengo', objeto: `${w.nombre} · ${w.motivo}`.slice(0, 200), texto: w.motivo, vista_previa: `${ctx.persona.nombre} coge «${w.motivo}» en ${w.url}. Se para la subida a Agus.` }); return 'Tuyo (simulación)'; } }),
-        botonConfirmar({ texto: 'Avisar al account', pregunta: '¿Avisar con el motivo?', confirmar: 'Sí, avisar', mini: true, soloLectura: ctx.soloLectura,
-          alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: w.nombre, texto: w.motivo, vista_previa: `Aviso interno al account de ${w.nombre}: «${w.motivo}». Nada sale al cliente.` }); return 'En la cola (simulación)'; } }),
-        h('a', { href: w.url, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir la web')),
-    })), { vacio: { titulo: 'Ninguna web en rojo', porque: 'Todas responden desde la IP de RO, sin spam ni certificados a punto de caducar.', celebrar: true } })));
+      // Ronda U (#4 y 50 §SEO): «Lo tengo» y «Avisar al account» a la vista en la fila, al primer clic con «Deshacer» 8 s
+      // (son internos: nada sale al cliente). «Abrir la web» en «⋯».
+      botones: [
+        botonDeshacer({ texto: 'Lo tengo', hecho: 'Tuya', pri: true, icono: 'persona', soloLectura: ctx.soloLectura,
+          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'caida_lo_tengo', objeto: `${w.nombre} · ${w.motivo}`.slice(0, 200), texto: w.motivo, vista_previa: `${ctx.persona.nombre} coge «${w.motivo}» en ${w.url}. Se para la subida a Agus.` }); return 'Tuya · no sube a Agus'; } }),
+        botonDeshacer({ texto: 'Avisar al account', hecho: 'Account avisado', icono: 'send', soloLectura: ctx.soloLectura,
+          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: w.nombre, texto: w.motivo, vista_previa: `Aviso interno al account de ${w.nombre}: «${w.motivo}». Nada sale al cliente.` }); return 'Avisado en su Mi día'; } }),
+        ...masAcciones(h('span'), h('a', { href: w.url, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir la web')).slice(1)],
+    })), { subir: !d.tablero, vacio: { titulo: 'Ninguna web en rojo', porque: 'Todas responden desde la IP de RO, sin spam ni certificados a punto de caducar.', celebrar: true } })));   // con tablero, en el móvil no se sube encima de él
 
   // todas las webs con chips
   const ops = [
@@ -450,8 +559,8 @@ function pintarFicha(z, ctx, d, base) {
   // lo que ya sale: posiciones en Maps donde SE Ranking las mide (15 como máximo)
   const conMapa = base.map(f => ({ ...f, mapa: (f.informe15 || []).filter(k => k.mapa) })).filter(f => f.mapa.length);
   const filas = conMapa.flatMap(f => f.mapa.map(k => ({ cliente: f.cliente, cliente_id: f.cliente_id, k: k.k, mapa: k.mapa })));
-  z.append(panel({ titulo: 'La ficha de Google se conecta', icono: 'pin', sub: 'Google Business Profile no está conectado: hace falta pedir el acceso a la API, que Google aprueba a mano. Mientras, las reseñas, las llamadas y las publicaciones se miran en Google.' },
-    h('div', { class: 'cuerpo' }, vacioLinea('Sin datos de la ficha todavía. Lo que ya se ve son las posiciones en Maps que mide SE Ranking (abajo).', { icono: 'plug', quien: 'Agus' }))));
+  // Ronda U (50 §SEO): una línea, y debajo lo que sí se puede hacer hoy (posición en Maps)
+  const gz = h('div'); z.append(gz); pestanaFichaGoogle(gz, ctx);   // 3-oct · reseñas por responder, llamadas y rutas (o «pendiente de aprobación de Google»)
   z.append(panel({ titulo: 'Posiciones en Maps que ya da SE Ranking', icono: 'pin', sub: `Solo en los proyectos con buscador de Maps dado de alta. Posición de hoy · ${fmt.plural(filas.length, 'palabra', 'palabras')}, todas (la misma cuenta que Mi día).` },
     filas.length ? tablaDensa({ filas, porPagina: 15, apilable: false, columnas: [
       { clave: 'cliente', titulo: 'Cliente', principal: true, celda: x => h('a', { class: 'celda-cli', href: `#/seo-web/${x.cliente_id}`, style: { color: 'var(--ink)', textDecoration: 'none', ...TOQUE } }, x.cliente) },
@@ -505,7 +614,7 @@ function pintarDetalle(cont, ctx, d, id) {
         f.seranking ? h('a', { class: 'bt', href: f.seranking.prueba, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en SE Ranking') : null,
         f.gsc ? h('a', { class: 'bt', href: `https://search.google.com/search-console/performance/search-analytics?resource_id=${encodeURIComponent(f.gsc.site)}`, target: '_blank', rel: 'noopener' }, icono('ext'), 'Search Console') : h('span', { class: 'bt', 'aria-disabled': 'true', title: 'Falta emparejar Search Console' }, icono('plug'), 'Search Console: falta emparejar'),
         f.ga4_enlace ? h('a', { class: 'bt', href: f.ga4_enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Analytics') : h('span', { class: 'bt', 'aria-disabled': 'true', title: 'Falta emparejar Analytics' }, icono('plug'), 'Analytics: falta emparejar'),
-        h('span', { class: 'bt', 'aria-disabled': 'true', title: 'La ficha de Google del negocio se conecta más adelante' }, icono('pin'), 'Ficha de Google: se conecta')))));
+        h('a', { class: 'bt', href: 'https://business.google.com/locations', target: '_blank', rel: 'noopener' }, icono('ext'), 'Ficha de Google')))));
 
   // tarjetas (5 → una fila de 5). Ventanas fijas de la fuente, dichas en cada etiqueta.
   const k = f.clics;
@@ -532,7 +641,7 @@ function pintarDetalle(cont, ctx, d, id) {
     cont.append(panel({ titulo: 'Avisos de esta semana', icono: 'alert' },
       listaLoPrimero(f.alertas.slice(0, 7).map((a, i, l) => ({ estado: cuentagotas(a.gravedad, i, l.length), icono: a.tipo === 'clics' ? 'grafico' : a.tipo === 'visibilidad' ? 'ojo' : 'star', motivo: a.texto,
         detalle: a.tipo === 'desaparece' ? 'Puede ser desindexación o un fallo de la comprobación de SE Ranking: buscar la palabra en Google en una ventana privada.' : a.tipo === 'fuera_top10' ? 'Regla: si en 48 h no hay tarea, sube a Jerónimo (jefe de SEO).' : '',
-        botones: [botonConfirmar({ texto: 'Hecho / no aplica', pregunta: '¿Marcar?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura, alConfirmar: () => { ctx.rastro({ accion: 'alerta_seo_vista', objeto: `${f.cliente_id}:${a.palabra || a.tipo}`, detalle: a.texto }); return 'Queda en el rastro'; } })] })))));
+        botones: [botonDeshacer({ texto: 'Hecho / no aplica', hecho: 'Marcada', soloLectura: ctx.soloLectura, alHacer: () => { ctx.rastro({ accion: 'alerta_seo_vista', objeto: `${f.cliente_id}:${a.palabra || a.tipo}`, detalle: a.texto }); return 'Queda en el rastro'; } })] })))));
   }
 
   // pestañas por fuente: Posiciones (SE Ranking) · Clics de Google (Search Console) · Web y ficha
@@ -600,7 +709,7 @@ function pintarDetalle(cont, ctx, d, id) {
               alConfirmar: async () => { await ctx.accion({ herramienta: 'pagespeed', tipo: 'medir_velocidad', objeto: w.url, cliente_id: f.cliente_id, texto: 'Medir velocidad móvil', vista_previa: `PageSpeed móvil de ${w.url} (cuando haya clave)` }); return 'En la cola (simulación)'; } }),
             h('a', { class: 'bt mini', href: w.url, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir la web')))
           : h('div', { class: 'cuerpo' }, vacioLinea('Sin web registrada: el portal no tiene la web de este cliente.', { icono: 'mundo_web' }))),
-      panel({ titulo: 'Ficha de Google', icono: 'pin' }, h('div', { class: 'cuerpo' }, vacioLinea('Se conecta: reseñas, llamadas, rutas y publicaciones llegan con el acceso a Google Business Profile.', { icono: 'plug', quien: 'Agus' })))));
+      bloqueFichaGoogle(ctx, f.cliente_id, { modulo: 'seo-web' })));   // 3-oct · ficha de Google (Business Profile)
   };
   cont.append(pestanas({
     clave: `seo.detalle.${ctx.persona.id}`, activa: 'pos', etiqueta: 'Fuentes del cliente',
@@ -617,8 +726,8 @@ function pintarDetalle(cont, ctx, d, id) {
     h('div', { class: 'cuerpo fila' },
       botonConfirmar({ texto: 'Lanzar comprobación de posiciones', pregunta: 'Gasta créditos de SE Ranking. ¿Seguro?', confirmar: 'Sí, gastar', mini: true, soloLectura: ctx.soloLectura || !f.seranking,
         alConfirmar: async () => { await ctx.accion({ herramienta: 'seranking', tipo: 'comprobar_posiciones', objeto: `proyecto ${f.seranking.proyecto}`, cliente_id: f.cliente_id, texto: 'Comprobación de posiciones', vista_previa: `SE Ranking · proyecto ${f.seranking.proyecto} (${f.cliente}) · ${f.seranking.seguidas} palabras · gasta créditos` }); return 'En la cola (simulación, doble confirmación hecha)'; } }),
-      botonConfirmar({ texto: 'Avisar al account', pregunta: '¿Avisar con el motivo?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-        alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: f.cliente, cliente_id: f.cliente_id, texto: f.motivo, vista_previa: `Aviso interno al account de ${f.cliente}: «${f.motivo}».` }); return 'En la cola (simulación)'; } }))));
+      botonDeshacer({ texto: 'Avisar al account', hecho: 'Account avisado', soloLectura: ctx.soloLectura,
+        alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: f.cliente, cliente_id: f.cliente_id, texto: f.motivo, vista_previa: `Aviso interno al account de ${f.cliente}: «${f.motivo}».` }); return 'Avisado en su Mi día'; } }))));
 }
 
 /** Barrido v1: enlaces sueltos en tablas y líneas de datos con zona de toque de 32 px (WCAG 2.5.8). */

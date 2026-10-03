@@ -495,7 +495,7 @@ for cid, cnt in por_cli_ag.items():
         if ("El account de ClickUp no es quien lleva sus tickets en Desk", cid) in vistos_inc:
             continue
         INCONG.append({"id": uid("inc", tipo, cid), "tipo": tipo, "cliente_id": cid, "cliente": C_ID[cid]["nombre"], "persona_id": None,
-                       "detalle": f"App (asignaciones): {nombre_p(acc) or acc} · Desk: {ag} lleva {n} de {sum(cnt.values())} {"ticket abierto" if sum(cnt.values()) == 1 else "tickets abiertos"}{' (desactivado en Desk)' if ag in desactivado else ''}.",
+                       "detalle": f"App (asignaciones): {nombre_p(acc) or acc} · Desk: {ag} lleva {n} de {sum(cnt.values())} {'ticket abierto' if sum(cnt.values()) == 1 else 'tickets abiertos'}{' (desactivado en Desk)' if ag in desactivado else ''}.",
                        "decide": "Mili", "herramientas": ["app", "desk"], "opciones": OPCIONES["El account de ClickUp no es quien lleva sus tickets en Desk"],
                        "origen": "cruce en vivo (Desk de hoy + asignaciones)"})
 

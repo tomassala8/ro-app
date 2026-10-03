@@ -99,6 +99,18 @@ def iso(x): return x.astimezone(MAD).strftime('%Y-%m-%d %H:%M') if x else None
 
 def ghl_url(loc, cid): return f'https://app.gohighlevel.com/v2/location/{loc}/contacts/detail/{cid}'
 
+# Regla común de teléfonos (3-oct, telefono.py): «+34…» sin espacios; lo que no cuadra no se guarda y va a
+# data/telefonos/dudosos.json (apartado «ventas_ro», sin el número entero).
+from telefono import limpiar as limpiar_tel, Dudosos  # noqa: E402
+DUD_TEL = Dudosos('ventas_ro')
+
+def tel_priv(c):
+    """{'telefono': '+34…' | '', 'extension'?} para el almacén privado del setter; el raro se anota y no se guarda."""
+    r = limpiar_tel(c.get('phone'))
+    if r['motivo'] == 'dudoso':
+        DUD_TEL.anotar(None, c.get('phone'), r['aviso'], f"Lead de Ventas de RO en GoHighLevel: {ghl_url(LOC, c.get('id'))}")
+    return {'telefono': r['telefono'] or '', **({'extension': r['extension']} if r['extension'] else {})}
+
 def guardar(nombre, datos, priv=False):
     ruta = os.path.join(PRIV if priv else SALIDA, nombre)
     os.makedirs(os.path.dirname(ruta), exist_ok=True)
@@ -308,7 +320,7 @@ if ghl_ok:
             lista = 'segunda'
         vence = (primera + dt.timedelta(hours=48)) if primera else None
         tel = c.get('phone') or ''
-        aviso = '' if (tel.startswith('+34') and len(tel) == 12) else ('sin teléfono' if not tel else 'teléfono raro: revisar')
+        aviso = '' if limpiar_tel(tel)['motivo'] == 'ok' else ('sin teléfono' if not tel else 'teléfono raro: revisar')   # regla común (extranjeros con «+» valen)
         lead = {
             'id': cid, 'setter': f['setter'], 'reparto': f['reparto'], 'grupo': f['grupo'], 'lista': lista,
             'motivo': f['detalle'], 'entro': iso(ref), 'minutos_sin_llamar': int((AHORA - ref).total_seconds() // 60) if lista == 'llamar_ya' else None,
@@ -318,7 +330,7 @@ if ghl_ok:
             'aviso_tel': aviso, 'sin_tel': not tel, 'tiene_correo': bool(c.get('email')), 'ghl': ghl_url(LOC, cid),
         }
         setters_out['leads'].append(lead)
-        privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', 'telefono': tel, 'correo': c.get('email') or ''}
+        privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', **tel_priv(c), 'correo': c.get('email') or ''}
 
     # citas de hoy y mañana por confirmar (calendario de 45 min, ya repartidas en (a))
     # «hoy y mañana» = hoy y el siguiente día laborable (un viernes se confirman las del lunes)
@@ -339,7 +351,7 @@ if ghl_ok:
                                      'confirmada_tel': bool(conf), 'llamadas': len(llamadas_a(num, reservada)),
                                      'nombre_m': mascara(nombre_de(c)), 'despacho_m': mascara(c.get('companyName') or ''),
                                      'tel_m': mascara_tel(c.get('phone')), 'sin_tel': not c.get('phone'), 'tiene_correo': bool(c.get('email')), 'ghl': ghl_url(LOC, cid)})
-        privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', 'telefono': c.get('phone') or '', 'correo': c.get('email') or ''}
+        privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', **tel_priv(c), 'correo': c.get('email') or ''}
 
     # citas pasadas sin resultado (7 días): GHL no marca la cita y la tarjeta sigue en «Cita agendada» o no hay tarjeta
     etapa_ventas = {}
@@ -362,7 +374,7 @@ if ghl_ok:
                                            'estado_ghl': e.get('appointmentStatus'), 'etapa': et or 'sin tarjeta',
                                            'grabada_zadarma': bool([l for l in llamadas_a(ult9(c.get('phone')), t - dt.timedelta(hours=2)) if l['contestada']]),
                                            'nombre_m': mascara(nombre_de(c)), 'despacho_m': mascara(c.get('companyName') or ''), 'ghl': ghl_url(LOC, cid)})
-            privados[setter][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', 'telefono': c.get('phone') or '', 'correo': c.get('email') or ''}
+            privados[setter][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', **tel_priv(c), 'correo': c.get('email') or ''}
 
 # llamadas perdidas o de números sin ficha (48 h). Solo número enmascarado; el setter ve las de SU extensión.
 for l in llamadas:
@@ -670,6 +682,7 @@ for s in SETTERS:
 guardar('ventas_tomas.json', {'generado': iso(AHORA), 'leads': priv_tomas}, priv=True)
 guardar('outreach_respuestas.json', {'generado': iso(AHORA), 'respuestas': priv_out}, priv=True)
 with open(os.path.join(PRIV, '.gitignore'), 'w') as f: f.write('*\n')
+DUD_TEL.guardar()
 
 print(json.dumps({'leads': len(setters_out['leads']), 'citas_48h': len(setters_out['citas']), 'pasadas': len(setters_out['pasadas']),
                   'perdidas': len(setters_out['perdidas']), 'reparto': setters_out['reparto'].get('por_setter'),

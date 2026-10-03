@@ -153,12 +153,22 @@ export const MODULOS = [
   { id: 'mi-perfil', num: 'P1', titulo: 'Mi perfil', grupo: 'Perfil', fase: 0, estado: 'hecho', fichero: './mi_perfil.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', rrhh: 'todo' },
     resumen: 'Tu nombre, puesto, jefe y zona horaria; cámbiala tú y sale en tu hora (reloj, resumen diario y día de tus horas).' },
-  // N11 (2-oct noche): salud de las 26 conexiones; Agus (técnico) la ve sin entrar en Ajustes.
-  { id: 'conexiones', num: 'N11', titulo: 'Conexiones', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './ajustes_conexiones.js',
+  // N11 (2-oct noche) → «Salud del sistema» (3-oct): el vigía (despliegue/vigia.py) cada 10 min; Agus (técnico) la ve sin entrar en Ajustes.
+  { id: 'conexiones', num: 'N11', titulo: 'Salud del sistema', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './ajustes_conexiones.js',
     puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', tecnico_altas: 'todo' },
-    resumen: 'Estado de cada conexión con las herramientas: verde, ámbar o rojo, desde cuándo y qué hacer.' },
+    resumen: 'Si todo funciona: cada herramienta (Google, GoHighLevel, ClickUp…) y la app por dentro, en verde, ámbar o rojo, desde cuándo, qué hacer y quién.' },
   // Envíos verificados (3-oct, encargo de Tomás «que el sistema nunca esté fallando»): cola de envíos con su estado, simulados hasta que Tomás los active (envios.py).
   { id: 'envios', num: 'EV1', titulo: 'Envíos', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './envios.js',
-    puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', tecnico_altas: 'todo' },
+    puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', tecnico_altas: 'todo' },
     resumen: 'Cada correo, WhatsApp o mensaje de GHL que sale de la app: si salió, si llegó, si rebotó y quién lo pidió. Hoy en simulación.' },
+  // Avisos automáticos (3-oct, encargo de Tomás «que en el chat de la app estén todas [las automatizaciones]»): recordatorios
+  // programados en los canales de la app (horas, semáforo del lunes, informe, cierre de facturación, resúmenes). Cada jefa
+  // cambia los de su departamento; Mili y Tomás, todos; el resto ve los que le llegan (avisos_programados.py).
+  { id: 'avisos-automaticos', num: 'AV2', titulo: 'Avisos automáticos', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './ajustes_avisos.js',
+    puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo' },
+    resumen: 'Lo que la app recuerda sola en el chat (imputar horas, semáforo del lunes, informes, cierre de facturación…): a quién, cuándo y solo si hace falta.' },
+  // Gasto de IA (3-oct, encargo de Tomás «no quiero una IA con tokens infinitos»): topes en euros, coste real por llamada, modo reglas (ia_gasto.py). Solo Tomás.
+  { id: 'gasto-ia', num: 'IA2', titulo: 'Gasto de IA', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './gasto_ia.js',
+    puestos_que_lo_ven: { direccion: 'todo' },
+    resumen: 'Lo que gasta la IA: mes, día, previsión, por función y por persona, con topes que solo cambia Tomás. Al 100 %, modo reglas sin coste.' },
 ];

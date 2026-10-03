@@ -46,7 +46,7 @@
 2. **Correos de RO de Ana y Javier** (`…@rankingonline.com`): son su llave de entrada (Cloudflare Access, W1) y el campo `correo` de `personas.json`. Hoy están como `setter_ana` / `setter_javier`, «por incorporar», sin correo de RO. Mientras no haya W1, la app solo se abre en el Mac de Tomás.
 3. **Usuarios de GHL y etiquetas `setter:ana` / `setter:javier`** (con el sí de Tomás: crear usuario manda invitación): `crear_usuarios_setters.py --ejecutar` y `repartir_setters.py --ejecutar`. En cuanto estén, el reparto de la app deja de ser simulado y el marcador cuenta las citas de cada uno.
 4. **Extensiones de Zadarma de cada setter** confirmadas (puse 107 Ana y 110 Javier por la memoria del 1-oct; están en `SETTERS` del generador). Sin ellas el marcador sale a cero.
-5. **Que `sip:` abra Zadarma en su móvil** (la app de Zadarma tiene que estar instalada y registrada con su extensión) y **qué WhatsApp usan** con `wa.me`: el del móvil del setter, no el +34 644 90 00 30 de GHL. Si Tomás quiere que salga del número de RO, hace falta W3.
+5. **Que `sip:` abra Zadarma en su móvil** (la app de Zadarma tiene que estar instalada y registrada con su extensión) y **qué WhatsApp usan** con `wa.me`: el del móvil del setter, no el número de WhatsApp de RO en GHL. Si Tomás quiere que salga del número de RO, hace falta W3.
 6. **Regenerar los datos cada mañana y a mediodía** (`generar_ventas_ro.py`), igual que el reparto: hoy no hay tarea programada para esto.
 
 ## Para E0 (propuestas, no tocado)

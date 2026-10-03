@@ -20,13 +20,19 @@
 
 import {
   h, fmt, semaforo, tile, tiles, chipEstado, chipsFiltro, selectorCliente, pestanas, barraEtapas,
-  lineaTiempo, vacio, botonConfirmar, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales,
+  lineaTiempo, vacio, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales,
   listaLoPrimero, listaConIcono, tablaApilable, graficoSerie, botonesContacto, normalizarTelefono, copiar, avisoFlotante,
-  variacion, esqueleto, rejillaTarjetas, vacioLinea, campoTexto,
+  variacion, esqueleto, rejillaTarjetas, vacioLinea, campoTexto, menuMas,
 } from '../componentes.js';
+import { botonAvisar, compositorAviso, pintarReunion } from './ficha_equipo.js';
+import { botonDeshacer } from './_deshacer.js';
+import { plegarConsejo } from './_plegar_consejo.js';
 import { cargarObjetivos, puedeEditar, lunesDeHoy, RE_IMPORTE, TIPO_OBJETIVO, TIPO_SEMAFORO } from './objetivos_comun.js';
 import { botonIA, panelCopiloto, estilos as estilosIA } from './ia_componentes.js';
 import { conTickets } from './_legible.js';
+import { panelBitacora } from './_bitacora.js';
+import { bloqueEstadoWeb } from './_modular.js';
+import { bloqueFichaGoogle } from './_gbp_bloques.js';   // 3-oct · ficha de Google (Business Profile)
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -74,6 +80,7 @@ const PESTANAS = {
   resultados: { texto: 'Resultados', icono: 'target' },
   web: { texto: 'Web y SEO', icono: 'globe' },
   redes: { texto: 'Redes', icono: 'heart' },
+  reunion: { texto: 'Reunión', icono: 'video' },
   comunicacion: { texto: 'Comunicación', icono: 'mail' },
   chat: { texto: 'Chat', icono: 'chat' },
   trabajo: { texto: 'Trabajo', icono: 'check' },
@@ -84,14 +91,15 @@ const PESTANAS = {
 // «Que cada uno tenga la información ordenada de lo que más va a visitar a lo que menos» (Tomás, 2-oct).
 // Resumen siempre primero y Rastro siempre último; en medio, lo que más abre cada puesto.
 const ORDEN = {
-  account: ['resumen', 'comunicacion', 'chat', 'contactos', 'trabajo', 'informes', 'resultados', 'web', 'redes', 'accesos', 'rastro'],
-  publicidad: ['resumen', 'resultados', 'chat', 'trabajo', 'informes', 'comunicacion', 'contactos', 'web', 'redes', 'accesos', 'rastro'],
-  crm: ['resumen', 'resultados', 'chat', 'trabajo', 'informes', 'comunicacion', 'contactos', 'web', 'redes', 'accesos', 'rastro'],
+  // Ronda U (#9): «Reunión» junta en una pantalla lo que hoy exige cuatro (resultados, pendiente del acta, abiertos, acta).
+  account: ['resumen', 'reunion', 'comunicacion', 'chat', 'contactos', 'trabajo', 'informes', 'resultados', 'web', 'redes', 'accesos', 'rastro'],
+  publicidad: ['resumen', 'resultados', 'chat', 'trabajo', 'reunion', 'informes', 'comunicacion', 'contactos', 'web', 'redes', 'accesos', 'rastro'],
+  crm: ['resumen', 'resultados', 'chat', 'trabajo', 'reunion', 'informes', 'comunicacion', 'contactos', 'web', 'redes', 'accesos', 'rastro'],
   seo: ['resumen', 'web', 'chat', 'trabajo', 'informes', 'resultados', 'comunicacion', 'contactos', 'redes', 'accesos', 'rastro'],
   redes: ['resumen', 'redes', 'chat', 'trabajo', 'informes', 'web', 'resultados', 'comunicacion', 'contactos', 'accesos', 'rastro'],
   resumen: ['resumen', 'redes', 'trabajo', 'informes', 'web', 'accesos', 'rastro'],
   admin: ['accesos', 'rastro'],          // administración (Sofía): cabecera, accesos y contrato, y rastro (I-02)
-  direccion: ['resumen', 'comunicacion', 'resultados', 'contactos', 'chat', 'trabajo', 'informes', 'web', 'redes', 'accesos', 'rastro'],
+  direccion: ['resumen', 'reunion', 'comunicacion', 'resultados', 'contactos', 'chat', 'trabajo', 'informes', 'web', 'redes', 'accesos', 'rastro'],
 };
 const PERFIL_DE_PUESTO = {
   direccion: 'direccion', finanzas_direccion: 'direccion', operaciones: 'direccion', proyectos: 'direccion', tecnico_altas: 'direccion',
@@ -321,7 +329,10 @@ export default {
       zona.replaceChildren(cabecera(ctx, F, barra));
       const cuentas = contadores(F);
       let caja = null;
-      const irA = k => { if (caja && orden.includes(k)) { caja.elegir(k); caja.querySelector('[role=tablist]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
+      // Ronda U: al ir a una pestaña, sus pestañas quedan arriba (bajo la cabecera fija de la app), sin animación que el
+      // repintado de la pestaña pueda cortar.
+      const irA = k => { if (caja && orden.includes(k)) { caja.elegir(k); const tl = caja.querySelector('[role=tablist]');
+        if (tl) setTimeout(() => window.scrollTo({ top: Math.max(0, tl.getBoundingClientRect().top + window.scrollY - (document.querySelector('header')?.offsetHeight || 64) - 8) }), 30); return true; } return false; };
       F.irA = irA;
       caja = pestanas({
         etiqueta: `Ficha de ${c.nombre}`, activa: tabActual, unaFila: true,
@@ -341,6 +352,7 @@ export default {
     ctx.alCambiarPeriodo?.(v => { periodoId = v?.id; if (raiz.isConnected) repintar(); });
     if (abrirA4 && F.obj) F.a4 = abrirA4;
     repintar();
+    plegarConsejo(cont);   // Ronda U (#1, molde común): el «Qué haría yo hoy aquí» de la carcasa, plegado en una línea
     if (abrirA4 && F.obj) {
       // El editor ya sale abierto (su botón, pulsado): basta con llevarlo al centro y dar el foco a su primer campo.
       const aLaVista = (n = 0) => {
@@ -384,51 +396,70 @@ function cabecera(ctx, F, barra = {}) {
   const directos = ['clickup', 'drive', 'metaAds', 'analytics', 'searchConsole'].map(k => recursos.find(r => r.k === k)).filter(Boolean);
   const extra = (portal?.atajos || []);
   const deskUrl = F.admin ? null : (F.porCliente?.fila?.mas_antiguo?.url || (F.correos?.lista || [])[0]?.url || null);
-  const atajo = (url, ico, texto) => { const a = h('a', { class: 'bt mini', href: url, target: '_blank', rel: 'noopener', title: `Abrir en ${texto} ↗` }, icono(ico), texto);
-    a.addEventListener('click', () => ctx.rastro({ accion: 'abrir_atajo', objeto: c.id, detalle: texto })); return a; };
   const ICO_EXTRA = { ghl: 'cap', metricool: 'heart', seranking: 'star' };
   const NOMBRE_CORTO = { ghl: 'GoHighLevel', metricool: 'Metricool', seranking: 'SE Ranking' };
   const fila100 = { flexBasis: '100%', minWidth: '0' };
 
-  // Copiloto de la IA («Qué haría hoy») en la cabecera: quien abre el detalle del cliente; nunca administración (I-02).
+  // Copiloto de la IA («Qué haría hoy»): ronda U (#1) plegado en UNA línea; se pide a la IA solo al abrirlo (nunca empuja
+  // las pestañas). Quien abre el detalle del cliente; nunca administración (I-02).
   const veCopiloto = !F.admin && ctx.ver({ tipo: 'cliente_detalle', cliente_id: c.id }).ok;
   let copiloto = null;
   if (veCopiloto) {
-    copiloto = panelCopiloto(ctx, c.id, { compacto: !!ctx.veModulo?.('asistente-ia') });
-    copiloto.style.flexBasis = '100%';
-    copiloto.style.minWidth = '0';
+    copiloto = h('details', { class: 'que-es', 'data-copiloto-plegado': '', style: { flexBasis: '100%', minWidth: '0' } },
+      h('summary', { style: { display: 'flex', alignItems: 'center', gap: 'var(--s-2)', minHeight: 'var(--s-8)' } }, icono('spark', { clase: 's' }), 'Qué haría hoy con este cliente (IA)', h('span', { class: 'sub' }, '· se abre al pulsar')));
+    copiloto.addEventListener('toggle', () => {
+      if (!copiloto.open || copiloto.dataset.pedido) return;
+      copiloto.dataset.pedido = '1';
+      const p = panelCopiloto(ctx, c.id, { compacto: !!ctx.veModulo?.('asistente-ia') });
+      p.style.marginTop = 'var(--s-2)';
+      copiloto.append(p);
+    });
   }
 
+  // Ronda U (#14 y #7): barra de acciones del cliente ARRIBA, junto al nombre: llamar/WhatsApp/correo, avisar al equipo
+  // (con el dato ya escrito), la hoja de la reunión y «Abrir en…» (las herramientas de fuera, en un menú).
+  const zonaAviso = h('div', { 'data-zona-aviso': '', style: { flexBasis: '100%', minWidth: '0', display: 'contents' } });
+  const abrirAviso = p => {
+    zonaAviso.style.display = 'block';
+    zonaAviso.replaceChildren(compositorAviso(ctx, F, p, { alCerrar: () => { zonaAviso.replaceChildren(); zonaAviso.style.display = 'contents'; } }));
+    zonaAviso.scrollIntoView({ block: 'nearest' });
+  };
+  const fuera = [
+    ...directos.map(r => ({ texto: r.t.replace('Lista de ', ''), icono: ICONO_RECURSO[r.k] || 'ext', url: r.url })),
+    ...extra.filter(x => x.url).map(x => ({ texto: NOMBRE_CORTO[x.k] || x.t, icono: ICO_EXTRA[x.k] || 'ext', url: x.url })),
+    deskUrl ? { texto: 'Desk', icono: 'inbox', url: deskUrl } : null,
+  ].filter(Boolean);
+  const sinEmparejar = extra.filter(x => !x.url).map(x => NOMBRE_CORTO[x.k] || x.t);
+  const menuFuera = fuera.length ? menuMas({ texto: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--s-2)' } }, icono('ext'), 'Abrir en'), etiqueta: `Abrir ${c.nombre} en otra herramienta`,
+    items: [...fuera.map(x => ({ texto: x.texto, icono: x.icono, alPulsar: () => { ctx.rastro({ accion: 'abrir_atajo', objeto: c.id, detalle: x.texto }); window.open(x.url, '_blank', 'noopener'); } })),
+      ...sinEmparejar.map(t => ({ texto: `${t} · falta emparejar (Mili)`, icono: 'alert', alPulsar: () => avisoFlotante(`${t}: falta emparejar el cliente con su cuenta. Lo arregla Mili.`, { icono: 'alert' }) }))] }) : null;
+  const tieneReunion = (ORDEN[perfil(ctx)] || []).includes('reunion');
+  const acciones = h('div', { class: 'fila', role: 'toolbar', 'aria-label': `Acciones con ${c.nombre}`, 'data-barra-acciones': '', style: { gap: 'var(--s-2)', flex: '1 1 auto', justifyContent: matchMedia('(max-width: 900px)').matches ? 'flex-start' : 'flex-end', minWidth: '0' } },
+    contactoCab, F.admin ? null : botonAvisar(ctx, F, abrirAviso),
+    tieneReunion ? h('button', { type: 'button', class: 'bt', on: { click: () => F.irA?.('reunion') } }, icono('video'), 'Reunión') : null);
+
   return h('section', { class: 'detalle-cab', 'aria-label': 'Cabecera del cliente' },
-    // 1 · el selector de cliente es el título (el periodo está en la barra común, bajo la cabecera)
-    h('div', { class: 'fila', style: fila100 }, barra.selector || h('b', {}, c.nombre)),
-    // 2 · datos y estado del cliente · contacto
-    h('div', { class: 'fila', style: { ...fila100, justifyContent: 'space-between', alignItems: 'flex-start' } },
-      h('div', { class: 'pila', style: { flex: '1 1 260px', minWidth: '0' } },   // V2 (B-A4): con poco ancho, el contacto baja de línea
-        portal?.nombre_portal && portal.nombre_portal !== c.nombre ? h('p', { class: 'sub' }, portal.nombre_portal) : null,
-        h('div', { class: 'meta-linea' },
-          c.alta ? h('span', {}, icono('cal'), `Cliente desde ${fFecha(c.alta)}`) : null,
-          cuota ? h('span', { title: `Cuota mensual sin IVA · ${cuota.fuente}` }, icono('euro'), `${fmt.eur(cuota.valor)}/mes`) : null,
-          especialidad ? h('span', {}, icono('maletin'), especialidad) : descripcionDe(portal, c) ? h('span', {}, icono('maletin'), descripcionDe(portal, c)) : null,
-          web ? h('span', {}, icono('link'), h('a', { href: c.web, target: '_blank', rel: 'noopener' }, web)) : null),
-        h('div', { class: 'fila' },
-          grav ? h('span', { class: `chip ${grav[0]}`, title: (v.motivos || []).join(' · ') || 'Gravedad única del cliente' }, `Estado: ${grav[1]}`) : null,
-          F.obj ? null : chipEstado(sem, textoSem),   // A4: con el semáforo del lunes, va en su fila (abajo)
-          salud !== undefined && salud !== null ? h('span', { class: `chip ${semaforo(salud, { verde: 60, ambar: 40 })}`, title: 'Salud provisional (40 resultados + 30 atención + 30 arranque), a medias' }, `Salud ${salud}`) : chipEstado('gris', 'Salud sin dato'),
-          (v.nuevo ?? c.nuevo) ? chipEstado('azul', 'Cliente nuevo') : null,
-          F.alarmas.some(a => a.gravedad === 'rojo') ? h('a', { href: `#/en-rojo/${c.id}`, class: 'chip rojo', title: 'Ver los avisos rojos en «En rojo»' }, fmt.plural(F.alarmas.filter(a => a.gravedad === 'rojo').length, 'aviso rojo', 'avisos rojos')) : null,
-          chipMedicion(F))),
-      contactoCab),
-    // 2b · A4: semáforo del lunes y objetivo del cliente (≤ 2 clics: abrir y elegir color / guardar)
+    // 1 · el selector de cliente es el título y, a su lado, la barra de acciones (lo que más se pulsa, en la primera línea)
+    h('div', { class: 'fila', style: { ...fila100, justifyContent: 'space-between', alignItems: 'center', gap: 'var(--s-3)' } },
+      h('div', { style: { flex: '0 1 auto', minWidth: '0' } }, barra.selector || h('b', {}, c.nombre)), acciones),
+    zonaAviso,
+    // 2 · datos y estado del cliente, en una sola línea que se parte sola
+    h('div', { class: 'fila', style: { ...fila100, gap: 'var(--s-2) var(--s-3)' } },
+      portal?.nombre_portal && portal.nombre_portal !== c.nombre ? h('span', { class: 'sub' }, portal.nombre_portal) : null,
+      h('div', { class: 'meta-linea' },
+        c.alta ? h('span', {}, icono('cal'), `Cliente desde ${fFecha(c.alta)}`) : null,
+        cuota ? h('span', { title: `Cuota mensual sin IVA · ${cuota.fuente}` }, icono('euro'), `${fmt.eur(cuota.valor)}/mes`) : null,
+        especialidad ? h('span', {}, icono('maletin'), especialidad) : descripcionDe(portal, c) ? h('span', {}, icono('maletin'), descripcionDe(portal, c)) : null,
+        web ? h('span', {}, icono('link'), h('a', { href: c.web, target: '_blank', rel: 'noopener' }, web)) : null),
+      grav ? h('span', { class: `chip ${grav[0]}`, title: (v.motivos || []).join(' · ') || 'Gravedad única del cliente' }, `Estado: ${grav[1]}`) : null,
+      F.obj ? null : chipEstado(sem, textoSem),   // A4: con el semáforo del lunes, va en su fila (abajo)
+      salud !== undefined && salud !== null ? h('span', { class: `chip ${semaforo(salud, { verde: 60, ambar: 40 })}`, title: 'Salud provisional (40 resultados + 30 atención + 30 arranque), a medias' }, `Salud ${salud}`) : chipEstado('gris', 'Salud sin dato'),
+      (v.nuevo ?? c.nuevo) ? chipEstado('azul', e >= 0 ? `Cliente nuevo · ${['arranque', 'arranque', 'optimización', 'consolidado'][e]}` : 'Cliente nuevo') : null,
+      F.alarmas.some(a => a.gravedad === 'rojo') ? h('a', { href: `#/en-rojo/${c.id}`, class: 'chip rojo', title: 'Ver los avisos rojos en «En rojo»' }, fmt.plural(F.alarmas.filter(a => a.gravedad === 'rojo').length, 'aviso rojo', 'avisos rojos')) : null,
+      chipMedicion(F),
+      menuFuera ? h('span', { style: { marginLeft: 'auto' } }, menuFuera) : null),
+    // 3 · A4: semáforo del lunes y objetivo del cliente (≤ 2 clics: abrir y elegir color / guardar)
     F.obj ? zonaA4(ctx, F, { sem, textoSem }) : null,
-    // 3 · atajos
-    h('div', { class: 'fila', style: fila100 },
-      h('span', { class: 'titulo-seccion' }, 'Abrir en'),
-      directos.map(r => atajo(r.url, ICONO_RECURSO[r.k] || 'ext', r.t.replace('Lista de ', ''))),
-      extra.map(x => x.url ? atajo(x.url, ICO_EXTRA[x.k] || 'ext', NOMBRE_CORTO[x.k] || x.t)
-        : h('span', { class: 'bt mini', 'aria-disabled': 'true', title: `${x.t}: falta emparejar el cliente con su cuenta. Lo arregla Mili.` }, icono(ICO_EXTRA[x.k] || 'ext'), `${NOMBRE_CORTO[x.k] || x.t} · falta emparejar`)),
-      deskUrl ? atajo(deskUrl, 'inbox', 'Desk') : null),
-    e >= 0 ? (() => { const b = barraEtapas(null, e); b.style.flexBasis = '100%'; return b; })() : null,
     copiloto);
 }
 
@@ -583,9 +614,13 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
   const { c } = F;
   const hijos = [];
   if (edita) {
-    const campo = campoTexto({ etiqueta: 'Una línea para el lunes (opcional)', placeholder: 'Qué ha pasado, el reto y el siguiente paso', valor: sHoy?.nota || '' });
-    const input = campo.querySelector('input');
-    input.maxLength = 140;
+    // Ronda U: la nota del lunes en los 3 campos cortos de la guía (interacciones, retos, siguientes pasos), que se guardan
+    // en la misma nota de una línea (máx. 200 caracteres en objetivos_comun.js) como «Interacciones: … · Retos: … · Siguiente: …».
+    const ET = [['Interacciones', 'Qué ha pasado con el cliente'], ['Retos', 'Qué preocupa o frena'], ['Siguiente', 'El siguiente paso']];
+    const previa = Object.fromEntries(String(sHoy?.nota || '').split(' · ').map(t => t.split(': ')).filter(x => x.length > 1).map(([k, ...v]) => [k, v.join(': ')]));
+    const tres = ET.map(([k, ph]) => { const c = campoTexto({ etiqueta: k, placeholder: ph, valor: previa[k] || (k === 'Interacciones' && !Object.keys(previa).length ? sHoy?.nota || '' : '') }); c.querySelector('input').maxLength = 55; c.style.flex = '1 1 200px'; return c; });
+    const campo = h('div', { class: 'fila', style: { gap: 'var(--s-2)', alignItems: 'flex-end', minWidth: '0' } }, tres);
+    const input = { get value() { return tres.map((c, i) => { const v = c.querySelector('input').value.trim(); return v ? `${ET[i][0]}: ${v}` : ''; }).filter(Boolean).join(' · '); } };
     const estado = h('span', { class: 'sub', role: 'status' }, F.a4msg || '');
     const elegir = color => h('button', { type: 'button', class: `bt${sHoy?.color === color ? ' pri' : ''}`, title: `Guardar el semáforo en ${COLOR_TXT[color].toLowerCase()} con la nota`,
       on: { click: async e => {
@@ -777,7 +812,7 @@ const PINTAR = {
       estado: semaforo(td.revision_mas_48h || 0, { verde: 0, ambar: 3, mejorSi: 'bajo' }), contexto: `${fmt.num(td.vencidas)} tareas vencidas`, frescura: frescuraDe(tar), ir: 'Ver trabajo', alPulsar: () => irA('trabajo') }));
     const rd = reu?.datos || {};
     L.push(tile({ icono: 'video', etiqueta: 'Días sin reunión', valor: rd.dias_sin_reunion ?? null, estado: rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }),
-      contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · rojo > 35 días` : 'Sin reuniones registradas', frescura: frescuraDe(reu), alPulsar: () => irA('comunicacion') }));
+      contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · rojo > 35 días` : 'Sin reuniones registradas', frescura: frescuraDe(reu), ir: 'Preparar la reunión', alPulsar: () => irA('reunion') || irA('comunicacion') }));
     if (pintable(ga)) L.push(tile({ icono: 'users', etiqueta: 'Visitas a la web · 30 días', valor: fmt.num(ga.datos.actual?.usuarios), unidad: 'usuarios',
       comparacion: { delta: variacion(ga.datos.actual?.usuarios, ga.datos.anterior?.usuarios), pct: true, texto: 'frente a los 30 anteriores' }, frescura: frescuraDe(ga), alPulsar: () => irA('web') }));
     if (F.ve.horas.ok && hor?.datos && F.ve.horas.nivel !== 'resumen') {
@@ -828,16 +863,29 @@ const PINTAR = {
           detalle: h('span', {}, a.texto !== undefined ? `${fechasEnTexto(a.texto)}${a.accion ? ` — ${String(a.accion).replace(/^Escalar:\s*([^:]{2,30}):\s*/, 'Escalar a $1: ')}` : ''}` : 'El detalle lo ve quien lleva el cliente.'),
           botones: [
             a.enlace ? h('a', { class: 'bt mini', href: a.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir la prueba') : null,
-            botonConfirmar({ texto: 'Marcar visto', pregunta: '¿Lo has visto?', confirmar: 'Sí, visto', mini: true, soloLectura: ctx.soloLectura,
-              alConfirmar: async () => { await ctx.rastro({ accion: 'alarma_vista', objeto: a.id, detalle: `${F.c.id} · ${a.tipo}` }); return 'Visto · queda en el rastro'; } }),
+            // Ronda U (#4): interno → al primer clic, con «Deshacer» 8 s (sin «¿Seguro?»).
+            botonDeshacer({ texto: 'Marcar visto', icono: 'ojo', hecho: 'Visto', soloLectura: ctx.soloLectura,
+              alHacer: async () => { await ctx.rastro({ accion: 'alarma_vista', objeto: a.id, detalle: `${F.c.id} · ${a.tipo}` }); return 'Visto · queda en el rastro'; } }),
           ],
         })), { vacio: { titulo: 'Todo en orden', porque: 'Este cliente no tiene avisos hoy.', celebrar: true } }))),
       h('div', { class: 'pila' },
         panel({ titulo: 'Últimos movimientos', icono: 'hist', sub: 'Correos, reuniones, informes y revisiones' },
           h('div', { class: 'cuerpo' }, listaConIcono(movs.slice(0, 7), { vacio: { icono: 'hist', titulo: 'Sin movimientos registrados' } }))),
         panelEquipo(ctx, F))));
+    // U3 (3-oct) · bitácora del trafficker («qué se cambió en la publicidad»), para quien ve Captación
+    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, c.id).then(p => hb.replaceWith(p)).catch(() => hb.remove()); }
     // V2 (B-A4): a 390 la frescura más larga («Reuniones (CRM, Fathom y verificación manual)») desbordaba 1 px: que parta línea
     z.append(h('div', { class: 'fila', style: { minWidth: '0' } }, h('span', { class: 'sub' }, 'Hora del dato:'), ...['desk', 'meta', 'tareas', 'reuniones', 'ga4'].map(k => { const el = frescuraEl(fuente(doc, k)); if (el) { el.style.whiteSpace = 'normal'; el.style.maxWidth = '100%'; } return el; }).filter(Boolean)));
+    // Ronda U: la barra de etapas (firma → consolidado) pasa de la cabecera al pie del Resumen (contexto, no trabajo).
+    const et = etapa(c);
+    if (et >= 0) z.append(barraEtapas(null, et));
+  },
+
+  // ------------------------------------------------------------- Reunión (ronda U, #9)
+  reunion(z, ctx, F) {
+    F.cc = correosCliente(F); pintarReunion(z, ctx, F);
+    // U3 (3-oct) · lo que se cambió en la publicidad, para contarlo en la reunión
+    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, F.c.id).then(p => hb.replaceWith(p)).catch(() => hb.remove()); }
   },
 
   // ------------------------------------------------------------- Contactos
@@ -949,6 +997,9 @@ const PINTAR = {
     const { doc } = F;
     const n = +F.periodo();
     const ga = fuente(doc, 'ga4'), gsc = fuente(doc, 'gsc'), sr = fuente(doc, 'seranking');
+    // N5 (3-oct) · Estado de la web desde Modular DS (caídas, copias, actualizaciones, seguridad), con acción y dueño
+    z.append(bloqueEstadoWeb(ctx, F.c.id, { web: F.c.web }));
+    z.append(bloqueFichaGoogle(ctx, F.c.id, { modulo: 'ficha' }));   // 3-oct · reseñas, llamadas, rutas y estado de su ficha de Google
     if (!pintable(ga) && !pintable(gsc)) {
       z.append(vacio({ icono: 'globe', borde: true, titulo: 'Sin Analytics ni Search Console emparejados', texto: `${ga?.nota || 'No hay propiedad de Analytics.'} ${gsc?.nota || ''} Hay que dar acceso a gmb1@ o decir cuál es.`, quien: 'Constanza (SEO) y Agus' }));
       return;
@@ -1182,9 +1233,9 @@ function pintarContactos(z, ctx, F) {
     const fijos = (v.fijos || []).map(f => normalizarTelefono(f)).filter(Boolean);
     const caja = h('div', { class: 'aviso', role: 'note', style: { flexWrap: 'wrap' } },
       h('div', { class: 'pila', style: { flex: '1 1 0', minWidth: '0' } }, h('b', { class: 'fila' }, icono('phone'), 'Sin móvil de este cliente: pídeselo'), h('p', {}, (v.notas || []).join(' ') || 'Ni el portal, ni el Excel de cartera, ni GHL ni WhatsApp tienen un móvil.')),
-      h('div', { class: 'fila' }, fijos.map(t => h('a', { class: 'bt', href: `sip:${t.intl}@sip.zadarma.com`, title: 'Llamar al fijo con Zadarma' }, icono('phone'), `Fijo ${t.mostrar}`)),
-        botonConfirmar({ texto: 'Pedir el móvil', pregunta: `¿Dejar a ${F.c.responsable} la tarea de pedirlo?`, confirmar: 'Sí, pedirlo', soloLectura: ctx.soloLectura,
-          alConfirmar: async () => { await ctx.accion({ herramienta: 'clickup', tipo: 'pedir_movil', objeto: F.c.id, cliente_id: F.c.id, texto: `Pedir a ${F.c.nombre} un móvil de contacto (no hay ninguno en portal, Excel, GHL ni WhatsApp)`, vista_previa: { tarea: `Pedir móvil · ${F.c.nombre}`, para: F.c.responsable } }); return 'En cola (simulado de momento)'; } })));
+      h('div', { class: 'fila' }, fijos.map(t => h('a', { class: 'bt', href: t.sip, title: 'Llamar al fijo con Zadarma' }, icono('phone'), `Fijo ${t.mostrar}`)),
+        botonDeshacer({ texto: 'Pedir el móvil', icono: 'phone', hecho: `Tarea para ${F.c.responsable}`, mini: false, soloLectura: ctx.soloLectura,   // ronda U (#4): tarea interna, con Deshacer
+          alHacer: async () => { await ctx.accion({ herramienta: 'clickup', tipo: 'pedir_movil', objeto: F.c.id, cliente_id: F.c.id, texto: `Pedir a ${F.c.nombre} un móvil de contacto (no hay ninguno en portal, Excel, GHL ni WhatsApp)`, vista_previa: { tarea: `Pedir móvil · ${F.c.nombre}`, para: F.c.responsable } }); return 'En cola (simulado de momento)'; } })));
     marcar(caja, 'fijo'); z.append(caja);
   }
 
@@ -1217,7 +1268,7 @@ function pintarContactos(z, ctx, F) {
     const f = chips.valor(), q = buscar.value.trim().toLowerCase();
     const xs = P.filter(p => (f === 'todo' ? true : f === 'movil' ? !p.externo && p.telefonos.length : f === 'decisor' ? p.decisor && !p.externo : f === 'dia' ? p.dia_a_dia && !p.externo
       : f === 'buzon' ? p.generico : f === 'externo' ? p.externo : !p.generico && !p.externo))
-      .filter(p => !q || [p.nombre, p.rol, ...(p.tambien || []), ...p.telefonos.map(t => t.tel), ...p.correos.map(m => m.correo)].join(' ').toLowerCase().includes(q));
+      .filter(p => !q || [p.nombre, p.rol, ...(p.tambien || []), ...p.telefonos.map(t => `${t.tel} ${normalizarTelefono(t.tel)?.mostrar || ''}`), ...p.correos.map(m => m.correo)].join(' ').toLowerCase().includes(q));
     caja.replaceChildren(...(xs.length ? xs.map(p => tarjetaPersona(p, marcar, enDuda.has(p.nombre))) : [vacio({ icono: 'buscar', titulo: 'Nadie con ese filtro' })]));
   };
   buscar.addEventListener('input', pintar);
@@ -1474,7 +1525,7 @@ function pintarChat(caja, ctx, F, r) {
   caja.replaceChildren(
     panel({ titulo: `#${ch.nombre || 'canal'}`, icono: 'chat', sub: `ClickUp · últimos ${(ch.mensajes || []).length} mensajes`,
       acciones: h('div', { class: 'fila' },
-          tel ? h('a', { class: 'bt mini', href: `sip:${tel.intl}@sip.zadarma.com`, title: `Llamar al cliente (${tel.mostrar}) con Zadarma`, on: { click: () => ctx.rastro({ accion: 'llamar', objeto: c.id, detalle: 'desde el chat' }) } }, icono('phone'), 'Llamar') : null,
+          tel ? h('a', { class: 'bt mini', href: tel.sip, title: `Llamar al cliente (${tel.mostrar}) con Zadarma`, on: { click: () => ctx.rastro({ accion: 'llamar', objeto: c.id, detalle: 'desde el chat' }) } }, icono('phone'), 'Llamar') : null,
           zoomBt,
           h('a', { class: 'bt mini', href: url, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en ClickUp')) },
       msgs,

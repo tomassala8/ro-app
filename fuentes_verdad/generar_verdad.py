@@ -63,7 +63,7 @@ REGLAS_GRAVEDAD = {
 # Motivo de la lista común (D-90: todos ven la lista con motivo y responsable): sin cifras ni euros.
 MOTIVO_COMUN = {"integracion": "Los leads no llegan al CRM", "arranque": "Alta fuera de plazo", "respuesta": "Correos del cliente sin contestar",
                 "publicidad": "Gasto en publicidad sin leads", "reunion": "Sin reunión el mes pasado", "bloqueo": "Tareas bloqueadas",
-                "account": "Sin account asignado", "captacion": "Captación con problemas", "semaforo": "Su account lo marca en crítico"}
+                "account": "Sin account asignado", "captacion": "Captación con problemas", "semaforo": "Su account lo marca como cliente crítico"}
 
 
 def leer(rel, defecto=None):
@@ -153,7 +153,7 @@ def main():
             criticos.append(("integracion", f"Fuga de integración: {fuga['texto']}"))
         if encendido and encendido["estado"] == "sin_encender_fuera_de_plazo":
             criticos.append(("arranque", f"Alta en el día {n.get('dia')} sin encender (límite: día 12)"))
-        riesgo = ("sin reunión el mes pasado" if sin_reunion else "su account lo marca en crítico" if c.get("semaforo") == "crítico"
+        riesgo = ("sin reunión el mes pasado" if sin_reunion else "su account lo marca como cliente crítico" if c.get("semaforo") == "crítico"
                   else "captación en crítico" if k.get("severidad") == "critico" else None)
         if dias_sin_resp is not None and dias_sin_resp > 10 and riesgo:
             criticos.append(("respuesta", f"Correos sin contestar desde hace {dias_sin_resp} días laborables y {riesgo}"))
@@ -170,7 +170,7 @@ def main():
         if k.get("severidad") in ("critico", "atencion") and set(k.get("cuello") or []) - {"integracion"}:
             atencion.append(("captacion", "Captación con problemas de publicidad o seguimiento"))
         if c.get("semaforo") == "crítico":
-            atencion.append(("semaforo", "Su account lo marca en crítico"))
+            atencion.append(("semaforo", "Su account lo marca como cliente crítico"))
         if encendido and encendido["estado"] == "tarde":
             atencion.append(("arranque", f"Encendida tarde (día {encendido['dia']})"))
         if fuga and fuga["leve"]:

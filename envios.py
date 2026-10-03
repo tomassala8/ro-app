@@ -1032,6 +1032,20 @@ def _post(h, ruta, real, persona, b):
                                  "mensaje": "Reintento simulado: los envíos los activa Tomás. No ha salido nada." if r.get("simulado") else "Reintento hecho."})
 
 
+# Huecos de plantilla sin rellenar: «[completar]», «[completar: fecha]», «[…]» o «[...]». Un envío así no sale nunca.
+HUECO_SIN_RELLENAR = re.compile(r"\[\s*(?:completar[^\]]*|…|\.{3})\s*\]", re.IGNORECASE)
+
+
+def hueco_sin_rellenar(b):
+    """El primer hueco sin rellenar del texto (o del asunto) de una acción que es envío; None si está completo."""
+    vp = b.get("vista_previa") if isinstance(b.get("vista_previa"), dict) else {}
+    for t in (b.get("texto"), vp.get("asunto"), vp.get("texto"), vp.get("cuerpo")):
+        m = HUECO_SIN_RELLENAR.search(t) if isinstance(t, str) else None
+        if m:
+            return m.group(0)
+    return None
+
+
 def _tras_accion(ruta, b):
     """Tras cada acción de la cola: si es un envío, nace su fila; con el canal activo, sale y se verifica al momento."""
     if ruta != "/api/acciones" or not es_envio(str(b.get("herramienta") or ""), str(b.get("tipo") or "")):
@@ -1089,6 +1103,11 @@ def enganchar(Manejador, servir):
     def api_post(self, ruta, real, persona_, b):
         if ruta.startswith("/api/envios"):
             return _post(self, ruta, real, persona_, b)
+        if ruta == "/api/acciones" and real["id"] == persona_["id"] and isinstance(b, dict) and es_envio(str(b.get("herramienta") or ""), str(b.get("tipo") or "")):
+            hueco = hueco_sin_rellenar(b)
+            if hueco:
+                return self.responder(400, {"error": f"El mensaje tiene un hueco sin rellenar ({hueco}). Complétalo o bórralo antes de enviarlo: así no sale.",
+                                            "motivo": "hueco_sin_rellenar"})
         r = post_orig(self, ruta, real, persona_, b)
         if real["id"] == persona_["id"]:
             _tras_accion(ruta, b)

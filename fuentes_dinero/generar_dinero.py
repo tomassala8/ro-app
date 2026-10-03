@@ -769,3 +769,7 @@ print(json.dumps({'cuota_airtable_oct': cuota_at, 'firmada': firmada, 'si_firman
                   'clientes_m18': len(filas_cli), 'rent_tarifa': len(rent_tarifa), 'coste_hora_real': coste_hora_real,
                   'altas_esperadas': R(esperadas, 1), 'huecos': huecos_total, 'sin_casar_airtable': sin_casar_at,
                   'fuentes': [(f['fuente'], f['estado']) for f in fuentes]}, ensure_ascii=False, indent=1))
+
+# Paneles v4 (3-oct): la retención por mes de alta sale de direccion.json recién escrito (solo lectura, sin red).
+import subprocess   # noqa: E402
+subprocess.run([sys.executable, str(AQUI / 'generar_cohortes.py')], check=False)

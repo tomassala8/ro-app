@@ -118,9 +118,9 @@ CREATE TRIGGER IF NOT EXISTS canal_resumenes_sin_delete BEFORE DELETE ON canal_r
 # =================================================================== reloj y utilidades
 def ahora_local():
     """Hora de Madrid (naive). RO_AVISOS_AHORA la fija para pruebas."""
-    v = os.environ.get("RO_AVISOS_AHORA")
+    v = os.environ.get("RO_AVISOS_AHORA") or os.environ.get("RO_RELOJ")   # avisos programados (3-oct): también RO_RELOJ
     if v:
-        return datetime.fromisoformat(v)
+        return datetime.fromisoformat(v.replace("T", " "))
     return datetime.now(MADRID).replace(tzinfo=None, microsecond=0)
 
 
@@ -408,6 +408,8 @@ class Vista:
             return ver["alerta"] in self.alertas
         if "puestos" in ver:
             return bool(P.puestos_de(self.p) & set(ver["puestos"]))
+        if "personas" in ver:      # avisos programados (3-oct): un recordatorio personal solo lo ven su persona y su jefe
+            return self.p["id"] in ver["personas"] and (not self.como or self.real["id"] in ver["personas"])
         return True
 
 
@@ -482,6 +484,18 @@ def fila_a_json(r, V, padres=None):
         out["icono"] = datos["icono"]
     if datos.get("ir") and str(datos["ir"]).startswith("#/"):
         out["ir"] = datos["ir"]
+    if datos.get("botones"):       # avisos programados (3-oct): botones de acción («Imputar», «Semáforo de X»…)
+        bs = []
+        for x in datos["botones"][:5]:
+            ir = x.get("ir") if str(x.get("ir") or "").startswith("#/") else None
+            url = P.enlace_seguro(x.get("url")) if str(x.get("url") or "").startswith("https://") else None
+            if (ir or url) and x.get("texto"):
+                bs.append({"texto": str(x["texto"])[:40], "ir": ir, "url": None if ir else url})
+        if bs:
+            out["botones"] = bs
+    if isinstance(datos.get("pedido"), dict):   # Ronda U · U3: pedido de creatividades (brief para Producción)
+        pd = datos["pedido"]
+        out["pedido"] = {k: (str(pd.get(k))[:900] if isinstance(pd.get(k), str) else pd.get(k)) for k in ("id", "cliente_id", "cliente", "quien", "creada", "para", "formatos", "anuncio", "brief")}
     if r["tipo"] == "evento" and r["dueno_id"]:
         out["dueno_id"], out["vence"] = r["dueno_id"], r["vence"]
     return out
@@ -700,6 +714,36 @@ def _sync_eventos(con):
             anos = hoy.year - fi.year
             n += 1 if publicar(con, "general", "evento", f"Hoy {nom} cumple {anos} {'año' if anos == 1 else 'años'} en RO. ¡Gracias!",
                                f"aniversario:{p['id']}:{hoy.year}", menciones=[p["id"]], datos={"icono": "heart"}) else 0
+    # Ronda U · U3 (3-oct): pedido de creatividades desde Captación (acción clickup/tarea con vista_previa.pedido_creatividad).
+    # Va a #avisos-redes (producción y redes) con el brief, solo a quien puede abrir ese cliente. La tarea en ClickUp la
+    # lleva sincronia.py (hoy en simulación). Últimos 14 días; una vez por pedido (clave por id de la acción).
+    try:
+        filas = con.execute("SELECT id, quien, cliente_id, texto, vista_previa, creada FROM acciones WHERE herramienta='clickup' AND tipo='tarea' "
+                            "AND vista_previa LIKE '%pedido_creatividad%' ORDER BY id DESC LIMIT 200").fetchall()
+    except Exception:
+        filas = []
+    for a in filas:
+        f = fecha_local(a["creada"])
+        if not f or (hoy - f.date()).days > 14:
+            continue
+        try:
+            vp = json.loads(a["vista_previa"] or "{}")
+        except ValueError:
+            vp = {}
+        if not isinstance(vp, dict) or not vp.get("pedido_creatividad"):
+            continue
+        cli = a["cliente_id"]
+        nom = next((c["nombre"] for c in S.E.crudo["clientes"] if c["id"] == cli), cli or "sin cliente")
+        vence = vp.get("para") if isinstance(vp.get("para"), str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", vp.get("para") or "") else None
+        t = f"Pedido de creatividades para {nom}, de {corto(a['quien'])}. {str(a['texto'] or '')[:600]}"
+        # Lo ve producción y redes (y dirección, operaciones y publicidad) aunque no «abran» el cliente: es un encargo con
+        # brief, sin dinero ni datos de leads. Los datos del pedido van en «datos» para que Producción lo enseñe en la tarea.
+        pedido = {"id": a["id"], "cliente_id": cli, "cliente": nom, "quien": a["quien"], "creada": a["creada"], "para": vence,
+                  "formatos": vp.get("formatos") if isinstance(vp.get("formatos"), list) else [], "anuncio": vp.get("anuncio"),
+                  "brief": str(vp.get("brief") or a["texto"] or "")[:900]}
+        n += 1 if publicar(con, "avisos-redes", "evento", t, f"pedido_creatividad:{a['id']}", menciones=[], vence=vence,
+                           ver={"puestos": ["produccion", "redes", "direccion", "operaciones", "proyectos", "jefa_publicidad", "trafficker"]},
+                           datos={"icono": "spark", "ir": f"#/produccion/pedido/{a['id']}", "pedido": pedido}) else 0
     return n
 
 
@@ -932,6 +976,14 @@ def _post(ruta, p, b, con, rastro):
         mid = publicar(con, cid, "mensaje", texto, None, quien=p["id"], hilo_de=padre["id"] if padre else None, menciones=menc,
                        cliente_id=cli, alerta_id=padre["alerta_id"] if padre else None)
         fila = con.execute("SELECT * FROM canal_mensajes WHERE id=?", (mid,)).fetchone()
+        # Sincronía (3-oct): puente de chat app → ClickUp (opción b de 51_SINCRONIA_Y_CHAT.md), APAGADO. Con el puente
+        # encendido y el grupo emparejado, el mensaje queda copiado en la cola de sincronia.py en la MISMA transacción.
+        SI = sys.modules.get("sincronia")
+        if SI is not None and hasattr(SI, "encolar_chat"):
+            try:
+                SI.encolar_chat(con, fila, cid)
+            except Exception:
+                traceback.print_exc()
         con.execute("INSERT INTO canal_leidos (persona_id, canal_id, ultimo_id, hora) VALUES (?,?,?,?) "
                     "ON CONFLICT(persona_id, canal_id) DO UPDATE SET ultimo_id=excluded.ultimo_id, hora=excluded.hora",
                     (p["id"], cid, mid, ahora_utc_txt()))

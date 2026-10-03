@@ -17,11 +17,14 @@
 // Ruta: #/mi-dia (puesto principal) o #/mi-dia/<puesto> (si la persona tiene varios: Tomás, Coti, Valeria, Yessica…).
 
 import {
-  h, fmt, icono, chipEstado, selloMedible, frescura, vacio, estadoVacio, botonConfirmar, barraProgreso, pieFase2,
-  limpiaTexto, deDondeSale, panel, listaLoPrimero, avisoFlotante, cifraPrincipal, vacioLinea, esqueleto, hoyMadrid,
+  h, fmt, icono, chipEstado, selloMedible, frescura, vacio, estadoVacio, barraProgreso, pieFase2,
+  limpiaTexto, deDondeSale, panel, avisoFlotante, cifraPrincipal, vacioLinea, esqueleto, hoyMadrid,
 } from '../componentes.js';
 import { colorCifra } from '../componentes.js';
 import { bloqueCopiloto } from './ia_componentes.js';
+// Ronda U (50 #3, #4): «Deshacer» en vez de «¿Seguro?» en lo interno, y el consejo de la IA plegado a una línea.
+import { botonDeshacer } from './_deshacer.js';
+import { plegarConsejo } from './_trabajo.js';
 // R12: sin el hueco «[importe]» del recorte del servidor y sin la puntuación que deja al quitar un código («llega con .», «, )»)
 // V2: y en llano (textoLlano): «478 h» → «20 días», sin «(RO-6625)» ni el paso técnico entre paréntesis, «» con espacios
 // Revisión 44 (D6, D7, §2.1): glosario común en los textos que llegan de los datos: «lista de arranque» (no «onboarding»),
@@ -68,8 +71,6 @@ const CORTA = { display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: '
 const TEXTO_FILA = { whiteSpace: 'normal', display: 'grid', gap: 'var(--s-1)', overflowWrap: 'anywhere' };
 /** Rejilla sin huérfanas: si el número de piezas es impar, la última ocupa la fila entera. */
 const sinHuerfana = l => { if (l.length > 1 && l.length % 2) l[l.length - 1].style.gridColumn = '1 / -1'; return l; };
-/** Las filas de «Mis alertas» llevan cuatro botones: van debajo del texto, no en una tercera columna estrecha. */
-const botonesDebajo = nodo => { nodo.querySelectorAll?.('.primero > li').forEach(li => { li.style.gridTemplateColumns = '32px minmax(0, 1fr)'; const a = li.querySelector('.acc'); if (a) Object.assign(a.style, { gridColumn: '2', justifyContent: 'flex-start' }); }); return nodo; };
 const edadUTC = s => (s ? edadH(String(s).replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? '' : 'Z')) : null);
 
 // ================================================================== datos
@@ -186,6 +187,9 @@ const MODULO = {
     const pCampana = ctx.servidor && ctx.veModulo('chat-equipo') ? ctx.api('canales/campana').catch(() => null) : Promise.resolve(null);
     // V2: lo ya despachado en la Bandeja por CUALQUIERA (la cola de la Bandeja), para contar los correos como la pantalla Bandeja
     const pAccBandeja = ctx.servidor && ctx.veModulo('bandeja') ? ctx.api('acciones?modulo=bandeja').then(r => r.acciones || []).catch(() => []) : Promise.resolve([]);
+    // Ronda U + cerebro de decisiones v2: la prioridad por objeto (data/prioridades/p_<id>.json, solo la propia; en «ver
+    // como» da 403 y se ordena por puesto, como hasta ahora)
+    const pPrio = ctx.servidor && !ctx.soloLectura ? ctx.api(`modulo/prioridades/p_${encodeURIComponent(ctx.persona.id)}`).catch(() => null) : Promise.resolve(null);
     const usaPaquete = ctx.servidor && !ctx.soloLectura;
     const adelantados = usaPaquete ? Object.fromEntries(leerAparte(claveAparte(ctx, pidePuesto)).map(n => [n, ctx.datosModulo(n)])) : {};
     Object.values(adelantados).forEach(p => p.catch(() => null));
@@ -217,7 +221,7 @@ const MODULO = {
     // El resumen vale si es de este puesto (si no, sus ficheros se piden sueltos: mismo resultado, más viajes).
     const valePaquete = paquete?._meta?.puesto === puesto;
     const D = cargador(ctx, valePaquete ? paquete : null, adelantados);
-    const [, acciones, avisosTodos, prospeccionTodas, alertas, accAlertas, campana, accionesBandeja] = await Promise.all([D.precargar(usa), pAcciones, pAvisos, pProspeccion, promAlertas, pAccAlertas, pCampana, pAccBandeja]);
+    const [, acciones, avisosTodos, prospeccionTodas, alertas, accAlertas, campana, accionesBandeja, prio] = await Promise.all([D.precargar(usa), pAcciones, pAvisos, pProspeccion, promAlertas, pAccAlertas, pCampana, pAccBandeja, pPrio]);
     if (valePaquete) guardarAparte(claveAparte(ctx, pidePuesto), D.sueltos);
     const avisos = ['direccion', 'operaciones'].includes(puesto) ? avisosTodos : [];
     const accionesProspeccion = puesto === 'outreach' ? prospeccionTodas : [];
@@ -259,7 +263,7 @@ const MODULO = {
     } catch (e) { numero = e?.falta ? { falta: textoFalta(e) } : { error: String(e?.message || e) }; }
 
     // ---- A1 · «Lo mío»: UNA lista con todo lo de hoy (funde «Lo primero hoy» y «Mis alertas»); V2: la de ESTA pestaña de puesto
-    const lm = { ctx, D, A: alertas, accAlertas, acciones, extra, campana, bloques, avisos, local: new Map(), puesto };
+    const lm = { ctx, D, A: alertas, accAlertas, acciones, extra, campana, bloques, avisos, local: new Map(), puesto, prio: prio?.persona_id === ctx.persona.id ? prio : null };
     const loMio = panelLoMio(lm);
 
     // V2-B: el copiloto («Tus clientes por gravedad · lo que propone la IA») solo al account, y plegado en «Más de tu día»
@@ -388,7 +392,31 @@ function heroNumero(ctx, cfg, n, puesto) {
 // correos sin contestar de tu cartera, las piezas que te toca revisar, las menciones del chat sin leer, las decisiones que
 // esperan tu sí y lo urgente que suben los bloques (antes «Lo primero hoy»). Cada fila: qué, de quién, por qué, plazo y UN
 // botón con el verbo que abre el objeto exacto; si es alerta, además «Lo tengo» y «Posponer» (mismos tipos que Alertas).
-const LM_A_LA_VISTA = { escritorio: 6, tableta: 3, movil: 4 };
+// Ronda U (50 #3): filas compactas de ~60 px → 10 a la vista en escritorio y 8 en tableta y móvil (antes 6/3/4 de 142 px).
+const LM_A_LA_VISTA = { escritorio: 10, tableta: 8, movil: 8 };
+/** Qué va arriba en cada puesto (la línea bajo el título de «Lo mío»). */
+const ORDEN_TXT = { direccion: 'arriba, tus decisiones con reloj y los cobros', finanzas_direccion: 'arriba, los cobros', administracion: 'arriba, lo que toca hoy de facturación y cobros',
+  operaciones: 'arriba, lo que te llega escalado', proyectos: 'arriba, lo que espera tu decisión', jefa_publicidad: 'arriba, lo de tu equipo que necesita tu decisión',
+  jefa_crm: 'arriba, lo de tu equipo que necesita tu decisión', jefa_seo: 'arriba, lo de tu equipo que necesita tu decisión', account: 'arriba, correos y clientes críticos',
+  rrhh: 'arriba, las personas en alerta' };
+
+/** Ronda U (50 #3): «Lo mío» en filas de ~60 px (icono · qué · plazo y por qué en una línea · verbo a la derecha), sobre la
+ *  misma lista común (ol.primero: atajos j/k y «e» siguen igual). En el móvil, los botones secundarios solo con icono. */
+function listaCompacta(items, { vacio: v, movil = false } = {}) {
+  if (!items.length) return estadoVacio(v);
+  const UNA = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: '0' };
+  // Flex con salto de línea (no rejilla): el texto pide al menos 240 px; si con los botones no cabe (480-700 px, o un panel
+  // estrecho), los botones bajan a su línea, a la derecha. Nunca encima del texto ni el título reducido a «D».
+  return h('ol', { class: 'primero', 'data-compacta': '' }, items.map(it => h('li', { class: it.estado || 'rojo',
+    style: { display: 'flex', flexWrap: 'wrap', columnGap: 'var(--s-3)', rowGap: 'var(--s-1)', padding: `var(--s-2) ${movil ? 'var(--s-3)' : 'var(--s-4)'}`, alignItems: 'center' } },
+  h('span', { class: 'num', 'aria-hidden': 'true', style: { flex: 'none' } }, it.icono ? icono(it.icono) : ''),
+  h('div', { style: { minWidth: '0', flex: '1 1 240px' } },
+    // en el móvil el qué puede ocupar 2 líneas (a 390 px una sola cortaba «Decidir: Extens…»)
+    h('div', { class: 'mot', style: movil ? { ...CORTA, overflowWrap: 'anywhere' } : UNA, title: it.titulo || null }, it.motivo),
+    h('div', { class: 'det', style: { display: 'flex', gap: 'var(--s-2)', alignItems: 'center', marginTop: '0', minWidth: '0' } },
+      it.chip ? Object.assign(it.chip, { style: 'flex: none; white-space: nowrap' }) : null, h('span', { class: 'sub', style: UNA, title: it.porque || null }, it.porque || ''))),
+  h('div', { class: 'acc', style: { flexWrap: 'nowrap', gridColumn: 'auto', marginTop: '0', marginLeft: 'auto', alignItems: 'center', flex: 'none', justifyContent: 'flex-end' } }, it.botones || []))));
+}
 const ICONO_TIPO = { alerta: 'campana', correo: 'mail', revision: 'check', mencion: 'chat', decision: 'flag', persona: 'persona', aviso: 'plug' };
 
 /** Ficheros extra que lee «Lo mío», solo los que pueden traer algo para esta persona (sin 403 de ruido). */
@@ -397,6 +425,37 @@ function usaLoMio(ctx) {
   return LO_MIO_USA.filter(f => (f === 'bandeja/bandeja' ? !!ctx.carteraPorSilla?.account?.size && ctx.veModulo('bandeja')
     : f === 'produccion/produccion' ? ctx.veModulo('produccion') && revisaPiezas(ctx)
       : f === 'decisiones/reloj' ? ctx.veModulo('decisiones') && (p.includes('direccion') || p.includes('proyectos')) : false));
+}
+/** La decisión del reloj por su id (o su clave), si el fichero está cargado (dirección y proyectos). */
+const decisionDe = (D, id) => (D.opcional('decisiones/reloj')?.decisiones || []).find(d => String(d.id) === String(id) || d.clave === id) || null;
+
+// ---- Ronda U (50 #3): «Lo mío» ORDENADO POR PUESTO. Dentro de cada rango manda el orden de siempre (plazo y gravedad).
+// Si una fila trae «prioridad» (el cerebro de decisiones v2 la publicará por objeto: número, o { valor | puntos, motivo }),
+// manda esa prioridad; el orden por puesto queda de respaldo para lo que no la traiga.
+const prioridadDe = x => { const p = x.prioridad; return typeof p === 'number' ? p : typeof p?.puntos === 'number' ? p.puntos : typeof p?.valor === 'number' ? p.valor : null; };
+const motivoPrioridad = x => { const m = typeof x.prioridad === 'object' && x.prioridad?.motivo; return m ? `Primero porque ${/^(es|son|lleva|llevan|vence|vencen)\b/i.test(m) ? m[0].toLowerCase() + m.slice(1) : m}` : null; };
+const esDecision = x => x.tipo === 'decision' || x.alerta?.tipo === 'dir_decision';
+const esCobro = x => /^adm_/.test(x.alerta?.tipo || '') || /^(impago|cobro|firmado|devuelto)/.test(String(x.clave || '')) || (x.grupos || []).some(g => /^(factura|impago-cli)/.test(g || ''));
+const esPersona = x => x.alerta?.tipo === 'rrhh_alerta' || x.tipo === 'persona';
+const deArea = (x, deps) => !!x.alerta && (deps || []).includes(x.alerta.departamento);
+const JEFAS = { jefa_publicidad: ['publicidad'], jefa_crm: ['crm'], jefa_seo: ['seo', 'web'] };
+/** Rango de una fila en «Lo mío» según el puesto de la pestaña (0 primero). Lo dice el 50 §2 y el encargo de la ronda U. */
+function rangoPuesto(puesto, x) {
+  const rev = x.tipo === 'revision';
+  if (puesto === 'direccion') return esDecision(x) ? 0 : esCobro(x) ? 1 : (x.escaladaAMi || esPersona(x)) ? 2 : x.tipo === 'aviso' ? 3 : rev ? 5 : 4;
+  if (puesto === 'finanzas_direccion') return esCobro(x) ? 0 : esDecision(x) ? 1 : rev ? 3 : 2;
+  if (puesto === 'proyectos') return esDecision(x) ? 0 : /^visto:/.test(String(x.clave)) || x.escaladaAMi ? 1 : rev ? 3 : 2;
+  if (puesto === 'operaciones') return x.escaladaAMi || x.vuelve ? 0 : x.tipo === 'alerta' ? 1 : x.tipo === 'bloque' ? 2 : x.tipo === 'aviso' ? 3 : rev ? 4 : 2;
+  if (JEFAS[puesto]) return x.escaladaAMi ? 0 : deArea(x, JEFAS[puesto]) || (x.tipo === 'bloque' && !rev) ? (x.grav === 'alta' ? 1 : 2) : rev ? 4 : 3;
+  if (puesto === 'administracion') return x.alerta?.tipo === 'adm_sin_alta' ? 0 : esCobro(x) ? 1 : rev ? 3 : 2;
+  if (puesto === 'account') return x.tipo === 'correo' || x.alerta?.tipo === 'acc_correos' ? 0 : x.alerta?.tipo === 'acc_critico' || /critico/.test(String(x.clave)) ? 1 : rev ? 3 : 2;
+  if (puesto === 'rrhh') return esPersona(x) ? 0 : 1;
+  return 0;
+}
+function ordenarPorPuesto(filas, puesto) {
+  return filas.map((x, i) => ({ x, i, p: prioridadDe(x), r: rangoPuesto(puesto, x) }))
+    .sort((a, b) => ((a.p === null) - (b.p === null)) || (a.p !== null && b.p !== null ? b.p - a.p : 0) || a.r - b.r || a.i - b.i)
+    .map(o => o.x);
 }
 const finDeHoy = ahora => { const d = new Date(ahora); d.setHours(23, 59, 0, 0); return d; };
 const nombreCli = (ctx, id) => (id ? ctx.clientes?.find(c => c.id === id)?.nombre || ctx.verdad?.(id)?.nombre || null : null);
@@ -443,16 +502,21 @@ function filasLoMio(lm, ahora) {
   lm.nAlertasTodas = mias.length;   // la cifra de «Mías» en Alertas (el botón la enseña tal cual)
   for (const x of mias.filter(y => al.alerta(y.a))) {
     const a = x.a;
+    if (a.tipo === 'dir_decision' && lm.contestadas?.has(String(a.id).split(':').slice(1).join(':'))) continue;   // ya contestada aquí
     // V2 (M6): sin el id interno del departamento delante («administracion ·», «rrhh ·»): el motivo ya dice de quién es
-    f.push({ tipo: 'alerta', clave: a.id, alerta: a, est: x.est, escaladaAMi: x.escaladaAMi,
-      que: a.cliente ? `${a.cliente} · ${tituloAlerta(ctx, a)}` : (a.titulo || a.motivo), quien: null,
-      porque: a.motivo, plazo: x.vence, grav: a.gravedad === 'alta' ? 'alta' : a.gravedad === 'baja' ? 'baja' : 'media',
+    // Ronda U (50 #3): la decisión dice QUÉ hay que decidir y la recomendación (antes «Decisión con reloj»), y la persona en
+    // alerta, de quién es (antes «Persona en alerta» diez veces). La decisión lleva su objeto para «Aprobar» en la fila.
+    const dec = a.tipo === 'dir_decision' ? decisionDe(D, String(a.id).split(':').slice(1).join(':')) : null;
+    const quienAl = !a.cliente && a.persona_id && ctx.nombre ? ctx.nombre(a.persona_id) : null;
+    f.push({ tipo: 'alerta', clave: a.id, alerta: a, est: x.est, escaladaAMi: x.escaladaAMi, decision: dec, prioridad: a.prioridad ?? null, cliente_id: a.cliente_id || null,
+      que: dec ? `Decidir: ${dec.titulo}` : a.cliente ? `${a.cliente} · ${tituloAlerta(ctx, a)}` : quienAl ? `${quienAl} · ${String(a.titulo || a.motivo).replace(/^Persona en alerta$/, 'en alerta')}` : (a.titulo || a.motivo), quien: null,
+      porque: dec ? `Recomendación: ${dec.recomendacion || '—'}${dec.quien && ctx.nombre ? ` · la sube ${ctx.nombre(dec.quien)}` : ''}` : a.motivo, plazo: x.vence, grav: a.gravedad === 'alta' ? 'alta' : a.gravedad === 'baja' ? 'baja' : 'media',
       ...irAlerta(ctx, a), grupos: [temaAlerta(a)] });
   }
   // 2 · correos sin contestar de tu cartera (regla de la Bandeja), uno por cliente con el más antiguo
   for (const { x, n, quejas, espera } of al.correos ? correosLoMio(ctx, D, extra) : []) {
     const ir = ctx.veModulo('bandeja') ? `#/bandeja/${encodeURIComponent(x.id)}` : null;
-    f.push({ tipo: 'correo', clave: `correo:${x.id}`, que: `${x.cliente || 'Sin cliente reconocido'} · contestar «${x.asunto}»`, quien: null,
+    f.push({ tipo: 'correo', clave: `correo:${x.id}`, cliente_id: x.cliente_id || null, que: `${x.cliente || 'Sin cliente reconocido'} · contestar «${x.asunto}»`, quien: null,
       porque: `${n === 1 ? '1 correo sin contestar' : `${n} correos sin contestar`}${quejas ? ` (${quejas === 1 ? '1 queja' : `${quejas} quejas`})` : ''} · el más antiguo, ${espera}`,
       plazo: new Date(ahora.getTime() + (48 - (Number(x.horas) || 0)) * 36e5), grav: x.gravedad === 'rojo' || x.queja ? 'alta' : x.gravedad === 'ambar' ? 'media' : 'baja',
       ir, verbo: 'Contestar el correo', objeto: objetoDe(ir), grupos: [x.cliente_id ? `correo-cli:${x.cliente_id}` : null, `correo:${x.id}`] });
@@ -478,7 +542,7 @@ function filasLoMio(lm, ahora) {
     const ir = `#/produccion/${encodeURIComponent(x.id)}`;
     const dias = Number(x.dias) || 0;
     const espera = dias < 1 ? 'menos de un día' : `${fmt.num(dias, 0)} día${Math.round(dias) === 1 ? '' : 's'}`;
-    f.push({ tipo: 'revision', clave: `rev:${k}`, n: l.length, que: l.length === 1 ? `Revisar «${x.tarea}»` : `Revisar ${fmt.num(l.length)} piezas de ${x.clienteNombre}`, quien: l.length === 1 ? x.clienteNombre : null,
+    f.push({ tipo: 'revision', clave: `rev:${k}`, n: l.length, cliente_id: x.cli || null, que: l.length === 1 ? `Revisar «${x.tarea}»` : `Revisar ${fmt.num(l.length)} piezas de ${x.clienteNombre}`, quien: l.length === 1 ? x.clienteNombre : null,
       porque: `${l.length === 1 ? 'Espera' : `La que más espera, «${x.tarea}»,`} tu visto bueno desde hace ${espera} (${x.estado}${x.autoresTxt ? `, de ${x.autoresTxt}` : ''}); el plazo es de 48 h`,
       plazo: new Date(ahora.getTime() + (2 - dias) * 864e5), grav: dias > 2 ? 'media' : 'baja', ir, verbo: l.length === 1 ? 'Revisar la pieza' : 'Revisar la primera',
       objeto: objetoDe(ir), grupos: l.map(y => `tarea:${y.id}`) });
@@ -491,11 +555,12 @@ function filasLoMio(lm, ahora) {
       porque: `«${x.texto}»`, plazo: new Date(hora.getTime() + 24 * 36e5), grav: 'media', ir, verbo: 'Abrir el mensaje', objeto: `men:${x.id}`, grupos: [] });
   }
   // 5 · decisiones que esperan tu sí (reloj de 48 h)
-  for (const x of decisionesMias(ctx, D).filter(al.decision)) {
-    const ir = ctx.veModulo('decisiones') ? '#/decisiones/reloj' : null;
-    f.push({ tipo: 'decision', clave: `dec:${x.id}`, que: `Decidir: ${x.titulo}`, quien: `subida por ${ctx.nombre ? ctx.nombre(x.quien) : x.quien}`,
+  // Ronda U (50 #5): un solo destino por objeto: la decisión abre ESA decisión (#/decisiones/reloj/<id>), igual que su alerta.
+  for (const x of decisionesMias(ctx, D).filter(al.decision).filter(y => !lm.contestadas?.has(String(y.id)))) {
+    const ir = ctx.veModulo('decisiones') ? `#/decisiones/reloj/${encodeURIComponent(x.id)}` : null;
+    f.push({ tipo: 'decision', clave: `dec:${x.id}`, que: `Decidir: ${x.titulo}`, quien: `subida por ${ctx.nombre ? ctx.nombre(x.quien) : x.quien}`, decision: decisionDe(D, x.id) || x,
       porque: `Recomendación: ${x.recomendacion || '—'}`, plazo: x.vence ? new Date(String(x.vence).replace(' ', 'T')) : null, grav: x.estado === 'en plazo' ? 'media' : 'alta',
-      ir, verbo: 'Decidir', objeto: `dec:${x.id}`, grupos: [`dec:${x.id}`] });
+      ir, verbo: 'Abrir la decisión', objeto: objetoDe(ir) || `dec:${x.id}`, grupos: [`dec:${x.id}`], prioridad: x.prioridad ?? null });
   }
   // 6 · lo urgente de los bloques (antes «Lo primero hoy»), los avisos de fuentes caídas y los avisos de persona
   for (const b of bloques) for (const c of b.r.primero || []) {
@@ -503,7 +568,7 @@ function filasLoMio(lm, ahora) {
     const cli = nombreCli(ctx, c.cliente_id);
     // V2 (C-10): si la cosa trae su fecha (una tarea vencida), el plazo es ESA fecha («Vencido hace 4 días»), nunca «Sin fecha»
     const pz = c.plazo ? new Date(String(c.plazo).length <= 10 ? `${c.plazo}T23:59:00` : String(c.plazo).replace(' ', 'T')) : null;
-    f.push({ tipo: 'bloque', clave: c.clave, que: c.motivo, quien: cli && String(c.motivo).includes(cli) ? null : cli || b.titulo, porque: c.detalle || '', icono: c.icono, peso: c.peso,
+    f.push({ tipo: 'bloque', clave: c.clave, cliente_id: c.cliente_id || null, que: c.motivo, quien: cli && String(c.motivo).includes(cli) ? null : cli || b.titulo, porque: c.detalle || '', icono: c.icono, peso: c.peso, prioridad: c.prioridad ?? null,
       plazo: pz && !Number.isNaN(+pz) ? pz : c.peso >= 3 ? finDeHoy(ahora) : null, grav: gravDePeso(c.peso), ir, href: c.href || null, abrirEn: c.abrirEn, verbo: null,
       objeto: objetoDe(ir) || (c.href ? `ext:${c.href}` : null), grupos: [c.clave, c.grupo] });
   }
@@ -527,6 +592,13 @@ function filasLoMio(lm, ahora) {
   // V2 (B-M10): lo que trata de una alerta que has pospuesto (mismo tema u objeto) tampoco sale hasta que vuelva la alerta
   const apartadas = apartadasLoMio(A, accAlertas, { personas: ctx.datos.personas, ahora, local });
   const apartada = x => x.tipo !== 'alerta' && ((x.objeto && apartadas.has(`o:${x.objeto}`)) || (x.grupos || []).some(g => g && apartadas.has(`g:${g}`)));
+  // Cerebro v2: alerta → por_alerta[id]; correo o revisión con cliente → por_cliente[cliente]; si no, por_objeto[ruta]
+  const P = lm.prio;
+  if (P) for (const x of f) {
+    if (x.prioridad !== null && x.prioridad !== undefined) continue;
+    const cid = x.alerta?.cliente_id || x.cliente_id || (x.grupos || []).map(g => /^correo-cli:(.+)$/.exec(g || '')?.[1]).find(Boolean) || null;
+    x.prioridad = (x.tipo === 'alerta' ? P.por_alerta?.[x.clave] : null) || ((x.tipo === 'correo' || x.tipo === 'revision') && cid ? P.por_cliente?.[cid] : null) || (x.ir ? P.por_objeto?.[x.ir] : null) || null;
+  }
   return f.filter(x => !apartada(x)).filter(x => {
     const p = x.tipo !== 'alerta' && pedidos.get(x.clave);
     if (!p) return true;
@@ -562,7 +634,9 @@ function panelLoMio(lm) {
   let abierto = false;
   const pintar = () => {
     const ahora = new Date();
-    const { filas, quitadas } = unirLoMio(filasLoMio(lm, ahora), ahora);
+    const unidas = unirLoMio(filasLoMio(lm, ahora), ahora);
+    const quitadas = unidas.quitadas;
+    const filas = ordenarPorPuesto(unidas.filas, lm.puesto);
     const mal = repetidosLoMio(filas);
     if (mal.length) console.warn('Lo mío · repetidos', mal);   // no debería pasar nunca: lo vigila pruebas_coherencia.py
     const n = t => filas.filter(x => x.tipo === t).length;
@@ -579,11 +653,11 @@ function panelLoMio(lm) {
     ].filter(Boolean);
     const vencidas = filas.filter(x => tramoPlazo(x.plazo, ahora) === 0).length;
     // en una línea: cuántas y cuántas vencidas; el desglose, debajo y solo en escritorio (en el móvil, en el «title»)
-    const sub = filas.length ? `${fmt.plural(filas.length, 'cosa', 'cosas')} para ti${vencidas ? ` · ${fmt.num(vencidas)} con el plazo pasado` : ''} · lo vencido y lo grave arriba` : 'Nada pendiente a tu nombre';
+    const sub = filas.length ? `${fmt.plural(filas.length, 'cosa', 'cosas')} para ti${vencidas ? ` · ${fmt.num(vencidas)} con el plazo pasado` : ''} · ${ORDEN_TXT[lm.puesto] || 'lo vencido y lo grave arriba'}` : 'Nada pendiente a tu nombre';
     const desglose = [...partes, quitadas ? `${fmt.plural(quitadas, 'aviso repetido', 'avisos repetidos')} en la misma fila` : null].filter(Boolean).join(' · ');
     const tableta = !movil && typeof matchMedia === 'function' && matchMedia('(max-width: 1180px)').matches;
     const tope = movil ? LM_A_LA_VISTA.movil : tableta ? LM_A_LA_VISTA.tableta : LM_A_LA_VISTA.escritorio;
-    const lista = items => listaLoPrimero(items.map(x => itemLoMio(lm, x, ahora, pintar)), { vacio: { titulo: 'Nada tuyo pendiente hoy', porque: 'Ni alertas, ni correos de tu cartera, ni piezas por revisar, ni menciones, ni decisiones esperando. Repasa los bloques de abajo.', celebrar: true } });
+    const lista = items => listaCompacta(items.map(x => itemLoMio(lm, x, ahora, pintar)), { movil, vacio: { titulo: 'Nada tuyo pendiente hoy', porque: 'Ni alertas, ni correos de tu cartera, ni piezas por revisar, ni menciones, ni decisiones esperando. Repasa los bloques de abajo.', celebrar: true } });
     const marcarFilas = (ol, items) => { ol.querySelectorAll?.(':scope > li').forEach((li, i) => { const x = items[i]; if (!x) return; li.dataset.filaMia = x.clave; li.dataset.tipo = x.tipo; if (x.objeto) li.dataset.objeto = x.objeto; }); return ol; };
     const primeras = filas.slice(0, tope), resto = filas.slice(tope);
     const cuerpo = [marcarFilas(lista(primeras), primeras)];
@@ -594,21 +668,21 @@ function panelLoMio(lm) {
       cuerpo.push(det);
     }
     sec.replaceChildren(
-      h('header', {}, h('div', {}, h('h2', { id: 'mid-lomio-t' }, icono('zap'), 'Lo mío'), h('p', { class: 'sub', title: desglose || null }, sub),
-        !movil && desglose ? h('p', { class: 'sub' }, desglose) : null),
+      // Ronda U (50 #3): cabecera de una línea; el desglose («18 alertas tuyas · 2 piezas…») va en el title, no empuja la lista
+      h('header', { style: { padding: `var(--s-3) ${movil ? 'var(--s-3)' : 'var(--relleno)'}` } }, h('div', { style: { minWidth: '0', flex: '1 1 260px' } }, h('h2', { id: 'mid-lomio-t' }, icono('zap'), 'Lo mío'), h('p', { class: 'sub', title: desglose || null }, sub)),
         ctx.veModulo('alertas') && (lm.nAlertasTodas ?? nAl) ? h('a', { class: 'bt mini', href: '#/alertas', title: 'La misma cifra que «Mías» en Alertas' }, `Alertas · ${fmt.num(lm.nAlertasTodas ?? nAl)}`, icono('derecha')) : null),
       ...cuerpo);
-    botonesDebajo(sec);
   };
   pintar();
   return sec;
 }
 
-/** Una fila de «Lo mío» para listaLoPrimero: qué · de quién · por qué · plazo · verbo (+ Lo tengo / Posponer si es alerta). */
+/** Una fila de «Lo mío» para listaCompacta: qué · de quién · por qué · plazo · verbo (+ Lo tengo / Posponer si es alerta). */
 function itemLoMio(lm, x, ahora, repintar) {
   const { ctx } = lm;
   const tramo = tramoPlazo(x.plazo, ahora);
   const a = x.alerta;
+  const dec = x.decision || null;
   const puede = !!a && ctx.veModulo('alertas') && !ctx.soloLectura;
   const estado = x.est?.estado;
   // un solo chip: el plazo y, si hay, el estado («Vencido hace 2 h · te ha llegado escalada»)
@@ -625,22 +699,44 @@ function itemLoMio(lm, x, ahora, repintar) {
     avisoFlotante(tipo === 'alerta_posponer' ? `Pospuesta hasta el ${fDiaHoraRO(hasta)}: no cuenta ni escala hasta entonces` : 'Anotado: lo tienes tú. El escalado se para.');
     setTimeout(repintar, 600);
   };
-  const ir = x.ir ? h('a', { class: 'bt mini pri', href: x.ir, title: 'Abre esto mismo, no la pantalla entera' }, x.verbo || verbo(String(x.ir).replace(/^#\//, '')), icono('derecha'))
-    : x.href ? h('a', { class: 'bt mini pri', href: x.href, target: '_blank', rel: 'noopener', title: `Abrir en ${x.abrirEn || 'su herramienta'}` }, `Abrir en ${x.abrirEn || 'origen'}`, icono('ext')) : null;
+  const m = lm.movil;
+  const verboTxt = x.ir ? x.verbo || verbo(String(x.ir).replace(/^#\//, '')) : `Abrir en ${x.abrirEn || 'origen'}`;
+  // En el móvil el verbo va en icono (con su nombre para lectores de pantalla y en el title): la fila cabe en ~60 px.
+  const soloIco = m || !!dec;   // la decisión: «Aprobar» en texto y «Abrir la decisión» en icono, para que quepa en una fila
+  const ir = x.ir ? h('a', { class: `bt mini${dec ? '' : ' pri'}${soloIco ? ' icono' : ''}`, href: x.ir, title: `${verboTxt} · abre esto mismo, no la pantalla entera`, 'aria-label': soloIco ? verboTxt : null }, soloIco ? null : verboTxt, icono('derecha'))
+    : x.href ? h('a', { class: `bt mini pri${m ? ' icono' : ''}`, href: x.href, target: '_blank', rel: 'noopener', title: verboTxt, 'aria-label': m ? verboTxt : null }, m ? null : verboTxt, icono('ext')) : null;
+  // Ronda U (50 #4): «Lo tengo» al primer clic, con «Deshacer» 8 s (antes «¿Te encargas tú? Sí»).
+  const loTengo = puede && !dec && estado !== 'lo_tengo' ? botonDeshacer({ texto: m ? '' : 'Lo tengo', icono: m ? 'check' : null, hecho: 'Lo tienes tú', titulo: 'Lo tengo: me encargo yo (se puede deshacer 8 s)',
+    alHacer: async () => { await marcar('alerta_lo_tengo'); return 'Lo tienes tú'; } }) : null;
+  if (loTengo && m) loTengo.querySelector('button')?.setAttribute('aria-label', 'Lo tengo');
+  // Ronda U (50 #3/#20): la decisión se aprueba en la propia fila («Aprobar» = la recomendación), con «Deshacer» 8 s.
+  // Rechazar o delegar piden motivo: eso, en la decisión (el botón de al lado la abre sola, con su barra de acciones).
+  const aprobar = dec && puedeDecidir(ctx, dec) ? botonDeshacer({ texto: 'Aprobar', pri: true, icono: 'check', hecho: 'Aprobada', soloLectura: ctx.soloLectura,
+    titulo: `Aprobar la recomendación: ${L(dec.recomendacion || '')}`.slice(0, 300),
+    alHacer: async () => {
+      const M = await import('./decisiones.js');
+      await M.contestarDecision(ctx, dec, 'Aprobar la recomendación', null);
+      (lm.contestadas ||= new Set()).add(String(dec.id));
+      if (a) lm.local.set(a.id, { estado: 'resuelta', hasta: null });
+      setTimeout(repintar, 400);
+      return 'Aprobada · queda en el rastro';
+    } }) : null;
+  const que = L(x.que);
+  const porque = L([x.quien, x.porque].filter(Boolean).join(' · '));
   return {
     estado: tramo === 0 || x.grav === 'alta' ? 'rojo' : x.grav === 'baja' ? 'gris' : 'ambar',
     icono: x.icono && x.tipo === 'bloque' ? x.icono : ICONO_TIPO[x.tipo] || 'zap',
-    motivo: h('span', { style: CORTA, title: L(x.que) }, L(x.que)),
-    detalle: [
-      h('span', { class: 'sub', style: { ...CORTA, flexBasis: '100%' } }, L([x.quien, x.porque].filter(Boolean).join(' · '))),
-      h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, chips),
-    ],
-    botones: [
-      ir,
-      puede && estado !== 'lo_tengo' ? botonConfirmar({ texto: 'Lo tengo', pregunta: '¿Te encargas tú?', confirmar: 'Sí', mini: true, alConfirmar: async () => { await marcar('alerta_lo_tengo'); return 'Lo tienes tú'; } }) : null,
-      puede ? botonPosponer(hasta => marcar('alerta_posponer', hasta), lm.movil) : null,
-    ],
+    motivo: que, titulo: [que, motivoPrioridad(x)].filter(Boolean).join(' · '),
+    porque, chip: chips[0],
+    // en el móvil la decisión lleva solo «Aprobar» y «Abrir» (posponer, dentro de la decisión): nunca más botones que texto
+    botones: [aprobar, ir, loTengo, puede && !(m && aprobar) ? botonPosponer(hasta => marcar('alerta_posponer', hasta), true) : null],
   };
+}
+
+/** ¿Puede contestar esta decisión quien mira? (dirección las de Tomás; proyectos las de Coti; nunca en «ver como»). */
+function puedeDecidir(ctx, d) {
+  const p = ctx.persona.puestos || [];
+  return !ctx.soloLectura && !d.respondida && !d.respuesta && ((p.includes('direccion') && d.tipo !== 'para_coti') || (p.includes('proyectos') && d.tipo === 'para_coti'));
 }
 
 /** «Posponer» → Mañana · El lunes (a las 9:00), como en Alertas. Vuelve sola en su fecha; mientras, no cuenta ni escala. */
@@ -716,6 +812,9 @@ function vigilarConsejo(main, loMio, despuesDe, { ctx = null, puesto = null } = 
     if (res && primera) res.replaceChildren(h('b', {}, primera), quedan > 1 ? ` · y ${quedan - 1} más` : '');
     const ocultar = !quedan;
     if (c.hidden !== ocultar) c.hidden = ocultar;
+    // Ronda U (molde): el consejo nunca empuja la lista: va debajo de «Lo mío» y plegado a una línea (una vez: si la persona
+    // lo abre, se queda abierto)
+    if (!c.dataset.plegadoU) { c.dataset.plegadoU = '1'; plegarConsejo(c); }
     if (despuesDe.isConnected && (despuesDe.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING)) despuesDe.after(c);
   };
   let pend = null;
@@ -727,6 +826,8 @@ function vigilarConsejo(main, loMio, despuesDe, { ctx = null, puesto = null } = 
 
 /** Verbo + objeto según adónde lleva (guía 30, 3.13): nunca un «Ir» suelto. */
 function verbo(ruta) {
+  if (/^finanzas\/cobros\/./.test(String(ruta || ''))) return 'Abrir el cobro';   // Ronda U (50 #5): mismo verbo que su alerta
+  if (/^decisiones\/reloj\/./.test(String(ruta || ''))) return 'Abrir la decisión';
   const m = String(ruta || '').split('/')[0];
   return ({ bandeja: 'Abrir correo', produccion: 'Abrir tarea', incidencias: 'Abrir incidencia', ficha: 'Abrir cliente', 'en-rojo': 'Abrir cliente',
     'clientes-nuevos': 'Abrir alta', captacion: 'Abrir cuenta', 'salud-crm': 'Abrir subcuenta', 'seo-web': 'Abrir web', redes: 'Abrir redes',
@@ -769,7 +870,7 @@ function panelCelebraciones(ctx) {
     c.en_dias === 0 ? chipEstado('verde', 'Hoy') : null));
   return panel({ titulo: 'Cumpleaños y aniversarios', icono: 'heart', sub: 'Del equipo, en las próximas dos semanas · lo ve todo el equipo', id: 'mid-cel-t' },
     h('div', { class: 'cuerpo' }, h('ul', { class: 'lista-i' }, filas),
-      l.length > 5 ? h('p', { class: 'sub' }, `y ${l.length - 5} más`) : null));
+      l.length > 5 ? h('p', { class: 'sub' }, `y ${fmt.plural(l.length - 5, 'celebración', 'celebraciones')} más en las próximas dos semanas`) : null));
 }
 
 // ================================================================== bloques
@@ -783,10 +884,12 @@ function filaBloque(f) {
   const texto = f.href ? h('a', { href: f.href, target: ext ? '_blank' : null, rel: ext ? 'noopener' : null, style: { textDecoration: 'none' } }, L(f.texto)) : h('span', {}, L(f.texto));
   const donde = f.abrir?.href ? origenUrl(f.abrir.href) || f.abrir.texto : null;
   const abrir = f.abrir?.href ? h('a', { class: 'bt icono mini', href: f.abrir.href, target: '_blank', rel: 'noopener', title: `Abrir en ${donde}`, 'aria-label': `Abrir en ${donde}` }, icono('ext')) : null;
+  // Ronda U (50 #5): la fila con verbo lleva su botón («Abrir el cobro»), al MISMO sitio que su fila de «Lo mío»
+  const verboBt = f.verbo && f.href && !ext ? h('a', { class: 'bt mini', href: f.href }, f.verbo, icono('derecha', { clase: 's' })) : null;
   return h('li', {},
     h('span', { class: `ico-c s ${f.estado || 'gris'}` }, icono(f.icono || 'doc')),
     h('span', { class: 't', style: TEXTO_FILA }, texto, f.extra ? h('span', { class: 'sub' }, L(f.extra)) : null),
-    abrir || (ext ? icono('ext') : null));
+    verboBt || abrir || (ext ? icono('ext') : null), verboBt ? abrir : null);
 }
 const listaFilas = l => h('ul', { class: 'lista-i' }, l.map(filaBloque));
 
@@ -822,8 +925,8 @@ function tarjetaBloque(ctx, b) {
   if (r.extra) cuerpo.push(h('div', {}, r.extra));
   if (r.ronda) cuerpo.push(ronda(ctx, r.ronda, max));
   if (r.mapa) cuerpo.push(mapaControl(r.mapa, max));
-  if (r.tarjetas?.length) cuerpo.push(h('div', { class: 'rejilla' }, r.tarjetas), r.mas ? h('p', { class: 'sub' }, `y ${r.mas} más en ${b.ruta ? 'su pantalla' : 'el detalle'}`) : null);
-  if (r.pistas) cuerpo.push(pistas(r.pistas), r.mas ? h('p', { class: 'sub' }, `y ${r.mas} más en Clientes nuevos`) : null);
+  if (r.tarjetas?.length) cuerpo.push(h('div', { class: 'rejilla' }, r.tarjetas), r.mas ? masEn(r.mas, objetoBloque(b, r), b.ruta ? nombreRuta(b.ruta) : 'el detalle', b.ruta) : null);
+  if (r.pistas) cuerpo.push(pistas(r.pistas), r.mas ? masEn(r.mas, ['alta', 'altas'], 'Clientes nuevos', 'clientes-nuevos') : null);
   if (r.barras) cuerpo.push(h('div', { class: 'embudo-barras' }, r.barras.map(x => h('div', { class: 'et' }, h('span', {}, x.etiqueta),
     barraProgreso({ valor: x.valor, max: x.max, estado: x.valor > x.max ? 'rojo' : x.valor >= x.max * 0.875 ? 'ambar' : 'verde', marca: x.marca ?? null, etiqueta: `${x.etiqueta}: ${x.valor} de ${x.max}` }),
     h('span', { class: 'n' }, `${fmt.num(x.valor)}/${fmt.num(x.max)}`)))));
@@ -832,7 +935,7 @@ function tarjetaBloque(ctx, b) {
     cuerpo.push(listaFilas(filas.slice(0, max)));
     if (filas.length > max) {
       if (r.plegar) cuerpo.push(h('details', { class: 'que-es' }, h('summary', {}, `Ver ${filas.length - max} más`), listaFilas(filas.slice(max))));
-      else cuerpo.push(h('p', { class: 'sub' }, `y ${filas.length - max} más en ${nombreRuta(b.ruta)}`));
+      else cuerpo.push(masEn(filas.length - max, objetoBloque(b, r), nombreRuta(b.ruta), b.ruta));
     }
   } else if (r.vacio && !r.ronda && !r.mapa && !r.tarjetas?.length && !r.pistas?.length && !r.barras?.length && !r.extra) {
     cuerpo.push(vacioLinea([h('b', {}, L(r.vacio.titulo)), r.vacio.texto ? ` · ${L(r.vacio.texto)}` : null], { icono: r.vacio.icono || (r.vacio.tono === 'celebrar' ? 'ok' : r.pendiente ? 'hist' : 'info'), quien: L(r.vacio.quien) }));
@@ -849,6 +952,16 @@ function tarjetaBloque(ctx, b) {
   return sec;
 }
 const nombreRuta = r => nombreModulo(String(r || '').split('/')[0]);
+/** V3b / Ronda U: «y 3 impagos más en Finanzas» (con el objeto y, si la pantalla se ve, como enlace), nunca «y 3 más en su pantalla». */
+function objetoBloque(b, r) {
+  const u = typeof r.unidad === 'string' && r.unidad ? r.unidad.split(/ · | de |, /)[0].trim() : '';
+  const pl = /^(\d|—)/.test(u) || !u ? String(b.titulo || 'cosas').replace(/^./, c => c.toLowerCase()) : u;
+  return [unidadDe(1, pl), pl];
+}
+function masEn(n, [sg, pl], donde, ruta) {
+  const texto = `y ${fmt.num(n)} ${n === 1 ? sg : pl} más en ${donde}`;
+  return h('p', { class: 'sub' }, ruta && !/^el detalle$/.test(donde) ? h('a', { href: `#/${ruta}` }, texto) : texto);
+}
 
 function ronda(ctx, { items, hechas, hoy }, max) {
   const fila = x => {
@@ -856,8 +969,9 @@ function ronda(ctx, { items, hechas, hoy }, max) {
     return h('li', {},
       h('span', { class: `ico-c s ${hecha ? 'verde' : 'gris'}` }, icono(hecha ? 'ok' : 'check')),
       h('span', { class: `t${hecha ? ' dim' : ''}`, style: TEXTO_FILA }, h('span', {}, x.que), h('span', { class: 'sub' }, [x.f, x.prueba ? `prueba: ${x.prueba}` : null].filter(Boolean).join(" · "))),
-      hecha ? chipEstado('verde', 'Hecho') : botonConfirmar({ texto: 'Hecho', pregunta: '¿Hecho?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-        alConfirmar: async () => { await ctx.accion({ herramienta: 'app', tipo: 'ronda', objeto: `${hoy}:${x.id}`, texto: x.que, vista_previa: { que: 'Marca este punto de la ronda como hecho hoy' } }); return 'Hecho · queda en el rastro'; } }));
+      // Ronda U (50 #4): «Hecho» al primer clic, con «Deshacer» 8 s (antes «¿Hecho? Sí»)
+      hecha ? chipEstado('verde', 'Hecho') : botonDeshacer({ texto: 'Hecho', hecho: 'Hecho', soloLectura: ctx.soloLectura, atajo: 'e',
+        alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'ronda', objeto: `${hoy}:${x.id}`, texto: x.que, vista_previa: { que: 'Marca este punto de la ronda como hecho hoy' } }); hechas.add(x.id); return 'Hecho · queda en el rastro'; } }));
   };
   const pend = items.filter(x => !hechas.has(x.id));
   const orden = [...pend, ...items.filter(x => hechas.has(x.id))];
@@ -880,7 +994,7 @@ function mapaControl(filas, max) {
       c(n(x.contesta?.mas48) === 0, fmt.num(x.contesta?.mas48), `${x.contesta?.mas48} de ${x.contesta?.correos} correos`),
       c(n(x.reune?.sin_reunion) === 0, fmt.num(x.reune?.sin_reunion)),
       c(n(x.reune?.sin_correo_sem) === 0, fmt.num(x.reune?.sin_correo_sem))))))),
-  filas.length > max ? h('p', { class: 'sub' }, `y ${filas.length - max} personas más en el mapa de Incidencias`) : null);
+  filas.length > max ? h('p', { class: 'sub' }, `y ${fmt.plural(filas.length - max, 'persona', 'personas')} más en el mapa de Incidencias`) : null);
 }
 
 /** Altas en su pista de 90 días: barra común con la marca del día 10 (encendido; límite el 12). */

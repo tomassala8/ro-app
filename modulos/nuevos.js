@@ -19,6 +19,8 @@ import {
   logoCliente, panel, frescura, icono, iniciales, pestanas, tablaApilable, listaConIcono, grafico, campoTexto, menuMas,
   fechas, sumarDias,
 } from '../componentes.js';
+import { botonDeshacer } from './_deshacer.js';
+import { plegarConsejo } from './_plegar_consejo.js';
 import { cargarObjetivos, puedeEditar, veObjetivos } from './objetivos_comun.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -119,6 +121,12 @@ async function accionesPrevias(ctx) {
 
 /** Botón de acción simulada (R9): vista previa, cola local, nunca API externa. */
 function botonAccion(ctx, { texto, icono: ico, pregunta, confirmar, accion, mini = true, peligro }) {
+  // Ronda U (#4): lo interno (herramienta «app»: escalar, casillas…) va al primer clic con «Deshacer» 8 s; el «¿Seguro?»
+  // queda para lo que sale fuera (Desk, ClickUp).
+  if (accion?.herramienta === 'app' && !peligro) {
+    return botonDeshacer({ texto, icono: ico, mini, hecho: texto === 'Escalar' ? 'Escalado' : 'Hecho', soloLectura: ctx.soloLectura,
+      alHacer: async () => { const r = await ctx.accion(accion); return r?.local ? 'Apuntado en local (sin servidor)' : `En la cola (n.º ${r?.id ?? '—'}) · queda en el rastro`; } });
+  }
   return botonConfirmar({
     texto, pregunta, confirmar: confirmar || 'Sí', mini, peligro, soloLectura: ctx.soloLectura,
     alConfirmar: async () => {
@@ -743,6 +751,12 @@ function pintarDetalle(cont, ctx, d, id, acciones) {
       dato('CRM', nombrePersona(a.crm) || 'Sin asignar'),
       dato('Encendido', a.plazo.dia_encendido !== null && a.plazo.dia_encendido !== undefined ? `Día ${a.plazo.dia_encendido}` : `Objetivo ${fechaLarga(a.plazo.objetivo)} · límite ${fechaLarga(a.plazo.limite)}`))));
 
+  // ---- Ronda U (#14): «Lo que falta» arriba, con su verbo en cada fila (Dado / Hecho, al primer clic y con Deshacer) y
+  //      «Pedir lo que falta en un correo» en su barra. Antes las casillas estaban a 1.941 px y el correo a 2.300 px. ----
+  const falta = panelLoQueFalta(ctx, a, acciones);
+  if (matchMedia('(max-width: 640px)').matches) cont.querySelector('section.detalle-cab')?.before(falta);   // en el móvil, antes de la cabecera
+  else cont.append(falta);
+
   // ---- lo que pide atención, arriba (guía 3.6) ----
   const escaladas = new Set(acciones.filter(x => x.tipo === 'escalar').map(x => x.objeto));
   const itemAlerta = x => {
@@ -758,7 +772,7 @@ function pintarDetalle(cont, ctx, d, id, acciones) {
   };
   const alertas = a.alertas.slice(0, 12);
   cont.append(panel({ titulo: 'Qué pide atención', icono: 'alert', sub: 'Tareas vencidas o paradas, bloqueos, plazo de encendido y lo que marca el equipo' },
-    alertas.length ? recortado(alertas, 4, vis => listaLoPrimero(vis.map(itemAlerta)), { nombre: 'todas' })
+    alertas.length ? recortado(alertas, 4, vis => listaLoPrimero(vis.map(itemAlerta), { subir: false }), { nombre: 'todas' })
       : h('div', { class: 'cuerpo' }, vacioLinea('Esta alta no tiene alertas: en plazo, sin tareas vencidas ni bloqueos.', { icono: 'ok' })),
     a.alertas.length > 12 ? h('p', { class: 'cuerpo', style: { ...S.meta, margin: '0' } }, `Y ${a.alertas.length - 12} más en la línea de tiempo.`) : null));
 
@@ -817,8 +831,8 @@ function pintarDetalle(cont, ctx, d, id, acciones) {
         h('span', { class: `ico-c s ${x.estado}`, style: { gridRow: 'span 2' } }, icono(x.estado === 'verde' ? 'ok' : x.estado === 'rojo' ? 'cerrar' : x.estado === 'ambar' ? 'alert' : 'info')),
         h('b', { style: S.h3 }, x.texto), h('span', { style: { ...S.meta, overflowWrap: 'anywhere' } }, `${x.detalle} · ${x.fuente}`)))), { nombre: 'todas las casillas' })),
       h('div', { class: 'cuerpo fila', style: { paddingTop: '0' } },
-        botonAccion(ctx, { texto: 'Marcar «Landing y posts revisados»', pregunta: '¿Marcar la casilla con prueba? Queda en el rastro.', confirmar: 'Sí, marcar',
-          accion: { herramienta: 'app', tipo: 'casilla', objeto: `${a.cliente_id}:landing_posts`, cliente_id: a.cliente_id, texto: `Casilla «Landing y posts revisados» de ${a.nombre}`, vista_previa: { casilla: 'landing_posts', prueba: 'enlace a la landing y a los posts revisados' } } }),
+        botonDeshacer({ texto: 'Marcar «Landing y posts revisados»', icono: 'ok', hecho: 'Casilla marcada', soloLectura: ctx.soloLectura,   // ronda U (#4): interna, con Deshacer
+          alHacer: async () => { const r = await ctx.accion({ herramienta: 'app', tipo: 'casilla', objeto: `${a.cliente_id}:landing_posts`, cliente_id: a.cliente_id, texto: `Casilla «Landing y posts revisados» de ${a.nombre}`, vista_previa: { casilla: 'landing_posts', prueba: 'enlace a la landing y a los posts revisados' } }); return `En la cola (n.º ${r?.id ?? '—'}) · queda en el rastro`; } }),
         a.dominio ? btMini({ href: `https://mxtoolbox.com/SuperTool.aspx?action=dmarc%3a${encodeURIComponent(a.dominio)}`, target: '_blank', rel: 'noopener' }, icono('ext'), 'Comprobar DNS fuera') : null))));
 
   // ---- línea de tiempo por semanas ----
@@ -849,6 +863,36 @@ function pintarDetalle(cont, ctx, d, id, acciones) {
   cont.append(panel({ titulo: 'Fechas automáticas de su lista', icono: 'cal', sub: 'Día 0 + N para las tareas sin fecha. Se aplicará cuando la app pueda escribir en ClickUp.' },
     h('div', { class: 'cuerpo' }, o ? plantillaDN(ctx, d, a, acciones) : vacioLinea(`No hay lista de arranque: primero hay que crear «Onboarding — [${a.nombre}]» desde la plantilla. Cuando la app pueda escribir, la creará con las fechas ya puestas.`, { icono: 'capas', quien: 'Agus' }))));
   cont.append(avisoDatos(d));
+}
+
+const slug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40);
+function panelLoQueFalta(ctx, a, acciones) {
+  const puede = ctx.persona.puestos.some(p => PUEDEN_EDITAR.includes(p)) && !ctx.soloLectura;
+  const marcadas = new Map();
+  for (const x of acciones) if (x.tipo === 'casilla' && x.cliente_id === a.cliente_id) marcadas.set(String(x.objeto), x);
+  const filas = [
+    ...a.accesos.filter(x => x.estado !== 'dado').map(x => ({ obj: `${a.cliente_id}:acceso:${slug(x.recurso)}`, icono: x.icono || 'key', texto: `Acceso · ${x.recurso}`, extra: `${x.estado === 'falta' ? 'Falta' : 'Sin registro'}${x.quien ? ` · ${x.quien}` : ''}${x.desde ? ` · desde ${fechaLarga(x.desde)}` : ''}`, estado: x.estado === 'falta' ? 'rojo' : 'gris', verbo: 'Dado', url: x.tarea })),
+    ...a.casillas.filter(x => x.estado !== 'verde' && x.medible !== 'no').map(x => ({ obj: `${a.cliente_id}:${x.id}`, icono: 'check', texto: x.texto, extra: `${x.detalle} · ${x.fuente}`, estado: x.estado === 'rojo' ? 'rojo' : x.estado === 'ambar' ? 'ambar' : 'gris', verbo: 'Hecho' })),
+  ];
+  const fila = it => {
+    const m = marcadas.get(it.obj);
+    const accion = m ? chipEstado('verde', `${it.verbo} · ${ctx.nombre ? ctx.nombre(m.quien) : m.quien} · se comprueba con el dato`)
+      : puede ? botonDeshacer({ texto: it.verbo, icono: 'ok', hecho: it.verbo, atajo: 'e',
+        alHacer: async () => { const r = await ctx.accion({ herramienta: 'app', tipo: 'casilla', objeto: it.obj, cliente_id: a.cliente_id, texto: `${a.nombre} · ${it.texto}: ${it.verbo.toLowerCase()}`, vista_previa: { casilla: it.obj.split(':').slice(1).join(':'), marca: it.verbo, comprobar: 'con la lectura siguiente de la fuente' } });
+          marcadas.set(it.obj, { quien: ctx.real.id, id: r?.id }); return `${it.verbo} · queda en el rastro`; } }) : null;
+    return h('li', { 'data-fila': '', style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--s-2) var(--s-3)', padding: 'var(--s-2) 0', borderTop: 'var(--borde-suave)', minWidth: '0' } },
+      h('span', { class: `ico-c s ${m ? 'verde' : it.estado}`, 'aria-hidden': 'true' }, icono(it.icono)),
+      h('span', { style: { flex: '1 1 220px', minWidth: '0', display: 'grid', gap: '2px' } }, h('b', { style: S.h3 }, it.texto), h('span', { style: { ...S.meta, overflowWrap: 'anywhere' } }, it.extra)),
+      h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, it.url ? btMini({ href: it.url, target: '_blank', rel: 'noopener' }, icono('ext'), 'ClickUp') : null, accion));
+  };
+  const faltanAcc = a.accesos.filter(x => x.estado === 'falta');
+  const pedir = faltanAcc.length ? botonAccion(ctx, { texto: 'Pedir lo que falta en un correo', mini: true, pregunta: a.encargo_art28 ? '¿Dejar el correo único de accesos en la cola? Se enviará por Desk cuando la app pueda escribir.' : 'Sin encargo de tratamiento no se piden accesos.',
+    confirmar: 'Sí, a la cola', accion: { herramienta: 'desk', tipo: 'pedir_accesos', objeto: a.cliente_id, cliente_id: a.cliente_id,
+      texto: `Correo único de accesos para ${a.nombre}: ${faltanAcc.map(x => x.recurso).join(', ')}`,
+      vista_previa: { asunto: `${a.nombre} · accesos para arrancar`, pide: faltanAcc.map(x => x.recurso), cierre_ronda: masDias(a.alta, 7), regla: 'Si no contesta en 48 h, se llama (no otro correo).' } } }) : null;
+  return panel({ titulo: 'Lo que falta', icono: 'check', id: 'm12-falta', sub: filas.length ? `${fmt.plural(filas.length, 'paso', 'pasos')} entre accesos y casillas técnicas. «Dado» y «Hecho» se deshacen en 8 s; el dato siguiente lo comprueba.` : 'Accesos y casillas técnicas al día.',
+    acciones: pedir },
+  h('div', { class: 'cuerpo' }, filas.length ? h('ul', { style: { listStyle: 'none', margin: '0', padding: '0' } }, [...filas].sort((x, y) => (marcadas.has(x.obj) ? 1 : 0) - (marcadas.has(y.obj) ? 1 : 0)).map(fila)) : vacioLinea('Nada pendiente: accesos dados y casillas en verde.', { icono: 'ok' })));
 }
 
 function lineaSemanas(ctx, d, a) {
@@ -1041,6 +1085,7 @@ export default {
   grupo: 'Clientes',
   async render(contenedor, ctx) {
     vigilarCortes(contenedor);
+    plegarConsejo(contenedor);   // ronda U (#1): el consejo de la carcasa, en una línea
     // A4: el objetivo del alta es el objetivo del cliente, de un solo sitio (objetivos_comun.js: base de la app, lo cargue la ficha o esta pantalla)
     const [d, acciones, objetivos] = await Promise.all([cargar(ctx), accionesPrevias(ctx), veObjetivos(ctx) ? cargarObjetivos(ctx).catch(() => new Map()) : new Map()]);   // R15a: Sofía no los ve → no se piden
     if (!d || d._error) {

@@ -8,8 +8,13 @@
 
 import {
   h, fmt, tile, tiles, listaLoPrimero, tablaDensa, chipEstado, chipsFiltro, selectorCliente, barraEtapas,
-  lineaTiempo, vacio, botonConfirmar, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales, limpiaTexto,
+  lineaTiempo, vacio, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales, limpiaTexto,
 } from '../componentes.js';
+// Ronda U (50 #4): «Marcar visto» al primer clic con «Deshacer» 8 s (antes «¿Lo has visto? Sí, visto»); el consejo de la
+// IA, plegado y debajo de «Lo primero hoy»; y, para Coti, «Visto» también en cada fila crítica de la lista.
+import { botonDeshacer } from './_deshacer.js';
+import { consejoCompacto, filasFlexibles } from './_trabajo.js';
+const filasLP = (...a) => filasFlexibles(listaLoPrimero(...a));   // Ronda U: botones debajo cuando no caben, a cualquier ancho
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -116,6 +121,7 @@ async function pintarLista(cont, ctx) {
   const tieneCartera = ctx.carteraIds.size > 0;
   const mias = filas.filter(f => ctx.carteraIds.has(f.id));
   const operaciones = ctx.persona.puestos.some(p => ['direccion', 'operaciones', 'proyectos'].includes(p));
+  const esCoti = ctx.persona.puestos.includes('proyectos');
 
   ctx.titulo('En rojo', `${n('critico')} críticos · ${n('atencion')} a vigilar · ${n('bien')} bien, de ${total} clientes. La misma regla en toda la app.`);
 
@@ -160,7 +166,7 @@ async function pintarLista(cont, ctx) {
     const sub = !deCasa ? 'Tus clientes críticos, el más grave arriba (como mucho 7)'
       : `${tieneCartera ? 'Ninguno de tus clientes es crítico. ' : ''}Los críticos de la casa: a quién empujar hoy${quedan > 0 ? ` · ${quedan} más en la lista` : ''}`;
     cont.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub },
-      listaLoPrimero(primeras.map(f => {
+      filasLP(primeras.map(f => {
         const motivo = f.det?.motivos?.[0] ? textoMotivo(senales(f.det.motivos)[0]) : f.motivo;
         const cl = claseMotivo(motivo);
         return {
@@ -170,11 +176,12 @@ async function pintarLista(cont, ctx) {
             f.detalle ? h('a', { class: 'bt mini pri', href: hrefFicha(ctx, f.id) }, icono('cli'), 'Abrir la ficha') : null,
             f.detalle ? atajo(ctx, f.id, cl.atajo) : null,
             f.detalle && ctx.veModulo('ficha') ? h('a', { class: 'bt mini', href: `#/en-rojo/${f.id}` }, icono('fire'), 'Por qué') : null,
-            botonConfirmar({ texto: 'Marcar visto', pregunta: '¿Lo has visto?', confirmar: 'Sí, visto', mini: true, soloLectura: ctx.soloLectura,
-              alConfirmar: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Visto · queda en el rastro'; } }),
+            botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', soloLectura: ctx.soloLectura,
+              alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Visto · queda en el rastro'; } }),
           ],
         };
       }), { vacio: { titulo: 'Ningún cliente crítico', porque: tieneCartera ? 'Ninguno de tus clientes es crítico hoy. Repasa los de «Vigilar» cuando puedas.' : 'Hoy no hay ningún cliente crítico.', celebrar: true } })));
+    consejoCompacto(cont, cont.lastElementChild);
   }
   cont.append(cifras);
 
@@ -212,6 +219,8 @@ async function pintarLista(cont, ctx) {
           : h('span', { title: f.sin_account ? limpiaTexto(f.sin_account) : null }, chipEstado('ambar', 'Sin account')) },
         { clave: 'abrir', titulo: 'Abrir', ordenable: false, celda: f => f.detalle
           ? h('span', { class: 'fila', style: { gap: 'var(--s-1)', flexWrap: 'nowrap', justifyContent: 'flex-end' } },
+              // Ronda U (50, En rojo): Coti da el «Visto» desde la propia lista, sin abrir la tarjeta
+              esCoti && f.gravedad === 'critico' ? botonDeshacer({ texto: 'Visto', hecho: 'Visto', soloLectura: ctx.soloLectura, alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Visto'; } }) : null,
               h('a', { class: 'bt mini', href: hrefFicha(ctx, f.id), title: `Abrir la ficha de ${f.nombre}` }, icono('cli'), 'Ficha'),
               ['desk', 'clickup', 'ghl'].filter(k => ATAJOS?.get(f.id)?.atajos.some(a => a.k === k)).map(k => atajo(ctx, f.id, k, { conTexto: false })))
           : candado('Lo ve quien lo lleva') },
@@ -305,8 +314,8 @@ async function pintarDetalle(cont, ctx, id) {
           v.sin_account ? chipEstado('ambar', 'Sin account') : null)),
       h('div', { class: 'fila' },
         // V2 (A-M15): quien viene a dar el «Visto» a un crítico lo tiene en la cabecera, sin bajar a 995 px
-        v.gravedad === 'critico' ? botonConfirmar({ texto: 'Marcar visto', pregunta: '¿Has visto este crítico?', confirmar: 'Sí, visto', soloLectura: ctx.soloLectura,
-          alConfirmar: () => { ctx.rastro({ accion: 'critico_visto', objeto: id }); return 'Visto · queda en el rastro'; } }) : null,
+        v.gravedad === 'critico' ? botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', mini: false, pri: !ctx.veModulo('ficha'), soloLectura: ctx.soloLectura,
+          alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: id }); return 'Visto · queda en el rastro'; } }) : null,
         ctx.veModulo('ficha') ? h('a', { class: 'bt pri', href: `#/ficha/${id}` }, icono('cli'), 'Abrir la ficha') : null)),
     h('div', { class: 'fila', style: { gap: 'var(--s-2)' }, 'aria-label': 'Abrir en las herramientas' },
       h('span', { class: 'sub', style: { fontWeight: 600, marginRight: 'var(--s-1)' } }, 'Abrir en'),
@@ -348,12 +357,12 @@ async function pintarDetalle(cont, ctx, id) {
 
   cont.append(h('div', { class: 'dos' },
     panel({ titulo: `Por qué está en «${g.texto.toLowerCase()}»`, icono: 'alert', sub: 'Cada señal con su atajo a la herramienta donde se arregla' },
-      listaLoPrimero(sen.map((m, i) => {
+      filasLP(sen.map((m, i) => {
         const txt = textoMotivo(m); const cl = claseMotivo(txt);
         return { estado: v.gravedad === 'critico' && i === 0 ? 'rojo' : 'ambar', icono: cl.icono, motivo: txt,
           botones: [atajo(ctx, id, cl.atajo),
-            botonConfirmar({ texto: 'Marcar visto', pregunta: '¿Lo has visto?', confirmar: 'Sí, visto', mini: true, soloLectura: ctx.soloLectura,
-              alConfirmar: () => { ctx.rastro({ accion: 'senal_vista', objeto: id, detalle: txt }); return 'Visto · queda en el rastro'; } })] };
+            botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', soloLectura: ctx.soloLectura,
+              alHacer: () => { ctx.rastro({ accion: 'senal_vista', objeto: id, detalle: txt }); return 'Visto · queda en el rastro'; } })] };
       }), { vacio: { titulo: 'Este cliente está bien', porque: 'No tiene ninguna de las señales de la regla única.', celebrar: true } })),
     h('div', { class: 'pila' },
       panel({ titulo: 'Línea de tiempo', icono: 'hist' }, h('div', { class: 'cuerpo' }, lineaTiempo([

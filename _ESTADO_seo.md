@@ -94,3 +94,7 @@ Pruebas de la ronda: `pruebas_e0.py` TODO BIEN · `pruebas_coherencia.py`: seo-w
 - **C-8 número que manda de web en Mi día → pedido** (dudas V2): `resumen.responden`.
 - **C-21 guardias de web:** 5 webs sin persona de web → ya lo dice la tabla («pendiente de Mili»); dar la pestaña Web de la ficha a quien hace guardia es de permisos (R16) y del reparto de Mili: no aplica en este carril.
 - **Jefe de SEO = Jerónimo:** fuera «Constanza» de los textos (escalados, reseñas, «díselo a…»).
+
+## Puesta al día 3-oct-2026
+- **Pestaña «Webs» con el tablero de Modular:** todas las webs con disponibilidad desde fuera, copias, actualizaciones, seguridad y certificado, cruzadas con el monitor propio de RO; acciones Crear tarea, Avisar al account y Marcar revisado. Solo web, jefe de SEO y web, operaciones y dirección. Detalle en `_ESTADO_modular.md`.
+- **Ficha de Google (Google Business Profile): en curso** en otro carril (`fuentes_gbp/`); hoy «pendiente de aprobación» de Google. Responder reseñas queda en simulación.

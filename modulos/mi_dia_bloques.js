@@ -39,7 +39,7 @@ const fecha = s => { if (!s) return null; const d = new Date(String(s).replace('
 export const edadH = s => { const d = fecha(s); return d ? Math.max(0, (Date.now() - d) / 36e5) : null; };
 export const diaCorto = s => { const d = fecha(String(s).length <= 10 ? `${s}T12:00` : s); return d ? `${d.getDate()}-${MESES[d.getMonth()].slice(0, 3)}` : (s || '—'); };
 const horaCorta = s => { const d = fecha(s); return d ? d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''; };
-const cuandoTxt = s => { const d = fecha(s); if (!d) return s || '—'; const hoy = hoyISO(); const iso = String(s).slice(0, 10); return iso === hoy ? `hoy ${horaCorta(s)}` : `${diaCorto(iso)} ${horaCorta(s)}`; };
+const cuandoTxt = s => { const d = fecha(s); if (!d) return s || '—'; const hoy = hoyISO(); const iso = String(s).slice(0, 10); return iso === hoy ? `hoy, ${horaCorta(s)}` : `${diaCorto(iso)}, ${horaCorta(s)}`; };   // «2-oct, 17:34» (44 §2.3)
 const n0 = v => Number(v) || 0;
 /** Euros con el formateador común (punto de miles siempre y «−»): 3.860 € · 3.859,87 €. */
 const eurG = n => fmt.eur(n);
@@ -65,6 +65,12 @@ export const hrefCliente = (ctx, id, pestana) => (!id ? null : ctx.veModulo('fic
 const ir = (ctx, modulo, id, alt) => (id && ctx.veModulo(modulo) ? `#/${modulo}/${String(id).split('/').map(encodeURIComponent).join('/')}` : alt || (ctx.veModulo(modulo) ? `#/${modulo}` : null));
 /** A1 · la ficha de ESA persona (#/personas/<id>), no la pantalla entera. */
 const hrefPersona = (ctx, id, { plan = false } = {}) => (id && ctx.veModulo('personas') ? `#/personas/${encodeURIComponent(id)}${plan ? '?plan=1' : ''}` : '#/personas');
+// Ronda U (50 #5): UN SOLO DESTINO POR OBJETO. El mismo objeto lleva siempre a la misma ruta exacta, la de su alerta en
+// «Lo mío»: una decisión → #/decisiones/reloj/<id> (la abre sola, con su barra de acciones); un firmado sin alta o un cobro →
+// #/finanzas/cobros/<cliente o factura> (la fila con «Alta hecha» / «Reclamado»); un alta o su taller → #/clientes-nuevos/<id>;
+// la rentabilidad de un cliente → #/dinero-cliente/<id>. La ficha queda para lo que es del cliente entero.
+const hrefDecision = (ctx, id) => ir(ctx, 'decisiones', id ? `reloj/${id}` : 'reloj');
+const hrefCobro = (ctx, clave, alt) => ir(ctx, 'finanzas', clave ? `cobros/${clave}` : null, alt);
 const hrefCap = (ctx, id) => ir(ctx, 'captacion', id, hrefCliente(ctx, id, 'resultados'));
 const sinAlmohadilla = href => (href && href.startsWith('#/') ? href.slice(2) : null);
 /** Tiempo esperando como en la Bandeja: horas contadas de lunes a viernes. */
@@ -92,9 +98,9 @@ const silla = (ctx, s) => {
 };
 /** Salud y gravedad de la verdad única (la misma que la ficha y En rojo), nunca la «salud» vieja de la sesión. */
 export const saludV = (ctx, id) => { const s = verdad(ctx, id)?.salud; return typeof s === 'number' ? s : null; };
-const GRAV_TXT = { critico: 'crítico', atencion: 'atención', bien: 'bien' };
+const GRAV_TXT = { critico: 'crítico', atencion: 'a vigilar', bien: 'bien' };   // glosario 44 §2.1: Crítico / Vigilar / Bien
 const GRAV_EST = { critico: 'rojo', atencion: 'ambar', bien: 'verde' };
-export const GRAV_CLI = { critico: 'cliente en crítico', atencion: 'cliente en atención', bien: 'cliente bien' };
+export const GRAV_CLI = { critico: 'cliente crítico', atencion: 'cliente a vigilar', bien: 'cliente bien' };
 /** Texto sin el hueco «[importe]» que deja el recorte del servidor: la frase sin la cifra (la cifra va aparte si se puede ver). */
 export const sinImporte = t => (typeof t !== 'string' || !t.includes('[importe]') ? t
   : t.replace(/\s*(?:de|por|con|en|a)?\s*\[importe\](?:\s*\/\s*\w+)?/g, '').replace(/\s+([,.;)])/g, '$1').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim());
@@ -141,10 +147,10 @@ def('decisiones_48h', ['decisiones/reloj'], (ctx, D, b) => {
   return {
     valor: l.length, unidad: l.length === 1 ? 'esperando' : 'esperando', estado: l.length ? (fuera.length ? 'rojo' : 'ambar') : 'verde',
     motivo: l.length ? `Reloj de ${l[0].reloj_h || 48} h: ${fuera.length ? `${fuera.length} fuera de plazo` : 'todas en plazo'}. Cada una trae problema, recomendación y fecha.` : 'Nada esperando tu decisión.',
-    filas: l.map(x => ({ texto: x.titulo, extra: `vence ${cuandoTxt(x.vence)} · subida por ${nombre(ctx, x.quien)}`, estado: x.estado === 'en plazo' ? 'ambar' : 'rojo', icono: 'flag', href: ir(ctx, 'decisiones', 'reloj') })),
+    filas: l.map(x => ({ texto: x.titulo, extra: `vence ${cuandoTxt(x.vence)} · subida por ${nombre(ctx, x.quien)}`, estado: x.estado === 'en plazo' ? 'ambar' : 'rojo', icono: 'flag', href: hrefDecision(ctx, x.id) })),
     vacio: { titulo: 'Sin decisiones pendientes', texto: 'Cuando Mili, Coti, Cecilia o Sofía suban una, aparece aquí con su reloj.', tono: 'celebrar' },
     frescura: fresco('Decisiones', r), medible: 'hoy',
-    primero: l.map(x => ({ peso: x.estado === 'en plazo' ? 2.5 : 4, icono: 'flag', motivo: `Decidir: ${x.titulo}`, detalle: `Recomendación: ${x.recomendacion || '—'} · vence ${cuandoTxt(x.vence)}`, ruta: 'decisiones/reloj', clave: `dec:${x.id}` })),
+    primero: l.map(x => ({ peso: x.estado === 'en plazo' ? 2.5 : 4, icono: 'flag', motivo: `Decidir: ${x.titulo}`, detalle: `Recomendación: ${x.recomendacion || '—'} · vence ${cuandoTxt(x.vence)}`, ruta: sinAlmohadilla(hrefDecision(ctx, x.id)) || 'decisiones/reloj', clave: `dec:${x.id}` })),
   };
 });
 
@@ -238,7 +244,7 @@ def('captacion_ro', ['ventas_ro/ventas_ro', 'finanzas/finanzas', 'finanzas/direc
   } else if (cr?.actual) filas.unshift({ texto: `Cuota firmada: ${eurG(cr.actual)} al mes con ${cr.clientes} clientes`, extra: cr.si_firman ? `si firman los ${(cr.pendientes || []).length} pendientes: ${eurG(cr.si_firman)}` : '', estado: 'verde', icono: 'sube', href: '#/finanzas' });
   return {
     valor: fmt.num(m.firmados), unidad: `firmados de ${v.objetivo_firmados_mes ?? '—'}`, estado: est(coste),
-    motivo: `Publicidad ${eurG(m.inversion)} → ${fmt.num(m.contactos)} contactos → ${fmt.num(m.citas)} citas → ${fmt.num(m.celebradas)} celebradas → ${fmt.num(m.firmados)} firmados. Coste por cliente: verde ≤ 700 € (D-13).`,
+    motivo: `Publicidad ${eurG(m.inversion)} → ${fmt.num(m.contactos)} contactos → ${fmt.num(m.citas)} citas → ${fmt.num(m.celebradas)} celebradas → ${fmt.num(m.firmados)} firmados. Coste por cliente: bien ≤ 700 € (D-13).`,
     extra: embudoBarras([
       { etiqueta: 'Contactos', valor: m.contactos, icono: 'users' }, { etiqueta: 'Citas', valor: m.citas, icono: 'cal' },
       { etiqueta: 'Celebradas', valor: m.celebradas, icono: 'video' }, { etiqueta: 'Propuestas', valor: m.propuestas, icono: 'doc' },
@@ -347,7 +353,7 @@ def('fin_rentabilidad', ['dinero_cliente/dinero_cliente'], (ctx, D) => {
   return {
     valor: perd.length, unidad: `en pérdida de ${r.length}`, estado: perd.length >= 3 ? 'rojo' : perd.length ? 'ambar' : 'verde',
     motivo: `A ${fmt.num(dc.tarifa_hora, 2)} €/h. ${dc.imputacion?.texto || ''}`,
-    filas: r.map(x => ({ texto: `${x.nombre} · ${x.account || 'sin account'}`, extra: `${fmt.pct(x.coste.margen_pct)} · ${fmt.num(x.coste.horas, 1)} h`, estado: x.coste.margen_pct < 0 ? 'rojo' : x.coste.margen_pct < 10 ? 'ambar' : 'verde', icono: 'grafico', href: hrefCliente(ctx, x.cid) })),
+    filas: r.map(x => ({ texto: `${x.nombre} · ${x.account || 'sin account'}`, extra: `${fmt.pct(x.coste.margen_pct)} · ${fmt.num(x.coste.horas, 1)} h`, estado: x.coste.margen_pct < 0 ? 'rojo' : x.coste.margen_pct < 10 ? 'ambar' : 'verde', icono: 'grafico', href: ir(ctx, 'dinero-cliente', x.cid, hrefCliente(ctx, x.cid)) })),
     frescura: fresco('Holded + Airtable + ClickUp', dc), medible: 'medias', medibleDetalle: `Horas incompletas: ${fmt.pct(dc.imputacion?.pct)} imputado`,
   };
 });
@@ -387,7 +393,7 @@ def('fin_valor_cliente', ['finanzas/finanzas', 'finanzas/direccion'], (ctx, D) =
   const k = fdir(D).kpi || {};
   return {
     valor: eurG(k.ltv_media), unidad: 'de valor medio por cliente', estado: '',
-    motivo: `Mediana ${eurG(k.ltv_mediana)}; bajas: ${fmt.num(k.churn_n, 1)} % al mes; retención neta ${fmt.pct(k.nrr)} (verde ≥ 90, D-15).`,
+    motivo: `Mediana ${eurG(k.ltv_mediana)}; bajas: ${fmt.num(k.churn_n, 1)} % al mes; retención neta ${fmt.pct(k.nrr)} (bien ≥ 90, D-15).`,
     filas: [
       { texto: 'Cuota media', extra: eurG(k.cuota_media), icono: 'euro', estado: 'gris' },
       { texto: 'Vida media de los activos', extra: `${fmt.num(k.vida_act_media, 1)} meses`, icono: 'clock', estado: 'gris' },
@@ -434,7 +440,7 @@ def('adm_impagos', ['finanzas/finanzas'], (ctx, D) => {
   return {
     valor: eurG(im.vencido_total), unidad: `vencido · ${plural(im.vencido_n || 0, 'factura')}`, estado: n0(im.mas_60) ? 'rojo' : n0(im.mas_30) ? 'ambar' : 'verde',
     motivo: 'Aviso a 30 días, decisión de Tomás a 60, nunca más de 2 cuotas (D-21).',
-    filas: l.map(x => ({ texto: `${x.nombre} · ${x.doc}`, extra: `${x.dias} días · ${eurG(x.importe)}${x.aviso ? ' · ' + x.aviso : ''}`, estado: x.dias > 60 ? 'rojo' : x.dias > 30 ? 'ambar' : 'gris', icono: 'alert', href: x.holded || null })),
+    filas: l.map(x => ({ texto: `${x.nombre} · ${x.doc}`, extra: `${x.dias} días · ${eurG(x.importe)}${x.aviso ? ' · ' + x.aviso : ''}`, estado: x.dias > 60 ? 'rojo' : x.dias > 30 ? 'ambar' : 'gris', icono: 'alert', href: hrefCobro(ctx, x.doc, x.holded || null), verbo: 'Abrir el cobro', abrir: x.holded ? { href: x.holded, texto: 'Holded' } : null })),
     frescura: fresco('Holded', D.dato('finanzas/finanzas')), medible: 'hoy',
     // V2 (M13): la misma factura que la alerta «Factura vencida sin cobrar» abre el mismo cobro (finanzas/cobros/<factura>):
     // «Lo mío» las junta en una fila, nunca dos veces IP Forense A-26-001
@@ -446,7 +452,7 @@ def('adm_firmas', ['finanzas/finanzas'], (ctx, D) => {
   return {
     valor: l.length, unidad: 'firmados sin alta', estado: l.some(x => x.dia0_pasado) ? 'rojo' : l.length ? 'ambar' : 'verde',
     motivo: 'Del contrato en Zoho Sign al alta en facturación antes del día 0.',
-    filas: l.map(x => ({ texto: x.nombre, extra: `firmado el ${diaCorto(x.firma)} · día 0: ${diaCorto(x.alta)} · ${x.account || 'sin account'}`, estado: x.dia0_pasado ? 'rojo' : 'ambar', icono: 'doc', href: hrefCliente(ctx, x.cliente_id) })),
+    filas: l.map(x => ({ texto: x.nombre, extra: `firmado el ${diaCorto(x.firma)} · día 0: ${diaCorto(x.alta)} · ${x.account || 'sin account'}`, estado: x.dia0_pasado ? 'rojo' : 'ambar', icono: 'doc', href: hrefCobro(ctx, x.cliente_id, hrefCliente(ctx, x.cliente_id)), verbo: 'Abrir el cobro' })),
     vacio: { titulo: 'Todos los firmados tienen su alta', tono: 'celebrar' },
     frescura: fresco('Zoho Sign + Airtable', D.dato('finanzas/finanzas')), medible: 'hoy',
   };
@@ -514,7 +520,7 @@ def('clientes_esperando', ['bandeja/bandeja'], (ctx, D, b, extra) => {
   if ((bj.triaje || []).length) filas.push({ texto: `${plural(bj.triaje.length, 'ticket')} sin asignar con propuesta`, estado: 'ambar', icono: 'inbox', href: '#/bandeja' });
   return {
     valor: rojos.length, unidad: `correos > 48 h · ${plural(quejas.length, 'queja')}`, estado: rojos.length ? 'rojo' : 'verde',
-    motivo: 'Pídeselo al account, no lo contestes tú. Verde < 24 h · ámbar 24-48 h · rojo > 48 h.',
+    motivo: 'Pídeselo al account, no lo contestes tú. Bien < 24 h · vigilar 24-48 h · crítico > 48 h.',
     filas, frescura: fresco('Desk + Zadarma', bj), medible: 'hoy',
     primero: quejas.slice(0, 2).map(x => ({ peso: 3.5, icono: 'megafono', motivo: x.cliente ? `Queja sin contestar · ${x.cliente}` : `Queja sin contestar · «${x.asunto}»`, detalle: `${x.cliente ? `«${x.asunto}» · ` : 'Sin cliente reconocido · '}${esperaTxt(x)} · ${x.account}`, ruta: `bandeja/${encodeURIComponent(x.id)}`, clave: `correo:${x.id}`, cliente_id: x.cliente_id })),
   };
@@ -546,10 +552,10 @@ def('rojos_cartera', ['verdad/clientes'], (ctx, D, b) => {
   const todos = porGravedad(ctx, alcance(b, 'todo') === 'mio');
   const l = todos.filter(x => x.grav === 'critico');
   return {
-    valor: l.length, unidad: `en crítico de ${plural(todos.length, 'cliente')} · ${todos.filter(x => x.grav === 'atencion').length} en atención`, estado: l.length ? 'rojo' : 'verde',
+    valor: l.length, unidad: `${l.length === 1 ? 'crítico' : 'críticos'} de ${plural(todos.length, 'cliente')} · ${todos.filter(x => x.grav === 'atencion').length} a vigilar`, estado: l.length ? 'rojo' : 'verde',
     motivo: 'La misma gravedad que En rojo y la ficha (verdad única). Cada uno con su motivo y su account; el plan escrito y el «Visto» de Coti, en En rojo.',
     filas: l.map(x => ({ texto: `${x.c.nombre} · ${x.mot || 'crítico'}`, extra: x.v.account ? nombre(ctx, x.v.account) : 'sin account', estado: 'rojo', icono: 'fire', href: `#/en-rojo/${x.cid}` })),
-    vacio: { titulo: 'Ningún cliente en crítico', tono: 'celebrar' },
+    vacio: { titulo: 'Ningún cliente crítico', tono: 'celebrar' },
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'hoy',
   };
 });
@@ -627,7 +633,7 @@ def('para_tomas', ['decisiones/reloj', 'nuevos/nuevos', 'incidencias/incidencias
     { texto: `Nº 1 · Altas encendidas el día 10: ${n1?.valor ? `${n1.valor} ${n1.unidad.replace(/^encendidas el día 10\s*/, '')}` : 'sin dato'}`, extra: 'día 10, límite 12 · el mismo número que manda de Operaciones', estado: n1?.estado || 'gris', icono: 'rocket', href: '#/clientes-nuevos' },
     { texto: 'Nº 2 · Horas por cuenta nueva', extra: 'a medias: horas incompletas (D-27)', estado: 'gris', icono: 'clock', href: '#/horas' },
     { texto: `Nº 3 · Fuegos en rojo sin aviso apuntado: ${sinAviso ?? '—'}`, extra: 'compromisos vencidos sin aviso', estado: sinAviso ? 'rojo' : 'verde', icono: 'alert', href: '#/incidencias' },
-    ...abiertas.map(x => ({ texto: `Decisión subida: ${x.titulo}`, extra: `vence ${cuandoTxt(x.vence)}`, estado: x.estado === 'en plazo' ? 'ambar' : 'rojo', icono: 'flag', href: ir(ctx, 'decisiones', 'reloj') })),
+    ...abiertas.map(x => ({ texto: `Decisión subida: ${x.titulo}`, extra: `vence ${cuandoTxt(x.vence)}`, estado: x.estado === 'en plazo' ? 'ambar' : 'rojo', icono: 'flag', href: hrefDecision(ctx, x.id) })),
   ];
   return {
     valor: abiertas.length, unidad: 'decisiones sin contestar', estado: abiertas.some(x => x.estado !== 'en plazo') ? 'rojo' : abiertas.length ? 'ambar' : 'verde',
@@ -641,12 +647,12 @@ def('rojos_visto_coti', ['verdad/clientes'], (ctx, D) => {
   // V2 (A1): «rojo» = crítico de la verdad única (antes, la alarma del semáforo de las 07:00, con clientes en atención)
   const l = porGravedad(ctx, false).filter(x => x.grav === 'critico');
   return {
-    valor: l.length, unidad: l.length === 1 ? 'cliente en crítico' : 'clientes en crítico', estado: l.length ? 'rojo' : 'verde',
+    valor: l.length, unidad: l.length === 1 ? 'cliente crítico' : 'clientes críticos', estado: l.length ? 'rojo' : 'verde',
     motivo: 'Los críticos de la verdad única (los mismos de En rojo). Antes de hablar con el cliente, tu «Visto» con números y plan (lo marcas en En rojo).',
     filas: l.map(x => ({ texto: `${x.c.nombre} · ${x.mot || 'crítico'}`, extra: x.v.account ? nombre(ctx, x.v.account) : 'sin account', estado: 'rojo', icono: 'ojo', href: `#/en-rojo/${x.cid}` })),
-    vacio: { titulo: 'Ningún cliente en crítico', tono: 'celebrar' },
+    vacio: { titulo: 'Ningún cliente crítico', tono: 'celebrar' },
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'hoy',
-    primero: l.slice(0, 2).map(x => ({ peso: 2.8, icono: 'ojo', motivo: `${x.c.nombre} · cliente en crítico`, detalle: `${x.mot ? `${x.mot}. ` : ''}Falta tu «Visto» antes de la comunicación al cliente.`, ruta: `en-rojo/${x.cid}`, clave: `visto:${x.cid}`, cliente_id: x.cid, grupo: `critico:${x.cid}` })),
+    primero: l.slice(0, 2).map(x => ({ peso: 2.8, icono: 'ojo', motivo: `${x.c.nombre} · cliente crítico`, detalle: `${x.mot ? `${x.mot}. ` : ''}Falta tu «Visto» antes de la comunicación al cliente.`, ruta: `en-rojo/${x.cid}`, clave: `visto:${x.cid}`, cliente_id: x.cid, grupo: `critico:${x.cid}` })),
   };
 });
 def('nuevos_garantia', ['nuevos/nuevos'], (ctx, D, b) => {
@@ -677,10 +683,10 @@ def('semaforo_cartera', ['verdad/clientes'], (ctx, D) => {
   const n = g => l.filter(x => x.grav === g).length;
   const cr = n('critico'), at = n('atencion'), bi = n('bien');
   return {
-    valor: fmt.pct(pct(bi, l.length)), unidad: `bien de ${l.length} · ${cr} en crítico`, estado: cr ? 'rojo' : at ? 'ambar' : 'verde',
-    motivo: `${bi} bien, ${at} en atención y ${cr} en crítico: la misma gravedad que En rojo y la ficha.`,
-    extra: l.length ? h('div', { class: 'fila', role: 'group', 'aria-label': `${cr} en crítico, ${at} en atención, ${bi} bien` },
-      chipEstado('rojo', `${cr} en crítico`), chipEstado('ambar', `${at} en atención`), chipEstado('verde', `${bi} bien`)) : null,
+    valor: fmt.pct(pct(bi, l.length)), unidad: `bien de ${l.length} · ${cr} ${cr === 1 ? 'crítico' : 'críticos'}`, estado: cr ? 'rojo' : at ? 'ambar' : 'verde',
+    motivo: `${bi} bien, ${at} a vigilar y ${cr} ${cr === 1 ? 'crítico' : 'críticos'}: la misma gravedad que En rojo y la ficha.`,
+    extra: l.length ? h('div', { class: 'fila', role: 'group', 'aria-label': `${cr} ${cr === 1 ? 'crítico' : 'críticos'}, ${at} a vigilar, ${bi} bien` },
+      chipEstado('rojo', `${cr} ${cr === 1 ? 'crítico' : 'críticos'}`), chipEstado('ambar', `${at} a vigilar`), chipEstado('verde', `${bi} bien`)) : null,
     filas: l.map(x => ({ texto: `${x.c.nombre} · ${GRAV_TXT[x.grav] || 'sin estado'}`, extra: [x.mot, typeof x.salud === 'number' ? `salud ${x.salud}` : null, x.v.account ? nombre(ctx, x.v.account) : 'sin account'].filter(Boolean).join(' · '), estado: GRAV_EST[x.grav] || 'gris', icono: 'heart', href: hrefCliente(ctx, x.cid) })),
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'medias', medibleDetalle: 'Reglas de gravedad de la verdad única; la salud, fórmula provisional',
   };
@@ -850,7 +856,7 @@ def('clientes_tarjetas', ['verdad/clientes'], (ctx, D) => {
   const bien = conSalud.filter(c => c.salud >= 60).length;
   const crit = l.filter(c => c.grav === 'critico').length;
   return {
-    valor: l.length, unidad: `clientes · ${bien} con salud ≥ 60 · ${crit} en crítico`, estado: crit ? 'rojo' : semaforo(pct(bien, conSalud.length), { verde: 80, ambar: 60 }),
+    valor: l.length, unidad: `clientes · ${bien} con salud ≥ 60 · ${crit} ${crit === 1 ? 'crítico' : 'críticos'}`, estado: crit ? 'rojo' : semaforo(pct(bien, conSalud.length), { verde: 80, ambar: 60 }),
     motivo: 'Lo crítico arriba y, dentro, de peor a mejor salud. Estado, salud y motivo: los mismos que la ficha.',
     filas: l.map(c => ({ texto: `${c.nombre} · ${GRAV_TXT[c.grav] || 'sin estado'}${typeof c.salud === 'number' ? ` · salud ${c.salud}` : ''}`, extra: c.mot || '', estado: GRAV_EST[c.grav] || 'gris', icono: 'cli', href: hrefCliente(ctx, c.id) })),
     vacio: { titulo: 'Sin clientes asignados', texto: 'Cuando Mili te asigne clientes en Ajustes, salen aquí.', quien: 'Mili' },
@@ -859,9 +865,12 @@ def('clientes_tarjetas', ['verdad/clientes'], (ctx, D) => {
 });
 /** R12 (A4): los correos y llamadas pendientes con la MISMA regla que la pantalla Bandeja (lo que el servidor manda a
  *  la persona, sin automáticos, sin los viejos y sin lo que ya está en la cola de la Bandeja). Un solo contador. */
+const SACAN_DE_BANDEJA = new Set(['responder', 'cerrar', 'no_aplica', 'despachado', 'llamada_devuelta', 'esperando_cliente']);
 function bandejaComoPantalla(ctx, D, extra) {
   const bj = D.dato('bandeja/bandeja');
-  const hechos = new Set([...(extra?.acciones || []), ...(extra?.accionesBandeja || [])].filter(a => a.modulo === 'bandeja').map(a => String(a.objeto)));
+  // Solo lo que SACA el correo en la Bandeja (bandeja.js → TERMINALES + «esperando al cliente»): una nota, una tarea,
+  // un aviso o una asignación no lo despachan.
+  const hechos = new Set([...(extra?.acciones || []), ...(extra?.accionesBandeja || [])].filter(a => a.modulo === 'bandeja' && SACAN_DE_BANDEJA.has(a.tipo)).map(a => String(a.objeto)));
   const vivo = x => !x.auto && !x.viejo && !hechos.has(String(x.numero ?? x.id));
   const c = (bj.correos || []).filter(vivo);
   const ll = (bj.llamadas || []).filter(x => !x.viejo && !hechos.has(String(x.numero ?? x.id)));
@@ -973,7 +982,7 @@ function motivoCuenta(c) {
 def('cuentas_problema', ['captacion/captacion'], (ctx, D, b) => {
   // V2 (A1 / B-A2 / B-A3): «rojo» = cliente en CRÍTICO de la verdad única con cuenta de Meta: las cifras únicas de Captación
   // (captacion.json → criticos_casa para toda la casa; carteras_publicidad[persona].criticos para su cartera). La alarma de la
-  // cuenta de Meta con el cliente en atención (Akua) es «publicidad urgente», aparte y en ámbar: nunca «crítica».
+  // cuenta de Meta con el cliente en atención (Akua) es «publicidad a vigilar», aparte y en ámbar: nunca «crítica».
   const { cap, l } = cuentas(ctx, D, b, 'mio');
   const todo = alcance(b, 'mio') !== 'mio';
   const cp = cap.carteras_publicidad?.[yo(ctx)];
@@ -983,17 +992,17 @@ def('cuentas_problema', ['captacion/captacion'], (ctx, D, b) => {
   const urgentes = l.filter(c => c.severidad === 'critico' && !ids.has(c.cliente_id));
   const mia = !todo ? silla(ctx, 'trafficker') : null;
   const motivoMeta = c => sinImporte((c.motivos || [])[0]?.texto) || '';
-  const fila = (c, est) => { const m = motivoMeta(c); const v = verdad(ctx, c.cliente_id); return { texto: `${c.nombre} · ${est === 'rojo' ? (v?.motivos || [])[0] || 'cliente en crítico' : m || 'publicidad urgente'}`,
+  const fila = (c, est) => { const m = motivoMeta(c); const v = verdad(ctx, c.cliente_id); return { texto: `${c.nombre} · ${est === 'rojo' ? (v?.motivos || [])[0] || 'cliente crítico' : m || 'publicidad a vigilar'}`,
     extra: [est === 'rojo' ? (m ? `Meta: ${m}` : null) : GRAV_CLI[v?.gravedad] || null, motivoCuenta(c).cifra, c.equipo?.trafficker ? nombre(ctx, c.equipo.trafficker) : null].filter(Boolean).join(' · '),
     estado: est, icono: est === 'rojo' ? 'fire' : 'alert', href: hrefCap(ctx, c.cliente_id) }; };
   return {
-    valor: crit.length, unidad: `${crit.length === 1 ? 'cliente en crítico' : 'clientes en crítico'} con cuenta de Meta${urgentes.length ? ` · ${plural(urgentes.length, 'cuenta', 'cuentas')} con publicidad urgente` : ''}${cp && !todo ? ` · tu cartera: ${plural(cp.cartera, 'cliente')}${cp.apoyo ? ` (+${cp.apoyo} de apoyo)` : ''}` : mia ? ` · tu cartera: ${plural(mia.size, 'cuenta')}` : ''}`,
+    valor: crit.length, unidad: `${crit.length === 1 ? 'cliente crítico' : 'clientes críticos'} con cuenta de Meta${urgentes.length ? ` · ${plural(urgentes.length, 'cuenta', 'cuentas')} con publicidad a vigilar` : ''}${cp && !todo ? ` · tu cartera: ${plural(cp.cartera, 'cliente')}${cp.apoyo ? ` (+${cp.apoyo} de apoyo)` : ''}` : mia ? ` · tu cartera: ${plural(mia.size, 'cuenta')}` : ''}`,
     estado: crit.length ? 'rojo' : urgentes.length ? 'ambar' : 'verde',
-    motivo: `${todo ? 'Clientes en crítico (verdad única) con cuenta de Meta en toda la casa: la misma cifra que «Por trafficker» y que Captación.' : 'Tus clientes en crítico (verdad única) con cuenta de Meta: la misma cifra que «Mis cuentas» de Captación.'} Aparte, la publicidad urgente: tarjeta o impago, anuncios rechazados, gasto 0, píxel caído o coste fuera del techo con el cliente en atención.`,
+    motivo: `${todo ? 'Clientes críticos (verdad única) con cuenta de Meta en toda la casa: la misma cifra que «Por trafficker» y que Captación.' : 'Tus clientes críticos (verdad única) con cuenta de Meta: la misma cifra que «Mis cuentas» de Captación.'} Aparte, la publicidad a vigilar: tarjeta o impago, anuncios rechazados, gasto 0, píxel caído o coste fuera del techo con el cliente a vigilar.`,
     filas: [...crit.map(c => fila(c, 'rojo')), ...urgentes.map(c => fila(c, 'ambar'))],
-    vacio: { titulo: 'Ningún cliente en crítico ni publicidad urgente', tono: 'celebrar' }, frescura: fresco('Meta + verdad única', cap.captacion_generado || cap), medible: 'hoy',
-    primero: [...crit.slice(0, 2).map(c => ({ peso: 3.2, icono: 'fire', motivo: `${c.nombre} · cliente en crítico`, detalle: [(verdad(ctx, c.cliente_id)?.motivos || [])[0], motivoMeta(c) ? `Meta: ${motivoMeta(c)}` : null].filter(Boolean).join(' · '), ruta: sinAlmohadilla(hrefCap(ctx, c.cliente_id)), clave: `cuenta:${c.cliente_id}`, cliente_id: c.cliente_id, grupo: `critico:${c.cliente_id}` })),
-      ...urgentes.slice(0, 1).map(c => { const m = motivoCuenta(c); return { peso: 2.6, icono: 'alert', motivo: `${c.nombre} · publicidad urgente`, detalle: [GRAV_CLI[verdad(ctx, c.cliente_id)?.gravedad], m.texto, m.cifra].filter(Boolean).join(' · '), ruta: sinAlmohadilla(hrefCap(ctx, c.cliente_id)), clave: `cuenta:${c.cliente_id}`, cliente_id: c.cliente_id }; })],
+    vacio: { titulo: 'Ningún cliente crítico ni publicidad a vigilar', tono: 'celebrar' }, frescura: fresco('Meta + verdad única', cap.captacion_generado || cap), medible: 'hoy',
+    primero: [...crit.slice(0, 2).map(c => ({ peso: 3.2, icono: 'fire', motivo: `${c.nombre} · cliente crítico`, detalle: [(verdad(ctx, c.cliente_id)?.motivos || [])[0], motivoMeta(c) ? `Meta: ${motivoMeta(c)}` : null].filter(Boolean).join(' · '), ruta: sinAlmohadilla(hrefCap(ctx, c.cliente_id)), clave: `cuenta:${c.cliente_id}`, cliente_id: c.cliente_id, grupo: `critico:${c.cliente_id}` })),
+      ...urgentes.slice(0, 1).map(c => { const m = motivoCuenta(c); return { peso: 2.6, icono: 'alert', motivo: `${c.nombre} · publicidad a vigilar`, detalle: [GRAV_CLI[verdad(ctx, c.cliente_id)?.gravedad], m.texto, m.cifra].filter(Boolean).join(' · '), ruta: sinAlmohadilla(hrefCap(ctx, c.cliente_id)), clave: `cuenta:${c.cliente_id}`, cliente_id: c.cliente_id }; })],
   };
 });
 def('tabla_cuentas', ['captacion/captacion'], (ctx, D, b) => {
@@ -1093,8 +1102,8 @@ def('tabla_trafficker', ['captacion/captacion'], (ctx, D) => {
   const l = [...g.entries()].sort((a, b) => b[1].criticas - a[1].criticas);
   return {
     valor: l.filter(([t]) => t !== 'sin trafficker').length, unidad: 'traffickers', estado: l.some(([, e]) => e.criticas >= 5) ? 'rojo' : l.some(([, e]) => e.criticas >= 3) ? 'ambar' : 'verde',
-    motivo: 'Las cifras únicas de Captación: cartera de cada trafficker (como principal) y en qué ayuda, cuántos tienen cuenta de Meta y encendida, y cuántos están en crítico (verdad única): verde ≤ 2 · ámbar 3-4 · rojo ≥ 5. La suma de críticos es la de «Fuegos».',
-    filas: l.map(([t, e]) => ({ texto: `${t === 'sin trafficker' ? 'Sin trafficker asignado' : nombre(ctx, t)} · ${plural(e.cuentas, 'cliente')}${e.apoyo ? ` (+${e.apoyo} de apoyo)` : ''}${e.conMeta !== undefined ? ` · ${e.conMeta} con cuenta de Meta` : ''} · ${e.activas} con Meta encendida`, extra: `${e.criticas} en crítico · ${plural(e.leads, 'lead')} en 7 días`, estado: e.criticas >= 5 ? 'rojo' : e.criticas >= 3 ? 'ambar' : 'verde', icono: 'persona', href: ir(ctx, 'captacion', `~trafficker/${t}`) })),
+    motivo: 'Las cifras únicas de Captación: cartera de cada trafficker (como principal) y en qué ayuda, cuántos tienen cuenta de Meta y encendida, y cuántos son críticos (verdad única): bien ≤ 2 · vigilar 3-4 · crítico ≥ 5. La suma de críticos es la de «Fuegos».',
+    filas: l.map(([t, e]) => ({ texto: `${t === 'sin trafficker' ? 'Sin trafficker asignado' : nombre(ctx, t)} · ${plural(e.cuentas, 'cliente')}${e.apoyo ? ` (+${e.apoyo} de apoyo)` : ''}${e.conMeta !== undefined ? ` · ${e.conMeta} con cuenta de Meta` : ''} · ${e.activas} con Meta encendida`, extra: `${e.criticas} ${e.criticas === 1 ? 'crítico' : 'críticos'} · ${plural(e.leads, 'lead')} en 7 días`, estado: e.criticas >= 5 ? 'rojo' : e.criticas >= 3 ? 'ambar' : 'verde', icono: 'persona', href: ir(ctx, 'captacion', `~trafficker/${t}`) })),
     frescura: fresco('Meta', cap.captacion_generado || cap), medible: 'hoy',
   };
 });
@@ -1198,7 +1207,7 @@ def('asistencia_velocidad', ['crm/crm'], (ctx, D) => {
   const crm = D.dato('crm/crm'); const r = crm.resumen || {}; const c = r.citas_30d || {};
   return {
     valor: r.asistencia_pct === null || r.asistencia_pct === undefined ? '—' : fmt.pct(r.asistencia_pct), unidad: 'de asistencia (30 días)', estado: r.asistencia_pct ? semaforo(r.asistencia_pct, { verde: 75, ambar: 60 }) : 'gris',
-    motivo: r.asistencia_pct === null || r.asistencia_pct === undefined ? `Sin dato: ${fmt.num(c.sin_estado)} de ${fmt.num(c.agendadas)} citas de 30 días están sin marcar.` : 'Verde ≥ 75 % (D-45).',
+    motivo: r.asistencia_pct === null || r.asistencia_pct === undefined ? `Sin dato: ${fmt.num(c.sin_estado)} de ${fmt.num(c.agendadas)} citas de 30 días están sin marcar.` : 'Bien ≥ 75 % (D-45).',
     filas: [
       { texto: 'Primer intento en menos de 1 h', extra: `${fmt.pct(r.velocidad_pct_1h)} de ${fmt.num(r.velocidad_juzgables)} leads`, estado: semaforo(r.velocidad_pct_1h, { verde: 70, ambar: 40 }), icono: 'zap' },
       { texto: 'Citas de 30 días', extra: `${fmt.num(c.agendadas)} agendadas · ${fmt.num(c.celebradas)} celebradas · ${fmt.num(c.no_presentadas)} no vinieron`, estado: 'gris', icono: 'cal' },
@@ -1270,7 +1279,7 @@ def('conexiones_caidas', ['nuevos/nuevos'], (ctx, D) => {
   const l = (n.subcuentas || []).filter(s => s.estado === 'rojo');
   return {
     valor: l.length, unidad: `caídas de ${n.resumen?.subcuentas ?? '—'} subcuentas`, estado: l.length ? 'rojo' : 'verde',
-    motivo: `WhatsApp con fallos, calendario sin usuario, dominio sin verificar y píxel sin eventos. ${n.resumen?.subcuentas_aviso ?? 0} más con aviso.`,
+    motivo: `WhatsApp con fallos, calendario sin usuario, dominio sin verificar y píxel sin eventos. ${plural(n0(n.resumen?.subcuentas_aviso), 'subcuenta más', 'subcuentas más')} con aviso.`,
     filas: l.map(s => ({ texto: `${s.cliente || s.subcuenta} · ${(s.problemas || [])[0]?.texto || 'caída'}`, extra: s.dueno, estado: 'rojo', icono: 'plug', href: s.cliente ? ir(ctx, 'clientes-nuevos', s.cliente) : '#/clientes-nuevos' })),
     frescura: fresco('GoHighLevel', n), medible: 'hoy',
   };
@@ -1281,7 +1290,7 @@ def('talleres_semana', ['nuevos/nuevos'], (ctx, D) => {
   return {
     valor: l.length, unidad: 'talleres por delante', estado: '',
     motivo: `Las 48 h de la víspera: si no contesta, se llama. ${n.talleres_nota || ''}`.trim(),
-    filas: l.map(t => ({ texto: `${t.cliente} · ${t.titulo}`, extra: cuandoTxt(t.inicio), estado: 'gris', icono: 'video', href: hrefCliente(ctx, t.cliente_id) })),
+    filas: l.map(t => ({ texto: `${t.cliente} · ${t.titulo}`, extra: cuandoTxt(t.inicio), estado: 'gris', icono: 'video', href: ir(ctx, 'clientes-nuevos', t.cliente_id, hrefCliente(ctx, t.cliente_id)) })),
     vacio: { titulo: 'Ningún taller agendado por delante', texto: 'Salen del calendario de RO en GoHighLevel (foto del 1-oct).' }, frescura: fresco('GHL de RO', n), medible: 'medias',
   };
 });
@@ -1411,7 +1420,7 @@ def('certificados', ['seo/webs'], (ctx, D, b) => {
   const c = l.filter(x => x.comprobacion?.cert_dias !== null && x.comprobacion?.cert_dias !== undefined && x.comprobacion.cert_dias < 30).sort((a, b2) => a.comprobacion.cert_dias - b2.comprobacion.cert_dias);
   return {
     valor: c.length, unidad: 'certificados caducan en < 30 días', estado: c.some(x => x.comprobacion.cert_dias <= 7) ? 'rojo' : c.length ? 'ambar' : 'verde',
-    motivo: 'Verde > 30 días · ámbar 8-30 · rojo ≤ 7 o caducado.',
+    motivo: 'Bien > 30 días · vigilar 8-30 · crítico ≤ 7 o caducado.',
     filas: c.map(x => ({ texto: x.nombre, extra: `caduca ${diaCorto(x.comprobacion.cert_caduca)} · ${x.comprobacion.cert_dias} días`, estado: x.comprobacion.cert_dias <= 7 ? 'rojo' : 'ambar', icono: 'candado', href: x.cliente && x.cliente !== '_ro' ? ir(ctx, 'seo-web', x.cliente) : x.url, abrir: x.url ? { href: x.url, texto: 'la web' } : null })),
     vacio: { titulo: 'Ningún certificado caduca pronto', tono: 'celebrar' }, frescura: fresco('Monitor desde RO', w._meta?.monitor?.leido), medible: 'medias', medibleDetalle: 'Monitor desde RO; dominios, sin lector',
   };
@@ -1595,7 +1604,7 @@ def('setter_llamar', ['ventas_ro/setters'], (ctx, D) => {
   const l = (s.leads || []).filter(x => f(x) && n0(x.intentos) === 0).sort((a, b) => String(b.entro).localeCompare(String(a.entro)));
   return {
     valor: l.length, unidad: 'leads sin ninguna llamada', estado: l.length ? 'rojo' : 'verde',
-    motivo: 'El más nuevo arriba. Verde si el primer intento llega en menos de 5 minutos.',
+    motivo: 'El más nuevo arriba. Bien si el primer intento llega en menos de 5 minutos.',
     filas: l.map(x => ({ texto: contacto(x), extra: `entró ${cuandoTxt(x.entro)}${x.motivo ? ' · ' + x.motivo : ''}`, estado: 'rojo', icono: 'phone', href: x.ghl })),
     vacio: { titulo: 'Todos llamados', tono: 'celebrar' }, frescura: fresco('GoHighLevel de RO', s), medible: 'hoy',
     primero: l.slice(0, 1).map(x => ({ peso: 4, icono: 'phone', motivo: `Llamar ya · ${contacto(x)}`, detalle: `Entró ${cuandoTxt(x.entro)}. ${x.motivo || ''}`, href: x.ghl, abrirEn: 'GHL', clave: `lead:${x.id}` })),
@@ -1634,7 +1643,7 @@ def('setter_marcador', ['ventas_ro/setters'], (ctx, D) => {
   const hoy = l.find(x => x.periodo === 'hoy') || {};
   return {
     valor: fmt.num(hoy.citas), unidad: 'citas hoy', estado: n0(hoy.citas) >= 2 ? 'verde' : n0(hoy.citas) === 1 ? 'ambar' : 'gris',
-    motivo: 'Marcaciones, conversaciones con sentido (verde ≥ 17 %) y citas (verde ≥ 2 al día). Solo los setters ven los marcadores (D-83).',
+    motivo: 'Marcaciones, conversaciones con sentido (bien ≥ 17 %) y citas (bien ≥ 2 al día). Solo los setters ven los marcadores (D-83).',
     filas: l.map(x => ({ texto: `${x.periodo === 'hoy' ? 'Hoy' : 'Esta semana'}${s.setters?.length > 1 && !miSetter(ctx) ? ` · ${x.setter}` : ''}`, extra: `${x.marcaciones} marcaciones · ${x.conversaciones} conversaciones · ${x.citas} citas`, estado: 'gris', icono: 'medidor' })),
     frescura: fresco('Zadarma + GHL', s), medible: 'hoy',
   };
@@ -1699,7 +1708,7 @@ def('vro_embudo', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const ritmo = Math.round((n0(v.objetivo_firmados_mes) * d.getDate()) / dias * 10) / 10;
   return {
     valor: fmt.num(m.firmados), unidad: `firmados · ritmo ${fmt.num(ritmo, 1)} de ${v.objetivo_firmados_mes}`, estado: n0(m.firmados) >= ritmo ? 'verde' : n0(m.firmados) >= ritmo * 0.85 ? 'ambar' : 'rojo',
-    motivo: 'Citas → celebradas → propuesta → firmado, frente al objetivo del mes. Verde ≥ 100 % del ritmo · ámbar 85-99 %.',
+    motivo: 'Citas → celebradas → propuesta → firmado, frente al objetivo del mes. Bien ≥ 100 % del ritmo · vigilar 85-99 %.',
     extra: embudoBarras([{ etiqueta: 'Citas', valor: m.citas, icono: 'cal' }, { etiqueta: 'Celebradas', valor: m.celebradas, icono: 'video' }, { etiqueta: 'Propuestas', valor: m.propuestas, icono: 'doc' }, { etiqueta: 'Firmados', valor: m.firmados, icono: 'editar', estado: 'verde' }]),
     filas: [], frescura: fresco('GoHighLevel de RO', v), medible: 'hoy',
   };
@@ -1711,7 +1720,7 @@ def('vro_costes', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const ref = a.cf !== null ? a : b2;
   return {
     valor: eurG(ref.cf), unidad: `por cliente (${ref.nombre})`, estado: colorCifra('coste_cliente', ref.cf),
-    motivo: 'Por cliente: verde ≤ 700 € (D-13). Por cita reservada: verde ≤ 40 €.',
+    motivo: 'Por cliente: bien ≤ 700 € (D-13). Por cita reservada: bien ≤ 40 €.',
     filas: [a, b2].map(x => ({ texto: x.nombre[0].toUpperCase() + x.nombre.slice(1), extra: `${eurG(x.cc)} por cita · ${eurG(x.cf)} por cliente`, estado: x.cc === null ? 'gris' : x.cc <= 40 ? 'verde' : x.cc <= 60 ? 'ambar' : 'rojo', icono: 'euro' })),
     frescura: fresco('Meta de RO + GHL', v), medible: 'hoy',
   };
@@ -1720,7 +1729,7 @@ def('vro_huecos', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const v = vro(D); const hu = v.huecos || {}; const l = Object.entries(hu.por_dia || {});
   return {
     valor: suma(l, x => x[1]), unidad: `huecos de ${hu.calendario || '45 min'} · ${hu.citas_ya ?? '—'} citas ya`, estado: '',
-    motivo: 'Huecos libres en las próximas dos semanas frente a las citas que hacen falta (verde si se usa ≤ 80 %).',
+    motivo: 'Huecos libres en las próximas dos semanas frente a las citas que hacen falta (bien si se usa ≤ 80 %).',
     filas: l.map(([d, n]) => ({ texto: diaCorto(d), extra: plural(n, 'hueco'), estado: n ? 'verde' : 'gris', icono: 'cal' })),
     frescura: fresco('Calendario de RO', v), medible: 'hoy',
   };
@@ -1729,7 +1738,7 @@ def('vro_bajas', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const v = vro(D); const b2 = v.bajas_tempranas || {};
   return {
     valor: b2.n ?? 0, unidad: `de ${b2.firmados_desde_agosto ?? '—'} firmados desde agosto`, estado: n0(b2.n) >= 2 ? 'rojo' : n0(b2.n) ? 'ambar' : 'verde',
-    motivo: 'Bajas en los primeros 90 días de clientes que vendiste. Verde 0 · ámbar 1 · rojo 2 o más al trimestre.',
+    motivo: 'Bajas en los primeros 90 días de clientes que vendiste. Bien 0 · vigilar 1 · crítico 2 o más al trimestre.',
     filas: (b2.detalle || []).map(x => ({ texto: x.cliente, extra: x.mes, estado: 'ambar', icono: 'baja' })),
     frescura: fresco('Libro de bajas', b2.libro_leido || v), medible: 'medias',
   };
@@ -1824,12 +1833,12 @@ num('beneficio_mes', ['finanzas/finanzas', 'finanzas/direccion'], (ctx, D) => {
 num('beneficio_pct', ['finanzas/finanzas', 'finanzas/direccion'], (ctx, D) => {
   const k = fdir(D).kpi || {}; const s = k.bai_serie || [];
   return { valor: fmt.pct(k.bai), unidad: 'últimos 6 meses', estado: k.bai >= 20 ? 'verde' : k.bai >= 0 ? 'ambar' : 'rojo', comparacion: s.length > 1 ? { delta: Math.round((s[s.length - 1] - s[s.length - 2]) * 10) / 10, unidad: ' pt', dec: 1, texto: 'el último mes frente al anterior' } : null,
-    contexto: 'Solo el verde está firmado (≥ 20 %). Margen bruto ' + fmt.pct(k.mb) + '.', frescura: fresco('Holded', D.dato('finanzas/finanzas')) };
+    contexto: 'Solo «Bien» está firmado (≥ 20 %). Margen bruto ' + fmt.pct(k.mb) + '.', frescura: fresco('Holded', D.dato('finanzas/finanzas')) };
 });
 num('cuota_cobrada', ['finanzas/finanzas'], (ctx, D) => {
   const ct = fadm(D).cuota_tres || {}; const antes10 = hoyDia().getDate() < 10;
   return { valor: fmt.pct(ct.cobrado_pct), unidad: 'de lo facturado', estado: antes10 ? 'gris' : semaforo(ct.cobrado_pct, { verde: 95, ambar: 85 }),
-    comparacion: { texto: `septiembre: ${fmt.pct(ct.cobrado_pct_sep)}` }, contexto: antes10 ? 'Se juzga el día 10; hoy es orientativo (el cargo SEPA entra el día 2).' : 'Verde ≥ 95 % · ámbar 85-95 %.', frescura: fresco('Holded', D.dato('finanzas/finanzas')) };
+    comparacion: { texto: `septiembre: ${fmt.pct(ct.cobrado_pct_sep)}` }, contexto: antes10 ? 'Se juzga el día 10; hoy es orientativo (el cargo SEPA entra el día 2).' : 'Bien ≥ 95 % · vigilar 85-95 %.', frescura: fresco('Holded', D.dato('finanzas/finanzas')) };
 });
 num('altas_en_plazo', ['nuevos/nuevos'], (ctx, D) => {
   // verdad única: encendido = { dia, estado } (en_plazo · en_limite · tarde · sin_encender_fuera_de_plazo · pendiente_en_plazo)
@@ -1868,8 +1877,8 @@ num('cartera_salud', ['verdad/clientes'], (ctx, D) => {
   const crit = l.filter(c => c.grav === 'critico');
   const b = l.filter(c => c.salud >= 60 && c.grav !== 'critico').length;
   const s0 = l.length ? semaforo(pct(b, l.length), { verde: 80, ambar: 60 }) : 'gris';
-  return { titulo: 'salud de 60 o más y ninguno en crítico', valor: l.length ? fmt.pct(pct(b, l.length)) : null, unidad: `${b} de ${l.length}`, estado: crit.length && s0 === 'verde' ? 'ambar' : s0,
-    contexto: `La misma salud que la ficha de cada cliente (fórmula provisional: 40 de resultados, 30 de atención y 30 de arranque); un cliente en crítico no cuenta como bien.${crit.length ? ` En crítico: ${crit.map(c => c.nombre).join(', ')}.` : ''}`,
+  return { titulo: 'salud de 60 o más y ningún crítico', valor: l.length ? fmt.pct(pct(b, l.length)) : null, unidad: `${b} de ${l.length}`, estado: crit.length && s0 === 'verde' ? 'ambar' : s0,
+    contexto: `La misma salud que la ficha de cada cliente (fórmula provisional: 40 de resultados, 30 de atención y 30 de arranque); un cliente crítico no cuenta como bien.${crit.length ? ` ${crit.length === 1 ? 'Crítico' : 'Críticos'}: ${crit.map(c => c.nombre).join(', ')}.` : ''}`,
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')) };
 });
 function citaObjetivo(ctx, D, todas) {
@@ -1905,7 +1914,7 @@ num('resultados_cartera', ['captacion/captacion'], (ctx, D) => {
   const nomSin = sinCamp.map(id => nomCli(ctx, id) || id);
   return { valor: fmt.pct(pct(ok, total)), unidad: `${ok} de ${plural(total, 'cliente')} en objetivo`,
     estado: semaforo(pct(ok, total), { verde: 70, ambar: 50 }),
-    contexto: `${sinCamp.length ? `${sinCamp.length} de tus ${total} clientes no tienen campaña de Meta encendida y no cuentan como en objetivo (${nomSin.slice(0, 4).join(', ')}${nomSin.length > 4 ? ` y ${nomSin.length - 4} más` : ''}). ` : ''}${act.length ? `Con campaña: ${ok} de ${act.length} en objetivo${mal.length ? `; fuera, ${mal.slice(0, 4).map(x => `${x.c.nombre} (${x.m})`).join(', ')}${mal.length > 4 ? ` y ${mal.length - 4} más` : ''}` : ''}. ${plural(citas, 'cita')} en 7 días y ${plural(suma(act, c => c.ghl?.embudo?.funnel?.cerrado), 'venta marcada', 'ventas marcadas')} (90 días) ${conGhl === 1 ? 'en la única' : `en las ${conGhl}`} con GoHighLevel.` : 'Ninguno tiene campaña de Meta encendida.'} ${cap.resumen?.objetivos_cargados ?? 0} objetivos del alta cargados: mientras, techo general.`.replace(/\s+/g, ' ').trim(),
+    contexto: `${sinCamp.length ? `${sinCamp.length} de tus ${total} clientes no tienen campaña de Meta encendida y no cuentan como en objetivo (${nomSin.slice(0, 4).join(', ')}${nomSin.length > 4 ? ` y ${plural(nomSin.length - 4, 'cliente más', 'clientes más')}` : ''}). ` : ''}${act.length ? `Con campaña: ${ok} de ${act.length} en objetivo${mal.length ? `; fuera, ${mal.slice(0, 4).map(x => `${x.c.nombre} (${x.m})`).join(', ')}${mal.length > 4 ? ` y ${plural(mal.length - 4, 'cliente más', 'clientes más')}` : ''}` : ''}. ${plural(citas, 'cita')} en 7 días y ${plural(suma(act, c => c.ghl?.embudo?.funnel?.cerrado), 'venta marcada', 'ventas marcadas')} (90 días) ${conGhl === 1 ? 'en la única' : `en las ${conGhl}`} con GoHighLevel.` : 'Ninguno tiene campaña de Meta encendida.'} ${cap.resumen?.objetivos_cargados ?? 0} objetivos del alta cargados: mientras, techo general.`.replace(/\s+/g, ' ').trim(),
     frescura: fresco('Meta + GoHighLevel', cap.captacion_generado || cap.generado) };
 });
 num('cita_objetivo_mias', ['captacion/captacion'], (ctx, D) => citaObjetivo(ctx, D, false));
@@ -1952,7 +1961,7 @@ num('top5_mios', ['seo/seo'], (ctx, D) => {
   const aviso = avisoSeRanking(l);
   const duda = !!(s.resumen?.aviso_seranking || aviso);   // V2 (B-M8): dato en duda → gris
   return { valor: fmt.num(hoy), unidad: `en top 5 · ${plural(l.length, 'cliente')}`, estado: !l.length || duda ? 'gris' : hoy >= mes ? 'verde' : mes - hoy <= 2 ? 'ambar' : 'rojo', duda, comparacion: { delta: hoy - mes, texto: 'frente a hace 30 días' },
-    contexto: duda ? `Dato en duda: compruébalo en Google antes de tocar nada.${aviso ? ` ${aviso} La caída del top 5 puede no ser real.` : ''}` : 'Verde si sube o se mantiene el número en top 5 frente a hace 30 días.', frescura: fresco('SE Ranking', s._meta?.seranking?.leido || s._meta?.generado) };
+    contexto: duda ? `Dato en duda: compruébalo en Google antes de tocar nada.${aviso ? ` ${aviso} La caída del top 5 puede no ser real.` : ''}` : 'Bien si sube o se mantiene el número en top 5 frente a hace 30 días.', frescura: fresco('SE Ranking', s._meta?.seranking?.leido || s._meta?.generado) };
 });
 num('webs_verde', ['seo/webs', 'seo/seo'], (ctx, D) => {
   // V2 (C-8): el número que manda de web es el de su pantalla de trabajo: «Webs que responden 60 de 64» (todas las webs, como
@@ -1963,7 +1972,7 @@ num('webs_verde', ['seo/webs', 'seo/seo'], (ctx, D) => {
   const caidas = todas.filter(x => x.estado === 'rojo' && !responde(x));
   const mias = ctx.persona.puestos.includes('web') ? webs(ctx, D, { alcance: 'mio' }).l : null;
   return { titulo: 'Webs que responden', valor: `${n} de ${tot}`, unidad: 'webs responden desde RO', estado: caidas.length ? 'rojo' : 'verde',
-    contexto: `${plural(caidas.length, 'caída', 'caídas')}${caidas.length ? ` (${caidas.slice(0, 4).map(x => x.nombre).join(', ')}${caidas.length > 4 ? ` y ${caidas.length - 4} más` : ''})` : ''}; ${r.rojo ?? '—'} en rojo y ${r.ambar ?? '—'} con aviso.${mias ? ` Tuyas: ${mias.filter(responde).length} de ${mias.length} responden.` : ''} Una comprobación desde la IP de RO; la disponibilidad desde fuera llega con el despliegue.`,
+    contexto: `${plural(caidas.length, 'caída', 'caídas')}${caidas.length ? ` (${caidas.slice(0, 4).map(x => x.nombre).join(', ')}${caidas.length > 4 ? ` y ${plural(caidas.length - 4, 'web más', 'webs más')}` : ''})` : ''}; ${r.rojo ?? '—'} en rojo y ${r.ambar ?? '—'} con aviso.${mias ? ` Tuyas: ${mias.filter(responde).length} de ${mias.length} responden.` : ''} Una comprobación desde la IP de RO; la disponibilidad desde fuera llega con el despliegue.`,
     frescura: fresco('Monitor desde RO', w._meta?.monitor?.leido) };
 });
 num('redes_14', ['redes/redes'], (ctx, D) => {
@@ -1973,7 +1982,7 @@ num('redes_14', ['redes/redes'], (ctx, D) => {
   const v = l.filter(c => c.estado_14 === 'verde').length;
   const nomF = fuera.map(id => nomCli(ctx, id) || id);
   return { valor: l.length ? fmt.pct(pct(v, l.length)) : null, unidad: `${v} de ${plural(l.length, 'cliente')} con calendario en Metricool`, estado: !l.length ? 'gris' : v === l.length ? 'verde' : 'rojo',
-    contexto: `Un cliente con un hueco de ${r._meta?.hueco_dias || 4} días o más ya no cuenta.${fuera.length ? ` Tu cartera de redes tiene ${l.length + fuera.length} clientes: ${plural(fuera.length, 'no está', 'no están')} en Metricool y no se pueden medir (${nomF.slice(0, 4).join(', ')}${nomF.length > 4 ? ` y ${nomF.length - 4} más` : ''}).` : ''}`,
+    contexto: `Un cliente con un hueco de ${r._meta?.hueco_dias || 4} días o más ya no cuenta.${fuera.length ? ` Tu cartera de redes tiene ${l.length + fuera.length} clientes: ${plural(fuera.length, 'no está', 'no están')} en Metricool y no se pueden medir (${nomF.slice(0, 4).join(', ')}${nomF.length > 4 ? ` y ${plural(nomF.length - 4, 'cliente más', 'clientes más')}` : ''}).` : ''}`,
     frescura: fresco('Metricool', r._meta?.leido_metricool) };
 });
 num('indice_piezas', ['produccion/produccion'], (ctx, D) => {
@@ -1989,7 +1998,7 @@ num('cierre_celebradas', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const usar = n0(m.celebradas) >= 5 ? m : a; const nombre = usar === m ? MESES[new Date().getMonth()] : MESES[Number(mesAnterior().slice(5)) - 1];
   const p = pct(n0(usar.firmados), n0(usar.celebradas));
   return { valor: fmt.pct(p), unidad: `${usar.firmados ?? 0} de ${usar.celebradas ?? 0} en ${nombre}`, estado: p === null ? 'gris' : semaforo(p, { verde: 33, ambar: 20 }),
-    contexto: usar === m ? 'Verde ≥ 33 % · ámbar 20-32 % (D-63).' : `Este mes aún no hay 5 celebradas: se enseña ${nombre}. Verde ≥ 33 % · ámbar 20-32 % (D-63).`, frescura: fresco('GoHighLevel de RO', v) };
+    contexto: usar === m ? 'Bien ≥ 33 % · vigilar 20-32 % (D-63).' : `Este mes aún no hay 5 celebradas: se enseña ${nombre}. Bien ≥ 33 % · vigilar 20-32 % (D-63).`, frescura: fresco('GoHighLevel de RO', v) };
 });
 
 // ============================================================ A1 · «Lo mío» (43_IDEAS_MEJORA, 2-oct noche)

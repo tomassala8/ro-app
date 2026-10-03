@@ -61,7 +61,9 @@ def limpiar(t):
     t = re.sub(r'\n\s*\n+', '\n\n', t).strip()
     # fuera las citas del correo anterior (lo de «El … escribió:» en adelante) para no repetir el hilo
     t = re.split(r'\n(?:El .{5,120} escribió:|On .{5,120} wrote:|De: |From: |-----Original|________________)', t)[0]
-    return t[:3000]
+    # 3-oct: fuera también los avisos legales del pie (no aportan y comen contexto)
+    t = re.split(r'(?:NOTA LEGAL|AVISO LEGAL|LEGAL NOTE|PROTECCIÓN DE DATOS-|Este mensaje y (?:los|sus) archivos|De acuerdo con lo establecido en el artículo 13)', t)[0].strip()
+    return t[:3500]
 
 
 def main():
@@ -81,7 +83,7 @@ def main():
     salida = {'generado': datetime.now().strftime('%Y-%m-%d %H:%M'), 'fuente': 'Zoho Desk (zh.py, lectura)', 'hilos': {}}
     for x in elegir(n):
         tid = (x.get('url') or '').rstrip('/').split('/')[-1]
-        conv = g(f'/tickets/{tid}/conversations?from=1&limit=30', oid)
+        conv = g(f'/tickets/{tid}/conversations?from=1&limit=50', oid)
         msgs = []
         for m in sorted(conv.get('data', []), key=lambda m: m.get('createdTime') or ''):
             if m.get('type') != 'thread':
@@ -99,7 +101,7 @@ def main():
         salida['hilos'][x['numero']] = {
             'numero': x['numero'], 'ticket_id': tid, 'cliente_id': x['cliente_id'], 'asunto': x.get('asunto'),
             'account_id': x.get('account_id'), 'queja': x.get('queja'), 'horas': x.get('horas'),
-            'dias_laborables': x.get('dias_laborables'), 'url': x.get('url'), 'mensajes': msgs[-8:],
+            'dias_laborables': x.get('dias_laborables'), 'url': x.get('url'), 'mensajes': msgs[-20:],   # 3-oct: el hilo completo (hasta 20)
             'error': conv.get('_error'),
         }
         print(x['numero'], x['cliente_id'], len(msgs), conv.get('_error') or '')

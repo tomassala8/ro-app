@@ -1,6 +1,26 @@
 # App de RO · base común (prototipo local)
 
-**2-oct-2026.** Carcasa, sistema de diseño, capa de permisos y un módulo de ejemplo («En rojo») con datos reales del panel v27 de Mili. Nada desplegado; nada escrito en ninguna herramienta externa.
+**Puesto al día el 3-oct-2026 (06:30).** Prototipo local completo: carcasa, sistema de diseño, permisos en el servidor y los módulos de los 21 puestos con datos reales. **Nada desplegado y nada sale de la app:** envíos, ClickUp, reseñas de Google y acceso a WordPress están programados pero en simulación hasta que Tomás los active. Código en GitHub (privado): repositorio `tomassala8/ro-app` (por SSH), rama `main`, **sin datos** (ver «Qué no se sube»).
+
+## Estado a 3-oct-2026 · el mapa en una pantalla
+
+| Parte | Estado | Dónde se cuenta |
+|---|---|---|
+| Piezas comunes (`_trabajo.js`, `_deshacer.js`, `_bitacora.js`, `_ir.js`, `_legible.js`, `capaFlotante`, paneles v4 + `dinero_v4.js`, `ayudas.js` con ⌘K) | Hecho | «Piezas comunes» (abajo) y secciones de cada ronda |
+| Envíos verificados (`envios.py`, `despliegue/verificar_envios.py`, interruptores) | Hecho, **en simulación** | `_ESTADO_envios.md` · `../46_ENVIOS_VERIFICADOS.md` |
+| Sincronía con ClickUp (`sincronia.py`, `despliegue/reconciliar_clickup.py`, copia en la base) | Hecho, **en simulación** | `_ESTADO_sincronia.md` · `../51_SINCRONIA_Y_CHAT.md` |
+| Avisos y canales (`avisos.py`, `avisos_programados.py`, 11 reglas) | Hecho; reloj dentro del servidor | `_ESTADO_avisos.md` · `../54_AUTOMATIZACIONES_INVENTARIO.md` |
+| Vigía + «Salud del sistema» + `despliegue/copia_seguridad.py` | Hecho; el bucle local lo arranca quien diga Tomás | «Vigía y copias» (abajo) |
+| IA con topes (`ia.py`, `ia_gasto.py`: 150 €/mes, 10 €/día, corte a reglas) | Hecho; **sin clave**, hoy gasto 0 € | `_ESTADO_ia.md` · `../52_IA_COSTE_Y_TOPES.md` · `../55_COSTE_IA_POR_DIA.md` |
+| Cerebro de respuestas de correo y cerebro de decisiones v2 | Hecho (precalculado y por reglas sin clave) | `_ESTADO_ia.md` · `../49_CEREBRO_RESPUESTAS.md` · `../53_CEREBRO_DECISIONES.md` |
+| Modular (ficha del cliente + tablero de webs + 4 reglas de alerta) | Hecho y **conectado** (lectura); acceso de un clic **apagado** | `_ESTADO_modular.md` |
+| Hostinger | Hecho y probado con datos inventados; **falta el token** | `_ESTADO_hostinger.md` · `../56_INTEGRACIONES_HOSTINGER_Y_OTRAS.md` |
+| Google Business Profile (ficha de Google, reseñas) | **En curso** (otro carril lo está terminando); hoy «pendiente de aprobación» de Google | «Google Business Profile y teléfonos» (abajo) |
+| Teléfonos en formato internacional (`telefono.py`, `modulos/_telefono.js`) | **En curso** (otro carril lo está aplicando en pantallas) | «Google Business Profile y teléfonos» (abajo) |
+| Baterías de prueba | Hecho | «Baterías de prueba» (abajo) |
+| Lo que solo puede hacer Tomás | — | «Lo que solo puede hacer Tomás» (abajo) |
+
+*Origen (2-oct): carcasa, sistema de diseño, capa de permisos y un módulo de ejemplo («En rojo») con datos reales del panel v27 de Mili.*
 
 > ✅ **Desde E0 (2-oct) los permisos se aplican en un servidor local, `servir.py`**, con la misma lógica que irá al Worker de Cloudflare (W1): identidad, «ver como», recorte por persona, 403 para clientes ajenos, rastro imborrable y puerta de secretos. Con `servir.py`, `data/` **no se sirve nunca como fichero**. El modo estático (`python3 -m http.server`) sigue funcionando para desarrollar pantallas, pero ahí el navegador descarga todo y **no protege nada**. Nada se publica: solo en este Mac (127.0.0.1).
 
@@ -12,7 +32,8 @@
 cd ~/Downloads/APP_RO_ROLES_Y_PERMISOS_2026-10-02/30_APP_PROTOTIPO
 python3 build_data.py            # panel v27 + fase 0 (+ respuestas de Mili si existen) → data/*.json (solo lectura)
 python3 generar_catalogo.py      # fichas G1-G3 + umbrales firmados → indicadores.json
-python3 servir.py                # y abre http://127.0.0.1:8770  (recomendado: permisos en el servidor)
+python3 servir.py --bind 127.0.0.1 --puerto 8770   # y abre http://127.0.0.1:8770 (permisos en el servidor)
+                                 # SIEMPRE --bind 127.0.0.1: nunca a la wifi (2-oct se expusieron correos y teléfonos)
 python3 pruebas_e0.py            # con servir.py en marcha: pruebas de aceptación de E0
 # modo de respaldo, sin permisos de verdad:  python3 -m http.server 8765
 ```
@@ -490,3 +511,162 @@ Encargo de Tomás: «que el equipo pueda actualizar su timezone».
 - **Salud:** conexión `envio_correos` («Envío de correos (Desk)») en `despliegue/salud_conexiones.py` (la define `envios.conexion_salud`, solo lectura): llave de escritura y su permiso, departamento, dirección de envío, firmas y cupo.
 - **Activar (solo Tomás):** `data/envios/interruptor.json` (`envios_reales`, canal y `activado_por: "tomas"`) **y** `RO_ENVIOS_REALES=si` en el entorno. Canario: `interruptor.canario` + `data/envios/_privado/canario.json`.
 - **Pantalla:** `modulos/envios.js` (`#/envios`, `#/envios/<id>`, grupo Sistema; Tomás, Mili y Agus). Capturas en `capturas/_envios/`. Pruebas: `pruebas_seguridad.py → envios_verificados`.
+
+## Ronda U (3-oct · usabilidad por tareas, `../50_USABILIDAD_POR_TAREAS.md`): dos piezas comunes nuevas — contrato compatible
+Principio de Tomás: «la info colocada para que la gente la UTILICE de verdad». Dos ficheros nuevos en `modulos/` (no tocan `componentes.js` ni `estilos.css`, que otros carriles están cambiando). Solo clases comunes y tokens.
+
+### `modulos/_trabajo.js` · molde de pantalla de trabajo (cambio #1)
+Regla: la **primera fila accionable a ≤ 300 px** desde arriba del contenido, a 1440 y a 390, sin desplazarse antes del primer clic útil.
+- `pantallaTrabajo({ id, filtros, pestanas, lista, detalle, contexto: [nodos], tituloContexto, abiertoContexto, consejo = true })` → `<div data-trabajo>` con la clase común `.dos` (dos columnas desde 901 px; una debajo de otra en el móvil). Izquierda (2/3): `filtros` (franja ≤ 64 px), `pestanas` y **la lista**. Derecha (1/3, `sticky` bajo la cabecera): `detalle` del objeto elegido con su barra de acciones y `contexto` en un plegable «Contexto y cifras» (abierto en ancho, cerrado en el móvil). El consejo de la IA baja a justo después del bloque, plegado. Las tarjetas grandes de cifras, «Cómo se mide» y gráficos van al contexto, nunca encima de la lista.
+- `barraAcciones({ titulo, sub, acciones: [nodos], volver: { href, texto } })` → barra de un **detalle** pegada arriba (sticky) con sus verbos («Escalar», «Resolver», «No aplica», «Aprobar»…). Cambio #14: el ciclo de una incidencia, «Guardar nota», «Aprobar» de una decisión… nunca a 1.400 px.
+- `franjaCifras([{ etiqueta, valor, estado, activo, alPulsar, titulo }])` → cifras pequeñas que **son los filtros** de la lista (chips con `aria-pressed`).
+- `consejoCompacto(raiz, destino)` → el «Qué haría yo hoy aquí» que pone la carcasa se coloca **justo después del hijo de `#main` que contiene a `destino`** y se pliega a una línea, una vez (sin cambiar la preferencia guardada; si la persona lo abre, se queda abierto). **Sigue siendo hijo directo de `#main`**: si se mete dentro de otra caja, la carcasa no lo encuentra y pinta otro (se apilaban; arreglado a las 05:00 del 3-oct). `plegarConsejo(c)` lo pliega sin moverlo (también lo hace `_plegar_consejo.js` de U2). Lo usa `pantallaTrabajo` solo; exportado para maquetas propias.
+
+### `modulos/_deshacer.js` · «Deshacer» en vez de «¿Seguro?» (cambio #4)
+- **Acciones internas** (Hecho, Visto, Lo tengo, Reclamado, Aprobar, A revisión, Correcto…): se ven hechas al primer clic y sale «✓ Hecho · Deshacer (8)». A los **8 s** se escribe (`alHacer` → `ctx.accion`/`ctx.api`); «Deshacer» lo anula y no se escribe nada. Si la persona cambia de ruta, cierra o deja la pestaña antes, lo pendiente se escribe en ese momento (`hashchange`, `pagehide`, `visibilitychange`).
+- `botonDeshacer({ texto, hecho, alHacer, alAnular, plazo, mini, pri, icono, soloLectura, atajo, titulo })`: el botón en su sitio. `soloLectura` («ver como») lo deja apagado con el motivo.
+- `conDeshacer({ mensaje, hacer, optimista, revertir, plazo })`: para filas que **desaparecen** al marcarlas (Lo mío, alertas): `optimista()` la quita, aviso flotante «… · Deshacer», `hacer()` a los 8 s, `revertir()` si se deshace o falla. Un segundo `conDeshacer` escribe el anterior al momento.
+- **El «¿Seguro?» (`botonConfirmar`) queda solo** para lo que sale fuera (envíos reales: correo, WhatsApp, GoHighLevel, Desk) o borra. `pendientes()` y `encolarTodo()` para pruebas.
+- Adoptado en (carril U1): Mi día, Incidencias, Alertas, En rojo, Decisiones, Personas, Horas, Panel de dirección y Ventas de RO. U2 y U3 lo adoptan en sus pantallas.
+
+### Carril U3 · piezas y datos nuevos (contrato compatible)
+- `modulos/_trabajo_ancho.js` · `pantallaAncha({ id, filtros, lista, contexto, tituloContexto })`: el molde a **todo el ancho** para listas que son tablas anchas (Salud del CRM, Captación, SEO y webs, Outreach, Producción, Redes). Arriba franja + pestañas + lista; debajo, plegado, «Contexto y cifras»; el consejo, plegado detrás (`consejoCompacto`). `franjaEnLinea(franja)`: la franja en una sola línea también a 390 (se desliza dentro, la página no).
+- `modulos/_bitacora.js` · `bitacoraCuenta(ctx, clienteId, { dias })` y `panelBitacora(ctx, clienteId)`: la bitácora diaria del trafficker («qué cambio hoy», acción interna `bitacora_cuenta` de Captación) para leerla en otras pantallas (ficha, informes). Horas de la cola en UTC → Madrid.
+- **Acciones nuevas** (`reglas_permisos.json › acciones_permitidas`): `salud-crm: revisado_lead, revisado_cita` («Revisado · motivo», la fila sale de la lista) · `captacion: bitacora_cuenta, pedido_creatividad` · `redes: hueco_lo_cubro` (vista_previa `{ desde, hasta, dias[] }`). El **pedido de creatividades** se manda como `clickup/tarea` con `vista_previa.pedido_creatividad: true` → `sincronia.py` lo guarda como «crear tarea en la lista del cliente» (simulado) y `avisos.py` lo publica en `#avisos-redes` para producción, redes, publicidad, operaciones y dirección (campo `pedido` en el mensaje; «Ir» → `#/produccion/pedido/<id>`).
+- **Marca del cliente en la tarea de Producción:** `fuentes_produccion/generar_marca.py` → `data/produccion/marca.json` (filas con `cliente_id`, recortado por cliente) y `data/produccion/marca/p_<persona>.json` (solo su dueño: los clientes de sus tareas y su cartera, filas con `cli`). Tono y «lo que nunca se dice» del `_MANUAL_VOZ_ESTILO.md` de cada cliente, colores del manual o del logo, carpeta de Drive, última pieza aprobada. `fichaMarca({ cliente, marca, pedidos, tarea, alias })` en `produccion_comun.js`.
+- Setters: el resultado se guarda con herramienta `app` (con `ghl` el servidor lo rechazaba con 403: los leads de RO no son de un cliente); las citas pasadas, tipo `resultado`.
+
+## Paneles v4 (3-oct · encargo de Tomás «todo a nivel de dashboards tiene que mejorar»): contrato compatible
+Especificación: `../48_BENCHMARK_DASHBOARDS.md` (QuickBooks, Xero, ChartMogul, Pigment, Databox… y las métricas de agencia con fuente). Orden de toda pantalla de dinero: **la cifra que manda arriba · 4-6 tarjetas con su línea de 12 meses, su comparación y su umbral con fuente · lo que pide decisión · el porqué (gráficos) · tablas plegadas al final**. Cada bloque lleva su acción al lado (reclamar, ver cobros, pedir revisión), no solo el dato.
+
+**Componentes nuevos (`componentes.js`, bloque «PANELES V4»; estilos en `estilos.css`, bloque «Paneles v4»; ejemplos en Sistema › Componentes):**
+| Componente | Para qué |
+|---|---|
+| `tarjetaKpi({ icono, etiqueta, valor, num, unidad, estado, mejorSi: 'alto'\|'bajo'\|'neutro', serie, serieX, umbralSerie, comparar, comparaciones: { mes_ant, anio_ant, objetivo: { ref, num?, texto, modo: 'pct'\|'abs'\|'puntos', formato, sinDato } }, umbral: { texto, fuentes: [{ fuente, href }], colorea }, fuente: { texto, href }, nota, contexto, medible, frescura, alPulsar, ir })` | La tarjeta estándar: cifra, minilínea de 12 meses, «▲/▼ contra qué» con el color según la dirección buena, umbral escrito con «Ver fuente ↗» y el dato con su fuente. `colorea: false` = «Referencia, no colorea» (gris). No es un botón entero (lleva enlaces): `alPulsar` pone «ir» al pie |
+| `selectorComparar({ clave, alCambiar })` · `COMPARAR_CON` | «Comparar con: Mes anterior · Mismo mes del año pasado · Objetivo o plan» (se recuerda). La pantalla repinta sus tarjetas con `comparar` |
+| `lineaComparacion({ num, ref, modo, mejorSi, texto, formato })` | La línea «▲ 12 % frente a julio» suelta (para la cifra que manda: `cifraPrincipal({ comparacion })`) |
+| `minilinea(valores, { x, formato, umbral, etiqueta, alto })` | La línea pequeña de tendencia; null con < 2 valores |
+| `cascada({ pasos: [{ texto, valor, tipo: 'total'\|'cambio', estado: 'sube'\|'sube2'\|'ambar'\|'baja' }], formato, zoom, anchoFilas = 440 })` | Puente: saldos en gris, sube verde, baja rojo. `zoom: true` = el eje no empieza en 0 (cuota) y lo dice. Por debajo de 440 px, en filas |
+| `barrasGanadoPerdido({ x, ganado: [{ nombre, y, clase }], perdido, enCurso, notaCurso, detalle })` | Lo ganado sobre cero, lo perdido bajo cero, línea del neto y el periodo en curso **rayado** (ChartMogul) |
+| `mapaCalor({ columnas, vistas: [{ valor, texto, filas: [{ etiqueta, n, valores }], media, nota }], clave })` | Cohortes: filas = mes de alta, columnas = mes 0..N, fila «Media», un solo color (`--calor-1..5`), interruptor % clientes / % cuota; scroll dentro de su caja |
+| `barraObjetivo({ valor, objetivo, max, marcas, extra, bandas, colorea, formato })` · `bandasObjetivo()` · `estadoObjetivo()` · `FUENTE_BANDAS` | Bullet: bandas de Databox (< 75 % rojo, 75-99 ámbar, ≥ 100 verde), cifra en barra oscura, objetivo como marca, `extra` en trazo fino («si firman») |
+| `previsionCaja({ puntos: [{ fecha, saldo }], minimo, eventos, textoMinimo })` | Caja proyectada con la línea del mínimo y el tramo rojo por debajo (QuickBooks/Xero) |
+| `barrasDivergentes({ filas: [{ etiqueta, sub, valor, estado }], formato, alPulsar })` | Ranking con el cero en medio: negativas a la izquierda en rojo |
+| `enlaceFuente(href, quien)` | «Quién · Ver fuente ↗» (fuera, en otra pestaña) |
+| `barraApilada` | admite `estado: 'rojo-claro'` (tramo 61-90 días) |
+
+**Lo común de los paneles de dinero (`modulos/dinero_v4.js`, no es un módulo):** `FUENTES` (las 21 del 48, abiertas el 3-oct), `UMBRALES` (texto, fuentes y `colorea` por métrica; los de SaaS o sin fuente fiable, `colorea: false`), `ESTADO` (color por métrica con umbral), `fuentesAlPie(claves)` (lista de fuentes al final), `puenteCuota(puente)` (fuga mensual: rebajas, bajas, subidas), `puntosPrevisionCaja({...})` (caja a 90 días con sus supuestos en texto), `notaSupuestos()`, `separador()`, `mesMas()`. **El Panel de dirección y Ventas de RO deben reutilizar esto** (no copiar umbrales).
+
+**Datos nuevos:** `data/dinero_cliente/cohortes.json` ← `fuentes_dinero/generar_cohortes.py` (lo lanza `generar_dinero.py` al terminar; solo lee `direccion.json`): % de clientes y % de la cuota de entrada que siguen por mes de alta (24 filas, mes 0-12, media ponderada). `reglas_permisos.json → datos_de_modulo["dinero_cliente/cohortes"]`: dirección, operaciones y proyectos (`solo_real`). Acciones nuevas en la lista blanca: `revisar_rebajas`, `revisar_rebajas_deshecho` (Finanzas: «Pedir a Mili que lo revise», patrón «Hecho · Deshacer»; cuando exista `modulos/_deshacer.js` del carril U1, pasar a usarlo).
+
+**Retención neta:** fórmula propuesta (cuota de hoy de los clientes que ya estaban hace 12 meses ÷ su cuota de entonces, por trimestres) = el 60,5 % de `kpi.nrr`; en pantalla, **«Fórmula pendiente de confirmar por Tomás»**.
+
+**De paso (lo común, 44 y glosario del coordinador):** I9 `grafico()` pega al borde la primera/última etiqueta de un eje de barras y el SVG nunca es más ancho que su caja (PDF); el texto del umbral se aparta si pisa el valor final. V4 los botones del «Más» de una fila (`.mas-acc`) y los menús flotantes ya no se salen de la tarjeta. Glosario **Crítico · Vigilar · Bien**: `chipEstado('ambar', 'Atención')` sale «Vigilar»; la red de textos cambia «cliente en atención» → «cliente a vigilar», «3 en atención» → «3 a vigilar» y «Crítico, Atención…» → «Crítico, Vigilar…»; el menú «Mis clientes» dice «vigilar». N6: las cabeceras con nombres propios ya salen como se escriben (app.js; comprobado en Incidencias › Traspasos).
+
+## Sincronía con ClickUp (3-oct · encargo de Tomás «que los cambios impacten en ClickUp y se guarden como copia»): contrato compatible
+**Hoy todo en simulación: nada se escribe en ClickUp.** Detalle, encendido y chat en `../51_SINCRONIA_Y_CHAT.md`.
+- **Servidor:** `sincronia.py`, enganchado a `servir.py` tras `envios.py`. Toda acción de la cola con `herramienta: 'clickup'` crea al momento su cambio en `sinc_cambios` + `sinc_pasos` (imborrables; clave única por acción). Estados: simulado | pendiente → enviado → confirmado | fallido | conflicto → descartado. La tarea y el cambio los pone el servidor (Producción, `revision_piezas`); lo demás del navegador se ignora y se anota. La respuesta de `POST /api/acciones` trae `sincronia: {id, estado, texto, ir}` («Hecho en la app · pendiente de ClickUp»): úsalo en tu pantalla si quieres enseñarlo.
+- **Rutas:** `GET /api/sincronia[?canal=&estado=]`, `/api/sincronia/cambio?id=`, `/api/sincronia/objeto?ref=<tarea>` (estado de los cambios de una tarea, para pintar insignias); `POST /api/sincronia/reintentar|elegir {id, gana}|a_mano`.
+- **Tubería:** paso `reconciliar_clickup` (`despliegue/reconciliar_clickup.py`): despacha, relee (solo lectura), conflicto, reintentos, informe diario «sin reflejar» en #avisos-altas. `--prueba-e2e` con ClickUp simulado (también en `pruebas_noche.py --solo-solidez`).
+- **Interruptor:** `data/sincronia/interruptor.json` (`clickup_real` + `activado_por: "tomas"`) + `RO_CLICKUP_REAL=si` + llave `clickup_token_servicio` (usuario de servicio, nunca la de propietario). Puente de chat (`chat_puente`, `data/sincronia/puente_chat.json`): apagado; enganche en `avisos.py`.
+- **Pantalla:** `modulos/envios.js` con pestañas Correos / ClickUp / Chat (`#/envios/clickup[/<id>]`, `#/envios/chat`). Capturas en `capturas/_sincronia/`. Pruebas: `pruebas_seguridad.py → sincronia_clickup`.
+
+## Cerebro de decisiones v2 (3-oct · encargo de Tomás «mejorar el cerebro que alimenta las decisiones»): contrato compatible
+Diseño completo, árbol, reglas por puesto y ejemplos: `../53_CEREBRO_DECISIONES.md`.
+- **Dónde vive:** `fuentes_consejos/cerebro_decisiones.py` (orquesta) + `cd_diagnostico.py` (árbol por síntoma), `cd_prioridad.py` (impacto · urgencia · esfuerzo · motivo), `cd_prudencia.py` (nada de precios, plazos ni asesorar al cliente), `cd_aprendizaje.py` (valoraciones, seguimiento a 7/14 días, ajuste por regla, informe semanal). Conocimiento en `fuentes_consejos/conocimiento/`: `reglas.json` (178 reglas con autor, fichero, línea y enlace a GitHub; lo genera `construir_reglas.py` desde `reglas_minadas.json`), `tipos.json` (tipo → tema, esfuerzo, regla) y `puestos.json` (los 21 puestos: foco, pesos, reglas del jefe).
+- **Cada consejo trae además** (`/api/ia/consejo`): `prioridad {puntos, impacto{nivel, euros_mes*, cuota*, gravedad}, urgencia, esfuerzo, aprendizaje_pts}`, `motivo_orden` y `motivo_linea` («Primero porque…»), `criterio {id, regla, autor, url (GitHub), fichero}`, `evidencia [{dato, fecha, fuente, url}]`, `confianza` (alta/media/baja) + `confianza_porque`, `diagnostico {sintoma, causa, camino}` si aplica, `metrica`, `valoracion`. *Solo si quien lee ve la cuota de ese cliente (sin cliente: dirección, finanzas, operaciones, administración y ventas de RO).
+- **Rutas nuevas (ia.py):** `POST /api/ia/consejo/valorar {consejo, valor: util|no_util|hecho, pantalla}` (el servidor busca el consejo entre los de esa persona y apunta `consejo_valorado` con su métrica; nunca en «ver como»; `consejo_valorado` está en `rastro_solo_servidor`); `GET /api/ia/consejo/informe` (solo dirección, persona real). El copiloto sin clave sale **por reglas** (`origen: "reglas"`, diagnóstico en 3 líneas, 3 acciones, `arbol`).
+- **Contrato para «Lo mío» (carril U1):** `data/prioridades/p_<id>.json` (`datos_de_modulo["prioridades/p_*"]`, `solo_propio`, módulo `mi-dia`) = `{orden, por_alerta{id_alerta: P}, por_cliente{cliente_id: P}, por_objeto{"#/…": P}}`, P = `{puntos, nivel, urgencia, dias_retraso, esfuerzo_min, motivo, confianza, regla, criterio_url, delegado, euros_mes*}`. Ordenar por `puntos` desc.
+- **Tubería:** `fuentes_consejos/generar_consejos.py` (después de alertas y verdad) ahora: evalúa el aprendizaje → `data/consejos/_privado/{aprendizaje.json, informe_semanal.json, informe_semanal.md}`, escribe consejos y prioridades, y guarda la foto diaria `data/consejos/_privado/historia/AAAA-MM-DD.json`.
+- **Componente:** `modulos/ia_componentes.js` solo añade la fila de valoración bajo cada consejo (motivo, «Criterio … · Ver fuente ↗», confianza, «Útil / No útil / Ya hecho»).
+- **Pruebas:** `fuentes_ia/probar_ia.py` sección 11 → `fuentes_consejos/probar_cerebro.py`; navegador: `fuentes_consejos/capturar_cerebro.py --puerto 9265` (capturas en `capturas/_cerebro/`).
+
+## Vigía y copias (3-oct · encargo de Tomás «que siempre haya un validador de que todo funciona»)
+- **Vigía:** `despliegue/vigia.py` cada 10 min, aparte de la tubería: 27 conexiones (lectura barata; la llave de GHL que rota no se usa) + la app por dentro (app web, tubería, envíos, ClickUp, IA en %, disco, base, copia) con 24 h de historia → `data/vigia/estado.json`. Pantalla **«Salud del sistema»** (`modulos/ajustes_conexiones.js`, `#/conexiones` y Ajustes; Agus, Mili y Tomás) por `GET /api/vigia`; «Probar ahora» de una fila = `POST /api/vigia/probar {id}` (regla `probar_conexiones`). Avisos agrupados en #avisos-altas: cae → Agus; > 1 h → Mili y Tomás; vuelve → recuperación. Local: `python3 despliegue/vigia.py --bucle` (lo arranca quien decida Tomás); servidor: tarea de Coolify cada 10 min (`despliegue/DESPLIEGUE.md`). Simulacro sobre una copia: `--prueba`. Capturas en `capturas/_salud/`.
+- **Copias:** `despliegue/copia_seguridad.py` (paso `copia_seguridad` de la tubería, una vez al día): local.db y tuberia.db con la API de copia de SQLite, verificadas (integridad y filas, también tras comprimir), en `despliegue/estado/copias/AAAA-MM-DD/` con `manifiesto.json`; 7 diarias + 4 semanales, tope 800 MB, nunca con menos de 1 GB libre; R2 apagado hasta `RO_COPIA_R2=si` con su llave. `--estado` y `--restaurar <día> <destino>`.
+
+## Avisos automáticos (3-oct · encargo de Tomás «que en el chat de la app estén todas [las automatizaciones]»): contrato compatible
+**Nada sale de la app:** los avisos se publican en los canales de avisos (avisos.py) y en la campana; no se escribe en ClickUp ni en ninguna herramienta. Inventario de lo que había (90 días, solo lectura) en `../54_AUTOMATIZACIONES_INVENTARIO.md` y `data/avisos_programados/inventario.json`; lo que conviene apagar fuera queda como recomendación para Tomás en cada regla (`apagar_en_origen`).
+- **Servidor:** `avisos_programados.py`, enganchado a `servir.py` justo después de `avisos.py`. Reglas en `data/avisos_programados/reglas.json` (11: horas de ayer, semáforo del lunes, cómo va el semáforo, informe mensual, cierre de facturación a Sofía, resumen de publicidad, resumen semanal a dirección, tareas vencidas, arranque de clientes nuevos, aviso del cierre semanal y factura del equipo; `no_se_hace_aun` = lo del inventario que aún no puede hacer y por qué). Cada regla: `tipo` (generador), canal, a quién, `cuando` (días, hora, `zona: persona|madrid`, ventana), umbrales editables, texto con `{…}`, botones, escalado. Para añadir un tipo: una función `gen_<tipo>(r, t, con)` → envíos (+ `sigue_<tipo>` si escala) en `GENERADORES`.
+- **Reloj:** hilo del servidor cada 2 min (`RO_AVISOS_SIN_BUCLE` lo apaga); `RO_RELOJ` lo fija (avisos.py también lo respeta ahora). Clave única por regla, persona y día: nunca repite. Solo avisa si hace falta (el dato dice que falta); si el dato no cubre ese día, no avisa («sin dato» en la vista previa). Escalado: pasadas `tras_horas`, si el dato dice que sigue y nadie pulsó «Ya lo he hecho», menciona a quien sube (en el hilo si ve el canal; si no, en el suyo).
+- **Permisos:** recordatorio personal con `ver = {"personas": [persona, jefa]}` (nuevo en `Vista.ve_fila` de avisos.py; en «ver como», lo de las dos); dinero solo a canales de quien lo ve y sin importes. Cambian reglas la jefa del departamento (`departamentos.json`: jefe o dueña fija) y Mili y Tomás; tablas `avisos_prog_cambios` y `avisos_prog_hechos` imborrables + rastro (`aviso_programado_cambio`, `aviso_programado_hecho`, `avisos_programados*`: solo del servidor).
+- **Rutas:** `GET /api/avisos_programados`, `/vista_previa?id=`; `POST /cambiar {id, campo: activa|hora|umbral.<k>|escalado_horas, valor}`, `/hecho {regla, objetivo, dia}`, `/ejecutar` (Mili y Tomás).
+- **Botones en los mensajes:** `datos.botones` (`[{texto, ir: '#/…'} | {texto, url: 'https://…'}]`, hasta 5) → `botones` en `fila_a_json`; `chat_equipo.js` los pinta en los eventos (si no hay, el «Abrir el mensaje» de siempre) y respeta los saltos de línea.
+- **Pantalla:** `modulos/ajustes_avisos.js` (`#/avisos-automaticos`, grupo Sistema; todos ven lo que les llega, las jefas editan lo suyo; «Ver cómo quedaría»; inventario para Mili y Tomás; `#/avisos-automaticos/hecho/<regla>/<persona>/<dia>`). Capturas en `capturas/_avisos_auto/`. Pruebas: `pruebas_seguridad.py → avisos_automaticos` (37, con relojes fijados). Sin servidor: `python3 avisos_programados.py --simular --reloj 2026-10-05T09:00`.
+
+---
+
+## Piezas comunes · índice rápido (3-oct)
+Antes de escribir algo propio en un módulo, mira si ya existe aquí. Detalle de cada una en su ronda (más arriba).
+| Pieza | Para qué |
+|---|---|
+| `componentes.js` | Todos los componentes (tablas, tarjetas, chips, gráficos, paneles v4, `capaFlotante`, `botonConfirmar`…), documentados en el propio fichero; ejemplos vivos en Sistema › Componentes |
+| `capaFlotante(el, ancla, { derecha, cerrar })` | Todo desplegable se abre como capa por encima de todo (hoja inferior a ≤ 640 px); `vigilarCapas()` lo aplica solo |
+| `modulos/_trabajo.js` · `_trabajo_ancho.js` | Molde de pantalla de trabajo: primera fila accionable a ≤ 300 px; lista + detalle + «Contexto y cifras» plegado |
+| `modulos/_deshacer.js` | «Hecho · Deshacer (8)» en vez de «¿Seguro?» para lo interno; el «¿Seguro?» solo para lo que sale fuera o borra |
+| `modulos/_bitacora.js` | Bitácora diaria del trafficker para leerla en ficha e informes |
+| `modulos/_ir.js` | Abrir una ruta profunda y resaltar el objeto exacto (pestaña, «Ver más», foco) |
+| `modulos/_legible.js` | Textos de datos en claro: tickets de Desk como enlace, sin códigos internos, «Yessica» |
+| `modulos/_plegar_consejo.js` | Pliega el «Qué haría yo hoy aquí» sin moverlo |
+| `modulos/_telefono.js` (+ `telefono.py`) | Regla común de teléfonos (ver más abajo; en curso) |
+| `modulos/_modular.js` | Estado de la web (Modular) en ficha y tablero de webs |
+| Paneles v4 + `modulos/dinero_v4.js` | Tarjeta KPI con línea de 12 meses, comparación y umbral con fuente; fuentes y umbrales comunes de dinero |
+| `ayudas.js` | Buscador ⌘K / Ctrl K / «/» que busca dentro y hace cosas, contadores del menú, «Mis clientes», «Algo va mal / Tengo una idea» y atajos |
+
+## IA con topes (3-oct) · `ia.py` + `ia_gasto.py`
+- **Hoy no hay clave:** la IA sirve lo precalculado y los consejos por reglas; **gasto 0 €**. Con clave, usa la API de Anthropic con clave de la Console (una suscripción Max no vale para la app: `../52_IA_COSTE_Y_TOPES.md`).
+- **Topes:** 150 €/mes y 10 €/día por defecto (los fija Tomás en Sistema › Gasto de IA, `#/gasto-ia`, solo él), 2 €/persona/día, tope por función y 40 generaciones/hora/persona. Antes de cada llamada se reserva su peor caso; si no cabe, no sale. Aviso al 80 % en #avisos-dirección; al 100 %, **modo reglas** solo (vuelve al día siguiente o el día 1). «Ver como» nunca gasta.
+- Modelo por tarea (Haiku para consejos, Opus para borradores, Sonnet para el copiloto), caché de prompts, lote nocturno a mitad de precio (`fuentes_ia/lote_nocturno.py`), llave de respaldo solo ante caída.
+- **Aviso del 55:** con estos topes solo cabe el paquete «Básico» (~113 €/mes); el «Recomendado» pediría 420 €/mes y 22 €/día. Lo decide Tomás.
+- Pruebas: `fuentes_ia/probar_ia.py` (incluye `probar_gasto.py` y `fuentes_consejos/probar_cerebro.py`). Detalle en `_ESTADO_ia.md`.
+
+## Cerebro de respuestas de correo (3-oct)
+`fuentes_ia/cerebro_respuestas/cerebro.py`: clasifica el correo (13 tipos), saca las preguntas del cliente, aplica la guía y la longitud de ese tipo (medidas en Desk) y pone una **nota de calidad 0-100** con «Lo que falta» antes de enseñar el borrador. Nada se envía. Ejemplos anonimizados en `ejemplos.json`. Diseño en `../49_CEREBRO_RESPUESTAS.md`; el cerebro de decisiones v2, más arriba.
+
+## Modular (3-oct) · ficha + tablero de webs
+Conectado en **solo lectura** (última pasada 3-oct 06:16: 29 webs con cliente, 34 en el tablero). Bloque «Estado de la web (Modular)» en la ficha del cliente y pestaña «Webs» en SEO, ficha y webs. 4 reglas de alerta en N4: web caída, copia atrasada o ninguna, vulnerabilidad crítica y certificado a < 15 días. **«Entrar al WordPress» de un clic: apagado** (la clave es de solo lectura). Detalle en `_ESTADO_modular.md`.
+
+## Hostinger (3-oct)
+Lector construido (`fuentes_hostinger/generar_hostinger.py`, paso `hostinger` de la tubería; alertas por `de_hostinger`) y probado con datos inventados (`--simulado`). **Falta el token** (lo crea Tomás): hoy `data/hostinger/hostinger.json` dice «sin conectar». Detalle en `_ESTADO_hostinger.md`.
+
+## Google Business Profile y teléfonos (3-oct) · **en curso**
+Otros carriles los están terminando mientras se escribe esto; cuando cierren, tendrán su propio `_ESTADO`.
+- **Ficha de Google:** `fuentes_gbp/generar_gbp.py` (solo lectura; paso `gbp` de la tubería) y `fuentes_gbp/servidor_gbp.py` («Proponer respuesta» a reseñas con el cerebro de reseñas y nota de calidad; «Responder» queda en la cola **en simulación**; interruptor `data/gbp/interruptor.json` apagado y el publicador real no está construido). Hoy «pendiente de aprobación» de Google. Emparejamientos a mano en `fuentes_gbp/emparejar.json`.
+- **Teléfonos:** `telefono.py` y su gemelo `modulos/_telefono.js`: se guardan con prefijo internacional y sin espacios (`+34` + 9 cifras), la extensión en su campo, se enseñan con espacios y lo dudoso no se guarda. Por qué: Zadarma pone el 34 delante si falta el «+» (26 llamadas fallidas en 90 días). `python3 telefono.py --probar`. Pendiente: aplicarlo en todas las pantallas que guardan o enseñan teléfonos.
+
+## Baterías de prueba · cómo lanzarlas
+Todas en 127.0.0.1 y, las que escriben, sobre una **copia** de la base. Antes de un cambio grande, como mínimo las cuatro primeras.
+```bash
+python3 escaner_secretos.py --proyecto        # puerta de secretos sobre todo el texto (los _privado se cuentan aparte)
+python3 pruebas_seguridad.py                  # permisos, recortes, envíos, sincronía, avisos automáticos… (arranca su servidor, puertos 8920-8929)
+python3 pruebas_coherencia.py                 # cifras y textos coherentes entre módulos (solo lee ficheros)
+python3 pruebas_diseno.py --estricto          # ningún módulo se sale de la guía visual
+python3 pruebas_e0.py --puerto 8770           # aceptación de E0 contra servir.py ya arrancado
+python3 despliegue/pruebas_noche.py           # la de cada noche (su propio servidor y copia); --solo-solidez = envíos y ClickUp extremo a extremo
+python3 despliegue/barrido_total.py --vuelta vN --personas lucia,tomas   # recorrido en navegador por personas y anchos
+python3 fuentes_ia/probar_ia.py               # IA, gasto y cerebro de decisiones
+python3 fuentes_bandeja/probar_bandeja.py     # Bandeja
+python3 despliegue/verificar_envios.py --prueba-e2e      # envíos con proveedor simulado
+python3 despliegue/reconciliar_clickup.py --prueba-e2e   # ClickUp simulado (36 casos)
+python3 despliegue/vigia.py --prueba          # simulacro de caídas sobre una copia
+python3 avisos_programados.py --simular --reloj 2026-10-05T09:00   # avisos programados sin servidor
+python3 telefono.py --probar                  # regla de teléfonos
+```
+
+## Qué no se sube a GitHub
+El repositorio lleva solo código, reglas y documentación. Fuera (`.gitignore`): `data/` entera salvo `data/mi_dia/config.json`, `data/departamentos.json` y `data/envios/interruptor.json`; `historia/`, `capturas/`, `*.db`, `_privado/`, `_cache/`, `_crudo/`, `despliegue/estado/` (copias de la base), `.env` y copias `*.antes*`. Las llaves viven en el llavero del Mac o en los secretos del servidor, nunca en el repositorio. Los datos se regeneran con la tubería.
+
+## Lo que solo puede hacer Tomás
+Nada de esto lo hace un agente ni nadie del equipo sin su sí por escrito.
+1. **Activar envíos reales** (correo de Desk, WhatsApp, GoHighLevel): `data/envios/interruptor.json` con `activado_por: "tomas"` + `RO_ENVIOS_REALES=si`; y elegir el buzón del canario.
+2. **Activar ClickUp real:** `data/sincronia/interruptor.json` + `RO_CLICKUP_REAL=si` + llave de un usuario de servicio (`clickup_token_servicio`); decidir si se enciende el puente de chat.
+3. **IA:** crear los dos espacios en la Console de Anthropic con su límite de gasto, pegar las claves (`bash fuentes_ia/pegar.sh`) y fijar los topes (o subirlos si elige otro paquete del 55).
+4. **Hostinger:** crear el token con caducidad en hPanel y `bash ~/RO_HERRAMIENTAS/hostinger/pegar.sh`.
+5. **Google Business Profile:** que Google apruebe el proyecto y ejecutar `~/RO_HERRAMIENTAS/google/gbp.py instalar`.
+6. **Modular · acceso de un clic:** interruptor `data/modular/interruptor.json` + `RO_MODULAR_ACCESO=si` + clave aparte con permiso de entrada (`modulards_acceso_key`).
+7. **Copias fuera del Mac:** `RO_COPIA_R2=si` con su llave de R2.
+8. **Vigía:** decidir quién y dónde arranca `python3 despliegue/vigia.py --bucle` (o la tarea de Coolify cada 10 min).
+9. **Puestos sensibles:** dar o quitar dirección, finanzas de dirección, RRHH, operaciones, ventas de RO y administración (`puestos_solo_tomas`).
+10. **Fórmulas pendientes:** confirmar la fórmula de retención neta (paneles v4) y la de salud del cliente.
+11. **Canales:** añadir a Agus a #avisos-dirección.
+12. **Despliegue:** publicar la app fuera de este Mac (Cloudflare Access, Worker, base en la nube); hoy solo corre en 127.0.0.1.

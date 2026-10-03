@@ -13,6 +13,8 @@ import {
   logoCliente, iniciales, tablaDensa, avisoFlotante, campoTexto, barraProgreso,
 } from '../componentes.js';
 import { llevarA } from './_ir.js';
+import { plegarConsejo } from './_plegar_consejo.js';
+import { botonConfirmar } from '../componentes.js';
 import { PUESTO } from '../permisos.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -147,10 +149,7 @@ function pintar(raiz, ctx, S) {
   const veEquipo = todo || personasVistas.size > 1 || [...personasVistas].some(p => p !== yo);
 
   // ---- el límite, siempre a la vista y en una línea (pedido: «lo que no pasa por el Zoom de RO no se cuenta») ----
-  raiz.append(h('div', { class: 'aviso', role: 'note' },
-    h('span', { class: 'ico' }, icono('video')),
-    h('span', {}, h('b', {}, 'Solo cuenta lo que pasa por el Zoom de RO y queda grabado. '),
-      'Desde el 2-oct se graban todas solas. Detalle al pie, en «Cómo se cuenta».')));
+  plegarConsejo(raiz);   // ronda U (#1): el consejo de la carcasa, en una línea
 
   const { mes, mesAnt, comparar } = mesesDelPeriodo(S);
   const mesPeriodo = (S.periodo?.desde || new Date().toISOString()).slice(0, 7);
@@ -167,7 +166,7 @@ function pintar(raiz, ctx, S) {
   raiz.append(h('details', { class: 'que-es panel', style: { padding: 'var(--s-3) var(--relleno)' } },
     h('summary', { style: { minHeight: ALTO_CLIC(), display: 'flex', alignItems: 'center', gap: 'var(--s-2)' } }, icono('info', { clase: 's' }), 'Cómo se cuenta'),
     h('div', { class: 'pila', style: { marginTop: 'var(--s-2)' } },
-      h('p', {}, 'Lo que no pasa por el Zoom de RO no se cuenta. Hoy solo se ven las reuniones grabadas: falta el permiso de Zoom para leer las no grabadas. La grabación automática está activada y bloqueada para toda la cuenta desde el 2-oct; antes solo están las que alguien grabó a mano. Zoom las borra a los 120 días.'),
+      h('p', {}, h('b', {}, 'Solo cuenta lo que pasa por el Zoom de RO y queda grabado (desde el 2-oct se graban todas solas). '), 'Lo que no pasa por el Zoom de RO no se cuenta. Hoy solo se ven las reuniones grabadas: falta el permiso de Zoom para leer las no grabadas. La grabación automática está activada y bloqueada para toda la cuenta desde el 2-oct; antes solo están las que alguien grabó a mano. Zoom las borra a los 120 días.'),
       h('p', {}, 'Tipo de reunión: por el principio del nombre (Daily, Coordinación, 1:1, Seguimiento, Formación, Cliente). Si no lo lleva, se clasifica a mano con un clic.'),
       h('p', {}, 'Ámbito: interna si solo hay gente de RO; con cliente o con gente de fuera según el dominio del correo de quien entra.'),
       h('p', { class: 'sub' }, `${fmt.num(meta.reuniones || 0)} reuniones grabadas y ${fmt.num(meta.asistencias || 0)} asistencias leídas de Zoom${meta.zoom_leido ? ` · ${fDiaRO(meta.zoom_leido)}` : ''}.`))));
@@ -196,9 +195,9 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
   ctx.titulo('Reuniones', `${Mayus(nombreMesAnio(mes))} · ${fmt.plural(delMes.length, 'reunión grabada', 'reuniones grabadas')} en el Zoom de RO · ${veEquipo ? (todo ? 'todo el equipo' : 'tú y tu equipo') : 'las tuyas'}`
     + (S.periodo?.id === 'mes' ? ' · el mes anterior, en «Más», arriba' : ''));   // R12 (A2): «Este mes» ya está elegido
 
-  // ---- tiles (5 → una fila de 5; la rejilla común evita huérfanas) ----
+  // ---- tiles: ronda U (#1, molde común) pasan a «Contexto y cifras» (plegado, debajo); arriba van las pestañas ----
   const cap = veEquipo ? null : (mio?.capacidad_h || 128);
-  cont.append(tiles([
+  const tarjetas = (tiles([
     tile({ icono: 'video', etiqueta: veEquipo ? 'Reuniones del mes' : 'Mis reuniones', valor: fmt.num(delMes.length), unidad: 'grabadas',
       comparacion: comp(`${fmt.num(S.reuniones.filter(r => r.mes === mesAnt).length)} en ${nombreMes(mesAnt || '')}`),
       contexto: `${fmt.num(internas.length)} internas · ${fmt.num(conCli.length)} con cliente o gente de fuera`, medible: 'medias', medibleDetalle: 'Solo las grabadas: las demás llegan cuando Zoom dé el permiso', frescura: { fuente: 'Zoom', fecha: meta.zoom_leido },
@@ -220,15 +219,21 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
   ].filter(Boolean)));
 
   // ---- pestañas: lo de cada día, primero ----
+  // Ronda U (#9): la vista por defecto es «Clientes sin reunión este mes» con «Preparar» (la hoja de la reunión en la ficha)
+  // y «Proponer fecha»; las grabaciones van en la segunda pestaña.
+  const hoyMes = (ctx.hoy || new Date().toISOString()).slice(0, 7);
+  const sinEsteMes = cli.filter(c => c.estado !== 'exento' && c.estado !== 'no_aplica' && !(c.ultima && c.ultima.slice(0, 7) >= hoyMes) && !(c.proxima && c.proxima.slice(0, 7) === hoyMes));
   const tabs = [
-    { id: 'lista', texto: veEquipo ? 'Reuniones' : 'Mis reuniones', icono: 'video', cuenta: sinTipo.length || null, cuentaEstado: 'rojo' },
+    cli.length ? { id: 'mes', texto: 'Clientes sin reunión este mes', icono: 'maletin', cuenta: sinEsteMes.length || null, cuentaEstado: 'rojo' } : null,
+    { id: 'lista', texto: veEquipo ? 'Grabaciones' : 'Mis grabaciones', icono: 'video', cuenta: sinTipo.length || null, cuentaEstado: 'rojo' },
     veEquipo ? { id: 'personas', texto: 'Por persona', icono: 'eq' } : null,
     cli.length ? { id: 'clientes', texto: 'Reunión con cada cliente', icono: 'maletin', cuenta: sinReu.length || null, cuentaEstado: 'rojo' } : null,
     (todo || ctx.persona.puestos.includes('operaciones')) ? { id: 'dailies', texto: 'Reuniones diarias', icono: 'cal' } : null,
   ].filter(Boolean);
   const pt = pestanas({
-    pestanas: tabs, clave: `${ID}.pestana`, etiqueta: 'Vistas de reuniones',
+    pestanas: tabs, clave: `${ID}.pestana.u`, etiqueta: 'Vistas de reuniones',
     pintar: (id, zona) => {
+      if (id === 'mes') zona.append(pintarClientesMes(cli, sinEsteMes, ctx, hoyMes));
       if (id === 'lista') zona.append(pintarLista(delMes, ctx, S, mes));
       if (id === 'personas') zona.append(pintarPersonas(pm, pmAnt, ctx, mes));
       if (id === 'clientes') zona.append(pintarClientes(cli, ctx, meta));
@@ -236,7 +241,43 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
     },
   });
   pt.id = 'reu-pestanas';
-  cont.append(pt);
+  cont.append(pt, h('details', { class: 'que-es panel', style: { padding: 'var(--s-3) var(--relleno)' } },
+    h('summary', { style: { minHeight: ALTO_CLIC(), display: 'flex', alignItems: 'center', gap: 'var(--s-2)' } }, icono('grafico', { clase: 's' }), 'Contexto y cifras del mes'),
+    h('div', { style: { marginTop: 'var(--s-3)' } }, tarjetas)));
+}
+
+// ------------------------------------------- ronda U · clientes sin reunión este mes
+const MES_NOMBRE = m => MES[Number(String(m).slice(5, 7)) - 1] || m;
+function pintarClientesMes(cli, sinEsteMes, ctx, hoyMes) {
+  const cliPorId = new Map(ctx.clientes.map(c => [c.id, c]));
+  const filas = sinEsteMes.map(c => ({ ...c, cli: cliPorId.get(c.cliente_id) || { nombre: c.cliente } }))
+    .sort((a, b) => (b.dias_sin ?? 999) - (a.dias_sin ?? 999));
+  const mesTxt = MES_NOMBRE(hoyMes);
+  const proponer = c => botonConfirmar({ texto: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--s-1)' } }, icono('cal', { clase: 's' }), 'Proponer fecha'), mini: true, soloLectura: ctx.soloLectura,
+    pregunta: `¿Mandar a ${c.cliente} el correo para buscar fecha? Hoy queda simulado (no sale).`, confirmar: 'Sí, mandar',
+    alConfirmar: async () => {
+      const r = await ctx.accion({ herramienta: 'desk', tipo: 'correo', objeto: `reunion:${c.cliente_id}:${hoyMes}`, cliente_id: c.cliente_id,
+        texto: `Hola,\n\n¿Buscamos un hueco para la reunión de ${mesTxt}? Repasamos los resultados de ${MES_NOMBRE(String(Number(hoyMes.slice(5, 7)) === 1 ? `${+hoyMes.slice(0, 4) - 1}-12` : `${hoyMes.slice(0, 4)}-${String(+hoyMes.slice(5, 7) - 1).padStart(2, '0')}`))} y los próximos pasos (30 minutos). Dime qué día te va mejor esta semana o la que viene.\n\nUn saludo,\n${ctx.nombre(ctx.real.id)} · Ranking Online`,
+        vista_previa: { asunto: `Reunión de ${mesTxt} · ${c.cliente}`, plantilla: 'proponer_reunion' } });
+      return `Correo en la cola de envíos (n.º ${r?.id ?? '—'}) · simulado`;
+    } });
+  const sub2 = t => h('span', { style: { display: 'block', font: 'var(--t-meta)', color: 'var(--dim)' } }, t);
+  return panel({ titulo: `Clientes sin reunión en ${mesTxt}`, icono: 'maletin', sub: 'Lo más antiguo arriba. «Preparar» abre la hoja de la reunión en la ficha (resultados, lo pendiente, temas abiertos y el acta).' },
+    tablaDensa({
+      filas, buscar: filas.length > 8 ? { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' } : null, porPagina: 25,
+      alPulsar: c => ctx.navegar(`ficha/${c.cliente_id}/reunion`), puedePulsar: c => !!c.cli.detalle,
+      columnas: [
+        { clave: 'cliente', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c.cli), h('span', { style: { display: 'grid', minWidth: '0' } }, h('span', { style: { overflowWrap: 'anywhere' } }, c.cliente), sub2(c.account_id ? ctx.nombre(c.account_id) : 'sin account'))) },
+        { clave: 'accion', titulo: 'Acción', ordenable: false, celda: c => h('span', { class: 'fila', style: { gap: 'var(--s-1)' } },
+          c.cli.detalle ? h('a', { class: 'bt mini pri', href: `#/ficha/${c.cliente_id}/reunion`, style: { minHeight: ALTO_CLIC() }, on: { click: e => e.stopPropagation() } }, icono('video', { clase: 's' }), 'Preparar') : null,
+          c.cli.detalle ? h('span', { on: { click: e => e.stopPropagation() } }, proponer(c)) : null) },
+        { clave: 'dias_sin', titulo: 'Última', num: true, celda: c => h('span', {}, c.ultima ? fDiaRO(c.ultima) : 'sin dato', c.dias_sin != null ? sub2(`hace ${fmt.plural(c.dias_sin, 'día', 'días')}`) : null) },
+        { clave: 'estado', titulo: 'Mes pasado', celda: c => c.estado === 'sin_reunion' ? chipEstado('rojo', 'Ninguna') : chipEstado('verde', 'Sí') },
+        { clave: 'enlaces', titulo: 'Abrir', ordenable: false, celda: c => atajos(c) },
+      ],
+      etiquetaFila: c => `${c.cliente}: preparar la reunión`,
+      vacio: { titulo: `Todos tus clientes tienen reunión en ${mesTxt}`, porque: 'Hecha o con fecha este mes.', celebrar: true },
+    }));
 }
 
 /** Comparación honesta: un mes en curso no se compara en número con uno cerrado. */
@@ -323,9 +364,12 @@ function selectorTipo(r, ctx, S) {
     const b = h('button', { type: 'button', class: 'bt mini', 'aria-disabled': ctx.soloLectura ? 'true' : null, 'aria-expanded': 'false',
       title: ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : 'Sin tipo en el nombre: pulsa para elegirlo',
       style: { minHeight: ALTO_CLIC(), background: 'var(--warn-soft)', borderColor: 'var(--warn-line)', color: 'var(--warn-ink)' } },
-    icono('flag'), `Sin tipo · ¿${r.tipo_sugerido}?`);
-    b.addEventListener('click', () => { if (!ctx.soloLectura) abrir(); });
-    caja.replaceChildren(b);
+    icono('flag'), `Sin tipo · ¿${r.tipo_sugerido}? Sí`);
+    // Ronda U (#9): el tipo sugerido se acepta en UN clic; «Otro» abre los demás.
+    b.title = ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : `Clasificarla como ${r.tipo_sugerido} (un clic)`;
+    b.addEventListener('click', () => { if (!ctx.soloLectura) guardar(r.tipo_sugerido); });
+    const otro = h('button', { type: 'button', class: 'bt mini', 'aria-disabled': ctx.soloLectura ? 'true' : null, style: { minHeight: ALTO_CLIC() }, on: { click: () => { if (!ctx.soloLectura) abrir(); } } }, 'Otro tipo');
+    caja.replaceChildren(b, otro);
     return b;
   };
   const abrir = () => {
@@ -471,7 +515,7 @@ function pintarClientes(cli, ctx, meta) {
     const filas = cli.filter(c => !v || c.estado === v).map(c => ({ ...c, cli: cliPorId.get(c.cliente_id) || { nombre: c.cliente } }));
     caja.replaceChildren(tablaDensa({
       filas, buscar: { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' },
-      alPulsar: c => ctx.navegar(`ficha/${c.cliente_id}/comunicacion`), puedePulsar: c => !!c.cli.detalle,
+      alPulsar: c => ctx.navegar(`ficha/${c.cliente_id}/reunion`)   /* ronda U (#5): el mismo destino que «Preparar» */, puedePulsar: c => !!c.cli.detalle,
       columnas: [
         { clave: 'cliente', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c.cli), h('span', { style: { overflowWrap: 'anywhere' } }, c.cliente)) },
         { clave: 'account', titulo: 'Account', celda: c => c.account_id ? h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(ctx.nombre(c.account_id))), ctx.nombre(c.account_id)) : chipEstado('ambar', 'Sin account') },

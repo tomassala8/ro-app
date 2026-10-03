@@ -5,6 +5,8 @@ Uso:
   python3 generar_datos.py                       # plan B: lee lo último que dejaron los lectores (0 llamadas a API)
   python3 generar_datos.py --en-vivo zoom,seranking
   python3 generar_datos.py --en-vivo todo        # externos.py, Windsor (si hay clave), SE Ranking y Zoom
+Cartera, horas, tareas, Desk, reuniones y alarmas (3-oct) salen de lo que ya dejan los módulos (f_vivo.py: verdad única,
+Producción, Bandeja, Reuniones y Alertas), no del panel de Mili; lo que ningún módulo da aún va en «del_panel» con su hora.
 Frecuencias previstas (04 §4, idea A10): cada hora ClickUp, Desk y Meta (los regenera el panel y captacion.py);
 diario GA4, Search Console, SE Ranking, Windsor, Zoom y el libro.
 
@@ -34,6 +36,7 @@ import f_externos  # noqa: E402
 import f_libro  # noqa: E402
 import f_panel  # noqa: E402
 import f_seranking  # noqa: E402
+import f_vivo  # noqa: E402
 import f_windsor  # noqa: E402
 import f_zoom  # noqa: E402
 import universo as U  # noqa: E402
@@ -56,7 +59,7 @@ def main():
 
     universo, libro_sin_casar = U.construir()
     resultados = [
-        f_panel.cargar(universo),
+        f_vivo.aplicar(universo, f_panel.cargar(universo)),   # 3-oct: cartera, horas, tareas, Desk, reuniones y alarmas, de los módulos
         f_externos.cargar(universo, en_vivo="externos" in vivo),
         f_captacion.cargar(universo, en_vivo="meta" in vivo),
         f_windsor.cargar(universo, en_vivo="windsor" in vivo),

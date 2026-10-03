@@ -9,6 +9,8 @@ import {
   h, fmt, icono, tile, tiles, chipEstado, chipsFiltro, vacio, vacioLinea, avisoParcial, panel, frescura,
   logoCliente, iniciales, tablaDensa, tablaApilable, avisoFlotante, campoTexto,
 } from '../componentes.js';
+import { panelRevisar, accionesInforme, estadoInforme } from './informe_revisar.js';
+import { plegarConsejo } from './_plegar_consejo.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -122,9 +124,12 @@ export default {
         for (const a of (r.acciones || []).slice().reverse()) if (a.tipo === 'enviado_otra_via') cola.set(String(a.objeto), a);
       } catch { /* sin cola: no pasa nada */ }
     }
-    const raiz = h('div', { class: 'pila', style: { gap: 'var(--s-5)', minWidth: '0' } });
+    // Ronda U (#8): revisado y enviado desde «Revisar y enviar» (guardados a nombre de Informe del cliente).
+    const accInf = ctx.veModulo?.('informe-cliente') === false ? [] : await accionesInforme(ctx);
+    const raiz = h('div', { class: 'pila', style: { gap: 'var(--s-4)', minWidth: '0' } });
     cont.append(raiz);
-    const S = { D, cola, filas: preparar(D, cola, ctx), hoy: ctx.hoy,   /* V2-E: hoy en Madrid (no el día en que se leyó la fuente ni UTC) */ filtroAccount: '', periodo: ctx.periodo };
+    plegarConsejo(cont);   // molde común (#1): el consejo de la carcasa, en una línea
+    const S = { D, cola, accInf, filas: preparar(D, cola, ctx), hoy: ctx.hoy,   /* V2-E: hoy en Madrid (no el día en que se leyó la fuente ni UTC) */ filtroAccount: '', periodo: ctx.periodo };
     S.rehacer = () => { S.filas = preparar(D, S.cola, ctx); raiz.replaceChildren(); pintar(raiz, ctx, S); };
     ctx.alCambiarPeriodo?.(p => { if (!raiz.isConnected) return; S.periodo = p; S.filtroAccount = ''; raiz.replaceChildren(); pintar(raiz, ctx, S); });
     pintar(raiz, ctx, S);
@@ -228,7 +233,7 @@ function pintarMes(cont, ctx, S, sel, compMeses, fresco) {
     : !rA ? { texto: compMeses.length ? `sin datos de ${nombreComp}` : 'sin mes anterior medido' }
       : enPlazo && !varios ? { texto: `en plazo hasta el día 5 · ${nombreComp} acabó en ${rA.pct ?? '—'} %` }
         : rA.pct !== null && r.pct !== null ? { delta: r.pct - rA.pct, unidad: ' pts', texto: `frente a ${nombreComp} (${rA.pct} %)` } : null;
-  cont.append(tiles([
+  const tarjetas = tiles([
     tile({ icono: 'ok', etiqueta: mios ? 'Mis informes enviados a tiempo' : 'Enviados a tiempo', valor: fmt.pct(r.pct), unidad: `${fmt.num(r.aTiempo)} de ${fmt.num(r.aplican)}`,
       estado: estPct, comparacion: comp, contexto: 'Verde si sale el día 5 incluido · rojo el 6 con aviso a Mili',
       medible: 'hoy', frescura: { fuente: 'Desk', fecha: meta.generado }, ir: 'Ver enviados', alPulsar: () => elegirChip(cont, 'enviados') }),
@@ -247,13 +252,20 @@ function pintarMes(cont, ctx, S, sel, compMeses, fresco) {
         contexto: `Límite: ${diaSemana(limite)}${r.exentos ? ` · ${fmt.num(r.exentos)} exentos (mantenimiento)` : ''}`, medible: 'hoy' })
       : tile({ icono: 'cal', etiqueta: varios ? 'Límite' : 'Límite de ese mes', valor: varios ? 'Día 5' : fDiaRO(limite), unidad: varios ? 'del mes siguiente' : '',
         contexto: `${varios ? 'Cada informe sale como muy tarde el día 5' : `Límite: ${diaSemana(limite)}`}${r.exentos ? ` · ${fmt.num(r.exentos)} exentos (mantenimiento)` : ''}`, medible: 'hoy' }),
-  ]));
+  ]);
+  // Ronda U (#1, molde común): las cifras SON los filtros de la tabla (los chips de estado, con su contador); las tarjetas
+  // grandes pasan a «Contexto y cifras» (plegado, debajo). La tabla con «Revisar y enviar» queda en la primera pantalla.
+  S.tarjetasContexto = tarjetas;
 
   // ---- por account (Mili y dirección): quién va retrasado, de un vistazo ----
   if (todo) cont.append(pintarPorAccount(delMes, S, cont, enPlazo));
 
-  // ---- la tabla del periodo ----
-  cont.append(pintarTabla(delMes, ctx, S, sel, enPlazoDe, fresco));
+  // ---- la tabla del periodo (con el panel «Revisar y enviar» encima cuando se abre) ----
+  S.zonaPanel = h('div', { 'data-zona-revisar': '' });
+  cont.append(S.zonaPanel, pintarTabla(delMes, ctx, S, sel, enPlazoDe, fresco));
+  if (S.tarjetasContexto) cont.append(h('details', { class: 'que-es panel', style: { padding: 'var(--s-3) var(--relleno)' } },
+    h('summary', { style: { minHeight: ALTO_CLIC(), display: 'flex', alignItems: 'center', gap: 'var(--s-2)' } }, icono('grafico', { clase: 's' }), 'Contexto y cifras del mes'),
+    h('div', { style: { marginTop: 'var(--s-3)' } }, S.tarjetasContexto)));
 }
 
 function botonAvisoMili(ctx, pendientes, mes) {
@@ -382,6 +394,30 @@ function botonOtraVia(f, ctx, S) {
   return caja;
 }
 
+/** Ronda U (#8): «Revisar y enviar» (abre el panel de una pantalla) + lo que ya se hizo + «Enviado por otra vía». */
+function accionesFila(f, ctx, S) {
+  if (!ctx.nivel) return null;
+  const e = S.accInf ? estadoInforme(S.accInf, f.cliente_id, f.mes) : {};
+  const hecho = e.enviado ? chipEstado('azul', 'Enviado desde la app (simulado)') : e.revisado ? chipEstado('verde', `Revisado · ${ctx.nombre(e.revisado.quien)}`) : null;
+  const pendiente = PENDIENTES.has(f.estado) && !e.enviado;
+  const puedeAbrir = f.cli?.detalle && ctx.veModulo?.('informe-cliente') !== false;
+  const b = pendiente && puedeAbrir ? h('button', { type: 'button', class: 'bt mini pri', style: { minHeight: ALTO_CLIC() }, 'data-revisar': f.id,
+    on: { click: ev => { ev.stopPropagation(); abrirRevisar(f, ctx, S); } } }, icono('send'), 'Revisar y enviar') : null;
+  return celda(h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, b, hecho), pendiente ? botonOtraVia(f, ctx, S) : null);
+}
+
+async function abrirRevisar(f, ctx, S) {
+  const anterior = S.filas.filter(x => x.cliente_id === f.cliente_id && x.mes < f.mes && x.enviado?.ticket).sort((a, b) => b.mes.localeCompare(a.mes))[0];
+  const c = ctx.clientes.find(x => x.id === f.cliente_id) || f.cli;
+  const cerrar = () => { S.zonaPanel.replaceChildren(); };
+  S.zonaPanel.replaceChildren(await panelRevisar(ctx, { c, pid: f.mes, ticketAnterior: anterior?.enviado?.ticket || null }, {
+    alCerrar: cerrar,
+    alCambio: async () => { S.accInf = await accionesInforme(ctx); S.repintarTabla?.(); },
+  }));
+  // El navegador ancla la vista a la fila pulsada (que baja al meter el panel encima): se lleva la vista al panel.
+  setTimeout(() => { const el = S.zonaPanel.firstElementChild; if (el) window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - 80) }); }, 60);
+}
+
 function elegirChip(cont, valor) {
   const b = cont.querySelector(`#inf-chips button[data-v="${valor}"]`);
   if (b && b.getAttribute('aria-pressed') !== 'true') b.click();
@@ -400,6 +436,8 @@ function pintarTabla(filas, ctx, S, sel, enPlazoDe, fresco) {
     { valor: 'enviados', texto: 'Enviados', icono: 'ok', cuenta: cuenta(f => f.estado === 'enviado' || f.estado === 'otra_via') },
     { valor: 'exento', texto: 'Exentos y no aplica', icono: 'escudo', cuenta: cuenta(f => f.estado === 'exento' || f.estado === 'no_aplica') },
   ];
+  // Ronda U: en el móvil, tres filtros (los demás estados se ven en la columna); así la primera fila cabe en la pantalla.
+  if (MOVIL()) opciones.splice(0, opciones.length, ...opciones.filter(o => ['', 'pendientes', 'enviados'].includes(o.valor)));
   const chips = chipsFiltro({ etiqueta: 'Estado', clave: `${ID}.estado`, opciones, alCambiar: () => repintar() });
   chips.id = 'inf-chips';
   chips.querySelectorAll('button').forEach((b, i) => { if (opciones[i]) b.dataset.v = opciones[i].valor; });
@@ -416,29 +454,31 @@ function pintarTabla(filas, ctx, S, sel, enPlazoDe, fresco) {
     if (S.filtroAccount) base = base.filter(f => (f.account || 'sin account') === S.filtroAccount);
     quitarAcc.hidden = !S.filtroAccount;
     quitarAcc.replaceChildren(icono('cerrar'), `Quitar «${S.filtroAccount}»`);
-    base.sort((a, b) => EST[a.estado].orden - EST[b.estado].orden || (b.dias_retraso || 0) - (a.dias_retraso || 0) || a.cliente.localeCompare(b.cliente, 'es') || b.mes.localeCompare(a.mes));
+    const yaApp = f => (S.accInf && estadoInforme(S.accInf, f.cliente_id, f.mes).enviado ? 1 : 0);   // ronda U: lo enviado desde la app baja
+    base.sort((a, b) => yaApp(a) - yaApp(b) || EST[a.estado].orden - EST[b.estado].orden || (b.dias_retraso || 0) - (a.dias_retraso || 0) || a.cliente.localeCompare(b.cliente, 'es') || b.mes.localeCompare(a.mes));
     caja.replaceChildren(tablaDensa({
       filas: base, porPagina: MOVIL() ? 10 : 25,
       buscar: { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' },
-      alPulsar: f => ctx.navegar(`ficha/${f.cliente_id}`), puedePulsar: f => !!f.cli.detalle,
+      // Ronda U (#5): la fila es un INFORME → lleva al informe (pendiente: el panel «Revisar y enviar»; si no, el informe del cliente).
+      alPulsar: f => (PENDIENTES.has(f.estado) && !(S.accInf && estadoInforme(S.accInf, f.cliente_id, f.mes).enviado) ? abrirRevisar(f, ctx, S) : ctx.navegar(`informe-cliente/${f.cliente_id}`)), puedePulsar: f => !!f.cli.detalle,
       columnas: [
         { clave: 'cliente', titulo: 'Cliente', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente(f.cli),
           h('span', { style: { display: 'grid', minWidth: '0' } }, h('span', { style: { overflowWrap: 'anywhere' } }, f.cliente),
             sub(`${f.account_id ? ctx.nombre(f.account_id) : 'sin account'}${varios ? ` · informe de ${nombreMes(f.mes)}` : ''}`, { fontWeight: '500' }))) },
+        { clave: 'accion', titulo: 'Acción', ordenable: false, celda: f => accionesFila(f, ctx, S) },
         { clave: 'hecho', titulo: 'Hecho (ClickUp)', valor: f => (f.hecho ? 1 : f.tarea ? 0.5 : 0), celda: celdaHecho },
         { clave: 'estado', titulo: 'Enviado (Desk)', valor: f => EST[f.estado].orden, celda: f => celdaEnviado(f, enPlazoDe(f)) },
         S.D.historico?.estado === 'importado' ? { clave: 'hoja', titulo: 'Hoja de Zoho', valor: f => (f.diferencia ? 0 : 1), celda: f => celdaHoja(f) } : null,
         { clave: 'dias_retraso', titulo: 'Retraso', num: true, celda: f => (f.estado === 'exento' || f.estado === 'no_aplica') ? sub('no aplica') : f.dias_retraso ? h('b', { style: { color: f.plazo === 'rojo' ? 'var(--bad-ink)' : 'var(--warn-ink)' } }, fmt.plural(f.dias_retraso, 'día', 'días')) : (PENDIENTES.has(f.estado) ? 'en plazo' : 'a tiempo') },
-        { clave: 'accion', titulo: 'Acción', ordenable: false, celda: f => PENDIENTES.has(f.estado) && ctx.nivel ? botonOtraVia(f, ctx, S) : null },
       ].filter(Boolean),
-      etiquetaFila: f => `${f.cliente}: ${EST[f.estado].texto}. Abrir la ficha`,
+      etiquetaFila: f => `${f.cliente}: ${EST[f.estado].texto}. Abrir el informe`,
       vacio: { titulo: 'Nada con este filtro', porque: 'Cambia el estado o quita el filtro de account.', celebrar: chips.valor() === 'pendientes' },
     }));
   };
   S.repintarTabla = repintar;
   repintar();
   return h('div', { id: 'inf-tabla' }, panel({ titulo: varios ? `Informes de ${listaMeses(sel)}` : `Informes de ${nombreMes(sel[0])}`, icono: 'doc',
-    sub: 'Lo que pide acción, arriba. Pulsa una fila para abrir la ficha del cliente. «Enviado por otra vía» cuenta como enviado, con motivo y sello en el rastro.',
+    sub: MOVIL() ? 'Lo pendiente, arriba: «Revisar y enviar» en cada fila.' : 'Lo pendiente, arriba: «Revisar y enviar» abre el informe, el análisis y el correo en un panel. «Enviado por otra vía» cuenta como enviado, con motivo.',
     acciones: h('div', { class: 'fila' }, frescura(fresco), comoSeCuenta, quitarAcc) },
   h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja));
 }

@@ -1,5 +1,5 @@
 {
- "generado": "2026-10-03 03:23",
+ "generado": "2026-10-03 06:31",
  "mes": "2026-10",
  "regla": "Cuota de cada cliente: línea recurrente de octubre en el Airtable de Sofía (suma de sus sociedades); si no tiene, su factura de octubre en Holded. La misma para toda la app (fuentes_dinero/cuotas.json).",
  "cuotas": {

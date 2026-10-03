@@ -9,12 +9,29 @@
 
 import {
   fmt, tile, tiles, pestanas, chipsFiltro, chipEstado, tablaDensa, tablaApilable, vacio, panel, avisoParcial,
-  botonConfirmar, copiar, avisoFlotante, icono, listaConIcono,
+  copiar, avisoFlotante, icono, listaConIcono,
 } from '../componentes.js';
 import { conTickets, sinCodigos, claveLegible } from './_legible.js';
 import { llevarA } from './_ir.js';
 import { limpiaTexto, deDondeSale } from '../componentes.js';
 import { h, elegir, estilosLocales, campo, horasTxt, chipReloj } from './personas_comun.js';
+// Ronda U (50 #4, #5, #14): «Deshacer» en vez de «¿Seguro?»; #/decisiones/reloj/<id> abre ESA decisión sola con su barra de
+// acciones arriba (Aprobar · Rechazar · Delegar), y las cifras de arriba son una franja pequeña que filtra.
+import { botonDeshacer } from './_deshacer.js';
+import { barraAcciones, franjaCifras, consejoCompacto } from './_trabajo.js';
+
+/** Contesta una decisión (la usa también «Lo mío» para «Aprobar» en la fila). Una detectada por la app entra primero en la
+ *  tabla con su clave. Nada sale de la app: queda en local.db y en el rastro. */
+export async function contestarDecision(ctx, d, decision, motivo = null) {
+  let id = d.id;
+  if (!/^db-\d+$/.test(String(id))) {
+    const r = await ctx.api('decisiones', { metodo: 'POST', cuerpo: { operacion: 'nueva', tipo: d.tipo, clave: d.clave, titulo: d.titulo, problema: d.problema,
+      recomendacion: d.recomendacion, cliente_id: d.cliente_id || null, clientes: d.clientes || null, prueba: /^(https:\/\/|#\/)/.test(d.prueba || '') ? d.prueba : null } });
+    id = r.id;
+  }
+  await ctx.api('decisiones', { metodo: 'POST', cuerpo: { operacion: 'responder', id, decision, motivo: motivo || null } });
+  return id;
+}
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -89,17 +106,23 @@ export default {
 
     let tabs;
     const ir = id => () => { tabs?.elegir(id); tabs?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-    cont.append(tiles([
-      tile({ icono: 'flag', etiqueta: esTomas ? 'Te esperan' : esCoti ? 'Te esperan (24 h)' : 'Abiertas que ves', valor: esTomas || esCoti ? mias.length : abiertas.length,
-        unidad: 'decisiones', estado: (esTomas || esCoti ? mias : abiertas).some(d => d.estado === 'caducada') ? 'rojo' : (esTomas || esCoti ? mias : abiertas).length ? 'ambar' : 'verde',
-        contexto: abiertas[0] ? `La próxima vence ${fmtVence(abiertas[0].vence)}` : 'Nada pendiente', medible: 'hoy', ir: 'Ver el reloj', alPulsar: ir('reloj') }),
-      tile({ icono: 'clock', etiqueta: 'Caducadas sin contestar', valor: caducadas.length, estado: caducadas.length ? 'rojo' : 'verde',
-        contexto: 'A las 36 h salta el aviso; pasadas las 48 h cuenta como «tarde»', medible: 'hoy', ir: 'Ver el reloj', alPulsar: ir('reloj') }),
-      tile({ icono: 'check', etiqueta: 'Contestadas en 48 h', valor: contestadas.length ? fmt.pct(aTiempo.length / contestadas.length * 100) : null,
-        estado: !contestadas.length ? '' : aTiempo.length === contestadas.length ? 'verde' : contestadas.some(d => d.horas > 96) ? 'rojo' : 'ambar',
-        contexto: contestadas.length ? `${aTiempo.length} de ${contestadas.length}` : 'Aún ninguna contestada · indicador de Dirección', medible: 'hoy' }),
-      tile({ icono: 'libro', etiqueta: 'Decisiones firmadas', valor: F?.decisiones?.length ?? null, unidad: 'del 2-oct', contexto: 'No se vuelve a preguntar nada de lo firmado', ir: 'Consultar', alPulsar: ir('firmadas') }),
-    ]));
+    // Ronda U (molde): las cuatro tarjetas grandes (≈ 250 px) pasan a una franja de cifras que lleva a su pestaña.
+    const esperan = esTomas || esCoti ? mias : abiertas;
+    const franja = franjaCifras([
+      { etiqueta: esTomas || esCoti ? 'Te esperan' : 'Abiertas que ves', valor: esperan.length, estado: esperan.some(d => d.estado === 'caducada') ? 'rojo' : '', alPulsar: ir('reloj'),
+        titulo: abiertas[0] ? `La próxima vence ${fmtVence(abiertas[0].vence)}` : 'Nada pendiente' },
+      { etiqueta: 'Caducadas', valor: caducadas.length, estado: caducadas.length ? 'rojo' : '', alPulsar: ir('reloj'), titulo: 'A las 36 h salta el aviso; pasadas las 48 h cuenta como «tarde»' },
+      { etiqueta: 'Contestadas en 48 h', valor: contestadas.length ? `${aTiempo.length} de ${contestadas.length}` : '—', titulo: 'Indicador de Dirección' },
+      { etiqueta: 'Firmadas', valor: F?.decisiones?.length ?? '—', alPulsar: ir('firmadas'), titulo: 'No se vuelve a preguntar nada de lo firmado' },
+    ], { etiqueta: 'Cifras de decisiones' });
+    // #/decisiones/reloj/<id> (o #/decisiones/<id>): la decisión sola, arriba del todo, con su barra de acciones fija.
+    const idObj = ctx.params[0] === 'reloj' ? ctx.params[1] : (ctx.params[0] && !['reloj', 'informe', 'cierre', 'firmadas', 'rastro'].includes(ctx.params[0]) ? ctx.params[0] : null);
+    const dObj = idObj ? decis.find(d => String(d.id) === String(idObj) || d.clave === idObj) : null;
+    if (dObj) cont.append(focoDecision(ctx, dObj, { esTomas, esCoti, nombre }));
+    else if (idObj) cont.append(avisoParcial('Esa decisión ya no está en tu lista (contestada y archivada, o no es de las que ves).', { titulo: 'No la encuentro.' }));
+    cont.append(franja);
+    // el consejo de la IA, plegado a una línea y debajo de la decisión y las cifras: nunca empuja lo que hay que decidir
+
 
     const lista = [
       { id: 'reloj', texto: 'Con reloj', icono: 'clock', cuenta: abiertas.length, cuentaEstado: caducadas.length ? 'rojo' : undefined },
@@ -108,14 +131,16 @@ export default {
       { id: 'rastro', texto: 'Rastro', icono: 'hist' },
     ];
     tabs = pestanas({ pestanas: lista, clave: 'decisiones', etiqueta: 'Secciones de Decisiones', activa: ctx.params[0], pintar: (id, z) => {
-      if (id === 'reloj') z.append(...vistaReloj(ctx, decis, { esTomas, esCoti, direccion, nombre, R, objetivo: ctx.params[0] === 'reloj' ? ctx.params[1] : null }));
+      if (id === 'reloj') z.append(...vistaReloj(ctx, decis, { esTomas, esCoti, direccion, nombre, R, objetivo: dObj ? null : (ctx.params[0] === 'reloj' ? ctx.params[1] : null) }));
       if (id === 'informe') z.append(...vistaInforme(ctx, D));
       if (id === 'cierre') z.append(...vistaCierre(ctx, D));
       if (id === 'firmadas') z.append(...vistaFirmadas(F));
       if (id === 'rastro') { const caja = h('div', { class: 'pila' }); z.append(caja); Promise.resolve(pintarRastro(caja, ctx)).catch(e => caja.append(vacio({ titulo: 'No se pudo pintar el rastro', texto: e.message, tono: 'aviso' }))); }
     } });
     cont.append(tabs);
-    if (ctx.params[0] && lista.some(p => p.id === ctx.params[0])) tabs.elegir(ctx.params[0]);   // R15a (A2): la ruta manda sobre la pestaña recordada
+    consejoCompacto(cont, tabs);   // el consejo de la IA, plegado y DEBAJO de la lista: nunca empuja lo que hay que decidir
+    if (ctx.params[0] && lista.some(p => p.id === ctx.params[0])) tabs.elegir(ctx.params[0]);
+    else if (dObj) tabs.elegir('reloj');   // R15a (A2): la ruta manda sobre la pestaña recordada
   },
 };
 
@@ -184,22 +209,13 @@ function tarjeta(ctx, d, { esTomas, esCoti, nombre }) {
   const puedeDecidir = !d.respondida && ((esTomas && d.tipo !== 'para_coti') || (esCoti && d.tipo === 'para_coti'));
   const motivo = h('input', { type: 'text', placeholder: 'Motivo (obligatorio para rechazar o delegar)', 'aria-label': 'Motivo', style: { minHeight: 'var(--s-8)' } });
   const lt = limpiaTexto;
-  const decidir = (decision) => botonConfirmar({ texto: decision, mini: true, pregunta: `¿${decision}?`, confirmar: 'Sí', soloLectura: ctx.soloLectura, peligro: decision === 'Rechazar',
-    alConfirmar: async () => {
-      if (decision !== 'Aprobar la recomendación' && !motivo.value.trim()) throw new Error('escribe el motivo');
-      let id = d.id;
-      if (!/^db-\d+$/.test(id)) {   // detectada por la app: primero entra en la tabla (misma clave) y después se contesta
-        const r = await ctx.api('decisiones', { metodo: 'POST', cuerpo: { operacion: 'nueva', tipo: d.tipo, clave: d.clave, titulo: d.titulo, problema: d.problema,
-          recomendacion: d.recomendacion, cliente_id: d.cliente_id || null, clientes: d.clientes || null, prueba: /^(https:\/\/|#\/)/.test(d.prueba || '') ? d.prueba : null } });
-        id = r.id;
-      }
-      await ctx.api('decisiones', { metodo: 'POST', cuerpo: { operacion: 'responder', id, decision, motivo: motivo.value.trim() || null } });
-      avisoFlotante('Decisión contestada. Queda en el rastro'); setTimeout(() => location.reload(), 900);
-      return 'Contestada';
-    } });
+  const decidir = decision => botonDecidir(ctx, d, decision, motivo);
   return h('article', { class: `pm-tarjeta ${color}`, 'data-decision': String(d.id) },
     h('div', { class: 'pm-cab' }, h('span', { class: `ico-c ${color}` }, icono(d.tipo === 'para_coti' ? 'persona' : 'crown')),
       h('span', { class: 't' }, h('b', { class: 'pm-dos', title: lt(d.titulo) }, lt(d.titulo)), h('span', {}, `${TIPO_TXT[d.tipo] || 'Para Tomás · 48 h'} · sube ${nombre[d.quien]}`)), h('span', { class: 'der' }, chipReloj(d))),
+    // Ronda U (50 #14): las acciones arriba de la tarjeta, justo bajo el título (antes al final, a 600-700 px en el móvil)
+    puedeDecidir ? h('div', { class: 'pila pm-form', style: { gap: 'var(--s-2)', gridTemplateColumns: 'minmax(0, 1fr)' } },
+      h('div', { class: 'fila' }, decidir('Aprobar la recomendación'), decidir('Rechazar'), decidir('Delegar')), motivo) : null,
     h('div', { class: 'pm-dec' },
       d.problema ? h('p', {}, h('b', {}, 'Problema: '), lt(d.problema)) : null,
       d.recomendacion ? h('p', { class: 'rec' }, h('b', {}, 'Recomendación: '), lt(d.recomendacion)) : h('p', { class: 'sub' }, 'Sin recomendación: devuélvela pidiendo una.')),
@@ -209,8 +225,39 @@ function tarjeta(ctx, d, { esTomas, esCoti, nombre }) {
       d.prueba ? h('a', { class: 'bt mini', href: d.prueba, target: /^https?:/.test(d.prueba) ? '_blank' : null, rel: /^https?:/.test(d.prueba) ? 'noopener' : null }, icono('ext'), /^#\//.test(d.prueba) ? 'Ver en la app' : 'Ver la prueba ↗') : null),
     h('span', { class: 'sub' }, icono('info', { clase: 's' }), ` ${lt(String(d.origen || '').replace(/\s*\(local\.db\)/, ''))}${d.detectada ? ' Detectada por la app.' : ''}`),
     d.respondida ? h('p', { class: 'rec', style: { margin: 0 } }, h('b', {}, `${d.respuesta?.decision || 'Contestada'}`), d.respuesta?.motivo ? ` · ${lt(d.respuesta.motivo)}` : '', h('span', { class: 'sub' }, ` · ${nombre[d.respondida_por]}${d.simulada ? ' · simulado' : ''}`)) : null,
-    puedeDecidir ? h('div', { class: 'pila pm-form', style: { gap: 'var(--s-2)', gridTemplateColumns: 'minmax(0, 1fr)' } }, motivo,
-      h('div', { class: 'fila' }, decidir('Aprobar la recomendación'), decidir('Rechazar'), decidir('Delegar'))) : null);
+    null);
+}
+
+/** Ronda U (50 #4): Aprobar / Rechazar / Delegar al primer clic con «Deshacer» 8 s (antes «¿Aprobar? Sí»). Rechazar y delegar
+ *  piden el motivo antes de empezar. Al escribirse, la tarjeta dice «Contestada» (sin recargar la página). */
+function botonDecidir(ctx, d, decision, motivo, { pri = false } = {}) {
+  const corto = decision === 'Aprobar la recomendación' ? 'Aprobar' : decision;
+  return botonDeshacer({ texto: decision, pri: pri || decision === 'Aprobar la recomendación', hecho: decision === 'Aprobar la recomendación' ? 'Aprobada' : decision === 'Rechazar' ? 'Rechazada' : 'Delegada',
+    soloLectura: ctx.soloLectura, titulo: `${corto}: se puede deshacer durante 8 s`,
+    validar: () => (decision !== 'Aprobar la recomendación' && !motivo.value.trim() ? 'Escribe el motivo' : null),
+    alHacer: async () => {
+      await contestarDecision(ctx, d, decision, motivo.value.trim() || null);
+      d.respondida = new Date().toISOString(); d.respuesta = { decision, motivo: motivo.value.trim() || null };
+      document.querySelectorAll(`[data-decision="${CSS.escape(String(d.id))}"] .pm-form`).forEach(f => f.replaceWith(h('p', { class: 'rec', style: { margin: 0 } }, h('b', {}, decision), motivo.value.trim() ? ` · ${limpiaTexto(motivo.value.trim())}` : '', h('span', { class: 'sub' }, ' · ahora mismo'))));
+      return 'Contestada · queda en el rastro';
+    } });
+}
+
+/** #/decisiones/reloj/<id>: la decisión sola, con la barra de acciones arriba (sticky) y debajo su problema y recomendación. */
+function focoDecision(ctx, d, { esTomas, esCoti, nombre }) {
+  const puede = !d.respondida && ((esTomas && d.tipo !== 'para_coti') || (esCoti && d.tipo === 'para_coti'));
+  const motivo = h('input', { type: 'text', placeholder: 'Motivo (para rechazar o delegar)', 'aria-label': 'Motivo', style: { minHeight: 'var(--s-8)', minWidth: '220px' } });
+  const reloj = d.respondida ? `Contestada en ${horasTxt(d.horas)}` : d.quedan >= 0 ? `Quedan ${horasTxt(d.quedan)} · vence ${horaMadrid(+d.vence)}` : `Pasada ${horasTxt(-d.quedan)}`;
+  const barra = barraAcciones({ titulo: limpiaTexto(d.titulo), sub: `${TIPO_TXT[d.tipo] || 'Para Tomás · 48 h'} · sube ${nombre[d.quien]} · ${reloj}`,
+    volver: { href: '#/decisiones/reloj', texto: 'Todas' },
+    acciones: puede ? [botonDecidir(ctx, d, 'Aprobar la recomendación', motivo, { pri: true }), motivo, botonDecidir(ctx, d, 'Rechazar', motivo), botonDecidir(ctx, d, 'Delegar', motivo)]
+      : [chipEstado(d.respondida ? 'gris' : 'ambar', d.respondida ? (d.respuesta?.decision || 'Contestada') : 'No es tuya: la decide su destinatario')] });
+  const caja = h('div', { class: 'pila', 'data-decision': String(d.id), 'data-foco-decision': '' }, barra,
+    h('div', { class: 'panel', style: { padding: 'var(--relleno)' } },
+      d.problema ? h('p', { style: { margin: 0 } }, h('b', {}, 'Problema: '), limpiaTexto(d.problema)) : null,
+      d.recomendacion ? h('p', { class: 'rec' }, h('b', {}, 'Recomendación: '), limpiaTexto(d.recomendacion)) : h('p', { class: 'sub' }, 'Sin recomendación: devuélvela pidiendo una.'),
+      d.prueba ? h('a', { class: 'bt mini', href: d.prueba, target: /^https?:/.test(d.prueba) ? '_blank' : null, rel: /^https?:/.test(d.prueba) ? 'noopener' : null }, icono('ext'), /^#\//.test(d.prueba) ? 'Ver en la app' : 'Ver la prueba ↗') : null));
+  return caja;
 }
 
 function formNueva(ctx) {
@@ -222,10 +269,10 @@ function formNueva(ctx) {
   return panel({ titulo: 'Subir una decisión', icono: 'mas', sub: 'Filtrado primero y con una recomendación marcada. Sin recomendación no se sube. Queda en la base de la app con tu nombre y la hora.' },
     h('div', { class: 'pm-form' }, campo('Para', tipo), campo('Fecha límite (opcional)', fecha), campo('Qué hay que decidir', titulo, { ancho: true }),
       campo('Problema', problema, { ancho: true }), campo('Recomendación', rec, { ancho: true }),
-      botonConfirmar({ texto: 'Subir', pregunta: '¿Subir la decisión? Empieza a correr el reloj.', confirmar: 'Sí, subir', soloLectura: ctx.soloLectura,
-        alConfirmar: async () => {
-          if (!titulo.value.trim() || !problema.value.trim()) throw new Error('falta qué hay que decidir o el problema');
-          if (!rec.value.trim()) throw new Error('falta tu recomendación');
+      // Ronda U (50 #4): «Subir» al primer clic, con «Deshacer» 8 s (es interno: empieza a correr el reloj de Tomás o Coti)
+      botonDeshacer({ texto: 'Subir', pri: true, hecho: 'Subida', soloLectura: ctx.soloLectura, mini: false,
+        validar: () => (!titulo.value.trim() || !problema.value.trim() ? 'Falta qué hay que decidir o el problema' : !rec.value.trim() ? 'Falta tu recomendación' : null),
+        alHacer: async () => {
           await ctx.api('decisiones', { metodo: 'POST', cuerpo: { operacion: 'nueva', tipo: tipo.value, titulo: titulo.value.trim(), problema: problema.value.trim(),
             recomendacion: rec.value.trim(), fecha: fecha.value || null } });
           avisoFlotante('Decisión subida: empieza a correr el reloj'); setTimeout(() => location.reload(), 900);

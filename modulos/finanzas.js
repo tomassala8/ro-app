@@ -9,7 +9,9 @@
 // Botones: dejan la acción en la cola simulada (R9). Emitir, cobrar, pagar o tocar Airtable: nunca.
 // Datos: data/finanzas/finanzas.json ← fuentes_dinero/generar_dinero.py (Holded en vivo, Airtable en lectura, panel financiero v29).
 
-import { plegarSecundarias, grafico, plegadoMovil } from '../componentes.js';
+import { plegarSecundarias, grafico, plegadoMovil, tarjetaKpi, selectorComparar, lineaComparacion, cifraPrincipal, minilinea, cascada,
+  barrasGanadoPerdido, barraObjetivo, previsionCaja, barraApilada, estadoObjetivo, enlaceFuente } from '../componentes.js';
+import { FUENTES, UMBRALES, ESTADO, fuentesAlPie, mesMas, puenteCuota, puntosPrevisionCaja, notaSupuestos, separador } from './dinero_v4.js';
 import { h, fmt, tile, tiles, chipEstado, chipsFiltro, tablaDensa, panel, avisoParcial, vacio, icono, barraProgreso,
   listaLoPrimero, botonConfirmar, pestanas, avisoFlotante, colorCifra, campoTexto, variacion, hoyMadrid } from '../componentes.js';
 import { llevarA, filaConTexto } from './_ir.js';
@@ -120,25 +122,38 @@ function bloqueCaja(a, { conMeses } = {}) {
 }
 
 function cifrasCobros(a, d, fH, fA) {
+  // Paneles v4 (3-oct): las cifras de cobro de Sofía con su línea de 12 meses, su umbral con fuente y «Ver fuente ↗».
+  // Sin margen, beneficio ni equipo (su puesto no los ve; el servidor ni se los manda).
   const t = a.cuota_tres || {};
   const imp = a.impagos || {};
   const sinPlan = (imp.filas || []).filter(f => f.tramo !== 'Sin vencer').length;
+  const fact = (a.facturado_mes || []).filter(x => !x.curso && typeof x.cobrado_pct === 'number');
+  const fx = fact.slice(-12);
+  const ev = d.impagos?.evolucion || [];
+  const evX = ev.slice(-12);
+  const dia10 = Number(String(hoyMadrid()).slice(8, 10)) >= 10;
+  const mesT = mesLargo(t.mes).split(' ')[0];
   return [
-    tile({ icono: 'euro', etiqueta: `Cuota cobrada · ${mesLargo(t.mes).split(' ')[0]}`, valor: t.cobrado_pct === null ? null : fmt.pct(t.cobrado_pct),
-      unidad: `${fmt.eur(t.cobrada)} de ${fmt.eur(t.facturada)}`, estado: new Date().getDate() >= 10 ? (t.cobrado_pct >= 95 ? 'verde' : t.cobrado_pct >= 85 ? 'ambar' : 'rojo') : 'gris',
-      comparacion: { texto: `septiembre: ${fmt.pct(t.cobrado_pct_sep)}` }, contexto: 'Verde ≥ 95 % el día 10 · rojo < 85 % (el color sale el día 10)', medible: 'medias',
-      medibleDetalle: 'El cargo SEPA del día 2 aún no ha entrado; 529 movimientos sin conciliar', frescura: fH }),
-    tile({ icono: 'alert', etiqueta: 'Recibos vencidos sin plan', valor: sinPlan, unidad: fmt.eur(imp.vencido_total), estado: sinPlan ? 'rojo' : 'verde',
-      contexto: `${imp.mas_30 || 0} con más de 30 días · ${imp.mas_60 || 0} con más de 60`, medible: 'hoy', frescura: fH,
+    tarjetaKpi({ icono: 'euro', etiqueta: `Cuota cobrada · ${mesT}`, valor: t.cobrado_pct === null || t.cobrado_pct === undefined ? null : fmt.pct(t.cobrado_pct), unidad: `${fmt.eur(t.cobrada)} de ${fmt.eur(t.facturada)}`,
+      num: t.cobrado_pct, estado: dia10 ? ESTADO.cobrada_dia10(t.cobrado_pct) : 'gris', mejorSi: 'alto',
+      serie: fx.map(x => x.cobrado_pct), serieX: fx.map(x => x.m), formatoSerie: v => fmt.pct(v), umbralSerie: 95,
+      comparaciones: { mes_ant: { ref: t.cobrado_pct_sep, texto: `frente a septiembre (${fmt.pct(t.cobrado_pct_sep)})`, modo: 'puntos' } },
+      contexto: dia10 ? 'Cobrado frente a lo emitido este mes' : 'El color sale el día 10: el cargo SEPA del día 2 tarda en verse en el banco',
+      umbral: UMBRALES.cobrada_dia10, fuente: { texto: 'Holded', href: '#/finanzas/cobros' }, medible: 'medias', medibleDetalle: 'El cargo SEPA del día 2 aún no ha entrado; hay movimientos sin conciliar', frescura: fH }),
+    tarjetaKpi({ icono: 'alert', etiqueta: 'Recibos vencidos sin plan', valor: sinPlan, unidad: fmt.eur(imp.vencido_total), num: imp.vencido_total, estado: imp.mas_60 ? 'rojo' : sinPlan ? 'ambar' : 'verde', mejorSi: 'bajo',
+      serie: evX.map(x => x.vencido), serieX: evX.map(x => x.m), formatoSerie: v => fmt.eur(v),
+      comparaciones: { mes_ant: { ref: ev.at(-2)?.vencido, texto: `importe frente al cierre de ${ev.at(-2) ? mesLargo(ev.at(-2).m).split(' ')[0] : 'el mes anterior'}` } },
+      contexto: `${imp.mas_30 || 0} con más de 30 días · ${imp.mas_60 || 0} con más de 60`, umbral: UMBRALES.vencido, fuente: { texto: 'Holded', href: '#/finanzas/impagos' }, frescura: fH,
       ir: 'Ver cuáles', alPulsar: () => document.querySelector('[data-bloque=impagos]')?.scrollIntoView({ behavior: 'smooth' }) }),
-    tile({ icono: 'doc', etiqueta: 'Firmados sin alta en facturación', valor: (a.firmas_sin_alta || []).length, estado: (a.firmas_sin_alta || []).length ? 'rojo' : 'verde',
-      contexto: 'Antes del día 0 del cliente', medible: 'hoy', frescura: fA, ir: 'Ver cuáles', alPulsar: () => document.querySelector('[data-bloque=firmas]')?.scrollIntoView({ behavior: 'smooth' }) }),
-    tile({ icono: 'alert', etiqueta: 'Recibos devueltos', valor: (a.devueltos || []).length, estado: (a.devueltos || []).length ? 'rojo' : 'verde', contexto: 'SEPA o tarjeta devueltos (Holded)', medible: 'medias',
-      medibleDetalle: 'Holded ve el cobro, no siempre el motivo de la devolución', frescura: fH }),
-    tile({ icono: 'clock', etiqueta: 'Días de cobro', valor: a.dias_cobro?.valor ?? null, unidad: 'días', estado: (a.dias_cobro?.valor ?? 99) <= 15 ? 'verde' : (a.dias_cobro?.valor ?? 0) <= 60 ? 'ambar' : 'rojo',
-      contexto: 'Verde ≤ 15 · rojo > 60 (tope legal, Ley 15/2010)', medible: 'hoy', medibleDetalle: a.dias_cobro?.texto }),
-    tile({ icono: 'users', etiqueta: 'Cliente que más pesa', valor: pctS(a.concentracion?.uno, 1), unidad: 'de la cuota', estado: (a.concentracion?.uno ?? 0) < 20 ? 'verde' : a.concentracion.uno <= 25 ? 'ambar' : 'rojo',
-      contexto: `Los 10 mayores: ${pctS(a.concentracion?.diez, 1)} · verde < 20 % (referencia de mercado)`, medible: 'hoy' }),
+    tarjetaKpi({ icono: 'doc', etiqueta: 'Firmados sin alta en facturación', valor: (a.firmas_sin_alta || []).length, estado: (a.firmas_sin_alta || []).length ? 'rojo' : 'verde',
+      contexto: 'Antes del día 0 del cliente · Zoho Sign y la columna «Cliente» de GHL frente al Airtable de octubre', fuente: { texto: 'Airtable de facturación (solo lectura)' }, frescura: fA,
+      ir: 'Ver cuáles', alPulsar: () => document.querySelector('[data-bloque=firmas]')?.scrollIntoView({ behavior: 'smooth' }) }),
+    tarjetaKpi({ icono: 'alert', etiqueta: 'Recibos devueltos', valor: (a.devueltos || []).length, estado: (a.devueltos || []).length ? 'rojo' : 'verde', contexto: 'SEPA o tarjeta devueltos',
+      fuente: { texto: 'Holded' }, medible: 'medias', medibleDetalle: 'Holded ve el cobro, no siempre el motivo de la devolución', frescura: fH }),
+    tarjetaKpi({ icono: 'clock', etiqueta: 'Días de cobro', valor: a.dias_cobro?.valor ?? null, unidad: 'días', num: a.dias_cobro?.valor, estado: ESTADO.dias_cobro(a.dias_cobro?.valor), mejorSi: 'bajo',
+      contexto: a.dias_cobro?.texto, umbral: { ...UMBRALES.dias_cobro, texto: 'verde ≤ 60 días (máximo legal entre empresas) · media real en España: 67 días (2025) · sin dato de agencias' }, fuente: { texto: 'Holded' } }),
+    tarjetaKpi({ icono: 'users', etiqueta: 'Cliente que más pesa', valor: pctS(a.concentracion?.uno, 1), unidad: 'de la cuota', num: a.concentracion?.uno, estado: ESTADO.concentracion(a.concentracion?.uno), mejorSi: 'bajo',
+      contexto: `Los 5 mayores: ${pctS(a.concentracion?.cinco, 1)} · los 10 mayores: ${pctS(a.concentracion?.diez, 1)} (sin umbral fiable: no colorean)`, umbral: UMBRALES.concentracion, fuente: { texto: 'Airtable de octubre' } }),
   ];
 }
 
@@ -354,7 +369,11 @@ function pintarImpagos(cont, ctx, imp, { acciones = [] } = {}) {
   const ev = imp.evolucion || [];
   cont.append(h('div', { class: 'pila' },
     panel({ titulo: 'Por antigüedad', icono: 'capas', sub: 'Aviso al account a 30 días, decisión de Tomás a 60, nunca más de 2 cuotas' },
-      h('div', { class: 'cuerpo' }, filasConBarra((imp.tramos || []).map(t => ({ etiqueta: `${t.tramo} · ${fmt.plural ? fmt.plural(t.n, 'factura') : `${t.n} facturas`}`, valor: fmt.eur(t.importe), actual: t.importe, max: maxT,
+      h('div', { class: 'cuerpo pila' },
+        barraApilada({ etiqueta: 'Vencido por antigüedad', formato: v => fmt.eur(v), partes: (imp.tramos || []).map(t => ({ valor: t.importe, texto: t.tramo,
+          estado: /^0-30/.test(t.tramo) ? 'gris' : /31-60/.test(t.tramo) ? 'ambar' : /61-90/.test(t.tramo) ? 'rojo-claro' : 'rojo' })) }),
+        h('p', { class: 'kpi-pie' }, h('span', {}, 'Tramos como los de QuickBooks: '), enlaceFuente(FUENTES.quickbooks_tramos.href, FUENTES.quickbooks_tramos.fuente)),
+        filasConBarra((imp.tramos || []).map(t => ({ etiqueta: `${t.tramo} · ${fmt.plural ? fmt.plural(t.n, 'factura') : `${t.n} facturas`}`, valor: fmt.eur(t.importe), actual: t.importe, max: maxT,
         estado: /61|90/.test(t.tramo) ? 'rojo' : /31/.test(t.tramo) ? 'ambar' : null })), { titulos: ['Antigüedad', '', 'Importe'] }))),
     panel({ titulo: 'Vencido sin cobrar, mes a mes', icono: 'grafico', sub: 'Lo que quedaba vencido y sin cobrar al final de cada mes (con las fechas de cobro de Holded); el último, hoy' },
       h('div', { class: 'cuerpo' }, grafico({ x: ev.map(x => x.m), formatoX: ejeMes, alto: 200, formato: v => fmt.eur(v),
@@ -434,73 +453,265 @@ function pintarCuadre(cont, ctx, cu, { completo } = {}) {
   const be = bloqueEquipoMes(cu); if (be) cont.append(be);
 }
 
-// ===================================================================== Tomás
+// ===================================================================== Tomás · Resumen (paneles v4, 3-oct)
+// 48 §4.2 «¿cuánto gano, cuánto cobro y cuánto aguanto?»: arriba la cifra que manda (beneficio del último mes cerrado) con
+// «Comparar con» (mes anterior · mismo mes de 2025 · plan); al lado, la cuota contra el plan y el objetivo de diciembre; debajo
+// seis tarjetas con su línea de 12 meses, su umbral y su fuente; lo que pide tu decisión; y el porqué: cascada del beneficio
+// (real y frente al plan), puente de la cuota con las rebajas a la vista, caja a 90 días con el mínimo de 2 meses, cobros por
+// antigüedad y peso del equipo. Las cifras son las fijadas (beneficio ene-ago 93.492 €, agosto 3.859,87 €…): no se recalculan.
+const planDe = t => { const m = /([\d.]+)\s*→\s*([\d.]+)\s*→\s*([\d.]+)/.exec(t || ''); return m ? m.slice(1, 4).map(x => Number(x.replace(/\./g, ''))) : []; };
+const fmtMeses = v => `${fmt.num(v, 1)} meses`;
+
 function pintarResumen(cont, ctx, d) {
-  const dir = d.direccion[0], a = d.admin;
-  const bb = bloqueBeneficio(ctx, d.cuadre); if (bb) cont.append(bb);     // v3: el beneficio de cada mes, lo primero
-  const bp = bloquePeriodo(ctx, d, { tomas: true }); if (bp) cont.append(bp);
-  const n = dir.numero || {}, cr = dir.cuota_recurrente || {}, cj = dir.caja || {};
-  // regla común (auditoría 30): beneficio positivo = verde en todas las pantallas (el mismo que en Mi día)
-  const estBen = colorCifra('beneficio', n.beneficio);
-  // escenario: hoy o si firman los pendientes
-  const zonaCuota = h('div');
+  const dir = d.direccion[0], a = d.admin, cu = d.cuadre || {};
+  const n = dir.numero || {}, cr = dir.cuota_recurrente || {}, cj = dir.caja || {}, eq = dir.equipo || {}, kpi = dir.kpi || {};
+  const imp = d.impagos?.resumen || {};
+  const B = cu.beneficio?.meses || [];
+  const porMes = new Map(B.map(x => [x.m, x]));
+  const ultM = n.mes || B.filter(x => !x.estimado).at(-1)?.m || '2026-08';
+  const prevM = mesMas(ultM, -1), anioM = mesMas(ultM, -12);
+  const m12 = Array.from({ length: 12 }, (_, i) => mesMas(ultM, i - 11));
+  const pyg = dir.pyg || [];
+  const pygDe = new Map(pyg.map(x => [x.m, x]));
+  const pygU = pygDe.get(ultM) || {};
+  const mb3 = m => { const w = [mesMas(m, -2), mesMas(m, -1), m].map(x => pygDe.get(x)).filter(Boolean); return w.length === 3 ? (100 * w.reduce((s, x) => s + x.mb, 0)) / w.reduce((s, x) => s + x.ing, 0) : null; };
+  const eqDe = new Map((cu.equipo_mes || []).map(x => [x.m, x]));
+  const pesoDe = m => { const e = eqDe.get(m), b = porMes.get(m); return e && b?.ing && !b.estimado && e.estado !== 'provisional' ? (100 * e.usado) / b.ing : null; };
+  const [planOct, planNov] = planDe(cr.plan_texto);
+  const serieCuota = cr.serie || [];
+  const cuotaDe = new Map(serieCuota.map(x => [x.m, x.cuota]));
+  const mCuota = serieCuota.at(-1)?.m || '2026-10';
+  const evol = d.impagos?.evolucion || [];
+  const evolDe = new Map(evol.map(x => [x.m, x.vencido]));
+  const mImp = evol.at(-1)?.m || mCuota;
+
+  // ---------------------------------------------------------- 1 · cifra que manda + cuota hacia el objetivo
+  const comp = selectorComparar({ clave: 'finanzas-comparar', alCambiar: v => pintarCifras(v) });
+  const zonaCifras = h('div', { class: 'pila' });
+  const cifraQueManda = c => {
+    const ref = c === 'mes_ant' ? { ref: porMes.get(prevM)?.bai, texto: `frente a ${nomMes(prevM)}` }
+      : c === 'anio_ant' ? { ref: porMes.get(anioM)?.bai, texto: `frente a ${mesLargo(anioM)} (estimado: a 2025 le falta la nómina de España)` }
+        : { ref: n.plan_res, texto: `frente al plan del mes (${eurS(n.plan_res)})` };
+    return panel({ titulo: `Beneficio de ${nomMes(ultM)} · la cifra que manda`, icono: 'grafico', sub: 'Último mes cerrado por Sofía, con los gastos convertidos a euros factura a factura. El mismo número que Mi día y el Panel de dirección.' },
+      h('div', { class: 'cuerpo pila' },
+        cifraPrincipal({ etiqueta: `Margen ${pctS(n.margen_pct, 1)} sobre ${fmt.eur(n.ingresos)} de ingresos`, valor: eur2(n.beneficio), estado: colorCifra('beneficio', n.beneficio),
+          comparacion: lineaComparacion({ num: n.beneficio, ...ref, modo: 'abs', formato: v => fmt.eur(v), mejorSi: 'alto' }) || h('span', { class: 'tc' }, h('em', {}, 'sin dato para comparar')) }),
+        h('p', { class: 'cifra-gris' }, `Con el gasto sin factura: ${eur2(n.beneficio_real)} (techo: puede contar dos veces). Enero-agosto: ${eurS(dir.anio?.bai)} · ${eurS(dir.anio?.real)} con el gasto sin factura.`),
+        minilinea(m12.map(m => porMes.get(m)?.bai ?? null), { x: m12, formato: v => eurS(v), etiqueta: 'Beneficio de los 12 últimos meses (2025, estimado)', alto: 40 }),
+        h('p', { class: 'kpi-pie' }, h('span', {}, `Norte: ${n.objetivo_texto || '30.000 € de beneficio al mes a final de 2027'}`), h('span', {}, 'Dato: ', enlaceFuente('#/finanzas/cuadre', 'cierre de Sofía y Holded')))));
+  };
+  const zonaCuota = h('div', { class: 'pila' });
   const pintarCuota = esc => {
     const v = esc === 'firman' ? cr.si_firman_mes : cr.cuota_mes;
-    zonaCuota.replaceChildren(numeroGrande({ secundaria: true, icono: 'sube', etiqueta: 'Cuota de octubre', valor: fmt.eur(v), unidad: 'al mes', estado: '',
-      texto: esc === 'firman' ? `Si firman los ${cr.pendientes.length} contratos enviados (${fmt.eur(cr.si_firman_mes - cr.cuota_mes)} más).` : `Recurrente firmada ${fmt.eur(cr.actual)} + proyectos con fin. Facturable en octubre: ${fmt.eur(cr.facturable)}.`,
-      lineas: [...(cr.desglose || []).filter(x => x.tipo !== 'info').map(x => [x.concepto, x.tipo === 'total' ? fmt.eur(x.importe) : `${x.importe < 0 ? '−' : '+'}${fmt.eur(Math.abs(x.importe))}`]),
-        ...(esc === 'firman' ? cr.pendientes.map(p => [`${p.nombre_m} · contrato enviado hace ${p.dias} días${p.abierta ? ' · abierto' : ''}`, `+${fmt.eur(p.cuota)}`]) : [])],
-      extra: h('div', { class: 'pila' }, h('p', { class: 'fila' }, h('span', { class: 'sub' }, 'Hacia el objetivo de diciembre'), h('b', {}, `${fmt.pct((100 * v) / cr.objetivo_dic)} de ${fmt.eur(cr.objetivo_dic)}`)),
-        barraProgreso({ valor: v, max: cr.objetivo_dic, estado: null, etiqueta: `${fmt.eur(v)} de ${fmt.eur(cr.objetivo_dic)}` }), h('span', { class: 'sub' }, cr.plan_texto)) }));
+    zonaCuota.replaceChildren(
+      h('p', { class: 'fila' }, h('b', {}, `${fmt.eur(v)} al mes`), h('span', { class: 'sub' }, `${fmt.pct((100 * v) / (planOct || 1))} del plan de ${nomMes(mCuota)} · ${fmt.pct((100 * v) / cr.objetivo_dic)} del objetivo de diciembre`)),
+      barraObjetivo({ etiqueta: `Cuota de ${nomMes(mCuota)}`, valor: v, objetivo: planOct || cr.objetivo_dic, max: Math.max(cr.objetivo_dic, planNov || 0) * 1.04, formato: v2 => fmt.eur(v2),
+        etiquetaValor: esc === 'firman' ? 'Si firman' : 'Hoy', etiquetaObjetivo: `Plan de ${nomMes(mCuota)}`,
+        extra: esc === 'firman' ? [{ valor: cr.cuota_mes, texto: 'Hoy' }] : [{ valor: cr.si_firman_mes, texto: `Si firman los ${(cr.pendientes || []).length}` }],
+        marcas: [planNov ? { valor: planNov, texto: 'Plan de noviembre' } : null, { valor: cr.objetivo_dic, texto: 'Objetivo de diciembre' }].filter(Boolean) }),
+      h('p', { class: 'kpi-umbral' }, h('span', {}, `Umbral: ${UMBRALES.cuota_objetivo.texto}`), ' · ', enlaceFuente(FUENTES.databox.href, FUENTES.databox.fuente)),
+      ctx.veModulo?.('ventas-ro') && (cr.pendientes || []).length ? h('div', { class: 'fila' }, h('a', { class: 'bt mini', href: '#/ventas-ro' }, icono('rocket', { clase: 's' }), `Ver los ${cr.pendientes.length} contratos pendientes`)) : null,
+      h('details', { class: 'que-es' }, h('summary', {}, 'Ver la cuota línea a línea'),
+        h('dl', { class: 'dl' }, [...(cr.desglose || []).filter(x => x.tipo !== 'info').map(x => [x.concepto, x.tipo === 'total' ? fmt.eur(x.importe) : `${x.importe < 0 ? '−' : '+'}${fmt.eur(Math.abs(x.importe))}`]),
+          ...(cr.pendientes || []).map(p => [`${p.nombre_m} · contrato enviado hace ${p.dias} días${p.abierta ? ' · abierto' : ''} (si firma)`, `+${fmt.eur(p.cuota)}`])].map(([tx, vv]) => [h('dt', {}, tx), h('dd', {}, h('b', {}, vv))]))));
   };
-  const esc = chipsFiltro({ opciones: [{ valor: 'hoy', texto: 'Hoy', icono: 'ok' }, { valor: 'firman', texto: `Si firman los ${cr.pendientes.length} pendientes`, icono: 'rocket', cuenta: cr.pendientes.length }],
+  const escCuota = chipsFiltro({ opciones: [{ valor: 'hoy', texto: 'Hoy', icono: 'ok' }, { valor: 'firman', texto: `Si firman los ${(cr.pendientes || []).length} pendientes`, icono: 'rocket', cuenta: (cr.pendientes || []).length }],
     clave: 'finanzas-escenario', etiqueta: 'Escenario', alCambiar: pintarCuota });
-  pintarCuota(esc.valor());
-  cont.append(h('div', { class: 'dos' },
-    numeroGrande({ icono: 'grafico', etiqueta: `Beneficio de ${mesLargo(n.mes || '2026-08').split(' ')[0]} · el número que manda`, valor: eurS(n.beneficio), estado: estBen, colorValor: true,
-      texto: `Margen ${pctS(n.margen_pct, 1)} sobre ${fmt.eur(n.ingresos)} de ingresos · último mes cerrado por Sofía. Norte: ${n.objetivo_texto}.`,
-      lineas: [['Con el gasto sin factura (techo, puede contar dos veces)', eurS(n.beneficio_real)], ['Plan del mes', eurS(n.plan_res)],
-        ['El cierre de Sofía decía (dólares como euros)', eurS(dir.correccion_cierre?.mes_beneficio_cierre)],
-        ['En 2026 (ene-ago): beneficio · real', `${eurS(dir.anio?.bai)} · ${eurS(dir.anio?.real)}`]],
-      extra: h('p', { class: 'sub' }, 'Gastos convertidos a euros factura a factura con el tipo de Holded (auditoría del cierre, 2-oct). ', n.sin_factura_texto || '', ' Septiembre aún sin cerrar (día 10).') }),
-    h('div', { class: 'pila' }, esc, zonaCuota)));
+  pintarCuota(escCuota.valor());
+  const panelCuota = panel({ titulo: 'Cuota hacia el objetivo de diciembre', icono: 'sube', sub: cr.plan_texto }, h('div', { class: 'cuerpo pila' }, escCuota, zonaCuota));
 
+  // ---------------------------------------------------------- 2 · seis tarjetas
+  const tarjetas = c => {
+    const mbU = mb3(ultM), mbP = mb3(prevM);
+    const pesoU = eq.peso_ingresos ?? pesoDe(ultM), pesoP = pesoDe(prevM);
+    const nrrS = kpi.nrr_serie || [];
+    const mNrr = Array.from({ length: nrrS.length }, (_, i) => mesMas(mCuota === '2026-10' ? '2026-09' : mCuota, i - nrrS.length + 1));
+    const mesesImp = Array.from({ length: 12 }, (_, i) => mesMas(mImp, i - 11));
+    const mesesCuo = Array.from({ length: 12 }, (_, i) => mesMas(mCuota, i - 11));
+    return h('div', { class: 'tiles' },
+      tarjetaKpi({ icono: 'sube', etiqueta: 'Margen bruto · media de 3 meses', valor: pctS(mbU, 1), num: mbU, estado: ESTADO.margen_bruto(mbU), mejorSi: 'alto', comparar: c,
+        serie: m12.map(mb3), serieX: m12, formatoSerie: v => pctS(v, 1), umbralSerie: 35,
+        comparaciones: { mes_ant: { ref: mbP, texto: `frente a la media hasta ${nomMes(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025 no tiene el coste de entrega fiable' }, objetivo: { ref: 35, texto: 'frente al 35 % de la regla', modo: 'puntos' } },
+        contexto: `Ingresos menos el equipo de entrega · ${nomMes(ultM)} solo: ${pctS(pygU.ing ? (100 * pygU.mb) / pygU.ing : null, 1)} · enero-agosto: ${pctS(kpi.mb, 1)}`,
+        umbral: UMBRALES.margen_bruto, fuente: { texto: 'cierre de Sofía', href: '#/finanzas/cuadre' }, alPulsar: () => tabs.elegir('resultados'), ir: 'Ver resultados' }),
+      tarjetaKpi({ icono: 'escudo', etiqueta: 'Meses de caja', valor: fmt.num(cj.meses, 1), unidad: 'meses', num: cj.meses, estado: ESTADO.meses_caja(cj.meses), mejorSi: 'alto', comparar: c,
+        comparaciones: { mes_ant: { ref: cj.meses_31ago, texto: 'frente al 31-ago', modo: 'abs', formato: fmtMeses }, anio_ant: { sinDato: 'Sin saldo de bancos de hace un año en la app' }, objetivo: { ref: 2, texto: 'frente al mínimo de 2 meses', modo: 'abs', formato: fmtMeses } },
+        contexto: `Caja de hoy ${fmt.eur(cj.total)} ÷ gasto medio ${fmt.eur(cj.gasto_medio)} al mes, si no entrara nada · el flujo del año es +${fmt.eur(cj.flujo_neto_anio)}`,
+        umbral: UMBRALES.meses_caja, fuente: { texto: 'Holded en vivo', href: '#/finanzas/cobros' }, frescura: fresco(d, 'Holded'), alPulsar: () => document.querySelector('[data-bloque=prevision]')?.scrollIntoView({ behavior: 'smooth' }), ir: 'Ver la caja a 90 días' }),
+      tarjetaKpi({ icono: 'alert', etiqueta: 'Vencido sin cobrar', valor: fmt.eur(imp.vencido ?? a.impagos?.vencido_total), unidad: `${imp.facturas ?? a.impagos?.vencido_n} facturas`, num: imp.vencido ?? a.impagos?.vencido_total,
+        estado: (imp.mas_60 ?? a.impagos?.mas_60) ? 'rojo' : (imp.vencido ?? a.impagos?.vencido_total) ? 'ambar' : 'verde', mejorSi: 'bajo', comparar: c,
+        serie: mesesImp.map(m => evolDe.get(m) ?? null), serieX: mesesImp, formatoSerie: v => fmt.eur(v),
+        comparaciones: { mes_ant: { ref: evolDe.get(mesMas(mImp, -1)), texto: `frente al cierre de ${nomMes(mesMas(mImp, -1))}` }, anio_ant: { ref: evolDe.get(mesMas(mImp, -12)), texto: `frente a ${mesLargo(mesMas(mImp, -12))}` }, objetivo: { sinDato: 'Sin objetivo de vencido: manda la regla de 30 y 60 días' } },
+        contexto: `${imp.mas_60 ?? a.impagos?.mas_60} con más de 60 días (te toca decidir) · días de cobro: ${a.dias_cobro?.valor ?? '—'} con el SEPA`,
+        umbral: UMBRALES.vencido, fuente: { texto: 'Holded en vivo', href: '#/finanzas/impagos' }, alPulsar: () => tabs.elegir('impagos'), ir: 'Ver los impagos' }),
+      tarjetaKpi({ icono: 'euro', etiqueta: 'Cuota recurrente firmada', valor: fmt.eur(cr.actual), unidad: 'al mes', num: cr.actual, estado: planOct ? estadoObjetivo(cr.cuota_mes, planOct) : '', mejorSi: 'alto', comparar: c,
+        serie: mesesCuo.map(m => cuotaDe.get(m) ?? null), serieX: mesesCuo, formatoSerie: v => fmt.eur(v),
+        comparaciones: { mes_ant: { num: cuotaDe.get(mCuota), ref: cuotaDe.get(mesMas(mCuota, -1)), texto: `cuota facturada: ${nomMes(mCuota)} frente a ${nomMes(mesMas(mCuota, -1))}` },
+          anio_ant: { num: cuotaDe.get(mCuota), ref: cuotaDe.get(mesMas(mCuota, -12)), texto: `cuota facturada: frente a ${mesLargo(mesMas(mCuota, -12))}` },
+          objetivo: { num: cr.cuota_mes, ref: planOct, texto: `cuota de ${nomMes(mCuota)} (${fmt.eur(cr.cuota_mes)}) frente al plan (${fmt.eur(planOct)})` } },
+        contexto: `Cuota de ${nomMes(mCuota)} ${fmt.eur(cr.cuota_mes)} con proyectos · facturable ${fmt.eur(cr.facturable)} · ${cr.clientes} clientes · línea: cuota facturada de cada mes`,
+        umbral: UMBRALES.cuota_objetivo, fuente: { texto: 'Airtable de Sofía y Holded', href: '#/finanzas/cobros' } }),
+      tarjetaKpi({ icono: 'eq', etiqueta: 'Peso del equipo sobre ingresos', valor: pctS(pesoU, 1), num: pesoU, estado: ESTADO.peso_equipo(pesoU), mejorSi: 'bajo', comparar: c,
+        serie: m12.map(m => (m >= '2026-01' ? pesoDe(m) : null)), serieX: m12, formatoSerie: v => pctS(v, 1), umbralSerie: 55,
+        comparaciones: { mes_ant: { ref: pesoP, texto: `frente a ${nomMes(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025: el equipo va repartido por ingresos, no es comparable' }, objetivo: { ref: 55, texto: 'frente al 55 %', modo: 'puntos' } },
+        contexto: `${nomMes(ultM)}: ${fmt.eur(eq.coste_equipo_cierre)} de equipo y colaboradores · año: ${pctS(kpi.peso_equipo_anio, 1)} (${fmt.num(100 / (kpi.peso_equipo_anio || 100), 2)} € de ingresos por euro de equipo) · nunca sueldos de una persona`,
+        umbral: UMBRALES.peso_equipo, fuente: { texto: 'cierre de Sofía, solo totales', href: '#/finanzas/cuadre' } }),
+      tarjetaKpi({ icono: 'baja', etiqueta: 'Retención neta de la cuota', valor: pctS(kpi.nrr, 1), num: kpi.nrr, estado: ESTADO.retencion_neta(kpi.nrr), mejorSi: 'alto', comparar: c,
+        serie: nrrS, serieX: mNrr, formatoSerie: v => pctS(v, 1), umbralSerie: 90,
+        comparaciones: { mes_ant: { ref: nrrS.at(-2), texto: 'frente al trimestre anterior (un mes antes)', modo: 'puntos' }, anio_ant: { sinDato: 'Sin la serie de hace un año' }, objetivo: { ref: 90, texto: 'frente al 90 % de RO', modo: 'puntos' } },
+        contexto: 'Cuota de hoy de los clientes que ya estaban hace 12 meses ÷ su cuota de entonces (por trimestres, para que no la deformen los desfases de facturación). Sin clientes nuevos.',
+        nota: 'Fórmula pendiente de confirmar por Tomás (Sofía calculaba 74-80 %).', medible: 'medias', medibleDetalle: 'Fórmula pendiente de confirmar por Tomás',
+        umbral: UMBRALES.retencion_neta, fuente: { texto: 'facturas de Holded, cliente a cliente' } }));
+  };
+  const pintarCifras = c => zonaCifras.replaceChildren(h('div', { class: 'dos iguales' }, cifraQueManda(c), panelCuota), tarjetas(c));
+  cont.append(h('div', { class: 'fila' }, comp), zonaCifras);
+  pintarCifras(comp.valor());
+
+  // ---------------------------------------------------------- 3 · lo que pide tu decisión (nunca se pliega)
   const mesesCaja = cj.meses;
-  const ingSep = (dir.ingresos || []).find(x => x.m === '2026-09');
-  const ingAgo = (dir.ingresos || []).find(x => x.m === '2026-08');
-  const eq = dir.equipo || {};
-  cont.append(tiles([
-    tile({ icono: 'cartera', etiqueta: 'Caja hoy', valor: fmt.eur(cj.total), comparacion: { delta: cj.total - cj.cierre_31ago, unidad: ' €', texto: 'frente al 31-ago' },
-      contexto: 'Sabadell, BBVA, Wise en euros y dólares', medible: 'hoy', frescura: fresco(d, 'Holded'), ir: 'Ver por banco', alPulsar: () => tabs.elegir('cobros') }),
-    tile({ icono: 'escudo', etiqueta: 'Meses de reserva', valor: fmt.num(mesesCaja, 1), unidad: 'meses', estado: mesesCaja >= 2 ? 'verde' : mesesCaja >= 1 ? 'ambar' : 'rojo',
-      contexto: `Si no entrara nada: caja ÷ gasto medio corregido (${fmt.eur(cj.gasto_medio)}/mes) · el flujo del año es +${fmt.eur(cj.flujo_neto_anio)}`, medible: 'hoy', medibleDetalle: cj.texto }),
-    tile({ icono: 'euro', etiqueta: 'Ingresos de septiembre', valor: fmt.eur(ingSep?.total), comparacion: { delta: ingSep && ingAgo ? ((ingSep.total - ingAgo.total) / ingAgo.total) * 100 : null, pct: true, texto: 'frente a agosto' },
-      contexto: `Cuota ${fmt.eur(ingSep?.cuota)} + puntual ${fmt.eur(ingSep?.puntual)} − rectificativas ${fmt.eur(Math.abs(ingSep?.rect || 0))}`, medible: 'hoy', ir: 'Ver mes a mes', alPulsar: () => tabs.elegir('ingresos') }),
-    tile({ icono: 'grafico', etiqueta: 'Margen bruto 2026', valor: pctS(dir.kpi?.mb, 1), estado: dir.kpi?.mb >= 35 ? 'verde' : dir.kpi?.mb >= 25 ? 'ambar' : 'rojo',
-      contexto: 'Verde ≥ 35 % · rojo < 25 %', medible: 'hoy', ir: 'Ver resultados', alPulsar: () => tabs.elegir('resultados') }),
-    tile({ icono: 'eq', etiqueta: 'Peso del equipo sobre ingresos', valor: pctS(eq.peso_ingresos, 1), estado: eq.peso_ingresos <= 55 ? 'verde' : eq.peso_ingresos <= 65 ? 'ambar' : 'rojo',
-      contexto: `${mesLargo(eq.cierre_mes || '2026-08')}: ${fmt.eur(eq.coste_equipo_cierre)} · verde ≤ 55 % (referencia de mercado)`, medible: 'hoy', medibleDetalle: 'Equipo + colaboradores del cierre de Sofía; agregado, sin sueldos' }),
-    tile({ icono: 'baja', etiqueta: 'Retención neta (trimestre)', valor: pctS(dir.kpi?.nrr, 1), estado: dir.kpi?.nrr >= 90 ? 'verde' : dir.kpi?.nrr >= 85 ? 'ambar' : 'rojo',
-      contexto: `Verde ≥ 90 % · rojo < 85 % · bajas al mes ${pctS(dir.kpi?.churn_n, 1)}`, medible: 'medias', medibleDetalle: 'Falta la fórmula única de Sofía (74 % frente a 80 %)' }),
-    tile({ icono: 'alert', etiqueta: 'Recibos vencidos', valor: fmt.eur(a.impagos?.vencido_total), unidad: `${a.impagos?.vencido_n} facturas`, estado: a.impagos?.mas_60 ? 'rojo' : a.impagos?.vencido_n ? 'ambar' : 'verde',
-      contexto: `${a.impagos?.mas_30} con más de 30 días · ${a.impagos?.mas_60} con más de 60 (te toca decidir)`, medible: 'medias', medibleDetalle: '529 movimientos sin conciliar', ir: 'Ver cobros', alPulsar: () => tabs.elegir('cobros') }),
-    tile({ icono: 'users', etiqueta: 'Concentración', valor: pctS(dir.concentracion?.cuota?.uno ?? a.concentracion?.uno, 1), unidad: 'el mayor',
-      estado: (a.concentracion?.uno ?? 0) < 20 ? 'verde' : 'ambar', contexto: `12 meses: el mayor ${pctS(dir.concentracion?.uno, 1)} (${dir.concentracion?.primero}) · 10 mayores ${pctS(dir.concentracion?.diez, 1)}`, medible: 'hoy' }),
-  ]));
-
-  // v3: el beneficio mes a mes va arriba (bloqueBeneficio); aquí, lo que pide decisión
   const incN = (d.cuadre?.incongruencias || []).filter(i => i.gravedad === 'alta').length;
-  cont.append(h('div', {},
-    panel({ titulo: 'Lo que pide tu decisión', icono: 'flag', sub: 'Del dinero, lo que no se arregla solo' },
-      listaLoPrimero([
-        a.impagos?.mas_60 ? { estado: 'rojo', icono: 'alert', motivo: `${a.impagos.mas_60} recibo${a.impagos.mas_60 === 1 ? '' : 's'} con más de 60 días`, detalle: 'A 60 días decides tú: cortar, plan de pago o darlo por perdido.', botones: [h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('cobros') } }, 'Ver')] } : null,
-        (a.firmas_sin_alta || []).length ? { estado: 'rojo', icono: 'doc', motivo: `${a.firmas_sin_alta.length} firmados sin línea en facturación`, detalle: a.firmas_sin_alta.map(x => x.nombre).join(', ') + ': no entran en la cuota que factura Sofía.' } : null,
-        mesesCaja < 2 ? { estado: mesesCaja < 1 ? 'rojo' : 'ambar', icono: 'escudo', motivo: `Caja para ${fmt.num(mesesCaja, 1)} meses si no entrara nada`, detalle: 'Referencia: mínimo 2 meses. El flujo del año es positivo, pero conviene fijar tu colchón.' } : null,
-        (n.beneficio_real ?? 0) < 0 && n.beneficio >= 0 ? { estado: 'ambar', icono: 'doc', motivo: `${mesLargo(n.mes).split(' ')[0]}: ${eurS(n.beneficio)} según facturas, ${eurS(n.beneficio_real)} con el gasto sin factura`, detalle: `Hay ${fmt.eur(n.sin_factura)} de cargos sin factura (techo). Que Sofía los cierre con la conciliación de Holded.` } : null,
-        n.beneficio < 0 ? { estado: 'rojo', icono: 'grafico', motivo: `${mesLargo(n.mes).split(' ')[0]} en pérdidas: ${eurS(n.beneficio)}`, detalle: `Real ${eurS(n.beneficio_real)} con ${fmt.eur(n.sin_factura)} de gasto sin factura.` } : null,
-        eq.peso_ingresos > 65 ? { estado: 'rojo', icono: 'eq', motivo: `El equipo pesa el ${pctS(eq.peso_ingresos, 0)} de los ingresos`, detalle: 'Referencia de mercado: 55 %. Más altas con el mismo equipo o revisar cuotas.' } : null,
-        incN ? { estado: 'rojo', icono: 'capas', motivo: `${incN} ${incN === 1 ? 'cifra que no cuadra' : 'cifras que no cuadran'} entre Holded, el cierre y Airtable`, detalle: 'Con la propuesta de cuál vale y por qué.', botones: [h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('cuadre') } }, 'Ver el cuadre')] } : null,
-      ].filter(Boolean)))));
+  cont.append(panel({ titulo: 'Lo que pide tu decisión', icono: 'flag', sub: 'Del dinero, lo que no se arregla solo' },
+    listaLoPrimero([
+      a.impagos?.mas_60 ? { estado: 'rojo', icono: 'alert', motivo: `${a.impagos.mas_60} recibo${a.impagos.mas_60 === 1 ? '' : 's'} con más de 60 días`, detalle: 'A 60 días decides tú: cortar, plan de pago o darlo por perdido.', botones: [h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('impagos') } }, 'Ver los impagos')] } : null,
+      (a.firmas_sin_alta || []).length ? { estado: 'rojo', icono: 'doc', motivo: `${a.firmas_sin_alta.length} firmados sin línea en facturación`, detalle: a.firmas_sin_alta.map(x => x.nombre).join(', ') + ': no entran en la cuota que factura Sofía.' } : null,
+      mesesCaja < 2 ? { estado: mesesCaja < 1 ? 'rojo' : 'ambar', icono: 'escudo', motivo: `Caja para ${fmt.num(mesesCaja, 1)} meses si no entrara nada`, detalle: 'Referencia de agencias: mínimo 2 meses de gasto fijo (3-4 si hay concentración). El flujo del año es positivo, pero conviene fijar tu colchón.' } : null,
+      (n.beneficio_real ?? 0) < 0 && n.beneficio >= 0 ? { estado: 'ambar', icono: 'doc', motivo: `${nomMes(n.mes)}: ${eurS(n.beneficio)} según facturas, ${eurS(n.beneficio_real)} con el gasto sin factura`, detalle: `Hay ${fmt.eur(n.sin_factura)} de cargos sin factura (techo). Que Sofía los cierre con la conciliación de Holded.` } : null,
+      n.beneficio < 0 ? { estado: 'rojo', icono: 'grafico', motivo: `${nomMes(n.mes)} en pérdidas: ${eurS(n.beneficio)}`, detalle: `Real ${eurS(n.beneficio_real)} con ${fmt.eur(n.sin_factura)} de gasto sin factura.` } : null,
+      eq.peso_ingresos > 65 ? { estado: 'rojo', icono: 'eq', motivo: `El equipo pesa el ${pctS(eq.peso_ingresos, 0)} de los ingresos`, detalle: 'Referencia de agencias: 55 %. Más altas con el mismo equipo o revisar las rebajas de cuota (la mayor fuga, abajo).' } : null,
+      kpi.nrr ? { estado: 'ambar', icono: 'baja', motivo: 'Fijar la fórmula de la retención neta', detalle: `Propuesta: cuota de hoy de los clientes de hace 12 meses ÷ su cuota de entonces (hoy ${pctS(kpi.nrr, 1)}). Sofía la calculaba en 74-80 %: una sola fórmula antes de colorearla en todas las pantallas.` } : null,
+      incN ? { estado: 'rojo', icono: 'capas', motivo: `${incN} ${incN === 1 ? 'cifra que no cuadra' : 'cifras que no cuadran'} entre Holded, el cierre y Airtable`, detalle: 'Con la propuesta de cuál vale y por qué.', botones: [h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('cuadre') } }, 'Ver el cuadre')] } : null,
+    ].filter(Boolean).slice(0, 7))));
+
+  // ---------------------------------------------------------- 4 · el porqué
+  cont.append(separador('El porqué de las cifras'));
+  const plan = { ing: pygU.plan_ing, gas: pygU.plan_gas, res: pygU.plan_res ?? n.plan_res };
+  const difIng = (pygU.ing ?? 0) - (plan.ing ?? 0), difGas = (plan.gas ?? 0) - (pygU.gas ?? 0);
+  cont.append(h('div', { class: 'dos iguales' },
+    panel({ titulo: `Cuenta de ${nomMes(ultM)} en cascada`, icono: 'capas', sub: 'Ingresos − equipo de entrega = margen bruto − resto de gastos = beneficio' },
+      h('div', { class: 'cuerpo pila' }, cascada({ formato: v => fmt.eur(v), pasos: [
+        { texto: 'Ingresos', valor: pygU.ing, tipo: 'total' }, { texto: 'Equipo de entrega', valor: -(pygU.entrega || 0) },
+        { texto: 'Margen bruto', valor: pygU.mb, tipo: 'total' }, { texto: 'Resto de gastos', valor: -(pygU.estructura || 0) },
+        { texto: 'Beneficio', valor: pygU.bai, tipo: 'total' }] }),
+        h('p', { class: 'kpi-pie' }, h('span', {}, 'Cómo se dibuja: '), enlaceFuente(FUENTES.pigment.href, FUENTES.pigment.fuente), h('span', {}, 'Dato: '), enlaceFuente('#/finanzas/cuadre', 'cierre de Sofía')))),
+    panel({ titulo: `Del plan al real · ${nomMes(ultM)}`, icono: 'flag', sub: 'Verde: lo que salió mejor que el plan; rojo: lo que salió peor' },
+      h('div', { class: 'cuerpo pila' }, cascada({ formato: v => fmt.eur(v), pasos: [
+        { texto: 'Plan del mes', valor: plan.res, tipo: 'total' },
+        { texto: difIng >= 0 ? 'Más ingresos' : 'Menos ingresos', valor: difIng },
+        { texto: difGas >= 0 ? 'Menos gasto' : 'Más gasto', valor: difGas },
+        { texto: 'Real', valor: pygU.bai, tipo: 'total' }] }),
+        h('p', { class: 'sub' }, `Plan: ${fmt.eur(plan.ing)} de ingresos y ${fmt.eur(plan.gas)} de gasto · real: ${fmt.eur(pygU.ing)} y ${fmt.eur(pygU.gas)}.`)))));
+
+  cont.append(bloquePuente(dir, ctx));
+
+  const prev = puntosPrevisionCaja({ caja: cj.total, fecha: String(a.caja?.fecha || ctx.hoy || '').slice(0, 10), gastoMedio: cj.gasto_medio,
+    cobroPendiente: Math.max(0, (a.cuota_tres?.facturada || 0) - (a.cuota_tres?.cobrada || 0)), cuotaMes: cr.actual, tasaCobro: (a.cuota_tres?.cobrado_pct_sep ?? 100) / 100 });
+  const minimo = 2 * (cj.gasto_medio || 0);
+  const bajo = prev.puntos.filter(p => p.saldo < minimo).length;
+  const panelCaja = panel({ titulo: 'Caja a 90 días', icono: 'cartera', sub: `Estimación con el mínimo de 2 meses de gasto (${fmt.eur(minimo)}): ${bajo} de ${prev.puntos.length} días por debajo` },
+    h('div', { class: 'cuerpo pila' },
+      previsionCaja({ puntos: prev.puntos, minimo, eventos: prev.eventos, formato: v => fmt.eur(v), textoMinimo: `Mínimo: 2 meses de gasto (${fmt.eur(minimo)})` }),
+      h('p', { class: 'kpi-umbral' }, h('span', {}, `Umbral: ${UMBRALES.meses_caja.texto}`), ...UMBRALES.meses_caja.fuentes.map(f => [' · ', enlaceFuente(f.href, f.fuente)]),
+        ' · Cómo se dibuja: ', enlaceFuente(FUENTES.quickbooks_caja.href, FUENTES.quickbooks_caja.fuente)),
+      h('div', { class: 'fila' },
+        h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('cobros') } }, icono('cartera', { clase: 's' }), 'Ver cobros pendientes'),
+        h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('impagos') } }, icono('alert', { clase: 's' }), 'Reclamar lo vencido')),
+      notaSupuestos(prev.supuestos)));
+  panelCaja.dataset.bloque = 'prevision';
+  cont.append(panelCaja);
+
+  const tramos = d.impagos?.tramos || (a.impagos?.tramos || []).filter(t => t.tramo !== 'Sin vencer');
+  const estT = t => (/^0-30/.test(t) ? 'gris' : /31-60/.test(t) ? 'ambar' : /61-90/.test(t) ? 'rojo-claro' : 'rojo');
+  const t3 = a.cuota_tres || {};
+  const pesoX = (cu.equipo_mes || []).map(x => x.m).filter(m => porMes.get(m));
+  cont.append(h('div', { class: 'dos iguales' },
+    panel({ titulo: 'Cobros por antigüedad', icono: 'alert', sub: 'Lo vencido sin cobrar, por días de retraso (0-30 gris, 31-60 ámbar, 61-90 rojo claro, más de 90 rojo)' },
+      h('div', { class: 'cuerpo pila' },
+        barraApilada({ etiqueta: 'Vencido por antigüedad', formato: v => fmt.eur(v), partes: tramos.map(t => ({ valor: t.importe, texto: `${t.tramo} · ${fmt.plural(t.n, 'factura')}`, estado: estT(t.tramo) })) }),
+        h('p', { class: 'sub' }, `Cuota cobrada en ${nomMes(mesMas(t3.mes || mCuota, -1))}: ${fmt.pct(t3.cobrado_pct_sep)} el día 10 (verde ≥ 95 %, rojo < 85 %, regla de RO). La de ${nomMes(t3.mes || mCuota)} entra con el cargo SEPA del día 2.`),
+        h('p', { class: 'kpi-pie' }, h('span', {}, 'Cómo se dibuja: '), enlaceFuente(FUENTES.quickbooks_tramos.href, FUENTES.quickbooks_tramos.fuente),
+          h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('impagos') } }, icono('alert', { clase: 's' }), 'Reclamar en Impagos')))),
+    panel({ titulo: 'Peso del equipo, mes a mes', icono: 'eq', sub: 'Coste del equipo y colaboradores ÷ ingresos · 2025 en gris (estimado) · línea roja: 55 %' },
+      h('div', { class: 'cuerpo pila' },
+        grafico({ x: pesoX, formatoX: ejeMes, alto: 200, formato: v => pctS(v, 0), etiquetaUltimo: false, umbral: { y: 55, texto: '55 %' },
+          barras: { nombre: 'Peso del equipo', y: pesoX.map(m => { const e = eqDe.get(m), b = porMes.get(m); return e && b?.ing ? Math.round((1000 * e.usado) / b.ing) / 10 : null; }), formato: v => pctS(v, 1),
+            clase: (i, v) => (porMes.get(pesoX[i])?.estimado || eqDe.get(pesoX[i])?.estado === 'provisional' ? 'est' : v > 65 ? 'neg' : v > 55 ? 'amb' : 'pos'),
+            leyenda: [{ nombre: '≤ 55 %', clase: 'pos' }, { nombre: '55-65 %', clase: 'amb' }, { nombre: '> 65 %', clase: 'neg' }, { nombre: 'Estimado o sin cerrar', clase: 'est' }] } }),
+        h('p', { class: 'kpi-umbral' }, h('span', {}, `Umbral: ${UMBRALES.peso_equipo.texto}`), ' · ', enlaceFuente(FUENTES.ami_personal.href, FUENTES.ami_personal.fuente)),
+        h('div', { class: 'fila' }, h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('resultados') } }, icono('eq', { clase: 's' }), 'Ver el coste del equipo por área'))))));
+
+  const bb = bloqueBeneficio(ctx, d.cuadre); if (bb) cont.append(bb);
+  const bp = bloquePeriodo(ctx, d, { tomas: true }); if (bp) cont.append(bp);
+  cont.append(fuentesAlPie(['baker', 'ami', 'ami_personal', 'parakeeto', 'scoro', 'promethean', 'saascapital', 'chartmogul_ret', 'sakas_rot', 'databox', 'pmcm', 'quickbooks_caja', 'quickbooks_tramos', 'chartmogul_mov', 'pigment', 'baremetrics']));
+}
+
+/** «Pedir a Mili que revise las rebajas»: acción interna a la cola (simulada), sin «¿Seguro?»: se hace y se puede deshacer
+ *  (patrón «Hecho · Deshacer»; cuando exista modulos/_deshacer.js del carril U1, este botón pasa a usarlo). */
+function pedirRevisionRebajas(ctx, S) {
+  const caja = h('span', { class: 'fila' });
+  const pintar = hecho => caja.replaceChildren(hecho
+    ? h('span', { class: 'estado', role: 'status' }, icono('ok', { clase: 's' }), ' Pedido a Mili (simulado) · ', h('button', { type: 'button', class: 'bt mini', on: { click: async () => {
+      try { await encolar(ctx, { herramienta: 'app', tipo: 'revisar_rebajas_deshecho', objeto: 'rebajas_cuota', texto: 'Deshecho: revisar las rebajas de cuota' }); } catch { /* ver como */ } pintar(false); } } }, 'Deshacer'))
+    : h('button', { type: 'button', class: 'bt mini', 'aria-disabled': ctx.soloLectura ? 'true' : null, title: ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : null, on: { click: async () => {
+      if (ctx.soloLectura) return avisoFlotante('Estás en «ver como»: solo lectura');
+      try { await encolar(ctx, { herramienta: 'app', tipo: 'revisar_rebajas', objeto: 'rebajas_cuota', texto: `Revisar con los accounts las rebajas de cuota: ${pctS(S.rebajas_pct, 1)} al mes, −${fmt.eur(S.rebajas_12)} en 12 meses. ¿Reales o ruido?`, vista_previa: { para: 'Mili', aviso: 'en su Mi día' } }); pintar(true); }
+      catch (e) { avisoFlotante('No se pudo: ' + e.message, { icono: 'alert' }); } } } }, icono('users', { clase: 's' }), 'Pedir a Mili que lo revise con los accounts'));
+  pintar(false);
+  return caja;
+}
+
+/** Puente de la cuota (48 §4.1-4.2): cascada del mes elegido (últimos 6), movimientos de 12 meses con el mes en curso rayado y
+ *  la fuga a la vista (las rebajas pesan más que las bajas). Mismo puente que la tabla de «Ingresos y clientes» (cuadra al euro). */
+function bloquePuente(dir, ctx) {
+  const P = dir.puente || [];
+  if (P.length < 2) return '';
+  const ab = dir.altas_bajas || [];
+  const kpi = dir.kpi || {};
+  const ult6 = P.slice(-6);
+  const zona = h('div', { class: 'pila' });
+  const pintarMes = m => {
+    const x = P.find(z => z.m === m) || P.at(-1);
+    zona.replaceChildren(cascada({ zoom: true, formato: v => fmt.eur(v), titulo: `${mesLargo(x.m)} · ${x.cuadra ? 'cuadra al euro' : 'no cuadra'}`, pasos: [
+      { texto: `Cuota de ${nomMes(mesMas(x.m, -1))}`, valor: x.ini, tipo: 'total' }, { texto: 'Altas', valor: x.altas || 0 }, { texto: 'Subidas', valor: x.subidas || 0, estado: 'sube2' },
+      { texto: 'Rebajas', valor: x.bajadas || 0, estado: 'ambar' }, { texto: 'Bajas', valor: x.bajas || 0 }, { texto: `Cuota de ${nomMes(x.m)}`, valor: x.fin, tipo: 'total' }] }),
+    h('p', { class: 'sub' }, [(x.qa || []).length ? `Altas: ${x.qa.slice(0, 4).map(q => q[0]).join(', ')}${x.qa.length > 4 ? ` y ${x.qa.length - 4} más` : ''}.` : '', (x.qb || []).length ? ` Bajas: ${x.qb.map(q => q[0]).join(', ')}.` : ''].join('')));
+  };
+  const chips = chipsFiltro({ opciones: ult6.map(x => ({ valor: x.m, texto: nomMes(x.m) })), valor: P.at(-1).m, clave: 'finanzas-puente-mes', etiqueta: 'Mes', alCambiar: pintarMes });
+  pintarMes(chips.valor());
+  const d12 = P.slice(-12);
+  const curso = ab.find(z => z.curso && z.m > P.at(-1).m);
+  const x = [...d12.map(z => z.m), ...(curso ? [curso.m] : [])];
+  const S = puenteCuota(P, 6);
+  const sakas = (kpi.churn_n ?? 0) <= 1.8 ? 'verde' : 'rojo';
+  return panel({ titulo: 'De dónde sale el cambio de la cuota', icono: 'capas', sub: 'Cuota del mes anterior + altas + subidas − rebajas − bajas = cuota del mes. Las rebajas, en ámbar: hoy son la mayor fuga.' },
+    h('div', { class: 'cuerpo pila' },
+      chips, zona,
+      h('div', { class: 'titulo-seccion' }, icono('grafico', { clase: 's' }), 'Los 12 últimos meses'),
+      barrasGanadoPerdido({ x, formato: v => fmt.eur(v), formatoX: ejeMes, enCurso: curso ? 1 : 0, notaCurso: curso ? `${nomMes(curso.m)} en curso: solo las altas del libro` : undefined,
+        ganado: [{ nombre: 'Altas', clase: 'sube', y: [...d12.map(z => z.altas || 0), ...(curso ? [curso.entra || 0] : [])] }, { nombre: 'Subidas', clase: 'sube2', y: [...d12.map(z => z.subidas || 0), ...(curso ? [0] : [])] }],
+        perdido: [{ nombre: 'Rebajas', clase: 'ambar', y: [...d12.map(z => z.bajadas || 0), ...(curso ? [0] : [])] }, { nombre: 'Bajas', clase: 'baja', y: [...d12.map(z => z.bajas || 0), ...(curso ? [curso.sale || 0] : [])] }],
+        detalle: i => { const z = d12[i]; return z ? [`Cuota al cierre: ${fmt.eur(z.fin)}`] : ['Estimado: en curso']; } }),
+      h('div', { class: 'fuga', role: 'group', 'aria-label': 'La fuga de la cuota, media de los 6 últimos meses' },
+        h('div', { class: 'mayor' }, h('span', {}, 'Rebajas de cuota · al mes'), h('b', {}, pctS(S.rebajas_pct, 1)), h('span', {}, `12 meses: −${fmt.eur(S.rebajas_12)} · la mayor fuga`)),
+        h('div', {}, h('span', {}, 'Bajas de clientes · al mes'), h('b', {}, pctS(S.bajas_pct, 1)), h('span', {}, `12 meses: −${fmt.eur(S.bajas_12)}`)),
+        h('div', {}, h('span', {}, 'Subidas · al mes'), h('b', {}, pctS(S.subidas_pct, 1)), h('span', {}, `12 meses: +${fmt.eur(S.subidas_12)}`)),
+        h('div', {}, h('span', {}, 'Pérdida bruta · al mes'), h('b', {}, pctS(S.perdida_pct, 1)), h('span', {}, 'rebajas + bajas sobre la cuota al empezar el mes'))),
+      h('p', { class: 'sub' }, `Media de ${textoMeses(S.meses)} sobre la cuota con la que empieza cada mes. Antes de nada: mirar si las rebajas son reales (descuentos, cambios de plan) o ruido (prorrateos, proyectos que entran y salen del recurrente).`),
+      h('div', { class: 'fila' },
+        h('button', { type: 'button', class: 'bt mini', on: { click: () => tabs.elegir('ingresos') } }, icono('capas', { clase: 's' }), 'Ver por qué, mes a mes'),
+        pedirRevisionRebajas(ctx, S)),
+      h('p', { class: 'kpi-umbral ref' }, h('span', {}, `Referencia, no colorea: ${UMBRALES.perdida_cuota.texto}`), ' · ', enlaceFuente(FUENTES.saascapital.href, FUENTES.saascapital.fuente)),
+      h('p', { class: 'kpi-umbral' }, chipEstado(sakas, `Bajas de clientes: ${pctS(kpi.churn_n, 1)} al mes`), h('span', {}, ` Umbral: ${UMBRALES.bajas_mes.texto}`), ' · ', enlaceFuente(FUENTES.sakas_rot.href, FUENTES.sakas_rot.fuente)),
+      h('p', { class: 'kpi-pie' }, h('span', {}, 'Cómo se dibuja: '), enlaceFuente(FUENTES.chartmogul_mov.href, FUENTES.chartmogul_mov.fuente), enlaceFuente(FUENTES.baremetrics.href, FUENTES.baremetrics.fuente), h('span', {}, 'Dato: puente de Holded')),
+      h('details', { class: 'que-es' }, h('summary', {}, 'Ver el puente mes a mes en tabla (12 meses)'),
+        tablaDensa({ filas: [...d12].reverse(), apilable: true, orden: null, columnas: [
+          { clave: 'm', titulo: 'Mes', principal: true, celda: z => mesLargo(z.m) },
+          { clave: 'ini', titulo: 'Al empezar', num: true, celda: z => fmt.eur(z.ini) },
+          { clave: 'altas', titulo: 'Altas', num: true, celda: z => (z.altas ? `+${fmt.eur(z.altas)}` : '—') },
+          { clave: 'subidas', titulo: 'Subidas', num: true, celda: z => (z.subidas ? `+${fmt.eur(z.subidas)}` : '—') },
+          { clave: 'bajadas', titulo: 'Rebajas', num: true, celda: z => (z.bajadas ? eurS(z.bajadas) : '—') },
+          { clave: 'bajas', titulo: 'Bajas', num: true, celda: z => (z.bajas ? eurS(z.bajas) : '—') },
+          { clave: 'fin', titulo: 'Al cierre', num: true, celda: z => fmt.eur(z.fin) },
+          { clave: 'cuadra', titulo: '¿Cierra?', celda: z => chipEstado(z.cuadra ? 'verde' : 'rojo', z.cuadra ? 'sí' : 'no') }] }))));
 }
 
 function pintarIngresos(cont, ctx, d) {
@@ -713,7 +924,7 @@ async function pintar(cont, ctx) {
       { id: 'dia', texto: 'Mi día administrativo', icono: 'hoy' },
       { id: 'impagos', texto: 'Impagos', icono: 'alert', cuenta: nImp, cuentaEstado: 'rojo' },
       { id: 'cuadre', texto: 'Cuadre de facturación', icono: 'capas', cuenta: nInc, cuentaEstado: 'ambar' },
-    ], clave: 'finanzas-sofia', etiqueta: 'Finanzas', pintar: (id, z) => {
+    ], clave: 'finanzas-sofia', etiqueta: 'Finanzas', unaFila: true, pintar: (id, z) => {
       z.classList.add('pila');
       if (id === 'impagos') { pintarImpagos(z, ctx, d.impagos, { acciones }); z.append(pieFuentes(d.impagos || d)); plegarSecundarias(z, { titulos: /^(Por antigüedad|Vencido sin cobrar)/ }); return; }
       if (id === 'cuadre') { pintarCuadre(z, ctx, d.cuadre, { completo: false }); z.append(pieFuentes(d.cuadre || d)); plegarSecundarias(z, { desde: 1 }); return; }
@@ -739,14 +950,15 @@ async function pintar(cont, ctx) {
     { id: 'impagos', texto: 'Impagos', icono: 'alert', cuenta: nImp, cuentaEstado: 'rojo' },
     { id: 'cobros', texto: 'Cobros y caja', icono: 'cartera', cuenta: vencidas + (d.admin.firmas_sin_alta || []).length, cuentaEstado: 'rojo' },
     { id: 'cuadre', texto: 'Cuadre de fuentes', icono: 'capas', cuenta: nInc, cuentaEstado: 'ambar' },
-  ], clave: 'finanzas', etiqueta: 'Finanzas', pintar: (id, z) => {
+  ], clave: 'finanzas', etiqueta: 'Finanzas', unaFila: true, pintar: (id, z) => {
     z.classList.add('pila');
     ({ resumen: pintarResumen, ingresos: pintarIngresos, top: pintarTop, resultados: pintarResultados,
       impagos: (c, x) => pintarImpagos(c, x, d.impagos, { acciones }),
       cuadre: (c, x) => pintarCuadre(c, x, d.cuadre, { completo: true }),
       cobros: (c, x, dd2) => pintarCobros(c, x, dd2, { tomas: true, objetivo: ctx.params?.[0] === 'cobros' ? ctx.params[1] : null }) })[id](z, ctx, d);
     z.append(pieFuentes(id === 'cuadre' ? d.cuadre || d : id === 'impagos' ? d.impagos || d : d));
-    plegarSecundarias(z, id === 'cobros' ? { titulos: PLEGAR_COBROS } : id === 'impagos' ? { titulos: /^(Por antigüedad|Vencido sin cobrar)/ } : { desde: 2 });   // V2-E (M17): plegado común en el móvil
+    plegarSecundarias(z, id === 'cobros' ? { titulos: PLEGAR_COBROS } : id === 'impagos' ? { titulos: /^(Por antigüedad|Vencido sin cobrar)/ }
+      : id === 'resumen' ? { titulos: PLEGAR_RESUMEN } : { desde: 2 });   // V2-E (M17): plegado común en el móvil
   } });
   cont.append(h('div', { class: 'fila' }, h('a', { class: 'bt pri', href: '#/panel-direccion' }, icono('dir'), 'Ver el panel de dirección completo'),
     h('span', { class: 'sub' }, 'Empresa, captación de RO y clientes del panel de resultados.')), tabs);
@@ -756,6 +968,9 @@ async function pintar(cont, ctx) {
 let tabs = { elegir: () => {} };
 // V2-E (M17): en Cobros, lo que NO pide acción (impagos, firmados sin alta, devueltos y Meta se quedan abiertos)
 const PLEGAR_COBROS = /^(Calendario administrativo|Cuota de octubre|Bajas y cambios|Caja por banco|En el periodo|Fiabilidad)/;
+// Paneles v4: en el Resumen se pliega el porqué (gráficos e históricos); la cifra que manda, la cuota, las tarjetas, «Lo que pide
+// tu decisión» y los cobros por antigüedad (impagos) se quedan abiertos.
+const PLEGAR_RESUMEN = /^(Cuenta de|Del plan al real|De dónde sale|Caja a 90|Peso del equipo|Beneficio mes a mes|En el periodo)/;
 
 export default {
   id: 'finanzas',

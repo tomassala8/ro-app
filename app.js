@@ -473,8 +473,9 @@ const ETIQUETA_CONTADOR = {
   produccion: n => `${n} ${n === 1 ? 'tarea vencida' : 'tareas vencidas'} en tu mano`,
   decisiones: n => `${n} ${n === 1 ? 'decisión espera' : 'decisiones esperan'} tu sí`,
 };
-// V3a (44 §2.1): un solo nombre para el nivel: Crítico · Atención · Bien («cliente crítico», nunca «en crítico»)
-const COLOR_GRAVEDAD = { critico: ['rojo', 'crítico'], atencion: ['ambar', 'atención'], bien: ['verde', 'bien'] };
+// V3a (44 §2.1) + glosario del coordinador (3-oct): los tres niveles se llaman Crítico · Vigilar · Bien en toda la app
+// (el dato interno sigue siendo critico/atencion/bien); «cliente crítico», nunca «en crítico».
+const COLOR_GRAVEDAD = { critico: ['rojo', 'crítico'], atencion: ['ambar', 'vigilar'], bien: ['verde', 'bien'] };
 function idsMisClientes() {
   if (Array.isArray(estado.fijados)) return estado.fijados;
   const g = { critico: 0, atencion: 1, bien: 2 };

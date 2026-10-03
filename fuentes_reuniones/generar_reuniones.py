@@ -400,6 +400,9 @@ def main():
             continue
         f = c['ficha'].get('fuentes', {}) if c['ficha'] else {}
         reu = (f.get('reuniones') or {}).get('datos') or {}
+        # 3-oct: la capa E1 ya da la vista consolidada de este módulo; el CRM y Fathom en bruto (lo que se lee aquí)
+        # viajan en «crm_panel». Leer la vista consolidada haría un bucle (Reuniones leyéndose a sí mismo).
+        reu = reu.get('crm_panel') if isinstance(reu.get('crm_panel'), dict) else reu
         cart = (f.get('cartera') or {}).get('datos') or {}
         pn = panel.get(cid) or {}
         hist = [x for x in reu.get('historial') or [] if (x.get('fecha') or '')[:7] == mes_pasado]

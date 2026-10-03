@@ -8,6 +8,8 @@
 //  · Todo lo que se pulsa es <button> o <a> (teclado gratis). Nada de div con onclick.
 //  · Catálogo vivo con ejemplos: abre la app como Tomás → Sistema → Componentes.
 
+import { telefono as telefonoComun } from './modulos/_telefono.js';   // regla común de teléfonos (3-oct)
+
 /**
  * h(etiqueta, atributos, ...hijos) · crea elementos.
  *  atributos: { class, text, html: NO existe a propósito, on: {click: fn}, data-*, aria-*, ... }
@@ -285,6 +287,8 @@ export function cuentagotas(valores, umbral = 14, { mejorSi = 'bajo' } = {}) {
 /** chipEstado('rojo', 'Sin responder') · estados: verde | ambar | rojo | gris | azul */
 export function chipEstado(estado = 'gris', texto, { punto = true } = {}) {
   if (estado === 'ambar' && typeof texto === 'string' && /\bcrític/i.test(texto)) estado = 'rojo';   // V3a (44 §2.1): «Crítico» nunca en ámbar
+  // Glosario del coordinador (3-oct, 44 §2.1): el segundo nivel se llama «Vigilar» en toda la app (el dato sigue siendo «atencion»)
+  if (typeof texto === 'string' && /^\s*atención\s*$/i.test(texto)) texto = /^\s*A/.test(texto) ? 'Vigilar' : 'vigilar';
   return h('span', { class: `chip ${estado}${punto ? '' : ' sin-punto'}` }, texto);
 }
 
@@ -885,8 +889,12 @@ export function grafico(o = {}) {
     while (idx.length > 2 && !caben(idx.at(-2), idx.at(-1))) idx.splice(-2, 1);
     for (let k = idx.length - 2; k > 0; k--) if (!caben(idx[k - 1], idx[k])) idx.splice(k, 1);
     for (const i of idx) {
-      const anchor = barras ? 'middle' : i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
-      const t = s('text', { x: X(i), y: H - 6, 'text-anchor': anchor }); t.textContent = fx(x[i]); svg.append(t);
+      let anchor = barras ? 'middle' : i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle';
+      let xi = X(i);
+      // 44 · I9 (3-oct): con barras, la primera y la última etiqueta centradas se salían del dibujo («29 se»): se pegan al borde
+      if (barras && xi + anchoTxt(i) / 2 > W - 2) { anchor = 'end'; xi = W - 2; }
+      if (barras && xi - anchoTxt(i) / 2 < 2) { anchor = 'start'; xi = 2; }
+      const t = s('text', { x: xi, y: H - 6, 'text-anchor': anchor }); t.textContent = fx(x[i]); svg.append(t);
     }
     // barras (escala propia: se dibujan a su altura relativa, sin eje)
     for (const b of [barras, barras2].filter(Boolean)) {
@@ -905,7 +913,13 @@ export function grafico(o = {}) {
     if (o.umbral && Number.isFinite(o.umbral.y)) {
       const y = Y(o.umbral.y);
       svg.append(s('line', { class: 'umbral-l', x1: pl, x2: W - pr, y1: y, y2: y }));
-      if (o.umbral.texto) { const t = s('text', { class: 'umbral-t', x: W - pr, y: y - 6, 'text-anchor': 'end' }); t.textContent = o.umbral.texto; svg.append(t); }
+      if (o.umbral.texto) {
+        // 44 · I9: si el valor final de la primera línea cae a menos de 18 px del umbral, el texto del umbral va a la izquierda
+        const s0 = series.find(sr => !sr.ant && !sr.escalaPropia);
+        const ult = s0 ? [...s0.y].reverse().find(v => typeof v === 'number' && Number.isFinite(v)) : undefined;
+        const choca = ult !== undefined && o.etiquetaUltimo !== false && Math.abs(Y(ult) - y) < 18;
+        const t = s('text', { class: 'umbral-t', x: choca ? pl + 4 : W - pr, y: y - 6, 'text-anchor': choca ? 'start' : 'end' }); t.textContent = o.umbral.texto; svg.append(t);
+      }
     }
     // líneas
     series.forEach((sr, k) => {
@@ -1905,20 +1919,12 @@ export function tablaApilable(o) {
 
 // --------------------------------------------------- contacto: llamar, WhatsApp, correo
 /**
- * normalizarTelefono('600 11 22 33') → { intl: '34600112233', mostrar: '+34 600 11 22 33' } | null.
- * Nueve cifras que empiezan por 6, 7, 8 o 9 → España (+34).
+ * normalizarTelefono('6XX XX XX XX') → { e164: '+346XXXXXXXX', intl: '346XXXXXXXX', mostrar: '+34 6XX XX XX XX',
+ *   tel, sip, wa, extension } | null. La regla vive en modulos/_telefono.js (gemelo de telefono.py, 3-oct):
+ *   guardar y marcar con «+» y sin espacios; enseñar con espacios; lo que no cuadra → null (no se marca).
  */
 export function normalizarTelefono(t) {
-  if (!t) return null;
-  let d = String(t).replace(/[^\d+]/g, '');
-  if (d.startsWith('00')) d = d.slice(2);
-  d = d.replace(/^\+/, '');
-  if (/^[6789]\d{8}$/.test(d)) d = '34' + d;
-  if (d.length < 9 || d.length > 15) return null;
-  const mostrar = d.startsWith('34') && d.length === 11
-    ? `+34 ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7, 9)} ${d.slice(9)}`
-    : `+${d}`;
-  return { intl: d, mostrar };
+  return telefonoComun(t);
 }
 
 /** avisoFlotante('Copiado') · aviso breve abajo (2,4 s), leído por lectores de pantalla. */
@@ -1954,16 +1960,16 @@ export function botonesContacto(o) {
   const corto = quien.split(/\s+/)[0] || 'cliente';
   if (o.modo === 'cabecera') {
     return h('div', { class: 'contacto-cab' },
-      tel ? h('a', { class: 'bt pri', href: `sip:${tel.intl}@sip.zadarma.com`, title: `Llamar a ${quien || tel.mostrar} con Zadarma` }, icono('phone'), `Llamar a ${corto}`) : null,
-      tel && o.whatsapp !== false ? h('a', { class: 'bt wa', href: `https://wa.me/${tel.intl}`, target: '_blank', rel: 'noopener', title: `WhatsApp a ${quien || tel.mostrar}` }, icono('wa'), 'WhatsApp') : null,
+      tel ? h('a', { class: 'bt pri', href: tel.sip, title: `Llamar a ${quien || tel.mostrar} con Zadarma` }, icono('phone'), `Llamar a ${corto}`) : null,
+      tel && o.whatsapp !== false ? h('a', { class: 'bt wa', href: tel.wa, target: '_blank', rel: 'noopener', title: `WhatsApp a ${quien || tel.mostrar}` }, icono('wa'), 'WhatsApp') : null,
       o.correo ? h('a', { class: 'bt', href: `mailto:${o.correo}`, title: `Escribir a ${o.correo}` }, icono('mail'), 'Correo') : null,
       !tel && !o.correo ? h('span', { class: 'sub' }, 'Sin teléfono ni correo de contacto') : null);
   }
   const filas = [];
   if (tel) filas.push(h('div', { class: 'contacto' },
-    h('a', { class: 'main', href: `sip:${tel.intl}@sip.zadarma.com`, title: 'Llamar con Zadarma' }, icono('phone'), h('span', {}, quien ? [h('b', {}, quien), ' · '] : null, tel.mostrar)),
-    o.whatsapp !== false ? h('a', { class: 'sq wa', href: `https://wa.me/${tel.intl}`, target: '_blank', rel: 'noopener', 'aria-label': `WhatsApp a ${quien || tel.mostrar}`, title: 'Abrir WhatsApp' }, icono('wa')) : null,
-    h('button', { type: 'button', class: 'sq', 'aria-label': `Copiar el teléfono ${tel.mostrar}`, title: 'Copiar teléfono', on: { click: () => copiar(tel.mostrar, 'Teléfono copiado') } }, icono('copy'))));
+    h('a', { class: 'main', href: tel.sip, title: 'Llamar con Zadarma' }, icono('phone'), h('span', {}, quien ? [h('b', {}, quien), ' · '] : null, tel.mostrar)),
+    o.whatsapp !== false ? h('a', { class: 'sq wa', href: tel.wa, target: '_blank', rel: 'noopener', 'aria-label': `WhatsApp a ${quien || tel.mostrar}`, title: 'Abrir WhatsApp' }, icono('wa')) : null,
+    h('button', { type: 'button', class: 'sq', 'aria-label': `Copiar el teléfono ${tel.mostrar}`, title: 'Copiar teléfono', on: { click: () => copiar(tel.e164, 'Teléfono copiado') } }, icono('copy'))));
   if (o.correo) filas.push(h('div', { class: 'contacto' },
     h('a', { class: 'main', href: `mailto:${o.correo}`, title: 'Escribir correo' }, icono('mail'), h('span', {}, !tel && quien ? [h('b', {}, quien), ' · '] : null, o.correo)),
     h('button', { type: 'button', class: 'sq', 'aria-label': `Copiar el correo ${o.correo}`, title: 'Copiar correo', on: { click: () => copiar(o.correo, 'Correo copiado') } }, icono('copy'))));
@@ -2080,6 +2086,10 @@ export function formatoTexto(t) {
     // V3a (44 §2.1): «cliente en crítico» → «cliente crítico», «3 en crítico» → «3 críticos» (un solo nombre: Crítico)
     .replace(/\b(clientes?|cuentas?)\s+en\s+crítico\b/gi, (_, n) => `${n} ${/s$/i.test(n) ? (/^c[uU]/.test(n) ? 'críticas' : 'críticos') : (/^c[uU]/.test(n) ? 'crítica' : 'crítico')}`)
     .replace(/\b(\d+)\s+en\s+crítico\b/g, (_, n) => `${n} ${Number(n) === 1 ? 'crítico' : 'críticos'}`)
+    // Glosario del coordinador (3-oct): Crítico · Vigilar · Bien. «cliente en atención» → «cliente a vigilar», «3 en atención»
+    // → «3 a vigilar», «crítico · atención · bien» → «crítico · vigilar · bien». «30 de atención» (salud) no se toca.
+    .replace(/\b(clientes?|cuentas?|\d+)\s+en\s+atención\b/gi, '$1 a vigilar')
+    .replace(/\b(crítico|Crítico|CRÍTICO)(\s*(?:,|·|\/|y|o)\s*)(atención|Atención|ATENCIÓN)\b/g, (_, c, sep, a) => `${c}${sep}${a[0] === 'a' ? 'vigilar' : a[1] === 'T' ? 'VIGILAR' : 'Vigilar'}`)
     // dos puntos sueltos y huecos vacíos: «Propuesta : verde» → «Propuesta: verde»
     .replace(/\s+:\s/g, ': ')
     .replace(/^\s*:\s*/, '')
@@ -2131,4 +2141,488 @@ export function nombrePersona(id, personas = []) {
   if (!id) return '—';
   const p = personas.find(x => x.id === id);
   return p ? (p.alias || p.nombre) : 'persona sin ficha';
+}
+
+// ============================================================================
+// PANELES V4 (3-oct-2026) · piezas de los paneles de dinero, al nivel de QuickBooks, Xero, ChartMogul, Pigment y Databox.
+// Especificación: ../48_BENCHMARK_DASHBOARDS.md §2 (patrones) y §4 (pantalla a pantalla). Las usan Finanzas y Dinero por
+// cliente; el Panel de dirección y Ventas de RO las reutilizarán. Todas devuelven HTMLElement, sin colores sueltos (clases de
+// estilos.css, bloque «Paneles v4») y con el texto entero en aria-label. Umbrales: SOLO con la fuente del 48; los que el 48
+// marca «no colorear» van en gris (umbral.colorea: false). Ejemplos en vivo: Sistema › Componentes.
+// ============================================================================
+
+/** alMedir(el, dibujar) · llama a dibujar(ancho) cada vez que el elemento cambia de ancho (dibujo en píxeles reales). */
+function alMedir(el, dibujar) {
+  let ultimo = 0;
+  if (typeof ResizeObserver === 'function') {
+    new ResizeObserver(ent => { const W = Math.round(ent[0].contentRect.width); if (W && W !== ultimo) { ultimo = W; dibujar(W); } }).observe(el);
+  } else requestAnimationFrame(() => dibujar(el.clientWidth || 600));
+}
+const _num = v => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+const _signo = (v, f) => `${v > 0 ? '+' : v < 0 ? '−' : ''}${f(Math.abs(v))}`;
+
+/** enlaceFuente(href, quien) · «Quien · Ver fuente ↗» (fuera de la app, en otra pestaña; dentro, en la misma). */
+export function enlaceFuente(href, quien) {
+  if (!href) return quien ? h('span', { class: 'fuente-t' }, quien) : null;
+  const fuera = /^https?:/i.test(href);
+  return h('a', { class: 'fuente-a', href, target: fuera ? '_blank' : null, rel: fuera ? 'noopener noreferrer' : null, title: quien ? `Fuente: ${quien}` : null },
+    `${quien ? `${quien} · ` : ''}Ver fuente ↗`);
+}
+
+/**
+ * minilinea(valores, { x, formato, formatoX, umbral, etiqueta, alto = 32 }) · la línea pequeña de tendencia (12 meses) que
+ *   llevan las tarjetas de Geckoboard, Databox y Pigment. Sin ejes: punto en el último valor y, si se da, el umbral discontinuo.
+ *   Con menos de 2 valores devuelve null (no se pinta nada). El resumen («de X a Y, mínimo, máximo») va en aria-label y title.
+ */
+export function minilinea(valores = [], { x = [], formato = v => fmt.num(v), formatoX = _etiquetaX, umbral = null, etiqueta = 'Tendencia', alto = 32 } = {}) {
+  const ys = valores.map(_num);
+  const ok = ys.filter(v => v !== null);
+  if (ok.length < 2) return null;
+  const ini = ys.find(v => v !== null), fin = [...ys].reverse().find(v => v !== null);
+  const conU = Number.isFinite(umbral) ? [umbral] : [];
+  const min = Math.min(...ok, ...conU), max = Math.max(...ok, ...conU);
+  const desde = x.length ? ` (${formatoX(x[0])} a ${formatoX(x[x.length - 1])})` : '';
+  const txt = `${etiqueta}${desde}: de ${formato(ini)} a ${formato(fin)} · mínimo ${formato(Math.min(...ok))} · máximo ${formato(Math.max(...ok))}`;
+  const caja = h('div', { class: 'kpi-spark', role: 'img', 'aria-label': txt, title: txt, style: { height: `${alto}px` } });
+  alMedir(caja, W => {
+    caja.querySelector('svg')?.remove();
+    const H = alto, p = 4, n = ys.length;
+    const X = i => p + (W - 2 * p) * (n === 1 ? 0.5 : i / (n - 1));
+    const Y = v => p + (H - 2 * p) * (1 - (v - min) / ((max - min) || 1));
+    const svg = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}`, 'aria-hidden': 'true' });
+    if (conU.length) svg.append(s('line', { class: 'umbral-l', x1: p, x2: W - p, y1: Y(umbral), y2: Y(umbral) }));
+    let d = '', abierto = false;
+    ys.forEach((v, i) => { if (v === null) { abierto = false; return; } d += `${abierto ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`; abierto = true; });
+    svg.append(s('path', { class: 'linea', d }));
+    let u = n - 1; while (u >= 0 && ys[u] === null) u--;
+    svg.append(s('circle', { class: 'punto', cx: X(u), cy: Y(ys[u]), r: 3 }));
+    caja.append(svg);
+  });
+  return caja;
+}
+
+/** Las tres comparaciones de los buenos (Jirav, Databox, Fathom): mes anterior · mismo mes del año pasado · objetivo o plan. */
+export const COMPARAR_CON = [['mes_ant', 'Mes anterior', 'cal'], ['anio_ant', 'Mismo mes del año pasado', 'hist'], ['objetivo', 'Objetivo o plan', 'flag']];
+const NOMBRE_COMPARAR = { mes_ant: 'mes anterior', anio_ant: 'dato del año pasado', objetivo: 'objetivo' };
+/** selectorComparar({ clave, valor = 'mes_ant', alCambiar }) · «Comparar con» arriba de cada pantalla de dinero (se recuerda). */
+export function selectorComparar({ clave = 'comparar-con', valor = 'mes_ant', alCambiar, opciones = COMPARAR_CON } = {}) {
+  return chipsFiltro({ etiqueta: 'Comparar con', clave, valor, alCambiar, opciones: opciones.map(([v, t, ico]) => ({ valor: v, texto: t, icono: ico || 'cal' })) });
+}
+
+/**
+ * lineaComparacion({ num, ref, modo = 'pct' | 'abs' | 'puntos', mejorSi = 'alto' | 'bajo' | 'neutro', texto, formato })
+ *   «▲ 12 % frente a julio» con el color según la dirección buena de la métrica (Geckoboard, Jirav: un gasto que baja es
+ *   verde). Devuelve null si falta alguna de las dos cifras. La usan tarjetaKpi() y la cifra que manda de cada pantalla.
+ */
+export function lineaComparacion({ num, ref, modo = 'pct', mejorSi = 'alto', texto, formato } = {}) {
+  if (_num(ref) === null || _num(num) === null) return null;
+  const delta = modo === 'pct' ? variacion(num, ref) : Math.round((num - ref) * 100) / 100;
+  if (delta === null) return null;
+  const sentido = mejorSi === 'neutro' || !delta ? 'igual' : (delta > 0) === (mejorSi !== 'bajo') ? 'bien' : 'mal';
+  const flecha = delta > 0 ? '▲' : delta < 0 ? '▼' : '=';
+  const cifra = modo === 'pct' ? `${fmt.num(Math.abs(delta), Math.abs(delta) < 10 ? 1 : 0)} %` : modo === 'puntos' ? `${fmt.num(Math.abs(delta), 1)} puntos`
+    : (formato || (v => fmt.num(v)))(Math.abs(delta));
+  return h('span', { class: 'tc' }, h('span', { class: sentido, title: sentido === 'bien' ? 'Va a mejor' : sentido === 'mal' ? 'Va a peor' : 'Sin juicio de mejor o peor' }, `${flecha} ${cifra}`),
+    texto ? h('em', {}, texto) : null);
+}
+
+/**
+ * tarjetaKpi({ icono, etiqueta, valor, unidad, num, estado, mejorSi, serie, serieX, formatoSerie, umbralSerie,
+ *              comparar, comparaciones, umbral, fuente, contexto, medible, medibleDetalle, frescura, alPulsar, ir })
+ *   La tarjeta estándar de un panel de dinero (48 §4): cifra grande · línea de 12 meses · comparación con flecha · contra qué
+ *   se compara, en palabras · umbral escrito con su fuente · «Ver fuente ↗».
+ *   · valor: el texto de la cifra («1,3»); num: el mismo número para calcular la comparación (1.32).
+ *   · mejorSi: 'alto' (subir es bueno) | 'bajo' (bajar es bueno: gasto, vencido, peso del equipo) | 'neutro' (flecha en gris).
+ *   · comparaciones: { mes_ant | anio_ant | objetivo: { ref, texto: 'frente a julio', modo: 'pct' | 'abs' | 'puntos', formato } };
+ *     comparar: la que se enseña (la del selectorComparar). Si la tarjeta no tiene esa, lo dice en gris («sin objetivo»).
+ *   · estado: lo decide quien llama con el umbral (colorCifra, semaforo); sin umbral, '' (azul neutro). Gris = no colorea.
+ *   · umbral: { texto, fuente, href, fuentes: [{ fuente, href }], colorea = true } · colorea: false → «Referencia, no colorea».
+ *   · fuente: { texto, href } del dato (Holded, cierre de Sofía…); href a la pestaña de la app donde está el detalle.
+ *   · nota: una línea que no se corta (p. ej. «fórmula pendiente de confirmar por Tomás»), en ámbar oscuro.
+ *   No es un botón entero (lleva enlaces dentro): con alPulsar sale un botón «ir» al pie.
+ */
+export function tarjetaKpi(o = {}) {
+  const vacioValor = o.valor === null || o.valor === undefined || o.valor === '';
+  const est = vacioValor ? 'gris' : (o.estado || '');
+  const mejor = o.mejorSi || 'alto';
+  const comps = o.comparaciones || {};
+  const elegido = o.comparar || Object.keys(comps)[0];
+  const c = elegido ? comps[elegido] : null;
+  let comp = c ? lineaComparacion({ num: o.num, ...c, formato: c.formato || o.formatoDelta, mejorSi: mejor }) : null;
+  if (!comp && elegido) comp = h('span', { class: 'tc' }, h('em', {}, c ? (c.sinDato || `${c.texto ? `${c.texto}: ` : ''}sin dato para comparar`) : `Sin ${NOMBRE_COMPARAR[elegido] || 'comparación'} para esta cifra`));
+  const u = o.umbral;
+  const fuentesU = u ? (u.fuentes || (u.href || u.fuente ? [{ fuente: u.fuente, href: u.href }] : [])) : [];
+  const umbralEl = u ? h('p', { class: `kpi-umbral${u.colorea === false ? ' ref' : ''}` },
+    h('span', {}, `${u.colorea === false ? 'Referencia, no colorea: ' : 'Umbral: '}${limpiaTexto(u.texto || '')}`),
+    fuentesU.map(f => [' · ', enlaceFuente(f.href, f.fuente)])) : null;
+  const sello = o.medible && o.medible !== 'hoy' ? selloMedible(o.medible, o.medibleDetalle) : null;
+  const pie = o.fuente || sello || o.frescura ? h('p', { class: 'kpi-pie' },
+    o.fuente ? h('span', {}, 'Dato: ', o.fuente.href ? enlaceFuente(o.fuente.href, o.fuente.texto) : o.fuente.texto) : null,
+    sello, o.frescura ? frescura(o.frescura) : null) : null;
+  const linea = o.serie ? minilinea(o.serie, { x: o.serieX || [], formato: o.formatoSerie || (v => fmt.num(v)), umbral: o.umbralSerie ?? null, etiqueta: `Tendencia de ${o.etiqueta}` }) : null;
+  const etqTxt = typeof o.etiqueta === 'string' ? limpiaTexto(o.etiqueta) : o.etiqueta;
+  return h('div', { class: `tile kpi ${est}`.trim(), role: 'group', 'aria-label': `${etqTxt}: ${vacioValor ? 'sin dato' : `${o.valor}${o.unidad ? ` ${o.unidad}` : ''}`}` },
+    h('span', { class: 'tt' }, h('span', { class: `ico-c ${est}` }, icono(o.icono || 'res')), h('span', {}, etqTxt)),
+    vacioValor ? h('span', { class: 'tv sin-dato' }, h('small', {}, o.sinDato ? `Sin dato · ${o.sinDato}` : 'Sin dato'))
+      : h('span', { class: 'tv' }, o.valor, o.unidad ? h('small', {}, o.unidad) : null),
+    linea, comp,
+    o.contexto ? h('span', { class: 'tx' }, typeof o.contexto === 'string' ? limpiaTexto(o.contexto) : o.contexto) : null,
+    o.nota ? h('p', { class: 'kpi-nota' }, icono('info', { clase: 's' }), h('span', {}, o.nota)) : null,
+    umbralEl, pie,
+    o.alPulsar ? h('button', { type: 'button', class: 'ir kpi-ir', on: { click: o.alPulsar } }, o.ir || 'Ver detalle', icono('derecha', { clase: 's' })) : null);
+}
+
+/**
+ * cascada({ pasos: [{ texto, valor, tipo: 'total' | 'cambio', estado?: 'sube' | 'sube2' | 'ambar' | 'baja' }], formato, titulo,
+ *           alto = 240, anchoFilas = 440, zoom, leyenda })
+ *   El puente (Pigment, Baremetrics): los totales en gris desde 0; cada cambio flota desde donde acabó el anterior (verde si
+ *   suma, rojo si resta; estado lo cambia, p. ej. las rebajas en ámbar). Cuota: inicial + altas + subidas − rebajas − bajas =
+ *   final; beneficio: ingresos − entrega = margen bruto − estructura = beneficio. Por debajo de anchoFilas (móvil) se dibuja en
+ *   filas horizontales. Pasa el ratón (o el dedo) por un paso para ver su cifra.
+ */
+export function cascada(o = {}) {
+  const pasos = (o.pasos || []).filter(p => p && _num(p.valor) !== null);
+  const f = o.formato || (v => fmt.num(v));
+  const caja = h('figure', { class: 'grafico cascada', style: { margin: 0 } });
+  if (o.titulo) caja.append(h('figcaption', { class: 'grafico-tit' }, o.titulo));
+  if (pasos.length < 2) { caja.append(h('p', { class: 'grafico-vacio' }, icono('grafico', { clase: 's' }), o.vacio || 'Sin datos para el puente')); return caja; }
+  let acum = 0;
+  const T = pasos.map(p => {
+    if (p.tipo === 'total') { acum = p.valor; return { ...p, a: 0, b: p.valor, cls: p.estado || 'total' }; }
+    const a = acum; acum += p.valor;
+    return { ...p, a, b: acum, cls: p.estado || (p.valor >= 0 ? 'sube' : 'baja') };
+  });
+  const txtPaso = t => `${t.texto}: ${t.tipo === 'total' ? f(t.valor) : _signo(t.valor, f)}`;
+  // zoom: true → el eje no empieza en 0 (puentes con una base grande y cambios pequeños, como la cuota); los saldos se cortan
+  // en el suelo del eje y se dice debajo («El eje empieza en 30.000 €»).
+  const ext = T.flatMap(t => (t.tipo === 'total' ? [t.b] : [t.a, t.b]));
+  let suelo = Math.min(0, ...T.flatMap(t => [t.a, t.b]));
+  if (o.zoom && Math.min(...ext) > 0) {
+    const mn = Math.min(...ext), mx = Math.max(...ext);
+    suelo = Math.max(0, marcasRedondas(mn - (mx - mn) * 0.6, mx, 5).min);
+    T.forEach(t => { if (t.tipo === 'total') t.a = suelo; });
+  }
+  const esc = marcasRedondas(suelo, Math.max(0, ...T.flatMap(t => [t.a, t.b])), 4);
+  if (o.zoom && esc.min > 0) T.forEach(t => { if (t.tipo === 'total') t.a = esc.min; });
+  // leyenda: «Saldo» para los totales y el nombre de cada paso que suma o resta (Altas, Rebajas…), sin repetir
+  const ley = o.leyenda || [...new Map(T.map(t => (t.tipo === 'total' ? ['__total', { clase: t.cls, nombre: 'Saldo' }] : [t.texto, { clase: t.cls, nombre: t.texto }]))).values()];
+  if (ley.length > 1) caja.append(h('div', { class: 'grafico-ley' }, ley.map(l => h('span', {}, h('i', { class: `b ${l.clase}` }), l.nombre))));
+  const lienzo = h('div', { class: 'grafico-lienzo', role: 'img', 'aria-label': `${o.titulo || 'Puente'}: ${T.map(txtPaso).join(' · ')}` });
+  caja.append(lienzo);
+  const pct = v => ((v - esc.min) / ((esc.max - esc.min) || 1)) * 100;
+  const filas = () => h('ul', { class: 'cascada-filas', 'aria-hidden': 'true' }, T.map(t => h('li', { class: t.tipo === 'total' ? 'es-total' : null },
+    h('span', { class: 'cf-et' }, t.texto),
+    h('span', { class: 'cf-pista' }, esc.min < 0 ? h('i', { class: 'cf-cero', style: { left: `${pct(0)}%` } }) : null,
+      h('i', { class: `cf-seg ${t.cls}`, style: { left: `${pct(Math.min(t.a, t.b))}%`, width: `${Math.max(0.6, pct(Math.max(t.a, t.b)) - pct(Math.min(t.a, t.b)))}%` }, title: txtPaso(t) })),
+    h('b', { class: 'cf-v' }, t.tipo === 'total' ? f(t.valor) : _signo(t.valor, f)))));
+  alMedir(lienzo, W => {
+    lienzo.replaceChildren();
+    lienzo.style.height = '';
+    if (W < (o.anchoFilas || 440)) { lienzo.append(filas()); return; }
+    const H = o.alto || 240;
+    lienzo.style.height = `${H}px`;
+    const anchoEtiq = Math.max(...esc.marcas.map(v => String(f(v)).length)) * 7.2 + 8;
+    const pl = Math.min(96, Math.max(28, anchoEtiq)), pr = 8, pt = 22, pb = 38;
+    const n = T.length, slot = (W - pl - pr) / n, ancho = Math.min(64, slot * 0.62);
+    const X = i => pl + slot * (i + 0.5);
+    const Y = v => pt + (H - pt - pb) * (1 - (v - esc.min) / ((esc.max - esc.min) || 1));
+    const svg = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+    for (const v of esc.marcas) {
+      svg.append(s('line', { class: v === 0 ? 'cero' : 'rejilla-l', x1: pl, x2: W - pr, y1: Y(v), y2: Y(v) }));
+      const t = s('text', { x: pl - 8, y: Y(v) + 4, 'text-anchor': 'end' }); t.textContent = f(v); svg.append(t);
+    }
+    T.forEach((t, i) => {
+      const y1 = Y(Math.max(t.a, t.b)), y2 = Y(Math.min(t.a, t.b));
+      const r = s('rect', { class: `seg ${t.cls}`, x: X(i) - ancho / 2, y: y1, width: ancho, height: Math.max(1, y2 - y1), rx: Math.min(3, ancho / 4) });
+      const tt = s('title'); tt.textContent = txtPaso(t); r.append(tt); svg.append(r);
+      if (i < n - 1) svg.append(s('line', { class: 'conector', x1: X(i) + ancho / 2, x2: X(i + 1) - ancho / 2, y1: Y(t.b), y2: Y(t.b) }));
+      const v = s('text', { class: 'valor-ult', x: X(i), y: y1 - 6, 'text-anchor': 'middle' });
+      v.textContent = t.tipo === 'total' ? f(t.valor) : _signo(t.valor, f); svg.append(v);
+      // etiqueta en 1-2 líneas que quepan en su hueco (≈ 7 px por letra a 12 px)
+      const cabe = Math.max(4, Math.floor(slot / 7));
+      const palabras = String(t.texto).split(/\s+/); const lineas = [''];
+      for (const p of palabras) { const l = lineas[lineas.length - 1]; if (!l || (l + ' ' + p).length <= cabe) lineas[lineas.length - 1] = l ? `${l} ${p}` : p; else if (lineas.length < 2) lineas.push(p); else lineas[1] = `${lineas[1]} ${p}`; }
+      lineas.forEach((l, k) => { const e = s('text', { x: X(i), y: H - pb + 16 + k * 14, 'text-anchor': 'middle' }); e.textContent = l.length > cabe + 2 ? `${l.slice(0, cabe)}…` : l; svg.append(e); });
+    });
+    lienzo.append(svg);
+  });
+  if (o.zoom && esc.min > 0) caja.append(h('p', { class: 'grafico-nota' }, `El eje empieza en ${f(esc.min)} para que se vean los cambios; los saldos van cortados.`));
+  return caja;
+}
+
+/**
+ * barrasGanadoPerdido({ x, ganado: [{ nombre, y, clase }], perdido: [{ nombre, y, clase }], neto = true, enCurso, formato,
+ *                       formatoX, alto = 220, titulo, notaCurso })
+ *   Los movimientos de la cuota de ChartMogul: lo ganado (altas, subidas) apilado por encima de 0 y lo perdido (rebajas,
+ *   bajas) por debajo; la línea es el neto. El periodo en curso va RAYADO (es estimación): enCurso = n.º de periodos del final
+ *   (1 = el último) o lista de índices. clase: 'sube' | 'sube2' | 'ambar' | 'baja'. «perdido» admite valores en negativo o
+ *   positivo (se dibujan siempre hacia abajo). Burbuja con el desglose al pasar el ratón.
+ */
+export function barrasGanadoPerdido(o = {}) {
+  const x = o.x || [], n = x.length;
+  const f = o.formato || (v => fmt.num(v));
+  const fx = o.formatoX || _etiquetaX;
+  const gan = (o.ganado || []).filter(sr => Array.isArray(sr?.y));
+  const per = (o.perdido || []).filter(sr => Array.isArray(sr?.y)).map(sr => ({ ...sr, y: sr.y.map(v => (_num(v) === null ? null : Math.abs(v))) }));
+  const curso = new Set(Array.isArray(o.enCurso) ? o.enCurso : Number.isFinite(o.enCurso) ? Array.from({ length: o.enCurso }, (_, k) => n - 1 - k) : []);
+  const sumG = i => gan.reduce((a, sr) => a + (sr.y[i] || 0), 0), sumP = i => per.reduce((a, sr) => a + (sr.y[i] || 0), 0);
+  const neto = o.neto === false ? null : Array.isArray(o.neto) ? o.neto : x.map((_, i) => sumG(i) - sumP(i));
+  const caja = h('figure', { class: 'grafico gp', style: { margin: 0 } });
+  if (o.titulo) caja.append(h('figcaption', { class: 'grafico-tit' }, o.titulo));
+  if (!n) { caja.append(h('p', { class: 'grafico-vacio' }, icono('grafico', { clase: 's' }), o.vacio || 'Sin datos en este periodo')); return caja; }
+  caja.append(h('div', { class: 'grafico-ley' }, [...gan, ...per].map(sr => h('span', {}, h('i', { class: `b ${sr.clase || ''}` }), sr.nombre)),
+    neto ? h('span', {}, h('i', { style: { background: 'var(--accent)' } }), 'Neto') : null,
+    curso.size ? h('span', {}, h('i', { class: 'b rayado' }), o.notaCurso || 'En curso (estimado)') : null));
+  const lienzo = h('div', { class: 'grafico-lienzo', style: { height: `${o.alto || 220}px` } });
+  const burbuja = h('div', { class: 'grafico-burbuja', hidden: true, role: 'status' });
+  lienzo.append(burbuja); caja.append(lienzo);
+  const ultimo = n - 1;
+  lienzo.setAttribute('aria-label', `${o.titulo || 'Movimientos'}: ${fx(x[0])} a ${fx(x[ultimo])}; último, ${[...gan, ...per].map(sr => `${sr.nombre} ${f(sr.y[ultimo] || 0)}`).join(', ')}${neto ? `, neto ${_signo(neto[ultimo], f)}` : ''}`);
+  lienzo.setAttribute('role', 'img');
+  const uid2 = uid('raya');
+  alMedir(lienzo, W => {
+    lienzo.querySelector('svg')?.remove();
+    const H = o.alto || 220;
+    const altos = x.map((_, i) => sumG(i)), bajos = x.map((_, i) => -sumP(i));
+    const esc = marcasRedondas(Math.min(0, ...bajos, ...(neto || [])), Math.max(0, ...altos, ...(neto || [])), H >= 160 ? 5 : 3);
+    const anchoEtiq = Math.max(...esc.marcas.map(v => String(f(v)).length)) * 7.2 + 8;
+    const pl = Math.min(96, Math.max(28, anchoEtiq)), pr = 8, pt = 12, pb = 24;
+    const slot = (W - pl - pr) / n, ancho = Math.max(3, Math.min(40, slot * 0.6));
+    const X = i => pl + slot * (i + 0.5);
+    const Y = v => pt + (H - pt - pb) * (1 - (v - esc.min) / ((esc.max - esc.min) || 1));
+    const svg = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+    const defs = s('defs'); const pat = s('pattern', { id: uid2, patternUnits: 'userSpaceOnUse', width: 6, height: 6, patternTransform: 'rotate(45)' });
+    pat.append(s('line', { class: 'rayado-l', x1: 0, y1: 0, x2: 0, y2: 6 })); defs.append(pat); svg.append(defs);
+    let ultY = Infinity;
+    for (const v of esc.marcas) {
+      svg.append(s('line', { class: v === 0 ? 'cero' : 'rejilla-l', x1: pl, x2: W - pr, y1: Y(v), y2: Y(v) }));
+      if (Math.abs(ultY - Y(v)) < 16 && v !== 0) continue;
+      const t = s('text', { x: pl - 8, y: Y(v) + 4, 'text-anchor': 'end' }); t.textContent = f(v); svg.append(t); ultY = Y(v);
+    }
+    const maxEtiq = Math.max(2, Math.min(8, Math.floor((W - pl - pr) / 56)));
+    const paso = Math.max(1, Math.ceil(n / maxEtiq));
+    for (let i = n - 1; i >= 0; i -= paso) {
+      let xi = X(i), anchor = 'middle'; const ancho2 = String(fx(x[i])).length * 7 + 2;
+      if (xi + ancho2 / 2 > W - 2) { xi = W - 2; anchor = 'end'; }
+      if (xi - ancho2 / 2 < 2) { xi = 2; anchor = 'start'; }
+      const t = s('text', { x: xi, y: H - 6, 'text-anchor': anchor }); t.textContent = fx(x[i]); svg.append(t);
+    }
+    for (let i = 0; i < n; i++) {
+      let arriba = 0, abajo = 0;
+      for (const sr of gan) { const v = sr.y[i] || 0; if (!v) continue; svg.append(s('rect', { class: `seg ${sr.clase || 'sube'}${curso.has(i) ? ' curso' : ''}`, x: X(i) - ancho / 2, y: Y(arriba + v), width: ancho, height: Math.max(1, Y(arriba) - Y(arriba + v)) })); arriba += v; }
+      for (const sr of per) { const v = sr.y[i] || 0; if (!v) continue; svg.append(s('rect', { class: `seg ${sr.clase || 'baja'}${curso.has(i) ? ' curso' : ''}`, x: X(i) - ancho / 2, y: Y(-abajo), width: ancho, height: Math.max(1, Y(-abajo - v) - Y(-abajo)) })); abajo += v; }
+      if (curso.has(i) && (arriba || abajo)) svg.append(s('rect', { class: 'rayado', x: X(i) - ancho / 2, y: Y(arriba), width: ancho, height: Math.max(1, Y(-abajo) - Y(arriba)), fill: `url(#${uid2})` }));
+    }
+    if (neto) {
+      let d = ''; neto.forEach((v, i) => { if (_num(v) !== null) d += `${d ? 'L' : 'M'}${X(i).toFixed(1)},${Y(v).toFixed(1)}`; });
+      svg.append(s('path', { class: 'linea', d, style: 'stroke:var(--accent)' }));
+      neto.forEach((v, i) => { if (_num(v) !== null) svg.append(s('circle', { class: `punto${curso.has(i) ? ' curso' : ''}`, cx: X(i), cy: Y(v), r: 3, style: 'stroke:var(--accent)' })); });
+    }
+    const guia = s('line', { class: 'guia', x1: 0, x2: 0, y1: pt, y2: H - pb, visibility: 'hidden' }); svg.append(guia);
+    const zona = s('rect', { x: pl, y: 0, width: Math.max(1, W - pl - pr), height: H, fill: 'transparent' });
+    const mostrar = ev => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      const i = Math.max(0, Math.min(n - 1, Math.floor((px - pl) / slot)));
+      guia.setAttribute('x1', X(i)); guia.setAttribute('x2', X(i)); guia.setAttribute('visibility', 'visible');
+      burbuja.replaceChildren(h('b', {}, `${fx(x[i])}${curso.has(i) ? ' · en curso (estimado)' : ''}`),
+        ...gan.map(sr => h('span', {}, h('i', { class: `b ${sr.clase || 'sube'}` }), `${sr.nombre}: +${f(sr.y[i] || 0)}`)),
+        ...per.map(sr => h('span', {}, h('i', { class: `b ${sr.clase || 'baja'}` }), `${sr.nombre}: −${f(sr.y[i] || 0)}`)),
+        neto ? h('span', {}, h('i', { style: { background: 'var(--accent)' } }), `Neto: ${_signo(neto[i] || 0, f)}`) : null,
+        ...(o.detalle ? (o.detalle(i) || []).map(t => h('span', { class: 'sub' }, t)) : []));
+      burbuja.hidden = false;
+      const bw = burbuja.offsetWidth;
+      burbuja.style.left = `${X(i) + 12 + bw > W - 8 ? Math.max(8, X(i) - bw - 12) : X(i) + 12}px`;
+    };
+    const ocultar = () => { guia.setAttribute('visibility', 'hidden'); burbuja.hidden = true; };
+    zona.addEventListener('mousemove', mostrar); zona.addEventListener('touchstart', mostrar, { passive: true }); zona.addEventListener('mouseleave', ocultar);
+    svg.append(zona);
+    lienzo.prepend(svg);
+  });
+  return caja;
+}
+
+/**
+ * mapaCalor({ columnas, filas: [{ etiqueta, n, valores }], media, vistas: [{ valor, texto, filas, media, nota }], clave,
+ *             min = 0, max = 100, formato, etiquetaFila = 'Mes de alta', etiquetaN = 'Clientes', nota })
+ *   La tabla de cohortes de ChartMogul y ProfitWell: filas = mes de alta, columnas = meses de vida (0..N), cada celda con su
+ *   %. Escala de UN solo color (más oscuro = más se queda; nunca rojo ni verde: 48 §4.1). Fila «Media» al pie. Con «vistas»
+ *   sale el interruptor (% de clientes / % de cuota). Las celdas sin dato todavía (meses que no han pasado) van vacías.
+ *   Scroll horizontal DENTRO de su caja en el móvil (la página no se ensancha).
+ */
+export function mapaCalor(o = {}) {
+  const vistas = o.vistas?.length ? o.vistas : [{ valor: 'unica', texto: '', filas: o.filas || [], media: o.media, nota: o.nota }];
+  const fmtV = o.formato || (v => fmt.pct(v));
+  const min = o.min ?? 0, max = o.max ?? 100;
+  const nivel = v => (_num(v) === null ? 'nd' : `c${Math.max(0, Math.min(5, Math.round(((v - min) / ((max - min) || 1)) * 5)))}`);
+  const tablaDe = V => {
+    const cols = o.columnas || [];
+    const fila = (r, media) => h('tr', { class: media ? 'media' : null },
+      h('th', { scope: 'row' }, r.etiqueta),
+      h('td', { class: 'num n' }, r.n === undefined || r.n === null ? '' : fmt.num(r.n)),
+      cols.map((col, k) => { const v = r.valores?.[k]; return h('td', { class: `celda ${nivel(v)}`, title: _num(v) === null ? `${r.etiqueta} · ${col}: aún no ha pasado` : `${r.etiqueta} · ${col}: ${fmtV(v)}` }, _num(v) === null ? '' : fmtV(v)); }));
+    const media = V.media ? { etiqueta: 'Media', n: (V.filas || []).reduce((a, r) => a + (r.n || 0), 0), valores: V.media } : null;
+    return h('div', { class: 'pila' },
+      h('div', { class: 'calor-scroll', tabindex: '0', role: 'region', 'aria-label': `${o.titulo || 'Cohortes'}${V.texto ? ` · ${V.texto}` : ''}` },
+        h('table', { class: 'calor' },
+          h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, o.etiquetaFila || 'Mes de alta'), h('th', { scope: 'col', class: 'num' }, o.etiquetaN || 'Clientes'), cols.map(col => h('th', { scope: 'col', class: 'num' }, col)))),
+          h('tbody', {}, (V.filas || []).map(r => fila(r)), media ? fila(media, true) : null))),
+      h('p', { class: 'calor-ley' }, h('span', {}, fmtV(min)), [1, 2, 3, 4, 5].map(k => h('i', { class: `celda c${k}`, 'aria-hidden': 'true' })), h('span', {}, fmtV(max)),
+        (V.nota || o.nota) ? h('span', { class: 'sub' }, ` · ${V.nota || o.nota}`) : null));
+  };
+  const caja = h('div', { class: 'calor-caja pila' });
+  const zona = h('div');
+  const pintar = v => zona.replaceChildren(tablaDe(vistas.find(x => x.valor === v) || vistas[0]));
+  if (vistas.length > 1) {
+    const ch = chipsFiltro({ opciones: vistas.map(v => ({ valor: v.valor, texto: v.texto, icono: v.icono })), clave: o.clave, etiqueta: o.etiquetaVistas || 'Ver', alCambiar: pintar });
+    caja.append(ch); pintar(ch.valor());
+  } else pintar(vistas[0].valor);
+  caja.append(zona);
+  return caja;
+}
+
+/** bandasObjetivo(objetivo) · las bandas de Databox contra objetivo: rojo < 75 %, ámbar 75-99 %, verde ≥ 100 % (48 §2.1). */
+export const FUENTE_BANDAS = { fuente: 'Databox', href: 'https://help.databox.com/article/245-overview-visualization-types' };
+export function bandasObjetivo(objetivo) {
+  return [{ hasta: objetivo * 0.75, estado: 'rojo' }, { hasta: objetivo, estado: 'ambar' }, { hasta: Infinity, estado: 'verde' }];
+}
+export function estadoObjetivo(valor, objetivo) {
+  if (_num(valor) === null || !objetivo) return 'gris';
+  return valor >= objetivo ? 'verde' : valor >= objetivo * 0.75 ? 'ambar' : 'rojo';
+}
+
+/**
+ * barraObjetivo({ valor, objetivo, max, bandas, marcas: [{ valor, texto }], extra: [{ valor, texto }], etiqueta, formato,
+ *                 colorea = true })
+ *   La barra contra objetivo (bullet chart): bandas de fondo (por defecto las de Databox: < 75 % rojo, 75-99 ámbar, ≥ 100
+ *   verde, en tonos suaves), la cifra en una barra oscura y el objetivo como marca vertical. «marcas» son referencias pequeñas
+ *   (el plan de cada mes); «extra» una segunda cifra en trazo fino (p. ej. «si firman»). colorea: false → bandas en gris.
+ */
+export function barraObjetivo(o = {}) {
+  const f = o.formato || (v => fmt.num(v));
+  const v = _num(o.valor) ?? 0, obj = _num(o.objetivo);
+  const marcas = (o.marcas || []).filter(m => _num(m.valor) !== null);
+  const extra = (o.extra || []).filter(m => _num(m.valor) !== null);
+  const tope = o.max || Math.max(v, obj || 0, ...marcas.map(m => m.valor), ...extra.map(m => m.valor)) * 1.04 || 1;
+  const pct = x => Math.max(0, Math.min(100, (x / tope) * 100));
+  const bandas = o.colorea === false ? [{ hasta: tope, estado: 'gris' }] : (o.bandas || (obj ? bandasObjetivo(obj) : [{ hasta: tope, estado: 'gris' }]));
+  let desde = 0;
+  const texto = `${o.etiqueta ? `${o.etiqueta}: ` : ''}${f(v)}${obj ? ` de ${f(obj)} (${fmt.num((100 * v) / obj, 0)} %)` : ''}${marcas.length ? ` · ${marcas.map(m => `${m.texto} ${f(m.valor)}`).join(' · ')}` : ''}`;
+  return h('div', { class: 'bullet', role: 'img', 'aria-label': texto, title: texto },
+    h('div', { class: 'bullet-pista' },
+      bandas.map(b => { const a = desde, z = Math.min(tope, b.hasta); desde = z; return z > a ? h('i', { class: `bb e-${b.estado}`, style: { left: `${pct(a)}%`, width: `${pct(z) - pct(a)}%` } }) : null; }),
+      extra.map(m => h('i', { class: 'bx', style: { width: `${pct(m.valor)}%` }, title: `${m.texto}: ${f(m.valor)}` })),
+      h('i', { class: 'bv', style: { width: `${pct(v)}%` } }),
+      marcas.map(m => h('b', { class: 'bm', style: { left: `${pct(m.valor)}%` }, title: `${m.texto}: ${f(m.valor)}` })),
+      obj ? h('b', { class: 'bo', style: { left: `${pct(obj)}%` }, title: `Objetivo: ${f(obj)}` }) : null),
+    marcas.length || obj ? h('div', { class: 'bullet-ley' },
+      h('span', {}, h('i', { class: 'bv' }), `${o.etiquetaValor || 'Hoy'} ${f(v)}`),
+      extra.map(m => h('span', {}, h('i', { class: 'bx' }), `${m.texto} ${f(m.valor)}`)),
+      marcas.length ? h('span', {}, h('i', { class: 'bm' }), marcas.map(m => `${m.texto} ${f(m.valor)}`).join(' · ')) : null,
+      obj ? h('span', {}, h('i', { class: 'bo' }), `${o.etiquetaObjetivo || 'Objetivo'} ${f(obj)}`) : null) : null);
+}
+
+/**
+ * previsionCaja({ puntos: [{ fecha: 'AAAA-MM-DD', saldo }], minimo, eventos: [{ fecha, texto }], formato, alto = 220,
+ *                 textoMinimo })
+ *   La caja proyectada de QuickBooks (planificador con umbral) y Xero (previsión a 90 días): una línea por día con la línea
+ *   del MÍNIMO discontinua; por debajo del mínimo, la franja en rojo suave y el tramo de la línea en rojo. Los eventos
+ *   (cargo SEPA, nóminas) llevan su punto. Burbuja con la fecha y el saldo al pasar el ratón.
+ */
+export function previsionCaja(o = {}) {
+  const P = (o.puntos || []).filter(p => p && _num(p.saldo) !== null);
+  const f = o.formato || (v => fmt.eur(v));
+  const min = _num(o.minimo);
+  const caja = h('figure', { class: 'grafico prevision', style: { margin: 0 } });
+  if (o.titulo) caja.append(h('figcaption', { class: 'grafico-tit' }, o.titulo));
+  if (P.length < 2) { caja.append(h('p', { class: 'grafico-vacio' }, icono('grafico', { clase: 's' }), o.vacio || 'Sin datos para la previsión')); return caja; }
+  const bajo = P.filter(p => min !== null && p.saldo < min).length;
+  caja.append(h('div', { class: 'grafico-ley' },
+    h('span', {}, h('i', { style: { background: 'var(--accent)' } }), 'Caja prevista'),
+    min !== null ? h('span', {}, h('i', { style: { background: 'var(--bad)' } }), 'Por debajo del mínimo') : null,
+    min !== null ? h('span', {}, h('i', { class: 'a', style: { borderColor: 'var(--bad)' } }), o.textoMinimo || `Mínimo ${f(min)}`) : null,
+    (o.eventos || []).length ? h('span', {}, h('i', { class: 'b ev' }), 'Cobro o pago previsto') : null));
+  const lienzo = h('div', { class: 'grafico-lienzo', style: { height: `${o.alto || 220}px` }, role: 'img',
+    'aria-label': `Caja prevista: ${f(P[0].saldo)} el ${fechaCorta(P[0].fecha)} y ${f(P[P.length - 1].saldo)} el ${fechaCorta(P[P.length - 1].fecha)}${min !== null ? `; ${bajo} de ${P.length} días por debajo del mínimo (${f(min)})` : ''}` });
+  const burbuja = h('div', { class: 'grafico-burbuja', hidden: true, role: 'status' });
+  lienzo.append(burbuja); caja.append(lienzo);
+  const evPor = new Map((o.eventos || []).map(e => [e.fecha, e.texto]));
+  alMedir(lienzo, W => {
+    lienzo.querySelector('svg')?.remove();
+    const H = o.alto || 220, n = P.length;
+    const esc = marcasRedondas(Math.min(0, ...P.map(p => p.saldo)), Math.max(...P.map(p => p.saldo), min ?? 0), H >= 160 ? 5 : 3);
+    const anchoEtiq = Math.max(...esc.marcas.map(v => String(f(v)).length)) * 7.2 + 8;
+    const pl = Math.min(96, Math.max(28, anchoEtiq)), pr = 12, pt = 12, pb = 24;
+    const X = i => pl + (W - pl - pr) * (i / (n - 1));
+    const Y = v => pt + (H - pt - pb) * (1 - (v - esc.min) / ((esc.max - esc.min) || 1));
+    const svg = s('svg', { width: W, height: H, viewBox: `0 0 ${W} ${H}` });
+    if (min !== null) svg.append(s('rect', { class: 'zona-min', x: pl, y: Y(min), width: W - pl - pr, height: Math.max(0, Y(esc.min) - Y(min)) }));
+    let ultY = Infinity;
+    for (const v of esc.marcas) {
+      svg.append(s('line', { class: v === 0 ? 'cero' : 'rejilla-l', x1: pl, x2: W - pr, y1: Y(v), y2: Y(v) }));
+      if (Math.abs(ultY - Y(v)) < 16 && v !== 0) continue;
+      const t = s('text', { x: pl - 8, y: Y(v) + 4, 'text-anchor': 'end' }); t.textContent = f(v); svg.append(t); ultY = Y(v);
+    }
+    const maxEtiq = Math.max(2, Math.min(6, Math.floor((W - pl - pr) / 64)));
+    const paso = Math.max(1, Math.ceil((n - 1) / (maxEtiq - 1)));
+    const idx = []; for (let i = 0; i < n; i += paso) idx.push(i);
+    if (idx[idx.length - 1] !== n - 1) { if ((n - 1) - idx[idx.length - 1] < paso / 2) idx.pop(); idx.push(n - 1); }
+    for (const i of idx) { const t = s('text', { x: X(i), y: H - 6, 'text-anchor': i === 0 ? 'start' : i === n - 1 ? 'end' : 'middle' }); t.textContent = fechaCorta(P[i].fecha); svg.append(t); }
+    if (min !== null) {
+      svg.append(s('line', { class: 'min-l', x1: pl, x2: W - pr, y1: Y(min), y2: Y(min) }));
+      const t = s('text', { class: 'min-t', x: W - pr, y: Y(min) - 6, 'text-anchor': 'end' }); t.textContent = o.textoMinimo || `Mínimo ${f(min)}`; svg.append(t);
+    }
+    // tramos: azul por encima del mínimo, rojo por debajo (cada tramo empieza en el último punto del anterior)
+    let d = '', clase = null;
+    const cerrar = () => { if (d) svg.append(s('path', { class: `linea caja-l${clase === 'bajo' ? ' bajo' : ''}`, d })); };
+    P.forEach((p, i) => {
+      const c = min !== null && p.saldo < min ? 'bajo' : 'ok';
+      const pt2 = `${X(i).toFixed(1)},${Y(p.saldo).toFixed(1)}`;
+      if (c !== clase) { const prev = i ? `M${X(i - 1).toFixed(1)},${Y(P[i - 1].saldo).toFixed(1)}L${pt2}` : `M${pt2}`; cerrar(); d = prev; clase = c; } else d += `L${pt2}`;
+    });
+    cerrar();
+    P.forEach((p, i) => { if (evPor.has(p.fecha)) { const c = s('circle', { class: 'evento', cx: X(i), cy: Y(p.saldo), r: 4 }); const tt = s('title'); tt.textContent = `${fechaCorta(p.fecha)} · ${evPor.get(p.fecha)}`; c.append(tt); svg.append(c); } });
+    const guia = s('line', { class: 'guia', x1: 0, x2: 0, y1: pt, y2: H - pb, visibility: 'hidden' }); svg.append(guia);
+    const zona = s('rect', { x: pl, y: 0, width: Math.max(1, W - pl - pr), height: H, fill: 'transparent' });
+    const mostrar = ev => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      const i = Math.max(0, Math.min(n - 1, Math.round(((px - pl) / ((W - pl - pr) || 1)) * (n - 1))));
+      guia.setAttribute('x1', X(i)); guia.setAttribute('x2', X(i)); guia.setAttribute('visibility', 'visible');
+      const p = P[i];
+      burbuja.replaceChildren(h('b', {}, fechaCorta(p.fecha)), h('span', {}, `Caja prevista: ${f(p.saldo)}`),
+        min !== null && p.saldo < min ? h('span', { class: 'sub' }, `${f(min - p.saldo)} por debajo del mínimo`) : null,
+        evPor.has(p.fecha) ? h('span', { class: 'sub' }, evPor.get(p.fecha)) : null);
+      burbuja.hidden = false;
+      const bw = burbuja.offsetWidth;
+      burbuja.style.left = `${X(i) + 12 + bw > W - 8 ? Math.max(8, X(i) - bw - 12) : X(i) + 12}px`;
+    };
+    zona.addEventListener('mousemove', mostrar); zona.addEventListener('touchstart', mostrar, { passive: true });
+    zona.addEventListener('mouseleave', () => { guia.setAttribute('visibility', 'hidden'); burbuja.hidden = true; });
+    svg.append(zona);
+    lienzo.prepend(svg);
+  });
+  return caja;
+}
+
+/**
+ * barrasDivergentes({ filas: [{ etiqueta, sub, valor, estado, titulo }], formato, max, etiqueta, alPulsar })
+ *   Ranking en barras horizontales con el cero en medio (Scoro, Productive): negativas a la izquierda en rojo, positivas a la
+ *   derecha en verde (estado lo cambia). Ordena quien llama. alPulsar(fila) hace cada fila un botón (abrir la ficha).
+ */
+export function barrasDivergentes({ filas = [], formato = v => fmt.num(v), max, etiqueta, alPulsar } = {}) {
+  const ok = filas.filter(r => _num(r.valor) !== null);
+  const tope = max || Math.max(1, ...ok.map(r => Math.abs(r.valor)));
+  const neg = ok.some(r => r.valor < 0), pos = ok.some(r => r.valor > 0);
+  const cero = neg && pos ? 50 : neg ? 100 : 0;
+  const escala = neg && pos ? 50 : 100;
+  return h('ul', { class: `diverg${neg && pos ? ' doble' : ''}`, role: 'list', 'aria-label': etiqueta || 'Ranking' }, ok.map(r => {
+    const w = (Math.abs(r.valor) / tope) * escala;
+    const est = r.estado || (r.valor < 0 ? 'rojo' : 'verde');
+    const cuerpo = [h('span', { class: 'dv-et' }, h('b', {}, r.etiqueta), r.sub ? h('small', {}, r.sub) : null),
+      h('span', { class: 'dv-pista', 'aria-hidden': 'true' }, neg && pos ? h('i', { class: 'dv-cero', style: { left: `${cero}%` } }) : null,
+        h('i', { class: `dv-b e-${est}`, style: r.valor < 0 ? { right: `${100 - cero}%`, width: `${w}%` } : { left: `${cero}%`, width: `${w}%` } })),
+      h('span', { class: `dv-v ${est}` }, formato(r.valor))];
+    return h('li', { title: r.titulo || null }, alPulsar ? h('button', { type: 'button', class: 'dv-fila', 'aria-label': `${r.etiqueta}: ${formato(r.valor)}`, on: { click: () => alPulsar(r) } }, cuerpo) : h('div', { class: 'dv-fila' }, cuerpo));
+  }));
 }

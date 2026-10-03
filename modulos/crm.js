@@ -18,6 +18,47 @@ import {
   botonesContacto, avisoFlotante, campoTexto, embudoBarras, barraProgreso, esqueleto, vacioLinea,
 } from '../componentes.js';
 import { motivoSinCartera } from './ficha.js';   // V2 (B-M7): la misma frase de «sin cartera» en todas las pantallas
+import { franjaCifras } from './_trabajo.js';
+import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
+import { conDeshacer, botonDeshacer } from './_deshacer.js';
+
+// Ronda U (3-oct, cambio #10 del 50): «Revisado · motivo» en leads sin tocar y citas sin estado. Interno (queda en la app
+// con rastro, acción revisado_lead / revisado_cita): un clic en el motivo, la fila sale y «Deshacer» 8 s. No toca GoHighLevel.
+const MOTIVOS_REVISADO = {
+  lead: ['El despacho lo llamó desde su móvil', 'Duplicado', 'Prueba o spam', 'Ya es cliente del despacho', 'Número o datos falsos', 'Lo llama el despacho hoy'],
+  cita: ['Vino (lo confirma el despacho)', 'No vino (lo confirma el despacho)', 'Cita de prueba', 'Duplicada', 'Cancelada fuera de GoHighLevel'],
+};
+const claveRev = (tipo, x) => `${tipo} ${x.ref}`;
+function botonRevisado(ctx, x, tipo, d) {
+  if (ctx.soloLectura) return null;
+  const caja = h('details', { class: 'periodo-mas menu-mas', style: { display: 'inline-grid', justifyItems: 'start' } },
+    h('summary', { class: 'bt mini pri', style: { display: 'inline-flex', listStyle: 'none' }, 'aria-label': `Revisado: elegir el motivo (${x.subcuenta})` }, icono('check'), 'Revisado'),
+    h('div', { class: 'menu-flot', role: 'menu', style: { position: 'static', boxShadow: 'none', marginTop: 'var(--s-2)', minWidth: 0, display: 'grid', gap: 'var(--s-1)' } },
+      MOTIVOS_REVISADO[tipo].map(m => h('button', { type: 'button', role: 'menuitem', class: 'bt mini', 'data-motivo': m, style: { justifyContent: 'flex-start', whiteSpace: 'normal', textAlign: 'left' }, on: { click: e => {
+        caja.open = false;
+        const fila = e.currentTarget.closest('tr') || e.currentTarget.closest('li') || e.currentTarget.closest('[role=row]');
+        const clave = claveRev(tipo, x);
+        conDeshacer({
+          mensaje: `${tipo === 'lead' ? 'Lead' : 'Cita'} de ${x.subcuenta} revisado · ${m}`,
+          optimista: () => { if (fila) fila.hidden = true; d.revisados?.set(clave, { texto: m }); contarRevisados(fila); },
+          revertir: () => { if (fila) fila.hidden = false; d.revisados?.delete(clave); contarRevisados(fila); },
+          hacer: () => ctx.accion({ herramienta: 'app', tipo: tipo === 'lead' ? 'revisado_lead' : 'revisado_cita', objeto: clave, cliente_id: x.cliente_id || undefined, texto: m,
+            vista_previa: `${tipo === 'lead' ? 'Lead' : 'Cita'} de ${x.subcuenta} (${tipo === 'lead' ? `entró el ${fDiaRO(x.creado)}` : `cita del ${fDiaRO(x.inicio)}`}) revisado por ${ctx.nombre(ctx.persona.id)}: «${m}». Sale de la lista; no se toca GoHighLevel.` }),
+        });
+      } } }, m))));
+  caja.addEventListener('keydown', e => { if (e.key === 'Escape') { caja.open = false; caja.querySelector('summary')?.focus(); } });
+  return caja;
+}
+/** Tras marcar o deshacer, la cuenta de la pestaña y de la franja baja o sube sin repintar (el filtro de la tabla se queda). */
+function contarRevisados(fila) {
+  const panelT = fila?.closest('[role=tabpanel]');
+  const tab = panelT ? document.getElementById(panelT.getAttribute('aria-labelledby') || '') : null;
+  const filas = panelT ? [...panelT.querySelectorAll('tbody tr, ul > li')].filter(r => r.querySelector('[data-motivo]')) : [];
+  const vivas = filas.filter(r => !r.hidden).length;
+  const cu = tab?.querySelector('span.c');
+  if (cu && /^\d+$/.test(cu.textContent.trim())) cu.textContent = String(Math.max(0, Number(cu.textContent) + (fila?.hidden ? -1 : 1)));
+  return vivas;
+}
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -102,6 +143,13 @@ async function cargar(ctx) {
     f.account = f.account_id ? ctx.nombre(f.account_id) : null;
   }
   for (const e of d.especialistas || []) e.nombre = ctx.nombre(e.id);
+  d.revisados = new Map();
+  if (ctx.servidor && ctx.api) {
+    try {
+      const r = await ctx.api('acciones?modulo=salud-crm');
+      for (const a of (r.acciones || []).slice().reverse()) if (a.tipo === 'revisado_lead' || a.tipo === 'revisado_cita') d.revisados.set(a.objeto, a);
+    } catch { /* sin revisados: la lista sale entera */ }
+  }
   return d;
 }
 
@@ -198,7 +246,7 @@ function pintarInicio(cont, ctx, d) {
     h('span', { class: 'fila', style: ESP }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(ctx.persona.alias || ctx.persona.nombre)),
       h('span', { class: 'sub' }, `${vis.etiqueta} · ${S.enc.length} con campaña o leads entrando · foto de ahora con ventanas fijas de 24 h, 14 y 30 días`)),
     h('div', { class: 'fila' }, frescura(frescuraGHL(d)), frescura(frescuraCap(d))));
-  cont.append(cabecera);
+  const ctxNodos = [cabecera];   // Ronda U: lo de leer va DEBAJO de la lista (pantallaAncha), plegado
 
   // ---- 1 · lo primero hoy (máximo 7): lo que pide acción va arriba (guía 3.6)
   let pest = null;
@@ -220,7 +268,7 @@ function pintarInicio(cont, ctx, d) {
       })(),
     });
   }
-  cont.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: vis.jefatura ? 'Las subcuentas que más pierden hoy y quién lo arregla. Las de integración rota, arriba.' : 'Tus subcuentas, lo más grave arriba' },
+  ctxNodos.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: vis.jefatura ? 'Las subcuentas que más pierden hoy y quién lo arregla. Las de integración rota, arriba.' : 'Tus subcuentas, lo más grave arriba' },
     prim.length ? listaLoPrimero(prim.slice(0, MOVIL() ? 4 : 7)) : null,
     prim.length > 4 && MOVIL() ? plegable(`Ver las ${prim.length - 4} restantes`, listaLoPrimero(prim.slice(4)), { dentro: true }) : null,
     prim.length ? null : h('div', { class: 'cuerpo' }, vacioLinea('Ninguna subcuenta en rojo: leads tocados, citas marcadas y WhatsApp sin fallos.', { icono: 'ok' }))));
@@ -268,11 +316,12 @@ function pintarInicio(cont, ctx, d) {
       ir: 'Ver por especialista', alPulsar: ir('especialistas'),
     }));
   }
-  cont.append(rejillaTarjetas(fichas));
+  ctxNodos.push(rejillaTarjetas(fichas));
 
-  // ---- 3 · pestañas
-  const leads = (d.leads_sin_tocar || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id));
-  const citas = (d.citas_sin_estado || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id));
+  // ---- 3 · pestañas (lo revisado con motivo ya no sale: la lista baja de verdad)
+  const rev = d.revisados || new Map();
+  const leads = (d.leads_sin_tocar || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id) && !rev.has(claveRev('lead', x)));
+  const citas = (d.citas_sin_estado || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id) && !rev.has(claveRev('cita', x)));
   const paradas = (d.oportunidades_paradas || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id));
   const defs = [
     { id: 'subcuentas', texto: 'Subcuentas', icono: 'base', cuenta: S.rojo, cuentaEstado: 'rojo' },
@@ -283,8 +332,10 @@ function pintarInicio(cont, ctx, d) {
     { id: 'flujos', texto: 'Flujos y WhatsApp', icono: 'zap' },
     !vis.resumen ? { id: 'montajes', texto: 'Altas', icono: 'rocket', cuenta: (d.montajes || []).filter(m => vis.jefatura || ctx.carteraIds.has(m.cliente_id)).length } : null,
   ].filter(Boolean);
+  // Quien trabaja la lista (especialista, jefa de CRM) abre en «Leads sin tocar»; el resto, en Subcuentas.
+  const trabajaLista = !vis.resumen && (vis.especialista || ctx.persona.puestos.includes('jefa_crm'));
   pest = pestanas({
-    pestanas: defs, clave: 'crm.pestana', etiqueta: 'Salud del CRM',
+    pestanas: defs, clave: 'crm.pestana', etiqueta: 'Salud del CRM', activa: trabajaLista && leads.length ? 'leads' : trabajaLista && citas.length ? 'citas' : 'subcuentas',
     pintar: (id, zona) => {
       if (id === 'subcuentas') pintarSubcuentas(zona, ctx, d, vis);
       if (id === 'leads') pintarLeads(zona, ctx, d, vis, leads);
@@ -295,7 +346,6 @@ function pintarInicio(cont, ctx, d) {
       if (id === 'montajes') pintarMontajes(zona, ctx, d, vis);
     },
   });
-  cont.append(pest);
 
   // ---- 4 · hallazgos de la casa (semanal) e indicadores con su umbral
   const hall = (d.hallazgos || []).filter(x => !x.cliente_id || vis.base.some(f => f.cliente_id === x.cliente_id));
@@ -307,17 +357,28 @@ function pintarInicio(cont, ctx, d) {
       h('div', { style: { minWidth: 0 } }, h('b', { style: { font: 'var(--t-h3)' } }, x.titulo), h('p', { class: 'sub', style: { margin: 'var(--s-1) 0 0', maxWidth: '72ch' } }, x.texto)),
       x.prueba ? h('a', { class: 'bt mini', href: x.prueba, target: '_blank', rel: 'noopener' }, icono('ext'), 'Ver prueba') : h('span'))));
     const N = MOVIL() ? 3 : 5;
-    cont.append(panel({ titulo: 'Hallazgos', icono: 'flag', sub: 'Lo que el dato dice que se rompe, con la prueba en GoHighLevel' },
+    ctxNodos.push(panel({ titulo: 'Hallazgos', icono: 'flag', sub: 'Lo que el dato dice que se rompe, con la prueba en GoHighLevel' },
       lista(hall.slice(0, N)),
       hall.length > N ? plegable(`Ver los ${hall.length - N} hallazgos restantes`, lista(hall.slice(N)), { dentro: true }) : null));
   }
-  cont.append(indicadoresPuesto(ctx, S, casa, vis));
-  cont.append(plegable('Cómo se cuenta', h('div', { class: 'cuerpo pila' },
+  ctxNodos.push(indicadoresPuesto(ctx, S, casa, vis));
+  ctxNodos.push(plegable('Cómo se cuenta', h('div', { class: 'cuerpo pila' },
     h('p', { style: { margin: 0, maxWidth: '72ch' } }, `${d.reglas?.lead || ''} Un «intento» es una llamada o un mensaje que sale de GoHighLevel hecho por una persona (no por un flujo): las llamadas del despacho desde su móvil no constan, por eso «sin tocar» y la velocidad van «a medias». Encendida = campaña de Meta activa o 3 o más leads en 30 días.`),
     h('p', { style: { margin: 0, maxWidth: '72ch' } }, `Esta pantalla es una foto de ahora con ventanas fijas (leads de 30 días, citas de 14 y 30 días, «sin tocar» a las 24 h, paradas a las 72 h); no depende de ningún periodo. ${d.ventanas?.leads ? `Ventanas: ${d.ventanas.leads}.` : ''}`),
     h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'Los flujos con error no salen por la API y la asistencia depende de que el despacho marque las citas: por eso varias cifras van «a medias».'),
     h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'En las tablas, el punto rojo marca solo el tercio más grave (más leads y citas sin atender, o más horas esperando); el resto de lo que pasa el umbral va con punto ámbar. El texto («En rojo», las horas) no cambia.')), { icono: 'info' }));
-  cont.append(h('p', { class: 'sub', style: { margin: 0 } }, `GoHighLevel leído el ${d.fuentes?.ghl?.hora || '—'} en hora de Madrid (${fmt.num(d.fuentes?.ghl?.llamadas)} lecturas, solo lectura) · Meta de Captación del ${d.fuentes?.captacion?.hora || '—'}`));
+  ctxNodos.push(h('p', { class: 'sub', style: { margin: 0 } }, `GoHighLevel leído el ${d.fuentes?.ghl?.hora || '—'} en hora de Madrid (${fmt.num(d.fuentes?.ghl?.llamadas)} lecturas, solo lectura) · Meta de Captación del ${d.fuentes?.captacion?.hora || '—'}`));
+
+  // ---- franja de cifras (filtran la lista: llevan a su pestaña) + lista + contexto debajo
+  const franja = franjaCifras([
+    !vis.resumen ? { etiqueta: 'Sin tocar > 24 h', valor: leads.length, estado: leads.length ? 'rojo' : '', alPulsar: () => pest.elegir('leads') } : null,
+    !vis.resumen ? { etiqueta: 'Citas sin estado', valor: citas.length, estado: citas.length ? 'rojo' : '', alPulsar: () => pest.elegir('citas') } : null,
+    { etiqueta: 'En rojo', valor: S.rojo, estado: S.rojo ? 'rojo' : '', alPulsar: () => pest.elegir('subcuentas') },
+    !vis.resumen ? { etiqueta: 'Paradas > 72 h', valor: paradas.length, alPulsar: () => pest.elegir('paradas') } : null,
+    { etiqueta: 'WhatsApp fallido', valor: S.pctWa === null ? 'sin envíos' : pc(S.pctWa), alPulsar: () => pest.elegir('flujos') },
+    rev.size ? { etiqueta: 'Revisados con motivo', valor: rev.size, titulo: 'Leads y citas que alguien revisó y salieron de la lista' } : null,
+  ], { etiqueta: 'Cifras del CRM (llevan a su lista)' });
+  cont.append(pantallaAncha({ id: ID, filtros: franjaEnLinea(franja), lista: pest, contexto: ctxNodos, tituloContexto: 'Lo primero hoy, cifras e indicadores' }));
 }
 
 // ------------------------------------------------------------------ pestaña: subcuentas
@@ -369,9 +430,10 @@ function pintarSubcuentas(zona, ctx, d, vis) {
 
 // ------------------------------------------------------------------ pestaña: leads sin tocar
 function pintarLeads(zona, ctx, d, vis, leads) {
+  leads = leads.filter(x => !d.revisados?.has(claveRev('lead', x)));
   const gota = cuentagotas(leads, x => (x.horas > 72 ? 'rojo' : 'ambar'), x => x.horas || 0);
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
-  zona.append(panel({ titulo: 'Leads sin tocar más de 24 h', icono: 'phone', sub: 'Sin ninguna llamada ni mensaje de una persona en GoHighLevel. Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
+  zona.append(panel({ titulo: 'Leads sin tocar más de 24 h', icono: 'phone', sub: 'Sin ninguna llamada ni mensaje de una persona en GoHighLevel. «Revisado» con su motivo lo saca de la lista (se puede deshacer). Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas: leads, buscar: { campos: ['subcuenta', 'medio'], placeholder: 'Buscar subcuenta u origen' }, filtros: [{ clave: 'subcuenta', titulo: 'Subcuenta' }],
       orden: { clave: 'horas', dir: 'desc' },
@@ -383,10 +445,12 @@ function pintarLeads(zona, ctx, d, vis, leads) {
         { clave: 'automatico', titulo: 'Mensaje automático', celda: x => x.automatico ? 'Sí salió' : puntoEstado('ambar', 'No salió') },
         { clave: 'respondio', titulo: 'El lead escribió', celda: x => x.respondio ? puntoEstado('ambar', 'Sí, sin respuesta') : 'No' },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
-          botonVerDatos(ctx, x, vis), abrirGHL(x.enlace, 'Abrir contacto en GHL'),
-          accionSim(ctx, { texto: 'Nota', pregunta: '¿Poner la nota «sin contactar a las 24 h»?', tipo: 'nota', objeto: `${x.subcuenta} · lead ${x.ref}`, cliente_id: x.cliente_id,
-            vista_previa: `Pondría en el contacto de GHL (${x.subcuenta}) la nota: «Sin contactar a las ${horasTxt(x.horas)} · revisado desde la app». Espera el permiso de GHL (falta un permiso de GoHighLevel).` }),
-          porSub.get(x.sub_id) ? tareaAccount(ctx, porSub.get(x.sub_id), `Llamar al lead del ${fDiaRO(x.creado)} (${horasTxt(x.horas)} sin contactar)`) : null) },
+          // Ronda U: fila compacta · verbo principal (Revisado) + Ver datos + «⋯» con lo que sale fuera (GHL, nota, tarea)
+          botonRevisado(ctx, x, 'lead', d), botonVerDatos(ctx, x, vis),
+          masAcciones([abrirGHL(x.enlace, 'Abrir contacto en GHL'),
+            accionSim(ctx, { texto: 'Nota en GHL', pregunta: '¿Poner la nota «sin contactar a las 24 h»?', tipo: 'nota', objeto: `${x.subcuenta} · lead ${x.ref}`, cliente_id: x.cliente_id,
+              vista_previa: `Pondría en el contacto de GHL (${x.subcuenta}) la nota: «Sin contactar a las ${horasTxt(x.horas)} · revisado desde la app». Espera el permiso de GHL (falta un permiso de GoHighLevel).` }),
+            porSub.get(x.sub_id) ? tareaAccount(ctx, porSub.get(x.sub_id), `Llamar al lead del ${fDiaRO(x.creado)} (${horasTxt(x.horas)} sin contactar)`) : null].filter(Boolean), `el lead de ${x.subcuenta}`)) },
       ],
       vacio: { titulo: 'Ningún lead sin tocar', porque: 'Todos los leads del mes tienen al menos un intento en GHL.' },
     })));
@@ -416,6 +480,7 @@ function pintarParadas(zona, ctx, d, vis, paradas) {
 
 // ------------------------------------------------------------------ pestaña: citas sin estado
 function pintarCitas(zona, ctx, d, vis, citas) {
+  citas = citas.filter(x => !d.revisados?.has(claveRev('cita', x)));
   const gota = cuentagotas(citas, x => (x.horas > 48 ? 'rojo' : 'ambar'), x => x.horas || 0);
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
   zona.append(avisoParcial('Marcar el estado de una cita en GoHighLevel manda un WhatsApp al lead (ley de la casa). En el prototipo no se marca nada: queda en la cola con su vista previa hasta tener el permiso de GoHighLevel.', { titulo: 'Ojo al marcar.' }));
@@ -429,13 +494,14 @@ function pintarCitas(zona, ctx, d, vis, citas) {
         { clave: 'calendario', titulo: 'Calendario', celda: x => h('span', { style: { display: 'inline-block', minWidth: '160px' } }, x.calendario || '—') },
         { clave: 'horas', titulo: 'Sin marcar', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
-          accionSim(ctx, { texto: 'Se presentó', pregunta: '¿Marcar «se presentó»? Manda WhatsApp al lead', tipo: 'marcar_cita', objeto: `${x.subcuenta} · cita ${x.ref}`, cliente_id: x.cliente_id,
+          botonRevisado(ctx, x, 'cita', d),
+          masAcciones([accionSim(ctx, { texto: 'Se presentó', pregunta: '¿Marcar «se presentó»? Manda WhatsApp al lead', tipo: 'marcar_cita', objeto: `${x.subcuenta} · cita ${x.ref}`, cliente_id: x.cliente_id,
             vista_previa: `Marcaría en GHL la cita del ${fDiaRO(x.inicio)} ${x.inicio?.slice(11)} (${x.calendario}) como «se presentó». GHL avisará al lead por WhatsApp. Espera un permiso de GoHighLevel.` }),
           accionSim(ctx, { texto: 'No vino', pregunta: '¿Marcar «no se presentó»? Manda WhatsApp al lead', tipo: 'marcar_cita', objeto: `${x.subcuenta} · cita ${x.ref}`, cliente_id: x.cliente_id,
             vista_previa: `Marcaría en GHL la cita del ${fDiaRO(x.inicio)} ${x.inicio?.slice(11)} (${x.calendario}) como «no se presentó» y el flujo de reagendar le escribiría. Espera un permiso de GoHighLevel.` }),
           accionSim(ctx, { texto: 'Reprogramar', pregunta: '¿Proponer otra hora al lead?', tipo: 'reprogramar_cita', objeto: `${x.subcuenta} · cita ${x.ref}`, cliente_id: x.cliente_id,
             vista_previa: `Abriría la cita del ${fDiaRO(x.inicio)} para moverla y mandaría al lead el enlace de reagendar. Espera un permiso de GoHighLevel.` }),
-          x.datos ? botonVerDatos(ctx, x, vis) : null, abrirGHL(x.enlace_contacto || x.enlace, x.enlace_contacto ? 'Abrir contacto en GHL' : 'Abrir calendario en GHL')) },
+          x.datos ? botonVerDatos(ctx, x, vis) : null, abrirGHL(x.enlace_contacto || x.enlace, x.enlace_contacto ? 'Abrir contacto en GHL' : 'Abrir calendario en GHL')].filter(Boolean), `la cita de ${x.subcuenta}`)) },
       ],
       vacio: { titulo: 'Todas las citas están marcadas', porque: 'Ninguna cita pasada de los últimos 14 días sin estado.' },
     })));
@@ -475,7 +541,10 @@ function pintarEspecialistas(zona, ctx, d, vis) {
         { clave: 'sin_tocar', titulo: 'Leads sin tocar', num: true },
         { clave: 'sin_estado', titulo: 'Citas sin estado', num: true },
         { clave: 'sin_subcuenta', titulo: 'Sin subcuenta emparejada', celda: e => e.sin_subcuenta?.length ? h('span', { class: 'sub', style: { display: 'inline-block', whiteSpace: 'normal', minWidth: '200px' } }, e.sin_subcuenta.join(', ')) : '—' },
-      ],
+        // Ronda U: «Proponer reparto a Mili» en la fila de quien pasa del tope o acumula rojos (interno: deshacer, sin «¿Seguro?»)
+        vis.jefatura ? { clave: 'reparto', titulo: 'Reparto', ordenable: false, celda: e => (e.clientes > e.tope || e.rojo >= 5) && !ctx.soloLectura ? botonDeshacer({ texto: 'Proponer reparto a Mili', hecho: 'Propuesta enviada a Mili', icono: 'users',
+          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'proponer_reasignacion', objeto: `Carga de ${e.nombre}`, texto: `${e.nombre}: ${e.clientes} de ${e.tope} clientes y ${e.rojo} en rojo`, vista_previa: `Propone a Mili repartir parte de la cartera de CRM de ${e.nombre} (${e.clientes} de ${e.tope} clientes, ${e.rojo} subcuentas en rojo). Deciden Mili y Tomás.` }); return 'Propuesta en el Mi día de Mili'; } }) : h('span', { class: 'sub' }, '—') } : null,
+      ].filter(Boolean),
       vacio: { titulo: 'Sin especialistas en asignaciones', texto: 'La silla CRM no tiene a nadie asignado todavía.' },
     })));
   const sin = d.resumen?.encendidas_sin_especialista || [];

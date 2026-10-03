@@ -534,11 +534,21 @@ llam.sort(key=lambda x: x['inicio'])
 zpc = J(V7 / 'zadarma_por_cliente.json', {})
 EXT = (zpc.get('_meta') or {}).get('_extensiones', {})
 tel_cli = defaultdict(set)
+# Regla común de teléfonos (3-oct, telefono.py): los conocidos se pasan por la regla; los que no cuadran no cruzan
+# y van a data/telefonos/dudosos.json (apartado «bandeja», por cliente, sin el número entero).
+from telefono import limpiar as limpiar_tel, Dudosos  # noqa: E402
+DUD_TEL = Dudosos('bandeja')
 for n2, L2 in zpc.items():
     if n2.startswith('_') or not isinstance(L2, dict):
         continue
     for t2 in L2.get('telefonos_conocidos') or []:
-        tel_cli[re.sub(r'\D', '', str(t2))[-6:]].add(n2)
+        r2 = limpiar_tel(t2)
+        if r2['motivo'] != 'ok':
+            if r2['motivo'] == 'dudoso':
+                cid2 = PANEL_A_APP.get(n2)
+                DUD_TEL.anotar(cid2, t2, r2['aviso'], 'Teléfonos conocidos del cliente en Zadarma (panel)', (CLI.get(cid2) or {}).get('nombre') or n2)
+            continue
+        tel_cli[r2['telefono'][-6:]].add(n2)
 lim = HOY
 k3 = 0
 while k3 < 5:
@@ -665,7 +675,16 @@ if E.escanear_fichero(tmp2):
     print('PUERTA DE SECRETOS: por_cliente.json no se escribe.')
     sys.exit(2)
 os.replace(tmp2, SALIDA.with_name('por_cliente.json'))
+DUD_TEL.guardar()
 r = out['resumen']
 print(f"bandeja.json · Desk {fuentes['desk']['plan']} ({hora_desk}) · Zadarma {fuentes['zadarma']['plan']}")
 print(f"  correos {r['correos']} (rojo {r['rojo']}, ámbar {r['ambar']}, quejas {r['quejas']}, automáticos {r['automaticos']}) · ruido fuera {r['ruido']}")
 print(f"  llamadas sin devolver {r['llamadas']} · sin agente {r['sin_agente']} · departamentos legibles {sum(1 for d in out['departamentos'] if d['legible'])}/{len(out['departamentos'])}")
+
+# Bandeja v5 (3-oct): el hilo legible de cada correo (data/bandeja/hilos.json) se rehace con la bandeja.
+try:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import generar_hilos  # noqa: E402
+    generar_hilos.main()
+except Exception as _e:   # la bandeja ya está escrita: sin hilos, la app abre el correo en Desk
+    print('hilos.json no se ha rehecho:', _e)

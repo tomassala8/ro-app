@@ -100,3 +100,7 @@
 - «Añadir persona» solo con `puede_anadir === true` (y nunca en «ver como»); si el servidor contesta 403 al añadir, se refrescan los canales y el botón desaparece.
 - Mensaje rechazado con 400 (sueldos): el motivo del servidor sale tal cual en una línea fija bajo la caja («No se ha enviado. Los sueldos no se escriben…», `role=alert`) y el texto se queda para corregirlo; la línea se borra al volver a escribir.
 - `tapado.tapar()` tapa también «la contraseña de … es X» sin «:» (`RX_CLAVE_ES` + `parece_clave`, la misma que `servir.limpiar_texto`). `servir.py` sigue con su copia: **para el dueño de servir.py**, cambiar `RX_CLAVE_ES`/`_parece_clave` por `TAPADO.RX_CLAVE_ES`/`TAPADO.parece_clave` (con su copia como respaldo en el `except ImportError`); hoy aplicarla dos veces no cambia nada (`(?!••••)`). `--solo-tapar` sobre el espejo: 0 ficheros cambiados.
+
+## Puesta al día 3-oct-2026
+- **Avisos programados** (`avisos_programados.py`, 11 reglas) publican en los canales de avisos con **botones** en el mensaje (hasta 5, a una pantalla o a un enlace); `chat_equipo.js` los pinta y respeta los saltos de línea. Ver `_ESTADO_avisos.md`.
+- **Puente de chat con ClickUp:** programado y apagado (`sincronia.py`). Ver `_ESTADO_sincronia.md`.

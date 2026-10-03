@@ -10,6 +10,7 @@
 // A8: selección múltiple con lote (Lo tengo · Resuelta · No aplica con motivo · Posponer), «Posponer» (mañana, el
 // lunes o una fecha) y cifras con UNA sola definición: la del generador (D.definiciones), interpretada abajo tal cual.
 
+import { franjaCifras, consejoCompacto } from './_trabajo.js';   // Ronda U (molde de pantalla de trabajo)
 import {
   h, fmt, tile, listaLoPrimero, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, logoCliente, panel,
   icono, iniciales, limpiaTexto, tablaApilable, copiar, avisoFlotante, frescura,
@@ -343,11 +344,6 @@ function tarjeta(a) {
   const fuera = (a.abrir || []).map(ab => h('a', { class: 'bt mini', href: ab.url, target: '_blank', rel: 'noopener', title: ab.texto,
     on: { click: () => ctx.rastro({ accion: 'abrir', objeto: a.id, detalle: ab.texto }) } }, icono(ICONO_HERR[ab.herramienta] || 'ext', { clase: 's' }), ab.texto, icono('ext', { clase: 's' })));
   if (fuera.length) mas.append(h('div', { class: 'fila', style: { gap: 'var(--s-2)' } }, ...fuera));
-  if (mas.childElementCount) {
-    acciones.append(h('details', { class: 'que-es', style: { flex: '1 1 100%', minWidth: '0' } },
-      h('summary', { style: { minHeight: '32px', display: 'inline-flex', alignItems: 'center' } }, abierta ? 'Más: resuelta, no aplica, posponer…' : 'Más acciones'), mas));
-  }
-
   const det = [
     ...(a.detalle || []).map(limpiaTexto),
     a.reabierta && est.estado === 'reabierta' ? a.reabierta : null,
@@ -359,23 +355,32 @@ function tarjeta(a) {
     `De dónde sale: ${a.fuente}`,
   ].filter(Boolean);
 
+  // Ronda U (50 #1, Alertas «entre 4 y 10 pantallas»): la alerta en DOS líneas (qué + plazo · de dónde, quién y desde) con
+  // «Ir» y «Lo tengo» a la derecha; el resto de acciones y el porqué, en un solo plegable «Más». Antes ~244 px por alerta.
+  const UNA = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: '0' };
+  const movil = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
+  const masDet = h('details', { class: 'que-es', style: { flex: '1 1 100%', minWidth: '0' } },
+    h('summary', { style: { minHeight: '32px', display: 'inline-flex', alignItems: 'center' } }, abierta ? 'Más: resuelta, no aplica, posponer y por qué' : 'Más y por qué'),
+    mas.childElementCount ? mas : null,
+    h('ul', { class: 'sub', style: { ...PILA(1), margin: 'var(--s-1) 0 0', paddingLeft: 'var(--s-4)' } }, det.map(x => h('li', {}, x))));
   return h('article', { class: 'panel', 'data-alerta': a.id, 'aria-label': `${g.texto}: ${a.motivo}`,
-    style: { ...PILA(2), padding: 'var(--s-3) var(--s-4)', borderLeft: `4px solid ${BORDE_GRAV[a.gravedad] || 'var(--off)'}`, background: abierta ? null : 'var(--card-2)', boxShadow: 'none' } },
-    h('div', { class: 'fila', style: { font: 'var(--t-meta)', color: 'var(--dim)', fontWeight: '600', flexWrap: 'wrap' } },
-      casilla,
-      h('span', { class: `ico-c s ${g.color === 'gris' ? '' : g.color}` }, icono(dep.icono || 'alert', { clase: 's' })),
-      h('span', {}, `${dep.nombre} · ${a.titulo}`),
-      chipEstado(g.color, g.texto),
-      est.estado !== 'nueva' ? chipEstado(ESTADO[est.estado]?.color || 'gris', ESTADO[est.estado]?.texto || est.estado) : null,
-      nivel ? chipEstado('rojo', `Escalada a ${corto(ctx, responsable)}`) : null),
-    h('div', { style: { font: 'var(--t-h3)', fontWeight: '600', overflowWrap: 'anywhere', maxWidth: '72ch' } }, limpiaTexto(a.motivo)),
-    h('div', { class: 'meta-linea', style: META },
-      cli ? h('span', {}, logoCliente(cli), cli.nombre) : (a.persona ? h('span', {}, icono('persona', { clase: 's' }), a.persona) : null),
-      h('span', { title: 'Dueño de la alerta' }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(corto(ctx, a.dueno_id))), a.dueno_id === ctx.persona.id ? 'Tú' : corto(ctx, a.dueno_id)),
-      a.desde ? h('span', { title: `Desde ${fDiaHoraRO(a.desde)}` }, icono('hist', { clase: 's' }), `Desde ${fmt.hace(a.desde) === 'hoy' ? 'hoy' : fmt.hace(a.desde)}`) : null,
-      h('span', {}, chipEstado(pl.color, pl.texto))),
-    h('details', { class: 'que-es' }, h('summary', { style: { minHeight: '32px', display: 'flex', alignItems: 'center' } }, 'Por qué, quién y cómo se cierra'), h('ul', { class: 'sub', style: { ...PILA(1), margin: 'var(--s-1) 0 0', paddingLeft: 'var(--s-4)' } }, det.map(t => h('li', {}, t)))),
-    acciones);
+    // Ronda U: flex con salto (no rejilla): si los botones no caben al lado del texto (≥ 260 px), bajan a su línea, a cualquier ancho
+    style: { display: 'flex', flexWrap: 'wrap', columnGap: 'var(--s-3)', rowGap: 'var(--s-1)', alignItems: 'center', padding: 'var(--s-2) var(--s-4)',
+      borderLeft: `4px solid ${BORDE_GRAV[a.gravedad] || 'var(--off)'}`, background: abierta ? null : 'var(--card-2)', boxShadow: 'none' } },
+    casilla,
+    h('span', { class: `ico-c s ${g.color === 'gris' ? '' : g.color}` }, icono(dep.icono || 'alert', { clase: 's' })),
+    h('div', { style: { minWidth: '0', flex: '1 1 260px' } },
+      h('div', { class: 'fila', style: { gap: 'var(--s-1) var(--s-2)', flexWrap: 'wrap', minWidth: '0' } },
+        // en el móvil el qué ocupa su línea entera (2 como mucho) y los chips bajan debajo
+        h('b', { style: movil ? { flex: '1 1 100%', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden', font: 'var(--t-h3)', fontWeight: '700', overflowWrap: 'anywhere' }
+          : { ...UNA, flex: '1 1 200px', font: 'var(--t-h3)', fontWeight: '700' }, title: limpiaTexto(a.motivo) }, limpiaTexto(a.motivo)),   // ≥ 200 px: si no caben los chips, bajan
+        h('span', { style: { flex: 'none' } }, chipEstado(pl.color, pl.texto)),
+        nivel ? h('span', { style: { flex: 'none' } }, chipEstado('rojo', `Escalada a ${corto(ctx, responsable)}`)) : null,
+        est.estado !== 'nueva' ? h('span', { style: { flex: 'none' } }, chipEstado(ESTADO[est.estado]?.color || 'gris', ESTADO[est.estado]?.texto || est.estado)) : null),
+      h('div', { class: 'sub', style: UNA }, [`${dep.nombre} · ${a.titulo}`, cli ? cli.nombre : a.persona || null, `de ${a.dueno_id === ctx.persona.id ? 'ti' : corto(ctx, a.dueno_id)}`,
+        a.desde ? `desde ${fmt.hace(a.desde) === 'hoy' ? 'hoy' : fmt.hace(a.desde)}` : null, g.texto].filter(Boolean).join(' · '))),
+    Object.assign(acciones, { style: 'display: flex; flex-wrap: wrap; gap: var(--s-2); flex: 0 1 auto; margin-left: auto' }),
+    masDet);
 }
 
 // --------------------------------------------------------------------- lista con filtros, selección y lote
@@ -433,7 +438,13 @@ function pintarLista(zona) {
         { valor: 'cerradas', texto: 'Resueltas y no aplica', icono: 'ok', cuenta: n('cerradas') },
         { valor: 'todas', texto: 'Todas', cuenta: base.length },
       ], alCambiar: () => { S.visibles = 30; pintar(); } });
-    filtros.replaceChildren(...[chQuien, chDep, chEst, h('label', { class: 'campo', style: { maxWidth: '420px' } }, buscar)].filter(Boolean));
+    // Ronda U (molde, móvil): a 390 px los tres grupos de chips medían ~400 px antes de la primera alerta; en el móvil van
+    // plegados en «Filtros» (la franja de cifras de arriba ya filtra lo de cada día) y el buscador queda a la vista.
+    const grupos = [chQuien, chDep, chEst].filter(Boolean);
+    const movilF = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
+    const resumenF = grupos.map(g => g.querySelector('button[aria-pressed="true"]')?.textContent.replace(/\d+$/, '').trim()).filter(Boolean).join(' · ');
+    filtros.replaceChildren(...(movilF ? [h('details', { class: 'que-es' }, h('summary', {}, `Filtros · ${resumenF}`), h('div', { style: { ...PILA(2), marginTop: 'var(--s-2)' } }, grupos))] : grupos),
+      h('label', { class: 'campo', style: { maxWidth: '420px' } }, buscar));
   };
   S.elegirDep = d => { const i = [...chDep.querySelectorAll('button')].findIndex(b => b.textContent.startsWith(d ? (deps[d]?.nombre || d) : 'Todos')); chDep.querySelectorAll('button')[i]?.click(); };
 
@@ -646,38 +657,21 @@ async function render(cont, ctx) {
     const mias = de(todas, 'mias');
     const escaladasAMi = de(todas, 'escaladas_a_mi');
     ctx.titulo('Alertas del departamento', `${fmt.plural(K.mias, 'alerta tuya abierta', 'alertas tuyas abiertas')}${K.urgentes ? ` · ${fmt.plural(K.urgentes, 'crítica')}` : ''}${K.plazo_pasado ? ` · ${fmt.num(K.plazo_pasado)} con el plazo pasado` : ''}${D.alcance !== 'mias' ? ` · ${fmt.num(K.en_vista)} en tu vista` : ''}. Dato de las ${String(D.generado).slice(11)}.`);
-    const cifras = h('div', { class: 'tiles', role: 'list', 'aria-label': 'Cifras', 'data-contadores': JSON.stringify(K) }, [
-      tile({ icono: 'campana', etiqueta: 'Mis alertas abiertas', valor: K.mias, estado: K.urgentes ? 'rojo' : K.mias ? 'ambar' : 'verde',
-        contexto: `${K.urgentes ? `${fmt.plural(K.urgentes, 'crítica')}` : 'Ninguna crítica'}${K.escaladas_a_mi ? ` · ${fmt.num(K.escaladas_a_mi)} te han llegado escaladas` : ''}${K.pospuestas ? ` · ${fmt.num(K.pospuestas)} pospuestas aparte` : ''}`,
-        medible: 'hoy', ir: 'Ver las mías', alPulsar: () => irA?.('mias', '', 'abiertas') }),
-      tile({ icono: 'clock', etiqueta: 'Con el plazo pasado', valor: K.plazo_pasado, estado: K.plazo_pasado ? 'rojo' : 'verde',
-        contexto: K.plazo_pasado ? 'De las tuyas. Sin «Lo tengo», suben al siguiente' : 'Todas dentro de plazo', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => irA?.('mias', '', 'pasadas') }),
-      tile({ icono: 'sube', etiqueta: 'Escaladas a ti', valor: K.escaladas_a_mi, estado: K.escaladas_a_mi ? 'rojo' : 'verde',
-        contexto: K.escaladas_a_mi ? 'Ya cuentan en «mías»: pasaron el plazo de su dueño' : 'Nada escalado a tu nombre', medible: 'hoy', ir: 'Ver escaladas', alPulsar: () => irA?.('mias', '', 'escaladas') }),
+    // Ronda U (50 #1, molde): «Lo mío» de Mi día ya trae lo tuyo con su verbo; aquí la pantalla es la LISTA con sus filtros.
+    // Las cuatro tarjetas (≈ 250 px) y «Lo primero hoy» (que repetía Lo mío) pasan a una franja de cifras que SON los filtros
+    // de la lista (mismas definiciones; data-contadores lo sigue leyendo pruebas_coherencia).
+    const franja = franjaCifras([
+      { etiqueta: 'Mías abiertas', valor: K.mias, estado: K.urgentes ? 'rojo' : '', alPulsar: () => irA?.('mias', '', 'abiertas'),
+        titulo: `${K.urgentes ? fmt.plural(K.urgentes, 'crítica') : 'Ninguna crítica'}${K.pospuestas ? ` · ${fmt.num(K.pospuestas)} pospuestas aparte` : ''}` },
+      { etiqueta: 'Plazo pasado', valor: K.plazo_pasado, estado: K.plazo_pasado ? 'rojo' : '', alPulsar: () => irA?.('mias', '', 'pasadas'), titulo: 'De las tuyas. Sin «Lo tengo», suben al siguiente' },
+      { etiqueta: 'Escaladas a ti', valor: K.escaladas_a_mi, estado: K.escaladas_a_mi ? 'rojo' : '', alPulsar: () => irA?.('mias', '', 'escaladas'), titulo: 'Ya cuentan en «mías»: pasaron el plazo de su dueño' },
       D.alcance !== 'mias'
-        ? tile({ icono: 'res', etiqueta: D.alcance === 'todas' ? 'Abiertas en la agencia' : 'Abiertas en tu departamento', valor: K.en_vista,
-          estado: K.urgentes_en_vista ? 'ambar' : 'verde', contexto: `${fmt.plural(K.urgentes_en_vista, 'crítica')} · ${fmt.plural(K.escaladas_en_vista, 'escalada')}`,
-          medible: 'hoy', ir: 'Ver todas', alPulsar: () => irA?.('dep', '', 'abiertas') })
-        : tile({ icono: 'clock', etiqueta: 'Pospuestas', valor: K.pospuestas, estado: '', contexto: 'Vuelven solas en su fecha; mientras, no cuentan ni escalan', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => irA?.('mias', '', 'pospuestas') }),
-    ].map(t => { t.setAttribute('role', 'listitem'); return t; }));
-    // lo primero hoy (máx. 3: escaladas a mí, luego urgentes con el plazo más cerca)
-    const primeras = [...escaladasAMi, ...mias.filter(a => !escaladasAMi.includes(a))]
-      .sort((x, y) => (escaladasAMi.includes(y) - escaladasAMi.includes(x)) || (GRAV[x.gravedad].orden - GRAV[y.gravedad].orden) || ((venceDe(x, estadoDe(x)) || 9e15) - (venceDe(y, estadoDe(y)) || 9e15)))
-      .slice(0, 3);
-    arriba.replaceChildren(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: 'Lo escalado a ti y lo crítico con el plazo más cerca (como mucho 3). «Ir» abre el correo, la ficha o la cuenta exacta.' },
-      listaLoPrimero(primeras.map(a => {
-        const pl = plazoDe(a, estadoDe(a));
-        return {
-          estado: GRAV[a.gravedad].color === 'gris' ? 'ambar' : GRAV[a.gravedad].color,
-          icono: D.departamentos?.[a.departamento]?.icono || 'alert',
-          motivo: limpiaTexto(a.motivo),
-          detalle: `${D.departamentos?.[a.departamento]?.nombre || ''} · ${pl.texto}${escaladasAMi.includes(a) ? ` · escalada desde ${corto(ctx, a.dueno_id)}` : ''}`,
-          botones: [botonIr(a),
-            a.abrir?.[0] ? h('a', { class: 'bt mini', href: a.abrir[0].url, target: '_blank', rel: 'noopener', on: { click: () => ctx.rastro({ accion: 'abrir', objeto: a.id, detalle: a.abrir[0].texto }) } }, icono(ICONO_HERR[a.abrir[0].herramienta] || 'ext', { clase: 's' }), a.abrir[0].texto) : null,
-          ].filter(Boolean),
-        };
-      }), { vacio: { titulo: 'Nada crítico a tu nombre', porque: 'No tienes alertas abiertas ni escaladas. Todo en orden.', celebrar: true } })),
-    cifras);   // guía 30 (3.6): lo que pide acción, primero; las cifras, debajo
+        ? { etiqueta: D.alcance === 'todas' ? 'Abiertas en la agencia' : 'En tu departamento', valor: K.en_vista, alPulsar: () => irA?.('dep', '', 'abiertas'), titulo: `${fmt.plural(K.urgentes_en_vista, 'crítica')} · ${fmt.plural(K.escaladas_en_vista, 'escalada')}` }
+        : { etiqueta: 'Pospuestas', valor: K.pospuestas, alPulsar: () => irA?.('mias', '', 'pospuestas'), titulo: 'Vuelven solas en su fecha; mientras, no cuentan ni escalan' },
+    ], { etiqueta: 'Cifras de alertas (filtran la lista)' });
+    franja.dataset.contadores = JSON.stringify(K);
+    void mias; void escaladasAMi;
+    arriba.replaceChildren(franja);
   };
   pintarArriba();
 
@@ -707,7 +701,9 @@ async function render(cont, ctx) {
   };
   // Tras cada marca (una o en lote): cifras de arriba, chips y lista, con la misma definición.
   S.refrescar = () => { pintarArriba(); if (pest.activa() === 'lista') LISTA?.(); };
-  cont.append(h('section', { class: 'panel' }, pest));
+  const secPest = h('section', { class: 'panel' }, pest);
+  cont.append(secPest);
+  consejoCompacto(cont, secPest);   // el consejo de la IA, plegado y debajo de la lista
   // ---- 3 · avisos de horas (regla de Tomás, 2-oct): se ven, pero no cuentan como alerta, no vencen y no escalan ----
   const avisos = D.avisos || [];
   if (avisos.length) {

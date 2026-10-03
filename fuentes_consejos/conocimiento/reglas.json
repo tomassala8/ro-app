@@ -1,0 +1,2894 @@
+{
+ "_meta": "Generado por construir_reglas.py desde reglas_minadas.json (3-oct-2026). Cada regla: texto llano (parafraseado, nunca copiado), umbral, autor (Cole Gordon, Hormozi o RO), fichero y línea comprobados, y «url» a GitHub si está en el repo ro-equipo. Los ids con «alias_de» son los que usa el motor.",
+ "reglas": [
+  {
+   "id": "acceso_delegado_minimo",
+   "tema": "prudencia",
+   "puestos": [
+    "tecnico_altas",
+    "especialista_ghl"
+   ],
+   "regla": "Pide acceso delegado con el permiso mínimo, nunca la contraseña del cliente; si te la manda, que la rote.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/onboarding-accesos-ro/SKILL.md",
+   "ancla": "Paso a paso",
+   "linea": 24,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/onboarding-accesos-ro/SKILL.md?plain=1#L24"
+  },
+  {
+   "id": "accesos_un_correo",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas"
+   ],
+   "regla": "Pide todos los accesos en un solo correo, nunca en goteo, y da cada uno por bueno solo cuando has entrado de verdad.",
+   "umbral": "0 accesos en el limbo a D-3",
+   "autor": "RO",
+   "fichero": "30_SKILLS/onboarding-accesos-ro/SKILL.md",
+   "ancla": "Paso a paso",
+   "linea": 17,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/onboarding-accesos-ro/SKILL.md?plain=1#L17"
+  },
+  {
+   "id": "adm_alta_facturacion",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion"
+   ],
+   "regla": "Cobra siempre por domiciliación SEPA; si el cliente pide otra vía, se escala a Tomás.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-17 · Cobro SIEMPRE por domiciliación SEPA",
+   "linea": 346,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "cobro_sepa"
+  },
+  {
+   "id": "adm_cobro",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "regla": "Ante un impago, aviso a los 30 días y decisión de Tomás a los 60; nunca se acumulan más de dos cuotas.",
+   "umbral": "30 d aviso · 60 d decisión · máx. 2 cuotas",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Objetivos y dinero",
+   "linea": 64,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "impago_corte"
+  },
+  {
+   "id": "airtable_solo_lectura",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "regla": "El Airtable de facturación es de solo lectura salvo para Sofía; los ajustes van en una hoja aparte.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "feedback_no_tocar_airtable_facturacion.md",
+   "ancla": null,
+   "linea": 7,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "angulo_decision_inminente",
+   "tema": "creatividades",
+   "puestos": [
+    "proyectos",
+    "produccion",
+    "trafficker"
+   ],
+   "regla": "Al menos uno de los tres ángulos de cada cliente debe hablar de una decisión a punto de tomarse (cambiar de asesoría sep-feb).",
+   "umbral": "1 de 3 ángulos",
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "10. Lo que dice el histórico de anuncios (añadido el 28-sep por la tarde)",
+   "linea": 117,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L117"
+  },
+  {
+   "id": "arranque_50_dia_estaticos",
+   "tema": "arranque",
+   "puestos": [
+    "trafficker"
+   ],
+   "regla": "Arranca con tres conjuntos de cinco estáticos a formulario nativo; gastar buena parte del mes la primera semana es el test.",
+   "umbral": "≈ 50 €/día los días 1-4",
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "3. Publicidad: la estructura de arranque",
+   "linea": 39,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L39"
+  },
+  {
+   "id": "arranque_dia_10",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas",
+    "proyectos",
+    "trafficker"
+   ],
+   "regla": "La campaña de un cliente nuevo se enciende el día 10 desde el alta del contrato, nunca después del 12.",
+   "umbral": "día 10, límite 12",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Clientes y reuniones",
+   "linea": 79,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "encendido_dia_10"
+  },
+  {
+   "id": "arranque_lista",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas"
+   ],
+   "regla": "Pide todos los accesos en un solo correo, nunca en goteo, y da cada uno por bueno solo cuando has entrado de verdad.",
+   "umbral": "0 accesos en el limbo a D-3",
+   "autor": "RO",
+   "fichero": "30_SKILLS/onboarding-accesos-ro/SKILL.md",
+   "ancla": "Paso a paso",
+   "linea": 17,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/onboarding-accesos-ro/SKILL.md?plain=1#L17",
+   "alias_de": "accesos_un_correo"
+  },
+  {
+   "id": "asistencia_despachos_bandas",
+   "tema": "asistencia",
+   "puestos": [
+    "especialista_ghl",
+    "jefa_crm"
+   ],
+   "regla": "La asistencia a las citas del despacho es el número del especialista GHL, con las citas sin estado a la vista hasta llegar a cero.",
+   "umbral": "verde ≥ 75 % · ámbar 60-74 · rojo < 60",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 106,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "asistencia_prioridad",
+   "tema": "asistencia",
+   "puestos": [
+    "setters",
+    "ventas_ro",
+    "jefa_crm"
+   ],
+   "regla": "Si la asistencia es baja, arreglarla es la prioridad del mes antes que conseguir más citas.",
+   "umbral": "< 60 % prioridad · < 80 % margen de mejora",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md",
+   "ancla": "A01.014 · [COLE] Restricción 3 de la cadena de valor: la asistencia (umbral del 60 % y del 80 %)",
+   "linea": 485,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md?plain=1#L485"
+  },
+  {
+   "id": "auditar_trasera_antes_anuncios",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "trafficker",
+    "account",
+    "jefa_crm"
+   ],
+   "regla": "Antes de culpar a los anuncios, revisa la rapidez de respuesta, el guion del setter y las llamadas: casi siempre falla detrás.",
+   "umbral": null,
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
+   "ancla": "P13.1334 · [COLE] Antes de tocar los anuncios, auditar la parte trasera: velocidad de respuesta, guiones del setter y llamadas de venta",
+   "linea": 19699,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md?plain=1#L19699"
+  },
+  {
+   "id": "automatizar_no_enviar",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "Automatiza leer, puntuar y redactar; enviar, conectar y publicar se hace siempre a mano.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/cola-de-accion-ro/SKILL.md",
+   "ancla": "1 · Qué problema resuelve",
+   "linea": 24,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/cola-de-accion-ro/SKILL.md?plain=1#L24"
+  },
+  {
+   "id": "bamfam",
+   "tema": "seguimiento",
+   "puestos": [
+    "ventas_ro",
+    "account",
+    "setters"
+   ],
+   "regla": "Ninguna reunión termina sin la siguiente agendada en el calendario.",
+   "umbral": null,
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/13_SEGUIMIENTO_Y_REACTIVACION.md",
+   "ancla": "S02.011 · [HORMOZI] BAMFAM: toda reunión termina agendando la siguiente",
+   "linea": 332,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/13_SEGUIMIENTO_Y_REACTIVACION.md?plain=1#L332"
+  },
+  {
+   "id": "brecha_clic_landing",
+   "tema": "medicion",
+   "puestos": [
+    "web",
+    "trafficker"
+   ],
+   "regla": "Si llegan a la landing muchas menos visitas que clics, revisa píxel, cookies, redirecciones y velocidad antes de tocar el anuncio.",
+   "umbral": "vistas ÷ clics < 70 % (rojo < 50 %) con ≥ 300 clics",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E2 · BRECHA CLIC→LANDING ⭐ (el eslabón que era huérfano)",
+   "linea": 58,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L58"
+  },
+  {
+   "id": "cac_tercio_bb",
+   "tema": "direccion",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "regla": "Lo máximo que puedes pagar por captar un cliente es un tercio del beneficio bruto que deja en toda su vida.",
+   "umbral": "CAC ≤ 1/3 del beneficio bruto de vida",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+   "ancla": "01.026 · [HORMOZI] CAC máximo permitido = un tercio del beneficio bruto de vida",
+   "linea": 528,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/01_FUNDAMENTOS_NUMEROS.md?plain=1#L528"
+  },
+  {
+   "id": "cadena_24_48_72",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Validados sin contactar: aviso al account el primer día, llamada del account al despacho al segundo y re-encuadre formal al tercero.",
+   "umbral": "24 h aviso · 48 h llamada · 72 h re-encuadre",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E5 · VALIDADOS SIN CONTACTAR o TARDE (el eslabón que más se rompe — y es humano)",
+   "linea": 98,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L98"
+  },
+  {
+   "id": "cadencia_24h",
+   "tema": "setting",
+   "puestos": [
+    "setters"
+   ],
+   "regla": "Concentra las llamadas en las primeras 24 h y no te rindas a la primera: la mayoría necesita varios contactos.",
+   "umbral": "~4 llamadas en 24 h; ~7 contactos antes de rendirse",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md",
+   "ancla": "S03.312 · [COLE] Cadencia: cuántas llamadas en las primeras 24 horas y cuántos contactos antes de rendirse",
+   "linea": 2012,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md?plain=1#L2012"
+  },
+  {
+   "id": "calidad_lead_es_del_anuncio",
+   "tema": "segmentacion",
+   "puestos": [
+    "trafficker",
+    "produccion"
+   ],
+   "regla": "Si la mayoría de los leads son malos, cambia el texto del anuncio antes que el público: la calidad la decide el copy.",
+   "umbral": "70-80 % de leads malos = problema del anuncio",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
+   "ancla": "P01.1369 · [COLE] La calidad del lead sale del copy, no del público: si hay un problema de calidad, «siempre es de anuncios»",
+   "linea": 2231,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md?plain=1#L2231"
+  },
+  {
+   "id": "carga_por_puesto",
+   "tema": "operaciones",
+   "puestos": [
+    "operaciones",
+    "rrhh"
+   ],
+   "regla": "Respeta la carga máxima por persona y avisa antes de llenarla.",
+   "umbral": "12 proyectos por account · 16 por trafficker y por CRM",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 41,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "cero_leads_sin_intento",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "account",
+    "especialista_ghl"
+   ],
+   "regla": "No puede haber leads sin ningún intento de llamada; si aparece uno, el account lo resuelve con el despacho.",
+   "umbral": "0 leads con 0 intentos; account en ≤ 24 h",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "Tramo medio (setting)",
+   "linea": 33,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L33"
+  },
+  {
+   "id": "cierre_bajo_no_es_trafico",
+   "tema": "diagnostico_citas_sin_ventas",
+   "puestos": [
+    "account",
+    "proyectos",
+    "direccion"
+   ],
+   "regla": "Si vienen a la reunión y no compran, el tráfico ya hizo su trabajo: no cambies canal ni subas presupuesto; mira oferta y venta.",
+   "umbral": "cierre < 10 % con ≥ 8 reuniones (D60)",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E8 · VIENEN Y NO CIERRAN (cierre/reunión <10%)",
+   "linea": 121,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L121"
+  },
+  {
+   "id": "cierre_ro_bandas",
+   "tema": "venta_ro",
+   "puestos": [
+    "ventas_ro",
+    "direccion"
+   ],
+   "regla": "Mide el cierre de RO sobre reuniones celebradas, no sobre citas reservadas.",
+   "umbral": "verde ≥ 33 % · ámbar 20-32 · rojo < 20",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 134,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "cobro_sepa",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion"
+   ],
+   "regla": "Cobra siempre por domiciliación SEPA; si el cliente pide otra vía, se escala a Tomás.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-17 · Cobro SIEMPRE por domiciliación SEPA",
+   "linea": 346,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "conexion_clave",
+   "tema": "operaciones",
+   "puestos": [
+    "tecnico_altas",
+    "especialista_ghl",
+    "trafficker"
+   ],
+   "regla": "Conexiones caídas: WhatsApp y calendario son de Agus hasta el día 90 y luego del especialista GHL; píxel y dominio, del trafficker.",
+   "umbral": "día 90 del alta",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 109,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "conexiones_caidas_dueno"
+  },
+  {
+   "id": "conexiones_caidas_dueno",
+   "tema": "operaciones",
+   "puestos": [
+    "tecnico_altas",
+    "especialista_ghl",
+    "trafficker"
+   ],
+   "regla": "Conexiones caídas: WhatsApp y calendario son de Agus hasta el día 90 y luego del especialista GHL; píxel y dominio, del trafficker.",
+   "umbral": "día 90 del alta",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 109,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "contacta_no_agenda",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "jefa_crm",
+    "account",
+    "setters"
+   ],
+   "regla": "Si se contacta pero no se agenda, suele faltar pedir la cita con motivo o se da precio en frío: puntúa 3 llamadas.",
+   "umbral": "contacto ≥ 35 % y agendado < 50 % de cualificados",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E6 · CONTACTA PERO NO AGENDA",
+   "linea": 103,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L103"
+  },
+  {
+   "id": "contacto_prueba_diario",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "especialista_ghl"
+   ],
+   "regla": "Ten un contacto de prueba automático cada día que recorra el circuito y avise si el aviso no llega al despacho.",
+   "umbral": "aviso al móvil < 1 min",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 111,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "contacto_semanal",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Escribe a cada cliente al menos una vez por semana; un informe mensual no deja margen para corregir.",
+   "umbral": "1 contacto/semana (alarma desde el miércoles)",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D6-19 · Reporte proactivo semanal desde el día 1",
+   "linea": 682,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "contratar_por_restriccion",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "rrhh",
+    "direccion"
+   ],
+   "regla": "Contrata solo para aliviar una restricción activa o prevista, no por sensación de carga.",
+   "umbral": null,
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+   "ancla": "OE13.131 · [COLE] «You hire based on constraints»: se contrata para aliviar una restricción",
+   "linea": 2449,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md?plain=1#L2449"
+  },
+  {
+   "id": "correcciones_errores_claros",
+   "tema": "prudencia",
+   "puestos": [
+    "produccion",
+    "operaciones",
+    "proyectos"
+   ],
+   "regla": "Al corregir al equipo, pide solo errores claros (erratas, frases que no se entienden); no preferencias de estilo.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "feedback_correcciones_solo_errores_claros.md",
+   "ancla": null,
+   "linea": 7,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "cortar_fuente_mala",
+   "tema": "diagnostico_pocos_leads",
+   "puestos": [
+    "jefa_publicidad",
+    "trafficker"
+   ],
+   "regla": "Si una fuente da pocos leads válidos y las 6 comprobaciones salen limpias, se corta sin consultar.",
+   "umbral": "< 40 % validados tras 50 leads o 3 semanas",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E4 · VALIDACIÓN CAE (<40% validados/leads en una fuente)",
+   "linea": 87,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L87"
+  },
+  {
+   "id": "coste_agregado_minimo_3",
+   "tema": "prudencia",
+   "puestos": [
+    "rrhh",
+    "finanzas_direccion"
+   ],
+   "regla": "En el coste agregado, junta las áreas de menos de 3 personas para que nadie pueda deducir un sueldo.",
+   "umbral": "< 3 personas = se agrupa",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Permisos y privacidad (bloque que aprueba la D-10)",
+   "linea": 170,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "coste_cliente_ro_bandas",
+   "tema": "direccion",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "ventas_ro"
+   ],
+   "regla": "Vigila lo que le cuesta a RO cada cliente captado y para la captación si se dispara.",
+   "umbral": "verde ≤ 700 € · rojo > 1.500 € · parar > 2.500 €",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Objetivos y dinero",
+   "linea": 56,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "cpl_sano_cero_cierres",
+   "tema": "diagnostico_citas_sin_ventas",
+   "puestos": [
+    "account",
+    "trafficker"
+   ],
+   "regla": "Coste por lead sano y cero cierres en el CRM: el problema es la oferta, no la campaña.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "🔌 Datos en vivo (opcional — esta es skill de CRITERIO, no de reporting)",
+   "linea": 167,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L167"
+  },
+  {
+   "id": "creativo_antes_que_segmentacion",
+   "tema": "segmentacion",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "Casi siempre falla el creativo, no la segmentación: el propio mensaje del anuncio elige al público.",
+   "umbral": "9 de cada 10 veces",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
+   "ancla": "P03.856 · [COLE] «Nine times out of 10… it's going to be your creative, not your targeting»: algunas de sus mejores campañas corren con segmentación abierta",
+   "linea": 4144,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md?plain=1#L4144"
+  },
+  {
+   "id": "criterio_d0",
+   "tema": "arranque",
+   "puestos": [
+    "account",
+    "proyectos"
+   ],
+   "regla": "En el arranque pacta con el cliente el número por el que nos juzgará: una métrica, un umbral y una fecha.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/preparador-kickoff-d0/SKILL.md",
+   "ancla": "Paso a paso",
+   "linea": 23,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/preparador-kickoff-d0/SKILL.md?plain=1#L23"
+  },
+  {
+   "id": "criterio_ganador_arranque",
+   "tema": "arranque",
+   "puestos": [
+    "jefa_publicidad",
+    "trafficker"
+   ],
+   "regla": "Cuando un anuncio gana, aíslalo y pausa el resto; no recortes a todos por igual.",
+   "umbral": "ganador = ≥ 3 leads a ≤ 45 € cada uno (lo fija Valeria)",
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "3. Publicidad: la estructura de arranque",
+   "linea": 50,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L50"
+  },
+  {
+   "id": "crm_leads_sin_tocar",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "account",
+    "especialista_ghl"
+   ],
+   "regla": "No puede haber leads sin ningún intento de llamada; si aparece uno, el account lo resuelve con el despacho.",
+   "umbral": "0 leads con 0 intentos; account en ≤ 24 h",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "Tramo medio (setting)",
+   "linea": 33,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L33",
+   "alias_de": "cero_leads_sin_intento"
+  },
+  {
+   "id": "crm_subcuenta_90d",
+   "tema": "operaciones",
+   "puestos": [
+    "tecnico_altas",
+    "especialista_ghl",
+    "trafficker"
+   ],
+   "regla": "Conexiones caídas: WhatsApp y calendario son de Agus hasta el día 90 y luego del especialista GHL; píxel y dominio, del trafficker.",
+   "umbral": "día 90 del alta",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 109,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "conexiones_caidas_dueno"
+  },
+  {
+   "id": "datos_en_duda",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "especialista_ghl",
+    "account"
+   ],
+   "regla": "Si no se puede medir del anuncio a la venta, estás optimizando a ciegas: lo primero es montar la medición.",
+   "umbral": "9 comprobaciones del gate de medición",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "§0 · LOS GATES — se recorren ANTES de diagnosticar nada",
+   "linea": 19,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L19",
+   "alias_de": "medicion_hasta_el_cierre"
+  },
+  {
+   "id": "despacho_llama_5min",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "account",
+    "jefa_crm"
+   ],
+   "regla": "El despacho debe llamar al lead enseguida y con una sola persona asignada: «lo vemos entre todos» es que no lo ve nadie.",
+   "umbral": "< 5 min al primer intento; 5 llamadas + mensajes",
+   "autor": "RO",
+   "fichero": "30_SKILLS/cualificacion-prospecto-despacho/SKILL.md",
+   "ancla": "Las 6 reglas del setting (innegociables)",
+   "linea": 30,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/cualificacion-prospecto-despacho/SKILL.md?plain=1#L30"
+  },
+  {
+   "id": "diag_asistencia",
+   "tema": "asistencia",
+   "puestos": [
+    "setters",
+    "ventas_ro",
+    "jefa_crm"
+   ],
+   "regla": "Si la asistencia es baja, arreglarla es la prioridad del mes antes que conseguir más citas.",
+   "umbral": "< 60 % prioridad · < 80 % margen de mejora",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md",
+   "ancla": "A01.014 · [COLE] Restricción 3 de la cadena de valor: la asistencia (umbral del 60 % y del 80 %)",
+   "linea": 485,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md?plain=1#L485",
+   "alias_de": "asistencia_prioridad"
+  },
+  {
+   "id": "diag_citas_sin_marcar",
+   "tema": "asistencia",
+   "puestos": [
+    "especialista_ghl",
+    "jefa_crm"
+   ],
+   "regla": "La asistencia a las citas del despacho es el número del especialista GHL, con las citas sin estado a la vista hasta llegar a cero.",
+   "umbral": "verde ≥ 75 % · ámbar 60-74 · rojo < 60",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 106,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "asistencia_despachos_bandas"
+  },
+  {
+   "id": "diag_encaje_oferta",
+   "tema": "diagnostico_citas_sin_ventas",
+   "puestos": [
+    "account",
+    "trafficker"
+   ],
+   "regla": "Coste por lead sano y cero cierres en el CRM: el problema es la oferta, no la campaña.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "🔌 Datos en vivo (opcional — esta es skill de CRITERIO, no de reporting)",
+   "linea": 167,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L167",
+   "alias_de": "cpl_sano_cero_cierres"
+  },
+  {
+   "id": "diag_fatiga",
+   "tema": "creatividades",
+   "puestos": [
+    "jefa_publicidad",
+    "trafficker"
+   ],
+   "regla": "Declara fatiga de un anuncio solo cuando coinciden dos señales; una sola no basta.",
+   "umbral": "dos señales a la vez (p. ej. frecuencia alta + CTR en caída)",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Publicidad",
+   "linea": 95,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "fatiga_dos_senales"
+  },
+  {
+   "id": "diag_formulario_roto",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "trafficker"
+   ],
+   "regla": "CTR sano y conversión muerta: el fallo es la página; comprueba que el titular sigue prometiendo lo del anuncio nuevo.",
+   "umbral": "conversión social < 1,5 % · búsqueda < 2,5 % con ≥ 100-200 clics",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E3 · LANDING NO CONVIERTE (CVR bajo con tráfico sano)",
+   "linea": 76,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L76",
+   "alias_de": "landing_no_convierte"
+  },
+  {
+   "id": "diag_fuga",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "especialista_ghl"
+   ],
+   "regla": "Ten un contacto de prueba automático cada día que recorra el circuito y avise si el aviso no llega al despacho.",
+   "umbral": "aviso al móvil < 1 min",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 111,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "contacto_prueba_diario"
+  },
+  {
+   "id": "diag_medicion",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "especialista_ghl",
+    "account"
+   ],
+   "regla": "Si no se puede medir del anuncio a la venta, estás optimizando a ciegas: lo primero es montar la medición.",
+   "umbral": "9 comprobaciones del gate de medición",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "§0 · LOS GATES — se recorren ANTES de diagnosticar nada",
+   "linea": 19,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L19",
+   "alias_de": "medicion_hasta_el_cierre"
+  },
+  {
+   "id": "diag_no_gasta",
+   "tema": "diagnostico_pocos_leads",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "Si la campaña no gasta lo presupuestado, la entrega está ahogada: arréglalo antes de culpar a anuncios u oferta.",
+   "umbral": "gasto 7 d ÷ (presupuesto × 7) < 0,60",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "Tramo alto (máquina + puerta)",
+   "linea": 18,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L18",
+   "alias_de": "entrega_ahogada_pacing"
+  },
+  {
+   "id": "diag_segmentacion",
+   "tema": "segmentacion",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "Casi siempre falla el creativo, no la segmentación: el propio mensaje del anuncio elige al público.",
+   "umbral": "9 de cada 10 veces",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
+   "ancla": "P03.856 · [COLE] «Nine times out of 10… it's going to be your creative, not your targeting»: algunas de sus mejores campañas corren con segmentación abierta",
+   "linea": 4144,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md?plain=1#L4144",
+   "alias_de": "creativo_antes_que_segmentacion"
+  },
+  {
+   "id": "diag_seguimiento",
+   "tema": "setting",
+   "puestos": [
+    "setters"
+   ],
+   "regla": "Concentra las llamadas en las primeras 24 h y no te rindas a la primera: la mayoría necesita varios contactos.",
+   "umbral": "~4 llamadas en 24 h; ~7 contactos antes de rendirse",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md",
+   "ancla": "S03.312 · [COLE] Cadencia: cuántas llamadas en las primeras 24 horas y cuántos contactos antes de rendirse",
+   "linea": 2012,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md?plain=1#L2012",
+   "alias_de": "cadencia_24h"
+  },
+  {
+   "id": "diag_sin_dato",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "account",
+    "especialista_ghl",
+    "jefa_publicidad",
+    "jefa_crm"
+   ],
+   "regla": "Si los datos no señalan una causa, el veredicto es «sin dato suficiente»: no se cambia nada a ciegas.",
+   "umbral": "ventana mínima cumplida",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "02 · ÁRBOL MAESTRO DE DIAGNÓSTICO FULL-FUNNEL",
+   "linea": 39,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L39"
+  },
+  {
+   "id": "diag_subcuenta_sin_uso",
+   "tema": "arranque",
+   "puestos": [
+    "account",
+    "tecnico_altas",
+    "proyectos"
+   ],
+   "regla": "No se enciende ninguna campaña sin una persona nombrada que llame a los leads, con disponibilidad y protocolo.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-04 · Sin nadie asignado a llamar al lead, no se enciende nada",
+   "linea": 258,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "sin_llamador_no_se_enciende"
+  },
+  {
+   "id": "diag_velocidad",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "account",
+    "especialista_ghl"
+   ],
+   "regla": "Al despacho se le mide la garantía de contacto; el minuto mide nuestro sistema de avisos.",
+   "umbral": "≤ 1 h y 4 intentos en 72 h",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 107,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "garantia_velocidad_despacho"
+  },
+  {
+   "id": "diag_whatsapp",
+   "tema": "operaciones",
+   "puestos": [
+    "tecnico_altas",
+    "especialista_ghl",
+    "trafficker"
+   ],
+   "regla": "Conexiones caídas: WhatsApp y calendario son de Agus hasta el día 90 y luego del especialista GHL; píxel y dominio, del trafficker.",
+   "umbral": "día 90 del alta",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 109,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "conexiones_caidas_dueno"
+  },
+  {
+   "id": "dir_decision_reloj",
+   "tema": "direccion",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "regla": "En cada etapa hay una sola restricción que limita el negocio: identifícala y ataca eso, nada más.",
+   "umbral": null,
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+   "ancla": "OE13.121 · [HORMOZI] Cada etapa tiene una restricción global, y la estrategia es atacarla",
+   "linea": 2310,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md?plain=1#L2310",
+   "alias_de": "una_restriccion"
+  },
+  {
+   "id": "dir_muro",
+   "tema": "prudencia",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Precio, cuota, descuentos, pausas, altas y bajas los decide dirección: diagnostica y eleva con una propuesta.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Las 5 reglas duras (innegociables)",
+   "linea": 65,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L65",
+   "alias_de": "muro_direccion"
+  },
+  {
+   "id": "dir_sin_account",
+   "tema": "operaciones",
+   "puestos": [
+    "operaciones",
+    "rrhh"
+   ],
+   "regla": "Respeta la carga máxima por persona y avisa antes de llenarla.",
+   "umbral": "12 proyectos por account · 16 por trafficker y por CRM",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 41,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "carga_por_puesto"
+  },
+  {
+   "id": "dos_resultados_no_compra",
+   "tema": "seguimiento",
+   "puestos": [
+    "ventas_ro",
+    "setters"
+   ],
+   "regla": "Cada «no compra» acaba en un seguimiento agendado o en la lista caliente con fecha de re-oferta.",
+   "umbral": null,
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/13_SEGUIMIENTO_Y_REACTIVACION.md",
+   "ancla": "S05.087 · [COLE] La regla de los dos resultados: cada no-compra termina en un seguimiento agendado o en la hot list con fecha de re-oferta",
+   "linea": 953,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/13_SEGUIMIENTO_Y_REACTIVACION.md?plain=1#L953"
+  },
+  {
+   "id": "encargo_rgpd_antes",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion",
+    "tecnico_altas"
+   ],
+   "regla": "Sin encargo de tratamiento (RGPD) firmado no se pide ningún acceso.",
+   "umbral": "D0-D1",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "4 · Técnico de altas / onboarding (Agus)",
+   "linea": 97,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "encendido_dia_10",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas",
+    "proyectos",
+    "trafficker"
+   ],
+   "regla": "La campaña de un cliente nuevo se enciende el día 10 desde el alta del contrato, nunca después del 12.",
+   "umbral": "día 10, límite 12",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Clientes y reuniones",
+   "linea": 79,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "entrega_ahogada_pacing",
+   "tema": "diagnostico_pocos_leads",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "Si la campaña no gasta lo presupuestado, la entrega está ahogada: arréglalo antes de culpar a anuncios u oferta.",
+   "umbral": "gasto 7 d ÷ (presupuesto × 7) < 0,60",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "Tramo alto (máquina + puerta)",
+   "linea": 18,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L18"
+  },
+  {
+   "id": "error_dinero_cliente",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account",
+    "direccion"
+   ],
+   "regla": "Si un error nuestro toca el dinero del cliente, admítelo sin matices y ofrece dos compensaciones; las graves las decide dirección.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-11 · Error que toca el dinero del cliente: admitir sin matices y compensar antes de que lo pida",
+   "linea": 305,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "fatiga_dos_senales",
+   "tema": "creatividades",
+   "puestos": [
+    "jefa_publicidad",
+    "trafficker"
+   ],
+   "regla": "Declara fatiga de un anuncio solo cuando coinciden dos señales; una sola no basta.",
+   "umbral": "dos señales a la vez (p. ej. frecuencia alta + CTR en caída)",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Publicidad",
+   "linea": 95,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "fatiga_por_anuncio",
+   "tema": "creatividades",
+   "puestos": [
+    "trafficker"
+   ],
+   "regla": "Mide la fatiga anuncio a anuncio, nunca a nivel de campaña, y rota piezas de una en una dejando dos estables.",
+   "umbral": "CTR de enlace −15 % sostenido 5 días frente a su media móvil de 7 días",
+   "autor": "RO",
+   "fichero": "30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md",
+   "ancla": "El ciclo (quincenal, por cuenta con Meta encendido)",
+   "linea": 47,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md?plain=1#L47"
+  },
+  {
+   "id": "ficha_lleva_seo",
+   "tema": "seo",
+   "puestos": [
+    "jefa_seo",
+    "ficha_google"
+   ],
+   "regla": "La ficha de Google la lleva el SEO de cada cliente, con la jefa de SEO vigilando.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 121,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "ficha_objetivo_llamada",
+   "tema": "seo",
+   "puestos": [
+    "ficha_google",
+    "seo"
+   ],
+   "regla": "El objetivo de la ficha es que llamen; sin dirección verificada no hay conversiones.",
+   "umbral": "tasa de llamada > 7 %",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/referencia/rendimiento.md",
+   "ancla": "2.4 GMB / Local",
+   "linea": 107,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/referencia/rendimiento.md?plain=1#L107"
+  },
+  {
+   "id": "ficha_traspaso_antes_venta",
+   "tema": "diagnostico_citas_sin_ventas",
+   "puestos": [
+    "account",
+    "jefa_crm"
+   ],
+   "regla": "Antes de culpar a la venta del despacho, revisa la ficha de traspaso: si llega vacía, el socio gasta la reunión recualificando.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E8 · VIENEN Y NO CIERRAN (cierre/reunión <10%)",
+   "linea": 123,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L123"
+  },
+  {
+   "id": "foco_campanas_no_asesorar",
+   "tema": "prudencia",
+   "puestos": [
+    "account",
+    "produccion",
+    "redes"
+   ],
+   "regla": "No asesores al cliente sobre su negocio, contrato o normativa: lo que encuentres se convierte en anuncios y posts.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "feedback_foco_campanas_no_asesorar_cliente.md",
+   "ancla": null,
+   "linea": 11,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "fondo_300_ro",
+   "tema": "arranque",
+   "puestos": [
+    "jefa_publicidad",
+    "proyectos"
+   ],
+   "regla": "Si en los últimos 5 días del mes 1 no hay ganador, usa hasta 300 € de RO en los clientes elegidos, sin preguntar caso a caso.",
+   "umbral": "hasta 300 €",
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "4. Los 300 € de RO",
+   "linea": 59,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L59"
+  },
+  {
+   "id": "formulario_etiquetado",
+   "tema": "web",
+   "puestos": [
+    "web"
+   ],
+   "regla": "Un campo de formulario sin etiqueta rompe la captación: es fallo grave y va en la portada del informe.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/auditoria-pagina-web/SKILL.md",
+   "ancla": "♿ Accesibilidad WCAG 2.2 AA (items 25-29)",
+   "linea": 33,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/auditoria-pagina-web/SKILL.md?plain=1#L33"
+  },
+  {
+   "id": "formulario_una_pregunta",
+   "tema": "arranque",
+   "puestos": [
+    "trafficker",
+    "tecnico_altas"
+   ],
+   "regla": "Formulario nativo con datos precargados y una sola pregunta de calificación; sin correo corporativo ni código por SMS.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "3. Publicidad: la estructura de arranque",
+   "linea": 38,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L38"
+  },
+  {
+   "id": "frecuencia_no_dispara_sola",
+   "tema": "creatividades",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "La frecuencia alta, sola, no es fatiga: solo cuenta si a la vez cae el CTR; en audiencias locales sube por pura aritmética.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md",
+   "ancla": "La doctrina (destilada del análisis experto — reglas INNEGOCIABLES del informe)",
+   "linea": 36,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md?plain=1#L36"
+  },
+  {
+   "id": "frio_100_dia",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "En frío, contacta uno a uno y en privado a gente que no te conoce, con volumen diario constante.",
+   "umbral": "100 al día",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/07_CAPTACION_EN_FRIO.md",
+   "ancla": "CF01.013 · [HORMOZI] Contacto en frío: uno a uno y privado a gente que no te conoce, 100 al día",
+   "linea": 387,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/07_CAPTACION_EN_FRIO.md?plain=1#L387"
+  },
+  {
+   "id": "frio_gate_legal",
+   "tema": "prudencia",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "El correo en frío en España tiene gate legal (art. 21 LSSI y RGPD): la cola no es permiso para enviar.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/cola-de-accion-ro/SKILL.md",
+   "ancla": "5 · La capa de doctrina que no se puede quitar",
+   "linea": 88,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/cola-de-accion-ro/SKILL.md?plain=1#L88"
+  },
+  {
+   "id": "game_tape_semanal",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "ventas_ro",
+    "direccion"
+   ],
+   "regla": "Revisa grabaciones de venta cada semana y mide reembolsos y satisfacción por comercial, para que lo vendido sea lo que se entrega.",
+   "umbral": "semanal",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+   "ancla": "OE07.063 · [HORMOZI] Etapa 5 · Ventas: expectativas irreales, reembolsos y malas reseñas → sales aids, game tape semanal y NPS/CSAT/reembolso por comercial",
+   "linea": 1318,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md?plain=1#L1318"
+  },
+  {
+   "id": "ganador_no_se_toca",
+   "tema": "creatividades",
+   "puestos": [
+    "trafficker"
+   ],
+   "regla": "Al anuncio ganador no lo edites: hacerlo, o meter anuncios en su conjunto, reinicia el aprendizaje; crea una variante aparte.",
+   "umbral": "14 días sin ediciones tras lanzar",
+   "autor": "RO",
+   "fichero": "30_SKILLS/tester-creatividades-despacho/SKILL.md",
+   "ancla": "MODO 2 · `lectura` — el veredicto con dato (cuando el calendario lo permite)",
+   "linea": 76,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/tester-creatividades-despacho/SKILL.md?plain=1#L76"
+  },
+  {
+   "id": "ganador_pasa_filtro",
+   "tema": "prudencia",
+   "puestos": [
+    "produccion",
+    "trafficker"
+   ],
+   "regla": "Que un anuncio gane no lo autoriza a prometer: vuelve a pasar el filtro regulatorio antes de escalarlo.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/tester-creatividades-despacho/SKILL.md",
+   "ancla": "MODO 2 · `lectura` — el veredicto con dato (cuando el calendario lo permite)",
+   "linea": 81,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/tester-creatividades-despacho/SKILL.md?plain=1#L81"
+  },
+  {
+   "id": "garantia_velocidad_despacho",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "account",
+    "especialista_ghl"
+   ],
+   "regla": "Al despacho se le mide la garantía de contacto; el minuto mide nuestro sistema de avisos.",
+   "umbral": "≤ 1 h y 4 intentos en 72 h",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 107,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "gate_estaticos",
+   "tema": "produccion",
+   "puestos": [
+    "produccion"
+   ],
+   "regla": "Ningún estático sale sin pasar el gate: zonas seguras de Reels, márgenes, ortografía y textos exactos.",
+   "umbral": "pasa / no pasa",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "9 · Copy, diseño y vídeo",
+   "linea": 187,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "gatillos_mes_2_3",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Mes 3 sin que el despacho cierre ninguna venta: rojo, escalado a Mili con el diagnóstico completo delante.",
+   "umbral": "mes 2 sin venta = amarillo · mes 3 = rojo",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "4. Gatillos de estado de cuenta (se leen en CADA pulso)",
+   "linea": 93,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L93"
+  },
+  {
+   "id": "gmb_resenas",
+   "tema": "seo",
+   "puestos": [
+    "ficha_google"
+   ],
+   "regla": "Consigue reseñas en goteo constante, nunca en ráfaga, y pídelas sin ofrecer nada a cambio.",
+   "umbral": "15+ al mes",
+   "autor": "RO",
+   "fichero": "30_SKILLS/gestion-gmb-despacho/SKILL.md",
+   "ancla": null,
+   "linea": 9,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/gestion-gmb-despacho/SKILL.md?plain=1#L9",
+   "alias_de": "resenas_goteo"
+  },
+  {
+   "id": "horas_solo_aviso",
+   "tema": "prudencia",
+   "puestos": [
+    "operaciones",
+    "rrhh",
+    "direccion"
+   ],
+   "regla": "Las horas imputadas se enseñan solo como aviso de disciplina: no cuentan en la salud del cliente ni en el número de nadie.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "✅ Ya resueltas por ti en la conversación (2-oct)",
+   "linea": 23,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "impago_corte",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "regla": "Ante un impago, aviso a los 30 días y decisión de Tomás a los 60; nunca se acumulan más de dos cuotas.",
+   "umbral": "30 d aviso · 60 d decisión · máx. 2 cuotas",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Objetivos y dinero",
+   "linea": 64,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "informe_dia_5",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "El informe mensual sale desde Desk el día 5 como muy tarde; el día 6 ya es rojo con aviso a Mili.",
+   "umbral": "día 5 verde · día 6 rojo",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 43,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "informe_sin_cifra_inventada",
+   "tema": "prudencia",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Ninguna cifra del informe sin fuente real; si falta, pon «dato no disponible este mes», nunca un número plausible.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/generador-reporting-mensual-despacho/SKILL.md",
+   "ancla": "⛔ PREFLIGHT OBLIGATORIO (autocontenido)",
+   "linea": 75,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/generador-reporting-mensual-despacho/SKILL.md?plain=1#L75"
+  },
+  {
+   "id": "jefa_crm_velocidad",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "account",
+    "especialista_ghl"
+   ],
+   "regla": "Al despacho se le mide la garantía de contacto; el minuto mide nuestro sistema de avisos.",
+   "umbral": "≤ 1 h y 4 intentos en 72 h",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "CRM y citas",
+   "linea": 107,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "garantia_velocidad_despacho"
+  },
+  {
+   "id": "jefa_rojos_trafficker",
+   "tema": "operaciones",
+   "puestos": [
+    "operaciones",
+    "rrhh"
+   ],
+   "regla": "Respeta la carga máxima por persona y avisa antes de llenarla.",
+   "umbral": "12 proyectos por account · 16 por trafficker y por CRM",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 41,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "carga_por_puesto"
+  },
+  {
+   "id": "juzgar_setter",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "setters",
+    "ventas_ro",
+    "direccion"
+   ],
+   "regla": "A un setter no se le juzga por un día: necesita volumen de llamadas, y su número lo fija el jefe.",
+   "umbral": "tras 30-50 llamadas · ~12 reuniones celebradas/mes",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 138,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "landing_no_convierte",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "trafficker"
+   ],
+   "regla": "CTR sano y conversión muerta: el fallo es la página; comprueba que el titular sigue prometiendo lo del anuncio nuevo.",
+   "umbral": "conversión social < 1,5 % · búsqueda < 2,5 % con ≥ 100-200 clics",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E3 · LANDING NO CONVIERTE (CVR bajo con tráfico sano)",
+   "linea": 76,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L76"
+  },
+  {
+   "id": "medicion_hasta_el_cierre",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "especialista_ghl",
+    "account"
+   ],
+   "regla": "Si no se puede medir del anuncio a la venta, estás optimizando a ciegas: lo primero es montar la medición.",
+   "umbral": "9 comprobaciones del gate de medición",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "§0 · LOS GATES — se recorren ANTES de diagnosticar nada",
+   "linea": 19,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L19"
+  },
+  {
+   "id": "meses_de_caja",
+   "tema": "administracion_cobros",
+   "puestos": [
+    "finanzas_direccion",
+    "administracion"
+   ],
+   "regla": "Calcula los meses de caja con el gasto medio de los tres últimos meses cerrados y no bajes del colchón mínimo.",
+   "umbral": "mínimo 2 meses · objetivo 3",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Objetivos y dinero",
+   "linea": 60,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "meta_vs_ghl",
+   "tema": "medicion",
+   "puestos": [
+    "account",
+    "trafficker"
+   ],
+   "regla": "Reporta con Meta pero decide con GHL; avisa al despacho de la diferencia antes de que la vea él.",
+   "umbral": "discrepancia Meta↔GHL del 20-50 % es normal",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+   "ancla": "3. Vistas exactas de los raíles",
+   "linea": 82,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md?plain=1#L82"
+  },
+  {
+   "id": "monitor_landing_avisos",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "tecnico_altas"
+   ],
+   "regla": "Si cae una landing, avisa a web y a Agus; y también a CRM y trafficker si tiene campaña encendida.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 122,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "muro_direccion",
+   "tema": "prudencia",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Precio, cuota, descuentos, pausas, altas y bajas los decide dirección: diagnostica y eleva con una propuesta.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Las 5 reglas duras (innegociables)",
+   "linea": 65,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L65"
+  },
+  {
+   "id": "no_bajar_precio_por_silencio",
+   "tema": "prudencia",
+   "puestos": [
+    "ventas_ro",
+    "account"
+   ],
+   "regla": "No reabras la negociación bajando el precio porque el cliente calla: el descuento enseña que el precio era mentira.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E9 · PROPUESTA ENVIADA QUE NO SE FIRMA ⭐ (el eslabón que no existía)",
+   "linea": 144,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L144"
+  },
+  {
+   "id": "no_compensar_con_pauta",
+   "tema": "diagnostico_leads_sin_citas",
+   "puestos": [
+    "account",
+    "trafficker"
+   ],
+   "regla": "Si el despacho no llama, no subas la inversión para compensar: solo comprarías más leads sin llamar.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E5 · VALIDADOS SIN CONTACTAR o TARDE (el eslabón que más se rompe — y es humano)",
+   "linea": 99,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L99"
+  },
+  {
+   "id": "nota_y_1a1",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "rrhh"
+   ],
+   "regla": "Puntúan Mili y las jefas; RRHH consolida, lleva la ronda quincenal y garantiza un 1:1 como mínimo cada trimestre.",
+   "umbral": "1:1 trimestral mínimo",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Personas y RRHH",
+   "linea": 150,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "numero_jefa_seo",
+   "tema": "seo",
+   "puestos": [
+    "jefa_seo"
+   ],
+   "regla": "El número de la jefa de SEO es el % de clientes de SEO en verde, juntando clics (resultado) y posiciones (aviso temprano).",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 119,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "numero_trafficker_coste_cita",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "Juzga al trafficker por el coste por cita medido en GHL; el coste por lead es solo la señal diaria.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Publicidad",
+   "linea": 94,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "objetivo_coste_cita_d0",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas",
+    "account",
+    "trafficker"
+   ],
+   "regla": "Ningún cliente sin objetivo de coste por cita en la ficha del alta; sin él, alarma por encima de 100 €.",
+   "umbral": "red de seguridad > 100 €; 45 € solo en el arranque",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 37,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "ops_cartera_riesgo",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Actúa según la salud del cliente: por debajo de 40, llamada personal hoy y aviso a dirección.",
+   "umbral": "0-39 llamada hoy · 40-59 plan con fecha · 60-79 check-in · 80+ upsell",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Termómetro de la cuenta — la baja se ve 2 semanas antes",
+   "linea": 90,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L90",
+   "alias_de": "salud_umbrales_accion"
+  },
+  {
+   "id": "orden_refresco_hormozi",
+   "tema": "creatividades",
+   "puestos": [
+    "produccion",
+    "trafficker"
+   ],
+   "regla": "Cuando una promoción se cansa, cambia primero imagen o vídeo, después el texto y solo después el titular o envoltorio.",
+   "umbral": "creatividad cada 7 d · cuerpo cada 2-3 semanas · titular cada trimestre",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
+   "ancla": "P07.249 · [HORMOZI] Orden de refresco cuando la promoción se fatiga, con frecuencias",
+   "linea": 9064,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/08_PUBLICIDAD_DE_PAGO.md?plain=1#L9064"
+  },
+  {
+   "id": "outreach_clasificar",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "Ninguna respuesta de una campaña se queda sin persona asignada.",
+   "umbral": "0 respuestas sin dueño",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "13 · Outreach",
+   "linea": 252,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "respuestas_con_dueno"
+  },
+  {
+   "id": "outreach_positiva_4h",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "Ninguna respuesta de una campaña se queda sin persona asignada.",
+   "umbral": "0 respuestas sin dueño",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "13 · Outreach",
+   "linea": 252,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "respuestas_con_dueno"
+  },
+  {
+   "id": "paradita_ya_esta_fuera",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "direccion"
+   ],
+   "regla": "«A lo mejor hacemos una paradita» significa que ya está fuera: responde con una propuesta distinta, no rebajando cuota.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-13 · \"A lo mejor hacemos una paradita\" significa que ya está fuera — y retener por precio no es retener",
+   "linea": 319,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "pausa_90_sin_lead",
+   "tema": "arranque",
+   "puestos": [
+    "trafficker"
+   ],
+   "regla": "En el arranque, pausa el anuncio que gasta sin traer ningún lead; con menos de 15 € está sin probar, no descartado.",
+   "umbral": "≥ 90 € sin ningún lead",
+   "autor": "RO",
+   "fichero": "15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "ancla": "3. Publicidad: la estructura de arranque",
+   "linea": 52,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md?plain=1#L52"
+  },
+  {
+   "id": "pieza_humanizada_y_filtrada",
+   "tema": "produccion",
+   "puestos": [
+    "redes",
+    "produccion"
+   ],
+   "regla": "Cada pieza pasa por el humanizador y, si se publica, por el filtro regulatorio antes de salir.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/rrss-celula-orquestadora/SKILL.md",
+   "ancla": "Inbound-readiness check semanal",
+   "linea": 162,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/rrss-celula-orquestadora/SKILL.md?plain=1#L162"
+  },
+  {
+   "id": "pocos_leads_creativo_primero",
+   "tema": "diagnostico_pocos_leads",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad",
+    "account"
+   ],
+   "regla": "Con pocos leads, mira primero el creativo y luego puja o presupuesto; no subas presupuesto de entrada ni toques el anuncio ganador.",
+   "umbral": "volumen 14 d < 70 % del esperado o una fuente cae ≥ 30 % en 90 d",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E1 · POCOS LEADS (volumen bruto < pactado en D0)",
+   "linea": 50,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L50"
+  },
+  {
+   "id": "precio_coti_tomas",
+   "tema": "prudencia",
+   "puestos": [
+    "administracion",
+    "proyectos",
+    "ventas_ro"
+   ],
+   "regla": "El precio lo fija Coti y las excepciones Tomás; administración factura pero nunca fija un precio.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D2-04 · El precio lo decide Coti; la excepción, Tomás; Administración nunca",
+   "linea": 136,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "primeros_28_dias",
+   "tema": "arranque",
+   "puestos": [
+    "tecnico_altas",
+    "account"
+   ],
+   "regla": "Coreografía los primeros 28 días: el cliente decide en 48 h si somos buenos; promete cosas pequeñas y cúmplelas.",
+   "umbral": "48 h · 28 días",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+   "ancla": "ER04.060 · [HORMOZI] Las primeras 48 horas y los primeros 28 días: microexpectativas cumplidas y BAMFAM",
+   "linea": 1624,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md?plain=1#L1624"
+  },
+  {
+   "id": "problema_lo_contamos_nosotros",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account",
+    "trafficker",
+    "seo"
+   ],
+   "regla": "Cuenta tú las caídas de leads o posiciones antes de que las vea el cliente, con hipótesis y propuesta.",
+   "umbral": "perfil de lead fuera de ICP a los 7-10 días = correo ese día",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-08 · Si el cliente detecta el problema antes que nosotros, ya se perdió la autoridad",
+   "linea": 285,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "prod_devuelto_primero",
+   "tema": "produccion",
+   "puestos": [
+    "produccion"
+   ],
+   "regla": "Una pieza debería salir a la primera; tres rondas de revisión ya es rojo.",
+   "umbral": "verde ≤ 1 · ámbar 2 · rojo ≥ 3",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 124,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "rondas_revision"
+  },
+  {
+   "id": "prod_plazo_avisar",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account",
+    "trafficker",
+    "seo"
+   ],
+   "regla": "Cuenta tú las caídas de leads o posiciones antes de que las vea el cliente, con hipótesis y propuesta.",
+   "umbral": "perfil de lead fuera de ICP a los 7-10 días = correo ese día",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-08 · Si el cliente detecta el problema antes que nosotros, ya se perdió la autoridad",
+   "linea": 285,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "problema_lo_contamos_nosotros"
+  },
+  {
+   "id": "prod_revision_48h",
+   "tema": "produccion",
+   "puestos": [
+    "produccion"
+   ],
+   "regla": "Una pieza debería salir a la primera; tres rondas de revisión ya es rojo.",
+   "umbral": "verde ≤ 1 · ámbar 2 · rojo ≥ 3",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 124,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "rondas_revision"
+  },
+  {
+   "id": "protocolo_antiplanton",
+   "tema": "asistencia",
+   "puestos": [
+    "especialista_ghl",
+    "jefa_crm"
+   ],
+   "regla": "Aplica el protocolo anti-plantón entero: confirmación con un SÍ, recordatorio con el coste de faltar y llamada si no aparece.",
+   "umbral": "cita a < 72 h, no en viernes · recordatorio 24 h y 1-2 h · llamada a los 3 min",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E7 · AGENDA PERO NO VIENEN (no-show)",
+   "linea": 114,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L114"
+  },
+  {
+   "id": "proyectos_visto",
+   "tema": "retencion",
+   "puestos": [
+    "proyectos",
+    "account"
+   ],
+   "regla": "Ningún plan de un cliente en rojo llega al cliente sin que Coti lo haya revisado antes.",
+   "umbral": "100 %",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "3 · Proyectos / oferta (Coti)",
+   "linea": 76,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "rojo_revisado_por_coti"
+  },
+  {
+   "id": "puntuar_conductas",
+   "tema": "setting",
+   "puestos": [
+    "jefa_crm",
+    "setters",
+    "ventas_ro"
+   ],
+   "regla": "En la revisión de llamadas puntúa conductas, no resultados: si premias la cita, el setter fuerza citas que luego no vienen.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/qa-llamada-setting-despacho/SKILL.md",
+   "ancla": "Los 3 principios de diseño (no negociables)",
+   "linea": 31,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/qa-llamada-setting-despacho/SKILL.md?plain=1#L31"
+  },
+  {
+   "id": "queja_p0",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Ante una queja o amenaza de baja, llama ese mismo día para escuchar (nunca un correo primero) e informa a dirección.",
+   "umbral": "mismo día · plan en 48 h validado arriba",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-10 · Correo de queja = P0: se escala el mismo día y va un senior, no un email",
+   "linea": 299,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "recordatorios_manuales",
+   "tema": "asistencia",
+   "puestos": [
+    "setters",
+    "especialista_ghl"
+   ],
+   "regla": "Los recordatorios que manda una persona funcionan mejor que los automáticos: uno la mañana anterior y otro una hora antes.",
+   "umbral": "24 h y 1 h antes → ×2 asistencia",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md",
+   "ancla": "A03.053 · [HORMOZI] Recordatorios manuales 24 h antes (por la mañana) y 1 h antes: el doble de asistencia",
+   "linea": 1263,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md?plain=1#L1263"
+  },
+  {
+   "id": "redes_calendario",
+   "tema": "redes",
+   "puestos": [
+    "redes"
+   ],
+   "regla": "Publica con constancia: los resultados llegan al mes 3-4 y publicar en ráfaga y parar reinicia el algoritmo.",
+   "umbral": "4-6 semanas sostenidas; resultados mes 3-4",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/referencia/rendimiento.md",
+   "ancla": "2.3 RRSS",
+   "linea": 85,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/referencia/rendimiento.md?plain=1#L85",
+   "alias_de": "redes_constancia"
+  },
+  {
+   "id": "redes_constancia",
+   "tema": "redes",
+   "puestos": [
+    "redes"
+   ],
+   "regla": "Publica con constancia: los resultados llegan al mes 3-4 y publicar en ráfaga y parar reinicia el algoritmo.",
+   "umbral": "4-6 semanas sostenidas; resultados mes 3-4",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/referencia/rendimiento.md",
+   "ancla": "2.3 RRSS",
+   "linea": 85,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/referencia/rendimiento.md?plain=1#L85"
+  },
+  {
+   "id": "redes_fallida",
+   "tema": "redes",
+   "puestos": [
+    "redes"
+   ],
+   "regla": "Publica el volumen pactado con cada cliente; si no hay pacto, el volumen por defecto de RO.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 126,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "redes_volumen_pactado"
+  },
+  {
+   "id": "redes_linkedin_personal",
+   "tema": "redes",
+   "puestos": [
+    "redes"
+   ],
+   "regla": "Prioriza el LinkedIn personal del asesor por delante de Instagram y de la página de empresa.",
+   "umbral": "1 post/semana → +30-60 % seguidores en 6 meses",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/referencia/rendimiento.md",
+   "ancla": "2.3 RRSS",
+   "linea": 84,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/referencia/rendimiento.md?plain=1#L84"
+  },
+  {
+   "id": "redes_volumen_pactado",
+   "tema": "redes",
+   "puestos": [
+    "redes"
+   ],
+   "regla": "Publica el volumen pactado con cada cliente; si no hay pacto, el volumen por defecto de RO.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 126,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "rel_bloqueo_callado",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account",
+    "trafficker",
+    "seo"
+   ],
+   "regla": "Cuenta tú las caídas de leads o posiciones antes de que las vea el cliente, con hipótesis y propuesta.",
+   "umbral": "perfil de lead fuera de ICP a los 7-10 días = correo ese día",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-08 · Si el cliente detecta el problema antes que nosotros, ya se perdió la autoridad",
+   "linea": 285,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "problema_lo_contamos_nosotros"
+  },
+  {
+   "id": "rel_correo_48h",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Contesta al cliente cuanto antes: un correo o WhatsApp sin respuesta se pone amarillo al día y rojo a los dos.",
+   "umbral": "amarillo 24 h · rojo 48 h",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 208,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "respuesta_24_48"
+  },
+  {
+   "id": "rel_desk_agente",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Contesta al cliente cuanto antes: un correo o WhatsApp sin respuesta se pone amarillo al día y rojo a los dos.",
+   "umbral": "amarillo 24 h · rojo 48 h",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 208,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "respuesta_24_48"
+  },
+  {
+   "id": "rel_informe_mensual",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "El informe mensual sale desde Desk el día 5 como muy tarde; el día 6 ya es rojo con aviso a Mili.",
+   "umbral": "día 5 verde · día 6 rojo",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "1 · Las 10 decisiones que más desbloquean",
+   "linea": 43,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "informe_dia_5"
+  },
+  {
+   "id": "rel_llamadas_perdidas",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Contesta al cliente cuanto antes: un correo o WhatsApp sin respuesta se pone amarillo al día y rojo a los dos.",
+   "umbral": "amarillo 24 h · rojo 48 h",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 208,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "respuesta_24_48"
+  },
+  {
+   "id": "rel_queja_llamada",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Ante una queja o amenaza de baja, llama ese mismo día para escuchar (nunca un correo primero) e informa a dirección.",
+   "umbral": "mismo día · plan en 48 h validado arriba",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-10 · Correo de queja = P0: se escala el mismo día y va un senior, no un email",
+   "linea": 299,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "queja_p0"
+  },
+  {
+   "id": "rel_silencio_30d",
+   "tema": "retencion",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Ten una reunión al mes con cada cliente; pasar de 35 días sin reunión ya es señal de alarma.",
+   "umbral": "1/mes · alarma > 35 días",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 210,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "reunion_mensual"
+  },
+  {
+   "id": "reloj_propuesta",
+   "tema": "seguimiento",
+   "puestos": [
+    "account"
+   ],
+   "regla": "La propuesta sale el mismo día de la reunión; si no se abre en tres días, se llama, no se manda otro correo.",
+   "umbral": "envío < 24 h · sin abrir a 72 h → llamada · 14 días = presunta muerta",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E9 · PROPUESTA ENVIADA QUE NO SE FIRMA ⭐ (el eslabón que no existía)",
+   "linea": 139,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L139"
+  },
+  {
+   "id": "rescate_no_show",
+   "tema": "asistencia",
+   "puestos": [
+    "setters",
+    "especialista_ghl"
+   ],
+   "regla": "Al que no se presenta, ofrécele dos huecos concretos sin ningún reproche; no insistas más allá de 48 h.",
+   "umbral": "0-10 min dos huecos · máximo 48 h",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E7 · AGENDA PERO NO VIENEN (no-show)",
+   "linea": 115,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L115"
+  },
+  {
+   "id": "resenas_goteo",
+   "tema": "seo",
+   "puestos": [
+    "ficha_google"
+   ],
+   "regla": "Consigue reseñas en goteo constante, nunca en ráfaga, y pídelas sin ofrecer nada a cambio.",
+   "umbral": "15+ al mes",
+   "autor": "RO",
+   "fichero": "30_SKILLS/gestion-gmb-despacho/SKILL.md",
+   "ancla": null,
+   "linea": 9,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/gestion-gmb-despacho/SKILL.md?plain=1#L9"
+  },
+  {
+   "id": "respuesta_24_48",
+   "tema": "relacion_cliente",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Contesta al cliente cuanto antes: un correo o WhatsApp sin respuesta se pone amarillo al día y rojo a los dos.",
+   "umbral": "amarillo 24 h · rojo 48 h",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 208,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "respuesta_frio_bandas",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "Mide la tasa de respuesta del correo en frío; por debajo del 2 % cambia lista o mensaje.",
+   "umbral": "verde ≥ 5,5 % · ámbar 2-5,4 · rojo < 2",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 141,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "respuestas_con_dueno",
+   "tema": "outreach",
+   "puestos": [
+    "outreach"
+   ],
+   "regla": "Ninguna respuesta de una campaña se queda sin persona asignada.",
+   "umbral": "0 respuestas sin dueño",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "13 · Outreach",
+   "linea": 252,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "reunion_mensual",
+   "tema": "retencion",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Ten una reunión al mes con cada cliente; pasar de 35 días sin reunión ya es señal de alarma.",
+   "umbral": "1/mes · alarma > 35 días",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "11 · Accounts / soporte",
+   "linea": 210,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "revision_personas_escalera",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "regla": "En la revisión de una persona, primero los datos objetivos y luego lo cualitativo; ninguna salida sin la escalera completa documentada.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D4-09 · Primero el dato objetivo, después la valoración — y ninguna salida sin la escalera completa",
+   "linea": 431,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "rojo_revisado_por_coti",
+   "tema": "retencion",
+   "puestos": [
+    "proyectos",
+    "account"
+   ],
+   "regla": "Ningún plan de un cliente en rojo llega al cliente sin que Coti lo haya revisado antes.",
+   "umbral": "100 %",
+   "autor": "RO",
+   "fichero": "06_KPIS_INTERNOS_RO_POR_PUESTO.md",
+   "ancla": "3 · Proyectos / oferta (Coti)",
+   "linea": 76,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "rondas_revision",
+   "tema": "produccion",
+   "puestos": [
+    "produccion"
+   ],
+   "regla": "Una pieza debería salir a la primera; tres rondas de revisión ya es rojo.",
+   "umbral": "verde ≤ 1 · ámbar 2 · rojo ≥ 3",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 124,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "rrhh_conversacion",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "regla": "En la revisión de una persona, primero los datos objetivos y luego lo cualitativo; ninguna salida sin la escalera completa documentada.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D4-09 · Primero el dato objetivo, después la valoración — y ninguna salida sin la escalera completa",
+   "linea": 431,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "revision_personas_escalera"
+  },
+  {
+   "id": "rrhh_reconocimiento",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "rrhh"
+   ],
+   "regla": "Puntúan Mili y las jefas; RRHH consolida, lleva la ronda quincenal y garantiza un 1:1 como mínimo cada trimestre.",
+   "umbral": "1:1 trimestral mínimo",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Personas y RRHH",
+   "linea": 150,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "nota_y_1a1"
+  },
+  {
+   "id": "salud_umbrales_accion",
+   "tema": "retencion",
+   "puestos": [
+    "account",
+    "operaciones"
+   ],
+   "regla": "Actúa según la salud del cliente: por debajo de 40, llamada personal hoy y aviso a dirección.",
+   "umbral": "0-39 llamada hoy · 40-59 plan con fecha · 60-79 check-in · 80+ upsell",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Termómetro de la cuenta — la baja se ve 2 semanas antes",
+   "linea": 90,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L90"
+  },
+  {
+   "id": "seo_alerta_top10",
+   "tema": "seo",
+   "puestos": [
+    "seo",
+    "jefa_seo"
+   ],
+   "regla": "Alerta crítica cuando una palabra clave del cliente sale del top-10 o cae mucho la visibilidad del proyecto.",
+   "umbral": "fuera del top-10 · visibilidad −15 %",
+   "autor": "RO",
+   "fichero": "30_SKILLS/monitor-posiciones-alertas/SKILL.md",
+   "ancla": "Reglas de bandera roja (umbrales embebidos)",
+   "linea": 157,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/monitor-posiciones-alertas/SKILL.md?plain=1#L157"
+  },
+  {
+   "id": "seo_comprobar_google",
+   "tema": "seo",
+   "puestos": [
+    "jefa_seo"
+   ],
+   "regla": "El número de la jefa de SEO es el % de clientes de SEO en verde, juntando clics (resultado) y posiciones (aviso temprano).",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 119,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "numero_jefa_seo"
+  },
+  {
+   "id": "seo_keywords_seguidas",
+   "tema": "seo",
+   "puestos": [
+    "seo",
+    "jefa_seo"
+   ],
+   "regla": "Una cuenta de SEO sin palabras clave seguidas en SE Ranking al cerrar el mes 1 es un cliente que se irá sin avisar.",
+   "umbral": "20-30 keywords al cierre del mes 1",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "🔌 Datos en vivo (opcional — esta es skill de CRITERIO, no de reporting)",
+   "linea": 166,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L166"
+  },
+  {
+   "id": "seo_local_antes_nacional",
+   "tema": "seo",
+   "puestos": [
+    "seo",
+    "jefa_seo"
+   ],
+   "regla": "Consolida primero las búsquedas locales y luego las nacionales; explica al cliente que el SEO tarda meses.",
+   "umbral": "top-5 local en 3-4 meses · nacional 6-9 meses",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/referencia/rendimiento.md",
+   "ancla": "2.1 SEO",
+   "linea": 52,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/referencia/rendimiento.md?plain=1#L52"
+  },
+  {
+   "id": "seo_top10",
+   "tema": "seo",
+   "puestos": [
+    "seo",
+    "jefa_seo"
+   ],
+   "regla": "Alerta crítica cuando una palabra clave del cliente sale del top-10 o cae mucho la visibilidad del proyecto.",
+   "umbral": "fuera del top-10 · visibilidad −15 %",
+   "autor": "RO",
+   "fichero": "30_SKILLS/monitor-posiciones-alertas/SKILL.md",
+   "ancla": "Reglas de bandera roja (umbrales embebidos)",
+   "linea": 157,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/monitor-posiciones-alertas/SKILL.md?plain=1#L157",
+   "alias_de": "seo_alerta_top10"
+  },
+  {
+   "id": "setter_confirmar",
+   "tema": "asistencia",
+   "puestos": [
+    "setters",
+    "especialista_ghl"
+   ],
+   "regla": "Los recordatorios que manda una persona funcionan mejor que los automáticos: uno la mañana anterior y otro una hora antes.",
+   "umbral": "24 h y 1 h antes → ×2 asistencia",
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md",
+   "ancla": "A03.053 · [HORMOZI] Recordatorios manuales 24 h antes (por la mañana) y 1 h antes: el doble de asistencia",
+   "linea": 1263,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/11_ASISTENCIA_A_CITAS.md?plain=1#L1263",
+   "alias_de": "recordatorios_manuales"
+  },
+  {
+   "id": "setter_marcador",
+   "tema": "equipo_rrhh",
+   "puestos": [
+    "setters",
+    "ventas_ro",
+    "direccion"
+   ],
+   "regla": "A un setter no se le juzga por un día: necesita volumen de llamadas, y su número lo fija el jefe.",
+   "umbral": "tras 30-50 llamadas · ~12 reuniones celebradas/mes",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 138,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "juzgar_setter"
+  },
+  {
+   "id": "setter_velocidad",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "setters",
+    "jefa_crm"
+   ],
+   "regla": "La rapidez del primer contacto es la medida nº1 de un lead: llama en minutos, no en horas.",
+   "umbral": "< 10 min → 2-3 veces más respuestas",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md",
+   "ancla": "S03.068 · [COLE] La velocidad es la medida n.º 1 de la calidad de un lead",
+   "linea": 1571,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md?plain=1#L1571",
+   "alias_de": "velocidad_calidad_lead"
+  },
+  {
+   "id": "silencio_es_alarma",
+   "tema": "retencion",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Un cliente que ni protesta ni comunica nada positivo es una alarma: check-in proactivo y contacto al doble.",
+   "umbral": "2 señales = amarillo · aviso el mismo día · check-in en 48 h",
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-06 · El silencio del cliente es alarma, no tranquilidad",
+   "linea": 271,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "sin_disparador_no_hay_oportunidad",
+   "tema": "setting",
+   "puestos": [
+    "setters"
+   ],
+   "regla": "Pregunta primero qué ha pasado para que hoy esté mirando esto: sin un hecho concreto y fechable, la reunión se cae.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/cualificacion-prospecto-despacho/SKILL.md",
+   "ancla": "Las 6 reglas del setting (innegociables)",
+   "linea": 35,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/cualificacion-prospecto-despacho/SKILL.md?plain=1#L35"
+  },
+  {
+   "id": "sin_garantia_resultado",
+   "tema": "prudencia",
+   "puestos": [
+    "ventas_ro",
+    "account",
+    "produccion"
+   ],
+   "regla": "Garantiza proceso, alcance y fecha de revisión; nunca resultados, número de clientes ni multiplicadores.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D2-05 · Ninguna garantía de resultado",
+   "linea": 143,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "sin_llamador_no_se_enciende",
+   "tema": "arranque",
+   "puestos": [
+    "account",
+    "tecnico_altas",
+    "proyectos"
+   ],
+   "regla": "No se enciende ninguna campaña sin una persona nombrada que llame a los leads, con disponibilidad y protocolo.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D3-04 · Sin nadie asignado a llamar al lead, no se enciende nada",
+   "linea": 258,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "sistemas_no_personas",
+   "tema": "prudencia",
+   "puestos": [
+    "operaciones",
+    "account",
+    "jefa_publicidad"
+   ],
+   "regla": "Los sistemas fallan, no las personas: el diagnóstico señala un eslabón con dueño, nunca un culpable con nombre.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "02 · ÁRBOL MAESTRO DE DIAGNÓSTICO FULL-FUNNEL",
+   "linea": 7,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L7"
+  },
+  {
+   "id": "sms_antes_de_llamar",
+   "tema": "setting",
+   "puestos": [
+    "setters",
+    "especialista_ghl"
+   ],
+   "regla": "Manda siempre un mensaje justo antes de llamar («te llamo ahora») y marca dos veces seguidas.",
+   "umbral": null,
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md",
+   "ancla": "S03.311 · [COLE] SMS siempre justo antes de llamar: «I'm sending that text before I call»",
+   "linea": 1991,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md?plain=1#L1991"
+  },
+  {
+   "id": "sobrecarga_account",
+   "tema": "operaciones",
+   "puestos": [
+    "operaciones",
+    "rrhh"
+   ],
+   "regla": "La sobrecarga del account se resuelve quitándole producción, no repartiendo sus cuentas.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "LEYES.md",
+   "ancla": "C-D4-05 · La sobrecarga del AM se resuelve quitándole producción, no repartiendo cuentas",
+   "linea": 403,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "tres_senales_baja",
+   "tema": "retencion",
+   "puestos": [
+    "account"
+   ],
+   "regla": "Si participa la mitad, deja de usar lo que usaba o pide sus accesos y materiales, la cuenta pasa a rojo aunque los números vayan bien.",
+   "umbral": "cualquiera de las 3 señales = rojo",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Las 3 señales que preceden a una baja (1-2 semanas antes)",
+   "linea": 104,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L104"
+  },
+  {
+   "id": "umbrales_captacion_ro",
+   "tema": "venta_ro",
+   "puestos": [
+    "ventas_ro",
+    "setters",
+    "direccion"
+   ],
+   "regla": "Vigila la captación propia de RO contra sus tres topes firmados: coste por cita, por reunión celebrada y asistencia.",
+   "umbral": "≤ 40 €/cita · ≤ 90 €/reunión · asistencia ≥ 80 %",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 133,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "una_restriccion",
+   "tema": "direccion",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "regla": "En cada etapa hay una sola restricción que limita el negocio: identifícala y ataca eso, nada más.",
+   "umbral": null,
+   "autor": "Hormozi",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+   "ancla": "OE13.121 · [HORMOZI] Cada etapa tiene una restricción global, y la estrategia es atacarla",
+   "linea": 2310,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/17_OPERACIONES_Y_ESCALADO.md?plain=1#L2310"
+  },
+  {
+   "id": "una_variable_por_test",
+   "tema": "creatividades",
+   "puestos": [
+    "produccion",
+    "trafficker"
+   ],
+   "regla": "Prueba una sola variable cada vez (ángulo, gancho, destino o formato); con dos no sacas ninguna conclusión.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/tester-creatividades-despacho/SKILL.md",
+   "ancla": "MODO 1 · `diseño` — el test que se puede leer (antes de encender nada)",
+   "linea": 47,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/tester-creatividades-despacho/SKILL.md?plain=1#L47"
+  },
+  {
+   "id": "valida_y_no_publica",
+   "tema": "retencion",
+   "puestos": [
+    "redes",
+    "account"
+   ],
+   "regla": "Un cliente que valida lo que hacemos y no lo publica ya se ha ido, aunque siga pagando.",
+   "umbral": "uso del entregable = 25 % de la salud",
+   "autor": "RO",
+   "fichero": "30_SKILLS/consejero-account-ro/SKILL.md",
+   "ancla": "Termómetro de la cuenta — la baja se ve 2 semanas antes",
+   "linea": 85,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/consejero-account-ro/SKILL.md?plain=1#L85"
+  },
+  {
+   "id": "velocidad_calidad_lead",
+   "tema": "velocidad_contacto",
+   "puestos": [
+    "setters",
+    "jefa_crm"
+   ],
+   "regla": "La rapidez del primer contacto es la medida nº1 de un lead: llama en minutos, no en horas.",
+   "umbral": "< 10 min → 2-3 veces más respuestas",
+   "autor": "Cole Gordon",
+   "fichero": "60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md",
+   "ancla": "S03.068 · [COLE] La velocidad es la medida n.º 1 de la calidad de un lead",
+   "linea": 1571,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/60_FORMACION_COLE_HORMOZI/CEREBRO/10_SETTING.md?plain=1#L1571"
+  },
+  {
+   "id": "velocidad_web_bandas",
+   "tema": "web",
+   "puestos": [
+    "web"
+   ],
+   "regla": "Vigila la velocidad de cada web con PageSpeed y arregla las que están en rojo antes de pedir más tráfico.",
+   "umbral": "rojo < 50 o ≥ 2,5 s · ámbar 50-84 · verde ≥ 85",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 120,
+   "confianza": "alta",
+   "url": null
+  },
+  {
+   "id": "vender_sin_presion",
+   "tema": "venta_ro",
+   "puestos": [
+    "ventas_ro"
+   ],
+   "regla": "Vender es ayudar a decidir: nada de miedo falso a Hacienda, escasez falsa ni presión de cierre.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/venta-consultiva-despacho/SKILL.md",
+   "ancla": "Reglas duras (deontología y ética de venta)",
+   "linea": 63,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/venta-consultiva-despacho/SKILL.md?plain=1#L63"
+  },
+  {
+   "id": "ventanas_minimas_lectura",
+   "tema": "medicion",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad"
+   ],
+   "regla": "No decidas con datos diarios: con 1-3 leads al día el dato del día es ruido.",
+   "umbral": "72 h solo entrega · 7-14 d métricas superiores · 21-28 d coste",
+   "autor": "RO",
+   "fichero": "30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md",
+   "ancla": "La doctrina (destilada del análisis experto — reglas INNEGOCIABLES del informe)",
+   "linea": 32,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md?plain=1#L32"
+  },
+  {
+   "id": "ventas_contrato_3d",
+   "tema": "seguimiento",
+   "puestos": [
+    "account"
+   ],
+   "regla": "La propuesta sale el mismo día de la reunión; si no se abre en tres días, se llama, no se manda otro correo.",
+   "umbral": "envío < 24 h · sin abrir a 72 h → llamada · 14 días = presunta muerta",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E9 · PROPUESTA ENVIADA QUE NO SE FIRMA ⭐ (el eslabón que no existía)",
+   "linea": 139,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L139",
+   "alias_de": "reloj_propuesta"
+  },
+  {
+   "id": "ventas_marcar_resultado",
+   "tema": "venta_ro",
+   "puestos": [
+    "ventas_ro",
+    "direccion"
+   ],
+   "regla": "Mide el cierre de RO sobre reuniones celebradas, no sobre citas reservadas.",
+   "umbral": "verde ≥ 33 % · ámbar 20-32 · rojo < 20",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "Ventas RO",
+   "linea": 134,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "cierre_ro_bandas"
+  },
+  {
+   "id": "ventas_propuesta_72h",
+   "tema": "seguimiento",
+   "puestos": [
+    "account"
+   ],
+   "regla": "La propuesta sale el mismo día de la reunión; si no se abre en tres días, se llama, no se manda otro correo.",
+   "umbral": "envío < 24 h · sin abrir a 72 h → llamada · 14 días = presunta muerta",
+   "autor": "RO",
+   "fichero": "30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ancla": "E9 · PROPUESTA ENVIADA QUE NO SE FIRMA ⭐ (el eslabón que no existía)",
+   "linea": 139,
+   "confianza": "media",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md?plain=1#L139",
+   "alias_de": "reloj_propuesta"
+  },
+  {
+   "id": "web_caida",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "tecnico_altas"
+   ],
+   "regla": "Si cae una landing, avisa a web y a Agus; y también a CRM y trafficker si tiene campaña encendida.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 122,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "monitor_landing_avisos"
+  },
+  {
+   "id": "web_certificado",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "tecnico_altas"
+   ],
+   "regla": "Si cae una landing, avisa a web y a Agus; y también a CRM y trafficker si tiene campaña encendida.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 122,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "monitor_landing_avisos"
+  },
+  {
+   "id": "web_rendimiento",
+   "tema": "web",
+   "puestos": [
+    "web"
+   ],
+   "regla": "Vigila la velocidad de cada web con PageSpeed y arregla las que están en rojo antes de pedir más tráfico.",
+   "umbral": "rojo < 50 o ≥ 2,5 s · ámbar 50-84 · verde ≥ 85",
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 120,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "velocidad_web_bandas"
+  },
+  {
+   "id": "web_spam",
+   "tema": "web",
+   "puestos": [
+    "web",
+    "tecnico_altas"
+   ],
+   "regla": "Si cae una landing, avisa a web y a Agus; y también a CRM y trafficker si tiene campaña encendida.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "11_DECISIONES_PARA_TOMAS.md",
+   "ancla": "SEO y web (con redes y producción)",
+   "linea": 122,
+   "confianza": "alta",
+   "url": null,
+   "alias_de": "monitor_landing_avisos"
+  },
+  {
+   "id": "whatsapp_con_consentimiento",
+   "tema": "prudencia",
+   "puestos": [
+    "especialista_ghl",
+    "jefa_crm"
+   ],
+   "regla": "WhatsApp solo con consentimiento registrado; baja visible en todos los correos y siempre en horario laborable.",
+   "umbral": null,
+   "autor": "RO",
+   "fichero": "30_SKILLS/secuencias-crm-despacho/SKILL.md",
+   "ancla": "Reglas transversales",
+   "linea": 84,
+   "confianza": "alta",
+   "url": "https://github.com/tomassala8/ro-equipo/blob/main/30_SKILLS/secuencias-crm-despacho/SKILL.md?plain=1#L84"
+  }
+ ]
+}

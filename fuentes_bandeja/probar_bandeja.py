@@ -1,118 +1,165 @@
 #!/usr/bin/env python3
-"""Prueba de M3 Bandeja con Chrome sin cabeza (Playwright): consola, desbordes, recorte por persona y capturas.
-Uso: con servir.py en marcha →  python3 probar_bandeja.py [puerto]   (por defecto 8783)"""
+"""Prueba de M3 Bandeja v5 con Chrome sin cabeza (Playwright): consola, desbordes, recorte por persona, distribución de
+trabajo (lista · conversación y editor · contexto), editor a la vista sin desplazarse, atajos, «Deshacer», huecos que
+bloquean el envío, vistas secundarias y capturas .jpg en capturas/_bandeja_v5/.
+Uso: con servir.py en marcha CON COPIA de la base (RO_DB=…) →  python3 probar_bandeja.py [puerto]   (por defecto 9230)"""
 import json
+import re
 import sys
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
-PUERTO = sys.argv[1] if len(sys.argv) > 1 else '8783'
+PUERTO = sys.argv[1] if len(sys.argv) > 1 else '9230'
 BASE = f'http://127.0.0.1:{PUERTO}'
-CAP = Path(__file__).resolve().parent.parent / 'capturas/bandeja'
+CAP = Path(__file__).resolve().parent.parent / 'capturas/_bandeja_v5'
 CAP.mkdir(parents=True, exist_ok=True)
-PRE = 'r4_'
-GENTE = ['tomas', 'mili', 'lucia', 'valeria', 'yessica', 'sofia', 'setter_ana']
+GENTE = ['tomas', 'mili', 'lucia', 'candela', 'yessica', 'valeria', 'sofia', 'setter_ana']
+ANCHOS = ((1440, 900), (1024, 768), (390, 844))
 fallos = []
+JS_CHICOS = '''() => { const out = []; for (const el of document.querySelectorAll('main *')) {
+  if (!el.childNodes.length || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
+  const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden' || !el.getClientRects().length) continue;
+  const f = parseFloat(cs.fontSize); if (f < 12 && !(f >= 11 && cs.textTransform === 'uppercase')) out.push(el.className + ':' + f); } return out.slice(0, 5); }'''
 
-with sync_playwright() as p:
-    nav = p.chromium.launch(channel='chrome', headless=True)
-    for yo in GENTE:
-        for ancho, alto in ((1440, 1000), (390, 844)):
-            ctx = nav.new_context(viewport={'width': ancho, 'height': alto}, device_scale_factor=1 if ancho > 1000 else 2)
-            pg = ctx.new_page()
-            errores = []
-            pg.on('console', lambda m: errores.append(m.text) if m.type == 'error' and 'nuevos.js' not in str(m.location) else None)
-            pg.on('pageerror', lambda e: errores.append(str(e)))
-            pg.goto(f'{BASE}/?yo={yo}#/bandeja', wait_until='networkidle')
-            pg.wait_for_timeout(1200)
-            texto = pg.inner_text('main') if pg.query_selector('main') else ''
-            desborde = pg.evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth')
-            items = pg.eval_on_selector_all('main [role=list] [data-id]', 'xs => xs.length')
-            # guía de diseño (auditoría 30): nada de «null», ni hoja de estilos propia, ni texto por debajo de 12 px
-            raro = [w for w in ('null', 'undefined', 'NaN') if w in texto.split() or f' {w} ' in texto]
-            hoja = pg.evaluate("!!document.getElementById('bandeja-estilos')")
-            chicos = pg.evaluate('''() => { const out = []; for (const el of document.querySelectorAll('main *')) {
-              if (!el.childNodes.length || ![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) continue;
-              const cs = getComputedStyle(el); if (cs.display === 'none' || cs.visibility === 'hidden' || !el.getClientRects().length) continue;
-              const f = parseFloat(cs.fontSize); if (f < 12 && !(f >= 11 && cs.textTransform === 'uppercase')) out.push(el.className + ':' + f); } return out.slice(0, 5); }''')
-            ia = pg.eval_on_selector_all('[data-ia="borrador"]', 'xs => xs.length')
-            linea = f'{yo:11} {ancho:5} px · errores {len(errores)} · desborde {desborde} px · filas {items} · IA {ia} · <12px {len(chicos)} · {texto[:70]!r}'
-            if raro: fallos.append((yo, ancho, f'texto raro en pantalla: {raro}'))
-            if hoja: fallos.append((yo, ancho, 'la Bandeja inyecta su propia hoja de estilos'))
-            if chicos: fallos.append((yo, ancho, f'texto < 12 px: {chicos}'))
-            print(linea.replace('\n', ' | '))
-            if errores:
-                fallos.append((yo, ancho, errores[:3]))
-            if desborde > 0:
-                fallos.append((yo, ancho, f'desborde horizontal {desborde}px'))
-            pg.screenshot(path=str(CAP / f'{PRE}{yo}_{ancho}.png'), full_page=False)
-            if yo in ('tomas', 'lucia') and ancho == 1440:
-                pg.screenshot(path=str(CAP / f'{PRE}{yo}_{ancho}_completa.png'), full_page=True)
-            ctx.close()
 
-    # detalle y acción simulada (Tomás, real, no «ver como») + pestañas
-    ctx = nav.new_context(viewport={'width': 1440, 'height': 1000})
+def nueva(nav, ancho, alto):
+    ctx = nav.new_context(viewport={'width': ancho, 'height': alto}, device_scale_factor=1 if ancho > 1000 else 2)
     pg = ctx.new_page()
     errores = []
     pg.on('console', lambda m: errores.append(m.text) if m.type == 'error' and 'nuevos.js' not in str(m.location) else None)
     pg.on('pageerror', lambda e: errores.append(str(e)))
-    pg.goto(f'{BASE}/?yo=tomas#/bandeja', wait_until='networkidle')
-    pg.wait_for_timeout(1000)
-    for pest in ('Sin responsable', 'WhatsApp', 'De dónde sale'):
-        pg.get_by_role('tab', name=pest).click()
-        pg.wait_for_timeout(400)
-        pg.screenshot(path=str(CAP / f"{PRE}tomas_1440_{pest.split()[0].lower().replace('ó', 'o')}.png"), full_page=True)
-    pg.get_by_role('tab', name='Correos y llamadas').click()
-    pg.wait_for_timeout(400)
-    pg.locator('[aria-label="Vista"] button[data-v="quejas"]').click()
-    pg.wait_for_timeout(300)
-    pg.locator('main [role=list] [data-id]').first.click()
-    pg.wait_for_timeout(300)
-    # IA: «Sugerir respuesta» en el correo; «Usar» pasa el borrador a la caja y NO envía nada
-    n_antes = pg.evaluate("fetch('api/acciones?modulo=bandeja', {headers: {'X-RO-Yo': 'tomas'}}).then(r => r.json()).then(d => (d.acciones || []).length).catch(() => -1)")
-    if pg.locator('[data-ia="borrador"] button:has-text("Sugerir respuesta")').count():
-        pg.locator('[data-ia="borrador"] button:has-text("Sugerir respuesta")').first.click()
-        pg.wait_for_timeout(1500)
-        usar = pg.locator('[data-ia="borrador"] button:has-text("Usar este borrador")')
-        if usar.count():
-            usar.first.click(); pg.wait_for_timeout(500)
-            caja = pg.locator('#bdj-texto').input_value()
-            print('IA · borrador en la caja:', caja[:80].replace('\n', ' | '))
-        else:
-            print('IA · sin borrador (sin conectar o sin precalculado):', pg.locator('[data-ia="borrador"]').inner_text()[:120].replace('\n', ' | '))
-        n_despues = pg.evaluate("fetch('api/acciones?modulo=bandeja', {headers: {'X-RO-Yo': 'tomas'}}).then(r => r.json()).then(d => (d.acciones || []).length).catch(() => -1)")
-        print('IA · acciones en cola antes/después:', n_antes, n_despues)
-        if n_despues != n_antes:
-            fallos.append(('tomas', 'IA', 'el borrador ha puesto algo en la cola: no debe enviarse solo'))
-    else:
-        fallos.append(('tomas', 'IA', 'falta «Sugerir respuesta» en el correo'))
-    pg.screenshot(path=str(CAP / (PRE + 'tomas_1440_ia_borrador.png')), full_page=False)
-    pg.screenshot(path=str(CAP / (PRE + 'tomas_1440_queja_detalle.png')), full_page=False)
-    # ruta directa a un correo antiguo (lo que hace el «Ir» de Mi día): se abre aunque no esté en «Para hoy»
-    pg.goto(f'{BASE}/?yo=tomas#/bandeja/t-RO-6626', wait_until='networkidle')
-    pg.wait_for_timeout(1200)
-    abierto = pg.locator('[data-id][aria-current="true"]').inner_text() if pg.locator('[data-id][aria-current="true"]').count() else ''
-    print('ruta directa RO-6626 →', abierto.replace('\n', ' | ')[:120])
-    if 'RO-6626' not in abierto:
-        fallos.append(('tomas', 'ruta', 'RO-6626 no se abre'))
-    pg.screenshot(path=str(CAP / (PRE + 'tomas_1440_ruta_RO-6626.png')), full_page=False)
-    print('errores tras pestañas y detalle:', errores)
-    if errores:
-        fallos.append(('tomas', 'pestañas', errores[:3]))
+    return ctx, pg, errores
+
+
+def en_vista(pg, sel):
+    b = pg.locator(sel).first.bounding_box() if pg.locator(sel).count() else None
+    return bool(b) and b['y'] >= 0 and b['y'] + b['height'] <= pg.viewport_size['height'] + 1
+
+
+with sync_playwright() as p:
+    nav = p.chromium.launch(channel='chrome', headless=True)
+    for yo in GENTE:
+        for ancho, alto in ANCHOS:
+            ctx, pg, errores = nueva(nav, ancho, alto)
+            pg.goto(f'{BASE}/?yo={yo}#/bandeja', wait_until='networkidle')
+            pg.wait_for_timeout(1800)
+            texto = pg.inner_text('main') if pg.query_selector('main') else ''
+            desborde = pg.evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth')
+            filas = pg.eval_on_selector_all('[data-bdj="lista"] [data-id]', 'xs => xs.length')
+            raro = [w for w in ('null', 'undefined', 'NaN') if w in texto.split() or f' {w} ' in texto or f'{w}{w}' in texto]
+            hoja = pg.evaluate("!!document.querySelector('style[id*=bandeja], #bandeja-estilos')")
+            chicos = pg.evaluate(JS_CHICOS)
+            editor = pg.locator('[data-bdj="editor"]').count()
+            vista = en_vista(pg, '[data-bdj-enviar="siguiente"]') if editor and ancho > 1000 else None
+            linea = f'{yo:11} {ancho:5} px · errores {len(errores)} · desborde {desborde} px · filas {filas} · editor {editor} · «Enviar y siguiente» a la vista {vista} · <12px {len(chicos)}'
+            print(linea)
+            if raro: fallos.append((yo, ancho, f'texto raro en pantalla: {raro}'))
+            if hoja: fallos.append((yo, ancho, 'la Bandeja inyecta su propia hoja de estilos'))
+            if chicos: fallos.append((yo, ancho, f'texto < 12 px: {chicos}'))
+            if errores: fallos.append((yo, ancho, errores[:3]))
+            if desborde > 0: fallos.append((yo, ancho, f'desborde horizontal {desborde}px'))
+            if ancho > 1000 and filas and editor and not vista and yo != 'setter_ana':
+                fallos.append((yo, ancho, '«Enviar y siguiente» no queda a la vista sin desplazarse'))
+            pg.screenshot(path=str(CAP / f'{yo}_{ancho}.jpg'), type='jpeg', quality=72, full_page=False)
+            ctx.close()
+
+    # ---- Tomás (real): borrador de la IA dentro del editor sin tocar la cola, huecos que bloquean, atajos y «Deshacer»
+    ctx, pg, errores = nueva(nav, 1440, 900)
+    pg.goto(f'{BASE}/?yo=lucia#/bandeja', wait_until='networkidle')
+    pg.wait_for_timeout(2500)
+    cola = lambda: pg.evaluate("fetch('api/acciones?modulo=bandeja').then(r => r.json()).then(d => (d.acciones || []).length).catch(() => -1)")
+    n0 = cola()
+    valor = pg.locator('#bdj-texto').input_value()
+    print('IA · borrador ya en el editor:', valor[:70].replace('\n', ' | '))
+    if not valor.strip(): fallos.append(('lucia', 'IA', 'el editor sale vacío (sin borrador ni plantilla)'))
+    if cola() != n0: fallos.append(('lucia', 'IA', 'cargar el borrador ha puesto algo en la cola'))
+    calidad = pg.inner_text('[data-bdj="calidad"]') if pg.locator('[data-bdj="calidad"]').count() else ''
+    print('calidad:', calidad.replace('\n', ' '))
+    if 'Calidad' not in calidad: fallos.append(('lucia', 'IA', 'falta «Calidad del borrador»'))
+    # huecos: no se envía con [..]
+    pg.fill('#bdj-texto', 'Hola,\n\nTe llamo [día y hora].\n\nUn saludo,')
+    pg.click('[data-bdj-enviar="siguiente"]'); pg.wait_for_timeout(400)
+    err = pg.locator('[data-bdj="editor"] [data-error]').inner_text() if pg.locator('[data-bdj="editor"] [data-error]').count() else ''
+    print('huecos →', err)
+    if '[día y hora]' not in err or cola() != n0: fallos.append(('lucia', 'huecos', 'deja enviar con huecos [..]'))
+    # atajos: j / k / e (despachado) / z (deshacer)
+    pg.mouse.click(700, 30)
+    cur = lambda: pg.eval_on_selector_all('[data-bdj="lista"] [aria-current="true"]', 'xs => xs.map(x => x.dataset.id)')
+    c0 = cur(); pg.keyboard.press('j'); pg.wait_for_timeout(300); c1 = cur(); pg.keyboard.press('k'); pg.wait_for_timeout(300); c2 = cur()
+    print('j/k:', c0, c1, c2)
+    if not (c0 == c2 and c0 != c1): fallos.append(('lucia', 'atajos', 'j/k no mueven la selección'))
+    pg.keyboard.press('e'); pg.wait_for_timeout(500); c3 = cur()
+    des = pg.locator('[data-deshacer] button:has-text("Deshacer")').count()
+    pg.keyboard.press('z'); pg.wait_for_timeout(500); c4 = cur()
+    print('e →', c3, '· Deshacer visible', des, '· z →', c4)
+    if c3 == c0 or c4 != c0 or not des: fallos.append(('lucia', 'deshacer', 'e / z no despachan y deshacen'))
+    pg.wait_for_timeout(8500)
+    if cola() != n0: fallos.append(('lucia', 'deshacer', 'lo deshecho ha llegado a la cola'))
+    # «Enviar y siguiente»: va a la cola simulada a los 8 s y aparece en envíos (simulado). ⌘↵ hace el botón principal
+    # (que es «Cerrar sin responder» cuando el cerebro dice que no hace falta responder).
+    cerrar = pg.locator('[data-bdj-enviar="cerrar"]:not([hidden])').count()
+    print('«Cerrar sin responder» como principal:', bool(cerrar))
+    pg.locator('#bdj-texto').fill('Hola,\n\nRecibido, lo miro hoy.\n\nUn saludo,')
+    obj = cur()
+    num = obj[0].replace('t-', '') if obj else ''
+    pg.locator('[data-bdj-enviar="siguiente"]').click(); pg.wait_for_timeout(600)
+    print('Enviar y siguiente:', obj, '→', cur())
+    if cur() == obj: fallos.append(('lucia', 'enviar', '«Enviar y siguiente» no pasa al siguiente'))
+    pg.wait_for_timeout(8800)
+    print('cola antes/después:', n0, cola())
+    if cola() != n0 + 1: fallos.append(('lucia', 'enviar', 'la respuesta no ha llegado a la cola simulada'))
+    env = pg.evaluate("fetch('api/envios').then(r => r.json()).then(d => (d.envios || []).map(e => e.estado + ' ' + (e.destinatario || {}).ref))")
+    print('envíos:', env[:3])
+    if f'simulado {num}' not in env: fallos.append(('lucia', 'enviar', f'sin envío simulado de {num} en /api/envios'))
+    vis = pg.locator('[data-bdj="lista"] [data-id="t-' + num + '"]').count()
+    pg.locator('[data-bdj="mas"] > button').click(); pg.wait_for_timeout(200)
+    pg.locator('.menu-flot [role="menuitem"]', has_text='Ya hechos').first.click(); pg.wait_for_timeout(500)
+    pg.locator(f'[data-bdj="lista"] [data-id="t-{num}"]').first.click(); pg.wait_for_timeout(1500)
+    estado = pg.locator('[data-bdj="envios"]').inner_text() if pg.locator('[data-bdj="envios"]').count() else ''
+    print('estado del envío en el hilo:', estado.replace('\n', ' · ')[:140])
+    if 'Simulado' not in estado: fallos.append(('lucia', 'enviar', 'el hilo no enseña el estado del envío'))
+    pg.screenshot(path=str(CAP / 'lucia_1440_tras_enviar.jpg'), type='jpeg', quality=72)
+    if errores: fallos.append(('lucia', 'flujo', errores[:3]))
     ctx.close()
 
-    # móvil: detalle en su propia ruta
-    ctx = nav.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=2)
-    pg = ctx.new_page()
-    pg.goto(f'{BASE}/?yo=lucia#/bandeja', wait_until='networkidle')
-    pg.wait_for_timeout(1000)
-    if pg.locator('main [role=list] [data-id]').count():
-        pg.locator('main [role=list] [data-id]').first.click()
-        pg.wait_for_timeout(800)
+    # ---- Tomás: vistas secundarias desde «Más», hilo legible y ruta directa
+    ctx, pg, errores = nueva(nav, 1440, 900)
+    pg.goto(f'{BASE}/?yo=tomas#/bandeja/t-RO-6627', wait_until='networkidle')
+    pg.wait_for_timeout(2500)
+    msgs = pg.locator('[data-bdj="hilo"] details[data-msg]').count()
+    print('hilo RO-6627 · mensajes:', msgs, '· abierto:', cur() if False else pg.eval_on_selector_all('[data-bdj="lista"] [aria-current="true"]', 'xs => xs.map(x => x.dataset.id)'))
+    if not msgs: fallos.append(('tomas', 'hilo', 'el hilo de RO-6627 no se lee en la app'))
+    pg.screenshot(path=str(CAP / 'tomas_1440_hilo_RO-6627.jpg'), type='jpeg', quality=72)
+    pg.goto(f'{BASE}/?yo=tomas#/bandeja/t-RO-6626', wait_until='networkidle')
+    pg.wait_for_timeout(1500)
+    abierto = pg.eval_on_selector_all('[data-bdj="lista"] [aria-current="true"]', 'xs => xs.map(x => x.dataset.id)')
+    print('ruta directa RO-6626 →', abierto)
+    if abierto != ['t-RO-6626']: fallos.append(('tomas', 'ruta', 'RO-6626 no se abre'))
+    for vista in ('Correos sin responsable', 'WhatsApp', 'De dónde sale'):
+        pg.locator('[data-bdj="mas"] > button').click(); pg.wait_for_timeout(200)
+        pg.locator('.menu-flot [role="menuitem"]', has_text=vista).first.click(); pg.wait_for_timeout(500)
+        pg.screenshot(path=str(CAP / f"tomas_1440_{vista.split()[0].lower().replace('ó', 'o')}.jpg"), type='jpeg', quality=72, full_page=True)
+        pg.locator('button:has-text("Volver a la bandeja")').click(); pg.wait_for_timeout(400)
+    if errores: fallos.append(('tomas', 'vistas', errores[:3]))
+    ctx.close()
+
+    # ---- móvil: lista → conversación a pantalla completa con el editor fijo abajo
+    ctx, pg, errores = nueva(nav, 390, 844)
+    pg.goto(f'{BASE}/?yo=candela#/bandeja', wait_until='networkidle')
+    pg.wait_for_timeout(1500)
+    if pg.locator('[data-bdj="lista"] [data-id]').count():
+        pg.locator('[data-bdj="lista"] [data-id]').first.click(); pg.wait_for_timeout(2500)
         d = pg.evaluate('document.documentElement.scrollWidth - document.documentElement.clientWidth')
-        print('móvil detalle', pg.url, 'desborde', d)
-        pg.screenshot(path=str(CAP / (PRE + 'lucia_390_detalle.png')), full_page=True)
+        fijo = en_vista(pg, '[data-bdj-enviar="siguiente"]')
+        print('móvil conversación', pg.url.split('#')[1], '· desborde', d, '· editor abajo a la vista', fijo)
+        if d > 0: fallos.append(('candela', 390, f'desborde en la conversación {d}px'))
+        if not fijo: fallos.append(('candela', 390, 'el editor no queda fijo abajo'))
+        pg.screenshot(path=str(CAP / 'candela_390_conversacion.jpg'), type='jpeg', quality=72)
+        pg.mouse.wheel(0, 600); pg.wait_for_timeout(300)
+        pg.screenshot(path=str(CAP / 'candela_390_conversacion_bajando.jpg'), type='jpeg', quality=72)
+    if errores: fallos.append(('candela', 'móvil', errores[:3]))
     ctx.close()
     nav.close()
 
-print('FALLOS:' if fallos else 'TODO BIEN', json.dumps(fallos, ensure_ascii=False)[:1500] if fallos else '')
+print('FALLOS:' if fallos else 'TODO BIEN', json.dumps(fallos, ensure_ascii=False)[:2000] if fallos else '')
+sys.exit(1 if fallos else 0)

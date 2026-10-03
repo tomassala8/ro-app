@@ -5,7 +5,7 @@
   "departamento": "web",
   "cliente_id": "busbac",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_medicion:busbac:0": {
   "detectada": "2026-10-02 17:53",
@@ -13,7 +13,7 @@
   "departamento": "web",
   "cliente_id": "busbac",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_spam:musashi-consultores": {
   "detectada": "2026-10-02 17:53",
@@ -21,7 +21,7 @@
   "departamento": "web",
   "cliente_id": "musashi-consultores",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_medicion:musashi-consultores:0": {
   "detectada": "2026-10-02 17:53",
@@ -29,7 +29,7 @@
   "departamento": "web",
   "cliente_id": "musashi-consultores",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_caida:abner-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -37,7 +37,7 @@
   "departamento": "web",
   "cliente_id": "abner-advisory",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_spam:geslabor": {
   "detectada": "2026-10-02 17:53",
@@ -45,7 +45,7 @@
   "departamento": "web",
   "cliente_id": "geslabor",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_caida:marlex-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -53,7 +53,7 @@
   "departamento": "web",
   "cliente_id": "marlex-consulting",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_caida:tst-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -61,7 +61,7 @@
   "departamento": "web",
   "cliente_id": "tst-consulting",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:ahedo": {
   "detectada": "2026-10-02 17:53",
@@ -69,23 +69,7 @@
   "departamento": "web",
   "cliente_id": "ahedo",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "web_lenta:aster-asesoria": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Aster Asesoría tarda 5,8 s en servirse.",
-  "departamento": "web",
-  "cliente_id": "aster-asesoria",
-  "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "web_lenta:billeo": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Billeo tarda 7,1 s en servirse.",
-  "departamento": "web",
-  "cliente_id": "billeo",
-  "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_lenta:consulting-f": {
   "detectada": "2026-10-02 17:53",
@@ -93,15 +77,15 @@
   "departamento": "web",
   "cliente_id": "consulting-f",
   "dueno_id": "macarena",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_lenta:deudot": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Deudot tarda 9 s en servirse.",
+  "motivo": "La portada de Deudot tarda 7,6 s en servirse.",
   "departamento": "web",
   "cliente_id": "deudot",
   "dueno_id": "macarena",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_lenta:fitec-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -109,23 +93,15 @@
   "departamento": "web",
   "cliente_id": "fitec-asesores",
   "dueno_id": "macarena",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_lenta:gac": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de GAC tarda 5,5 s en servirse.",
+  "motivo": "La portada de GAC tarda 5,4 s en servirse.",
   "departamento": "web",
   "cliente_id": "gac",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "web_lenta:ip-forense": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de IP Forense tarda 5,3 s en servirse.",
-  "departamento": "web",
-  "cliente_id": "ip-forense",
-  "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:j-d-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -133,7 +109,7 @@
   "departamento": "web",
   "cliente_id": "j-d-consulting",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:laver": {
   "detectada": "2026-10-02 17:53",
@@ -141,15 +117,7 @@
   "departamento": "web",
   "cliente_id": "laver",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "web_lenta:octoedro": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Octoedro tarda 7,9 s en servirse.",
-  "departamento": "web",
-  "cliente_id": "octoedro",
-  "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:proincentiva": {
   "detectada": "2026-10-02 17:53",
@@ -157,7 +125,7 @@
   "departamento": "web",
   "cliente_id": "proincentiva",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:segu-assessors": {
   "detectada": "2026-10-02 17:53",
@@ -165,15 +133,7 @@
   "departamento": "web",
   "cliente_id": "segu-assessors",
   "dueno_id": "macarena",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "web_lenta:sol-4": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Sol-4 tarda 6,2 s en servirse.",
-  "departamento": "web",
-  "cliente_id": "sol-4",
-  "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_certificado:torrevieja-consult": {
   "detectada": "2026-10-02 17:53",
@@ -181,15 +141,15 @@
   "departamento": "web",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_lenta:tribulex": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "La portada de Tribulex tarda 8,9 s en servirse.",
+  "motivo": "La portada de Tribulex tarda 5,6 s en servirse.",
   "departamento": "web",
   "cliente_id": "tribulex",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_medicion:ecija-advisory:0": {
   "detectada": "2026-10-02 17:53",
@@ -197,7 +157,7 @@
   "departamento": "web",
   "cliente_id": "ecija-advisory",
   "dueno_id": "carlos_viur",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "web_medicion:fusterguell:0": {
   "detectada": "2026-10-02 17:53",
@@ -205,7 +165,7 @@
   "departamento": "web",
   "cliente_id": "fusterguell",
   "dueno_id": "macarena",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:asetra": {
   "detectada": "2026-10-02 17:53",
@@ -213,7 +173,7 @@
   "departamento": "seo",
   "cliente_id": "asetra",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:bit-24": {
   "detectada": "2026-10-02 17:53",
@@ -221,7 +181,7 @@
   "departamento": "seo",
   "cliente_id": "bit-24",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:ahedo": {
   "detectada": "2026-10-02 17:53",
@@ -229,7 +189,7 @@
   "departamento": "seo",
   "cliente_id": "ahedo",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:gac": {
   "detectada": "2026-10-02 17:53",
@@ -237,7 +197,7 @@
   "departamento": "seo",
   "cliente_id": "gac",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:ecom-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -245,7 +205,7 @@
   "departamento": "seo",
   "cliente_id": "ecom-advisory",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:fitec-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -253,7 +213,7 @@
   "departamento": "seo",
   "cliente_id": "fitec-asesores",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:octoedro": {
   "detectada": "2026-10-02 17:53",
@@ -261,7 +221,7 @@
   "departamento": "seo",
   "cliente_id": "octoedro",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:orejana": {
   "detectada": "2026-10-02 17:53",
@@ -269,7 +229,7 @@
   "departamento": "seo",
   "cliente_id": "orejana",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:prodegest": {
   "detectada": "2026-10-02 17:53",
@@ -277,7 +237,7 @@
   "departamento": "seo",
   "cliente_id": "prodegest",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_rojo:xterna": {
   "detectada": "2026-10-02 17:53",
@@ -285,7 +245,7 @@
   "departamento": "seo",
   "cliente_id": "xterna",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:accompany": {
   "detectada": "2026-10-02 17:53",
@@ -293,7 +253,7 @@
   "departamento": "seo",
   "cliente_id": "accompany",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:adade-zaragoza": {
   "detectada": "2026-10-02 17:53",
@@ -301,7 +261,7 @@
   "departamento": "seo",
   "cliente_id": "adade-zaragoza",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:aselegal": {
   "detectada": "2026-10-02 17:53",
@@ -309,7 +269,7 @@
   "departamento": "seo",
   "cliente_id": "aselegal",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:aster-asesoria": {
   "detectada": "2026-10-02 17:53",
@@ -317,7 +277,7 @@
   "departamento": "seo",
   "cliente_id": "aster-asesoria",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:avantik": {
   "detectada": "2026-10-02 17:53",
@@ -325,7 +285,7 @@
   "departamento": "seo",
   "cliente_id": "avantik",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:ayg-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -333,7 +293,7 @@
   "departamento": "seo",
   "cliente_id": "ayg-asesores",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:bonet-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -341,7 +301,7 @@
   "departamento": "seo",
   "cliente_id": "bonet-asesores",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:busbac": {
   "detectada": "2026-10-02 17:53",
@@ -349,7 +309,7 @@
   "departamento": "seo",
   "cliente_id": "busbac",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:centro-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -357,7 +317,7 @@
   "departamento": "seo",
   "cliente_id": "centro-consulting",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:christian-sanchez": {
   "detectada": "2026-10-02 17:53",
@@ -365,7 +325,7 @@
   "departamento": "seo",
   "cliente_id": "christian-sanchez",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:ecija-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -373,7 +333,7 @@
   "departamento": "seo",
   "cliente_id": "ecija-advisory",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:fusterguell": {
   "detectada": "2026-10-02 17:53",
@@ -381,7 +341,7 @@
   "departamento": "seo",
   "cliente_id": "fusterguell",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:gestanex": {
   "detectada": "2026-10-02 17:53",
@@ -389,15 +349,7 @@
   "departamento": "seo",
   "cliente_id": "gestanex",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "seo_ambar:greconsult": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "Greconsult: Ninguna de las 15 palabras del informe está en el top 10.",
-  "departamento": "seo",
-  "cliente_id": "greconsult",
-  "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:ip-forense": {
   "detectada": "2026-10-02 17:53",
@@ -405,7 +357,7 @@
   "departamento": "seo",
   "cliente_id": "ip-forense",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:j-d-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -413,7 +365,7 @@
   "departamento": "seo",
   "cliente_id": "j-d-consulting",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:joan-lluis-vives": {
   "detectada": "2026-10-02 17:53",
@@ -421,7 +373,7 @@
   "departamento": "seo",
   "cliente_id": "joan-lluis-vives",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:kiosko-box": {
   "detectada": "2026-10-02 17:53",
@@ -429,7 +381,7 @@
   "departamento": "seo",
   "cliente_id": "kiosko-box",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:laver": {
   "detectada": "2026-10-02 17:53",
@@ -437,7 +389,7 @@
   "departamento": "seo",
   "cliente_id": "laver",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:mg-economistes": {
   "detectada": "2026-10-02 17:53",
@@ -445,7 +397,7 @@
   "departamento": "seo",
   "cliente_id": "mg-economistes",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:musashi-consultores": {
   "detectada": "2026-10-02 17:53",
@@ -453,7 +405,7 @@
   "departamento": "seo",
   "cliente_id": "musashi-consultores",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:oteca": {
   "detectada": "2026-10-02 17:53",
@@ -461,7 +413,7 @@
   "departamento": "seo",
   "cliente_id": "oteca",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:romero-martinez": {
   "detectada": "2026-10-02 17:53",
@@ -469,7 +421,7 @@
   "departamento": "seo",
   "cliente_id": "romero-martinez",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:segu-assessors": {
   "detectada": "2026-10-02 17:53",
@@ -477,7 +429,7 @@
   "departamento": "seo",
   "cliente_id": "segu-assessors",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:sol-4": {
   "detectada": "2026-10-02 17:53",
@@ -485,7 +437,7 @@
   "departamento": "seo",
   "cliente_id": "sol-4",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:torrevieja-consult": {
   "detectada": "2026-10-02 17:53",
@@ -493,7 +445,7 @@
   "departamento": "seo",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "seo_ambar:tribulex": {
   "detectada": "2026-10-02 17:53",
@@ -501,7 +453,7 @@
   "departamento": "seo",
   "cliente_id": "tribulex",
   "dueno_id": "jeronimo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_critico:akua": {
   "detectada": "2026-10-02 17:53",
@@ -509,7 +461,7 @@
   "departamento": "publicidad",
   "cliente_id": "akua",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_critico:consulting-f": {
   "detectada": "2026-10-02 17:53",
@@ -517,7 +469,7 @@
   "departamento": "crm",
   "cliente_id": "consulting-f",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_critico:innova-scala": {
   "detectada": "2026-10-02 17:53",
@@ -525,7 +477,7 @@
   "departamento": "publicidad",
   "cliente_id": "innova-scala",
   "dueno_id": "valeria",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:bit-24": {
   "detectada": "2026-10-02 17:53",
@@ -533,7 +485,7 @@
   "departamento": "publicidad",
   "cliente_id": "bit-24",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:busbac": {
   "detectada": "2026-10-02 17:53",
@@ -541,7 +493,7 @@
   "departamento": "publicidad",
   "cliente_id": "busbac",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:ecom-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -549,7 +501,7 @@
   "departamento": "publicidad",
   "cliente_id": "ecom-advisory",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:emex": {
   "detectada": "2026-10-02 17:53",
@@ -557,7 +509,7 @@
   "departamento": "publicidad",
   "cliente_id": "emex",
   "dueno_id": "valeria",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:gac": {
   "detectada": "2026-10-02 17:53",
@@ -565,7 +517,7 @@
   "departamento": "crm",
   "cliente_id": "gac",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:joan-lluis-vives": {
   "detectada": "2026-10-02 17:53",
@@ -573,7 +525,7 @@
   "departamento": "publicidad",
   "cliente_id": "joan-lluis-vives",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:orejana": {
   "detectada": "2026-10-02 17:53",
@@ -581,7 +533,7 @@
   "departamento": "publicidad",
   "cliente_id": "orejana",
   "dueno_id": "valeria",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:adade-zaragoza": {
   "detectada": "2026-10-02 17:53",
@@ -589,7 +541,7 @@
   "departamento": "redes",
   "cliente_id": "adade-zaragoza",
   "dueno_id": "lara",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:ahedo": {
   "detectada": "2026-10-02 17:53",
@@ -597,7 +549,7 @@
   "departamento": "redes",
   "cliente_id": "ahedo",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:aselegal": {
   "detectada": "2026-10-02 17:53",
@@ -605,7 +557,7 @@
   "departamento": "redes",
   "cliente_id": "aselegal",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:aselegal": {
   "detectada": "2026-10-02 17:53",
@@ -613,7 +565,7 @@
   "departamento": "redes",
   "cliente_id": "aselegal",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:asetra": {
   "detectada": "2026-10-02 17:53",
@@ -621,7 +573,7 @@
   "departamento": "redes",
   "cliente_id": "asetra",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:aster-asesoria": {
   "detectada": "2026-10-02 17:53",
@@ -629,7 +581,7 @@
   "departamento": "redes",
   "cliente_id": "aster-asesoria",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:avantik": {
   "detectada": "2026-10-02 17:53",
@@ -637,7 +589,7 @@
   "departamento": "redes",
   "cliente_id": "avantik",
   "dueno_id": "lara",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:ayg-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -645,7 +597,7 @@
   "departamento": "redes",
   "cliente_id": "ayg-asesores",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:ayg-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -653,7 +605,7 @@
   "departamento": "redes",
   "cliente_id": "ayg-asesores",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:bit-24": {
   "detectada": "2026-10-02 17:53",
@@ -661,7 +613,7 @@
   "departamento": "redes",
   "cliente_id": "bit-24",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:bit-24": {
   "detectada": "2026-10-02 17:53",
@@ -669,7 +621,7 @@
   "departamento": "redes",
   "cliente_id": "bit-24",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:bonet-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -677,7 +629,7 @@
   "departamento": "redes",
   "cliente_id": "bonet-asesores",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:centro-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -685,7 +637,7 @@
   "departamento": "redes",
   "cliente_id": "centro-consulting",
   "dueno_id": "lara",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:consulting-f": {
   "detectada": "2026-10-02 17:53",
@@ -693,7 +645,7 @@
   "departamento": "redes",
   "cliente_id": "consulting-f",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:deudot": {
   "detectada": "2026-10-02 17:53",
@@ -701,7 +653,7 @@
   "departamento": "redes",
   "cliente_id": "deudot",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:ecom-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -709,7 +661,7 @@
   "departamento": "redes",
   "cliente_id": "ecom-advisory",
   "dueno_id": "anderson",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:ecom-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -717,7 +669,7 @@
   "departamento": "redes",
   "cliente_id": "ecom-advisory",
   "dueno_id": "anderson",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:fitec-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -725,7 +677,7 @@
   "departamento": "redes",
   "cliente_id": "fitec-asesores",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:fitec-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -733,7 +685,7 @@
   "departamento": "redes",
   "cliente_id": "fitec-asesores",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:fusterguell": {
   "detectada": "2026-10-02 17:53",
@@ -741,7 +693,7 @@
   "departamento": "redes",
   "cliente_id": "fusterguell",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:fusterguell": {
   "detectada": "2026-10-02 17:53",
@@ -749,7 +701,7 @@
   "departamento": "redes",
   "cliente_id": "fusterguell",
   "dueno_id": "belen",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:gac": {
   "detectada": "2026-10-02 17:53",
@@ -757,7 +709,7 @@
   "departamento": "redes",
   "cliente_id": "gac",
   "dueno_id": "anderson",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:gac": {
   "detectada": "2026-10-02 17:53",
@@ -765,7 +717,7 @@
   "departamento": "redes",
   "cliente_id": "gac",
   "dueno_id": "anderson",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:innova-scala": {
   "detectada": "2026-10-02 17:53",
@@ -773,7 +725,7 @@
   "departamento": "redes",
   "cliente_id": "innova-scala",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:joan-lluis-vives": {
   "detectada": "2026-10-02 17:53",
@@ -781,15 +733,15 @@
   "departamento": "redes",
   "cliente_id": "joan-lluis-vives",
   "dueno_id": "lara",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:musashi-consultores": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Musashi Consultores: hueco sin nada programado en los próximos 7 días (desde el 02-10).",
+  "motivo": "Musashi Consultores: 2 huecos sin nada programado en los próximos 7 días (desde el 02-10).",
   "departamento": "redes",
   "cliente_id": "musashi-consultores",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:oteca": {
   "detectada": "2026-10-02 17:53",
@@ -797,7 +749,7 @@
   "departamento": "redes",
   "cliente_id": "oteca",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:oteca": {
   "detectada": "2026-10-02 17:53",
@@ -805,7 +757,7 @@
   "departamento": "redes",
   "cliente_id": "oteca",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:romero-martinez": {
   "detectada": "2026-10-02 17:53",
@@ -813,7 +765,7 @@
   "departamento": "redes",
   "cliente_id": "romero-martinez",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:segu-assessors": {
   "detectada": "2026-10-02 17:53",
@@ -821,7 +773,7 @@
   "departamento": "redes",
   "cliente_id": "segu-assessors",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_hueco:torrevieja-consult": {
   "detectada": "2026-10-02 17:53",
@@ -829,7 +781,7 @@
   "departamento": "redes",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "redes_fallida:torrevieja-consult": {
   "detectada": "2026-10-02 17:53",
@@ -837,31 +789,31 @@
   "departamento": "redes",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "kimberlyn",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:musashi-consultores": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Musashi Consultores está en crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca en crítico.",
+  "motivo": "Musashi Consultores es un cliente crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca como cliente crítico.",
   "departamento": "accounts",
   "cliente_id": "musashi-consultores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:gac": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "GAC está en crítico: Correos sin contestar desde hace 20 días laborables y su account lo marca en crítico.",
+  "motivo": "GAC es un cliente crítico: Correos sin contestar desde hace 20 días laborables y su account lo marca como cliente crítico.",
   "departamento": "accounts",
   "cliente_id": "gac",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:campalans": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Campalans está en crítico: Correos sin contestar desde hace 16 días laborables y sin reunión el mes pasado.",
+  "motivo": "Campalans es un cliente crítico: Correos sin contestar desde hace 16 días laborables y sin reunión el mes pasado.",
   "departamento": "accounts",
   "cliente_id": "campalans",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:campalans": {
   "detectada": "2026-10-02 17:53",
@@ -869,23 +821,23 @@
   "departamento": "accounts",
   "cliente_id": "campalans",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:pgb-auditores": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "PGB Auditores está en crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca en crítico.",
+  "motivo": "PGB Auditores es un cliente crítico: Correos sin contestar desde hace 16 días laborables y su account lo marca como cliente crítico.",
   "departamento": "accounts",
   "cliente_id": "pgb-auditores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:tribulex": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Tribulex está en crítico: Correos sin contestar desde hace 12 días laborables y sin reunión el mes pasado.",
+  "motivo": "Tribulex es un cliente crítico: Correos sin contestar desde hace 12 días laborables y sin reunión el mes pasado.",
   "departamento": "accounts",
   "cliente_id": "tribulex",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:tribulex": {
   "detectada": "2026-10-02 17:53",
@@ -893,7 +845,7 @@
   "departamento": "accounts",
   "cliente_id": "tribulex",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:consulting-f": {
   "detectada": "2026-10-02 17:53",
@@ -901,7 +853,7 @@
   "departamento": "accounts",
   "cliente_id": "consulting-f",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:joan-lluis-vives": {
   "detectada": "2026-10-02 17:53",
@@ -909,15 +861,15 @@
   "departamento": "accounts",
   "cliente_id": "joan-lluis-vives",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:lobo": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Lobo está en crítico: Alta en el día 19 sin encender (límite: día 12).",
+  "motivo": "Lobo es un cliente crítico: Alta en el día 19 sin encender (límite: día 12).",
   "departamento": "accounts",
   "cliente_id": "lobo",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:j-d-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -925,7 +877,7 @@
   "departamento": "accounts",
   "cliente_id": "j-d-consulting",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_reunion:torrevieja-consult": {
   "detectada": "2026-10-02 17:53",
@@ -933,39 +885,39 @@
   "departamento": "accounts",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:cib-partners": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "CIB Partners está en crítico: Alta en el día 15 sin encender (límite: día 12).",
+  "motivo": "CIB Partners es un cliente crítico: Alta en el día 15 sin encender (límite: día 12).",
   "departamento": "accounts",
   "cliente_id": "cib-partners",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:abner-advisory": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Abner Advisory está en crítico: Alta en el día 15 sin encender (límite: día 12).",
+  "motivo": "Abner Advisory es un cliente crítico: Alta en el día 15 sin encender (límite: día 12).",
   "departamento": "accounts",
   "cliente_id": "abner-advisory",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:gestio-plural": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Gestió Plural está en crítico: Alta en el día 17 sin encender (límite: día 12).",
+  "motivo": "Gestió Plural es un cliente crítico: Alta en el día 17 sin encender (límite: día 12).",
   "departamento": "accounts",
   "cliente_id": "gestio-plural",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:garmande": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Garmande está en crítico: Alta en el día 32 sin encender (límite: día 12).",
+  "motivo": "Garmande es un cliente crítico: Alta en el día 32 sin encender (límite: día 12).",
   "departamento": "accounts",
   "cliente_id": "garmande",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:joan-lluis-vives": {
   "detectada": "2026-10-02 17:53",
@@ -973,7 +925,7 @@
   "departamento": "accounts",
   "cliente_id": "joan-lluis-vives",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:accompany": {
   "detectada": "2026-10-02 17:53",
@@ -981,7 +933,7 @@
   "departamento": "accounts",
   "cliente_id": "accompany",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:aselegal": {
   "detectada": "2026-10-02 17:53",
@@ -989,7 +941,7 @@
   "departamento": "accounts",
   "cliente_id": "aselegal",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:musashi-consultores": {
   "detectada": "2026-10-02 17:53",
@@ -997,7 +949,7 @@
   "departamento": "accounts",
   "cliente_id": "musashi-consultores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:fusterguell": {
   "detectada": "2026-10-02 17:53",
@@ -1005,7 +957,7 @@
   "departamento": "accounts",
   "cliente_id": "fusterguell",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:xterna": {
   "detectada": "2026-10-02 17:53",
@@ -1013,7 +965,7 @@
   "departamento": "accounts",
   "cliente_id": "xterna",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:proincentiva": {
   "detectada": "2026-10-02 17:53",
@@ -1021,7 +973,7 @@
   "departamento": "accounts",
   "cliente_id": "proincentiva",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:consulting-f": {
   "detectada": "2026-10-02 17:53",
@@ -1029,7 +981,7 @@
   "departamento": "accounts",
   "cliente_id": "consulting-f",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:oteca": {
   "detectada": "2026-10-02 17:53",
@@ -1037,7 +989,7 @@
   "departamento": "accounts",
   "cliente_id": "oteca",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:busbac": {
   "detectada": "2026-10-02 17:53",
@@ -1045,7 +997,7 @@
   "departamento": "accounts",
   "cliente_id": "busbac",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:gac": {
   "detectada": "2026-10-02 17:53",
@@ -1053,7 +1005,7 @@
   "departamento": "accounts",
   "cliente_id": "gac",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:sol-4": {
   "detectada": "2026-10-02 17:53",
@@ -1061,7 +1013,7 @@
   "departamento": "accounts",
   "cliente_id": "sol-4",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:bonet-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -1069,7 +1021,7 @@
   "departamento": "accounts",
   "cliente_id": "bonet-asesores",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:tribulex": {
   "detectada": "2026-10-02 17:53",
@@ -1077,7 +1029,7 @@
   "departamento": "accounts",
   "cliente_id": "tribulex",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:prodegest": {
   "detectada": "2026-10-02 17:53",
@@ -1085,7 +1037,7 @@
   "departamento": "accounts",
   "cliente_id": "prodegest",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:adade-zaragoza": {
   "detectada": "2026-10-02 17:53",
@@ -1093,7 +1045,7 @@
   "departamento": "accounts",
   "cliente_id": "adade-zaragoza",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:optimalia": {
   "detectada": "2026-10-02 17:53",
@@ -1101,7 +1053,7 @@
   "departamento": "accounts",
   "cliente_id": "optimalia",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:finexen": {
   "detectada": "2026-10-02 17:53",
@@ -1109,7 +1061,7 @@
   "departamento": "accounts",
   "cliente_id": "finexen",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:pgb-auditores": {
   "detectada": "2026-10-02 17:53",
@@ -1117,7 +1069,7 @@
   "departamento": "accounts",
   "cliente_id": "pgb-auditores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:mg-economistes": {
   "detectada": "2026-10-02 17:53",
@@ -1125,7 +1077,7 @@
   "departamento": "accounts",
   "cliente_id": "mg-economistes",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:laver": {
   "detectada": "2026-10-02 17:53",
@@ -1133,7 +1085,7 @@
   "departamento": "accounts",
   "cliente_id": "laver",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:centro-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -1141,7 +1093,7 @@
   "departamento": "accounts",
   "cliente_id": "centro-consulting",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:concilia": {
   "detectada": "2026-10-02 17:53",
@@ -1149,7 +1101,7 @@
   "departamento": "accounts",
   "cliente_id": "concilia",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:campalans": {
   "detectada": "2026-10-02 17:53",
@@ -1157,7 +1109,7 @@
   "departamento": "accounts",
   "cliente_id": "campalans",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:emex": {
   "detectada": "2026-10-02 17:53",
@@ -1165,7 +1117,7 @@
   "departamento": "accounts",
   "cliente_id": "emex",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:lobo": {
   "detectada": "2026-10-02 17:53",
@@ -1173,7 +1125,7 @@
   "departamento": "accounts",
   "cliente_id": "lobo",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:geslabor": {
   "detectada": "2026-10-02 17:53",
@@ -1181,7 +1133,7 @@
   "departamento": "accounts",
   "cliente_id": "geslabor",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:impulsa-cfo": {
   "detectada": "2026-10-02 17:53",
@@ -1189,7 +1141,7 @@
   "departamento": "accounts",
   "cliente_id": "impulsa-cfo",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:asetra": {
   "detectada": "2026-10-02 17:53",
@@ -1197,7 +1149,7 @@
   "departamento": "accounts",
   "cliente_id": "asetra",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:conficonsulting": {
   "detectada": "2026-10-02 17:53",
@@ -1205,7 +1157,7 @@
   "departamento": "accounts",
   "cliente_id": "conficonsulting",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:fitec-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -1213,7 +1165,7 @@
   "departamento": "accounts",
   "cliente_id": "fitec-asesores",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_llamadas:z-984555": {
   "detectada": "2026-10-02 17:53",
@@ -1221,7 +1173,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_llamadas:z-203753": {
   "detectada": "2026-10-02 17:53",
@@ -1229,7 +1181,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:accompany:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1237,7 +1189,7 @@
   "departamento": "accounts",
   "cliente_id": "accompany",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:asetra:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1245,7 +1197,7 @@
   "departamento": "accounts",
   "cliente_id": "asetra",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:bit-24:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1253,7 +1205,7 @@
   "departamento": "accounts",
   "cliente_id": "bit-24",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:campalans:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1261,7 +1213,7 @@
   "departamento": "accounts",
   "cliente_id": "campalans",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:christian-sanchez:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1269,7 +1221,7 @@
   "departamento": "accounts",
   "cliente_id": "christian-sanchez",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:ecom-advisory:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1277,7 +1229,7 @@
   "departamento": "accounts",
   "cliente_id": "ecom-advisory",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:j-d-consulting:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1285,7 +1237,7 @@
   "departamento": "accounts",
   "cliente_id": "j-d-consulting",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:marlex-consulting:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1293,7 +1245,7 @@
   "departamento": "accounts",
   "cliente_id": "marlex-consulting",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:musashi-consultores:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1301,7 +1253,7 @@
   "departamento": "accounts",
   "cliente_id": "musashi-consultores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:proincentiva:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1309,7 +1261,7 @@
   "departamento": "accounts",
   "cliente_id": "proincentiva",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:quique-gomez-barreda:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1317,7 +1269,7 @@
   "departamento": "accounts",
   "cliente_id": "quique-gomez-barreda",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_informe:tribulex:2026-08": {
   "detectada": "2026-10-02 17:53",
@@ -1325,7 +1277,7 @@
   "departamento": "accounts",
   "cliente_id": "tribulex",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_config:i-5932b99ca6": {
   "detectada": "2026-10-02 17:53",
@@ -1333,7 +1285,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-9ae93bbbf9": {
   "detectada": "2026-10-02 17:53",
@@ -1341,7 +1293,7 @@
   "departamento": "accounts",
   "cliente_id": "mg-economistes",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-7393c5daef": {
   "detectada": "2026-10-02 17:53",
@@ -1349,7 +1301,7 @@
   "departamento": "accounts",
   "cliente_id": "concilia",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-b57590d2af": {
   "detectada": "2026-10-02 17:53",
@@ -1357,7 +1309,7 @@
   "departamento": "accounts",
   "cliente_id": "lobo",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-e5873d4f23": {
   "detectada": "2026-10-02 17:53",
@@ -1365,7 +1317,7 @@
   "departamento": "accounts",
   "cliente_id": "geslabor",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_config:i-0c4ae5beca": {
   "detectada": "2026-10-02 17:53",
@@ -1373,7 +1325,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:cib-partners": {
   "detectada": "2026-10-02 17:53",
@@ -1381,7 +1333,7 @@
   "departamento": "altas",
   "cliente_id": "cib-partners",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:garmande": {
   "detectada": "2026-10-02 17:53",
@@ -1389,7 +1341,7 @@
   "departamento": "altas",
   "cliente_id": "garmande",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:laver": {
   "detectada": "2026-10-02 17:53",
@@ -1397,7 +1349,7 @@
   "departamento": "altas",
   "cliente_id": "laver",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:lobo": {
   "detectada": "2026-10-02 17:53",
@@ -1405,7 +1357,7 @@
   "departamento": "altas",
   "cliente_id": "lobo",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:deudot": {
   "detectada": "2026-10-02 17:53",
@@ -1413,7 +1365,7 @@
   "departamento": "altas",
   "cliente_id": "deudot",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:gestio-plural": {
   "detectada": "2026-10-02 17:53",
@@ -1421,7 +1373,7 @@
   "departamento": "altas",
   "cliente_id": "gestio-plural",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_fuera_plazo:abner-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -1429,47 +1381,39 @@
   "departamento": "altas",
   "cliente_id": "abner-advisory",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_sin_lista:conficonsulting": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Conficonsulting: Sin lista de onboarding en ClickUp a las 110 h de la firma.",
+  "motivo": "Conficonsulting: Sin lista de arranque en ClickUp a los 5 días de la firma.",
   "departamento": "altas",
   "cliente_id": "conficonsulting",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "alta_sin_lista:tst-consulting": {
-  "detectada": "2026-10-02 17:53",
-  "motivo": "TST Consulting: Sin lista de onboarding en ClickUp a las 112 h de la firma.",
-  "departamento": "altas",
-  "cliente_id": "tst-consulting",
-  "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_sin_lista:impulsa-cfo": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Impulsa CFO: Sin lista de onboarding en ClickUp a las 125 h de la firma.",
+  "motivo": "Impulsa CFO: Sin lista de arranque en ClickUp a los 5 días de la firma.",
   "departamento": "altas",
   "cliente_id": "impulsa-cfo",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_sin_lista:imfor-asesores": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Imfor Asesores: Sin lista de onboarding en ClickUp a las 61 h de la firma.",
+  "motivo": "Imfor Asesores: Sin lista de arranque en ClickUp a los 3 días de la firma.",
   "departamento": "altas",
   "cliente_id": "imfor-asesores",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "alta_sin_lista:billeo": {
   "detectada": "2026-10-02 17:53",
-  "motivo": "Billeo: Sin lista de onboarding en ClickUp a las 110 h de la firma.",
+  "motivo": "Billeo: Sin lista de arranque en ClickUp a los 5 días de la firma.",
   "departamento": "altas",
   "cliente_id": "billeo",
   "dueno_id": "agustina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-001": {
   "detectada": "2026-10-02 17:53",
@@ -1477,7 +1421,7 @@
   "departamento": "administracion",
   "cliente_id": "ip-forense",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-040": {
   "detectada": "2026-10-02 17:53",
@@ -1485,7 +1429,7 @@
   "departamento": "administracion",
   "cliente_id": null,
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-051": {
   "detectada": "2026-10-02 17:53",
@@ -1493,7 +1437,7 @@
   "departamento": "administracion",
   "cliente_id": null,
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-088": {
   "detectada": "2026-10-02 17:53",
@@ -1501,7 +1445,7 @@
   "departamento": "administracion",
   "cliente_id": "ip-forense",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-105": {
   "detectada": "2026-10-02 17:53",
@@ -1509,7 +1453,7 @@
   "departamento": "administracion",
   "cliente_id": "ecom-advisory",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-118": {
   "detectada": "2026-10-02 17:53",
@@ -1517,7 +1461,7 @@
   "departamento": "administracion",
   "cliente_id": "agc",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:F-26-413": {
   "detectada": "2026-10-02 17:53",
@@ -1525,7 +1469,7 @@
   "departamento": "administracion",
   "cliente_id": "jenasa",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:A-26-117": {
   "detectada": "2026-10-02 17:53",
@@ -1533,7 +1477,7 @@
   "departamento": "administracion",
   "cliente_id": null,
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_sin_alta:think-value": {
   "detectada": "2026-10-02 17:53",
@@ -1541,7 +1485,7 @@
   "departamento": "administracion",
   "cliente_id": "think-value",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_sin_alta:marlex-consulting": {
   "detectada": "2026-10-02 17:53",
@@ -1549,7 +1493,7 @@
   "departamento": "administracion",
   "cliente_id": "marlex-consulting",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:mili": {
   "detectada": "2026-10-02 17:53",
@@ -1557,7 +1501,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:constanza": {
   "detectada": "2026-10-02 17:53",
@@ -1565,7 +1509,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:cecilia": {
   "detectada": "2026-10-02 17:53",
@@ -1573,7 +1517,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:agustina": {
   "detectada": "2026-10-02 17:53",
@@ -1581,7 +1525,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:carla": {
   "detectada": "2026-10-02 17:53",
@@ -1589,7 +1533,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:lucia": {
   "detectada": "2026-10-02 17:53",
@@ -1597,7 +1541,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:casiana": {
   "detectada": "2026-10-02 17:53",
@@ -1605,7 +1549,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:facundo": {
   "detectada": "2026-10-02 17:53",
@@ -1613,7 +1557,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:natalia": {
   "detectada": "2026-10-02 17:53",
@@ -1621,7 +1565,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:candela": {
   "detectada": "2026-10-02 17:53",
@@ -1629,7 +1573,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_alerta:yessica": {
   "detectada": "2026-10-02 17:53",
@@ -1637,7 +1581,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "rrhh_aniversario:lara:2026-10-07": {
   "detectada": "2026-10-02 17:53",
@@ -1645,7 +1589,7 @@
   "departamento": "rrhh",
   "cliente_id": null,
   "dueno_id": "cecilia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_decision:regla-altas-tarde": {
   "detectada": "2026-10-02 17:53",
@@ -1653,7 +1597,7 @@
   "departamento": "direccion",
   "cliente_id": null,
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_decision:regla-fuego-ayg-asesores": {
   "detectada": "2026-10-02 17:53",
@@ -1661,7 +1605,7 @@
   "departamento": "direccion",
   "cliente_id": "ayg-asesores",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_decision:regla-fuego-ecija-advisory": {
   "detectada": "2026-10-02 17:53",
@@ -1669,7 +1613,7 @@
   "departamento": "direccion",
   "cliente_id": "ecija-advisory",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_decision:regla-fuego-kiosko-box": {
   "detectada": "2026-10-02 17:53",
@@ -1677,7 +1621,7 @@
   "departamento": "direccion",
   "cliente_id": "kiosko-box",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_decision:acc-12": {
   "detectada": "2026-10-02 17:53",
@@ -1685,7 +1629,7 @@
   "departamento": "direccion",
   "cliente_id": null,
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_sin_account:campalans": {
   "detectada": "2026-10-02 17:53",
@@ -1693,7 +1637,7 @@
   "departamento": "direccion",
   "cliente_id": "campalans",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_sin_account:sintaer": {
   "detectada": "2026-10-02 17:53",
@@ -1701,7 +1645,7 @@
   "departamento": "direccion",
   "cliente_id": "sintaer",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_sin_account:gomez-y-carvacho": {
   "detectada": "2026-10-02 17:53",
@@ -1709,7 +1653,7 @@
   "departamento": "direccion",
   "cliente_id": "gomez-y-carvacho",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "dir_sin_account:volatt": {
   "detectada": "2026-10-02 17:53",
@@ -1717,7 +1661,7 @@
   "departamento": "direccion",
   "cliente_id": "volatt",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "_cerradas": [
   {
@@ -2687,6 +2631,94 @@
    "cerrada": "2026-10-03 02:07",
    "como": "desaparecio_sola",
    "marcada_por": null
+  },
+  {
+   "motivo": "La portada de Aster Asesoría tarda 5,8 s en servirse.",
+   "departamento": "web",
+   "cliente_id": "aster-asesoria",
+   "dueno_id": "carlos_viur",
+   "detectada": "2026-10-02 17:53",
+   "id": "web_lenta:aster-asesoria",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "La portada de Billeo tarda 7,1 s en servirse.",
+   "departamento": "web",
+   "cliente_id": "billeo",
+   "dueno_id": "jeronimo",
+   "detectada": "2026-10-02 17:53",
+   "id": "web_lenta:billeo",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "La portada de IP Forense tarda 5,3 s en servirse.",
+   "departamento": "web",
+   "cliente_id": "ip-forense",
+   "dueno_id": "jeronimo",
+   "detectada": "2026-10-02 17:53",
+   "id": "web_lenta:ip-forense",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "La portada de Octoedro tarda 7,9 s en servirse.",
+   "departamento": "web",
+   "cliente_id": "octoedro",
+   "dueno_id": "carlos_viur",
+   "detectada": "2026-10-02 17:53",
+   "id": "web_lenta:octoedro",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "La portada de Sol-4 tarda 6,2 s en servirse.",
+   "departamento": "web",
+   "cliente_id": "sol-4",
+   "dueno_id": "carlos_viur",
+   "detectada": "2026-10-02 17:53",
+   "id": "web_lenta:sol-4",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Greconsult: Ninguna de las 15 palabras del informe está en el top 10.",
+   "departamento": "seo",
+   "cliente_id": "greconsult",
+   "dueno_id": "jeronimo",
+   "detectada": "2026-10-02 17:53",
+   "id": "seo_ambar:greconsult",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "TST Consulting: Sin lista de onboarding en ClickUp a las 112 h de la firma.",
+   "departamento": "altas",
+   "cliente_id": "tst-consulting",
+   "dueno_id": "agustina",
+   "detectada": "2026-10-02 17:53",
+   "id": "alta_sin_lista:tst-consulting",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
+  },
+  {
+   "motivo": "Concilia: la subcuenta de GoHighLevel no se usa (4 contactos).",
+   "departamento": "crm",
+   "cliente_id": "concilia",
+   "dueno_id": "gustavo",
+   "detectada": "2026-10-03 02:11",
+   "id": "crm_sin_usar:concilia",
+   "cerrada": "2026-10-03 05:17",
+   "como": "desaparecio_sola",
+   "marcada_por": null
   }
  ],
  "pub_critico:concilia": {
@@ -2695,7 +2727,7 @@
   "departamento": "publicidad",
   "cliente_id": "concilia",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:accompany": {
   "detectada": "2026-10-03 02:07",
@@ -2703,7 +2735,7 @@
   "departamento": "publicidad",
   "cliente_id": "accompany",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:gestanex": {
   "detectada": "2026-10-03 02:07",
@@ -2711,7 +2743,7 @@
   "departamento": "publicidad",
   "cliente_id": "gestanex",
   "dueno_id": "lina",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "pub_atencion:kiosko-box": {
   "detectada": "2026-10-03 02:07",
@@ -2719,23 +2751,23 @@
   "departamento": "publicidad",
   "cliente_id": "kiosko-box",
   "dueno_id": "valeria",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:concilia": {
   "detectada": "2026-10-03 02:07",
-  "motivo": "Concilia está en crítico: Correos sin contestar desde hace 18 días laborables y captación en crítico.",
+  "motivo": "Concilia es un cliente crítico: Correos sin contestar desde hace 18 días laborables y captación en crítico.",
   "departamento": "accounts",
   "cliente_id": "concilia",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_critico:busbac": {
   "detectada": "2026-10-03 02:07",
-  "motivo": "Busbac está en crítico: 100 € o más gastados en Meta en 7 días y 0 leads.",
+  "motivo": "Busbac es un cliente crítico: 100 € o más gastados en Meta en 7 días y 0 leads.",
   "departamento": "accounts",
   "cliente_id": "busbac",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:ayg-asesores": {
   "detectada": "2026-10-03 02:07",
@@ -2743,7 +2775,7 @@
   "departamento": "accounts",
   "cliente_id": "ayg-asesores",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:greconsult": {
   "detectada": "2026-10-03 02:07",
@@ -2751,7 +2783,7 @@
   "departamento": "accounts",
   "cliente_id": "greconsult",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:ecija-advisory": {
   "detectada": "2026-10-03 02:07",
@@ -2759,7 +2791,7 @@
   "departamento": "accounts",
   "cliente_id": "ecija-advisory",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:romero-martinez": {
   "detectada": "2026-10-03 02:07",
@@ -2767,7 +2799,7 @@
   "departamento": "accounts",
   "cliente_id": "romero-martinez",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:innova-scala": {
   "detectada": "2026-10-03 02:07",
@@ -2775,7 +2807,7 @@
   "departamento": "accounts",
   "cliente_id": "innova-scala",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:kiosko-box": {
   "detectada": "2026-10-03 02:07",
@@ -2783,7 +2815,7 @@
   "departamento": "accounts",
   "cliente_id": "kiosko-box",
   "dueno_id": "constanza",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:bit-24": {
   "detectada": "2026-10-03 02:07",
@@ -2791,7 +2823,7 @@
   "departamento": "accounts",
   "cliente_id": "bit-24",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:torrevieja-consult": {
   "detectada": "2026-10-03 02:07",
@@ -2799,7 +2831,7 @@
   "departamento": "accounts",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:aster-asesoria": {
   "detectada": "2026-10-03 02:07",
@@ -2807,7 +2839,7 @@
   "departamento": "accounts",
   "cliente_id": "aster-asesoria",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:avantik": {
   "detectada": "2026-10-03 02:07",
@@ -2815,7 +2847,7 @@
   "departamento": "accounts",
   "cliente_id": "avantik",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:ecom-advisory": {
   "detectada": "2026-10-03 02:07",
@@ -2823,7 +2855,7 @@
   "departamento": "accounts",
   "cliente_id": "ecom-advisory",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:segu-assessors": {
   "detectada": "2026-10-03 02:07",
@@ -2831,7 +2863,7 @@
   "departamento": "accounts",
   "cliente_id": "segu-assessors",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:ahedo": {
   "detectada": "2026-10-03 02:07",
@@ -2839,7 +2871,7 @@
   "departamento": "accounts",
   "cliente_id": "ahedo",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:octoedro": {
   "detectada": "2026-10-03 02:07",
@@ -2847,7 +2879,7 @@
   "departamento": "accounts",
   "cliente_id": "octoedro",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:liebana-consulting": {
   "detectada": "2026-10-03 02:07",
@@ -2855,7 +2887,7 @@
   "departamento": "accounts",
   "cliente_id": "liebana-consulting",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:gestanex": {
   "detectada": "2026-10-03 02:07",
@@ -2863,7 +2895,7 @@
   "departamento": "accounts",
   "cliente_id": "gestanex",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:akua": {
   "detectada": "2026-10-03 02:07",
@@ -2871,7 +2903,7 @@
   "departamento": "accounts",
   "cliente_id": "akua",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:garmande": {
   "detectada": "2026-10-03 02:07",
@@ -2879,7 +2911,7 @@
   "departamento": "accounts",
   "cliente_id": "garmande",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:volatt": {
   "detectada": "2026-10-03 02:07",
@@ -2887,7 +2919,7 @@
   "departamento": "accounts",
   "cliente_id": "volatt",
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:quique-gomez-barreda": {
   "detectada": "2026-10-03 02:07",
@@ -2895,7 +2927,7 @@
   "departamento": "accounts",
   "cliente_id": "quique-gomez-barreda",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_correos:deudot": {
   "detectada": "2026-10-03 02:07",
@@ -2903,7 +2935,7 @@
   "departamento": "accounts",
   "cliente_id": "deudot",
   "dueno_id": "dana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-86278d3b98": {
   "detectada": "2026-10-03 02:07",
@@ -2911,7 +2943,7 @@
   "departamento": "accounts",
   "cliente_id": "greconsult",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-fc25c62b03": {
   "detectada": "2026-10-03 02:07",
@@ -2919,7 +2951,7 @@
   "departamento": "accounts",
   "cliente_id": "ecija-advisory",
   "dueno_id": "tomas",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-636dbc0ade": {
   "detectada": "2026-10-03 02:07",
@@ -2927,7 +2959,7 @@
   "departamento": "accounts",
   "cliente_id": "aselegal",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-1da9679f40": {
   "detectada": "2026-10-03 02:07",
@@ -2935,7 +2967,7 @@
   "departamento": "accounts",
   "cliente_id": "romero-martinez",
   "dueno_id": "lucia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-aae0960776": {
   "detectada": "2026-10-03 02:07",
@@ -2943,7 +2975,7 @@
   "departamento": "accounts",
   "cliente_id": "musashi-consultores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-e96d96bab3": {
   "detectada": "2026-10-03 02:07",
@@ -2951,7 +2983,7 @@
   "departamento": "accounts",
   "cliente_id": "busbac",
   "dueno_id": "casiana",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-e1d54a0523": {
   "detectada": "2026-10-03 02:07",
@@ -2959,7 +2991,7 @@
   "departamento": "accounts",
   "cliente_id": "sol-4",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-4c92ed5f23": {
   "detectada": "2026-10-03 02:07",
@@ -2967,7 +2999,7 @@
   "departamento": "accounts",
   "cliente_id": "tribulex",
   "dueno_id": "facundo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-f7ec837d5f": {
   "detectada": "2026-10-03 02:07",
@@ -2975,7 +3007,7 @@
   "departamento": "accounts",
   "cliente_id": "ecom-advisory",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-cff39ebbba": {
   "detectada": "2026-10-03 02:07",
@@ -2983,7 +3015,7 @@
   "departamento": "accounts",
   "cliente_id": "bonet-asesores",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-640f954eba": {
   "detectada": "2026-10-03 02:07",
@@ -2991,7 +3023,7 @@
   "departamento": "accounts",
   "cliente_id": "optimalia",
   "dueno_id": "carla",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-bbd2292019": {
   "detectada": "2026-10-03 02:07",
@@ -2999,7 +3031,7 @@
   "departamento": "accounts",
   "cliente_id": "akua",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-f549fe6d7f": {
   "detectada": "2026-10-03 02:07",
@@ -3007,7 +3039,7 @@
   "departamento": "accounts",
   "cliente_id": "finexen",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-e1e5e031ac": {
   "detectada": "2026-10-03 02:07",
@@ -3015,7 +3047,7 @@
   "departamento": "accounts",
   "cliente_id": "pgb-auditores",
   "dueno_id": "natalia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_sin_agente:i-052f3f0fdd": {
   "detectada": "2026-10-03 02:07",
@@ -3023,7 +3055,7 @@
   "departamento": "accounts",
   "cliente_id": "garmande",
   "dueno_id": "candela",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_config:i-78de532d15": {
   "detectada": "2026-10-03 02:07",
@@ -3031,7 +3063,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "acc_config:i-fda1fc67ed": {
   "detectada": "2026-10-03 02:07",
@@ -3039,7 +3071,7 @@
   "departamento": "accounts",
   "cliente_id": null,
   "dueno_id": "mili",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:akua": {
   "detectada": "2026-10-03 02:11",
@@ -3047,7 +3079,7 @@
   "departamento": "crm",
   "cliente_id": "akua",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:innova-scala": {
   "detectada": "2026-10-03 02:11",
@@ -3055,7 +3087,7 @@
   "departamento": "crm",
   "cliente_id": "innova-scala",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:torrevieja-consult": {
   "detectada": "2026-10-03 02:11",
@@ -3063,7 +3095,7 @@
   "departamento": "crm",
   "cliente_id": "torrevieja-consult",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:consulting-f": {
   "detectada": "2026-10-03 02:11",
@@ -3071,7 +3103,7 @@
   "departamento": "crm",
   "cliente_id": "consulting-f",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:ecom-advisory": {
   "detectada": "2026-10-03 02:11",
@@ -3079,7 +3111,7 @@
   "departamento": "crm",
   "cliente_id": "ecom-advisory",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:aster-asesoria": {
   "detectada": "2026-10-03 02:11",
@@ -3087,7 +3119,7 @@
   "departamento": "crm",
   "cliente_id": "aster-asesoria",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:adade-zaragoza": {
   "detectada": "2026-10-03 02:11",
@@ -3095,7 +3127,7 @@
   "departamento": "crm",
   "cliente_id": "adade-zaragoza",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:laver": {
   "detectada": "2026-10-03 02:11",
@@ -3103,7 +3135,7 @@
   "departamento": "crm",
   "cliente_id": "laver",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:orejana": {
   "detectada": "2026-10-03 02:11",
@@ -3111,7 +3143,7 @@
   "departamento": "crm",
   "cliente_id": "orejana",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:christian-sanchez": {
   "detectada": "2026-10-03 02:11",
@@ -3119,7 +3151,7 @@
   "departamento": "crm",
   "cliente_id": "christian-sanchez",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:ayU74sG2qNhQo1AWlslm": {
   "detectada": "2026-10-03 02:11",
@@ -3127,7 +3159,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:concilia": {
   "detectada": "2026-10-03 02:11",
@@ -3135,15 +3167,15 @@
   "departamento": "crm",
   "cliente_id": "concilia",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:emex": {
   "detectada": "2026-10-03 02:11",
-  "motivo": "Emex: 3 leads de más de 24 h sin ningún intento en GoHighLevel.",
+  "motivo": "Emex: 4 leads de más de 24 h sin ningún intento en GoHighLevel.",
   "departamento": "crm",
   "cliente_id": "emex",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:CYhcFzSDJRCVUs7su8ye": {
   "detectada": "2026-10-03 02:11",
@@ -3151,7 +3183,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:musashi-consultores": {
   "detectada": "2026-10-03 02:11",
@@ -3159,7 +3191,7 @@
   "departamento": "crm",
   "cliente_id": "musashi-consultores",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:oteca": {
   "detectada": "2026-10-03 02:11",
@@ -3167,7 +3199,7 @@
   "departamento": "crm",
   "cliente_id": "oteca",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:Vf3gDK3pKBJUdfo5VUZ7": {
   "detectada": "2026-10-03 02:11",
@@ -3175,7 +3207,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:centro-consulting": {
   "detectada": "2026-10-03 02:11",
@@ -3183,7 +3215,7 @@
   "departamento": "crm",
   "cliente_id": "centro-consulting",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:0Y2M2OHivoqv4KuaOmk9": {
   "detectada": "2026-10-03 02:11",
@@ -3191,7 +3223,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:VkM4ygjsOUPqtFRpCftf": {
   "detectada": "2026-10-03 02:11",
@@ -3199,7 +3231,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_tocar:aselegal": {
   "detectada": "2026-10-03 02:11",
@@ -3207,7 +3239,7 @@
   "departamento": "crm",
   "cliente_id": "aselegal",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:ecom-advisory": {
   "detectada": "2026-10-03 02:11",
@@ -3215,7 +3247,7 @@
   "departamento": "crm",
   "cliente_id": "ecom-advisory",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:innova-scala": {
   "detectada": "2026-10-03 02:11",
@@ -3223,7 +3255,7 @@
   "departamento": "crm",
   "cliente_id": "innova-scala",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:musashi-consultores": {
   "detectada": "2026-10-03 02:11",
@@ -3231,7 +3263,7 @@
   "departamento": "crm",
   "cliente_id": "musashi-consultores",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:UiQ5o2vZTZlk0iipWmoj": {
   "detectada": "2026-10-03 02:11",
@@ -3239,7 +3271,7 @@
   "departamento": "crm",
   "cliente_id": null,
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:quique-gomez-barreda": {
   "detectada": "2026-10-03 02:11",
@@ -3247,7 +3279,7 @@
   "departamento": "crm",
   "cliente_id": "quique-gomez-barreda",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:garmande": {
   "detectada": "2026-10-03 02:11",
@@ -3255,7 +3287,7 @@
   "departamento": "crm",
   "cliente_id": "garmande",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:lobo": {
   "detectada": "2026-10-03 02:11",
@@ -3263,7 +3295,7 @@
   "departamento": "crm",
   "cliente_id": "lobo",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_citas_sin_estado:emex": {
   "detectada": "2026-10-03 02:11",
@@ -3271,7 +3303,7 @@
   "departamento": "crm",
   "cliente_id": "emex",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:abner-advisory": {
   "detectada": "2026-10-03 02:11",
@@ -3279,7 +3311,7 @@
   "departamento": "crm",
   "cliente_id": "abner-advisory",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:agc": {
   "detectada": "2026-10-03 02:11",
@@ -3287,7 +3319,7 @@
   "departamento": "crm",
   "cliente_id": "agc",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:fitec-asesores": {
   "detectada": "2026-10-03 02:11",
@@ -3295,7 +3327,7 @@
   "departamento": "crm",
   "cliente_id": "fitec-asesores",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:geslabor": {
   "detectada": "2026-10-03 02:11",
@@ -3303,7 +3335,7 @@
   "departamento": "crm",
   "cliente_id": "geslabor",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:billeo": {
   "detectada": "2026-10-03 02:11",
@@ -3311,7 +3343,7 @@
   "departamento": "crm",
   "cliente_id": "billeo",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:cib-partners": {
   "detectada": "2026-10-03 02:11",
@@ -3319,15 +3351,7 @@
   "departamento": "crm",
   "cliente_id": "cib-partners",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
- },
- "crm_sin_usar:concilia": {
-  "detectada": "2026-10-03 02:11",
-  "motivo": "Concilia: la subcuenta de GoHighLevel no se usa (4 contactos).",
-  "departamento": "crm",
-  "cliente_id": "concilia",
-  "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:conficonsulting": {
   "detectada": "2026-10-03 02:11",
@@ -3335,7 +3359,7 @@
   "departamento": "crm",
   "cliente_id": "conficonsulting",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:gac": {
   "detectada": "2026-10-03 02:11",
@@ -3343,7 +3367,7 @@
   "departamento": "crm",
   "cliente_id": "gac",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:garmande": {
   "detectada": "2026-10-03 02:11",
@@ -3351,7 +3375,7 @@
   "departamento": "crm",
   "cliente_id": "garmande",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:gestio-plural": {
   "detectada": "2026-10-03 02:11",
@@ -3359,7 +3383,7 @@
   "departamento": "crm",
   "cliente_id": "gestio-plural",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:quique-gomez-barreda": {
   "detectada": "2026-10-03 02:11",
@@ -3367,7 +3391,7 @@
   "departamento": "crm",
   "cliente_id": "quique-gomez-barreda",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:impulsa-cfo": {
   "detectada": "2026-10-03 02:11",
@@ -3375,7 +3399,7 @@
   "departamento": "crm",
   "cliente_id": "impulsa-cfo",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_whatsapp:musashi-consultores": {
   "detectada": "2026-10-03 02:11",
@@ -3383,7 +3407,7 @@
   "departamento": "crm",
   "cliente_id": "musashi-consultores",
   "dueno_id": "gustavo",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:segu-assessors": {
   "detectada": "2026-10-03 02:11",
@@ -3391,7 +3415,7 @@
   "departamento": "crm",
   "cliente_id": "segu-assessors",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "crm_sin_usar:tst-consulting": {
   "detectada": "2026-10-03 02:11",
@@ -3399,7 +3423,7 @@
   "departamento": "crm",
   "cliente_id": "tst-consulting",
   "dueno_id": "yessica",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:TRO24-00278": {
   "detectada": "2026-10-03 03:47",
@@ -3407,7 +3431,7 @@
   "departamento": "administracion",
   "cliente_id": null,
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:TRO25-0240": {
   "detectada": "2026-10-03 03:47",
@@ -3415,7 +3439,7 @@
   "departamento": "administracion",
   "cliente_id": "ip-forense",
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
  },
  "adm_impago:TRO25-0361": {
   "detectada": "2026-10-03 03:47",
@@ -3423,6 +3447,478 @@
   "departamento": "administracion",
   "cliente_id": null,
   "dueno_id": "sofia",
-  "ultima_vez": "2026-10-03 03:47"
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "web_lenta:centro-consulting": {
+  "detectada": "2026-10-03 05:17",
+  "motivo": "La portada de Centro Consulting tarda 6,3 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "web_lenta:impulsa-cfo": {
+  "detectada": "2026-10-03 05:17",
+  "motivo": "La portada de Impulsa CFO tarda 5,9 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "impulsa-cfo",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "web_lenta:joan-lluis-vives": {
+  "detectada": "2026-10-03 05:17",
+  "motivo": "La portada de Joan Lluís Vives tarda 7,6 s en servirse.",
+  "departamento": "web",
+  "cliente_id": "joan-lluis-vives",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "seo_rojo:greconsult": {
+  "detectada": "2026-10-03 05:17",
+  "motivo": "Greconsult: Clics −31,6 % semana contra semana (19 → 13).",
+  "departamento": "seo",
+  "cliente_id": "greconsult",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "crm_whatsapp:laver": {
+  "detectada": "2026-10-03 05:17",
+  "motivo": "Laver: fallan 1 de 4 WhatsApp (25,0 %).",
+  "departamento": "crm",
+  "cliente_id": "laver",
+  "dueno_id": "gustavo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:accompany": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Accompany: Web sin ninguna copia de seguridad buena · accompany.es: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "accompany",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:adade-zaragoza": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Adade Zaragoza: Copia de seguridad atrasada · adadezaragoza.es: la última copia buena es de hace 3 días.",
+  "departamento": "web",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:adade-zaragoza": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Adade Zaragoza: Vulnerabilidad grave en la web · adadezaragoza.es: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "adade-zaragoza",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:ahedo": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Ahedo: Vulnerabilidad grave en la web · ahedo.es: 5 vulnerabilidad(es) críticas o altas en MySQL 8.0, PHP 8.0, WP Rocket, WPForms.",
+  "departamento": "web",
+  "cliente_id": "ahedo",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:aselegal": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Aselegal: Copia de seguridad atrasada · aselegal.com: la última copia buena es de hace 4 días.",
+  "departamento": "web",
+  "cliente_id": "aselegal",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:aselegal": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Aselegal: Vulnerabilidad grave en la web · aselegal.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "aselegal",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:asetra": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Asetra: Copia de seguridad atrasada · asetra.net: la última copia buena es de hace 18 días.",
+  "departamento": "web",
+  "cliente_id": "asetra",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:asetra": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Asetra: Vulnerabilidad grave en la web · asetra.net: 3 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "asetra",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:avantik": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Avantik: Copia de seguridad atrasada · avantik.es: la última copia buena es de hace 3 días.",
+  "departamento": "web",
+  "cliente_id": "avantik",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:ayg-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "AyG Asesores: Web sin ninguna copia de seguridad buena · aygasesores.com: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:ayg-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "AyG Asesores: Vulnerabilidad grave en la web · aygasesores.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "ayg-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:bonet-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Bonet Asesores: Copia de seguridad atrasada · bonetasesores.com: la última copia buena es de hace 4 días.",
+  "departamento": "web",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:bonet-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Bonet Asesores: Vulnerabilidad grave en la web · bonetasesores.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "bonet-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:busbac.es": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Busbac: Copia de seguridad atrasada · busbac.es: la última copia buena es de hace 4 días.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:busbac.es": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Busbac: Vulnerabilidad grave en la web · busbac.es: 14 vulnerabilidad(es) críticas o altas en MariaDB 10.11, PHP 8.3, WPForms.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:centro-consulting": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Centro Consulting: Copia de seguridad atrasada · centroconsulting.es: la última copia buena es de hace 49 días.",
+  "departamento": "web",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:centro-consulting": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Centro Consulting: Vulnerabilidad grave en la web · centroconsulting.es: 1 vulnerabilidad(es) críticas o altas en PHP 8.3.",
+  "departamento": "web",
+  "cliente_id": "centro-consulting",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:christian-sanchez": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Christian Sanchez: Web sin ninguna copia de seguridad buena · csanchezgestor.com: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "christian-sanchez",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:clcripto.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "CL Cripto: Copia de seguridad atrasada · clcripto.com: la última copia buena es de hace 3 días.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:clcripto.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "CL Cripto: Vulnerabilidad grave en la web · clcripto.com: 7 vulnerabilidad(es) críticas o altas en All-in-One WP Migration and Backup, Popup Maker – Boost Sales, Conversions, Optins, Subscribers with the Ultimate WP Popup Builder, Schema & Structured Data for WP & AMP, Visual Composer Website Build.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:consulting-f": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Consulting F: Copia de seguridad atrasada · consultingf.com: la última copia buena es de hace 5 días.",
+  "departamento": "web",
+  "cliente_id": "consulting-f",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:consulting-f": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Consulting F: Vulnerabilidad grave en la web · consultingf.com: 10 vulnerabilidad(es) críticas o altas en PHP 8.3, Schema & Structured Data for WP & AMP.",
+  "departamento": "web",
+  "cliente_id": "consulting-f",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:fitec-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Fitec Asesores: Copia de seguridad atrasada · asesoriafitecc.com: la última copia buena es de hace 7 días.",
+  "departamento": "web",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:fitec-asesores": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Fitec Asesores: Vulnerabilidad grave en la web · asesoriafitecc.com: 56 vulnerabilidad(es) críticas o altas en MariaDB 10.5, PHP 8.4.",
+  "departamento": "web",
+  "cliente_id": "fitec-asesores",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:fusterguell": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "FusterGüell: Web sin ninguna copia de seguridad buena · fusterguell.com: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "fusterguell",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:fusterguell": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "FusterGüell: Vulnerabilidad grave en la web · fusterguell.com: 8 vulnerabilidad(es) críticas o altas en MySQL 8.4, WP Rocket, WPForms.",
+  "departamento": "web",
+  "cliente_id": "fusterguell",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:gac": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "GAC: Vulnerabilidad grave en la web · gacgrup.com: 6 vulnerabilidad(es) críticas o altas en MariaDB 10.11, Nifty.",
+  "departamento": "web",
+  "cliente_id": "gac",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:innova-scala": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Innova Scala: Copia de seguridad atrasada · innovascalaconsulting.es: la última copia buena es de hace 4 días.",
+  "departamento": "web",
+  "cliente_id": "innova-scala",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:innova-scala": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Innova Scala: Vulnerabilidad grave en la web · innovascalaconsulting.es: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "innova-scala",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:ip-forense": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "IP Forense: Copia de seguridad atrasada · ipforense.com: la última copia buena es de hace 3 días.",
+  "departamento": "web",
+  "cliente_id": "ip-forense",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:j-d-consulting": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "J&D Consulting: Vulnerabilidad grave en la web · jdconsultingsl.es: 12 vulnerabilidad(es) críticas o altas en Advanced Google reCAPTCHA, All-in-One WP Migration and Backup, Complianz GDPR/CCPA Cookie Consent Banner, Schema & Structured Data for WP & AMP, WP Rocket, WPForms.",
+  "departamento": "web",
+  "cliente_id": "j-d-consulting",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:kiosko-box": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Kiosko Box: Vulnerabilidad grave en la web · kioskobox.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "kiosko-box",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:medalva.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Medalva: Copia de seguridad atrasada · medalva.com: la última copia buena es de hace 5 días.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:mg-economistes": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "MG Economistes: Copia de seguridad atrasada · mgeconomistes.es: la última copia buena es de hace 3 días.",
+  "departamento": "web",
+  "cliente_id": "mg-economistes",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:mg-economistes": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "MG Economistes: Vulnerabilidad grave en la web · mgeconomistes.es: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "mg-economistes",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_caida:octoedro": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Octoedro: Modular la da por caída (desde RO responde) · octoedro.com: Modular la da por caída desde 2-jul, 15:42 (último intento: 301, Response status code does not match allowed codes), pero desde la IP de RO responde 200. Modular recibe una redirección y solo acepta respuestas 2xx: el monitor apunta a una dirección vieja.",
+  "departamento": "web",
+  "cliente_id": "octoedro",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:octoedro": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Octoedro: Copia de seguridad atrasada · octoedro.com: la última copia buena es de hace 6 días.",
+  "departamento": "web",
+  "cliente_id": "octoedro",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:octoedro": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Octoedro: Vulnerabilidad grave en la web · octoedro.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "octoedro",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:oteca": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Oteca: Copia de seguridad atrasada · otecaasesores.com: la última copia buena es de hace 6 días.",
+  "departamento": "web",
+  "cliente_id": "oteca",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:oteca": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Oteca: Vulnerabilidad grave en la web · otecaasesores.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "oteca",
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:prodegest": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Prodegest: Vulnerabilidad grave en la web · prodegest.com: 1 vulnerabilidad(es) críticas o altas en PHP 8.3.",
+  "departamento": "web",
+  "cliente_id": "prodegest",
+  "dueno_id": "macarena",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:qualityconta.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "QualityConta: Web sin ninguna copia de seguridad buena · qualityconta.com: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:qualityconta.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "QualityConta: Vulnerabilidad grave en la web · qualityconta.com: 18 vulnerabilidad(es) críticas o altas en All-in-One WP Migration and Backup, LiteSpeed Cache, MySQL 8.0, Rank Math SEO – AI SEO Tools to Dominate SEO Rankings, Schema & Structured Data for WP & AMP, WPForms, WordPress 7.0.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:rankingonline.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Ranking Online: Copia de seguridad atrasada · rankingonline.com: la última copia buena es de hace 26 días.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:rankingonline.com": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Ranking Online: Vulnerabilidad grave en la web · rankingonline.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": null,
+  "dueno_id": "jeronimo",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:romero-martinez": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Romero Martínez: Vulnerabilidad grave en la web · romeromartinez.com: 2 vulnerabilidad(es) críticas o altas en WPForms.",
+  "departamento": "web",
+  "cliente_id": "romero-martinez",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:sol-4": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Sol-4: Web sin ninguna copia de seguridad buena · sol-4gestion.com: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "sol-4",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:sol-4": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Sol-4: Vulnerabilidad grave en la web · sol-4gestion.com: 5 vulnerabilidad(es) críticas o altas en Estatik Real Estate Plugin, MySQL 8.0, PHP 8.2, WPForms; alguna sin parche todavía.",
+  "departamento": "web",
+  "cliente_id": "sol-4",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:torrevieja-consult": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Torrevieja Consult: Copia de seguridad atrasada · torreviejaconsult.net: la última copia buena es de hace 5 días.",
+  "departamento": "web",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:torrevieja-consult": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Torrevieja Consult: Vulnerabilidad grave en la web · torreviejaconsult.net: 5 vulnerabilidad(es) críticas o altas en Jeg Kit for Elementor, MySQL 8.0, PHP 8.0, Schema & Structured Data for WP & AMP.",
+  "departamento": "web",
+  "cliente_id": "torrevieja-consult",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:tribulex": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Tribulex: Web sin ninguna copia de seguridad buena · tribulex.es: Modular no tiene ninguna copia terminada de esta web.",
+  "departamento": "web",
+  "cliente_id": "tribulex",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:tribulex": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Tribulex: Vulnerabilidad grave en la web · tribulex.es: 4 vulnerabilidad(es) críticas o altas en Advanced Custom Fields PRO, PHP 8.3.",
+  "departamento": "web",
+  "cliente_id": "tribulex",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_copia:xterna": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Xterna: Copia de seguridad atrasada · xterna.es: la última copia buena es de hace 6 días.",
+  "departamento": "web",
+  "cliente_id": "xterna",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
+ },
+ "modular_vulnerabilidad:xterna": {
+  "detectada": "2026-10-03 06:04",
+  "motivo": "Xterna: Vulnerabilidad grave en la web · xterna.es: 11 vulnerabilidad(es) críticas o altas en Interactive World Maps, Slider Revolution, Super Forms, WPForms.",
+  "departamento": "web",
+  "cliente_id": "xterna",
+  "dueno_id": "carlos_viur",
+  "ultima_vez": "2026-10-03 06:32"
  }
 }

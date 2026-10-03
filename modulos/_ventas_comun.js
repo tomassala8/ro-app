@@ -104,13 +104,49 @@ export function abrirEn(herramienta, url, { motivo = 'Falta el enlace · lo empa
   return h('a', { class: cls, href: url, target: '_blank', rel: 'noopener' }, icono('ext'), `Abrir en ${herramienta}`);
 }
 
-/** «⋯ Más»: desplegable nativo (details) con acciones secundarias, para no aplastar filas. */
+/** «⋯ Más acciones»: desplegable nativo (details) con acciones secundarias, para no aplastar filas.
+ *  V3b / Ronda U (pendiente): si el primer argumento es un texto, es DE QUIÉN son las acciones: el botón dice «Más acciones»
+ *  y su nombre accesible «Más acciones de Jorge Córdova» (antes un «Más» suelto, igual en todas las filas). Compatible:
+ *  masAcciones(b1, b2…) sigue funcionando. */
 export function masAcciones(...botones) {
+  const de = typeof botones[0] === 'string' ? botones.shift() : null;
   const hijos = botones.flat().filter(Boolean);
   if (!hijos.length) return null;
+  const nombre = de ? `Más acciones de ${de}` : 'Más acciones';
   return h('details', { class: 'mas-acc pila' },
-    h('summary', { class: 'bt mini' }, icono('mas'), 'Más'),
-    h('div', { class: 'fila' }, hijos));
+    h('summary', { class: 'bt mini', 'aria-label': nombre, title: nombre }, icono('mas'), 'Más acciones'),
+    h('div', { class: 'fila', role: 'group', 'aria-label': nombre }, hijos));
+}
+
+/**
+ * Ronda U (50 #15, tarea 23): «Llamar» y «WhatsApp» al lado de cada contrato o propuesta que se enfría (antes el consejo
+ * decía «Llama hoy a …» sin botón). Un clic: pide el teléfono por ver_dato (queda en el rastro) y abre la app de Zadarma
+ * (sip:) o WhatsApp (wa.me); si su número no está en la app (el almacén del closer solo trae nombre y despacho), abre su
+ * ficha de GoHighLevel, donde está el botón de llamar. Deja el intento en la cola simulada. Nada se envía desde la app.
+ */
+export function botonesLlamar(ctx, { almacen = 'ventas_tomas', x, quien, compacto = false } = {}) {
+  const nombre = quien || (x?.nombre_completo ? x.nombre_m : 'el contacto');
+  const uno = (tipo, texto, ico, pri) => {
+    const soloIco = compacto && !pri;   // compacto: WhatsApp solo con su icono (y su nombre para lectores de pantalla)
+    const b = h('button', { type: 'button', class: `bt mini${pri ? ' pri' : ''}${soloIco ? ' icono' : ''}`, 'aria-label': soloIco ? `${texto} a ${nombre}` : null, 'aria-disabled': ctx.soloLectura ? 'true' : null,
+      title: ctx.soloLectura ? 'En «ver como» no se llama a nadie' : `${texto} a ${nombre}: abre ${tipo === 'llamar' ? 'la app de Zadarma' : 'WhatsApp'} con su número (o su ficha de GHL si el número no está en la app)` },
+    icono(ico), soloIco ? null : texto);
+    b.addEventListener('click', async () => {
+      if (ctx.soloLectura) return;
+      b.disabled = true;
+      let tel = null;
+      if (puedeAbrir(ctx, almacen)) { try { const v = await dato(ctx, almacen, x.id, 'telefono'); tel = v ? normalizarTelefono(v) : null; } catch { tel = null; } }
+      encolar(ctx, { que: tipo === 'llamar' ? 'llamada_iniciada' : 'whatsapp_abierto', sobre: x.id, herramienta: tipo === 'llamar' ? 'zadarma' : 'whatsapp',
+        texto: `${tipo === 'llamar' ? 'Llamada' : 'WhatsApp'} a ${nombre}${tel ? '' : ' (desde su ficha de GHL)'}`, vista: tel ? 'Abre la app con el número' : 'Abre su ficha de GHL para llamar desde allí' }).catch(() => null);
+      if (tel) { if (tipo === 'whatsapp') window.open(tel.wa, '_blank', 'noopener'); else location.href = tel.sip; }
+      else if (x.ghl) window.open(x.ghl, '_blank', 'noopener');
+      else avisoFlotante('Sin teléfono ni ficha de GHL: búscalo en GHL', { icono: 'alert' });
+      b.disabled = false;
+      if (!soloIco) b.replaceChildren(icono(ico), tel ? texto : `${texto} · en GHL`);
+    });
+    return b;
+  };
+  return [uno('llamar', 'Llamar', 'phone', true), uno('whatsapp', 'WhatsApp', 'wa', false)];
 }
 
 // ------------------------------------------------------------------ datos completos de un lead (D-88)
@@ -151,7 +187,7 @@ export function contactoLead(ctx, { almacen, x, modulo = 'setters' }) {
       const valor = await dato(ctx, almacen, x.id, campo);
       if (!valor) { b.replaceChildren(icono('alert'), tipo === 'correo' ? 'Sin correo' : 'Sin teléfono'); return; }
       const tel = campo === 'telefono' ? normalizarTelefono(valor) : null;
-      const url = tipo === 'llamar' ? `sip:${tel?.intl}@sip.zadarma.com` : tipo === 'whatsapp' ? `https://wa.me/${tel?.intl}` : `mailto:${valor}`;
+      const url = tipo === 'llamar' ? tel?.sip : tipo === 'whatsapp' ? tel?.wa : `mailto:${valor}`;   // regla común (_telefono.js): sip con «+», wa sin «+»
       if (campo === 'telefono' && !tel) { b.replaceChildren(icono('alert'), 'Teléfono raro: míralo en GHL'); return; }
       await encolar(ctx, { que: tipo === 'llamar' ? 'llamada_iniciada' : tipo === 'whatsapp' ? 'whatsapp_abierto' : 'correo_abierto', sobre: x.id,
         herramienta: tipo === 'llamar' ? 'zadarma' : tipo === 'whatsapp' ? 'whatsapp' : 'app',

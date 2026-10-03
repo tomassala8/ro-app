@@ -20,23 +20,87 @@ import urllib.request
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
-def _libre():
+def _libre(evitar=()):
     """Ronda 11: un puerto libre de 8920-8929 (el rango de pruebas de E0), siempre en 127.0.0.1.
-    Ronda 12: RO_PUERTOS_PRUEBA=8965-8969 cambia el rango (el que asigne el coordinador a cada carril)."""
+    Ronda 12: RO_PUERTOS_PRUEBA=8965-8969 cambia el rango (el que asigne el coordinador a cada carril).
+    3-oct (intermitencias): la prueba de «libre» usa SO_REUSEADDR, como el propio servidor (HTTPServer lo activa). Sin
+    él, un puerto con conexiones en TIME_WAIT del servidor anterior (30-60 s) se daba por ocupado y en un rango de 5
+    puertos se acababan: «sin puerto libre» o el servidor del reloj fuera del rango, encima del carril de al lado.
+    Un puerto con alguien escuchando sigue sin servir (bind falla igual)."""
     import socket
     ini, fin = (int(x) for x in os.environ.get("RO_PUERTOS_PRUEBA", "8920-8929").split("-"))
     for puerto in range(ini, fin + 1):
+        if puerto in evitar:
+            continue
         with socket.socket() as so:
+            so.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
                 so.bind(("127.0.0.1", puerto))
                 return puerto
             except OSError:
                 continue
-    sys.exit(f"✗ No hay ningún puerto libre entre {ini} y {fin}.")
+    return None
 
 
-PUERTO = _libre()          # un puerto libre: nunca el servidor de otra sesión
-B = f"http://127.0.0.1:{PUERTO}"
+def _quien_escucha(puerto):
+    """PIDs que escuchan en 127.0.0.1:puerto (lsof). None si no se puede saber (sin lsof)."""
+    try:
+        r = subprocess.run(["lsof", "-nP", f"-iTCP@127.0.0.1:{puerto}", "-sTCP:LISTEN", "-t"], capture_output=True, text=True, timeout=10)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return {int(x) for x in r.stdout.split() if x.strip().isdigit()}
+
+
+def arrancar(env, cwd=None, espera=150, intentos=4):
+    """Arranca servir.py en un puerto libre del rango y espera a que responda ÉL (no otro proceso en ese puerto).
+    3-oct (intermitencias): antes se esperaban 18-24 s y se seguía aunque no hubiera arrancado; con la máquina cargada
+    (otras pruebas a la vez, discos fríos tras regenerar data/) el arranque pasa de 20 s y las primeras peticiones fallaban
+    o iban al servidor de otra sesión que había cogido el mismo puerto entre la comprobación y el arranque.
+    Devuelve (proceso, puerto) o (None, motivo)."""
+    motivo = "sin intentos"
+    usados = set()
+    for _ in range(intentos):
+        puerto = _libre(usados)
+        if not puerto:
+            return None, "no hay ningún puerto libre en RO_PUERTOS_PRUEBA"
+        usados.add(puerto)
+        srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(puerto)], cwd=cwd or AQUI, env=env,
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        fin = time.time() + espera
+        while time.time() < fin:
+            if srv.poll() is not None:            # no pudo escuchar (otro cogió el puerto) o falló al cargar
+                motivo = f"el servidor salió con el código {srv.returncode} en el puerto {puerto}"
+                break
+            pids = _quien_escucha(puerto)
+            if pids is None or srv.pid in pids:
+                try:
+                    urllib.request.urlopen(f"http://127.0.0.1:{puerto}/index.html", timeout=5)
+                    return srv, puerto
+                except Exception:
+                    pass
+            time.sleep(0.25)
+        else:
+            motivo = f"el servidor no respondió en {espera} s (puerto {puerto})"
+        if srv.poll() is None:
+            srv.terminate()
+            try:
+                srv.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                srv.kill()
+    return None, motivo
+
+
+def parar(srv):
+    if srv is not None and srv.poll() is None:
+        srv.terminate()
+        try:
+            srv.wait(timeout=10)
+        except subprocess.TimeoutExpired:
+            srv.kill()
+
+
+PUERTO = None              # el del servidor principal (lo pone main() al arrancarlo)
+B = "http://127.0.0.1:0"
 fallos = []
 
 
@@ -58,10 +122,12 @@ def pedir(ruta, metodo="GET", cuerpo=None, yo=None, como=None, cab=None, app=Tru
     datos = json.dumps(cuerpo).encode() if cuerpo is not None else None
     req = urllib.request.Request(B + ruta, data=datos, method=metodo, headers=h)
     try:
-        with urllib.request.urlopen(req) as r:
+        with urllib.request.urlopen(req, timeout=120) as r:
             return r.status, r.read().decode(), dict(r.headers)
     except urllib.error.HTTPError as e:
         return e.code, e.read().decode(), dict(e.headers)
+    except (urllib.error.URLError, TimeoutError, ConnectionError) as e:   # 3-oct: sin servidor, fallo legible (no se cae todo)
+        return 0, f"sin respuesta del servidor: {e}", {}
 
 
 def main():
@@ -77,21 +143,16 @@ def main():
             shutil.copy(AQUI / origen, tmp / nombre)
         env[var] = str(tmp / nombre)
     env.pop("RO_MODO", None)
-    srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(PUERTO)], cwd=AQUI, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    global PUERTO, B
+    srv, PUERTO = arrancar(env)
+    if srv is None:
+        shutil.rmtree(tmp, ignore_errors=True)
+        sys.exit(f"✗ El servidor de pruebas no arrancó: {PUERTO}.")
+    B = f"http://127.0.0.1:{PUERTO}"
     try:
-        for _ in range(60):
-            if srv.poll() is not None:
-                sys.exit("✗ El servidor de pruebas no arrancó.")
-            try:
-                urllib.request.urlopen(B + "/index.html", timeout=1)
-                break
-            except Exception:
-                time.sleep(0.3)
         pruebas(tmp)
     finally:
-        srv.terminate()
-        srv.wait(timeout=10)
+        parar(srv)
         shutil.rmtree(tmp, ignore_errors=True)
     print(f"\n{'TODO BIEN' if not fallos else f'{len(fallos)} FALLO(S)'}")
     sys.exit(1 if fallos else 0)
@@ -297,7 +358,11 @@ def pruebas(tmp):
     ronda16(tmp)
     mi_perfil(tmp)
     envios_verificados(tmp)
+    sincronia_clickup(tmp)
     finanzas_v3(tmp)
+    avisos_automaticos(tmp)
+    modular_acceso(tmp)
+    telefonos_regla(tmp)
 
     # ---- Escáner sobre todo lo que viajaría
     import escaner_secretos as ESC
@@ -337,21 +402,13 @@ def _servidor_copia(tmp, env_extra=None):
     if not destino.exists():
         shutil.copytree(AQUI, destino, ignore=shutil.ignore_patterns("capturas", "fuentes_*", "__pycache__", "local.db", "*.log"))
     shutil.copy(tmp / "prueba.db", tmp / "copia.db")
-    puerto = _libre()
     env = {**os.environ, "RO_DB": str(tmp / "copia.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json"), **(env_extra or {})}
     env.pop("RO_MODO", None)
-    srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(puerto)], cwd=destino, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    base = f"http://127.0.0.1:{puerto}"
-    for _ in range(80):
-        if srv.poll() is not None:
-            break
-        try:
-            urllib.request.urlopen(base + "/index.html", timeout=1)
-            break
-        except Exception:
-            time.sleep(0.3)
-    return srv, base, destino
+    srv, puerto = arrancar(env, cwd=destino)
+    if srv is None:
+        ok(False, f"Servidor sobre la copia de la app: no arrancó ({puerto})")
+        return None, "http://127.0.0.1:0", destino
+    return srv, f"http://127.0.0.1:{puerto}", destino
 
 
 def ronda11(tmp):
@@ -721,8 +778,7 @@ def ronda11(tmp):
         ok(c == 503, f"R11 M2 · roto y sin dato anterior en memoria → {c} con motivo (nunca 500)")
     finally:
         B = B_antes
-        srv.terminate()
-        srv.wait(timeout=10)
+        parar(srv)
 
 
 # ============================================================================ ronda 14 (velocidad, auditoría 37)
@@ -969,21 +1025,16 @@ def n15(tmp):
     fuera = db().execute("SELECT count(*) FROM acciones WHERE herramienta='clickup' AND tipo NOT LIKE 'pieza_%' AND creada >= datetime('now','-10 minutes')").fetchone()[0]
     ok(fuera == 0, f"N15 · ningún mensaje de la app va a la cola de ClickUp ({fuera})")
     # Resumen diario a su hora (servidor propio con el reloj fijado: 03-oct 13:00 en Madrid = 08:00 en Buenos Aires)
-    puerto = _libre()
     shutil.copy(tmp / "prueba.db", tmp / "resumen.db")
     env = {**os.environ, "RO_DB": str(tmp / "resumen.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json"), "RO_AVISOS_AHORA": "2026-10-03 13:00",
            "RO_DEPARTAMENTOS": str(tmp / "departamentos.json")}
     env.pop("RO_MODO", None)
-    srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(puerto)], cwd=AQUI, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    srv, puerto = arrancar(env)
+    if srv is None:
+        ok(False, f"N15 · el servidor con el reloj fijado no arrancó ({puerto})")
+        return
     B_antes, B = B, f"http://127.0.0.1:{puerto}"
     try:
-        for _ in range(80):
-            try:
-                urllib.request.urlopen(B + "/index.html", timeout=1)
-                break
-            except Exception:
-                time.sleep(0.3)
         r_tomas = js(pedir("/api/canales/campana", yo="tomas")).get("resumen")
         r_lucia = js(pedir("/api/canales/campana", yo="lucia")).get("resumen")
         ok(r_tomas and r_tomas["dia"] == "2026-10-03" and not r_lucia, "N15 · a las 13:00 de Madrid, Tomás (Madrid) tiene su resumen y Lucía (Buenos Aires, 08:00) todavía no")
@@ -994,8 +1045,7 @@ def n15(tmp):
         ok(pedir("/api/avisos", yo="lucia")[0] == 403, "N15 · /api/avisos (avisos del sistema de E0) sigue igual: Lucía → 403")
     finally:
         B = B_antes
-        srv.terminate()
-        srv.wait(timeout=10)
+        parar(srv)
 
 
 # ============================================================================ A8 · Alertas: posponer y lote (2-oct noche)
@@ -1424,41 +1474,33 @@ def r16c(tmp):
             n += g == "vencida"
         return n
     quien = next((p["persona_id"] for p in prod["personas"] if p["persona_id"] in ("lucia", "lina", "jeronimo", "valeria") and al_dia(p["persona_id"]) != p.get("vencidas")), None)
-    puerto2 = None
-    import socket
-    for pu in range(PUERTO + 1, PUERTO + 6):
-        with socket.socket() as so:
-            try:
-                so.bind(("127.0.0.1", pu))
-                puerto2 = pu
-                break
-            except OSError:
-                continue
-    if not quien or not puerto2:
-        ok(False, f"R16c · sin persona con vencidas distintas al día siguiente ({quien}) o sin puerto libre ({puerto2})")
+    if not quien:
+        ok(False, f"R16c · sin persona con vencidas distintas al día siguiente ({quien})")
         return
     shutil.copy(tmp / "prueba.db", tmp / "reloj.db")
     env = {**os.environ, "RO_DB": str(tmp / "reloj.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json"), "RO_RELOJ": f"{hoy}T09:00",
            "RO_CORREOS_ENTRADA": str(tmp / "correos.json"), "RO_LISTA_ACCESS": str(tmp / "lista_access.txt"), "RO_DEPARTAMENTOS": str(tmp / "departamentos.json")}
     env.pop("RO_MODO", None)
-    srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(puerto2)], cwd=AQUI, env=env,
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # 3-oct: dentro del rango de RO_PUERTOS_PRUEBA (antes PUERTO+1…+5, que se salía al carril de al lado)
+    srv, puerto2 = arrancar(env)
+    if srv is None:
+        ok(False, f"R16c · el servidor con el reloj fijado no arrancó ({puerto2})")
+        return
     try:
         cuenta = None
-        for _ in range(60):
+        for _ in range(20):
             try:
                 req = urllib.request.Request(f"http://127.0.0.1:{puerto2}/api/contadores", headers={"X-RO-Yo": quien})
-                with urllib.request.urlopen(req, timeout=2) as r:
+                with urllib.request.urlopen(req, timeout=10) as r:
                     cuenta = json.loads(r.read().decode()).get("produccion")
                 break
             except Exception:
-                time.sleep(0.3)
+                time.sleep(0.5)
         esperado = al_dia(quien)
         fichero = next(p.get("vencidas") for p in prod["personas"] if p["persona_id"] == quien)
         ok(cuenta == esperado, f"R16c · contador de Producción de {quien} con el hoy de Madrid ({hoy}, dato del {dato}): {cuenta} = {esperado} (el fichero dice {fichero})")
     finally:
-        srv.terminate()
-        srv.wait(timeout=10)
+        parar(srv)
 
 
 
@@ -1638,6 +1680,113 @@ def envios_verificados(tmp):
     ok(n_r >= 2 and pasos >= 2 and inm, f"ENVIOS · cada reintento deja rastro ({n_r}) y su paso ({pasos}); los pasos no se cambian")
     ok(pedir("/api/envios", yo="lina")[0] == 200 and all(e["quien"] == "lina" for e in lista("lina")["envios"]),
        "ENVIOS · alguien sin envíos recibe una lista vacía de los suyos, nunca los de otros")
+    # 3-oct: un texto con huecos de plantilla sin rellenar no sale nunca (400 con motivo llano, sin acción ni envío)
+    with sqlite3.connect(tmp / "prueba.db") as con:
+        a0, e0 = (con.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("acciones", "envios"))
+    for hueco in ("[completar]", "[completar: fecha]", "[…]", "[...]"):
+        c, t, _ = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": f"Hola, te lo mando el {hueco}. Un saludo,"})
+        motivo = (json.loads(t).get("error") or "") if t.startswith("{") else ""
+        ok(c == 400 and "sin rellenar" in motivo and hueco in motivo, f"ENVIOS · texto con «{hueco}» → {c} ({motivo[:70]})")
+    c, t, _ = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": "Hola, va el informe.", "vista_previa": {"asunto": "Informe de [completar]"}})
+    ok(c == 400, f"ENVIOS · asunto con «[completar]» → {c}")
+    with sqlite3.connect(tmp / "prueba.db") as con:
+        a1, e1 = (con.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("acciones", "envios"))
+    ok(a1 == a0 and e1 == e0, f"ENVIOS · …y no deja acción en la cola ni envío ({a1 - a0}, {e1 - e0})")
+    c = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": "Hola, ya lo tienes [adjunto en el correo]. Un saludo,"})[0]
+    ok(c == 200, f"ENVIOS · un corchete normal sí sale (solo bloquea [completar] y […]) → {c}")
+
+def sincronia_clickup(tmp):
+    """Sincronía con ClickUp (3-oct): cada acción que va a ClickUp queda guardada en la base (copia segura) al momento; el
+    navegador no fija la tarea ni el cambio; solo quien puede tocar esa tarea; nadie ve cambios ajenos; el conflicto lo
+    elige quien lo hizo (o dirección, operaciones, técnico); «ver como» no escribe; simulado: nada sale. En la copia."""
+    sys.path.insert(0, str(AQUI))
+    import sincronia as SI
+    prod = json.loads((AQUI / "data/produccion/produccion.json").read_text())
+    jefe = {p["id"]: p.get("jefe") for p in json.loads((AQUI / "data/personas.json").read_text())}
+    autores = {}
+    for r in prod.get("cola") or []:
+        autores.setdefault(str(r.get("id")), set()).add(r.get("persona_id"))
+    pend = {x["id"] for x in prod.get("revisiones") or []} | {r["id"] for r in prod.get("cola") or [] if r.get("grupo") == "revision"}
+    suya = next((r for r in prod.get("cola") or [] if r.get("persona_id") == "lucia" and r.get("estado") in ("en curso", "diario", "planning semanal")
+                 and r["id"] not in pend and "carla" not in autores[str(r["id"])] and "carla" not in {jefe.get(a) for a in autores[str(r["id"])]}), None)
+    ok(suya is not None, "SINC · hay una tarea de Lucía en Producción para probar")
+    if not suya:
+        return
+    db = lambda: sqlite3.connect(tmp / "prueba.db")
+    acc = lambda yo, cuerpo, como=None: pedir("/api/acciones", "POST", {"modulo": "produccion", "herramienta": "clickup", **cuerpo}, yo=yo, como=como)
+    c, t, _ = acc("lucia", {"tipo": "mover_estado", "objeto": suya["id"], "texto": "A revisión",
+                            "vista_previa": {"a": "complete", "task_id": "OTRA-TAREA", "de": "inventado"}})
+    d = json.loads(t) if c == 200 else {}
+    ok(c == 200 and (d.get("sincronia") or {}).get("estado") == "simulado" and "pendiente de ClickUp" in d["sincronia"].get("texto", ""),
+       f"SINC · Lucía mueve su tarea: la respuesta dice al momento «hecho en la app · pendiente de ClickUp» → {c} {t[:160]}")
+    with db() as con:
+        f = con.execute("SELECT objeto_ref, cambio, base, ignorado, quien, modo FROM sinc_cambios WHERE accion_id=?", (d.get("id"),)).fetchone()
+    cam = json.loads(f[1]) if f else {}
+    ok(f and f[0] == suya["id"] and cam == {"campo": "estado", "valor": "revisión project manager"} and json.loads(f[2])["estado"] == suya["estado"]
+       and {"a", "task_id"} <= set(json.loads(f[3] or "{}")) and f[4] == "lucia" and f[5] == "simulado",
+       f"SINC · copia segura en la base: tarea y cambio los pone el servidor («a» y «task_id» del navegador, ignorados y anotados) → {f}")
+    cid = (d.get("sincronia") or {}).get("id")
+    c2, _, _ = acc("lucia", {"tipo": "mover_estado", "objeto": suya["id"], "texto": "A revisión", "vista_previa": {"a": "complete"}})
+    with db() as con:
+        n = con.execute("SELECT count(*) FROM sinc_cambios WHERE objeto_ref=?", (suya["id"],)).fetchone()[0]
+    ok(c2 == 200 and n == 1, f"SINC · doble clic: la misma acción, un solo cambio (idempotente) → {n}")
+    with db() as con:
+        antes = con.execute("SELECT count(*) FROM sinc_cambios").fetchone()[0]
+    c3 = acc("carla", {"tipo": "mover_estado", "objeto": suya["id"], "texto": "x"})[0]
+    c4 = acc("carla", {"tipo": "comentario", "objeto": suya["id"], "texto": "x"})[0]
+    c5 = acc("lucia", {"tipo": "asignar", "objeto": suya["id"], "texto": "x", "vista_previa": {"persona": "carla"}})[0]
+    c6 = acc("tomas", {"tipo": "mover_estado", "objeto": suya["id"], "texto": "x"}, como="lucia")[0]
+    with db() as con:
+        despues = con.execute("SELECT count(*) FROM sinc_cambios").fetchone()[0]
+    ok(c3 == 403 and c4 == 403 and c5 in (400, 403) and c6 == 403 and despues == antes,
+       f"SINC · solo quien puede tocar la tarea: Carla mover/comentar ({c3}, {c4}), asignar sin puesto ({c5}), «ver como» ({c6}); ningún cambio nuevo")
+    L = lambda yo, como=None: (lambda r: json.loads(r[1]) if r[0] == 200 else {"cambios": [], "_c": r[0]})(pedir("/api/sincronia", yo=yo, como=como))
+    Ll, Lc, Lt, La, Lm = L("lucia"), L("carla"), L("tomas"), L("agustina"), L("mili")
+    ok(Ll["cambios"] and all(x["quien"] == "lucia" for x in Ll["cambios"]) and not Ll["ve_todos"], "SINC · Lucía solo ve los suyos")
+    ok(all(x["quien"] == "carla" for x in Lc["cambios"]) and cid not in {x["id"] for x in Lc["cambios"]}, "SINC · Carla no ve los de Lucía")
+    ok(pedir(f"/api/sincronia/cambio?id={cid}", yo="carla")[0] == 403, "SINC · Carla no abre un cambio de Lucía (403)")
+    ok(all(x.get("ve_todos") and cid in {y["id"] for y in x["cambios"]} for x in (Lt, La, Lm)), "SINC · Tomás, Agus y Mili ven los de todos")
+    V = L("tomas", como="lucia")
+    ok(V["solo_lectura"] and all(x["quien"] == "lucia" for x in V["cambios"]), "SINC · Tomás como Lucía: solo los de Lucía y en solo lectura")
+    o = pedir(f"/api/sincronia/objeto?ref={suya['id']}", yo="lucia")
+    ok(o[0] == 200 and json.loads(o[1])["cambios"][0]["estado"] == "simulado", "SINC · la pantalla puede preguntar el estado de una tarea (hecho en la app · pendiente)")
+    # conflicto: se prepara en la copia de la base con el ClickUp simulado (hoy nada real puede chocar)
+    con = SI.conectar(tmp / "prueba.db")
+    SI.preparar(con)
+    k, _ = SI.crear_cambio(con, clave=f"seg-conf-{os.getpid()}", quien="lucia", canal="clickup", tipo="mover_estado", cliente_id=suya.get("cli"), modulo="produccion",
+                           objeto={"tipo": "tarea", "ref": "seg-" + suya["id"], "nombre": "Prueba", "resuelto": True}, cambio={"campo": "estado", "valor": "revisión project manager"},
+                           base={"estado": "en curso"}, modo="prueba")
+    prov = SI.ClickUpSimulado({"seg-" + suya["id"]: {"estado": "en curso"}}, {SI.fila(con, k)["clave"]: {"fuera": "bloqueado"}})
+    est = SI.ejecutar(con, k, prov)
+    con.commit()
+    con.close()
+    ok(est == "conflicto", f"SINC · (preparado) un cambio en conflicto → {est}")
+    E = lambda yo, cuerpo, como=None, ruta="elegir": pedir(f"/api/sincronia/{ruta}", "POST", cuerpo, yo=yo, como=como)
+    ok(E("carla", {"id": k, "gana": "app"})[0] == 403, "SINC · Carla no elige en un conflicto de Lucía (403)")
+    ok(E("tomas", {"id": k, "gana": "app"}, como="lucia")[0] == 403, "SINC · en «ver como» no se elige (403)")
+    c, t, _ = pedir(f"/api/sincronia/cambio?id={k}", yo="lucia")
+    vs = (json.loads(t)["cambio"].get("versiones") or {}) if c == 200 else {}
+    ok(vs.get("app") == "revisión project manager" and vs.get("clickup") == "bloqueado", f"SINC · Lucía ve las dos versiones → {vs}")
+    c, t, _ = E("lucia", {"id": k, "gana": "clickup", "estado": "confirmado", "cambio": {"valor": "x"}})
+    ok(c == 200 and json.loads(t)["cambio"]["estado"] == "descartado", f"SINC · Lucía elige «lo de ClickUp» (estado y cambio del navegador ignorados) → {c}")
+    ok(E("lucia", {"id": k, "gana": "app"})[0] == 409, "SINC · ya decidido: elegir otra vez → 409")
+    c, t, _ = E("lucia", {"id": cid, "estado": "confirmado"}, ruta="reintentar")
+    ok(c == 200 and json.loads(t).get("simulado") and json.loads(t)["cambio"]["estado"] == "simulado", f"SINC · reintentar en simulación no escribe en ClickUp y no cambia el estado → {c}")
+    ok(E("lucia", {"id": cid}, ruta="a_mano")[0] == 403, "SINC · «ya está en ClickUp (a mano)» no lo marca quien no es Agus, Mili o Tomás")
+    c, t, _ = E("agustina", {"id": cid}, ruta="a_mano")
+    ok(c == 200 and json.loads(t)["cambio"]["estado"] == "confirmado", f"SINC · Agus lo marca como pasado a mano → {c}")
+    ok(E("tomas", {"canal": "clickup", "objeto": "x"}, ruta="crear")[0] == 404, "SINC · no hay ruta para crear un cambio a mano: solo nacen de una acción")
+    with db() as con2:
+        n_r = con2.execute("SELECT count(*) FROM registro WHERE accion IN ('sinc_elegir','sinc_reintento_simulado','sinc_a_mano')").fetchone()[0]
+        try:
+            con2.execute("UPDATE sinc_pasos SET estado='confirmado'")
+            inm = False
+        except sqlite3.DatabaseError:
+            inm = True
+    ok(n_r >= 3 and inm, f"SINC · cada decisión deja rastro ({n_r}) y los pasos no se cambian")
+    it = SI.interruptor()
+    ok(not it["reales"] and it["chat_puente"] == "apagado", "SINC · hoy ClickUp real apagado y puente de chat apagado")
+
 
 def finanzas_v3(tmp):
     """3-oct · Finanzas v3: Sofía ve impagos y el cuadre de lo facturado, NUNCA beneficio, equipo ni gasto; nadie ve sueldos
@@ -1691,6 +1840,191 @@ def finanzas_v3(tmp):
     c, t, _ = pedir("/api/acciones", "POST", {"modulo": "finanzas", "herramienta": "app", "tipo": "cobro_reclamado", "objeto": "A-26-001", "texto": "prueba"}, yo="lucia")
     ok(c in (400, 403), f"FIN v3 · Lucía no puede reclamar cobros ({c})")
 
+
+
+def avisos_automaticos(tmp):
+    """Avisos automáticos (3-oct · avisos_programados.py): cada jefa cambia solo las reglas de su departamento (Mili y Tomás,
+    todas); «ver como» no escribe; un recordatorio personal solo lo ven la persona y su jefa; avisa solo a quien le falta, una
+    vez; escala si se ignora y no si se marcó «Ya lo he hecho»; sin importes; nada sale de la app. Relojes fijados con
+    RO_RELOJ (viernes 2-oct 18:00, lunes 5-oct 9:00 y 17:30, martes 6-oct 18:00) sobre una copia de la base."""
+    global B
+    js = lambda r: json.loads(r[1]) if r[0] == 200 else {}
+    # ---- pantalla y permisos (servidor principal, sin reloj fijado)
+    reg = lambda yo, como=None: {r["id"]: r for r in js(pedir("/api/avisos_programados", yo=yo, como=como)).get("reglas", [])}
+    t, v, l, sf = reg("tomas"), reg("valeria"), reg("lucia"), reg("sofia")
+    ok(len(t) >= 7 and all(r["puede_editar"] for r in t.values()), f"AVISOS · Tomás ve y edita todas las reglas ({len(t)})")
+    ok(v.get("publicidad_manana", {}).get("puede_editar") and not v.get("horas_ayer", {}).get("puede_editar", True),
+       "AVISOS · Valeria edita la de publicidad y ve sin tocar la de horas")
+    ok(l and not any(r["puede_editar"] for r in l.values()) and "cierre_facturacion" not in l and "resumen_semanal_direccion" not in l,
+       f"AVISOS · Lucía solo ve lo que le llega, sin editar ({sorted(l)})")
+    ok(sf.get("cierre_facturacion", {}).get("puede_editar") and "publicidad_manana" not in sf, "AVISOS · Sofía edita el cierre de facturación")
+    ok(all(r.get("envios_semana") is None and not r.get("cambios") for r in l.values()), "AVISOS · Lucía no ve los envíos ni el historial de cambios")
+    cam = lambda yo, cuerpo, como=None: pedir("/api/avisos_programados/cambiar", "POST", cuerpo, yo=yo, como=como)
+    ok(cam("lucia", {"id": "semaforo_lunes", "campo": "activa", "valor": False})[0] == 403, "AVISOS · Lucía no apaga el semáforo del lunes (403)")
+    ok(cam("valeria", {"id": "horas_ayer", "campo": "hora", "valor": "10:00"})[0] == 403, "AVISOS · Valeria no cambia la regla de horas (403)")
+    c, tx, _ = cam("valeria", {"id": "publicidad_manana", "campo": "umbral.ritmo_pct", "valor": 120})
+    ok(c == 200 and next(u for u in json.loads(tx)["regla"]["umbrales"] if u["clave"] == "ritmo_pct")["valor"] == 120, f"AVISOS · Valeria sube el umbral de ritmo a 120 → {c}")
+    ok(cam("valeria", {"id": "publicidad_manana", "campo": "umbral.ritmo_pct", "valor": 900})[0] == 400, "AVISOS · umbral fuera de rango → 400")
+    ok(cam("valeria", {"id": "publicidad_manana", "campo": "umbral.ritmo_pct", "valor": "120"})[0] == 400, "AVISOS · umbral en texto → 400")
+    ok(cam("valeria", {"id": "publicidad_manana", "campo": "texto", "valor": "otra cosa"})[0] == 400, "AVISOS · el texto no se cambia desde la app → 400")
+    ok(cam("mili", {"id": "semaforo_lunes", "campo": "hora", "valor": "25:00"})[0] == 400, "AVISOS · hora imposible → 400")
+    ok(cam("mili", {"id": "semaforo_lunes", "campo": "hora", "valor": "10:30"})[0] == 200, "AVISOS · Mili cambia la hora del semáforo")
+    ok(cam("cecilia", {"id": "horas_ayer", "campo": "activa", "valor": False})[0] == 200 and cam("cecilia", {"id": "horas_ayer", "campo": "activa", "valor": True})[0] == 200,
+       "AVISOS · Cecilia (RRHH) apaga y enciende la de horas")
+    ok(cam("tomas", {"id": "publicidad_manana", "campo": "activa", "valor": False}, como="valeria")[0] == 403, "AVISOS · Tomás viendo como Valeria no cambia nada")
+    ok(js(pedir("/api/avisos_programados", yo="tomas", como="valeria")).get("solo_lectura") is True, "AVISOS · «ver como» abre en solo lectura")
+    ok(pedir("/api/avisos_programados/vista_previa?id=publicidad_manana", yo="lucia")[0] == 403, "AVISOS · Lucía no pide la vista previa de publicidad (403)")
+    c, tx, _ = pedir("/api/avisos_programados/vista_previa?id=cierre_facturacion", yo="sofia")
+    ok(c == 200 and "€" not in tx and json.loads(tx)["total"] == 1, f"AVISOS · vista previa del cierre para Sofía, sin importes → {c}")
+    ok(pedir("/api/avisos_programados/ejecutar", "POST", {}, yo="lucia")[0] == 403, "AVISOS · Lucía no pasa el reloj a mano (403)")
+    ok(pedir("/api/rastro", "POST", {"accion": "aviso_programado_cambio", "modulo": "avisos-automaticos", "objeto": "horas_ayer"}, yo="lucia")[0] == 403,
+       "AVISOS · el navegador no finge un cambio de regla en el rastro")
+    with sqlite3.connect(tmp / "prueba.db") as con:
+        n = con.execute("SELECT count(*) FROM avisos_prog_cambios").fetchone()[0]
+        nr = con.execute("SELECT count(*) FROM registro WHERE accion='aviso_programado_cambio'").fetchone()[0]
+        try:
+            con.execute("DELETE FROM avisos_prog_cambios")
+            borrado = True
+        except sqlite3.DatabaseError:
+            borrado = False
+    ok(n == 4 and nr == 4 and not borrado, f"AVISOS · cada cambio queda en la base ({n}) y en el rastro ({nr}), y no se borra")
+
+    # ---- el reloj: copia de la base, servidor con RO_RELOJ fijado
+    shutil.copy(tmp / "prueba.db", tmp / "avisos.db")
+    principal = B
+
+    def con_reloj(reloj, fn):
+        global B
+        env = {**os.environ, "RO_DB": str(tmp / "avisos.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json"), "RO_RELOJ": reloj,
+               "RO_AVISOS_SIN_BUCLE": "1", "RO_DEPARTAMENTOS": str(tmp / "departamentos.json")}
+        env.pop("RO_MODO", None)
+        srv, puerto = arrancar(env)
+        if srv is None:
+            ok(False, f"AVISOS · el servidor con reloj no arrancó ({puerto})")
+            return None
+        B = f"http://127.0.0.1:{puerto}"
+        try:
+            return fn()
+        finally:
+            B = principal
+            parar(srv)
+
+    ejec = lambda: js(pedir("/api/avisos_programados/ejecutar", "POST", {}, yo="tomas"))
+    canal = lambda yo, cid: js(pedir(f"/api/canales/canal?id={cid}", yo=yo)).get("mensajes", [])
+    prog = lambda ms, txt: [m for m in ms if txt in m["texto"]]
+
+    def viernes():
+        r1, r2 = ejec(), ejec()
+        luc, mil, car, gus = canal("lucia", "avisos-accounts"), canal("mili", "avisos-accounts"), canal("carla", "avisos-accounts"), canal("gustavo", "avisos-crm")
+        dir_ = canal("tomas", "avisos-direccion")
+        return r1, r2, luc, mil, car, gus, dir_
+    r1, r2, luc, mil, car, gus, dir_ = con_reloj("2026-10-02T18:00", viernes)
+    ok(r1.get("publicados", 0) > 0 and r2.get("publicados") == 0, f"AVISOS · viernes 18:00: publica ({r1.get('publicados')}) y la segunda vuelta no repite ({r2.get('publicados')})")
+    hl = prog(luc, "no imputaste horas")
+    ok(len(hl) == 1 and hl[0]["menciones"] == ["lucia"] and any(b.get("url", "").startswith("https://app.clickup.com/") for b in hl[0].get("botones", [])),
+       "AVISOS · Lucía (0 h ayer) recibe su recordatorio de horas, con botón «Imputar»")
+    ok(all("Lucía" in m["texto"] or "lucia" in m["menciones"] for m in prog(luc, "imputaste")), "AVISOS · Lucía no ve el recordatorio de horas de otra account")
+    ok(len(prog(mil, "no imputaste horas")) >= 5, f"AVISOS · Mili (su jefa) ve los de su equipo ({len(prog(mil, 'no imputaste horas'))})")
+    ok(not prog(gus, "imputaste"), "AVISOS · Gustavo, que imputó ayer, no recibe nada")
+    ok(len(prog(dir_, "Resumen de la semana")) == 1, "AVISOS · viernes 18:00: resumen semanal en #avisos-dirección")
+    ok(pedir("/api/canales/canal?id=avisos-direccion", yo="lucia")[0] == 403, "AVISOS · Lucía no abre #avisos-dirección")
+
+    def lunes():
+        r9 = ejec()
+        ok(js(pedir("/api/canales/canal?id=avisos-publicidad", yo="lina")) and all("€" not in m["texto"] for m in prog(canal("lina", "avisos-publicidad"), "Publicidad, lun")),
+           "AVISOS · lunes 9:00: el resumen de publicidad sale sin importes")
+        return r9
+    r9 = con_reloj("2026-10-05T09:00", lunes)
+    ok(r9.get("escalados", 0) > 0, f"AVISOS · lunes 9:00: los recordatorios de horas ignorados suben a la jefa ({r9.get('escalados')})")
+
+    def lunes_tarde():
+        r = ejec()
+        luc = canal("lucia", "avisos-accounts")
+        car = canal("carla", "avisos-accounts")
+        lina = pedir("/api/canales/canal?id=avisos-accounts", yo="lina")[0]
+        h_ok = pedir("/api/avisos_programados/hecho", "POST", {"regla": "semaforo_lunes", "objetivo": "lucia", "dia": "2026-10-05"}, yo="lucia")[0]
+        h_no = pedir("/api/avisos_programados/hecho", "POST", {"regla": "semaforo_lunes", "objetivo": "carla", "dia": "2026-10-05"}, yo="lucia")[0]
+        h_404 = pedir("/api/avisos_programados/hecho", "POST", {"regla": "semaforo_lunes", "objetivo": "nadie", "dia": "2026-10-05"}, yo="lucia")[0]
+        h_como = pedir("/api/avisos_programados/hecho", "POST", {"regla": "semaforo_lunes", "objetivo": "lucia", "dia": "2026-10-05"}, yo="tomas", como="lucia")[0]
+        return r, luc, car, lina, h_ok, h_no, h_404, h_como
+    r, luc, car, lina, h_ok, h_no, h_404, h_como = con_reloj("2026-10-05T17:30", lunes_tarde)
+    sl = prog(luc, "te falta el semáforo")
+    ok(len(sl) == 1 and all(b["ir"].startswith("#/ficha/") and b["ir"].endswith("?semaforo=1") for b in sl[0].get("botones", [])),
+       "AVISOS · lunes: Lucía recibe su semáforo con botones que abren la ficha con el editor")
+    ok(all("Lucía" not in m["texto"] for m in prog(car, "te falta el semáforo")), "AVISOS · Carla no ve el semáforo de Lucía")
+    ok(lina == 403, "AVISOS · Lina (publicidad) no abre #avisos-accounts")
+    ok(h_ok == 200 and h_no == 403 and h_404 == 404 and h_como == 403, f"AVISOS · «Ya lo he hecho»: lo suyo sí ({h_ok}), lo de Carla no ({h_no}), inexistente {h_404}, «ver como» {h_como}")
+
+    def martes():
+        r = ejec()
+        mil = canal("mili", "avisos-accounts")
+        return r, mil
+    r, mil = con_reloj("2026-10-06T18:00", martes)
+    esc = [m for m in mil if m.get("hilo_de") and "¿lo miras?" in m["texto"]] + [m for m in mil if "¿lo miras?" in m["texto"] and not m.get("hilo_de")]
+    ok(r.get("escalados", 0) > 0 and esc, f"AVISOS · martes: lo ignorado sube a Mili ({r.get('escalados')})")
+    with sqlite3.connect(tmp / "avisos.db") as con:
+        luc_esc = con.execute("SELECT count(*) FROM canal_mensajes WHERE clave='prog_esc:prog:semaforo_lunes:lucia:2026-10-05'").fetchone()[0]
+        car_esc = con.execute("SELECT count(*) FROM canal_mensajes WHERE clave='prog_esc:prog:semaforo_lunes:carla:2026-10-05'").fetchone()[0]
+        fuera = con.execute("SELECT count(*) FROM acciones WHERE herramienta IN ('clickup','desk','ghl','whatsapp') AND creada >= datetime('now','-1 hour') AND quien='sistema'").fetchone()[0]
+        euros = con.execute("SELECT count(*) FROM canal_mensajes WHERE clave LIKE 'prog%' AND (texto LIKE '%€%' OR texto LIKE '%euros%')").fetchone()[0]
+    ok(luc_esc == 0 and car_esc == 1, f"AVISOS · lo marcado «hecho» no sube (Lucía {luc_esc}); lo de Carla sí ({car_esc})")
+    ok(fuera == 0 and euros == 0, f"AVISOS · nada sale a herramientas ({fuera}) y ningún aviso lleva importes ({euros})")
+
+
+def modular_acceso(tmp):
+    """N5 Modular DS (3-oct): nadie fuera de web / jefe de SEO y web / dirección obtiene un enlace de acceso al WordPress;
+    «ver como» no lo pide; una web que no está en Modular, 404; el tablero de todas las webs solo para esos puestos (y
+    operaciones); el navegador no finge la fila del rastro; cada petición queda en el rastro y el enlace no se guarda."""
+    js = lambda r: json.loads(r[1]) if r[0] == 200 else {}
+    webs = json.loads((AQUI / "data/modular/webs.json").read_text()) if (AQUI / "data/modular/webs.json").exists() else {}
+    mid = str(((webs.get("webs") or [{}])[0]).get("modular_id") or "")
+    if not mid:
+        return ok(True, "MODULAR · sin datos de Modular: prueba de acceso omitida")
+    pedir_acc = lambda yo, como=None, m=mid: pedir("/api/modular/acceso", "POST", {"modular_id": m}, yo=yo, como=como)
+    for yo in ("lucia", "valeria", "gustavo", "sofia", "mili", "cecilia"):
+        if yo in PERSONAS and PERSONAS[yo].get("activo", True):
+            c, tx, _ = pedir_acc(yo)
+            ok(c == 403 and "url" not in tx, f"MODULAR · {yo} no obtiene enlace de acceso ({c})")
+    for yo in ("macarena", "jeronimo", "tomas"):
+        c, tx, _ = pedir_acc(yo)
+        d = json.loads(tx) if c == 200 else {}
+        ok(c == 200 and (d.get("apagado") or d.get("url")), f"MODULAR · {yo} (web / jefe / dirección) pasa la puerta ({c}, {'apagado' if d.get('apagado') else 'enlace'})")
+    ok(pedir_acc("tomas", como="lucia")[0] == 403, "MODULAR · Tomás viendo como Lucía no pide accesos")
+    ok(pedir_acc("tomas", como="macarena")[0] == 403, "MODULAR · «ver como» nunca pide accesos (ni como alguien de web)")
+    ok(pedir_acc("macarena", m="999999999")[0] == 404, "MODULAR · una web que no está en Modular → 404")
+    ok(pedir_acc("macarena", m="../x")[0] == 400, "MODULAR · identificador raro → 400")
+    ok(pedir("/api/rastro", "POST", {"accion": "modular_acceso", "modulo": "seo-web", "objeto": mid}, yo="macarena")[0] == 403,
+       "MODULAR · el navegador no finge la fila del rastro")
+    for yo, debe in (("lucia", False), ("valeria", False), ("macarena", True), ("jeronimo", True), ("tomas", True)):
+        c, tx, _ = pedir("/api/modulo/modular/tablero", yo=yo)
+        ok((c == 200) == debe, f"MODULAR · tablero de todas las webs para {yo}: {'sí' if debe else 'no'} ({c})")
+    lw = js(pedir("/api/modulo/modular/webs", yo="lucia"))
+    ok(not lw.get("sin_cliente") and all(w.get("cliente_id") for w in lw.get("webs", [])), "MODULAR · Lucía solo recibe webs de clientes (las sin cliente no)")
+    with sqlite3.connect(tmp / "prueba.db") as con:
+        n = con.execute("SELECT count(*) FROM registro WHERE accion='modular_acceso'").fetchone()[0]
+        nd = con.execute("SELECT count(*) FROM registro WHERE accion='modular_acceso_denegado'").fetchone()[0]
+        enl = con.execute("SELECT count(*) FROM registro WHERE accion LIKE 'modular_acceso%' AND datos LIKE '%login%'").fetchone()[0]
+    ok(n >= 3 and nd >= 1 and enl == 0, f"MODULAR · rastro de cada petición ({n} pedidas, {nd} denegadas) y ningún enlace guardado")
+
+def telefonos_regla(tmp):
+    """Regla de teléfonos (3-oct): el informe de dudosos solo lo leen dirección y operaciones y nunca lleva el número
+    entero; los contactos de la ficha siguen detrás de ver_dato (con su cartera) y guardados con «+» y sin espacios."""
+    if not (AQUI / "data/telefonos/dudosos.json").exists():
+        return ok(True, "TELÉFONOS · sin informe de dudosos todavía: prueba omitida")
+    for yo, debe in (("tomas", True), ("mili", True), ("lucia", False), ("setter_ana", False), ("sofia", False), ("cecilia", False)):
+        if yo in PERSONAS and PERSONAS[yo].get("activo", True):
+            c = pedir("/api/modulo/telefonos/dudosos", yo=yo)[0]
+            ok((c == 200) == debe, f"TELÉFONOS · informe de dudosos para {yo}: {'sí' if debe else 'no'} ({c})")
+    ok(pedir("/api/modulo/telefonos/dudosos", yo="tomas", como="lucia")[0] == 403, "TELÉFONOS · Tomás viendo como Lucía no recibe el informe")
+    ok(pedir("/data/telefonos/dudosos.json", yo="lucia")[0] in (401, 403, 404), "TELÉFONOS · el fichero no se sirve tal cual")
+    import escaner_secretos as ESC
+    ok(not ESC.escanear_fichero(AQUI / "data/telefonos/dudosos.json"), "TELÉFONOS · el informe de dudosos no lleva números enteros (escáner limpio)")
+    priv = AQUI / "data/ficha/_privado/contactos.json"
+    if priv.exists():
+        tels = [t["tel"] for c in json.loads(priv.read_text())["clientes"].values() for p in c["datos"]["personas"] for t in p["telefonos"]]
+        ok(tels and all(_re11.fullmatch(r"\+\d{8,15}", t) for t in tels), f"TELÉFONOS · los {len(tels)} teléfonos de contactos, con «+» y sin espacios")
+    c = pedir("/api/ver_dato", "POST", {"almacen": "ficha/_privado/contactos", "ref": "accompany", "campo": "datos"}, yo="setter_ana")[0]
+    ok(c == 403, f"TELÉFONOS · una setter no abre los contactos de un cliente ({c})")
 
 
 if __name__ == "__main__":

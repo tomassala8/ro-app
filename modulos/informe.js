@@ -20,6 +20,9 @@ import {
   candado, panel, frescura, icono, iniciales, tablaApilable, avisoFlotante, copiar, variacion, selloMedible, tile as tileBase,
   grafico, rejillaTarjetas, vacioLinea, esqueleto, barraProgreso, colorCifra,
 } from '../componentes.js';
+import { panelRevisar, estadoInforme } from './informe_revisar.js';
+import { barraAcciones } from './_trabajo.js';
+import { plegarConsejo } from './_plegar_consejo.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -107,11 +110,11 @@ const SELLOS = [
   ['ficha_google', 'Ficha de Google', 'pin'],
 ];
 const SELLO_BLOQUE = { ga4: 'ga4', gsc: 'gsc', seranking: 'seranking', ghl: 'embudo', meta: 'meta', google_ads: 'google_ads', snov: 'correo', linkedin: 'linkedin', ficha_google: 'ficha_google' };
-const APARTADOS = [
+export const APARTADOS = [
   ['mes', 'Cómo ha ido el mes'], ['funciona', 'Lo que funciona'], ['no_funciona', 'Lo que no'],
   ['perdidas', 'Llamadas perdidas o leads sin atender'], ['pasos', 'Próximos pasos'],
 ];
-const RE_LEAD = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)|((?:\+?34[\s.-]?)?[6789](?:[\s.-]?\d){8})/;
+export const RE_LEAD = /([\w.+-]+@[\w-]+(?:\.[\w-]+)+)|((?:\+?34[\s.-]?)?[6789](?:[\s.-]?\d){8})/;
 const GLOSARIO = [
   ['Clics', 'Veces que alguien pulsa en la web desde Google o desde un anuncio.'],
   ['Impresiones', 'Veces que la web o el anuncio aparece en pantalla, aunque nadie pulse.'],
@@ -261,7 +264,7 @@ async function indice(ctx, pid) {
   }
   return CACHE.indice.get(k);
 }
-async function filaCliente(ctx, pid, cid) {
+export async function filaCliente(ctx, pid, cid) {
   const k = `${yoDe(ctx)}|${pid}|${cid}`;
   if (!CACHE.fila.has(k)) {
     CACHE.fila.set(k, ctx.datosModulo(`informe/c_${pid}/${encodeURIComponent(cid)}`)
@@ -306,7 +309,7 @@ function equipoDe(ctx, c) {
 }
 
 // ------------------------------------------------------------------ avisos (G4 §4)
-function avisosDe(f, P, ana) {
+export function avisosDe(f, P, ana) {
   const out = (f.avisos || []).map(a => ({ ...a, fijo: true }));
   const F = f.fuentes || {};
   const nombre = { ga4: 'Analytics', gsc: 'Search Console', meta: 'Meta', snov: 'Snov.io' };
@@ -330,7 +333,7 @@ function avisosDe(f, P, ana) {
   if (ana?.actual && RE_LEAD.test(Object.values(ana.actual.apartados || {}).join(' '))) out.push({ color: 'rojo', tipo: 'datos_leads', texto: 'El análisis lleva un correo o un teléfono: los datos de leads no van en el informe.', quien: 'Account', bloque: 'analisis' });
   return out;
 }
-const bloqueaPDF = av => av.some(a => a.color === 'rojo' && ['otro_cliente', 'datos_leads'].includes(a.tipo));
+export const bloqueaPDF = av => av.some(a => a.color === 'rojo' && ['otro_cliente', 'datos_leads'].includes(a.tipo));
 
 function aviso(a) {
   return h('div', { class: `aviso no-imprimir${a.color === 'azul' ? ' info' : ''}`, style: a.color === 'rojo' ? AVISO_ROJO : null, role: a.color === 'rojo' ? 'alert' : 'note' },
@@ -356,6 +359,7 @@ export default {
     CTX = ctx;
     document.getElementById('informe-estilos')?.remove();   // hoja de antes de la guía 30
     cont.replaceChildren(esqueleto({ tarjetas: 4, lineas: 4 }));
+    plegarConsejo(cont);   // ronda U (#1): el consejo de la carcasa, en una línea
     try {
       CACHE.comun ??= ctx.datosModulo('informe/comun');
       // auditoría 37: lo que no depende del periodo sale a la vez (antes: comun → paridad → periodo, en serie)
@@ -466,7 +470,7 @@ function rangoComparar(P, cmp) {
   return [' · frente a ', fRango(a, b), cmp === 'anio' ? ` ${new Date(a + 'T12:00:00').getFullYear()}` : ''];
 }
 
-function analisisDe(acc, cid, pid) {
+export function analisisDe(acc, cid, pid) {
   const todas = acc.filter(a => a.cliente_id === cid && a.tipo === 'analisis_mes').map(a => ({ ...a, vp: vp(a) }));
   const anuladas = new Set(todas.filter(a => a.vp.anula).map(a => Number(a.vp.anula)));
   const mias = todas.filter(a => !a.vp.anula && !anuladas.has(Number(a.id))).sort((a, b) => String(b.creada).localeCompare(String(a.creada)) || b.id - a.id);
@@ -506,8 +510,7 @@ function pintarCliente(zona, ctx, X) {
         h('div', { class: 'fila no-imprimir' },
           h('button', { type: 'button', class: 'bt', title: 'Copiar el enlace con este cliente y estas fechas', on: { click: () => copiar(location.href, 'Enlace copiado') } }, icono('link'), 'Copiar enlace'),
           h('button', { type: 'button', class: 'bt', on: { click: () => document.getElementById('inf-b-analisis')?.scrollIntoView({ behavior: 'smooth' }) } }, icono('editar'), 'Preparar el mes'),
-          h('button', { type: 'button', class: 'bt pri', 'aria-disabled': pdfBloq ? 'true' : null, title: pdfBloq ? 'Bloqueado: hay un aviso rojo (cuenta de otro cliente o datos de leads)' : 'Imprimir o guardar como PDF',
-            on: { click: () => { if (pdfBloq) { avisoFlotante('PDF bloqueado: arregla antes el aviso rojo', { icono: 'alert' }); return; } ctx.rastro({ accion: 'descargar_pdf', objeto: `${c.id}/${P.id}` }); window.print(); } } }, icono('descarga'), 'Descargar PDF'))),
+          null)),
       h('div', { class: 'fila', style: { justifyContent: 'space-between' } },
         h('p', { class: 'sub' }, `${P.texto} (`, fRango(P.desde, P.hasta), ')', rangoComparar(P, cmp), f.fuentes?.gsc?.hasta_dato && f.fuentes.gsc.hasta_dato < P.hasta ? ` · Search Console hasta el ${fDia(f.fuentes.gsc.hasta_dato)}` : ''),
         chipFuentes),
@@ -518,7 +521,37 @@ function pintarCliente(zona, ctx, X) {
   // solo se le da el título con el cliente y las fechas. La cabecera de pantalla (selector ▾, botones, chips) no se imprime.
   const cmpTxt = cmp === 'no' ? '' : ` · frente a ${fDia((cmp === 'anio' ? P.anio_anterior : P.anterior)[0])} – ${fDia((cmp === 'anio' ? P.anio_anterior : P.anterior)[1])}`;
   ctx.titulo(`Informe de ${c.nombre}`, `${P.texto} (${fDia(P.desde)} – ${fDia(P.hasta)})${cmpTxt}`);
-  rc(zona, cab);
+  // Ronda U (#14 y #8): barra de acciones arriba y fija («Revisar y enviar» abre el panel de una pantalla con el análisis,
+  // la marca de revisado y el envío por Desk con el PDF, simulado) y, debajo, «Qué decirle al cliente este mes» en 3 líneas.
+  // El informe que se manda es el del último MES cerrado (aunque arriba se miren los últimos 30 días).
+  const Pmes = /^\d{4}-\d{2}$/.test(P.id) ? P : (P0.find(p => /^\d{4}-\d{2}$/.test(p.id)) || P);
+  const est = estadoInforme(acc, c.id, Pmes.id);
+  const zonaRev = h('div', { class: 'no-imprimir' });
+  const abrirRev = async () => {
+    const ant = acc.filter(a => a.herramienta === 'desk' && a.tipo === 'correo' && a.cliente_id === c.id).sort((a, b) => b.id - a.id)[0];
+    zonaRev.replaceChildren(await panelRevisar(ctx, { c, pid: Pmes.id, ticketAnterior: ant?.objeto && /^RO-\d+$/.test(ant.objeto) ? ant.objeto : (f.informe_anterior_ticket || null) },
+      { alCerrar: () => zonaRev.replaceChildren(), alCambio: () => { CACHE.acciones = null; } }));
+  };
+  const puedeEnviar = ctx.ver({ tipo: 'responder_cliente', cliente_id: c.id }).ok && !ctx.soloLectura;
+  const barra = barraAcciones({
+    titulo: `Informe de ${c.nombre}`,
+    sub: `Informe de ${Pmes.texto.replace(/ \d{4}$/, '').toLowerCase()} · ${est.enviado ? `enviado (simulado) el ${fDia(String(est.enviado.creada).slice(0, 10))}` : est.revisado ? `revisado por ${alias(ctx, est.revisado.quien)}` : 'sin revisar'}`,
+    acciones: [
+      puedeEnviar && !est.enviado ? h('button', { type: 'button', class: 'bt pri', on: { click: abrirRev } }, icono('send'), 'Revisar y enviar') : null,
+      h('button', { type: 'button', class: `bt${puedeEnviar && !est.enviado ? '' : ' pri'}`, 'aria-disabled': pdfBloq ? 'true' : null, title: pdfBloq ? 'Bloqueado: hay un aviso rojo (cuenta de otro cliente o datos de leads)' : 'Imprimir o guardar como PDF (el mismo que se adjunta al enviar)',
+        on: { click: () => { if (pdfBloq) { avisoFlotante('PDF bloqueado: arregla antes el aviso rojo', { icono: 'alert' }); return; } ctx.rastro({ accion: 'descargar_pdf', objeto: `${c.id}/${P.id}` }); window.print(); } } }, icono('descarga'), 'Descargar PDF'),
+    ],
+  });
+  barra.classList.add('no-imprimir');
+  const ap = ana.actual?.apartados || borrador(S);
+  const lineas = [ap.mes, ap.funciona || ap.no_funciona, ap.pasos || ap.perdidas].filter(Boolean).slice(0, 3);
+  const decir = h('section', { class: 'panel no-imprimir', 'aria-label': 'Qué decirle al cliente este mes' },
+    h('div', { class: 'cuerpo pila', style: { gap: 'var(--s-2)' } },
+      h('div', { class: 'fila', style: { justifyContent: 'space-between' } }, h('span', { class: 'titulo-seccion' }, `Qué decirle al cliente ${enP(P)}`),
+        h('span', { class: 'sub' }, ana.actual ? `Del análisis de ${alias(ctx, ana.actual.quien)}` : 'Propuesta con las cifras (sin análisis escrito todavía)')),
+      lineas.length ? h('ul', { style: { margin: '0', paddingLeft: 'var(--s-5)', display: 'grid', gap: 'var(--s-1)' } }, lineas.map(t => h('li', { style: { maxWidth: '90ch' } }, t)))
+        : vacioLinea('Sin cifras para proponer: escribe el análisis con «Revisar y enviar».', { icono: 'editar' })));
+  rc(zona, barra, zonaRev, decir, cab);
   const enBloques = av.filter(a => !a.fijo && a.bloque && bloques.has(a.bloque));
   const arriba = av.filter(a => a.fijo || !a.bloque);
   if (enBloques.length) arriba.push({ color: enBloques.some(a => a.color === 'rojo') ? 'rojo' : 'ambar', titulo: `${fmt.plural(enBloques.length, 'aviso')} en:`, texto: enBloques.map(a => BLOQUES.find(b => b.id === a.bloque)?.texto).filter((x, i, xs) => xs.indexOf(x) === i).join(' · ') + '. El detalle va dentro de cada bloque.' });
@@ -1022,7 +1055,7 @@ function bit24(props) {
     h('p', { class: 'sub' }, 'Su Looker enseña 1 clic y 43 impresiones en septiembre. La propiedad con más datos es casi seguro la buena: el SEO lo confirma y se cambia el emparejamiento.'));
 }
 
-function borrador(S) {
+export function borrador(S) {
   const { f, P } = S;
   const g = f.ga4?.actual, ga = f.ga4?.anterior, s = f.gsc?.web?.actual, sa = f.gsc?.web?.anterior, m = f.meta?.actual, ma = f.meta?.anterior;
   const v = (a, b) => (a != null && b ? `${variacion(a, b) > 0 ? '+' : ''}${num4(variacion(a, b), 0)} %` : 'sin comparación');

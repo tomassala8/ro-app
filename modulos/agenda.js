@@ -9,6 +9,7 @@
 // enseña a cada uno la suya; a los jefes, su equipo; a Mili y Tomás, todos. Prospectos con iniciales: los nombres, solo
 // su dueño con «Ver nombres» (ctx.verDato, queda en el rastro).
 
+import { plegarConsejo } from './_plegar_consejo.js';
 import {
   h, fmt, icono, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, panel, frescura, iniciales,
   avisoFlotante, copiar, tablaApilable, vacioLinea, selectorPersona, menuMas,
@@ -132,6 +133,7 @@ export default {
   grupo: 'Hoy',
   puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo' },
   async render(cont, ctx) {
+    plegarConsejo(cont);   // ronda U (#1): el consejo de la carcasa, en una línea
     vigilarCortes(cont);
     let D;
     try { D = await ctx.datosModulo('agenda/agenda'); }
@@ -254,7 +256,8 @@ function accionesCita(S, e, visible, f) {
   const zoom = atajos.find(a => a.h === 'zoom');
   const resto = atajos.filter(a => a !== zoom);
   return h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)', justifyContent: 'flex-end', alignItems: 'center' } },
-    visible ? h('a', { class: 'bt', href: `#/ficha/${e.cliente_ref}` }, icono('cli'), 'Ficha del cliente') : null,
+    // Ronda U (#5): una reunión con cliente lleva a su hoja de reunión (ficha › Reunión), el mismo destino que Reuniones.
+    visible ? h('a', { class: 'bt', href: `#/ficha/${e.cliente_ref}/reunion` }, icono('video'), 'Preparar la reunión') : null,
     e.cliente_ref && !visible && e.tipo === 'cliente' ? h('span', { style: { ...EST.meta, display: 'inline-flex' }, title: 'El detalle de este cliente solo lo ve quien lo lleva', 'aria-label': 'El detalle de este cliente solo lo ve quien lo lleva' }, icono('candado', { clase: 's' })) : null,
     zoom ? h('a', { class: 'bt icono', href: zoom.url, target: '_blank', rel: 'noopener', title: 'Ver la grabación de Zoom', 'aria-label': 'Ver la grabación de Zoom', style: { minWidth: 'var(--s-8)', justifyContent: 'center' } }, '▶') : null,
     resto.length === 1

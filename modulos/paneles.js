@@ -22,6 +22,7 @@ import {
   chipEstado, variacion, grafico, embudoBarras, colorCifra, sumarSerie, serieDelPeriodo, fechaCorta,
   rangoPeriodo, hoyMadrid, periodoCompleto, leerPeriodo, sumarDias, menuMas,
 } from '../componentes.js';
+import { consejoCompacto } from './_trabajo.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -653,7 +654,13 @@ export default {
     direccion: 'todo', finanzas_direccion: 'todo', operaciones: 'todo', proyectos: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', tecnico_altas: 'todo',
     account: 'suyo', trafficker: 'suyo', especialista_ghl: 'suyo', seo: 'suyo', ficha_google: 'suyo', web: 'suyo', redes: 'suyo',
   },
+  // Ronda U (#1): pantalla de consulta; el consejo de la IA no empuja el selector ni el panel: va plegado al pie
   async render(cont, ctx) {
+    await this.pintar(cont, ctx);
+    const ultimo = cont.lastElementChild;
+    if (ultimo) consejoCompacto(cont, ultimo);   // el consejo, plegado y detrás del panel
+  },
+  async pintar(cont, ctx) {
     vigilarCortes(cont);
     const [a0, a1, a2] = ctx.params || [];
     escuchar(ctx, null);

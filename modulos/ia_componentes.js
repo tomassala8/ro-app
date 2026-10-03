@@ -60,6 +60,19 @@ export function textoEscalar(t) {
   const m = s.match(/^(?:a\s+)?([^:]{2,40}?):\s*(.+)$/is);
   return m && /^[A-ZÁÉÍÓÚÑ]/.test(m[1].trim()) ? { cab: `Escalar a ${m[1].trim()}: `, resto: m[2] } : { cab: 'Escalar: ', resto: s };
 }
+// 3-oct · cerebro de respuestas: nota «calidad del borrador» (la calcula el servidor) con el tipo de correo y lo que falta
+function calidadIA(r) {
+  const c = r?.calidad;
+  if (!c || typeof c.nota !== 'number') return null;
+  const tono = c.nivel === 'lista' ? 'verde' : c.nivel === 'revisar' ? 'ambar' : 'rojo';   // con datos por completar, nunca en verde
+  const faltas = (c.faltas || []).filter(Boolean);
+  return h('div', { class: 'ia-calidad', role: 'note' },
+    h('p', { class: 'ia-sub' }, chipEstado(tono, `Calidad del borrador ${c.nota}/100${c.por_completar ? ` · ${c.por_completar} ${c.por_completar === 1 ? 'dato' : 'datos'} por completar` : ''}`), ' ',
+      r.tipo_nombre ? `Tipo: ${r.tipo_nombre}.` : '', r.recomendacion ? ` ${r.recomendacion}` : ''),
+    faltas.length ? h('details', {}, h('summary', { class: 'ia-sub', style: { minHeight: 'var(--s-8)', paddingBlock: 'var(--s-2)', cursor: 'pointer' } },
+      `Lo que falta (${faltas.length})`), h('ul', { class: 'ia-lista' }, faltas.map(f => h('li', {}, f)))) : null);
+}
+
 function avisoIA(texto) {
   return h('div', { class: 'ia-aviso', role: 'note' }, icono('alert'), h('span', {}, texto));
 }
@@ -130,6 +143,7 @@ export function botonIA(ctx, { ticket, destino = null, abierto = false } = {}) {
       h('div', { class: 'ia-cab' }, h('b', {}, icono('spark'), 'Borrador sugerido'), selloOrigen(r)),
       r.aviso ? avisoIA(r.aviso) : null,
       r.origen === 'precalculado' && r.motivo_conexion ? h('p', { class: 'ia-sub' }, r.motivo_conexion) : null,
+      calidadIA(r),
       h('div', { class: 'ia-campo' }, h('label', { for: asunto.id }, 'Asunto'), asunto),
       h('div', { class: 'ia-campo' }, h('label', { for: cuerpo.id }, 'Respuesta (edítala a tu gusto)'), cuerpo),
       h('div', { class: 'ia-firma' }, h('span', { class: 'av', 'aria-hidden': 'true' }, iniciales(r.firma?.nombre)),
@@ -192,7 +206,10 @@ export function panelCopiloto(ctx, clienteId, { compacto = false } = {}) {
     if (!r.ok) { cuerpo.replaceChildren(sinIA(r.motivo, { titulo: r.conectada ? 'Sin propuesta todavía' : 'IA sin conectar' })); return; }
     const [cls, txt] = COLOR[r.color] || ['gris', 'Sin color'];
     acciones.append(selloOrigen(r));
-    const diag = (r.diagnostico || []).filter(d => d && d !== 'null').slice(0, 3);
+    // Glosario: un diagnóstico precalculado que empieza por el color («Rojo: …») se lee con el nivel («Crítico: …»).
+    const NIVEL = { rojo: 'Crítico', ámbar: 'Vigilar', ambar: 'Vigilar', verde: 'Bien' };
+    const diag = (r.diagnostico || []).filter(d => d && d !== 'null').slice(0, 3)
+      .map(d => String(d).replace(/^(rojo|ámbar|ambar|verde)\s*:/i, (m, c) => `${NIVEL[c.toLowerCase()]}:`));
     const escalar = r.escalar && r.escalar !== 'null' ? r.escalar : null;
     // C4 / barrido v1: replaceChildren() escribe «null» si recibe null (h() no). Por eso se filtra antes de pintar.
     cuerpo.replaceChildren(...[
@@ -300,14 +317,65 @@ function consejoEl(c, i, { soloLectura, alAccion, aqui, pantalla }) {
   }
   // V8: sin «Umbral»; la regla ya llega en palabras («Bien con 2 citas al día o más»).
   const dato = [c.cifra, c.umbral ? textoRegla(c.umbral) : null].filter(Boolean).join(' · ');
-  return h('li', { class: 'ia-accion' },
+  return ligarMotivo(h('li', { class: 'ia-accion' },
     h('span', { class: 'n', 'aria-hidden': 'true' }, String(i + 1)),
     h('div', {},
       h('b', {}, conTickets(c.que)),
       h('p', {}, conTickets(c.porque)),
       dato ? h('div', { class: 'dato' }, icono('grafico'), h('span', {}, conTickets(dato))) : null,
       c.dato_en_duda && !String(c.porque || '').includes(c.dato_en_duda) ? h('div', { class: 'dato' }, icono('alert'), h('span', {}, `Dato en duda: ${c.dato_en_duda}`)) : null,
-      h('div', { class: 'pie' }, pie.filter(Boolean))));
+      h('div', { class: 'pie' }, pie.filter(Boolean)),
+      filaValoracion(c, { soloLectura, pantalla, i }))));
+}
+
+// ------------------------------------------------------------------ 3-oct · cerebro de decisiones v2: valoración
+// Debajo de cada consejo: por qué va en ese puesto («Primero porque…»), su criterio con «Ver fuente ↗» (la regla de Cole
+// Gordon, Hormozi o RO en GitHub), la confianza y los botones «Útil / No útil / Ya hecho». El navegador solo manda el id del
+// consejo y el valor; el servidor apunta en el rastro la métrica de ese momento (para ver a 7 y 14 días si mejoró).
+const VALORES = [['util', 'Útil'], ['no_util', 'No útil'], ['hecho', 'Ya hecho']];
+const CONFIANZA = { alta: ['verde', 'Confianza alta'], media: ['ambar', 'Confianza media'], baja: ['rojo', 'Confianza baja'] };
+async function valorar(c, valor, pantalla) {
+  if (!window.RO?.api) throw new Error('Sin servidor');
+  return window.RO.api('ia/consejo/valorar', { metodo: 'POST', cuerpo: { consejo: c.id, valor, pantalla } });
+}
+/** Mi día renumera los consejos que quedan tras quitar lo que ya está en «Lo mío»: «Primero / Luego» sigue a ese número. */
+function ligarMotivo(li) {
+  const n = li.querySelector('.n');
+  const m = li.querySelector('[data-motivo]');
+  if (!n || !m || typeof MutationObserver === 'undefined') return li;
+  const poner = () => { m.textContent = `${n.textContent.trim() === '1' ? 'Primero' : 'Luego'} porque ${m.dataset.motivo}`; };
+  new MutationObserver(poner).observe(n, { childList: true, characterData: true, subtree: true });
+  return li;
+}
+function filaValoracion(c, { soloLectura, pantalla, i = 0 }) {
+  if (!c?.id) return null;
+  // «Primero / Luego» según el sitio en ESTA lista (una pantalla puede quitar alguno que ya está en «Lo mío»)
+  const motivo = c.motivo_linea ? String(c.motivo_linea).replace(/^(Primero|Luego) porque/, i === 0 ? 'Primero porque' : 'Luego porque') : null;
+  const cr = c.criterio;
+  const conf = CONFIANZA[c.confianza];
+  const chip = conf ? chipEstado(conf[0], conf[1]) : null;
+  if (chip && c.confianza_porque) chip.title = c.confianza_porque;
+  const criterio = cr?.regla ? (cr.url
+    ? h('a', { href: cr.url, target: '_blank', rel: 'noopener noreferrer', title: cr.regla, 'data-criterio': cr.id }, `Criterio ${cr.autor || 'RO'} · Ver fuente ↗`)
+    : h('span', { title: `${cr.regla}${cr.fichero ? ` (${cr.fichero})` : ''}`, 'data-criterio': cr.id }, `Criterio ${cr.autor || 'RO'}${cr.fichero ? ` · ${cr.fichero}` : ''}`)) : null;
+  const estado = h('span', { role: 'status', 'aria-live': 'polite' }, c.valoracion_nota || '');
+  const botones = VALORES.map(([v, t]) => {
+    const b = h('button', { type: 'button', class: 'bt mini', 'data-valorar': v, 'aria-pressed': String(c.valoracion === v),
+      disabled: soloLectura || null, title: soloLectura ? 'En «ver como» no se valora nada' : 'Queda en el rastro: sirve para saber qué consejos funcionan' }, t);
+    b.addEventListener('click', async () => {
+      botones.forEach(x => { x.disabled = true; });
+      try {
+        await valorar(c, v, pantalla);
+        botones.forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+        estado.textContent = v === 'hecho' ? 'Anotado: hoy no vuelve a salir; en 7 y 14 días se mira si el dato mejoró.' : 'Anotado, gracias.';
+      } catch (e) { estado.textContent = `No se pudo anotar (${e?.message || e}).`; }
+      finally { botones.forEach(x => { x.disabled = soloLectura || null; }); }
+    });
+    return b;
+  });
+  return h('div', { class: 'pie', 'data-ia': 'valoracion' },
+    motivo ? h('span', { style: { flexBasis: '100%' }, 'data-motivo': motivo.replace(/^(Primero|Luego) porque /, '') }, motivo) : null,
+    criterio, chip, ...botones, estado);
 }
 
 /** Lo viejo precalculado con colores («verde ≥ 2 · ámbar 1 · rojo 0») se lee con el glosario: Bien / Vigilar / Crítico. */

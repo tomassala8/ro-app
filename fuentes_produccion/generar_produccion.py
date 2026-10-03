@@ -238,11 +238,17 @@ def main():
     flujo = leer(PANEL / 'build/tareas_flujo.json', {}) or {}
     plan = leer(PANEL / 'build/planificacion.json', {}) or {}
     por_nombre = {norm(n): i for i, n in nombres.items()}
-    hcli = defaultdict(float)
+    hcli, hcli_ant = defaultdict(float), defaultdict(float)
+    mes0 = (MES1 - dt.timedelta(days=1)).replace(day=1)          # el mes anterior entero (para la capa E1 y Dinero)
     for e in H.get('entradas', []):
         c = por_carpeta.get(str(e.get('carpeta_id') or ''))
-        if c and e['horas'] <= 10 and dt.date.fromisoformat(e['inicio'][:10]) >= MES1:
+        if not c or e['horas'] > 10:
+            continue
+        dia_e = dt.date.fromisoformat(e['inicio'][:10])
+        if dia_e >= MES1:
             hcli[c[0]] += e['horas']
+        elif dia_e >= mes0:
+            hcli_ant[c[0]] += e['horas']
     proyectos = []
     for nom, f in flujo.items():
         if nom.startswith('_'):
@@ -262,7 +268,7 @@ def main():
             'vencidas': f.get('vencidas', 0), 'sin_fecha': f.get('sin_fecha', 0),
             'creadas_mes': f.get('creadas_mes', 0), 'creadas_mes_ant': f.get('creadas_mes_ant', 0), 'sin_tareas_mes': bool(f.get('sin_tareas_mes')),
             'cerradas_semana': f.get('cerradas_semana', 0), 'cerradas_semana_ant': f.get('cerradas_semana_ant', 0),
-            'horas_mes': round(hcli.get(cid, 0), 1),
+            'horas_mes': round(hcli.get(cid, 0), 1), 'horas_mes_ant': round(hcli_ant.get(cid, 0), 1),
         })
     proyectos.sort(key=lambda r: (-(r['rev_account_48'] + r['rev_tecnica_48'] + r['bloqueadas']), r['cliente']))
 
