@@ -6,6 +6,7 @@
 #   ro-ligera          cada hora de 7 a 23 h de España: tubería ligera
 #   ro-completa        6:00 y 14:00: tubería completa (lectores en bruto, créditos, CRM en vivo)
 #   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
+#   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS)
 #   ro-base            UNA sola Postgres: rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con
 #                      bloqueo y los datos de cada módulo por versión (despliegue/publicacion.py)
 #
@@ -127,6 +128,23 @@ services:
       - fromGroup: ro-comun
       - fromGroup: ro-llaves
       - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-copias
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    schedule: "0 * * * *"         # cada hora (Tomás, 4-oct). Sin R2 sale en rojo: el disco de un cron se pierde
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh copias
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: ro-base, property: connectionString }
+      - key: RO_COPIAS_DIAS
+        value: "7"                # cuántos días se guardan las copias de cada hora; se cambia aquí
+      - fromGroup: ro-comun
+      - fromGroup: ro-vigilancia   # RO_R2_*
 
   - type: cron
     name: ro-noche

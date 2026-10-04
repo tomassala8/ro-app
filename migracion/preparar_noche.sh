@@ -108,6 +108,9 @@ echo "5 · Espacio y carpeta de trabajo fuera del repo"
 LIBRE=$(df -g "$RAIZ" 2>/dev/null | awk 'NR==2{print $4}'); [ -z "$LIBRE" ] && LIBRE=$(df -BG "$RAIZ" | awk 'NR==2{gsub("G","",$4);print $4}')
 [ "${LIBRE:-0}" -ge 10 ] && ok "${LIBRE} GB libres" || mal "poco disco (${LIBRE:-?} GB)" "deja al menos 10 GB libres (node_modules, Docker, fotos)"
 mkdir -p "$FUERA" && ok "carpeta para datos de la migración: $FUERA (fuera del repo)"
+mkdir -p "$FUERA/referencias"
+[ -n "$(ls -A "$FUERA/referencias" 2>/dev/null)" ] && ok "referencias de backend en $FUERA/referencias" \
+  || ojo "la carpeta de referencias está vacía" "deja ahí el zip del otro CRM (PLAN_MAESTRO §2.11); no es imprescindible"
 
 LISTA="$FUERA/PENDIENTES_LOGICA.md"; [ -f "$LISTA" ] || LISTA="migracion/PENDIENTES_LOGICA.md"
 ABIERTOS=$(cat migracion/PENDIENTES_LOGICA.md "$FUERA/PENDIENTES_LOGICA.md" 2>/dev/null | grep -E '^\| [LN]-[0-9]+ .*\| *abierto' | cut -d'|' -f2 | sort -u | grep -c .); ABIERTOS=${ABIERTOS:-0}

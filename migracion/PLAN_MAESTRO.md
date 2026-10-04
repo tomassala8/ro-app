@@ -220,6 +220,36 @@ Para que funcionen de verdad en la nube:
   - El vigía tiene que correr en la nube (N-18).
 - **Puerta (F5.11):** un ensayo de escalados sobre Postgres. Usa la copia `ro_esc`, un legado aparte con los bucles encendidos y las salidas apagadas, y el reloj adelantado. Se crea una alerta y un aviso automático vencidos, y comprueba que el mensaje «sube a X» llega al canal y a la campana de la persona correcta, una sola vez. Además entran en `baterias.sh` las pruebas que ya existen: `pruebas_seguridad.py` (`alertas_a8`, `avisos_automaticos`, `sincronia_clickup`) y `fuentes_alertas/probar_alertas.py`.
 
+### 2.10 Copia de seguridad cada hora, 7 días (Tomás, 4-oct)
+
+- **Qué:** `python3 despliegue/copia_base.py --hora`. Vuelca la Postgres entera (`pg_dump`), **la abre entera** y cuenta las filas de cada tabla contra la base viva (una copia que no se ha leído no cuenta), deja `manifiesto.json` (tamaño, huella sha256, filas por tabla) y la sube a Cloudflare R2 (otro proveedor: si cae Render, la copia sigue).
+- **Cuánto se guarda:** 7 días de copias de cada hora (168). Las más viejas se borran solas, en disco y en R2; la última nunca. **Se cambia con `RO_COPIAS_DIAS`** en `render.yaml` (por ejemplo 14 o 30); el coste en R2 es pequeño (la base de prueba ocupa 0,4 MB por copia).
+- **Dónde corre:** cron `ro-copias` cada hora en `despliegue/render.yaml` (y en `v2/render.yaml`, F7.2). Sin las llaves de R2 sale **en rojo**: en Render el disco de un cron se borra al terminar y la copia no sobreviviría. Las llaves de R2 (`RO_R2_*`) las crea Tomás en Cloudflare; hoy no existen.
+- **Restaurar:** `pg_restore --no-owner -d <base nueva> postgres.dump` de la hora que se quiera. Lo ensaya entero la puerta 7 (volcar, restaurar en otra base, misma API) y `copia_base.py --probar` el día 1 de cada mes.
+- **Además:** Render guarda sus propias copias de la base; su plazo depende del plan (no lo he podido comprobar desde aquí). La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
+- **Antes de cada despliegue que cambie la base**, una copia a mano (botón «Trigger Run» del cron `ro-copias` en Render) y después `prisma migrate deploy` como paso que **bloquea el despliegue** si falla (`preDeployCommand` de `ro-api`).
+- **Ensayado el 4-oct** sobre la Postgres de prueba: 41 tablas y 4.742 filas, iguales que la base viva; borra las de más de 7 días y no toca lo que no es una copia. Arreglado de paso: la imagen instalaba `pg_dump` 15, que no puede volcar una Postgres 16 (N-22). La imagen no la he podido construir aquí.
+
+### 2.11 Lo que se copia de herramientas hechas con este mismo stack (4-oct)
+
+Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado y leído el 4-oct), Teable, cal.com, Ghostfolio, Hoppscotch y Documenso (estudio del hilo «Repos de referencia del stack»). El zip del otro CRM que tiene Tomás va a `~/RO_MIGRACION/referencias/` (fuera del repo); Cursor lo puede leer para inspirarse, nunca copiar código tal cual.
+
+**Ya en la rama (4-oct, con pruebas):**
+- Filtro global de errores con la forma de `servir.py` (`{"error": …}`): Prisma P2002 → 409, P2025 → 404, P2003 → 400; JSON roto → 400 y cuerpo grande → 413 (N-13 en las rutas de Nest); nunca la pila ni el SQL; solo los 5xx van al registro como error.
+- El entorno se comprueba al arrancar (`src/entorno.ts`): sin base o sin identidad no arranca; en producción, ni `RO_IDENTIDAD=local` (cualquiera podría hacerse pasar por otro) ni `RO_RELOJ` (el reloj fijo de la noche).
+- Cierre ordenado al parar (`enableShutdownHooks`), tope de conexiones de la API a Postgres (`RO_PG_POOL_MAX`, 10) y la imagen de la API sin root (`USER node`).
+- La lista de rutas con su permiso guardada en el repositorio (`src/permisos/rutas-permisos.txt`, idea de Twenty): una ruta nueva o un permiso cambiado se ve en el diff.
+
+**En la fase 5 (reglas de cada ruta nueva):**
+- **El permiso también dentro de la consulta** (Documenso, Twenty): el servicio filtra por la cartera de la vista en el `WHERE`; si el recurso no es de la persona, 404 (como si no existiera), nunca leerlo y luego mirar. Defensa contra quien cambia el id en la URL.
+- El servicio recibe siempre la vista (quién pregunta) como argumento obligatorio: sin ella no hay consulta ni rastro.
+- La escritura y su anotación en el rastro, en la misma transacción.
+- Cambios de base solo hacia delante y en dos pasos (columna opcional → rellenar → obligatoria); una migración aplicada no se edita nunca.
+
+**Después del piloto:** colas de trabajos en Postgres (pg-boss) con reintentos e idempotencia, logs estructurados con id de petición (nestjs-pino), contrato zod compartido front/back, `/listo` que compruebe base y cadena del rastro, dinero en `Decimal`, fechas `timestamptz`, permisos por campo en la capa de datos.
+
+**No encaja (para 30 personas):** un esquema de base por cliente, GraphQL, Redis para caché o permisos, réplicas de lectura, tokens en `localStorage`, CORS abierto.
+
 ---
 
 ## 3. Las redes de seguridad (hechas y ensayadas el 4-oct)
@@ -257,7 +287,7 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
 | **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), como e2e que lanzan todas las puertas siguientes | 30–45 min | e2e en `puerta.sh` f3/f5/f6/f7 |
 | **5 · API a Nest** | grupos de §2.2, uno a uno, empezando por identidad + rastro de «ver como» (sin ellos, ninguna ruta de Nest puede pasar): se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | hasta 4 h antes del final | `puerta.sh f5` por grupo |
-| **5.10 · fallos pendientes** | los 70 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-21 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 1 h 45 antes del final; los de seguridad, hasta 75 min antes | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
+| **5.10 · fallos pendientes** | los 71 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-22 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 1 h 45 antes del final; los de seguridad, hasta 75 min antes | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
 | **6 · front en React** | carcasa en `/carcasa` (y en «/» con `RO_CARCASA=1`), `ctx.ts`, puente; carcasa por defecto con fotos iguales; pantallas una a una | hasta 1 h antes del final | `puerta.sh f6` por pieza |
 | **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 

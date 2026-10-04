@@ -21,4 +21,5 @@ alwaysApply: false
 - Si `despliegue/base.py` no traduce algo (la app de hoy sobre Postgres falla), se arregla la traducción en `base.py`, de forma general, nunca la consulta en `servir.py`.
 - Tests: Vitest. Un e2e por ruta (`test/*.e2e-spec.ts`, lo lanza `puerta.sh`) que compruebe 200 y 403 con dos personas distintas.
 - Si una prueba de `src/permisos/` deja de valer porque portaste el motor (F4.1) o el rastro (F5.1), no se relaja: se le mete a mano lo que probaba (`overrideProvider(...).useClass(MotorSinPortar)`), y la prueba sigue diciendo lo mismo.
+- Cada ruta: la vista como argumento obligatorio del servicio y la cartera dentro del `where` (404 si no es suyo); escritura y rastro en la misma transacción; `src/permisos/rutas-permisos.txt` al día (`test -u`, diff revisado).
 - Errores: el filtro global (`src/permisos/errores.filter.ts`) ya responde `{"error": "…"}` como `servir.py`. Lanza `HttpException` con el texto EXACTO de `servir.py`.

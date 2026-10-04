@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { METHOD_METADATA } from '@nestjs/common/constants.js';
+import { METHOD_METADATA, PATH_METADATA } from '@nestjs/common/constants.js';
+import { RequestMethod } from '@nestjs/common';
 import { CLAVE_PERMISO, CLAVE_PUBLICO } from './declarar.js';
 import { AppModule } from '../app.module.js';
 
@@ -38,6 +39,27 @@ describe('rutas declaradas', () => {
       }
     }
     expect(sinDeclarar).toEqual([]);
+  });
+
+  // Idea de Twenty (test/integration/endpoint-permissions): la lista entera de rutas con su permiso, guardada en el
+  // repositorio. Una ruta nueva o un permiso cambiado cambia este fichero, y el cambio se ve en el diff del commit.
+  // Al añadir rutas: `pnpm --filter @ro/api test -u` y revisar el diff de rutas-permisos.txt (nunca sin mirarlo).
+  it('la lista de rutas y permisos es la revisada', async () => {
+    const lineas: string[] = [];
+    for (const c of controladores()) {
+      const base = String(Reflect.getMetadata(PATH_METADATA, c) ?? '').replace(/^\/|\/$/g, '');
+      const deClase = Reflect.getMetadata(CLAVE_PERMISO, c) ?? Reflect.getMetadata(CLAVE_PUBLICO, c);
+      for (const nombre of Object.getOwnPropertyNames(c.prototype)) {
+        const metodo = c.prototype[nombre];
+        if (typeof metodo !== 'function' || Reflect.getMetadata(METHOD_METADATA, metodo) === undefined) continue;
+        const verbo = RequestMethod[Reflect.getMetadata(METHOD_METADATA, metodo) as number];
+        const ruta = [base, String(Reflect.getMetadata(PATH_METADATA, metodo) ?? '').replace(/^\/|\/$/g, '')].filter(Boolean).join('/');
+        const publico = Reflect.getMetadata(CLAVE_PUBLICO, metodo) ?? Reflect.getMetadata(CLAVE_PUBLICO, c);
+        const permiso = Reflect.getMetadata(CLAVE_PERMISO, metodo) ?? deClase;
+        lineas.push(`${verbo} /${ruta}  →  ${publico ? `público (${publico})` : JSON.stringify(permiso)}`);
+      }
+    }
+    await expect(lineas.sort().join('\n') + '\n').toMatchFileSnapshot('./rutas-permisos.txt');
   });
 
   it('nadie fuera de src/permisos decide por puestos', () => {

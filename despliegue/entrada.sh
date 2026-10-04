@@ -26,6 +26,7 @@ case "${1:-web}" in
             exec python3 servir.py ;;
   ligera)   tuberia --ligero ;;
   completa) tuberia --completo ;;
+  copias)   exec python3 despliegue/copia_base.py --hora ;;   # cada hora: copia de la Postgres, guardada RO_COPIAS_DIAS días
   noche)    python3 despliegue/copia_base.py; c1=$?
             python3 despliegue/pruebas_noche.py; c2=$?
             [ "$(date +%d)" = "01" ] && python3 despliegue/copia_base.py --probar

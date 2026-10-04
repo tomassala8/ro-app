@@ -12,8 +12,14 @@ ENV HOME=/srv/ro \
     PLAYWRIGHT_BROWSERS_PATH=/opt/navegadores \
     RO_APP=/srv/ro/Downloads/APP_RO_ROLES_Y_PERMISOS_2026-10-02/30_APP_PROTOTIPO
 
+# pg_dump tiene que ser de la MISMA versión que la base (16): el «postgresql-client» de bookworm es el 15 y se niega a
+# volcar una 16 («server version mismatch»), así que la copia de cada hora fallaría. Se toma del repositorio oficial.
 RUN apt-get update \
- && apt-get install -y --no-install-recommends tzdata ca-certificates openssl postgresql-client rsync \
+ && apt-get install -y --no-install-recommends tzdata ca-certificates openssl rsync curl gnupg \
+ && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor -o /usr/share/keyrings/pgdg.gpg \
+ && echo "deb [signed-by=/usr/share/keyrings/pgdg.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list \
+ && apt-get update && apt-get install -y --no-install-recommends postgresql-client-16 \
  && rm -rf /var/lib/apt/lists/*
 
 COPY app/despliegue/requirements.txt /tmp/requirements.txt

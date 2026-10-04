@@ -5,7 +5,7 @@
 Cómo se usa:
 - Un fallo arreglado en la app de hoy: estado `arreglado hoy` y el commit. Cursor solo comprueba que su prueba pasa en la app nueva.
 - Un fallo abierto: Cursor lo arregla en el paso **F5.10** (ver `PROMPTS_CURSOR.md`), donde viva la ruta esa noche: en el módulo de Nest si ya se mudó, en `servir.py` si sigue por el proxy, y en la matriz (`reglas_permisos.json`) si es de permisos. Siempre con una prueba que falla antes y pasa después.
-- **Dos familias de ids:** `L-01…L-49` (auditoría del hilo de feedback, los mismos del súper prompt de Astra; Astra añade desde L-50) y `N-01…N-21` (revisión de la migración: fuentes, caídas, nube). Nunca se reutiliza un id.
+- **Dos familias de ids:** `L-01…L-49` (auditoría del hilo de feedback, los mismos del súper prompt de Astra; Astra añade desde L-50) y `N-01…N-22` (revisión de la migración: fuentes, caídas, nube). Nunca se reutiliza un id.
 - **Si existe `~/RO_MIGRACION/PENDIENTES_LOGICA.md`** (Tomás lo deja en el Mac; Astra solo cambia su columna Estado a las 19:00): se juntan las dos por id. Para un id que está en las dos, **manda la Estado del Mac**; las filas que solo están en una, se suman. Nunca se cuenta dos veces.
 - Estados: `abierto` · `arreglado hoy (<commit>)` y `ya estaba` (Cursor no lo rehace; comprueba que su prueba existe en la app nueva) · `decide Tomás (Dn)` (no se toca hasta que esté la decisión, abajo) · `arreglado en v2 (<commit>)` · `pendiente: <motivo>`.
 - Sin datos reales: ni nombres de clientes, ni correos, ni importes. «Persona con puesto X» o «cliente de prueba».
@@ -41,7 +41,7 @@ N-01 a N-12 salen de la revisión del 4-oct (Claude, hilo de la migración) de c
 | L-22 | datos | `servir.py` `ahora()` (238), `ia.py` | Hora sin zona etiquetada como Madrid; correcta solo si `TZ` es Madrid | Hora con zona Madrid explícita; el arranque para si `TZ` no es Madrid | Arrancar con `TZ=UTC` → horas del rastro en Madrid | abierto |
 | L-23 | funcional | `ficha_equipo.js` 53-70 `equipoAvisable` | «Avisar al equipo» desactivado aunque el cliente tiene equipo (no mira `cliente.equipo`) | Usar `cliente.equipo` de respaldo | Account en la ficha de su cliente con equipo → botón activo | abierto |
 | L-24 | presentación | `app.js:82` | Persona de baja o desconocida: «Cargando…» para siempre y una orden de terminal | Con 403, «No tienes acceso, pídeselo a operaciones»; con 500/503, «La app no responde»; sin texto técnico | `?yo=<baja>` → mensaje claro; servidor parado → «no responde» | abierto |
-| L-25 | funcional | `sillas_de_puesto`, `dinero_cliente.js:130`, `/api/indicadores` (2248) | Técnico de altas con Bandeja siempre vacía; operaciones con 403 silencioso en Dinero por cliente; proyectos con la pantalla sin cifras | Silla `altas` con los clientes en alta; pedir finanzas solo si ve el módulo; proyectos según D1. D2-D4 (quién da jefaturas, Bandeja de SEO, Captación de producción) también cambian la matriz | Recorrido de esas tres personas sin 403 ni vacíos | decide Tomás (D1-D4) para proyectos y la matriz; el resto, abierto |
+| L-25 | funcional | `sillas_de_puesto`, `dinero_cliente.js:130`, `/api/indicadores` (2248) | Técnico de altas con Bandeja siempre vacía; operaciones con 403 silencioso en Dinero por cliente; proyectos con la pantalla sin cifras | Silla `altas` con los clientes en alta; pedir finanzas solo si ve el módulo; proyectos según D1. D2-D4 (quién da jefaturas, Bandeja de SEO, Captación de producción) también cambian la matriz | Recorrido de esas tres personas sin 403 ni vacíos | abierto (D1-D4 ya contestadas: ver sección 3) |
 | L-26 | funcional | `ficha.js` 183-184 y 207-209, `panel_direccion.js` 108 y 937, `dinero_comun.js:108`, `_ventas_comun.js` 80-91 | Lecturas que se saltan `ctx` (copia propia de `verDato`, `fetch` de la matriz, rama muerta); acciones de ventas guardadas sin `modulo` que nunca salen; saneado casero del HTML del panel | Todo por `ctx` / API; `acciones?modulo=`; saneado con lista blanca | `grep "fetch(" modulos/` solo en piezas comunes | abierto |
 | L-27 | funcional | 25 `.py` con `Path.home()`, 13 pasos de `despliegue/pasos.json`, 13 llamadas al llavero, `reglas_minadas.json` | Rutas del Mac y llavero de macOS en la tubería: no corre fuera del Mac | Todo por `config.py` y secretos del servidor | `grep` en la prueba de la noche falla con `Path.home()` o `~/` fuera de `config.py` | abierto |
 | L-28 | funcional | `escaner_secretos.py`, `pruebas_seguridad.py` M3 (282-290), `pruebas_e0.py:94` | El escáner falla con el repo limpio (`-iTCP@127.0.0.1`); M3 deja la base bloqueada; `pruebas_e0` revienta con `KeyError` | Baterías verdes con el repo limpio | Correr las baterías sobre el repo limpio | abierto |
@@ -56,7 +56,7 @@ N-01 a N-12 salen de la revisión del 4-oct (Claude, hilo de la migración) de c
 | L-37 | presentación | Cabecera: campana y Alertas | Campana 12 y Alertas 13 en la misma pantalla | Mismo número o etiquetas distintas | Comparar los dos contadores | abierto |
 | L-38 | presentación | `modulos/indice.js` `resumen`, `app.js:604`, pie «Fase 2» | Códigos internos (W1, W4-W6, D-06, D-09, D-27, E0, «101 firmadas» fijo) a la vista de todo el equipo | Texto llano, sin códigos; «Fase 2» solo dirección | `pruebas_coherencia` busca códigos en subtítulos; `modulos_puestos` idéntico antes y después | abierto |
 | L-39 | presentación | `componentes.js:2106` `limpiaTexto`, vacíos de 14 pantallas | «No existe. Se generan con.» y «No existe» a secas | Vacío común: «Todavía no hay datos de X de hoy. Lo arregla Y» | Abrir pantallas sin datos | abierto |
-| L-40 | presentación | Menú por puesto | Dirección 35 entradas, operaciones 31, account 24 (+ clientes) | 8-12 por puesto y el resto en «Más» | Contar entradas por puesto | decide Tomás (D5) |
+| L-40 | presentación | Menú por puesto | Dirección 35 entradas, operaciones 31, account 24 (+ clientes) | 8-12 por puesto y el resto en «Más» | Contar entradas por puesto | abierto (D5: sí) |
 | L-41 | presentación | `mi_dia.js` 575-577 y alertas de llaves | Cada llave que falta sale dos veces, con «Falta la llave: Falta la llave» y la orden de terminal | Una fila por conexión, motivo correcto, orden plegada | Mi día de dirección sin llaves | abierto |
 | L-42 | presentación | `asistente_ia.js` 70 y 145 | «40 correos» y «del 2-oct» fijos con 0 borradores | Número y fecha del dato | Sin borradores → no dice 40 | abierto |
 | L-43 | presentación | Dinero por cliente para quien no ve cuota | Título y subtítulo prometen cuota y rentabilidad | «Horas por cliente» para esos puestos | Trafficker ve el título correcto | abierto |
@@ -87,23 +87,24 @@ N-01 a N-12 salen de la revisión del 4-oct (Claude, hilo de la migración) de c
 | N-19 | funcional | `sincronia.py:332,721` | En modo real, «crear tarea» en ClickUp no funciona: queda «sin lista resuelta». Los tipos «otro» no están soportados. | Resolver la lista de cada tarea nueva (o rechazar el botón con un mensaje claro) antes de encender ClickUp real. | `reconciliar_clickup.py --prueba-e2e` con un caso de crear tarea. | abierto |
 | N-20 | funcional (inferido) | `data/sincronia/interruptor.json`, `despliegue/publicacion.py:194` | El interruptor de ClickUp real vive en `data/`, y en la web `data/` se reemplaza cada minuto por la versión publicada: se puede perder o volver a un estado viejo. | El interruptor en la base (tabla con rastro), no en `data/`. | Encender el interruptor, publicar una versión de `data` → sigue encendido. | abierto |
 | N-21 | datos | `despliegue/base.py › executescript`, `envios.py:172`, `sincronia.py:206` | Con 30 personas a la vez sobre Postgres, 172 de 2.340 peticiones daban 500: `envios.py` y `sincronia.py` lanzan su `CREATE … IF NOT EXISTS` en cada petición y en Postgres chocan («tuple concurrently updated», un «deadlock»). | Cero errores con 30 personas a la vez. | `python3 migracion/rendimiento.py carga --base http://127.0.0.1:3000 --referencia http://127.0.0.1:8770` (paso de `puerta.sh` f3–f7). | arreglado hoy (4-oct: esquemas de uno en uno con candado 7263 y una sola vez por proceso; 0 errores en 3 pasadas) |
+| N-22 | datos | `despliegue/Dockerfile` | La imagen instalaba el `pg_dump` de Debian 12 (versión 15), que se niega a volcar una Postgres 16: la copia de la base en la nube habría fallado siempre. | `pg_dump` 16 del repositorio oficial de PostgreSQL. | Al construir la imagen: `docker run … pg_dump --version` → 16; y `copia_base.py --hora` en verde en Render. | arreglado hoy (4-oct, sin construir la imagen: aquí no hay Docker) |
 
 **Ya resuelto en la rama de la migración, no repetir:** `despliegue/base.py` ya traduce a Postgres `BEGIN IMMEDIATE`, `INSERT OR REPLACE` y los disparadores con `WHEN`.
 
 **Falta en Postgres (va con L-14):** quitar al rol de la app `UPDATE`, `DELETE` y `TRUNCATE` sobre `registro`, `historial` y `registro_huellas` (`REVOKE`). Los disparadores no frenan `TRUNCATE`.
 
-## Decisiones de Tomás (las filas `decide Tomás (Dn)` esperan a esto)
+## Decisiones de Tomás (contestadas el 4-oct; lo que dice «pendiente» aún no se toca: va al informe)
 
-| Id | Pregunta | Recomendación |
-|---|---|---|
-| D1 | ¿La persona de proyectos ve la cuota y la rentabilidad por cliente? Hoy ve la pantalla «todo» pero sin cifras | Que la vea, o quitarle la pantalla; la pantalla vacía no vale |
-| D2 | ¿Operaciones puede dar jefaturas, `proyectos` o `tecnico_altas` (acceso a todos los clientes) sin dirección? Hoy sí | Añadirlos a `puestos_solo_tomas` |
-| D3 | ¿La jefatura de SEO ve todos los correos de clientes en Bandeja? Hoy «todo» | Bajarla a «suyo» o a solo SEO y web |
-| D4 | ¿Producción ve Captación? Hoy le llegan filas sin cliente y el detalle de sus clientes (sin dinero) | Proyectar con «resumen» |
-| D5 | Menús: ¿8-12 entradas por puesto y el resto en «Más»? | Sí |
-| D6 | ¿Quitar los ficheros de L-16 también del historial de GitHub? Obliga a reescribir todas las ramas | Sí, mañana, después de la noche |
-| D7 | ¿Renombrar la clave de la IA a `RO_ANTHROPIC_API_KEY`? Hay que cambiarla también en Render | Sí, junto con el despliegue |
-| D8 | ¿Copiar las anclas diarias del rastro fuera del Mac? | Sí, cuando se active la copia en R2 |
+| Id | Pregunta | Recomendación | Respuesta de Tomás (4-oct) |
+|---|---|---|---|
+| D1 | ¿La persona de proyectos ve la cuota y la rentabilidad por cliente? Hoy ve la pantalla «todo» pero sin cifras | Que la vea, o quitarle la pantalla; la pantalla vacía no vale | Sí: proyectos lo ve todo (cuota, inversión y rentabilidad por cliente). Pendiente: si también ve el dinero de la agencia |
+| D2 | ¿Operaciones puede dar jefaturas, `proyectos` o `tecnico_altas` (acceso a todos los clientes) sin dirección? Hoy sí | Añadirlos a `puestos_solo_tomas` | Sí: los da solo Tomás |
+| D3 | ¿La jefatura de SEO ve todos los correos de clientes en Bandeja? Hoy «todo» | Bajarla a «suyo» o a solo SEO y web | Ni Bandeja entera ni nada: solo las quejas de clientes por SEO o web. Si no se pueden clasificar, por En rojo e Incidencias |
+| D4 | ¿Producción ve Captación? Hoy le llegan filas sin cliente y el detalle de sus clientes (sin dinero) | Proyectar con «resumen» | Producción creativa no ve Captación. Traffickers sí (pendiente: todos los clientes o los suyos) |
+| D5 | Menús: ¿8-12 entradas por puesto y el resto en «Más»? | Sí | Sí, a criterio de Claude |
+| D6 | ¿Quitar los ficheros de L-16 también del historial de GitHub? Obliga a reescribir todas las ramas | Sí, mañana, después de la noche | No reescribir el historial; basta con L-16 (los ficheros siguen en disco y la app funciona igual) |
+| D7 | ¿Renombrar la clave de la IA a `RO_ANTHROPIC_API_KEY`? Hay que cambiarla también en Render | Sí, junto con el despliegue | Sí, el día del despliegue |
+| D8 | ¿Copiar las anclas diarias del rastro fuera del Mac? | Sí, cuando se active la copia en R2 | Sí, cuando se active la copia en R2 |
 
 ---
 

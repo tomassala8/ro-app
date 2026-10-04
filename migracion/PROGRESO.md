@@ -60,7 +60,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 Detalle de los nueve: sección «F5.x» de `PROMPTS_CURSOR.md`.
 Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>` (cómo, en «F5.x»), ⚠ y siguiente grupo.
 Reloj: ver «Cortes del reloj» arriba (grupos hasta 4 h antes del fin).
-- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-21; L-01 y L-21 primero; los «decide Tomás» no se tocan) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Reloj: hasta 1 h 45 antes del fin; los de seguridad, hasta 75 min antes. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
+- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Reloj: hasta 1 h 45 antes del fin; los de seguridad, hasta 75 min antes. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
 - ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Plan B: apuntar qué no escala como bloqueo para el piloto.
 
 ## Fase 6 · Front en React + shadcn
@@ -74,7 +74,7 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 ## Fase 7 · Cierre (la última hora, pase lo que pase)
 
 - ⬜ F7.1 `docker compose --profile completo up --build`: que los contenedores arranquen y respondan (`/vivo`, `/api/elegir`). Después, `docker compose --profile completo stop api web` (ocupan el 3000): la puerta f7 se pasa siempre contra los servicios locales. Plan B: apuntar qué falla en el contenedor (p. ej. `RO_LEGADO_URL`, «Host no permitido») como bloqueo para el piloto.
-- ⬜ F7.2 `v2/render.yaml` (ro-web, ro-api, ro-legado una sola copia con los bucles y el vigía, ro-base), sin llaves, con el grupo `ro-llaves` completo (`llaves_nube.py` sale con 0) y sin `RO_AVISOS_SIN_BUCLE`. Plan B: ninguno; es solo escribir.
+- ⬜ F7.2 `v2/render.yaml` (ro-web, ro-api, ro-legado una sola copia con los bucles y el vigía, ro-base), sin llaves, con el grupo `ro-llaves` completo (`llaves_nube.py` sale con 0), sin `RO_AVISOS_SIN_BUCLE` y con el cron de copias cada hora (§2.10). Plan B: ninguno; es solo escribir.
 - ⬜ F7.3 `migracion/INFORME_NOCHE.md` para Tomás (con el estado de cada fallo de `PENDIENTES_LOGICA.md`) y `bash migracion/puerta.sh f7` (incluye el ensayo de restauración).
 - ⬜ F7.4 Commit, `git push origin migracion/v2` y `ESTADO: TERMINADO`.
 

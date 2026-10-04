@@ -2,4 +2,4 @@
 # Una rama por línea, en este orden (cada una contiene la anterior). Si Tomás ya los juntó en main, no hace nada.
 claude/project-thread-fig42s   # PR #2 · cerebros de área (477 fichas)
 claude/project-thread-wc3fje   # PR #3 · diagnósticos de calidad (lleva el #2)
-claude/project-thread-my4plb   # PR #4 · semáforo en tres ejes y riesgo de baja (lleva el #2; choca con el #3 en 3 ficheros de cerebros)
+claude/project-thread-my4plb   # PR #4 · semáforo en tres ejes y riesgo de baja (lleva el #2 y el #3 ya juntos, sin choques: 4-oct 09:07)
