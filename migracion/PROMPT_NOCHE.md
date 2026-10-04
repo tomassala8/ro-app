@@ -31,6 +31,12 @@ REGLAS QUE NO SE NEGOCIAN:
 - Al traducir Python o el JS de hoy, sigue la «Guía de traducción» del final de `migracion/PROMPTS_CURSOR.md` y usa `@ro/compat` (redondeo, JSON, huella del rastro, textos, orden, reloj): no lo reescribas.
 - Permisos en un solo sitio: toda ruta de Nest declara `@Permiso(...)` o `@Publico(...)` (v2/apps/api/src/permisos/). Nunca compruebes puestos o personas a mano en una ruta.
 - Los fallos de `PENDIENTES_LOGICA.md` se arreglan sí o sí (paso F5.10): son la única diferencia permitida con la app de hoy, cada uno con su prueba, su línea en `~/RO_MIGRACION/excepciones.txt` y su commit «<id> · …» (L-n o N-n).
+- Reglas de la entrega del Mac (4-oct), sin excepción:
+  - Sin datos no es cero ni verde: ausencia, error de fuente y cobertura parcial se enseñan como desconocido.
+  - Las referencias no son objetivos contractuales: una banda o un umbral histórico no se convierte en obligación.
+  - No inferir ventas desde reservas ni respuesta desde aperturas.
+  - No activar IA, envíos, ClickUp ni Modular, ni editar webs de clientes.
+  - No sustituir fuentes privadas por fixtures ni copiar datos reales para conseguir verde.
 - Cuando notes que te queda poco contexto: deja el paso actual cerrado (✅/⚠) o con una nota exacta de por dónde ibas en «En curso», haz commit y termina la vuelta (en F5.1–F5.9, si el grupo aún no pasó su puerta, el commit lleva «WIP <grupo>» y se apunta en «En curso»: si acaba en plan B, el de F5.x quita a mano sus rutas de `rutas-en-nest.ts`). Te volverán a lanzar con este mismo mensaje y seguirás desde PROGRESO.md.
 - Cuando todos los pasos estén en ✅ o ⚠ (y la fase 7 hecha), escribe `ESTADO: TERMINADO` en la primera línea de estado de PROGRESO.md, haz commit y push de la rama, y termina.
 

@@ -21,20 +21,20 @@ Stack de destino: **Next.js 16** (web) · **NestJS 12** (API) · **PostgreSQL 16
 
 ## 1. Qué hay hoy
 
-Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` desde el código **del Mac** (incluidos los ficheros nuevos aún sin commit). Cifras a 4-oct en GitHub:
+Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` desde el código **del Mac** (incluidos los ficheros nuevos aún sin commit). Cifras del 4-oct por la tarde, ya con la entrega del Mac (corte 650) juntada en esta rama. Si una cifra de aquí no cuadra con `migracion/inventario/RESUMEN.md`, manda el RESUMEN:
 
 | Pieza | Hoy | Cuánto |
 |---|---|---|
-| Pantallas | `modulos/*.js` (JS sin framework, `render(contenedor, ctx)`) | 37 en el menú, 61 ficheros, ~36.000 líneas |
+| Pantallas | `modulos/*.js` (JS sin framework, `render(contenedor, ctx)`) | 42 en el menú, 193 ficheros en `modulos/`, ~48.000 líneas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa) |
 | Carcasa | `index.html` (con mapa de versiones, CSP y precarga), `app.js`, `carcasa.js`, `ayudas.js` | menú por puesto, «ver como», ⌘K |
 | Diseño | `estilos.css` + `componentes.js` | 107 componentes |
-| Servidor | `servir.py` + 11 ficheros «enchufados» | 37 + 62 rutas |
-| Permisos | `reglas_permisos.json` + `permisos.py` + `permisos.js` | 21 puestos, 39 tipos, 92 ficheros con permiso, 133 acciones |
-| Base | SQLite `local.db`; en la nube, Postgres vía `despliegue/base.py` | 40 tablas, rastro imborrable encadenado |
-| Datos | la «tubería» `fuentes_*/generar_*.py` → `data/*.json` | 50 pasos, 86 generadores |
-| Pruebas | `pruebas_*.py`, `despliegue/pruebas_noche.py` y las focalizadas de Astra | 16 baterías + las nuevas |
+| Servidor | `servir.py` + 49 ficheros «enchufados» | 37 + 125 rutas; el front llama a 86 distintas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa) |
+| Permisos | `reglas_permisos.json` + `permisos.py` + `permisos.js` | 21 puestos, 41 tipos, 100 ficheros con permiso, 140 acciones (cuenta en `migracion/inventario/RESUMEN.md`; manda esa) |
+| Base | SQLite `local.db`; en la nube, Postgres vía `despliegue/base.py` | 66 tablas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa), rastro imborrable encadenado |
+| Datos | la «tubería» `fuentes_*/generar_*.py` → `data/*.json` | 52 pasos, 175 generadores (cuenta en `migracion/inventario/RESUMEN.md`; manda esa) |
+| Pruebas | `pruebas_*.py`, `despliegue/pruebas_noche.py` y las focalizadas de Astra | 65 baterías (cuenta en `migracion/inventario/RESUMEN.md`; manda esa), más el carril de seguridad aislado (29 suites) y las pruebas DOM `*.cjs` de la entrega |
 
-**La copia del Mac va por delante de GitHub** (nota de Astra, `migracion/NOTA_ASTRA.md`): triaje, horas, campañas, números semanales, método e histórico, reuniones, cabeceras. Por eso la noche parte del **código del Mac**, que la fase 1 guarda en una instantánea (commit en la rama `migracion/v2`, nunca en `main`) después de pasar el escáner de secretos.
+**El código del Mac hasta el corte 650 ya está en esta rama** (4-oct): la entrega `codex/ro-entrega-cursor-2026-10-04` (`ENTREGA_CURSOR_CODEX.md` y `entrega/*.md`) se juntó aquí con los PR #2, #3 y #4, con los choques resueltos. El Mac no cambia de rama: `juntar_plan.sh` le trae lo de esta rama fichero a fichero, sin pisar lo que Astra cambió después de ese corte, y la instantánea de la fase 1 guarda esos cambios posteriores (commit en la rama `migracion/v2`, nunca en `main`), después de pasar el escáner de secretos. Los ficheros privados que la entrega sacó de git se quedan en el Mac (ya están en `.gitignore`): nunca se vuelven a añadir.
 
 ---
 
@@ -52,12 +52,12 @@ navegador ──► Next (3000) ──► Nest (4000) ──► Postgres
 v2/
 ├── apps/web          Next 16. next.config.ts › fallback: lo que no es página propia va a Nest.
 │   ├── src/app/carcasa/        banco de trabajo de la carcasa en React; se muda a «/» al pasar sus fotos
-│   ├── src/lib/ctx.ts          (fase 6) el MISMO ctx de app.js, 40 campos, en TypeScript
+│   ├── src/lib/ctx.ts          (fase 6) el MISMO ctx de app.js, 43 campos (cuenta en RESUMEN.md; manda esa), en TypeScript
 │   ├── src/components/ro/      (fase 6) componentes.js en React, mismas clases
 │   ├── src/components/ui/      shadcn con el tema de RO (src/styles/ro-tema.css)
 │   └── public/legacy/          copia automática del front de hoy (para el puente de pantallas)
 ├── apps/api          Nest 12. src/legado/: proxy + RUTAS_EN_NEST (la lista de lo que ya es de Nest).
-├── packages/db       Prisma 7: 40 modelos + migración 0_base (CHECK, vista, disparadores). Sacado de la base real.
+├── packages/db       Prisma 7: un modelo por tabla (cuenta en RESUMEN.md) + migración 0_base (CHECK, vista, disparadores). Sacado de la base real.
 ├── packages/permisos (fase 4) el motor de permisos en TypeScript. La matriz sigue en reglas_permisos.json.
 ├── packages/compat   lo que Python hace distinto de JS (round, json.dumps, huella del rastro, textos, orden, reloj), probado contra Python
 ├── tools/capturas    fotos de cada pantalla, vieja y nueva, y comparación píxel a píxel.
@@ -86,6 +86,8 @@ v2/
 | `ajustes`, `ver-dato` | `/api/ajustes/*`, `POST /api/ver_dato` | `servir.py` |
 | `acciones`, `avisos` | `/api/acciones`, `/api/avisos*`, `/api/canales/*` | `servir.py`, `avisos.py`, `avisos_programados.py` |
 | Se quedan en el legado esta noche | `/api/recarga`, `/api/envios/*`, `/api/sincronia/*`, `/api/ia/*`, `/api/gbp/*`, `/api/modular/*`, `/api/vigia/*`, `/api/altas/*`, triaje | hablan con proveedores o tienen transacciones verificadas solo en SQLite |
+
+Las rutas que no están en ningún grupo (la entrega del 4-oct trae muchas rutas nuevas de enchufes: operaciones, horas, producción, CRM, cerebros…) se quedan por el proxy. Está bien así: para el equipo no cambia nada.
 
 Reglas del backend (para cada ruta que se muda):
 - **Mismo contrato:** método, ruta, códigos, mensajes de error, claves JSON en `snake_case`, fechas en texto UTC, cabeceras que importan (`ETag`, `Cache-Control`; `X-RO-App` obligatoria en POST).
@@ -116,7 +118,7 @@ Reglas del backend (para cada ruta que se muda):
 
 - **Direcciones iguales que hoy** (`/#/mi-dia`). Pasar a rutas de verdad (`/mi-dia`) es para otro día: el front de hoy hace `fetch` relativos (`api/…`, `data/…`) que dependen de estar en «/».
 - **Carcasa en React + shadcn** en `/carcasa` con **las mismas clases de `estilos.css`** (que se carga tal cual; Tailwind sin «preflight»; el tema de shadcn apunta a los tokens de RO). Se muda a «/» cuando `puerta.sh f6` sale verde con ella.
-- **Puente de pantallas** (`<PantallaPuente fichero="mi_dia.js" />`): importa el módulo de hoy desde `/legacy/modulos/` y llama a `render(contenedor, ctx)`. Así la carcasa nueva lleva las 37 pantallas desde el primer día.
+- **Puente de pantallas** (`<PantallaPuente fichero="mi_dia.js" />`): importa el módulo de hoy desde `/legacy/modulos/` y llama a `render(contenedor, ctx)`. Así la carcasa nueva lleva las 42 pantallas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa) desde el primer día.
 - **Pantallas en React:** una a una, de menos a más riesgo. Una pantalla sustituye al puente solo con sus fotos ≤ 0,5 % para todas las personas y tamaños, y el contrato y las baterías en verde.
 - Sin Google Fonts. Claro siempre, nunca modo oscuro.
 
@@ -188,6 +190,7 @@ Hoy todas las llaves salen de un único sitio, `config.py › secreto()`, que la
   2. En Render › Env Groups › `ro-llaves` › «Add from .env», se pega y después se borra el fichero.
   3. `DATABASE_URL=<la de Supabase> python3 despliegue/llave_ghl.py sembrar`
   4. `despliegue/salud_conexiones.py` en la nube: las 27 conexiones en verde.
+- **Las fuentes privadas de la app** (entrega del 4-oct): `despliegue/empaquetado.py` separa el código del paquete de fuentes privadas (`PRIVADOS_REQUERIDOS`, `PRIVADOS_OPCIONALES`: personas, clientes, asignaciones, verdad, método, catálogos…). Los contenedores y Render lo necesitan y **nunca va a git**. Esta noche F7.1 solo lo prepara en `~/RO_MIGRACION/paquete/`; subirlo y montarlo en la nube es de Tomás y es un bloqueo para el piloto (N-23: la hidratación en destino aún no está hecha).
 - **Los lectores de verdad** (`~/RO_HERRAMIENTAS`: zh.py, hd.py, mt.py, gg.py…) no están en el repositorio. Los mete en la imagen `despliegue/preparar_contexto.sh`, como hasta ahora.
 
 ### 2.8 ClickUp en la app nueva
@@ -348,13 +351,13 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 
 | Fase | Qué | Tiempo orientativo | Puerta |
 |---|---|---|---|
-| **0 · tarde (Tomás)** | traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, `planear.sh` (Fable escribe y audita `PLAN_NOCHE.md`), `ensayo.sh` (1 hora en una copia), lanzar `noche.sh` | varias horas | LISTO y «PLAN: AUDITADO» |
+| **0 · tarde (Tomás)** | **antes de nada, liberar al menos 15 GB de disco** (la entrega vio 7,5 GB libres, 99 % usado; Docker, `node_modules`, fotos y `pg_dump` lo necesitan; `preparar_noche.sh` pide 10 como mínimo), traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, `planear.sh` (Fable escribe y audita `PLAN_NOCHE.md`), `ensayo.sh` (1 hora en una copia), lanzar `noche.sh` | varias horas | LISTO y «PLAN: AUDITADO» |
 | **1 · referencia** | inventario del Mac, escáner, instantánea del código + los PR #2, #3 y #4 (`RAMAS_A_JUNTAR.txt`), copia de la base y de la app de hoy (`~/RO_MIGRACION/ref`), servicios, grabar contrato, vectores, fotos, casos de escritura, `baterias.sh` | 60 min | `puerta.sh f1` |
 | **2 · base** | arreglo `avisos`→`tuberia_avisos`, `rehacer_base.sh` si cambiaron tablas, Postgres, copia, publicar `data`, la app de hoy sobre Postgres; arreglar `base.py` hasta que lea y escriba igual | 60–90 min | `puerta.sh f2` |
 | **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
 | **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), como e2e que lanzan todas las puertas siguientes | 30–45 min | e2e en `puerta.sh` f3/f5/f6/f7 |
-| **5.10 · fallos pendientes** | los 71 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-22 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | antes de mudar rutas; hasta 2 h 30 antes del final (los de seguridad van primero) | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
+| **5.10 · fallos pendientes** | los 72 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-23 de la migración; L-16 ya cerrado por la entrega), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | antes de mudar rutas; hasta 2 h 30 antes del final (los de seguridad van primero) | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
 | **5.11 · escalados** | ensayo de escalados sobre Postgres | hasta 2 h antes del final | `escalados.py` |
 | **5 · API a Nest** | grupos de §2.2, uno a uno, empezando por identidad + rastro de «ver como» (sin ellos, ninguna ruta de Nest puede pasar): se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | después de 5.10 y 5.11, hasta 1 h 30 antes del final (lo que no quepa sigue por el proxy) | `puerta.sh f5` por grupo |
 | **6 · front en React** | carcasa en `/carcasa` (y en «/» con `RO_CARCASA=1`), `ctx.ts`, puente; carcasa por defecto con fotos iguales; pantallas una a una | hasta 1 h antes del final | `puerta.sh f6` por pieza |

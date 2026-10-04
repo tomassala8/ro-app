@@ -10,6 +10,12 @@ alwaysApply: true
 - **Nada cambia para quien usa la app**: mismas pantallas, textos, colores, rutas de API, respuestas y 403. Una diferencia es un fallo, no una mejora. No "mejores" nada que no pida el plan. **Única excepción:** los fallos de `migracion/PENDIENTES_LOGICA.md` (paso F5.10), cada uno con su prueba y su línea en `~/RO_MIGRACION/excepciones.txt` (`<ruta, tabla:… o foto:…>  # <id> motivo`). En `excepciones.txt` solo entra una línea con un id L-/N- de `PENDIENTES_LOGICA.md` o el plan B de F2.4. Si un fichero que juzga parece estar mal, no es una excepción: va a «Preguntas para Tomás» de NOTAS_NOCHE.md.
 - **Se demuestra, no se supone**: un paso se cierra con `bash migracion/puerta.sh <fase>` en VERDE (sin `--rapido`). No digas «hecho» sin la salida de la orden. Nunca relajes ni saltes una comprobación para que pase.
 - **Lo de hoy no se toca**: la app vieja (raíz del repo) sigue funcionando. Lo nuevo vive en `v2/` y `migracion/`. Los únicos cambios en la raíz son los de los pasos del cuaderno (escáner, `avisos`→`tuberia_avisos`, traducciones de `despliegue/base.py`, `.gitignore`) y los arreglos de F5.10 (`servir.py`, `permisos.py`, `reglas_permisos.json`, `fuentes*/`, `modulos/`, `despliegue/`, o el fichero que nombre su fila de `PENDIENTES_LOGICA.md`), cada uno en su commit.
+- **Reglas de la entrega del Mac (4-oct)**, sin excepción:
+  - Sin datos no es cero ni verde: ausencia, error de fuente y cobertura parcial se enseñan como desconocido.
+  - Las referencias no son objetivos contractuales: una banda o un umbral histórico no se convierte en obligación.
+  - No inferir ventas desde reservas ni respuesta desde aperturas.
+  - No activar IA, envíos, ClickUp ni Modular, ni editar webs de clientes.
+  - No sustituir fuentes privadas por fixtures ni copiar datos reales para conseguir verde.
 - **Nada sale fuera**: servicios siempre con `migracion/servicios.sh` (sin envíos, sin ClickUp real, sin bucles). Nunca toques `local.db` ni `data/` reales: todo va sobre copias en `~/RO_MIGRACION/`.
 - **Datos reales nunca al repo ni al chat**: grabaciones, vectores, fotos y copias de la base van a `~/RO_MIGRACION/`. No pegues en el chat filas de clientes, correos ni teléfonos: resume.
 - **Nunca** credenciales, tokens ni claves en ficheros versionados (ni de ejemplo). Variables de entorno y `.env` (ignorado).

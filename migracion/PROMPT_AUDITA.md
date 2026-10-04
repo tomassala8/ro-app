@@ -12,6 +12,9 @@ ENFOQUES
 - **C · ¿Lo puede hacer un modelo rápido sin equivocarse?** Busca todo lo que deja una decisión al ejecutor: «ajusta», «si hace falta», «revisa», «etc.», pasos sin orden exacta, sin «Sale bien si», sin «Si sale otra cosa». Los cambios delicados (permisos, identidad, rastro, dinero, borrados, huellas, SQL) deben llevar el código exacto o el pseudocódigo línea a línea. Cada fallo abierto de PENDIENTES_LOGICA.md tiene su `### id` con prueba nueva en fichero nuevo.
 - **D · ¿Respeta las líneas rojas?** Nada lee llaves ni el llavero; nada toca `local.db`, `data/` ni envíos reales; ningún `git push` a `main`, `--force`, `git clean` ni `git stash`; no se cambian versiones de dependencias (salvo lo que añada `pnpm dlx shadcn@4.17.0 add` en F6.1 (versión exacta, mismo commit)); no se editan los ficheros que juzgan; `excepciones.txt` solo con un id L-/N- o el plan B de F2.4; servidores solo en 127.0.0.1; sin datos reales en el plan (nombres, correos, importes); la referencia (contrato, fotos, base de partida) solo lectura tras F1.7; permisos siempre con `@Permiso`/`@Publico`.
 
+EL ANÁLISIS (A0), CON CUALQUIER ENFOQUE
+`## A0 · Análisis` es la base de todo el plan. Con tu enfoque, mira también: ¿falta algo de lo trabajado el 4-oct (lee `migracion/contexto/LEEME.md`, `ENTREGA_CURSOR_CODEX.md` y `entrega/650_ULTIMO_CIERRE_PRE_CURSOR_CODEX.md`)? ¿Cada cosa de «Todo lo del 4-oct que entra» tiene un paso que de verdad la hace? ¿Las cifras y rutas de «Lo que ya hay» son ciertas? Si falta algo, lo añades en A0 y en el paso que toca.
+
 CÓMO CORRIGES
 - Corrige en su sitio, con el mismo formato. No reescribas lo que está bien ni cambies el estilo: cambios pequeños y exactos.
 - Si falta algo, lo escribes tú (con el detalle del formato del plan).
