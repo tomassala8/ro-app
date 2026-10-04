@@ -27,6 +27,7 @@ import ast
 import hashlib
 import itertools
 import json
+import os
 import re
 import subprocess
 import sys
@@ -372,11 +373,14 @@ def huella(ficheros):
 
 # ------------------------------------------------------------------ comparar con lo guardado en git
 def anterior(nombre):
-    try:
-        return json.loads(subprocess.run(["git", "show", f"HEAD:migracion/inventario/{nombre}"], cwd=RAIZ,
-                                         capture_output=True, text=True, check=True).stdout)
-    except Exception:
-        return None
+    # HEAD primero; si la rama de la noche aún no lo lleva (sale de main), el de la rama del plan
+    for ref in ("HEAD", os.environ.get("RO_RAMA_PLAN", "origin/claude/project-thread-rjes21")):
+        try:
+            return json.loads(subprocess.run(["git", "show", f"{ref}:migracion/inventario/{nombre}"], cwd=RAIZ,
+                                             capture_output=True, text=True, check=True).stdout)
+        except Exception:
+            continue
+    return None
 
 
 def comparar(actual):
@@ -391,7 +395,7 @@ def comparar(actual):
         b = {clave(x) for x in (actual[nombre] if isinstance(actual[nombre], list) else actual[nombre])}
         nuevos, quitados = sorted(b - a), sorted(a - b)
         lineas.append(f"- **{etiqueta}:** {len(nuevos)} nuevas, {len(quitados)} quitadas")
-        lineas += [f"  - nueva: `{x}`" for x in nuevos] + [f"  - quitada: `{x}`" for x in quitados]
+        lineas.extend([f"  - nueva: `{x}`" for x in nuevos] + [f"  - quitada: `{x}`" for x in quitados])
 
     dif("pantallas.json", lambda x: x["id"], "Pantallas")
     dif("rutas_api.json", lambda x: f'{x["metodo"]} {x["ruta"]}', "Rutas de API")
