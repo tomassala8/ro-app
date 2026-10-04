@@ -46,8 +46,10 @@ APP = Path(__file__).resolve().parents[1]
 DATA = APP / "data"
 SALIDA = DATA / "riesgo" / "riesgo_baja.json"
 
-# Umbrales firmados por Tomás el 4-oct-2026: silencio 7 días ámbar y 14 rojo, verde desde el 90 % del objetivo y
-# 30 días de ámbar tras una queja. El resto sigue la propuesta del mismo día. Todos aquí, para cambiarlos en un solo sitio.
+# Umbrales firmados por Tomás el 4-oct-2026, todos: silencio 7 días ámbar y 14 rojo, 30 días sin contacto rojo; verde
+# desde el 90 % del objetivo, ámbar 60-90 %, coste por lead hasta 1,3 ×; 30 días de ámbar tras una queja; reuniones
+# (1 falta o cancelación sin reagendar ámbar, 2 rojo) y calidez (1 frío de 4 ámbar, 2 rojo). La cartera usa la escala
+# de la D-41. Todos aquí, para cambiarlos en un solo sitio.
 UMBRALES = {
     "silencio_ambar_dias": 7,        # Tomás: «no responde desde hace, por ejemplo, siete días a nuestro último mail»
     "silencio_rojo_dias": 14,        # dos semanas esperando: ya no es despiste
@@ -65,7 +67,7 @@ UMBRALES = {
     "frio_rojo": 2,                  # frío 1 vez → ámbar · 2 o más → rojo
     "cartera": (2, 4),               # escala de la D-41: ≤ 2 bien · 3-4 vigilar · ≥ 5 crítico
 }
-FIRMADO = True    # Tomás firmó los umbrales principales el 4-oct-2026
+FIRMADO = True    # Tomás firmó los umbrales el 4-oct-2026
 
 COLORES = ("verde", "ambar", "rojo", "gris")
 PESO = {"verde": 0, "gris": 0, "ambar": 1, "rojo": 2}
@@ -544,7 +546,7 @@ def generar(hoy=None, escribir=True):
     out = {
         "formato": 1, "generado": datetime.now().strftime("%Y-%m-%d %H:%M"), "hoy": hoy.isoformat(),
         "umbrales": {**{k: v for k, v in UMBRALES.items() if k != "cartera"}, "cartera": list(UMBRALES["cartera"]),
-                     "firmado": FIRMADO, "nota": "Firmados por Tomás el 4-oct-2026 (silencio 7/14, verde 90 %, queja 30 días); el resto, propuesta del mismo día"},
+                     "firmado": FIRMADO, "nota": "Firmados por Tomás el 4-oct-2026; la cartera sigue la escala de la D-41"},
         "resumen": {n: sum(1 for f in filas if f["nivel"] == n) for n in NIVELES} |
                    {"clientes": len(filas), "discrepancias": sum(1 for f in filas if f["discrepancia"])},
         "carteras": resumen_cartera(filas),
