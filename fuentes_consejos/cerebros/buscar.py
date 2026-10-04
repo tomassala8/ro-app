@@ -124,6 +124,17 @@ def principios(area):
     return cerebros().get(area, {}).get("principios", [])
 
 
+# Áreas con material reservado (finanzas, precio, personas): con «puesto», solo salen las fichas de ese puesto.
+RESERVADAS = {"direccion", "personas_admin"}
+
+
+def visible(f, puesto):
+    """Sin puesto (consola, pruebas) se ve todo. Con puesto, las fichas de áreas reservadas solo para sus puestos."""
+    if not puesto or f.get("area") not in RESERVADAS:
+        return True
+    return puesto in f.get("puestos", []) or puesto == "direccion"
+
+
 # palabras que delatan el área (raíces): si la consulta las dice, esa área sube un poco
 PISTA_AREA = {
     "crm": {"crm", "gohighlevel", "ghl", "subcuenta", "embudo", "pipeline"},
@@ -149,7 +160,7 @@ def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=No
         if valor:
             ids += [i for i in ix[clave].get(valor, []) if i not in ids]
     out = [ficha(i) for i in ids]
-    out = [f for f in out if f]
+    out = [f for f in out if f and visible(f, puesto)]
     if puesto:  # las del puesto primero, sin quitar las demás
         out.sort(key=lambda f: (puesto not in f.get("puestos", []), ORDEN_GRAVEDAD.get(f.get("gravedad"), 3)))
     else:
@@ -184,6 +195,8 @@ def buscar(texto, puesto=None, area=None, n=3, minimo=1.0):
     for sid, bolsa in ix["docs"].items():
         meta = ix["situaciones"][sid]
         if area and meta["area"] != area:
+            continue
+        if not visible(meta, puesto):
             continue
         comunes = [t for t in qt if t in bolsa]
         if not comunes and sid not in frase_pts:

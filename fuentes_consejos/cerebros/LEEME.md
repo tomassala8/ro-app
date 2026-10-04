@@ -26,6 +26,12 @@ Sirven para aconsejar al equipo gastando muy poca IA.
 Orden de autoridad: decisiones de Tomás > leyes y contratos de RO > SOP internos > Cole Gordon / Hormozi.
 Prudencia: no se asesora al cliente en lo fiscal o legal, no se prometen plazos ni resultados, no se tocan precios.
 
+## Reserva
+
+`direccion` y `personas_admin` llevan finanzas, precio y personas. Si la app pasa el `puesto` a `buscar()` o
+`por_disparador()`, esas fichas solo salen a sus puestos (y a dirección). La app debe pasar SIEMPRE el puesto de quien
+pregunta. Ningún cerebro trae sueldos, valoraciones ni datos personales; las pruebas lo comprueban.
+
 ## Comandos
 
 ```

@@ -49,7 +49,7 @@ RE_SECRETO = re.compile(r"(contrase[ñn]a|password|passwd|api[_ ]?key|token)\s*[
 # consultas como las haría el equipo → área esperada en el primer resultado
 CONSULTAS = [
     ("los leads no se presentan a las citas", {"crm", "setters"}),
-    ("el cliente está enfadado y quiere darse de baja", {"account", "comunicacion", "operaciones"}),
+    ("el cliente está enfadado y quiere darse de baja", {"account", "comunicacion", "operaciones", "direccion"}),
     ("la campaña de meta no gasta", {"publicidad"}),
     ("el coste por lead se ha disparado", {"publicidad"}),
     ("la web se ha caído", {"seo_web"}),
@@ -61,7 +61,7 @@ CONSULTAS = [
     ("el prospecto dice que es caro", {"ventas_ro", "setters"}),
     ("un empleado no imputa horas", {"personas_admin", "operaciones"}),
     ("whatsapp desconectado en gohighlevel", {"crm"}),
-    ("leads sin llamar en el crm", {"crm", "setters"}),
+    ("leads sin llamar en el crm", {"crm", "setters", "account"}),
 ]
 
 
@@ -191,6 +191,13 @@ def correr(estricto=False):
         got = r[0][1]["area"] if r else None
         if got not in esperadas:
             avisos.append(f"consulta «{q}» → {got} (esperado {'/'.join(sorted(esperadas))})")
+    # reserva: una setter no ve fichas de dirección ni de personas que no sean suyas
+    fuga = [f["id"] for _, f in B.buscar("salida de una persona del equipo despido", puesto="setters", n=10)
+            if f["area"] in B.RESERVADAS and "setters" not in f.get("puestos", [])]
+    fuga += [f["id"] for f in B.por_disparador(tipo="dir_decision", puesto="setters")
+             if f["area"] in B.RESERVADAS and "setters" not in f.get("puestos", [])]
+    if fuga:
+        errores.append(f"reserva: fichas reservadas visibles para setters: {fuga[:5]}")
     print(f"{len(cb)} cerebros · {total} situaciones · {len(ix['tipo'])}/{len(tipos)} tipos cubiertos · "
           f"{len(ix['alerta'])}/{len(alertas)} alertas · {len(ix['indicador'])} indicadores")
     for a in avisos:
