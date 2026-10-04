@@ -107,6 +107,20 @@ ev = [{"tipo": "cliente", "cliente_ref": "x", "inicio": d(4) + " 10:00", "estado
 r = {x["fecha"]: x["estado"] for x in RB.reuniones_de("x", ev, [{"fecha": d(12)}], HOY)}
 ok(r == {d(4): "asistio", d(8): "no_asistio", d(12): "asistio"},
    f"agenda → asistencia: lo celebrado manda, una por día, la de hoy no cuenta, el historial confirma: {r}")
+canc = [{"cliente_ref": "x", "inicio": d(6) + " 11:00", "persona_id": "a"},                     # luego hubo otra (d4): reagendada
+        {"cliente_ref": "x", "inicio": d(2) + " 11:00", "persona_id": "a"},                     # nada después: cuenta
+        {"cliente_ref": "otro", "inicio": d(2) + " 11:00", "persona_id": "a"}]
+ev_pasadas = [e for e in ev if e["inicio"][:10] < HOY.isoformat()]
+r = {x["fecha"]: x["estado"] for x in RB.reuniones_de("x", ev_pasadas, [{"fecha": d(12)}], HOY, canc)}
+ok(r.get(d(2)) == "cancelo_sin_reagendar" and d(6) not in r,
+   f"cancelada sin reagendar cuenta; la que tuvo otra reunión después, no: {r}")
+r = {x["fecha"]: x["estado"] for x in RB.reuniones_de("x", [], [], HOY, [{"cliente_ref": "x", "inicio": (HOY + timedelta(days=3)).isoformat() + " 10:00"}])}
+ok(r == {HOY.isoformat(): "cancelo_sin_reagendar"}, f"cancelar la de la semana que viene sin otra fecha ya cuenta hoy: {r}")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(2), "estado": "cancelo_sin_reagendar"}]}, HOY)
+ok(s["color"] == "ambar" and s["reuniones"]["cancelo_sin_reagendar"] == 1 and any("sin reagendar" in m for m in s["motivos"]),
+   "canceló una sin reagendar → ámbar aunque conteste")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(2), "estado": "cancelo_sin_reagendar"}, {"fecha": d(9), "estado": "no_asistio"}]}, HOY)
+ok(s["color"] == "rojo", "una cancelada sin reagendar más una ausencia → rojo")
 
 ok(RB.eje_quejas([], HOY)["color"] == "verde", "sin quejas → verde")
 ok(RB.eje_quejas([], HOY, fuentes_ok=False)["color"] == "gris", "sin Desk ni semáforo → gris")
@@ -185,7 +199,8 @@ with tempfile.TemporaryDirectory() as t:
     (D / "bandeja/bandeja.json").write_text(json.dumps({"correos": [
         {"cliente_id": "tres", "asunto": "Sin leads esta semana", "queja": True, "auto": False, "desde": d(1) + " 10:00", "url": "https://desk.example/1"}]}))
     (D / "agenda/agenda.json").write_text(json.dumps({"eventos": [
-        {"tipo": "cliente", "cliente_ref": "uno", "inicio": d(6) + " 10:00", "estado_cita": "noshow", "persona_id": "persona_a"}]}))
+        {"tipo": "cliente", "cliente_ref": "uno", "inicio": d(6) + " 10:00", "estado_cita": "noshow", "persona_id": "persona_a"}],
+        "canceladas": [{"cliente_ref": "dos", "inicio": d(3) + " 10:00", "persona_id": "persona_a", "estado_cita": "cancelled"}]}))
     (D / "verdad/clientes.json").write_text(json.dumps({"comun": [{"cliente_id": c, "account": "persona_a"} for c in ("uno", "dos", "tres")]}))
     RB.DATA, RB.SALIDA = D, D / "riesgo" / "riesgo_baja.json"
     out = RB.generar(HOY)
@@ -197,6 +212,7 @@ with tempfile.TemporaryDirectory() as t:
     ok(por["dos"]["ejes"]["resultados"]["causa_probable"]["veredicto"] == "leads_malos", "dos: lee el veredicto del embudo de diagnosticos.json")
     ok(por["tres"]["semaforo"]["quejas"] == "rojo" and por["tres"]["semaforo"]["silencio"] == "verde",
        "tres: correo «Sin leads» → queja; nos escribió ayer → no está callado")
+    ok(por["dos"]["ejes"]["silencio"]["reuniones"]["cancelo_sin_reagendar"] == 1, "dos: lee las canceladas de agenda.json")
     ok(all(f.get("cliente_id") for f in out["clientes"]), "cada fila lleva cliente_id (el servidor recorta por cliente)")
     c = out["carteras"][0]
     ok(c["persona_id"] == "persona_a" and all(x.get("cliente_id") for x in c["en_riesgo"]), "la cartera lleva persona_id y cliente_id en cada cliente")

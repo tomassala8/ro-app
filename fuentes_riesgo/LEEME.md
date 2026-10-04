@@ -20,14 +20,16 @@ cliente que responde contento, son casos distintos y piden cosas distintas.
 | Eje | Verde | Ámbar | Rojo |
 |---|---|---|---|
 | Resultados | leads o citas ≥ 90 % del objetivo y coste por lead ≤ objetivo | 60-90 %, o coste hasta 1,3 × | < 60 %, coste > 1,3 ×, o gasta sin ningún lead en 14 días |
-| Silencio («Relación») | contesta, viene y está cálido | 7-13 días sin responder a nuestro último correo; no se presentó a 1 reunión en 30 días; 2 reuniones sin constancia de celebrarse; o frío en la reunión 1 de las últimas 4 semanas | 14 días o más; 30 días sin ninguna respuesta suya; no se presentó a 2 reuniones en 30 días; o frío 2 de las últimas 4 semanas |
+| Silencio («Relación») | contesta, viene y está cálido | 7-13 días sin responder a nuestro último correo; no se presentó a 1 reunión en 30 días o la canceló sin reagendar; 2 reuniones sin constancia de celebrarse; o frío en la reunión 1 de las últimas 4 semanas | 14 días o más; 30 días sin ninguna respuesta suya; 2 reuniones en 30 días sin presentarse o canceladas sin reagendar; o frío 2 de las últimas 4 semanas |
 | Quejas | ninguna en 30 días | se quejó en los últimos 30 días (ya cerrada) | queja abierta, o habla de baja, pausa o contrato |
 
 - Resultados sin objetivo cargado: usa la salud del panel (provisional). En los primeros 60 días no pone rojo.
 - Silencio: cuenta como respuesta un correo suyo (también los que esperan respuesta nuestra), una llamada contestada o
   una reunión. Con reunión agendada, el rojo baja a ámbar, salvo que haya faltado a alguna.
-- Asistencia: de la agenda (`data/agenda/agenda.json`, últimos 14 días): «noshow» en Bookings o GoHighLevel = no
+- Asistencia: de la agenda (`data/agenda/agenda.json`, últimos 30 días): «noshow» en Bookings o GoHighLevel = no
   vino; «showed», grabación de Zoom pegada o reunión en el historial de Reuniones ese día = vino; lo demás, sin constancia.
+  Las reuniones con clientes canceladas van en la lista aparte `canceladas` (no se pintan en la agenda): si después no
+  hay otra reunión con ese cliente, cuenta como «canceló sin reagendar», igual que una ausencia.
 - Una queja de un cliente activo es P0 (C-D3-10): aunque los números vayan bien, el riesgo sale alto.
 
 | Patrón | Nivel | Ficha |
@@ -59,7 +61,7 @@ reuniones, calidez y cartera) sigue la propuesta del mismo día. Todos están en
 | Nuestro último correo | `desk.ult_correo_saliente` (panel) | — |
 | Su última respuesta | correos suyos abiertos en la Bandeja, llamadas contestadas (Zadarma), reuniones | **su último correo en tickets ya cerrados**: `desk.ult_correo_entrante`. Sale de Zoho Desk (`customerResponseTime` del ticket más reciente de la cuenta, cerrados incluidos). Mientras falte, el eje sale con confianza «parcial» |
 | Calidez en la reunión | el account la marca cada lunes en el semáforo: cálido, normal o frío (`vista_previa.tono`) | leerla de las actas de Fathom con IA, como propuesta para que el account la confirme |
-| Asistencia a reuniones | agenda: estado de la cita en Zoho Bookings y GoHighLevel, grabaciones de Zoom, historial de Reuniones | las **canceladas** no llegan a la agenda (el lector las quita): cancelar sin reagendar no se ve todavía. La agenda mira 14 días atrás; para la ventana de 30 días, ampliar `DESDE` en `fuentes_agenda/generar_agenda.py`. Las citas del calendario de Zoho CRM no traen si el cliente vino |
+| Asistencia a reuniones | agenda: estado de la cita en Zoho Bookings y GoHighLevel, grabaciones de Zoom, historial de Reuniones | las canceladas de GoHighLevel ya llegan (lista `canceladas`); las de Bookings, solo si el lector `zbookings.py` (fuera del repo) las deja pasar. La agenda mira 30 días atrás desde el 4-oct. Las citas del calendario de Zoho CRM no traen si el cliente vino |
 | Quejas | asunto del correo (expresión del panel), incidencias con queja, rojo a mano en ClickUp, y la casilla **«Se ha quejado esta semana»** del semáforo del lunes | el texto del correo (no solo el asunto), los resúmenes de Fathom y WhatsApp (W6, desde el 16-oct) |
 
 ## En la app

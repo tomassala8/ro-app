@@ -59,7 +59,7 @@ UMBRALES = {
     "arranque_dias": 60,             # en los primeros 60 días los resultados no ponen rojo (sí ámbar)
     "queja_reciente_dias": 30,       # tras una queja hay «periodo amarillo»: no se vuelve directo a verde
     "reuniones_dias": 30,            # ventana para contar las reuniones a las que no vino
-    "no_asiste_rojo": 2,             # 1 reunión sin presentarse → ámbar · 2 o más → rojo
+    "no_asiste_rojo": 2,             # 1 reunión sin presentarse o cancelada sin reagendar → ámbar · 2 o más → rojo
     "sin_constancia_ambar": 2,       # 2 reuniones pasadas sin constancia de que se celebraran → ámbar
     "tono_semanas": 4,               # calidez: se miran las últimas 4 semanas del semáforo del lunes
     "frio_rojo": 2,                  # frío 1 vez → ámbar · 2 o más → rojo
@@ -184,7 +184,7 @@ def eje_resultados(r, hoy=None):
 
 def eje_silencio(c, hoy):
     """c: {ult_saliente, ult_entrante, ult_entrante_abierto, ult_llamada_contestada, ult_reunion, prox_reunion,
-           tiene_entrante_desk(bool), reuniones_pasadas[{fecha, estado: asistio|no_asistio|sin_constancia}],
+           tiene_entrante_desk(bool), reuniones_pasadas[{fecha, estado: asistio|no_asistio|cancelo_sin_reagendar|sin_constancia}],
            tonos[{semana, tono: calido|normal|frio}] (lo marca el account en el semáforo del lunes)}. «Silencio» es el del CLIENTE: si él escribió y nosotros no, no está callado."""
     U = UMBRALES
     respuestas = [(_fecha(c.get(k)), nom) for k, nom in (("ult_entrante", "correo"), ("ult_entrante_abierto", "correo"),
@@ -215,11 +215,15 @@ def eje_silencio(c, hoy):
     ventana = [r for r in c.get("reuniones_pasadas") or []
                if (_dias(r.get("fecha"), hoy) is not None and 0 <= _dias(r.get("fecha"), hoy) <= U["reuniones_dias"])]
     no_vino = sorted(r["fecha"][:10] for r in ventana if r.get("estado") == "no_asistio")
+    cancelo = sorted(r["fecha"][:10] for r in ventana if r.get("estado") == "cancelo_sin_reagendar")
     dudosas = sorted(r["fecha"][:10] for r in ventana if r.get("estado") == "sin_constancia")
     vino = sum(1 for r in ventana if r.get("estado") == "asistio")
-    if no_vino:
-        c_asist = "rojo" if len(no_vino) >= U["no_asiste_rojo"] else "ambar"
-        motivos.append(f"No se presentó a {len(no_vino)} reunión{'es' if len(no_vino) > 1 else ''} ({', '.join(no_vino)})")
+    if no_vino or cancelo:     # faltar y cancelar sin reagendar cuentan igual: 1 → ámbar · 2 o más → rojo
+        c_asist = "rojo" if len(no_vino) + len(cancelo) >= U["no_asiste_rojo"] else "ambar"
+        if no_vino:
+            motivos.append(f"No se presentó a {len(no_vino)} reunión{'es' if len(no_vino) > 1 else ''} ({', '.join(no_vino)})")
+        if cancelo:
+            motivos.append(f"Canceló {len(cancelo)} reunión{'es' if len(cancelo) > 1 else ''} sin reagendar ({', '.join(cancelo)})")
     elif len(dudosas) >= U["sin_constancia_ambar"]:
         c_asist = "ambar"
         motivos.append(f"{len(dudosas)} reuniones agendadas sin constancia de que se celebraran ({', '.join(dudosas)})")
@@ -241,14 +245,14 @@ def eje_silencio(c, hoy):
         if color == "gris":
             motivos = [m for m in motivos if not m.startswith("Sin fechas")]
         color = c_tono if color == "gris" else _peor([color, c_tono])
-    if color == "rojo" and reunion_agendada and not no_vino and not frios:     # si falta a las reuniones, tenerla agendada no calma
+    if color == "rojo" and reunion_agendada and not no_vino and not cancelo and not frios:     # si falta a las reuniones, tenerla agendada no calma
         color = "ambar"
         motivos.append(f"Tiene reunión el {prox.isoformat()}: baja a ámbar")
     confianza = "medido" if c.get("tiene_entrante_desk") else "parcial"
     return {"color": color, "motivos": motivos, "dias_esperando": esperando or 0, "dias_sin_respuesta": sin_contacto,
             "ultima_respuesta": ult_resp.isoformat() if ult_resp else None, "canal_ultima_respuesta": canal,
             "ultimo_nuestro": salida.isoformat() if salida else None, "reunion_agendada": reunion_agendada,
-            "reuniones": {"asistio": vino, "no_asistio": len(no_vino), "sin_constancia": len(dudosas)},
+            "reuniones": {"asistio": vino, "no_asistio": len(no_vino), "cancelo_sin_reagendar": len(cancelo), "sin_constancia": len(dudosas)},
             "tono": tonos[0]["tono"] if tonos else None, "semanas_frio": len(frios),
             "confianza": confianza}
 
@@ -403,14 +407,14 @@ def _ritmo_mes(ventanas, hoy):
     return _ventana(ventanas, "mes_anterior")
 
 
-def reuniones_de(cid, eventos, historial, hoy):
+def reuniones_de(cid, eventos, historial, hoy, canceladas=None):
     """Reuniones con el cliente ya pasadas, de la agenda: asistió (showed, grabación de Zoom pegada o la reunión consta en
-    el historial de Reuniones ese día), no asistió (noshow) o sin constancia. Las canceladas no llegan a la agenda."""
+    el historial de Reuniones ese día), no asistió (noshow) o sin constancia. Las canceladas (lista aparte de la agenda)
+    cuentan como «canceló sin reagendar» si después no hay otra reunión con ese cliente, pasada o futura."""
     celebradas = {str(h.get("fecha") or "")[:10] for h in historial or []}
+    suyas = [e for e in eventos or [] if e.get("tipo") == "cliente" and e.get("cliente_ref") == cid and e.get("inicio")]
     por_dia = {}     # la misma reunión sale una vez por cada persona de RO que la tiene en su agenda: una por día
-    for e in eventos or []:
-        if e.get("tipo") != "cliente" or e.get("cliente_ref") != cid or not e.get("inicio"):
-            continue
+    for e in suyas:
         dia = str(e["inicio"])[:10]
         if _fecha(dia) is None or _fecha(dia) >= hoy:      # hoy aún puede celebrarse
             continue
@@ -424,13 +428,22 @@ def reuniones_de(cid, eventos, historial, hoy):
         previo = por_dia.get(dia)
         if not previo or ORDEN_ASISTENCIA[estado] < ORDEN_ASISTENCIA[previo["estado"]]:   # manda lo celebrado
             por_dia[dia] = {"fecha": dia, "estado": estado, "fuente": e.get("fuente")}
+    for e in canceladas or []:
+        if e.get("cliente_ref") != cid or _fecha(str(e.get("inicio") or "")[:10]) is None:
+            continue
+        dia = str(e["inicio"])[:10]
+        if any(str(x["inicio"])[:10] >= dia for x in suyas):      # la reagendó (o ya tenía otra): no es señal
+            continue
+        fecha = min(_fecha(dia), hoy).isoformat()                  # una cancelada de la semana que viene ya cuenta hoy
+        if fecha not in por_dia:
+            por_dia[fecha] = {"fecha": fecha, "estado": "cancelo_sin_reagendar", "fuente": e.get("fuente")}
     return sorted(por_dia.values(), key=lambda r: r["fecha"])
 
 
-ORDEN_ASISTENCIA = {"asistio": 0, "no_asistio": 1, "sin_constancia": 2}
+ORDEN_ASISTENCIA = {"asistio": 0, "no_asistio": 1, "cancelo_sin_reagendar": 2, "sin_constancia": 3}
 
 
-def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=None, diag=None):
+def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=None, diag=None, canceladas=None):
     """Fichero de cliente + objetivos + bandeja + incidencias → entrada normalizada para calcular()."""
     cid = doc.get("id")
     cart, _ = _datos(doc, "cartera")
@@ -463,7 +476,7 @@ def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=Non
         "ult_llamada_contestada": max((x for x in zl if x), default=None),
         "ult_reunion": reu.get("ult_reunion"), "prox_reunion": reu.get("prox_reunion"),
         "tiene_entrante_desk": bool(desk.get("ult_correo_entrante")),
-        "reuniones_pasadas": reuniones_de(cid, eventos, reu.get("historial"), hoy),
+        "reuniones_pasadas": reuniones_de(cid, eventos, reu.get("historial"), hoy, canceladas),
         "tonos": sorted([{"semana": s.get("semana"), "tono": s.get("tono")} for s in (obj or {}).get("semanas") or [] if s.get("tono")],
                         key=lambda t: t["semana"] or "", reverse=True),
     }
@@ -514,7 +527,8 @@ def generar(hoy=None, escribir=True):
     hoy = _fecha(hoy) or date.today()
     objetivos = {c["cliente_id"]: c for c in (_j(DATA / "objetivos/objetivos.json", {}) or {}).get("clientes", [])}
     accounts = {c.get("cliente_id"): c.get("account") for c in (_j(DATA / "verdad/clientes.json", {}) or {}).get("comun", [])}
-    eventos = (_j(DATA / "agenda/agenda.json", {}) or {}).get("eventos", []) or []
+    agenda = _j(DATA / "agenda/agenda.json", {}) or {}
+    eventos, canceladas = agenda.get("eventos", []) or [], agenda.get("canceladas", []) or []
     diags = {c.get("cliente_id"): c for c in (_j(DATA / "diagnosticos/diagnosticos.json", {}) or {}).get("clientes", []) or []}
     correos = (_j(DATA / "bandeja/bandeja.json", {}) or {}).get("correos", []) or []
     inc_doc = _j(DATA / "incidencias/incidencias.json", {}) or {}
@@ -525,7 +539,7 @@ def generar(hoy=None, escribir=True):
         doc = _j(p)
         if not doc or doc.get("activo_libro") not in (None, "Activo"):
             continue
-        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id")), eventos, diags.get(doc.get("id"))), hoy))
+        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id")), eventos, diags.get(doc.get("id")), canceladas), hoy))
     filas.sort(key=lambda f: (-ORDEN_NIVEL[f["nivel"]], -f["puntos"], f.get("cliente") or ""))
     out = {
         "formato": 1, "generado": datetime.now().strftime("%Y-%m-%d %H:%M"), "hoy": hoy.isoformat(),
