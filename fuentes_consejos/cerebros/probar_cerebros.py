@@ -36,11 +36,16 @@ REPOS = {
     "ro-equipo": ["RO_EQUIPO", "~/RO_EQUIPO", "~/ro-equipo", "/home/claude/ro-equipo"],
     "hormozi-cole-gordon": ["HCG", "~/Hormozi-Cole-Gordon", "/home/claude/Hormozi-Cole-Gordon"],
     "central": ["CENTRAL", "~/Mac-Tom-s-la-Central", "/home/claude/Mac-Tom-s-la-Central"],
+    "skills-compartidas": ["SKILLS_COMPARTIDAS", "~/skills-compartidas-entre-compas",
+                           "/home/claude/skills-compartidas-entre-compas"],
+    "ro-skills": ["RO_SKILLS", "~/ro-skills", "/home/claude/ro-skills"],
     "ro-app": [str(APP)],
 }
 RE_CORREO = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 RE_TEL = re.compile(r"(?<![\d.,])(?:\+34[\s-]?)?[6789]\d{2}[\s-]?\d{3}[\s-]?\d{3}(?![\d.,])")
-RE_SECRETO = re.compile(r"(contrase[ñn]a|password|passwd|api[_ ]?key|token)\s*[:=]\s*\S{4,}|sk-[A-Za-z0-9]{10,}", re.I)
+# valor con pinta de secreto: lleva cifra o símbolo («ninguna contraseña: entramos con...» no cuenta)
+RE_SECRETO = re.compile(r"(contrase[ñn]a|password|passwd|api[_ ]?key|token)\s*[:=]\s*(?=\S*[\d@#$%&*!])\S{6,}"
+                        r"|sk-[A-Za-z0-9]{10,}", re.I)
 # consultas como las haría el equipo → área esperada en el primer resultado
 CONSULTAS = [
     ("los leads no se presentan a las citas", {"crm", "setters"}),
@@ -105,7 +110,7 @@ def correr(estricto=False):
             if sid in vistos:
                 errores.append(f"{donde}: id repetido (también en {vistos[sid]})")
             vistos[sid] = area
-            if not sid.startswith((area + "_", PREFIJO[area], area.split("_")[0] + "_")):
+            if not sid.startswith((area + "_", area.replace("_", "") + "_", PREFIJO[area], area.split("_")[0] + "_")):
                 avisos.append(f"{donde}: no empieza por {area}_")
             if s.get("gravedad") not in ("alta", "media", "baja"):
                 errores.append(f"{donde}: gravedad {s.get('gravedad')!r}")
