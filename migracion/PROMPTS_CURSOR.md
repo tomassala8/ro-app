@@ -239,8 +239,9 @@ Solo lee; escribe en `~/RO_MIGRACION/paquete/` (carpeta 700, ficheros 600, con `
 2. Puertas: cada una con VERDE/ROJO y su informe.
 3. Bloqueos para el piloto (Astra): permisos con datos reales, restauración, fuentes, funciones críticas; excepciones conocidas; fallos de seguridad de `PENDIENTES_LOGICA.md` sin arreglar.
    Y una tabla con cada fallo de `PENDIENTES_LOGICA.md`: arreglado (dónde y commit) o pendiente (por qué).
-4. Preguntas para Tomás.
-5. Pasos de la mañana, exactos.
+4. Revisiones: copia aquí `~/RO_MIGRACION/revisiones/PARA_EL_INFORME.md` si existe (pasos que la revisión aún ve mal o con algo pendiente).
+5. Preguntas para Tomás.
+6. Pasos de la mañana, exactos.
 Después, `bash migracion/puerta.sh f7`.
 
 ## F7.4 · Cierre

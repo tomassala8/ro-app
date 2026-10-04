@@ -37,7 +37,15 @@ GRAVEDAD_OPUS="${RO_GRAVEDAD_OPUS-seguridad}"            # en F5.10: gravedades 
 GRAVEDAD_GROK="${RO_GRAVEDAD_GROK-presentación}"         # en F5.10: gravedades que van con Grok
 TOPE_VUELTA="${RO_TOPE_VUELTA:-5400}"                    # una vuelta colgada se corta a los 90 min
 TOPE_REPLAN="${RO_TOPE_REPLAN:-1800}"
+# Revisión (Tomás, 4-oct 13:28: «el objetivo es el 100 %»): Grok hace el volumen y un modelo de pago revisa cada paso
+# que cierra antes de seguir. Si está mal, el paso se reabre con el plan del revisor. Así el saldo de pago va a mirar,
+# que es barato, y Grok a escribir. Los pasos de Opus que cerró otro modelo (por saldo) los revisa Opus.
+REVISAR="${RO_REVISAR:-1}"                               # 0 = sin revisiones
+REVISIONES_MAX="${RO_REVISIONES_MAX:-2}"                 # veces que un paso se puede reabrir por revisión
+TOPE_REVISION="${RO_TOPE_REVISION:-1500}"
 PROMPT="$RAIZ/migracion/PROMPT_NOCHE.md"
+PROMPT_REVISA="$RAIZ/migracion/PROMPT_REVISA.md"
+REVISIONES="$FUERA/revisiones"; INICIOS="$FUERA/inicio_pasos.txt"   # veredictos y commit con que empezó cada paso
 CUADERNO="$RAIZ/migracion/PROGRESO.md"
 PLAN_NOCHE="$RAIZ/migracion/PLAN_NOCHE.md"
 PLAN_GUARDADO="$FUERA/PLAN_NOCHE.auditado.md"
@@ -152,7 +160,7 @@ if [ -n "$nueva" ] || [ ! -f "$HUELLAS" ]; then
              migracion/comprobar_manana.sh migracion/llaves_nube.py migracion/validar_sqlite.py \
              v2/tools/capturas/comparar.mjs v2/apps/api/src/permisos/rutas-declaradas.spec.ts \
              v2/packages/permisos/test/paridad.test.ts v2/package.json \
-             migracion/PROMPT_NOCHE.md migracion/PROMPT_REPLAN.md .cursor/rules/*.mdc \
+             migracion/PROMPT_NOCHE.md migracion/PROMPT_REPLAN.md migracion/PROMPT_REVISA.md .cursor/rules/*.mdc \
              pruebas_*.py despliegue/pruebas_noche.py despliegue/pruebas_tokens.py; do
       [ -f "$f" ] || continue
       mkdir -p "$COPIA_JUECES/$(dirname "$f")"; cp -p "$f" "$COPIA_JUECES/$f"
@@ -172,6 +180,7 @@ if [ -f "$COPIA_JUECES/migracion/PROMPT_NOCHE.md" ]; then
 fi
 if [ -f "$COPIA_JUECES/migracion/PROMPT_REPLAN.md" ]; then PROMPT_REPLAN="$COPIA_JUECES/migracion/PROMPT_REPLAN.md"
 fi
+[ -f "$COPIA_JUECES/migracion/PROMPT_REVISA.md" ] && PROMPT_REVISA="$COPIA_JUECES/migracion/PROMPT_REVISA.md"
 
 # --- el reloj (empieza a contar cuando el plan está listo) ------------------------------------------------------------
 if [ -n "$nueva" ]; then FIN=$(( $(date +%s) + HORAS * 3600 )); echo "$FIN" > "$MARCA"; fi
@@ -180,7 +189,7 @@ RO_FIN_NOCHE="$(hora_de "$FIN")"; export RO_FIN_NOCHE
 # --- el Mac despierto ------------------------------------------------------------------------------------------------
 if command -v caffeinate >/dev/null; then caffeinate -dimsu -w $$ & fi
 
-echo "Noche de migración · hasta $RO_FIN_NOCHE · planea $MODELO_PLAN · Opus ($MODELO_OPUS): ${PASOS_OPUS:-nada} + F5.10 de ${GRAVEDAD_OPUS:-nada} · Sonnet ($MODELO_SONNET): ${PASOS_SONNET:-nada} · el resto $MODELO"
+echo "Noche de migración · hasta $RO_FIN_NOCHE · planea $MODELO_PLAN · Opus ($MODELO_OPUS): ${PASOS_OPUS:-nada} + F5.10 de ${GRAVEDAD_OPUS:-nada} · Sonnet ($MODELO_SONNET): ${PASOS_SONNET:-nada} · el resto $MODELO · revisión de cada paso de Grok: $([ "$REVISAR" = 1 ] && echo "sí (Sonnet; los de Opus, Opus)" || echo no)"
 echo "Plan: $(head -1 "$PLAN_NOCHE" 2>/dev/null || echo 'NO HAY PLAN_NOCHE.md: se sigue PROMPTS_CURSOR.md')"
 echo "Cuaderno: $CUADERNO · registros: $LOGS"
 
@@ -301,9 +310,77 @@ Primera línea exacta de PLAN_VUELTA.md: PLAN: VIGENTE · $1 · intento $2 · <h
   [ "$(arbol)" = "$antes" ] || echo "  ⚠ la vuelta de guardia cambió código (solo debía escribir PLAN_VUELTA.md): mira $log"
 }
 
+# --- la revisión de cada paso cerrado -----------------------------------------------------------------------------------
+hechos() { grep -oE '^[[:space:]]*-[[:space:]]*✅[[:space:]]*[*_`]*[[:space:]]*F[0-9]+\.[0-9]+' "$CUADERNO" 2>/dev/null | grep -oE 'F[0-9]+\.[0-9]+'; }
+revisor_de() {   # revisor_de <paso> <modelo que lo cerró> · vacío = sin revisión
+  local r=""
+  if en_lista "$1" "$PASOS_OPUS" && [ "$2" != "$MODELO_OPUS" ]; then r="$(con_saldo "$MODELO_OPUS" "$MODELO_SONNET")"
+  elif [ "$2" = "$MODELO" ]; then r="$(con_saldo "$MODELO_SONNET" "$MODELO_OPUS")"; fi
+  [ "$r" = "$MODELO" ] && r=""   # sin saldo de pago: Grok no se revisa a sí mismo
+  echo "$r"
+}
+reabrir() {   # reabrir <paso> <intento> · su ✅ vuelve a 🔄 con la marca que lee paso_actual
+  python3 - "$CUADERNO" "$1" "$2" "$(date +%H:%M)" <<'PY'
+import re, sys
+p, paso, it, hora = sys.argv[1:]
+t = open(p, encoding="utf-8").read()
+i = t.find("\n## Fase")
+cab, cuerpo = (t[:i], t[i:]) if i >= 0 else ("", t)
+pat = re.compile(r"^(\s*-\s*)✅(\s*[*_`]*\s*" + re.escape(paso) + r"\b[^\n]*)$", re.M)
+cuerpo, n = pat.subn(lambda m: f"{m.group(1)}🔄{m.group(2)} · {hora} · intento {it}/3 · revisión: rehacer con migracion/PLAN_VUELTA.md", cuerpo, count=1)
+open(p, "w", encoding="utf-8").write(cab + cuerpo)
+sys.exit(0 if n else 1)
+PY
+}
+revisar() {   # revisar <paso> <modelo que lo cerró> · sale 1 si el paso se reabrió
+  [ "$REVISAR" = 1 ] || return 0
+  local r; r="$(revisor_de "$1" "$2")"; [ -n "$r" ] || return 0
+  if [ $(( FIN - $(date +%s) )) -lt 4500 ]; then echo "  · $1 sin revisión: queda menos de 1 h 15"; return 0; fi
+  mkdir -p "$REVISIONES"
+  local malas k salida log inicio antes veredicto msg
+  malas="$(grep -c "^$1 MAL " "$REVISIONES/registro.txt" 2>/dev/null)"; malas="${malas:-0}"
+  k=$(( $(ls "$REVISIONES" 2>/dev/null | grep -c "^${1}_") + 1 ))
+  salida="$REVISIONES/${1}_$k.md"; log="$LOGS/revision_${1}_$k.log"
+  inicio="$(grep -m1 "^$1 " "$INICIOS" 2>/dev/null | cut -d' ' -f2)"; inicio="${inicio:-HEAD~1}"
+  antes="$(arbol)"
+  echo "[$(date '+%H:%M')] revisión $k de $1 (lo cerró $2) · $r → $log"
+  msg="$(cat "$PROMPT_REVISA")
+
+MENSAJE DEL SUPERVISOR: revisa el paso $1, que acaba de cerrar $2. Commit de inicio del paso: $inicio.
+Escribe tu veredicto en: $salida"
+  if ! lanzar "$r" "$msg" "$log" "$TOPE_REVISION" "$PLANTILLA_PLAN" && sin_saldo_en "$log" && ! sin_saldo "$r"; then
+    apuntar_sin_saldo "$r" "$log"; revisar "$1" "$2"; return $?   # lo revisa el siguiente con saldo
+  fi
+  [ "$(arbol)" = "$antes" ] || echo "  ⚠ la revisión cambió código (solo debía escribir $salida): mira $log"
+  veredicto="$(head -1 "$salida" 2>/dev/null)"
+  case "$veredicto" in
+    "REVISIÓN: BIEN"*) echo "$1 BIEN $k" >> "$REVISIONES/registro.txt"; echo "  ✔ revisión: $1 está bien"
+      sed -n 2,3p "$salida" | grep -q . && echo "- $1: $(sed -n 2p "$salida" | cut -c1-300) ($salida)" >> "$REVISIONES/PARA_EL_INFORME.md"
+      return 0 ;;
+    "REVISIÓN: MAL"*)
+      if [ "$malas" -ge "$REVISIONES_MAX" ]; then
+        echo "$1 SIGUE-MAL $k" >> "$REVISIONES/registro.txt"
+        echo "- $1: tras $malas arreglos la revisión sigue viendo fallos: $salida" >> "$REVISIONES/PARA_EL_INFORME.md"
+        echo "  ⚠ revisión: $1 sigue mal tras $malas arreglos; se queda cerrado y va al informe ($salida)"; return 0
+      fi
+      echo "$1 MAL $k" >> "$REVISIONES/registro.txt"
+      local it=$((malas + 2)); [ $it -gt 3 ] && it=3
+      if reabrir "$1" "$it"; then
+        { echo "PLAN: VIGENTE · $1 · intento $it · $(date +%H:%M)"
+          echo "Lo pide la revisión ($salida): el paso se marcó ✅ sin estar bien. Arréglalo y vuelve a cerrarlo."
+          tail -n +2 "$salida"; } > "$PLAN"
+        echo "  ✘ revisión: $1 no está bien; se reabre (intento $it) con el plan del revisor"; return 1
+      fi
+      echo "  ⚠ revisión: no encuentro la línea ✅ de $1 en PROGRESO.md para reabrirla" ;;
+    *) echo "  ⚠ la revisión de $1 no dejó veredicto (mira $log): se sigue" ;;
+  esac
+  return 0
+}
+
 # al relanzar la misma noche, los registros siguen numerándose (no se pisan los de antes)
 vuelta=$(ls "$LOGS"/vuelta_*.log 2>/dev/null | wc -l | tr -d ' '); planes=$(ls "$LOGS"/replan_*.log 2>/dev/null | wc -l | tr -d ' ')
-[ -n "$nueva" ] && { mkdir -p "$LOGS/antes"; mv "$LOGS"/vuelta_* "$LOGS"/replan_* "$LOGS/antes/" 2>/dev/null; vuelta=0; planes=0; }
+[ -n "$nueva" ] && { mkdir -p "$LOGS/antes"; mv "$LOGS"/vuelta_* "$LOGS"/replan_* "$LOGS"/revision_* "$LOGS/antes/" 2>/dev/null; vuelta=0; planes=0
+  rm -rf "$REVISIONES.antes"; [ -d "$REVISIONES" ] && mv "$REVISIONES" "$REVISIONES.antes"; rm -f "$INICIOS"; }
 fallos_seguidos=0; sin_avance=0; fallos_plan=0; ultimo_fallo_plan=0
 while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   guardar_plan
@@ -316,6 +393,7 @@ while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
     if [ -n "${clave_anterior:-}" ] || head -1 "$PLAN" | grep -q "^PLAN: VIGENTE"; then rm -f "$PLAN"; fi
   fi
   clave_anterior="$clave"
+  [ -n "$paso" ] && ! grep -q "^$paso " "$INICIOS" 2>/dev/null && echo "$paso $(git rev-parse HEAD 2>/dev/null)" >> "$INICIOS"
   # Fable de guardia: si dejó de responder, se le vuelve a probar a la media hora
   if [ $fallos_plan -ge 2 ] && [ $(( $(date +%s) - ultimo_fallo_plan )) -ge 1800 ]; then fallos_plan=0; fi
   replan=""
@@ -334,7 +412,7 @@ while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   vuelta=$((vuelta + 1))
   log="$LOGS/vuelta_$(printf %03d $vuelta).log"
   modelo="$(modelo_de "$paso" "$fallo")"
-  antes="$(huella)"
+  antes="$(huella)"; hechos_antes=" $(hechos | tr '\n' ' ') "
   echo "[$(date '+%H:%M')] vuelta $vuelta · ${paso:-?} intento $intento · $modelo → $log"
   mensaje="$(cat "$PROMPT")
 
@@ -368,6 +446,10 @@ AVISO: las dos últimas vueltas no han cambiado ni el cuaderno ni el código. Ap
   fi
   fallos_seguidos=0
   if [ "$antes" = "$despues" ]; then sin_avance=$((sin_avance + 1)); else sin_avance=0; fi
+  for p in $(hechos); do   # pasos que esta vuelta acaba de cerrar: los revisa un modelo de pago
+    case "$hechos_antes" in *" $p "*) continue ;; esac
+    revisar "$p" "$modelo" || break   # reabierto: la siguiente vuelta lo rehace
+  done
   if [ $sin_avance -ge 12 ]; then echo "✘ 12 vueltas seguidas sin cambiar nada: paro para no gastar. Mira $log"; break; fi
   [ $sin_avance -ge 6 ] && sleep 300      # algo raro: no quemar vueltas en bucle
 done
