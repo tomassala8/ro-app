@@ -40,7 +40,7 @@ export function prepararBandeja270(ctx,B,C){
  const ops=ids.every(p=>arr(p.puestos).some(x=>['direccion','operaciones'].includes(x)));
  const scope=x=>clientes.has(x?.cliente_id),cl=x=>({...x,nombre_cliente:clientes.get(x.cliente_id)?.nombre||'Sin cliente confirmado'});
  const desk=fuente270(B,'desk',ctx.hoy),z=fuente270(B,'zadarma',ctx.hoy);
- if(desk){const deps=arr(B?.departamentos);if(deps.length&&deps.every(x=>typeof x?.legible==='boolean'))desk.cobertura=`${deps.filter(x=>x.legible).length} de ${deps.length} departamentos legibles`;} 
+ if(desk){const deps=arr(B?.departamentos);if(deps.length&&deps.every(x=>typeof x?.legible==='boolean'))desk.cobertura=`${deps.filter(x=>x.legible).length} de ${deps.length} departamentos legibles`;}
  const correos=unicos(arr(B?.correos)).filter(scope).map(cl);
  const llamadas=unicos(arr(B?.llamadas)).filter(scope).filter(x=>dia(x.ultima?.slice(0,10))&&x.ultima.slice(0,10)<=ctx.hoy&&x.ultima.slice(0,10)>=inicioLlamadas270(ctx.hoy)&&Number.isSafeInteger(x.dias_laborables)&&x.dias_laborables>=0&&x.dias_laborables<=5).map(cl);
  const triaje=unicos(arr(B?.triaje)).filter(x=>scope(x)||(!x.cliente_id&&ops)).filter(x=>GRUPOS_TRIAJE270.some(g=>g[0]===x.propuesta)).map(cl);

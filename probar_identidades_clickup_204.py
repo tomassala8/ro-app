@@ -137,4 +137,3 @@ class Guardia204(unittest.TestCase):
         with self.assertRaises(ValueError):M.tarea_para_accion(self.p,'task-fixture')
 
 if __name__=='__main__':unittest.main()
-

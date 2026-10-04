@@ -149,4 +149,3 @@ class Runtime199(unittest.TestCase):
         self.assertEqual(ns['resumen_crosswalk']['manifest_estado'],'validado')
 
 if __name__=='__main__':unittest.main()
-

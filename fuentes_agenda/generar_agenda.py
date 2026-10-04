@@ -223,7 +223,7 @@ try:
         venue = limpio(e.get('Venue') or '')
         ev = {'id': f"crm-{e['id']}", 'persona_id': pid, 'fuente': 'crm', 'inicio': iso(ini), 'fin': iso(fin),
               'todo_el_dia': bool(e.get('All_day')), 'tipo': tipo,
-              'identidad_fuente': identidad_observada('crm',str(e['id']),e.get('Start_DateTime'),e.get('End_DateTime'),str((e.get('Owner') or {}).get('id') or '')), 
+              'identidad_fuente': identidad_observada('crm',str(e['id']),e.get('Start_DateTime'),e.get('End_DateTime'),str((e.get('Owner') or {}).get('id') or '')),
               'titulo': limpio(titulo) if tipo in ('cliente', 'interna') else mascara_titulo(titulo),
               'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None,
               'con_quien_m': mascara(persona_fuera) if persona_fuera else None,

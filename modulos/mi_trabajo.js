@@ -113,7 +113,7 @@ function capa(E, tid) {
   };
   const est = ult('estado'), fe = ult('fecha');
   return { estado: est?.valor, fecha: fe?.valor, cambios: c, cambio_estado: est,
-    intencion_cierre: !!(est && est.tipo === 'marcar_hecha' && ESTADOS_PENDIENTES.has(est.estado)) }; 
+    intencion_cierre: !!(est && est.tipo === 'marcar_hecha' && ESTADOS_PENDIENTES.has(est.estado)) };
 }
 
 /** Final de flujo según lista y tipo ClickUp; no acredita resultado comercial ni aceptación. */
@@ -270,7 +270,7 @@ function vistaTableroTrabajo181(E, tablero, lista, repintar) {
       h('button',{type:'button',class:'bt mini',disabled:!permiso.ok || null,'aria-label':`Mover tarea: ${t.tarea || 'tarea'}`,style:{minHeight:'44px'},on:{click:()=>abrirMover(t)}},'Mover'),
       estado?.error || estado?.intento || !permiso.ok ? h('p',{class:'sub',role:'status',style:{margin:'0',whiteSpace:'normal'}},estado?.error || mensaje) : null,
       estado?.abierto && permiso.ok ? h('div',{class:'pila',style:{gap:'8px'}},
-        
+
         !estado.intento ? menuElegir({etiqueta:'Estado exacto',todos:'Elige destino',valor:estado.destino,opciones:permiso.destinos.map(e=>({valor:e,texto:e})),alCambiar:e=>{if(vivo()&&!estado.intento){estado.destino=e;repintar();}}}) : h('span',{class:'sub'},`${estado.intento.payload.vista_previa.expected_estado} → ${estado.intento.payload.vista_previa.a}`),
         h('button',{type:'button',class:'bt',disabled:(!estado.destino && !estado.intento)||estado.intento?.estado==='guardando'||!!estado.intento?.recibo||null,style:{minHeight:'44px'},on:{click:guardar}},estado.intento?.estado==='sin_confirmar'?'Reintentar la misma intención':'Guardar cambio en RO'),
         h('button',{type:'button',class:'bt mini',disabled:estado.intento?.estado==='guardando'||null,style:{minHeight:'44px'},on:{click:()=>{if(!vivo())return;if(!estado.intento)E.movimientos192.delete(t.id);else estado.abierto=false;repintar();}}},'Cerrar')) : null);
@@ -671,7 +671,7 @@ function avisoAmable(E, r) {
   const d = r.dia ? diaTxt(r.dia, hoy) : '';
   const txt = {
     sin_registros_copia: `${d === 'ayer' ? 'Ayer' : `El ${d}`} no hay registros en esta copia parcial; no acredita ausencia de trabajo.`,
-    sin_horas: `${d === 'ayer' ? 'Ayer' : `El ${d}`} no aparecen horas en esta copia parcial. Contrasta los registros de ClickUp${E.ctx.soloLectura ? '.' : ' y, si falta un apunte, añádelo en la tarea correspondiente.'}`, 
+    sin_horas: `${d === 'ayer' ? 'Ayer' : `El ${d}`} no aparecen horas en esta copia parcial. Contrasta los registros de ClickUp${E.ctx.soloLectura ? '.' : ' y, si falta un apunte, añádelo en la tarea correspondiente.'}`,
     mas_10: r.una_sola ? `El ${d} hay un apunte de ${horasTxt(r.horas)} seguidas: ¿se quedó el cronómetro encendido?` : `El ${d} tienes ${horasTxt(r.horas)} imputadas: ¿es correcto?`,
     fin_semana: `El ${d} (fin de semana) imputaste ${horasTxt(r.horas)}. Si fue a propósito, perfecto.`,
     doble_estimacion: `«${(r.tarea || '').slice(0, 60)}» lleva ${horasTxt(r.horas)} y estaba estimada en ${horasTxt(r.est_h)}. Si hace falta, cambia la estimación en ClickUp o coméntalo.`,
