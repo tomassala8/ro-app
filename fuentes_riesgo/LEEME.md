@@ -47,7 +47,9 @@ crítico (o al revés), la fila lo marca como discrepancia (`rb_semaforo_lunes_c
 clientes en riesgo alto o crítico, con la escala de la D-41 (≤ 2 bien · 3-4 vigilar · ≥ 5 crítico,
 `rb_cartera_en_riesgo_de_baja`).
 
-**Los umbrales son una propuesta** (están todos en `UMBRALES`, arriba del fichero). `FIRMADO = True` cuando Tomás los firme.
+**Umbrales firmados por Tomás el 4-oct-2026:** silencio 7 días ámbar y 14 rojo, verde desde el 90 % del objetivo y
+30 días de ámbar tras una queja (`FIRMADO = True`). El resto (60 % y 1,3 × en resultados, 30 días sin contacto,
+reuniones, calidez y cartera) sigue la propuesta del mismo día. Todos están en `UMBRALES`, arriba del fichero.
 
 ## De dónde sale cada señal
 
