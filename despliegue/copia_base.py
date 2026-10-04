@@ -16,6 +16,9 @@ Uso:  python3 despliegue/copia_base.py            copia de hoy (+ R2 si está co
                                                   pg_dump, se abre entera y se cuentan sus filas contra la base viva,
                                                   manifiesto, R2 y borrado de las de más de RO_COPIAS_DIAS (7) días
 Variables: RO_COPIAS_DIR (carpeta de copias; pruebas), RO_COPIAS_DIAS (cuántos días se guardan las de cada hora).
+Contra el secuestro de datos (ransomware): en R2 la app SOLO SUBE. No lista ni borra: los 7 días los aplica la regla de
+borrado del bucket y el bloqueo del bucket impide borrar o sobrescribir una copia antes de tiempo, aunque alguien robe la
+llave de la app. Borrar desde aquí solo con RO_R2_PODAR=si (no se usa en producción).
 Variables de R2 (opcionales): RO_R2_ENDPOINT (https://<cuenta>.r2.cloudflarestorage.com, jurisdicción UE),
       RO_R2_BUCKET, RO_R2_KEY_ID, RO_R2_SECRET. Necesita boto3 (va en requirements.txt del servidor).
 """
@@ -237,7 +240,8 @@ def copia_hora():
     if s3:
         for f in (dump, carpeta / "manifiesto.json"):
             s3.upload_file(str(f), bucket, f"copias/horas/{carpeta.name}/{f.name}")
-    borradas = podar(ahora, s3, bucket)
+    # En R2 no se borra desde la app (ver arriba): solo en disco, salvo RO_R2_PODAR=si.
+    borradas = podar(ahora, s3 if os.environ.get("RO_R2_PODAR") == "si" else None, bucket)
     print(f"✔ copia de las {ahora:%H}:00 UTC: {round(dump.stat().st_size / 1e6, 2)} MB · {len(copia)} tablas · "
           f"{sum(copia.values())} filas · leída entera · {'en R2' if s3 else 'solo en disco'} · "
           f"{borradas} de más de {DIAS_HORAS:g} días borradas")

@@ -254,6 +254,22 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 
 **No encaja (para 30 personas):** un esquema de base por cliente, GraphQL, Redis para caché o permisos, réplicas de lectura, tokens en `localStorage`, CORS abierto.
 
+### 2.12 Seguridad en la nube: secuestro de datos, accesos y ataques (Tomás, 4-oct)
+
+| Riesgo | Qué lo para | Ya está | Lo activa Tomás | Cómo se comprueba |
+|---|---|---|---|---|
+| **Secuestro de datos (ransomware)**: alguien entra y cifra o borra la base | Copias cada hora fuera de Render, en R2 (otro proveedor). La app **solo sube**: no lista ni borra. El **bloqueo del bucket** (Bucket Lock de R2) impide borrar o sobrescribir una copia durante 7 días, aunque roben la llave. Las reglas de borrado del bucket quitan lo viejo, no la app | `copia_base.py --hora` (§2.10), sin borrar en R2 | Bucket `ro-copias` en UE con: bloqueo de 7 días en `copias/`, regla de borrado a 7 días en `copias/horas/` y a 30 en el resto, y una llave solo para ese bucket | Con la llave de la app, intentar borrar una copia → tiene que fallar. Y el ensayo de restauración (puerta 7 y `--probar` cada mes) |
+| Que el atacante tenga también la cuenta de Cloudflare | Una copia **desconectada**: una vez por semana, bajar la última copia a un disco externo que luego se desenchufa | — | Ponerlo en la agenda de Agus (5 minutos a la semana) | Restaurarla en el Mac una vez al mes |
+| **Entrar sin ser del equipo** | Cloudflare Access delante de todo. La app solo cree el sello firmado de Access (firma, `aud`, caducidad), nunca una cabecera; en producción no arranca en modo «local» ni con el reloj fijo | `acceso_cf.py`, `src/entorno.ts`, F5.1 | — | `python3 despliegue/seguridad_nube.py --dominio … --render …` tras cada despliegue: sin sesión o con cabeceras falsas, ninguna ruta da datos |
+| **Contraseña robada de un empleado** | **Segundo factor obligatorio** (Google Authenticator o la app de Google) | — | En Google Workspace: verificación en dos pasos **obligatoria** para todos. En Access: regla «Require › Authentication method › mfa» en la aplicación | Entrar con una cuenta de prueba sin segundo factor → Access no deja pasar |
+| Un empleado que se va | Quitarlo del grupo de Access (y de Google): pierde el acceso al momento | Solo Tomás da y quita accesos (D2) | Al dar de baja a alguien | Probar su correo → no entra |
+| **Ataques de denegación (DDoS)** y bots | Cloudflare en modo «proxied» absorbe el tráfico; Access corta en el borde a quien no ha entrado, antes de llegar a Render | — | En Cloudflare: Bot Fight Mode, reglas gestionadas del WAF (gratis), «Under Attack Mode» solo en emergencia, y una regla de límite de peticiones en `/api/` **por persona o muy alta por IP** (las 30 personas salen por la misma IP de la oficina: un límite bajo os bloquearía a vosotros) | `seguridad_nube.py` ve `cf-ray`. La carga de 30 personas (§2.6) da la cifra para el límite |
+| Saltarse Cloudflare por la dirección de Render | Desactivar las direcciones `*.onrender.com` (T8). `ro-api` y `ro-legado` como **servicios privados** (sin dirección pública): solo `ro-web` da la cara | Plan F7.2 | T8 en cada servicio público | `seguridad_nube.py --render …` |
+| Algo parecido a Wordfence | El WAF de Cloudflare hace ese papel (reglas contra ataques conocidos, bots, límites). Dentro de la app: permisos en un solo sitio, errores sin detalles, cuerpo máximo de 200 KB, cabeceras de seguridad, escáner de secretos | Sí (dentro de la app) | WAF, como arriba | `seguridad_http.py` en cada puerta |
+| Llaves robadas del repositorio | Nunca llaves en el repo (escáner de secretos); en Render, variables `sync: false` | Sí | — | `escaner_secretos.py --proyecto` |
+
+No lo he podido probar en la nube de verdad: la cuenta de Render, el dominio y las llaves de R2 aún no existen. Los nombres de los ajustes de Cloudflare y R2 son los de su panel a fecha de hoy; si alguno ha cambiado, el sitio es el mismo.
+
 ---
 
 ## 3. Las redes de seguridad (hechas y ensayadas el 4-oct)
