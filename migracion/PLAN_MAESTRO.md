@@ -21,7 +21,7 @@ Stack de destino: **Next.js 16** (web) · **NestJS 12** (API) · **PostgreSQL 16
 
 ## 1. Qué hay hoy
 
-Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` desde el código **del Mac** (incluidos los ficheros nuevos aún sin commit). Cifras del 4-oct por la tarde, ya con la entrega del Mac (corte 650) juntada en esta rama. Si una cifra de aquí no cuadra con `migracion/inventario/RESUMEN.md`, manda el RESUMEN:
+Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` desde el código **del Mac** (incluidos los ficheros nuevos aún sin commit). Cifras del 4-oct por la tarde, ya con la entrega del Mac (corte 675) juntada en esta rama. Si una cifra de aquí no cuadra con `migracion/inventario/RESUMEN.md`, manda el RESUMEN:
 
 | Pieza | Hoy | Cuánto |
 |---|---|---|

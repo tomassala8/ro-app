@@ -14,7 +14,7 @@ El checkpoint local de código se comprueba por hashes e integridad del archivo,
 
 Lo de arriba describe la nota tal como llegó. Desde entonces, el código del Mac hasta el corte 675 se publicó como rama de entrega (`codex/ro-entrega-cursor-2026-10-04`, con `ENTREGA_CURSOR_CODEX.md` y `entrega/*.md`) y está juntado en `claude/project-thread-rjes21` con los PR #2, #3 y #4; los choques se resolvieron el 4-oct. La tabla «Mejoras locales recientes» de abajo ya está en la rama: el inventario regenerado la recoge.
 
-- El Mac no cambia de rama. `preparar_noche.sh` trae de esta rama solo `migracion/`, `v2/`, `.cursor/` y `AGENTS.md`. `juntar_plan.sh` (lo lanza `noche.sh`) trae lo demás fichero a fichero, con mezcla a tres contra `main`: donde el Mac sigue en el corte 650 no hace nada, y lo que Astra cambió después se respeta.
+- El Mac no cambia de rama. `preparar_noche.sh` trae de esta rama solo `migracion/`, `v2/`, `.cursor/` y `AGENTS.md`. `juntar_plan.sh` (lo lanza `noche.sh`) trae lo demás fichero a fichero, con mezcla a tres contra `main`: donde el Mac sigue en el corte 675 no hace nada, y lo que Astra cambió después se respeta.
 - La instantánea de F1.3 solo recoge lo que cambió en el Mac después del corte 675, fichero a fichero. Nunca `git add -A`.
 - Los ficheros privados que la entrega sacó de git (estados `_ESTADO_*.md`, catálogos y criterios, cachés y logs de fuentes; lista: `git diff --name-status main origin/codex/ro-entrega-cursor-2026-10-04 | grep ^D`) se quedan en el Mac y ya están en `.gitignore`. Nunca se vuelven a añadir.
 
