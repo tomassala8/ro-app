@@ -67,12 +67,19 @@ describe('reglas', () => {
   });
 });
 
+// En local, sin vectores se salta (necesitan data/ del Mac). En CI no: una puerta que no compara nada no es verde.
+describe.runIf(!!process.env.CI)('vectores en CI', () => {
+  it('hay vectores de permisos.py (RO_VECTORES)', () => {
+    expect(hay, `faltan los vectores: ${dir ? join(dir, 'permisos.json') : 'RO_VECTORES sin poner'}`).toBe(true);
+  });
+});
+
 describe.skipIf(!hay)('paridad con permisos.py', () => {
   it('el motor exporta todas las funciones del contrato', () => {
     expect(NECESARIAS.filter((n) => !fn(n)).map(camel), 'faltan en src/index.ts (F4.1)').toEqual([]);
   });
 
-  it('cada persona activa: módulos, cartera, ámbito, ver, ver como y recorte, vector a vector', () => {
+  it('cada persona activa: módulos, cartera, ámbito, ver, ver como y recorte, vector a vector', async () => {
     const faltan = NECESARIAS.filter((n) => !fn(n)).map(camel);
     if (faltan.length) throw new Error(`Motor sin portar: faltan ${faltan.join(', ')} en src/index.ts. No hay con qué comparar.`);
     const ver = fn('ver')!, contexto = fn('contexto')!, nivelModulo = fn('nivel_modulo')!, carteraPorSilla = fn('cartera_por_silla')!;
@@ -123,11 +130,15 @@ describe.skipIf(!hay)('paridad con permisos.py', () => {
       preguntar(p, cp, fila.ver, id);
       if (fila.ver_como) {
         if (!tomas) apuntar(`${id}: hay ver_como en los vectores y no está «tomas» en crudo.json`);
-        else
-          mirandoComo(tomas, crudo, () => {
+        else {
+          // Se prueba que mirandoComo SÍ llama a la función: si no la llamara, no se compararía nada y saldría verde.
+          const antes = comparados;
+          await mirandoComo(tomas, crudo, () => {
             preguntar(p, cp, fila.ver_como, `${id} (ver como)`);
             comparar(`${id} (ver como) · modulos`, fila.modulos_ver_como, normal(niveles(p)));
           });
+          if (comparados === antes) apuntar(`${id} (ver como): mirandoComo no ejecutó la función, no se comparó nada`);
+        }
       }
       const recorte = join(dir!, 'recortes', `${id}.json`);
       if (existsSync(recorte)) comparar(`${id} · recortar`, leer(join('recortes', `${id}.json`)), normal(recortar(p, crudo)));

@@ -14,6 +14,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"; LOGS="$FUERA/logs"; COPIAS="$FUERA/plan_copias"; mkdir -p "$LOGS" "$COPIAS"
 MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"
+# si Fable se queda sin saldo, planea Opus; y si no, Sonnet (Tomás, 4-oct 12:09)
+RESERVA_PLAN="${RO_MODELO_OPUS:-claude-opus-5-5} ${RO_MODELO_SONNET:-claude-sonnet-5-5}"
 RONDAS="${RO_RONDAS_PLAN:-25}"            # vueltas de escritura como mucho
 TOPE="${RO_TOPE_PLAN:-3600}"              # segundos por vuelta
 AUD_MIN="${RO_AUDITORIAS_MIN:-4}"         # al menos una por enfoque (A, B, C, D)
@@ -69,6 +71,11 @@ vuelta() {   # vuelta <mensaje> <registro>: lanza al planificador con guardia, c
   local tope="$TOPE"
   if [ -n "${RO_PLAN_FIN:-}" ]; then local queda=$(( RO_PLAN_FIN - $(date +%s) )); [ $queda -lt "$tope" ] && tope=$queda; [ $tope -lt 60 ] && tope=60; fi
   lanzar "$MODELO_PLAN" "$1" "$2" "$tope" "$PLANTILLA_PLAN"; codigo=$?
+  if [ $codigo -ne 0 ] && sin_saldo_en "$2" && [ -n "${RESERVA_PLAN:-}" ]; then   # sin saldo: el siguiente de la cadena
+    echo "  ⚠ $MODELO_PLAN sin saldo: sigue planeando ${RESERVA_PLAN%% *}"
+    echo "$MODELO_PLAN" >> "$FUERA/sin_saldo.txt"
+    MODELO_PLAN="${RESERVA_PLAN%% *}"; RESERVA_PLAN="$(echo "$RESERVA_PLAN" | cut -s -d' ' -f2-)"
+  fi
   vigilar "$antes" "$2"
   if [ -f "$PLAN" ] && [ "$cab" -gt 0 ] && encogido "$cab" "$tam"; then
     echo "  ⚠ la vuelta dejó el plan más corto ($cab → $(cabeceras) pasos): se deshace"; cp "$(ultima_copia)" "$PLAN"; return 9
@@ -136,15 +143,19 @@ $detalle}"
     quieto=$((quieto + 1)); [ $quieto -ge 3 ] && { echo "✘ 3 vueltas sin escribir nada: mira $log"; exit 1; }
   else quieto=0; fi
 done
-primera | grep -qE '^PLAN: (COMPLETO|AUDITADO)' || pon_primera "PLAN: COMPLETO · $(date '+%Y-%m-%d %H:%M')"
+# si esta vez se escribió algo, deja de estar auditado hasta que lo audite alguien
+if [ $r -gt 0 ] || ! primera | grep -qE '^PLAN: (COMPLETO|AUDITADO)'; then pon_primera "PLAN: COMPLETO · $(date '+%Y-%m-%d %H:%M')"; fi
 echo "✔ Plan completo: $(cabeceras) pasos."
 
 # --- 2. auditorías hasta que una salga limpia ----------------------------------------------------------------------
 ENFOQUES=("A · ¿existe lo que nombra?" "B · ¿encaja la noche de principio a fin?" "C · ¿lo puede hacer un modelo rápido sin equivocarse?" "D · ¿respeta las líneas rojas?")
 limpia=""; fallos=0
-n=$(( $(auditorias) + 1 ))
+inicio=$(auditorias); n=$(( inicio + 1 ))
+# Plan nuevo: de AUD_MIN a AUD_MAX auditorías. Plan ya auditado al que se le escribió algo (un fallo nuevo en la lista):
+# al menos una auditoría más y como mucho dos, contadas desde aquí (si no, lo nuevo quedaría sin auditar).
+if [ "$inicio" -eq 0 ]; then tope=$AUD_MAX; minimo=$AUD_MIN; else tope=$(( inicio + 2 )); minimo=$(( inicio + 1 )); fi
 sin_tiempo=""
-while [ $n -le "$AUD_MAX" ]; do
+while [ $n -le "$tope" ]; do
   a_tiempo || { sin_tiempo=1; break; }
   if [ $n -le 4 ]; then enfoque="${ENFOQUES[$((n - 1))]}"; else enfoque="todos (A, B, C y D), con lo que las anteriores no miraron"; fi
   log="$LOGS/plan_auditoria_$(printf %02d $n).log"
@@ -171,17 +182,17 @@ MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: $enfoque."
   fallos=0
   # ¿limpia? la primera línea con texto tras su cabecera es exactamente «SIN CAMBIOS»
   if limpia_n $n; then
-    echo "  ✔ auditoría $n: SIN CAMBIOS"; [ $n -ge "$AUD_MIN" ] && { limpia=1; break; }
+    echo "  ✔ auditoría $n: SIN CAMBIOS"; [ $n -ge "$minimo" ] && { limpia=1; break; }
   else echo "  · auditoría $n: con correcciones"; fi
   n=$((n + 1))
 done
 [ -z "$limpia" ] && n=$((n - 1))           # la última que se hizo
-if [ "$n" -lt 1 ]; then echo "⏰ Sin tiempo para auditar: el plan queda COMPLETO sin auditar."; exit 2; fi
+if [ "$n" -le "$inicio" ]; then echo "⏰ Sin tiempo para auditar lo último: el plan queda COMPLETO sin esa auditoría."; exit 2; fi
 
 if [ -n "$sin_tiempo" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · sin tiempo para más · $(date '+%Y-%m-%d %H:%M')"
 elif [ -n "$limpia" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · la última sin cambios · $(date '+%Y-%m-%d %H:%M')"
 else pon_primera "PLAN: AUDITADO · $n auditorías · la última aún corrigió algo · $(date '+%Y-%m-%d %H:%M')"
-  echo "⚠ Tras $AUD_MAX auditorías la última aún corrigió algo. El plan vale; si hay tiempo: RO_AUDITORIAS=$((AUD_MAX + 2)) bash migracion/planear.sh"
+  echo "⚠ Tras $(( tope - inicio )) auditorías la última aún corrigió algo. El plan vale; si hay tiempo: RO_AUDITORIAS=$((AUD_MAX + 2)) bash migracion/planear.sh"
 fi
 guardar_auditado
 echo "✔ $(primera)"

@@ -34,7 +34,10 @@ services:
 
   web:
     profiles: ["completo"]
-    build: { context: .., dockerfile: v2/apps/web/Dockerfile }
+    build:
+      context: ..
+      dockerfile: v2/apps/web/Dockerfile
+      args: { RO_API_URL: "http://api:4000" }   # los rewrites se fijan en el «next build»: la variable de abajo no basta
     environment:
       RO_API_URL: http://api:4000
       HOSTNAME: 0.0.0.0

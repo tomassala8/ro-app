@@ -34,15 +34,25 @@ export function sinIdentidadLocal(url: string, cabeceras: IncomingMessage['heade
   return { path: u.pathname + u.search, headers };
 }
 
+const LOCAL = /^(127\.0\.0\.1|localhost)(:\d+)?$/i;
+
+// Host y, si viene, cada X-Forwarded-Host (puede llegar repetida o en lista con comas) tienen que ser locales.
+export function hostLocal(cabeceras: IncomingMessage['headers']) {
+  if (!LOCAL.test(cabeceras.host ?? '')) return false;
+  const reenviado = cabeceras['x-forwarded-host'];
+  if (reenviado === undefined) return true;
+  const hosts = (Array.isArray(reenviado) ? reenviado : [reenviado]).flatMap((h) => h.split(',')).map((h) => h.trim());
+  return hosts.every((h) => LOCAL.test(h));
+}
+
 export function proxyLegado(base = process.env.RO_LEGADO_URL, { cuerpoMax = CUERPO_MAX, esperaMs = ESPERA_MS } = {}) {
   const destino = base ? new URL(base) : null;
   return (req: IncomingMessage, res: ServerResponse, siguiente: () => void) => {
     const ruta = (req.url ?? '/').split('?')[0];
     if (!destino || atiendeNest(req.method ?? 'GET', ruta)) return siguiente();
-    // En local, la misma defensa que servir.py contra «DNS rebinding»: solo 127.0.0.1 / localhost.
-    if (process.env.RO_IDENTIDAD !== 'access' && !/^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(req.headers.host ?? '')) {
-      return json(res, 403, 'Host no permitido.');
-    }
+    // En local, la misma defensa que servir.py contra «DNS rebinding»: solo 127.0.0.1 / localhost. Detrás del
+    // rewrite de Next, Host llega ya cambiado a 127.0.0.1:4000 (changeOrigin): el original va en X-Forwarded-Host.
+    if (process.env.RO_IDENTIDAD !== 'access' && !hostLocal(req.headers)) return json(res, 403, 'Host no permitido.');
     // HEAD y OPTIONS: servir.py no tiene do_HEAD y el de la biblioteca de Python sirve ficheros sin pasar por la
     // identidad ni los permisos (auditoría del 4-oct, L-07). Aquí no pasan: 405.
     if (req.method === 'HEAD' || req.method === 'OPTIONS') {
@@ -68,17 +78,23 @@ export function proxyLegado(base = process.env.RO_LEGADO_URL, { cuerpoMax = CUER
         headers: { ...limpio.headers, host: destino.host, 'x-ro-via': 'nest' },
       },
       (respuesta) => {
+        if (res.destroyed) return respuesta.destroy();
         res.writeHead(respuesta.statusCode ?? 502, respuesta.headers);
         respuesta.pipe(res);
+        res.on('close', () => respuesta.destroy());
       },
     );
+    // Si el cliente se va antes de tiempo, se corta también la petición a servir.py (no queda trabajando para nadie).
+    res.on('close', () => {
+      if (!res.writableFinished) salida.destroy();
+    });
     let tarde = false;
     salida.setTimeout(esperaMs, () => {
       tarde = true;
       salida.destroy();
     });
     salida.on('error', () => {
-      if (res.headersSent) return res.destroy();
+      if (res.destroyed || res.headersSent) return res.destroy();
       if (tarde) return json(res, 504, 'La app de hoy (servir.py) tarda demasiado en responder.');
       json(res, 502, 'La app de hoy (servir.py) no responde.');
     });

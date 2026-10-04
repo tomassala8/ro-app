@@ -11,6 +11,9 @@ COPY estilos.css componentes.js datos.js permisos.js ayudas.js carcasa.js app.js
 COPY modulos/ modulos/
 COPY fuentes_web/ fuentes_web/
 WORKDIR /repo/v2
+# next.config.ts lee RO_API_URL al construir (los rewrites quedan fijados en la imagen): sin esto apuntarían a 127.0.0.1
+ARG RO_API_URL=http://127.0.0.1:4000
+ENV RO_API_URL=$RO_API_URL
 RUN pnpm install --frozen-lockfile && pnpm --filter @ro/web build
 
 FROM base AS final

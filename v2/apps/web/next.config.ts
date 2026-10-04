@@ -25,6 +25,9 @@ const nextConfig: NextConfig = {
       fallback: [{ source: "/:ruta*", destination: `${API}/:ruta*` }],
     };
   },
+  // El proxy de los rewrites corta a los 30 s por defecto; la API espera al legado 60 s (RO_LEGADO_ESPERA_MS).
+  // Con 65 s, el 504 con mensaje de la API llega antes que el corte seco de Next.
+  experimental: { proxyTimeout: 65_000 },
   output: "standalone",
   // Monorepo pnpm: el trazado de ficheros del standalone parte de la raíz de v2 (donde están node_modules/.pnpm y
   // los paquetes del espacio de trabajo). Así server.js queda en .next/standalone/apps/web, como espera el Dockerfile.

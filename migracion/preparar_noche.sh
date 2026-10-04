@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 INSTALAR=0; PROBAR=0
 for a in "$@"; do [ "$a" = "--instalar" ] && INSTALAR=1; [ "$a" = "--probar-cursor" ] && PROBAR=1; done
-MODELO="${RO_MODELO:-grok-code-fast-1}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"; MODELO_FUERTE="${RO_MODELO_FUERTE:-claude-sonnet-5-5}"
+MODELO="${RO_MODELO:-grok-code-fast-1}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"; MODELO_OPUS="${RO_MODELO_OPUS:-claude-opus-5-5}"; MODELO_SONNET="${RO_MODELO_SONNET:-claude-sonnet-5-5}"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"
 fallos=0; avisos=0
 ok()   { printf "  ✔ %s\n" "$1"; }
@@ -84,12 +84,12 @@ if command -v cursor-agent >/dev/null; then
     ojo "cursor-agent no anuncia -p / --force / --model" "mira «cursor-agent --help» y lánzalo con RO_AGENTE=\"cursor-agent <opciones> {MODELO}\" bash migracion/noche.sh"
   fi
   if [ $PROBAR = 1 ]; then
-    pares="RO_MODELO:$MODELO RO_MODELO_PLAN:$MODELO_PLAN"; [ -n "${RO_PASOS_FUERTES-F4.1 F4.2 F5.1 F5.10}" ] && pares="$pares RO_MODELO_FUERTE:$MODELO_FUERTE"
+    pares="RO_MODELO:$MODELO RO_MODELO_PLAN:$MODELO_PLAN RO_MODELO_OPUS:$MODELO_OPUS RO_MODELO_SONNET:$MODELO_SONNET"
     for par in $pares; do
       var="${par%%:*}"; m="${par#*:}"
       r="$(cursor-agent -p --force --output-format text --model "$m" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
       echo "$r" | grep -q "OK" && ok "Cursor responde con el modelo $m ($var)" \
-        || mal "Cursor no responde con el modelo $m: $r" "elige el nombre exacto y pásalo: $var=<nombre>. Nombres que conoce tu Cursor: $( (cursor-agent models 2>/dev/null || cursor-agent --list-models 2>/dev/null) | grep -ioE '[a-z0-9.-]*(grok|fable|sonnet)[a-z0-9.-]*' | sort -u | tr '\n' ' ')"
+        || mal "Cursor no responde con el modelo $m: $r" "elige el nombre exacto y pásalo: $var=<nombre>. Nombres que conoce tu Cursor: $( (cursor-agent models 2>/dev/null || cursor-agent --list-models 2>/dev/null) | grep -ioE '[a-z0-9.-]*(grok|fable|opus|sonnet)[a-z0-9.-]*' | sort -u | tr '\n' ' ')"
     done
     echo "$ayuda" | grep -q -- "--mode" && ok "cursor-agent tiene --mode: si admite «plan», RO_AGENTE_PLAN=\"cursor-agent -p --mode plan --output-format text --model {MODELO}\" deja al planificador en solo lectura"
   fi

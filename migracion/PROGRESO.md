@@ -11,9 +11,9 @@ Al retomar, arranca solo lo de fases cerradas: `viejo` tras F1.4, `legado` tras 
 Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 8 h en la primera vuelta y úsala como fin)
 
 Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al principio):
-- F5.1–F5.9: hasta **4 h** antes del fin. Lo que quede → ⚠ «sin tiempo».
-- F5.10: hasta **3 h** antes del fin, todos (los de seguridad van primero en el orden; no tienen prórroga).
+- F5.10: hasta **2 h 30** antes del fin (L-01 y L-21, luego los de seguridad, van primero; no tienen prórroga). Lo que quede → `pendiente: sin tiempo` y al informe.
 - F5.11: hasta **2 h** antes del fin.
+- F5.1–F5.9: hasta **1 h 30** antes del fin. Lo que quede → ⚠ «sin tiempo» (sus rutas siguen por el proxy, que funciona).
 - Fase 6: hasta **1 h** antes del fin.
 - Fase 7: la última hora, pase lo que pase.
 
@@ -49,7 +49,12 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## Fase 5 · Rutas a Nest (un grupo cada vez; cada uno: módulo + RUTAS_EN_NEST + puerta f5)
 
-- ⬜ F5.1 identidad (guarda global) + escritor del rastro de «ver como» (`RASTRO_VER_COMO`) + sesion. **Si F5.1 queda ⚠, F5.2–F5.9 → ⚠ sin intentarlo** (sin identidad ni rastro, toda ruta de Nest falla) y a F5.10.
+Primero los fallos y los escalados (Tomás, 4-oct: los fallos se arreglan sí o sí; mudar rutas a Nest no cambia nada de lo que ve el equipo). Mientras tanto todas las rutas siguen por el proxy, así que en F5.10 se arregla en `servir.py` (y en los dos motores si es de permisos).
+- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 2 h 30 antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
+- ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Plan B: apuntar qué no escala como bloqueo para el piloto.
+
+Después, las rutas a Nest:
+- ⬜ F5.1 identidad (guarda global) + escritor del rastro de «ver como» (`RASTRO_VER_COMO`) + sesion. **Si F5.1 queda ⚠, F5.2–F5.9 → ⚠ sin intentarlo** (sin identidad ni rastro, toda ruta de Nest falla) y a la fase 6.
 - ⬜ F5.2 rastro (lectura, escritura y verificar)
 - ⬜ F5.3 datos (`/api/modulo/**`)
 - ⬜ F5.4 clientes y logos
@@ -60,9 +65,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 - ⬜ F5.9 acciones, avisos y canales
 Detalle de los nueve: sección «F5.x» de `PROMPTS_CURSOR.md`.
 Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>` (cómo, en «F5.x»; también si ya hiciste commit), ⚠ y siguiente grupo.
-Reloj: ver «Cortes del reloj» arriba (grupos hasta 4 h antes del fin).
-- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 3 h antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
-- ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Plan B: apuntar qué no escala como bloqueo para el piloto.
+Reloj: ver «Cortes del reloj» arriba (grupos hasta 1 h 30 antes del fin).
 
 ## Fase 6 · Front en React + shadcn
 

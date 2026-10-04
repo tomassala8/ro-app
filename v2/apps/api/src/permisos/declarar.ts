@@ -33,3 +33,18 @@ export interface DeclaracionPermiso {
 
 export const Permiso = (declaracion: DeclaracionPermiso) => SetMetadata(CLAVE_PERMISO, declaracion);
 export const Publico = (motivo: string) => SetMetadata(CLAVE_PUBLICO, motivo);
+
+/**
+ * Lo que manda en una ruta: lo del método gana a lo de la clase. Un @Publico en la clase no abre un método que
+ * declara @Permiso (y al revés). Lo usan la guarda y la prueba de rutas declaradas, para que no se separen nunca.
+ */
+export function declaracionDe(metodo: object, clase: object): { publico?: string; permiso?: DeclaracionPermiso } {
+  const leer = (clave: string, objetivo: object) => Reflect.getMetadata(clave, objetivo) as unknown;
+  for (const objetivo of [metodo, clase]) {
+    const publico = leer(CLAVE_PUBLICO, objetivo) as string | undefined;
+    const permiso = leer(CLAVE_PERMISO, objetivo) as DeclaracionPermiso | undefined;
+    if (permiso) return { permiso };
+    if (publico) return { publico };
+  }
+  return {};
+}

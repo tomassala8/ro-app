@@ -4,7 +4,7 @@
 #   bash migracion/noche.sh                      # 8 horas desde que el plan está listo
 #   RO_HORAS=7 bash migracion/noche.sh
 #   RO_MODELO=<ejecuta> RO_MODELO_PLAN=<planea> bash migracion/noche.sh
-#   RO_PASOS_FUERTES="" bash migracion/noche.sh    # todo con Grok (por defecto F4.1 F4.2 F5.1 F5.10 van con RO_MODELO_FUERTE)
+#   RO_PASOS_OPUS="F4.1" RO_PASOS_SONNET="" bash migracion/noche.sh   # cambia el reparto de modelos (ver «Quién hace qué»)
 #   RO_AGENTE="cursor-agent -p --force --model {MODELO}" bash migracion/noche.sh  # si tu versión usa otras opciones
 #
 # Cómo trabaja (Tomás, 4-oct):
@@ -23,10 +23,18 @@ RAIZ="$(pwd)"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"; LOGS="$FUERA/logs"; mkdir -p "$LOGS"
 export RO_MIGRACION="$FUERA"
 HORAS="${RO_HORAS:-8}"
-MODELO="${RO_MODELO:-grok-code-fast-1}"                  # ejecuta (Tomás: Grok Fast)
+# Quién hace qué (Tomás, 4-oct 12:09): Fable planea y hace de guardia; Opus lo crítico; Sonnet lo que pide pensar;
+# Grok Fast el volumen. En F5.10 manda la gravedad de cada fallo en PENDIENTES_LOGICA.md: seguridad → Opus, datos y
+# funcional → Sonnet, presentación → Grok. Si un modelo de pago se queda sin saldo, ese paso baja un escalón
+# (Opus → Sonnet → Grok; Fable → Opus → Sonnet) y la noche sigue: nunca se para por saldo.
+MODELO="${RO_MODELO:-grok-code-fast-1}"                  # el volumen
 MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"        # planea y diagnostica
-MODELO_FUERTE="${RO_MODELO_FUERTE:-claude-sonnet-5-5}"   # solo para los pasos de RO_PASOS_FUERTES
-PASOS_FUERTES="${RO_PASOS_FUERTES-F4.1 F4.2 F5.1 F5.10}"   # decidido por Tomás el 4-oct; RO_PASOS_FUERTES="" = todo con Grok
+MODELO_OPUS="${RO_MODELO_OPUS:-claude-opus-5-5}"         # lo crítico (sin «fast»)
+MODELO_SONNET="${RO_MODELO_SONNET:-claude-sonnet-5-5}"   # lo que pide pensar
+PASOS_OPUS="${RO_PASOS_OPUS-F4.1 F4.2 F5.1}"             # motor de permisos, sus pruebas, identidad y rastro
+PASOS_SONNET="${RO_PASOS_SONNET-F2.4 F3.1 F5.10 F6.2}"   # base.py sobre Postgres, fontanería del proxy, fallos, carcasa
+GRAVEDAD_OPUS="${RO_GRAVEDAD_OPUS-seguridad}"            # en F5.10: gravedades que van con Opus
+GRAVEDAD_GROK="${RO_GRAVEDAD_GROK-presentación}"         # en F5.10: gravedades que van con Grok
 TOPE_VUELTA="${RO_TOPE_VUELTA:-5400}"                    # una vuelta colgada se corta a los 90 min
 TOPE_REPLAN="${RO_TOPE_REPLAN:-1800}"
 PROMPT="$RAIZ/migracion/PROMPT_NOCHE.md"
@@ -38,8 +46,28 @@ MARCA="$FUERA/noche_en_curso"
 . migracion/_agente.sh
 PLANTILLA_PLAN="${RO_AGENTE_PLAN:-$PLANTILLA}"
 
-terminado() { grep -q "^ESTADO: TERMINADO" "$CUADERNO" 2>/dev/null; }
+dice_terminado() { grep -q "^ESTADO: TERMINADO" "$CUADERNO" 2>/dev/null; }
+quedan_pasos() { grep -qE '^[[:space:]]*-[[:space:]]*(⬜|🔄)[[:space:]]*[*_`]*[[:space:]]*F[0-9]' "$CUADERNO" 2>/dev/null; }
+terminado() { dice_terminado && ! quedan_pasos; }   # «TERMINADO» con pasos sin cerrar no acaba la noche
 hora_de() { date -r "$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -d "@$1" '+%Y-%m-%d %H:%M'; }
+
+# --- una sola noche a la vez ----------------------------------------------------------------------------------------
+# Si se cerró la ventana de la terminal, la vuelta de Cursor pudo quedar suelta (va en su propio grupo): se corta antes
+# de empezar, para que nunca trabajen dos agentes a la vez sobre el mismo código.
+CERROJO="$FUERA/noche.lock"
+if ! mkdir "$CERROJO" 2>/dev/null; then
+  viejo="$(cat "$CERROJO/pid" 2>/dev/null)"
+  if [ -n "$viejo" ] && [ "$viejo" != "$$" ] && kill -0 "$viejo" 2>/dev/null; then
+    echo "✘ Ya hay una noche en marcha (proceso $viejo). Si de verdad no la hay: rm -rf $CERROJO"; exit 1
+  fi
+  grupo="$(cat "$CERROJO/grupo" 2>/dev/null)"
+  if [ -n "$grupo" ] && kill -0 -- "-$grupo" 2>/dev/null; then
+    echo "⚠ Quedaba una vuelta de Cursor suelta de antes (grupo $grupo): la corto."
+    kill -TERM -- "-$grupo" 2>/dev/null; sleep 5; kill -KILL -- "-$grupo" 2>/dev/null
+  fi
+fi
+echo $$ > "$CERROJO/pid"; rm -f "$CERROJO/grupo"
+trap 'rm -rf "$CERROJO"' EXIT
 
 # --- noche nueva o la misma de antes --------------------------------------------------------------------------------
 nueva=1
@@ -57,6 +85,8 @@ fi
 
 if [ -n "$nueva" ]; then
   # 1. lo que cambió el plan fuera de migracion/ (config.py, despliegue/, fuentes/…), sin pisar lo de Astra; una vez por noche
+  rm -f "$FUERA/sin_saldo.txt"   # el saldo se mira de nuevo cada noche
+  bash migracion/servicios.sh parar >/dev/null 2>&1 || true   # nada suelto de otra noche o del ensayo en los puertos
   bash migracion/juntar_plan.sh || echo "⚠ juntar_plan.sh falló: F1.3 lo repite"
   # 2. el plan de la noche, escrito y auditado (si ya lo está y nada cambió, esto tarda un segundo)
   #    Con tope: si el plan no estaba hecho de antes, como mucho RO_HORAS_PLAN horas (3); después la noche empieza con lo que haya.
@@ -65,7 +95,9 @@ if [ -n "$nueva" ]; then
       || echo "⚠ planear.sh no terminó: la noche sigue con el plan que haya y con PROMPTS_CURSOR.md"
   fi
   # 3. sin restos de otra noche o del ensayo
-  rm -f "$PLAN" "$FUERA/replan_claves.txt" "$FUERA/huellas_referencia.txt" "$FUERA/commit_f17.txt"
+  rm -f "$PLAN" "$FUERA/replan_claves.txt"
+  # la huella de la referencia solo se borra si la fase 1 se va a grabar de nuevo (F1.7 sin cerrar)
+  grep -q "^- ✅ F1.7" "$CUADERNO" 2>/dev/null || rm -f "$FUERA/huellas_referencia.txt" "$FUERA/commit_f17.txt"
   rm -f "$PLAN_GUARDADO"; [ -f "$PLAN_NOCHE" ] && { cp "$PLAN_NOCHE" "$PLAN_GUARDADO"; chmod 444 "$PLAN_GUARDADO"; }
   # 4. la rama de la noche, puesta desde aquí (el agente no tiene que pelearse con ella)
   if [ "$(git symbolic-ref -q --short HEAD)" != "migracion/v2" ]; then
@@ -91,16 +123,36 @@ export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 # Un agente que no pasa una prueba tiende a «arreglar» la prueba. Se guarda la huella y una COPIA de cada uno fuera del
 # repo; por la mañana comprobar_manana.sh compara, vuelve a la copia lo que cambió y repite las puertas desde cero.
 HUELLAS="$FUERA/huellas_puertas.txt"; COPIA_JUECES="$FUERA/huellas_copia"
+if [ -z "$nueva" ] && [ ! -f "$HUELLAS" ] && [ -d "$COPIA_JUECES" ]; then
+  echo "✘ Las huellas de esta noche ($HUELLAS) han desaparecido a mitad de noche: no se rehacen sobre ficheros que pudo tocar el agente."
+  echo "  Mira «git diff» de los ficheros que juzgan y «git log». Para empezar una noche nueva a sabiendas: RO_NOCHE_NUEVA=1 bash migracion/noche.sh"
+  exit 1
+fi
+if [ -n "$nueva" ] && [ -f "$HUELLAS" ] && [ -x "$FUERA/comprobar_manana.sh" ]; then
+  # antes de rehacer las huellas, que la noche anterior no dejara jueces cambiados (si no, se volverían la nueva vara)
+  if ! bash "$FUERA/comprobar_manana.sh" --huellas > "$LOGS/huellas_noche_anterior.txt" 2>&1 && [ "${RO_ACEPTO_JUECES:-}" != "1" ]; then
+    echo "✘ La noche anterior dejó cambiados ficheros que juzgan, excepciones sin id o la referencia regrabada:"
+    sed 's/^/   /' "$LOGS/huellas_noche_anterior.txt" | head -30
+    echo "  Míralo con: bash $FUERA/comprobar_manana.sh"
+    echo "  Si esos cambios son buenos (los hiciste tú de día): RO_ACEPTO_JUECES=1 bash migracion/noche.sh"
+    exit 1
+  fi
+fi
 if [ -n "$nueva" ] || [ ! -f "$HUELLAS" ]; then
+  if [ -f "$HUELLAS" ]; then   # las de la noche anterior se guardan, no se borran
+    archivo="$FUERA/huellas_anteriores/$(date '+%m%d_%H%M%S')"; mkdir -p "$archivo"
+    mv "$HUELLAS" "$archivo/" 2>/dev/null; [ -d "$COPIA_JUECES" ] && mv "$COPIA_JUECES" "$archivo/" 2>/dev/null
+  fi
   chmod -R u+w "$COPIA_JUECES" 2>/dev/null; rm -rf "$COPIA_JUECES"; rm -f "$HUELLAS"
-  [ -e "$COPIA_JUECES" ] && { echo "✘ No puedo borrar $COPIA_JUECES (de otra noche): bórralo a mano y vuelve a lanzar."; exit 1; }
+  [ -e "$COPIA_JUECES" ] && { echo "✘ No puedo apartar $COPIA_JUECES (de otra noche): bórralo a mano y vuelve a lanzar."; exit 1; }
   mkdir -p "$COPIA_JUECES"
   ( for f in migracion/puerta.sh migracion/contrato.py migracion/contrato_escritura.py migracion/vectores_permisos.py \
              migracion/caidas.sh migracion/seguridad_http.py migracion/rendimiento.py migracion/servicios.sh \
              migracion/noche.sh migracion/planear.sh migracion/_agente.sh migracion/juntar_plan.sh migracion/revisar_plan.py \
              migracion/comprobar_manana.sh migracion/llaves_nube.py migracion/validar_sqlite.py \
              v2/tools/capturas/comparar.mjs v2/apps/api/src/permisos/rutas-declaradas.spec.ts \
-             v2/packages/permisos/test/paridad.test.ts \
+             v2/packages/permisos/test/paridad.test.ts v2/package.json \
+             migracion/PROMPT_NOCHE.md migracion/PROMPT_REPLAN.md .cursor/rules/*.mdc \
              pruebas_*.py despliegue/pruebas_noche.py despliegue/pruebas_tokens.py; do
       [ -f "$f" ] || continue
       mkdir -p "$COPIA_JUECES/$(dirname "$f")"; cp -p "$f" "$COPIA_JUECES/$f"
@@ -112,6 +164,14 @@ if [ -n "$nueva" ] || [ ! -f "$HUELLAS" ]; then
   echo "$RAIZ" > "$FUERA/app_dir.txt"
   echo "Huellas y copias de los ficheros que juzgan: $HUELLAS"
 fi
+# Apúntalo (foto con el móvil): por la mañana, si no coincide, alguien cambió las huellas.
+echo "Huella de las huellas: $( (shasum -a 256 "$HUELLAS" 2>/dev/null || sha256sum "$HUELLAS") | cut -c1-16)"
+# las reglas del agente se leen de la copia de fuera: el agente no puede reescribirse sus propias reglas
+if [ -f "$COPIA_JUECES/migracion/PROMPT_NOCHE.md" ]; then
+  PROMPT="$COPIA_JUECES/migracion/PROMPT_NOCHE.md"
+fi
+if [ -f "$COPIA_JUECES/migracion/PROMPT_REPLAN.md" ]; then PROMPT_REPLAN="$COPIA_JUECES/migracion/PROMPT_REPLAN.md"
+fi
 
 # --- el reloj (empieza a contar cuando el plan está listo) ------------------------------------------------------------
 if [ -n "$nueva" ]; then FIN=$(( $(date +%s) + HORAS * 3600 )); echo "$FIN" > "$MARCA"; fi
@@ -120,7 +180,7 @@ RO_FIN_NOCHE="$(hora_de "$FIN")"; export RO_FIN_NOCHE
 # --- el Mac despierto ------------------------------------------------------------------------------------------------
 if command -v caffeinate >/dev/null; then caffeinate -dimsu -w $$ & fi
 
-echo "Noche de migración · hasta $RO_FIN_NOCHE · ejecuta $MODELO · planea $MODELO_PLAN${PASOS_FUERTES:+ · $PASOS_FUERTES con $MODELO_FUERTE}"
+echo "Noche de migración · hasta $RO_FIN_NOCHE · planea $MODELO_PLAN · Opus ($MODELO_OPUS): ${PASOS_OPUS:-nada} + F5.10 de ${GRAVEDAD_OPUS:-nada} · Sonnet ($MODELO_SONNET): ${PASOS_SONNET:-nada} · el resto $MODELO"
 echo "Plan: $(head -1 "$PLAN_NOCHE" 2>/dev/null || echo 'NO HAY PLAN_NOCHE.md: se sigue PROMPTS_CURSOR.md')"
 echo "Cuaderno: $CUADERNO · registros: $LOGS"
 
@@ -129,23 +189,63 @@ paso_actual() {
   python3 - "$CUADERNO" <<'PY'
 import re, sys
 texto = open(sys.argv[1], encoding="utf-8").read()
+# solo la lista de pasos (desde «## Fase 1»): una nota vieja en «## En curso» no cuenta
+i = texto.find("\n## Fase")
+lineas = (texto[i:] if i >= 0 else texto).splitlines()
 def paso(marca):
-    for linea in texto.splitlines():
+    for linea in lineas:
         m = re.match(r"^\s*-\s*" + marca + r"\s*[*_`]*\s*(F\d+\.\d+)\b(.*)$", linea)
         if m:
             return m
 m = paso("🔄")
 if m:
     resto = m.group(2)
-    i = re.search(r"intento\s*(\d+)", resto, re.I)
-    f = re.search(r"\b([LN]-\d+)\b", resto) if m.group(1) == "F5.10" else None
-    print(m.group(1), i.group(1) if i else 1, f.group(1) if f else "-")
+    # la marca que pone el agente: «· hh:mm · [L-03 ·] intento 2/3»; la descripción del paso no cuenta
+    marcas = re.findall(r"·\s*\d{1,2}:\d{2}\s*·\s*(?:\**([LN])-(\d+)\**\s*·\s*)?intento\s*(\d+)", resto, re.I)
+    if marcas:
+        letra, num, intento = marcas[-1]
+    else:
+        letra = num = ""; i = re.search(r"intento\s*(\d+)\s*/\s*3", resto, re.I); intento = i.group(1) if i else "1"
+    fallo = f"{letra}-{int(num):02d}" if (letra and m.group(1) == "F5.10") else "-"
+    print(m.group(1), intento, fallo)
 else:
     m = paso("⬜")
     print(m.group(1) + " 1 -" if m else "")
 PY
 }
-modelo_de() { case " $PASOS_FUERTES " in *" $1 "*) echo "$MODELO_FUERTE" ;; *) echo "$MODELO" ;; esac; }
+# gravedad <id> · columna «Gravedad» de PENDIENTES_LOGICA.md (manda la copia de ~/RO_MIGRACION si existe)
+gravedad() {
+  local f g
+  for f in "$FUERA/PENDIENTES_LOGICA.md" "$RAIZ/migracion/PENDIENTES_LOGICA.md"; do
+    g="$(grep -m1 -E "^\|[[:space:]]*$1[[:space:]]*\|" "$f" 2>/dev/null | cut -d'|' -f3 | tr -d ' *')"
+    [ -n "$g" ] && { echo "$g"; return; }
+  done
+}
+en_lista() { case " $2 " in *" $1 "*) return 0 ;; esac; return 1; }   # en_lista <palabra> <lista>
+SIN_SALDO="$FUERA/sin_saldo.txt"   # una línea por modelo que se quedó sin saldo esta noche
+sin_saldo() { grep -qxF "$1" "$SIN_SALDO" 2>/dev/null; }
+# con_saldo <modelo> [<siguiente>…] · el primero de la cadena que aún tiene saldo (el último, Grok, siempre vale)
+con_saldo() { local m; for m in "$@"; do sin_saldo "$m" || { echo "$m"; return; }; done; echo "$MODELO"; }
+modelo_de() {   # modelo_de <paso> <fallo de F5.10 o «-»>
+  local nivel=grok
+  if en_lista "$1" "$PASOS_OPUS"; then nivel=opus
+  elif en_lista "$1" "$PASOS_SONNET"; then nivel=sonnet; fi
+  if [ "$1" = "F5.10" ] && [ "${2:--}" != "-" ]; then
+    local g; g="$(gravedad "$2")"
+    if [ -n "$g" ] && en_lista "$g" "$GRAVEDAD_OPUS"; then nivel=opus
+    elif [ -n "$g" ] && en_lista "$g" "$GRAVEDAD_GROK"; then nivel=grok; fi
+  fi
+  case $nivel in
+    opus) con_saldo "$MODELO_OPUS" "$MODELO_SONNET" "$MODELO" ;;
+    sonnet) con_saldo "$MODELO_SONNET" "$MODELO" ;;
+    *) echo "$MODELO" ;;
+  esac
+}
+modelo_plan() { con_saldo "$MODELO_PLAN" "$MODELO_OPUS" "$MODELO_SONNET"; }
+apuntar_sin_saldo() {   # apuntar_sin_saldo <modelo> <registro>
+  [ "$1" = "$MODELO" ] && return 0     # Grok es el último escalón: se espera y se reintenta, como siempre
+  sin_saldo "$1" || { echo "$1" >> "$SIN_SALDO"; echo "  ⚠ $1 sin saldo ($(tail -1 "$2" | cut -c1-100)): sus pasos bajan un escalón el resto de la noche"; }
+}
 huella() { (git rev-parse HEAD; suma "$CUADERNO"; arbol) 2>/dev/null | tr '\n' ' '; }
 plan_vigente_para() { head -1 "$PLAN" 2>/dev/null | grep -qF "PLAN: VIGENTE · $1 · "; }        # <clave>
 plan_vigente_intento() { head -1 "$PLAN" 2>/dev/null | grep -qF "PLAN: VIGENTE · $1 · intento $2 "; }
@@ -161,16 +261,20 @@ guardar_plan() {
   fi
 }
 
-# Lo grabado en la fase 1 (contrato, fotos, vectores, casos, bases de partida, la app de hoy congelada) es la vara de medir:
+# Lo grabado en la fase 1 (contrato, fotos, casos, bases de partida, la app de hoy congelada) es la vara de medir:
 # al cerrar F1.7 se guarda su huella y el commit, y por la mañana comprobar_manana.sh mira que nada de eso se regrabó.
 huellas_referencia() {
   [ -f "$FUERA/huellas_referencia.txt" ] && return 0
   grep -q "^- ✅ F1.7" "$CUADERNO" 2>/dev/null || return 0
   git rev-parse HEAD > "$FUERA/commit_f17.txt"
-  ( cd "$FUERA" && for d in contrato/viejo capturas/viejo vectores ref casos_escritura.json local.db.antes tuberia.db.antes excepciones_solidez.txt; do
-      [ -e "$d" ] && find "$d" -type f ! -name '*.db' ! -name '*.db-*' ! -name '*.log' ! -name '*.pyc' ! -path '*/__pycache__/*' \
-        ! -path '*/node_modules/*' ! -path 'ref/data/*' 2>/dev/null
-    done | LC_ALL=C sort | while IFS= read -r f; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done
+  # sin los vectores (F5.10 los regenera a propósito) ni excepciones_solidez.txt (F5.10 quita la línea de N-13);
+  # de la app congelada (ref) solo el código: servir.py escribe ahí sus anclas y su estado
+  ( cd "$FUERA" && { for d in contrato/viejo capturas/viejo casos_escritura.json local.db.antes tuberia.db.antes; do
+      [ -e "$d" ] && find "$d" -type f ! -name '*.db' ! -name '*.db-*' ! -name '*.log' 2>/dev/null
+    done
+    [ -d ref ] && find ref -type f \( -name '*.py' -o -name '*.js' -o -name '*.html' -o -name '*.css' -o -name '*.sql' \) \
+      ! -path 'ref/data/*' ! -path '*/node_modules/*' ! -path '*/__pycache__/*' 2>/dev/null
+    } | LC_ALL=C sort | while IFS= read -r f; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done
   ) > "$FUERA/huellas_referencia.txt"
   chmod 444 "$FUERA/huellas_referencia.txt"
   echo "  Referencia de la fase 1 cerrada: huella guardada ($(wc -l < "$FUERA/huellas_referencia.txt" | tr -d ' ') ficheros)"
@@ -180,15 +284,17 @@ replanear() {   # replanear <clave> <intento> <motivo>
   planes=$((planes + 1)); echo "$1|$2" >> "$CLAVES"
   local log="$LOGS/replan_$(printf %03d $planes).log" antes; antes="$(arbol)"
   echo "[$(date '+%H:%M')] Fable de guardia ($1, intento $2: $3) → $log"
-  local msg; msg="$(cat "$RAIZ/migracion/PROMPT_REPLAN.md")
+  local msg; msg="$(cat "${PROMPT_REPLAN:-$RAIZ/migracion/PROMPT_REPLAN.md}")
 
 MENSAJE DEL SUPERVISOR: paso $1, intento $2. Te llamo porque: $3.
 Primera línea exacta de PLAN_VUELTA.md: PLAN: VIGENTE · $1 · intento $2 · <hora>
 Último registro del ejecutor: $LOGS/vuelta_$(printf %03d $vuelta).log"
   local h_antes; h_antes="$(suma "$PLAN")"
-  if lanzar "$MODELO_PLAN" "$msg" "$log" "$TOPE_REPLAN" "$PLANTILLA_PLAN" && [ "$(suma "$PLAN")" != "$h_antes" ] && plan_vigente_para "$1"; then
+  local mp; mp="$(modelo_plan)"
+  if lanzar "$mp" "$msg" "$log" "$TOPE_REPLAN" "$PLANTILLA_PLAN" && [ "$(suma "$PLAN")" != "$h_antes" ] && plan_vigente_para "$1"; then
     fallos_plan=0
   else
+    sin_saldo_en "$log" && apuntar_sin_saldo "$mp" "$log"
     fallos_plan=$((fallos_plan + 1)); ultimo_fallo_plan=$(date +%s)
     echo "  ⚠ el plan de guardia no se escribió bien ($(tail -1 "$log" | cut -c1-120))"
   fi
@@ -205,7 +311,10 @@ while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   read -r paso intento fallo <<< "$(paso_actual)"; paso="${paso:-}"; intento="${intento:-1}"; fallo="${fallo:--}"
   clave="$paso"; [ "$fallo" != "-" ] && clave="$paso $fallo"
   # al cambiar de paso (o de fallo), un plan de guardia que no es para el nuevo ya no vale: ni su GASTADO
-  if [ "$clave" != "${clave_anterior:-}" ] && [ -f "$PLAN" ] && ! plan_vigente_para "$clave"; then rm -f "$PLAN"; fi
+  # (al relanzar no se sabe de qué paso era un GASTADO: se conserva y lo trata Fable de guardia)
+  if [ "$clave" != "${clave_anterior:-}" ] && [ -f "$PLAN" ] && ! plan_vigente_para "$clave"; then
+    if [ -n "${clave_anterior:-}" ] || head -1 "$PLAN" | grep -q "^PLAN: VIGENTE"; then rm -f "$PLAN"; fi
+  fi
   clave_anterior="$clave"
   # Fable de guardia: si dejó de responder, se le vuelve a probar a la media hora
   if [ $fallos_plan -ge 2 ] && [ $(( $(date +%s) - ultimo_fallo_plan )) -ge 1800 ]; then fallos_plan=0; fi
@@ -224,7 +333,7 @@ while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
 
   vuelta=$((vuelta + 1))
   log="$LOGS/vuelta_$(printf %03d $vuelta).log"
-  modelo="$(modelo_de "$paso")"
+  modelo="$(modelo_de "$paso" "$fallo")"
   antes="$(huella)"
   echo "[$(date '+%H:%M')] vuelta $vuelta · ${paso:-?} intento $intento · $modelo → $log"
   mensaje="$(cat "$PROMPT")
@@ -234,6 +343,10 @@ Su sección del plan: python3 migracion/revisar_plan.py --seccion ${clave:-<paso
   if plan_vigente_para "$clave"; then
     mensaje="$mensaje
 Hay un plan de guardia VIGENTE para este paso en migracion/PLAN_VUELTA.md${replan:+ (recién escrito)}: síguelo antes que la sección."
+  fi
+  if dice_terminado; then
+    mensaje="$mensaje
+AVISO: PROGRESO.md dice «ESTADO: TERMINADO» pero quedan pasos en ⬜ o 🔄. Ciérralos (✅, o ⚠ con su motivo y plan B) antes de dar la noche por terminada."
   fi
   if [ $sin_avance -ge 2 ] && [ -z "$replan" ]; then
     mensaje="$mensaje
@@ -247,6 +360,7 @@ AVISO: las dos últimas vueltas no han cambiado ni el cuaderno ni el código. Ap
   if [ $codigo -ne 0 ]; then
     fallos_seguidos=$((fallos_seguidos + 1))
     echo "  ⚠ Cursor salió con código $codigo ($(tail -1 "$log" | cut -c1-120))"
+    if sin_saldo_en "$log" && [ "$modelo" != "$MODELO" ]; then apuntar_sin_saldo "$modelo" "$log"; fallos_seguidos=0; continue; fi
     # límite de uso, red o sesión caducada: espera creciente (máximo 10 min) y reintenta hasta la hora; nunca se rinde
     espera=$(( fallos_seguidos * 60 )); [ $espera -gt 600 ] && espera=600
     sleep $espera

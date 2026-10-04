@@ -30,6 +30,18 @@ class Prueba {
   }
 }
 
+// Un @Publico de clase no abre un método que declara @Permiso: lo del método manda.
+@Publico('prueba de clase')
+@Controller('mixta')
+class Mixta {
+  @Get('abierta') abierta() {
+    return { ok: true };
+  }
+  @Permiso({ modulo: 'crm', sinRecorte: 'prueba' }) @Get('cerrada') cerrada() {
+    return { secreto: 1 };
+  }
+}
+
 const DIR = { id: 'a', puestos: ['direccion'] };
 const SEO = { id: 'b', puestos: ['seo'] };
 const motor: MotorPermisos = {
@@ -39,7 +51,7 @@ const motor: MotorPermisos = {
 
 // `null` = el rastro sin portar. Se mete a mano (no el de por defecto) para que la prueba siga valiendo después de F5.1.
 async function montar(vista?: object, rastro?: RastroVerComo | null) {
-  const mod = Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba] })
+  const mod = Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba, Mixta] })
     .overrideProvider(MOTOR_PERMISOS)
     .useValue(motor)
     .overrideProvider(RASTRO_VER_COMO)
@@ -62,6 +74,15 @@ describe('permisos en un solo sitio', () => {
   it('una ruta pública responde a cualquiera', async () => {
     app = await montar();
     await request(app.getHttpServer()).get('/publica').expect(200);
+  });
+
+  it('un @Publico de clase no se salta el @Permiso de un método', async () => {
+    app = await montar({ real: SEO });
+    await request(app.getHttpServer()).get('/mixta/abierta').expect(200);
+    await request(app.getHttpServer()).get('/mixta/cerrada').expect(403);
+    await app.close();
+    app = await montar({ real: DIR });
+    await request(app.getHttpServer()).get('/mixta/cerrada').expect(200).expect({ secreto: 1 });
   });
 
   it('el motor decide quién entra', async () => {

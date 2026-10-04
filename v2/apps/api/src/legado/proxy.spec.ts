@@ -1,8 +1,8 @@
-import { createServer } from 'node:http';
+import { createServer, request as pedir } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import request from 'supertest';
-import { proxyLegado, sinIdentidadLocal } from './proxy.js';
+import { hostLocal, proxyLegado, sinIdentidadLocal } from './proxy.js';
 import { atiendeNest } from './rutas-en-nest.js';
 
 // Un «servir.py» de mentira que devuelve lo que recibe: así se ve que el proxy no cambia nada.
@@ -65,6 +65,33 @@ describe('proxy de legado', () => {
     const r = await request(app).get('/api/sesion').set('Host', 'malo.example:3000');
     expect(r.status).toBe(403);
     expect(r.body).toEqual({ error: 'Host no permitido.' });
+  });
+
+  it('detrás del rewrite de Next (Host 127.0.0.1:4000), mira también X-Forwarded-Host', async () => {
+    const app = express();
+    app.use(proxyLegado('http://127.0.0.1:9'));
+    const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:4000').set('X-Forwarded-Host', 'malo.example:3000');
+    expect(r.status).toBe(403);
+    expect(hostLocal({ host: '127.0.0.1:4000', 'x-forwarded-host': 'localhost:3000' })).toBe(true);
+    expect(hostLocal({ host: '127.0.0.1:4000', 'x-forwarded-host': 'localhost:3000, malo.example' })).toBe(false);
+  });
+
+  it('si el cliente se va antes de tiempo, se corta también la petición al legado', async () => {
+    let cerrada!: () => void;
+    const corte = new Promise<void>((ok) => (cerrada = ok));
+    const lento = createServer((req) => req.socket.on('close', () => cerrada()));
+    await new Promise<void>((ok) => lento.listen(0, '127.0.0.1', () => ok()));
+    const app = express();
+    app.use(proxyLegado(`http://127.0.0.1:${(lento.address() as AddressInfo).port}`));
+    const srv = app.listen(0, '127.0.0.1');
+    await new Promise<void>((ok) => srv.once('listening', () => ok()));
+    const cliente = pedir({ port: (srv.address() as AddressInfo).port, host: '127.0.0.1', path: '/api/sesion' });
+    cliente.on('error', () => undefined);
+    cliente.end();
+    setTimeout(() => cliente.destroy(), 100);
+    await corte;   // sin el corte, servir.py seguiría con la conexión abierta hasta los 60 s
+    srv.close();
+    lento.close();
   });
 
   it('si el legado no responde, 502 con un mensaje claro', async () => {

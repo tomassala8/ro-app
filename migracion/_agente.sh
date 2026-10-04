@@ -10,6 +10,9 @@ else
   exit 1
 fi
 
+# sin_saldo_en <registro> · ¿la vuelta acabó por falta de saldo del modelo? Solo se mira si Cursor salió con error,
+# y solo el final del registro (el agente puede hablar de «límites» en su trabajo).
+sin_saldo_en() { tail -15 "$1" 2>/dev/null | grep -qiE "usage limit|limit (reached|exceeded)|quota|out of (credits|usage)|insufficient (credits|balance|funds)|upgrade (your|to) |spend(ing)? limit|billing"; }
 suma() { md5 -q "$1" 2>/dev/null || md5sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
 # lanzar <modelo> <mensaje> <registro> <tope en segundos> [plantilla]   (si se corta por tiempo, deja <registro>.cortada)
@@ -23,6 +26,8 @@ parar_vuelta() {
   sleep 3; kill -KILL -- "-$GRUPO_VIVO" 2>/dev/null; kill -KILL "$GRUPO_VIVO" 2>/dev/null; GRUPO_VIVO=""
 }
 trap 'echo; echo "Parado (Ctrl+C): corto la vuelta en curso. Para seguir, vuelve a lanzar el mismo script."; parar_vuelta; exit 130' INT TERM
+# cerrar la ventana de la terminal (HUP) también: si no, la vuelta de Cursor seguiría sola, sin tope y sin supervisor
+trap 'parar_vuelta; exit 129' HUP
 
 lanzar() {
   local orden="${5:-$PLANTILLA}"; orden="${orden//\{MODELO\}/$1}"
@@ -36,6 +41,7 @@ lanzar() {
     $orden "$2" >> "$3" 2>&1 < /dev/null &
   fi
   local pid=$!; GRUPO_VIVO=$pid
+  [ -n "${CERROJO:-}" ] && [ -d "$CERROJO" ] && echo "$pid" > "$CERROJO/grupo"
   ( exec >/dev/null 2>&1; sleep "$4"
     kill -0 "$pid" 2>/dev/null || exit 0        # ya terminó: no es un corte
     touch "$3.cortada"; echo "[supervisor] vuelta cortada a los $4 s" >> "$3"
@@ -71,7 +77,7 @@ sin_llaves() {
   local v
   for v in $(compgen -e); do
     case "$v" in
-      CURSOR_*) ;;
+      CURSOR_*|GIT_CONFIG_*) ;;   # GIT_CONFIG_KEY_n va en pareja con GIT_CONFIG_COUNT: quitar una rompe git
       *KEY*|*SECRET*|*TOKEN*|*CLAVE*|*PASS*|*CRED*|DATABASE_URL|*_DATABASE_URL|RO_SECRETOS_DIR|RO_TOKENS_DIR) unset "$v" ;;
     esac
   done
