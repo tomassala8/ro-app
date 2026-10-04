@@ -38,7 +38,8 @@ def ejecutar_aisladas_560():
                    "probar_informes_declarados_596.py", "probar_acciones_tipadas_603.py",
                    "probar_decisiones_clientes_607.py", "probar_resumen_informes_611.py", "probar_cerebro_reservas_620.py",
                    "probar_puente_cerebro_reservas_621.py", "probar_seo_fuentes_624.py",
-                   "probar_seguridad_cerebro_seo_625.py", "probar_recorte_estructurado_632.py"):
+                   "probar_seguridad_cerebro_seo_625.py", "probar_recorte_estructurado_632.py",
+                   "probar_eventos_cadencia_644.py", "probar_lector_metodo_649.py"):
         try:
             r = subprocess.run([sys.executable, str(AQUI / nombre)], cwd=AQUI,
                                env=entorno, capture_output=True, text=True, timeout=60)

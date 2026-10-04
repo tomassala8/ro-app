@@ -323,6 +323,16 @@ function cifras(filas, d) {
   };
 }
 
+// 648: recuentos observados no certifican exhaustividad ni ausencia de señales.
+function contadorObservado648(v) { return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : null; }
+function resumenEquipo648(filas, d) {
+  const gravedad = filas.filter(c => ['critico', 'atencion', 'bien'].includes(c?.gravedad));
+  const dia = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v+'T12:00:00Z')) && new Date(v+'T12:00:00Z').toISOString().slice(0,10) === v;
+  const paradas = filas.filter(c => c?.meta_activa && ((typeof c.gasto?.ayer === 'number' && Number.isFinite(c.gasto.ayer) && c.gasto.ayer >= 0) || (dia(c.cuenta_meta?.ultimo_dia_con_gasto) && dia(d.datos_hasta) && c.cuenta_meta.ultimo_dia_con_gasto <= d.datos_hasta)));
+  const n = paradas.filter(c => c.gasto?.ayer === 0 || (dia(c.cuenta_meta?.ultimo_dia_con_gasto) && dia(d.datos_hasta) && c.cuenta_meta.ultimo_dia_con_gasto < d.datos_hasta)).length;
+  return { gravedad: gravedad.length, paradas: paradas.length ? n : null, paradasConDato: paradas.length };
+}
+
 // ================================================================== LISTA
 async function pintarLista(cont, ctx, d) {
   const K = contexto(ctx, d);
@@ -776,15 +786,16 @@ function pEquipo(el, ctx, d, filas) {
     };
   }).sort((a, b) => b.rojos - a.rojos || b.activas - a.activas);
   const total = cifras(filas, d);
+  const observado648 = resumenEquipo648(filas, d);
 
   const cifrasEquipo416=tiles([
-    tile({ icono: 'eq', etiqueta: 'Traffickers con 5 o más cuentas en rojo', valor: filasT.filter(x => x.id !== '—' && x.rojos >= ambar + 1).length, unidad: `de ${filasT.filter(x => x.id !== '—').length}`,
-      estado: filasT.some(x => x.id !== '—' && x.rojos > ambar) ? 'rojo' : filasT.some(x => x.id !== '—' && x.rojos > verde) ? 'ambar' : 'verde',
-      contexto: `Verde ≤ ${verde} · ámbar ${verde + 1}-${ambar} · rojo ≥ ${ambar + 1} cuentas críticas por trafficker`, medible: 'hoy', frescura: fuenteDe(d, 'meta') }),
+    tile({ icono: 'eq', etiqueta: 'Traffickers con 5 o más cuentas en rojo', valor: observado648.gravedad ? filasT.filter(x => x.id !== '—' && x.rojos >= ambar + 1).length : null, unidad: `de ${filasT.filter(x => x.id !== '—').length}`,
+      estado: filasT.some(x => x.id !== '—' && x.rojos > ambar) ? 'rojo' : filasT.some(x => x.id !== '—' && x.rojos > verde) ? 'ambar' : 'gris',
+      contexto: `Señales observadas en ${observado648.gravedad} de ${filas.length} cuentas; referencia ámbar ${verde + 1}-${ambar} y rojo ≥ ${ambar + 1}. Cobertura no exhaustiva; cero no acredita ausencia de críticos.`, medible: 'medias', frescura: fuenteDe(d, 'meta') }),
     total.conDinero.length ? tile({ icono: 'cartera', etiqueta: 'Inversión gestionada · septiembre', valor: eur(total.gastoMesAnt), comparacion: { texto: `${eur(total.gasto7)} en los últimos 7 días` },
       contexto: 'Solo Meta. Google Ads va aparte (muestra manual) hasta la clave de Windsor.', medible: 'medias', medibleDetalle: 'Falta Google Ads y TikTok', frescura: fuenteDe(d, 'meta') }) : null,
-    tile({ icono: 'flag', etiqueta: 'Cuentas paradas sin saberlo', valor: total.paradas.length, unidad: `de ${total.activas.length} activas`,
-      estado: total.paradas.length ? 'rojo' : 'verde', contexto: 'Con pauta en la semana y sin gasto ayer o desde antes del último día con datos.', medible: 'hoy', frescura: fuenteDe(d, 'meta') }),
+    tile({ icono: 'flag', etiqueta: 'Señales de cuentas paradas', valor: observado648.paradas, unidad: `en ${observado648.paradasConDato} de ${total.activas.length} activas con dato`,
+      estado: observado648.paradas > 0 ? 'rojo' : 'gris', contexto: 'Gasto ayer cero o último gasto anterior al corte: señal guardada por contrastar. Cobertura no exhaustiva; no confirma campañas paradas.', medible: 'medias', frescura: fuenteDe(d, 'meta') }),
     tile({ icono: 'rocket', etiqueta: 'Arranques con ganador en el mes 1', valor: (() => { const n = filas.filter(c => c.nuevo && c.meta_activa); return n.length ? `${n.filter(c => c.anuncios?.ganadoras).length} de ${n.length}` : null; })(),
       estado: 'gris', contexto: 'En el arranque, 3 contactos o más a 45 € o menos.', medible: 'hoy', frescura: fuenteDe(d, 'anuncios') }),
   ].filter(Boolean));
@@ -1311,10 +1322,10 @@ function tAnuncios(el, ctx, d, c) {
   const a = c.anuncios;
   if (!a) { el.append(vacio({ icono: 'spark', titulo: 'Sin anuncios que mirar', texto: c.meta_activa ? 'No se pudieron leer los anuncios de esta cuenta.' : 'La cuenta no tiene pauta activa: no hay anuncios con impresiones en 7 días.' })); return; }
   el.append(tiles([
-    tile({ icono: 'baja', etiqueta: 'Cansadas', valor: a.cansadas, estado: a.cansadas ? 'rojo' : 'verde', contexto: 'Dos señales a la vez', medible: 'hoy' }),
-    tile({ icono: 'ojo', etiqueta: 'Con una señal', valor: a.vigilar, estado: a.vigilar ? 'ambar' : 'verde', contexto: 'Vigilar: una señal sola no dispara', medible: 'hoy' }),
+    tile({ icono: 'baja', etiqueta: 'Cansadas', valor: contadorObservado648(a.cansadas), estado: contadorObservado648(a.cansadas) > 0 ? 'rojo' : 'gris', contexto: 'Dos señales guardadas a la vez; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
+    tile({ icono: 'ojo', etiqueta: 'Con una señal', valor: contadorObservado648(a.vigilar), estado: contadorObservado648(a.vigilar) > 0 ? 'ambar' : 'gris', contexto: 'Una señal guardada para revisar; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
     tile({ icono: 'star', etiqueta: 'Ganadoras', valor: a.ganadoras, estado: '', contexto: 'Gasto ≥ 10 veces el objetivo con coste ≤ objetivo', medible: 'hoy' }),
-    tile({ icono: 'alert', etiqueta: 'Rechazados o con problemas', valor: a.problemas_total, estado: a.problemas_total ? 'rojo' : 'verde', contexto: `${a.aprendizaje_limitado} de ${a.conjuntos_con_dato} conjuntos en aprendizaje limitado`, medible: 'hoy' }),
+    tile({ icono: 'alert', etiqueta: 'Rechazados o con problemas', valor: contadorObservado648(a.problemas_total), estado: contadorObservado648(a.problemas_total) > 0 ? 'rojo' : 'gris', contexto: 'Rechazos o problemas guardados; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
   ]));
   if (!ctx.soloLectura && ctx.nivel !== 'resumen') el.append(panel({ titulo: 'Pedir nuevas a producción', icono: 'send', sub: 'Con la cansada adjunta y el brief ya escrito.' }, h('div', { class: 'cuerpo' }, formPedido(ctx, d, c))));
   el.append(panel({ titulo: 'Anuncios · 7 días', icono: 'spark', sub: `${a.total_7d} con impresiones; ${a.sin_autor} sin iniciales de autor (desde el próximo lanzamiento)` },

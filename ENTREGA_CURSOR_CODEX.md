@@ -21,3 +21,6 @@ Disco observado7,5GB libres99%: comprobar antes de instalar dependencias/generar
 
 
 Actualización645: corrección de cadencia640/641 integrada y verificada después del corte635. Consultar entrega/645_CADENCIA_INTEGRADA_Y_VERIFICADA_CODEX.md y pruebas644/643. La reproducción previa644 usa sólo funciones puras en fixtures/metodo_cuentas_640_original.py. No activar proveedores ni sustituir fuentes privadas por fixtures.635 sigue siendo el corte anterior verificable; esta actualización no cierra el objetivo general.
+
+
+Actualización650 (corte actual): lector JSON estricto649, corrección conservadora de tarjetas secundarias Paid648 y portabilidad de pruebas307/453. Leer entrega/650_ULTIMO_CIERRE_PRE_CURSOR_CODEX.md. Carril aislado ahora29suites, incluyendo644/649; siguen pendientes los demás consumidores y la aceptación global. No ejecutar casos heredados que dependen de reglas privadas reales como si fueran fixtures portables.

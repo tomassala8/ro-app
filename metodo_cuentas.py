@@ -16,8 +16,26 @@ S=None
 
 
 def leer(p):
-    try:return json.loads(p.read_text())
-    except (OSError,ValueError):return {}
+    def objeto(pares):
+        resultado = {}
+        for clave, valor in pares:
+            if clave in resultado:
+                raise ValueError('JSON ambiguo')
+            resultado[clave] = valor
+        return resultado
+    def constante(_):
+        raise ValueError('Número no finito')
+    def decimal(valor):
+        import math
+        numero = float(valor)
+        if not math.isfinite(numero):
+            raise ValueError('Número no finito')
+        return numero
+    try:
+        return json.loads(p.read_text(), object_pairs_hook=objeto,
+                          parse_constant=constante, parse_float=decimal)
+    except (OSError, ValueError):
+        return {}
 
 
 def dia(v):

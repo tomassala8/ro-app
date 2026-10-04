@@ -42,7 +42,7 @@ class Pruebas560(unittest.TestCase):
         funciones('pruebas_seguridad.py', ['ejecutar_aisladas_560'], env)
         with contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(env['ejecutar_aisladas_560'](),1)
-        self.assertEqual(len(calls),27)
+        self.assertEqual(len(calls),29)
         self.assertEqual(Path(calls[3][0][1]).name,'probar_capturas_opiniones_565.py')
         self.assertIn('✓ probar_capturas_opiniones_565.py',out.getvalue())
         self.assertEqual(Path(calls[4][0][1]).name,'probar_secretos_calientes_567.py')
@@ -62,7 +62,8 @@ class Pruebas560(unittest.TestCase):
                           'probar_informes_declarados_596.py', 'probar_acciones_tipadas_603.py',
                           'probar_decisiones_clientes_607.py', 'probar_resumen_informes_611.py', 'probar_cerebro_reservas_620.py',
                           'probar_puente_cerebro_reservas_621.py', 'probar_seo_fuentes_624.py',
-                          'probar_seguridad_cerebro_seo_625.py', 'probar_recorte_estructurado_632.py'])
+                          'probar_seguridad_cerebro_seo_625.py', 'probar_recorte_estructurado_632.py',
+                          'probar_eventos_cadencia_644.py', 'probar_lector_metodo_649.py'])
         for c in calls[8:]:
             self.assertIn('✓ '+Path(c[0][1]).name,out.getvalue())
         self.assertIn('✗ probar_bloque_seguridad_558.py',out.getvalue())
