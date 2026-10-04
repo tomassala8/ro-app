@@ -5,7 +5,7 @@
   "puestos": [
    "account"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
@@ -26,11 +26,6 @@
   ],
   "nota": "Cubre cómo actuar delante del cliente: reunión del ciclo, informe, contacto semanal, mala noticia, error nuestro, queja, baja, pausa o descuento, cliente silencioso, señales de baja, revisión del día 120, expectativas, fuera de alcance, y la salud de la cartera del account. Reparto desde el 29-sep (mapa §13 n.º 6): en clientes del Método, paid lleva estrategia, campaña, reunión quincenal y malas noticias de campaña; el account asegura atención, cadencia, los 3 datos, el semáforo de llamadas (lunes y jueves), el informe del día 5 y que nada quede parado. Emex, Garmande y LAVER firmaron account «único»: sigue asignado y paid entra en la reunión. En la cartera antigua el account sigue llevando la relación con reunión mensual. Deriva a: publicidad (campaña, leads, creatividades), crm (embudo y GHL), altas (arranque) y personas_admin (cobros, impagos, SEPA).",
   "pendientes_tomas": [
-   "Rol del account en la cartera antigua (Visible/Motor): el 29-sep habla de clientes nuevos. Aplicado: en la cartera antigua el account sigue llevando relación y reunión mensual (alarma > 35 días).",
-   "Intentos de llamada a cada lead: el acuerdo exige 4 en 72 h, la academia recomienda 6 y A-2 pone tope de 5. Aplicado: el semáforo mide contra 4; 6 solo como recomendación.",
-   "Si el indicador account.reunion_del_ciclo cuenta las reuniones quincenales que hace paid. Aplicado: el account registra la reunión aunque la lleve paid.",
-   "Quién lleva la revisión del día 120 y con qué guion: no hay guion vigente. Aplicado: la prepara el account con los datos, la conduce paid con Mili y ninguna salida económica se ofrece sin dirección.",
-   "Garantía: el anuncio BOFU sigue diciendo «en reunión contigo en menos de 30 días, o no pagas» y venta ya no la nombra (9-sep). Falta decidir qué responde el account y enmendar C-D2-05 y la regla sin_garantia_resultado. Aplicado: no se confirma ni se niega por escrito; se escala a Mili el mismo día.",
    "Newsletter escrita mensual y diseño de la presentación del cliente (academia): no se prometen hasta el OK de Tomás."
   ],
   "fuentes_ausentes": [
@@ -39,7 +34,8 @@
    "OFERTA del 1-sep (.docx): solo se usa su resumen en _AVISO_VIGENCIA.md",
    "ACADEMIA .../04_LO_QUE_NO_CABE_EN_EL_ACUERDO.md (referenciado en 03_SEGUIMIENTO, no existe)",
    "Molde del acuerdo MCR (.docx, fuera del repo): solo se usa lo citado en 03_SEGUIMIENTO e INTERLOCUTOR"
-  ]
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -74,8 +70,8 @@
   },
   {
    "id": "account_p_no_prometer",
-   "texto": "No prometas resultados ni plazos. La garantía vive solo en el documento de oferta (1-sep, con el matiz del 9-sep): no la menciones tú; si el cliente la saca, escala.",
-   "fuente": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md:8",
+   "texto": "No prometas resultados ni plazos. No hay garantía de resultados: no se ofrece, no se promete y no se usa (decisión de Tomás, 4-oct). Si el cliente la saca, se lo dices así.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 18) · central:skills/criterio-tomas-ro/LEYES.md:143",
    "autor": "Tomás"
   },
   {
@@ -229,7 +225,7 @@
      "como_confirmar": "Hay un fallo concreto con fecha y pieza.",
      "solucion": [
       "Para el daño ya.",
-      "Sigue la ficha de error nuestro: admitir sin matices, dos compensaciones que decide dirección."
+      "Sigue la ficha de error nuestro: admitir sin matices y dos compensaciones, habladas primero con Coti."
      ],
      "quien": "account",
      "plazo": "Hoy"
@@ -359,6 +355,11 @@
      "linea": 6,
      "autor": "Tomás",
      "nota": "29-sep: el account pasa a soporte técnico; paid hace la estrategia y el seguimiento de la campaña. Manda 29-sep sobre PLAYBOOK (account = dueño) para clientes del Método (mapa §13 n.º 6)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -660,10 +661,10 @@
      "como_confirmar": "Ha costado inversión o lo han visto sus clientes.",
      "solucion": [
       "Admite sin matices.",
-      "Prepara dos compensaciones concretas y llévalas a dirección: el gesto económico lo decide Tomás.",
+      "Prepara dos compensaciones concretas y háblalas primero con Coti (decisión de Tomás, 4-oct).",
       "Ofrécelas antes de que las pida y deja que elija."
      ],
-     "quien": "direccion",
+     "quien": "proyectos",
      "plazo": "48 h"
     },
     {
@@ -713,7 +714,7 @@
     "Explicar por qué pasó antes de admitir que pasó.",
     "Relativizar cuando dice «me afecta a pasta».",
     "Señalar a un compañero delante del cliente.",
-    "Ofrecer descuento por tu cuenta: lo decide Tomás.",
+    "Ofrecer descuento o compensación por tu cuenta: primero se habla con Coti.",
     "Corregir en silencio sin decírselo."
    ],
    "escalar": {
@@ -769,6 +770,11 @@
      "linea": 50,
      "autor": "RO",
      "nota": "Segundo error del mismo tipo = escalada senior"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -3197,7 +3203,7 @@
      "como_confirmar": "Motivo de valor o experiencia.",
      "solucion": [
       "Recíbela con dignidad, sin discutir ni renegociar.",
-      "Pack de cierre, propiedades devueltas, autopsia contra las 12 causas."
+      "Pack de cierre, propiedades devueltas y autopsia contra la lista cerrada de causas: las 13 de barrido_cartera más «traspaso de account sin los 3 entregables»."
      ],
      "quien": "account",
      "plazo": "30 días"
@@ -3283,6 +3289,17 @@
      "linea": 2727,
      "autor": "Hormozi",
      "nota": "Entrevista de salida: dejarle desahogarse y escuchar el problema"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/barrido_cartera.md",
+     "linea": 22,
+     "autor": "RO",
+     "nota": "Las 13 causas raíz (8 con señal y 5 sin señal, líneas 22-45)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 56: causas de baja: las 13 de barrido_cartera más «traspaso de account sin los 3 entregables»."
     }
    ]
   },
@@ -3419,7 +3436,7 @@
      "veredicto"
     ]
    },
-   "sintoma": "Clientes del Método: dos relojes, 30 días (garantía donde esté firmada) y día 120 (revisión del dinero contra el objetivo del día 0). Cartera antigua: no hay «renovación», la continuidad es por defecto.",
+   "sintoma": "Clientes del Método: el día 120 se revisa el dinero contra el objetivo del día 0. No hay garantía de resultados. Cartera antigua: no hay «renovación», la continuidad es por defecto.",
    "gravedad": "media",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -3449,7 +3466,7 @@
     },
     {
      "paso": 5,
-     "comprueba": "¿Quién la lleva? No hay guion vigente del día 120: pregúntalo a Mili.",
+     "comprueba": "¿Está claro el reparto? La prepara el account con los datos, la conduce paid con Mili y nada económico se ofrece sin Tomás.",
      "donde": "Mili",
      "si_falla": "c5"
     }
@@ -3499,10 +3516,10 @@
     },
     {
      "id": "c5",
-     "causa": "Responsable de la revisión sin definir.",
+     "causa": "Paid o Mili sin fecha para conducirla.",
      "como_confirmar": "Nadie la tiene asignada.",
      "solucion": [
-      "Pide a Mili quién la conduce; tú llevas el dossier."
+      "Pide la fecha a Mili; tú llevas el dossier."
      ],
      "quien": "operaciones",
      "plazo": "Esta semana"
@@ -3516,7 +3533,7 @@
     {
      "canal": "reunion",
      "para": "cliente",
-     "cuando": "Apertura de la revisión (la conduce quien diga Mili; en Método, con paid)",
+     "cuando": "Apertura de la revisión (la conduce paid con Mili)",
      "texto": "{nombre}, hoy toca lo que pactamos el {fecha_dia0}: ver con números si esto tiene sentido para tu despacho. Pactamos {metrica} de {umbral}. Te enseño lo que ha pasado, tu parte y la nuestra, y lo decidimos con el dato delante. Puede salir que funciona, que no, o que estamos a medias; los tres casos tienen siguiente paso."
     }
    ],
@@ -3542,7 +3559,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 19,
      "autor": "Tomás",
-     "nota": "Dos relojes: 30 días la garantía, día 120 la revisión del dinero"
+     "nota": "Día 120: revisión del dinero contra el objetivo del día 0"
     },
     {
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
@@ -3579,6 +3596,16 @@
      "linea": 2767,
      "autor": "Hormozi",
      "nota": "La renovación se trabaja antes del final"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 29: día 120: lo prepara el account, lo conduce paid con Mili y nada económico se ofrece sin Tomás."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     }
    ]
   },
@@ -3959,7 +3986,7 @@
      "lo que decía el anuncio"
     ]
    },
-   "sintoma": "Pide una garantía de resultado, cita «si no, no pagas» del anuncio, o pregunta por la devolución.",
+   "sintoma": "Pide una garantía de resultado, cita «si no, no pagas» de un anuncio antiguo, o pregunta por la devolución.",
    "gravedad": "media",
    "plazo": "48 h",
    "diagnostico": [
@@ -3971,7 +3998,7 @@
     },
     {
      "paso": 2,
-     "comprueba": "¿Lo saca a raíz de un anuncio o del documento de oferta?",
+     "comprueba": "¿Lo saca por un anuncio o un documento antiguo?",
      "donde": "Pregúntaselo",
      "si_falla": "c2"
     },
@@ -3985,22 +4012,23 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "Tiene una cláusula firmada (p. ej. Emex).",
+     "causa": "Su acuerdo trae una cláusula de devolución o de resultado (p. ej. Emex).",
      "como_confirmar": "Consta en su acuerdo.",
      "solucion": [
-      "No la discutas ni la interpretes tú: pásalo a dirección."
+      "No la discutas ni la interpretes tú: pásala a Tomás el mismo día."
      ],
      "quien": "direccion",
      "plazo": "48 h"
     },
     {
      "id": "c2",
-     "causa": "Lo vio en un anuncio o en la oferta y no está en su acuerdo.",
+     "causa": "Lo vio en un anuncio o en la oferta antigua y no está en su acuerdo.",
      "como_confirmar": "El acuerdo no la recoge.",
      "solucion": [
-      "No confirmes ni niegues: «lo miro con dirección y te digo exactamente lo que tienes firmado»."
+      "Dile con claridad que no hay garantía de resultados.",
+      "Avisa a dirección para que retire el texto que la prometía."
      ],
-     "quien": "direccion",
+     "quien": "account",
      "plazo": "48 h"
     },
     {
@@ -4015,27 +4043,27 @@
     }
    ],
    "acciones_inmediatas": [
-    "Explica lo que sí se compromete: proceso, alcance, el número pactado el día 0 y la revisión del día 120.",
-    "Cualquier pregunta sobre devolución o cláusula, a dirección."
+    "Di con claridad que no hay garantía de resultados y explica lo que sí hacemos: proceso, alcance, el número pactado el día 0 y la revisión del día 120.",
+    "Si cita una cláusula firmada o pide una devolución, a Tomás el mismo día."
    ],
    "guiones": [
     {
      "canal": "llamada",
      "para": "cliente",
      "cuando": "Cuando pide garantía de resultado",
-     "texto": "{nombre}, te voy a ser honesto: nadie serio te puede garantizar clientes, porque la venta la cierras tú y eso no lo controlamos nosotros. Lo que sí te garantizamos es el proceso, lo que hacemos cada semana y que el día 120 nos sentamos con los números contra el objetivo que pactamos el día 0. Lo que tienes firmado en concreto lo reviso con dirección y te lo confirmo el {fecha}."
+     "texto": "{nombre}, te voy a ser claro: no hay garantía de resultados. Nadie serio te la puede dar, porque la venta la cierras tú y eso no lo controlamos nosotros. Lo que sí hacemos es el proceso, lo que trabajamos cada semana y la revisión del día 120 con los números contra el objetivo que pactamos el día 0. Si tienes algo firmado distinto, lo reviso con dirección y te lo confirmo el {fecha}."
     }
    ],
    "que_no_hacer": [
-    "Prometer un número de leads o clientes.",
-    "Interpretar tú una cláusula de devolución.",
-    "Negar algo que quizá vio en un anuncio sin comprobarlo."
+    "Prometer un número de leads, reuniones o clientes.",
+    "Decir que hay garantía o insinuarla: no la hay.",
+    "Interpretar tú una cláusula de devolución."
    ],
    "escalar": {
-    "cuando": "Siempre que cite una cláusula, el anuncio o la devolución.",
+    "cuando": "Siempre que cite una cláusula firmada o pida una devolución.",
     "a": "direccion"
    },
-   "exito": "El cliente sabe por escrito qué tiene firmado y qué no, sin promesas nuevas; la conversación vuelve a los datos.",
+   "exito": "El cliente sabe que no hay garantía de resultados y qué tiene firmado; la conversación vuelve a los datos.",
    "reglas_relacionadas": [
     "sin_garantia_resultado",
     "criterio_d0",
@@ -4043,28 +4071,21 @@
    ],
    "fuentes": [
     {
-     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
-     "linea": 18,
+     "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Oferta del 1-sep: mínimo 2 reuniones válidas en 30 días o no paga los honorarios del periodo"
-    },
-    {
-     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
-     "linea": 8,
-     "autor": "Tomás",
-     "nota": "9-sep: la garantía vive solo en el documento de oferta; no se dice en reunión ni va al contrato. Manda 1-sep con matiz 9-sep sobre LEYES C-D2-05 y la regla sin_garantia_resultado (mapa §13 n.º 1)"
-    },
-    {
-     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
-     "linea": 16,
-     "autor": "Tomás",
-     "nota": "El anuncio sigue prometiendo «en reunión contigo en menos de 30 días, o no pagas»: hueco abierto"
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 143,
      "autor": "Tomás",
-     "nota": "C-D2-05 (3-ago, superada en la garantía): se garantiza proceso, alcance y fecha de juicio"
+     "nota": "C-D2-05: se compromete proceso, alcance y fecha de juicio; ninguna garantía de resultado. Vuelve a mandar desde el 4-oct."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
+     "linea": 16,
+     "autor": "Tomás",
+     "nota": "El anuncio antiguo prometía «o no pagas»: hay que retirarlo, no hay garantía"
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/INTERLOCUTOR_2026-09-29/02_FRASE_NUEVA.md",
@@ -4727,7 +4748,7 @@
     },
     {
      "paso": 2,
-     "comprueba": "¿Llama desde su móvil personal y no lo apunta? Pregunta antes de reñir.",
+     "comprueba": "¿Llama desde su móvil personal y no lo apunta? Pregunta antes de reñir: solo cuentan las llamadas registradas en GHL.",
      "donde": "Notas y etapas de las fichas",
      "si_falla": "c2"
     },
@@ -4868,7 +4889,7 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/ACADEMIA_TAREAS_ACCOUNT_2026-09-29/03_SEGUIMIENTO_LLAMADAS_A_LEADS.md",
      "linea": 19,
      "autor": "RO",
-     "nota": "Se exigen 4 intentos (acuerdo) y se recomiendan 6 (academia): abierto para Tomás; A-2 pone tope de 5 (mapa §13 n.º 4)"
+     "nota": "Se exigen 4 intentos en 72 h (acuerdo) y el objetivo es 5 (4-oct). Los textos que dicen 6 se corrigen."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/ACADEMIA_TAREAS_ACCOUNT_2026-09-29/03_SEGUIMIENTO_LLAMADAS_A_LEADS.md",
@@ -4898,7 +4919,7 @@
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 1298,
      "autor": "RO",
-     "nota": "Garantía de contacto ≤ 1 h y 4 intentos en 72 h (11_DECISIONES, fuente ausente). Manda contrato y 2-oct sobre < 5 min (mapa §13 n.º 3)"
+     "nota": "Compromiso de contacto del despacho: ≤ 1 h y 4 intentos en 72 h (11_DECISIONES, fuente ausente). Manda el contrato y el 2-oct sobre < 5 min (mapa §13 n.º 3)"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
@@ -4917,6 +4938,16 @@
      "linea": 8,
      "autor": "Tomás",
      "nota": "El account se asegura de que el cliente esté atendido; estrategia y producto, paid"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 32: al despacho, primer intento en 1 h o menos y 4 intentos en 72 h; objetivo 5; < 15 min solo con persona dedicada; el setter de RO, < 5 min."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },

@@ -58,6 +58,7 @@ python3 fuentes_consejos/cerebros/pendientes.py           # regenera PENDIENTES_
 
 - Cambia el `<area>.json`, sube `_meta.version` y pon la fuente con fichero y línea.
 - Si es criterio sin documento, `{"fichero": "criterio", "autor": "RO", "nota": "sin fuente"}`.
+- Si es una decisión de Tomás sin fichero en un repo, `{"fichero": "decision_tomas_2026-10-04", "autor": "Tomás", "nota": "Respuesta n.º 18: …"}` (sin línea).
 - Nada de correos, teléfonos, claves ni datos de personas. Las pruebas lo vigilan.
 - `_meta.pendientes_tomas` recoge lo que solo Tomás puede decidir. Resumen en `PENDIENTES_TOMAS.md`.
 

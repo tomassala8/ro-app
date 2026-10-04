@@ -148,6 +148,11 @@ def correr(estricto=False):
                 fi = str(f.get("fichero", ""))
                 if fi == "criterio":
                     continue
+                # decisión de Tomás registrada fuera de los repos (p. ej. «decision_tomas_2026-10-04», respuesta n.º X): sin línea
+                if fi.startswith("decision_tomas_") and "linea" not in f:
+                    if not re.fullmatch(r"decision_tomas_\d{4}-\d{2}-\d{2}", fi) or not f.get("nota"):
+                        errores.append(f"{donde}: decisión de Tomás mal citada {fi!r}")
+                    continue
                 if ":" not in fi:
                     errores.append(f"{donde}: fuente sin prefijo de repo {fi!r}")
                     continue

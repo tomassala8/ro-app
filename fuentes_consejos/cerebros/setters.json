@@ -9,7 +9,7 @@
    "account",
    "direccion"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/cualificacion-prospecto-despacho/recursos/CADENCIA.md",
@@ -38,16 +38,10 @@
   ],
   "nota": "Cubre dos tipos de persona que llama. (1) El setter de RO: trabaja en «Mi día del setter» de la app, solo con la subcuenta de RO, y llama a despachos que dejaron sus datos para que se reúnan con Tomás. Es el sentido principal y el que tiene disparadores en la app. (2) Quien llama en el despacho cliente a los leads del despacho: RO le da guion, cadencia y QA. Las fichas de ese caso llevan «(despacho)» en el título. Las reglas de oficio (velocidad, cadencia, ley, objeciones, confirmación, rescate) valen para los dos. Deriva a: crm (montaje de GHL, flujos, recordatorios automáticos), ventas_ro (reunión de 45 min y cierre de Tomás), account (relación con el despacho y cláusula de incumplimiento), personas_admin (sueldos, contratos, despidos). Contradicciones resueltas según mapa §13: velocidad, manda el contrato y la decisión del 2-oct (≤ 1 h al despacho; el minuto mide nuestro sistema); intentos, manda A-2 (5 llamadas) con el suelo exigible del contrato (4 intentos en 72 h); llamadas, manda la ley española sobre Cole (sin doble marcación, 9:00-21:00 L-V, nunca móvil, fuera al primer no); precio en el setting, manda RO (no se da cifra de honorarios).",
   "pendientes_tomas": [
-   "T5: ¿objetivo interno de menos de 15 min al primer intento solo donde llama una persona dedicada? Mientras tanto se aplica ≤ 1 h al despacho y < 5 min como objetivo del setter de RO.",
-   "CADENCIA.md dice «6 llamadas» en el título de la tabla (línea 13) y «tope: CINCO» (línea 10). Hay que corregir el título a 5 llamadas (A-2).",
-   "Garantía: los anuncios BOFU prometen «en reunión contigo en menos de 30 días, o no pagas» y la venta no la nombra (9-sep). ¿Qué contesta el setter de RO si el lead la saca? Hoy la ficha dice: no la ofrezcas ni la niegues; que lo vea con Tomás.",
-   "El guion del setter de RO (03_GUION_SETTER_V1, 24-jul) sigue en borrador sin validar por Coti y tiene puntos superados (precio escalonado, Visible, «dame 90 días» frente a los 120 días del 29-jul). Falta un manual vigente del setter de RO con la oferta del 1-sep.",
-   "Suelo de publicidad que dice el setter: SOP-P2-01 y el guion v1 dicen 500-1.000 €/mes; el aviso del 1-sep dice «desde 600 €». La ficha usa «desde 600 €». Confirmar.",
-   "¿La llamada del setter con los 5 filtros sustituye a la de 15 minutos con Tomás, o el setter manda siempre al enlace de 15? La app confirma citas de 45 min.",
-   "KPI y retribución del setter de RO: la regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número.",
-   "Si RO llega a operar la llamada del despacho (SOP-P2-13 en borrador; recomendación de piloto en 2 cuentas, 27-jul).",
-   "Despedir o plan de mejora a un setter: Cole propone cortar en 3-4 semanas; mandan las leyes de Tomás (C-D4). La ficha no aconseja despidos: escala a dirección."
-  ]
+   "¿La llamada del setter con los 5 filtros sustituye a la de 15 minutos con Tomás, o el setter manda siempre al enlace de 15? La app confirma citas de 45 min. La recomendación (el setter agenda directo la de 45) no está confirmada: la respuesta n.º 46 solo trata el outreach y el suelo de publicidad.",
+   "KPI y retribución del setter de RO: sin definir (respuesta n.º 50). La regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -461,7 +455,7 @@
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 1298,
      "autor": "RO",
-     "nota": "Al despacho se le mide la garantía (≤ 1 h y 4 intentos en 72 h); el minuto mide nuestro sistema. Manda el contrato y el 2-oct sobre CADENCIA (< 5 min) y Cole (< 10 min), mapa §13 n.º 3"
+     "nota": "Al despacho se le mide el compromiso de contacto (≤ 1 h y 4 intentos en 72 h); el minuto mide nuestro sistema. Manda el contrato y el 2-oct sobre CADENCIA (< 5 min) y Cole (< 10 min), mapa §13 n.º 3"
     },
     {
      "fichero": "central:memoria/project_contrato_motor_clientes.md",
@@ -504,6 +498,11 @@
      "linea": 1571,
      "autor": "Cole Gordon",
      "nota": "< 10 min → 2-3 veces más respuestas (doctrina externa, por debajo del contrato)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 32: al despacho, primer intento en 1 h o menos y 4 intentos en 72 h; objetivo 5; < 15 min solo con persona dedicada; el setter de RO, < 5 min."
     }
    ]
   },
@@ -2129,7 +2128,17 @@
      "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
      "linea": 8,
      "autor": "Tomás",
-     "nota": "La garantía no se dice en venta (9-sep)"
+     "nota": "La garantía no se dice en venta (9-sep); desde el 4-oct no hay garantía"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 46: no se hace outreach para clientes salvo los que lo tienen contratado; suelo de publicidad que se dice: «desde 600 €»."
     }
    ]
   },
@@ -2952,6 +2961,11 @@
      "linea": 3557,
      "autor": "Cole Gordon",
      "nota": "Deferir al asesor cuando piden precio al setter"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 46: no se hace outreach para clientes salvo los que lo tienen contratado; suelo de publicidad que se dice: «desde 600 €»."
     }
    ]
   },
@@ -3231,7 +3245,7 @@
      "como_confirmar": "«¿Cuántos clientes me garantizáis?», «¿y si no funciona?».",
      "solucion": [
       "No prometas clientes ni resultados.",
-      "La garantía no se dice en venta: no la ofrezcas ni la niegues; dile que eso lo ve con Tomás.",
+      "No hay garantía de resultados: dilo así, sin rodeos, y vuelve al proceso (decisión de Tomás, 4-oct).",
       "Lo que sí se dice: proceso, reuniones con gente verificada y llenar la capacidad que él declare."
      ],
      "quien": "setters",
@@ -3303,7 +3317,7 @@
    ],
    "que_no_hacer": [
     "No prometas clientes, facturación ni «×N».",
-    "No ofrezcas ni expliques la garantía.",
+    "No ofrezcas ni insinúes una garantía: no la hay.",
     "No digas «garantizado», «asegurado», ni superlativos sin dato.",
     "No ofrezcas exclusividad «de momento».",
     "No uses escasez fabricada («solo me quedan dos huecos»)."
@@ -3347,7 +3361,7 @@
      "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
      "linea": 8,
      "autor": "Tomás",
-     "nota": "La garantía no se dice en la reunión ni se ofrece (9-sep). Punto abierto con los anuncios BOFU: pendiente de Tomás"
+     "nota": "La garantía no se dice ni se ofrece: desde el 4-oct no hay garantía"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/cualificacion-prospecto-despacho/recursos/OBJECIONES.md",
@@ -3366,6 +3380,16 @@
      "linea": 89,
      "autor": "RO",
      "nota": "Escasez fabricada: no se usa (líneas 88-99)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 21: cifras de resultado en la venta: prohibidas."
     }
    ]
   },

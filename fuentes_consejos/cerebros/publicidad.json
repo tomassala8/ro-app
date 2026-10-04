@@ -6,7 +6,7 @@
    "jefa_publicidad",
    "trafficker"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/optimizador-campanas-meta-despacho/SKILL.md",
@@ -25,17 +25,12 @@
    "ro-app:fuentes_captacion/generar_captacion.py",
    "hormozi-cole-gordon:CEREBRO/08_PUBLICIDAD_DE_PAGO.md"
   ],
-  "nota": "Cubre el árbol de diagnóstico de publicidad: no gasta, CPL alto, pocos leads, leads basura, fatiga, rechazos, cuenta bloqueada, medición, aprendizaje, presupuesto, segmentación, ganador, escalado, test de arranque y gestión de la cartera. Lo que pasa después del lead (llamada, cita, asistencia) se deriva al cerebro de crm y setters; la landing y la web, a seo_web; la producción de piezas, a redes_produccion; la conversación con el cliente, a account. Contradicciones resueltas: manda el 1-sep (Meta único) sobre PRECEDENCIA §5; manda el protocolo del 28-sep y su cuadro del 29-sep sobre rendimiento.md §4 (CPL de referencia, histórico); manda el cuadro del 29-sep (juicio por conjunto) sobre el criterio por anuncio del protocolo; manda D-39 (dos señales) sobre el nodo de fatiga de una señal de la app; manda RO sobre Cole Gordon en escalado y en abrir cuentas o BM nuevos. Fuentes que faltaban y se citan de forma indirecta: 11_DECISIONES_PARA_TOMAS.md (D-03, D-07, D-39, D-40, D-41), 06_KPIS_INTERNOS_RO_POR_PUESTO.md, 01_LA_CELULA.md, la oferta definitiva (.docx), DOCTRINA_META_ADS_2026/02_ARBOL_DE_DIAGNOSTICO.md (Desktop) y 14_GOOGLE_ADS_VIA_WINDSOR.md.",
+  "nota": "Cubre el árbol de diagnóstico de publicidad: no gasta, CPL alto, pocos leads, leads basura, fatiga, rechazos, cuenta bloqueada, medición, aprendizaje, presupuesto, segmentación, ganador, escalado, test de arranque y gestión de la cartera. Lo que pasa después del lead (llamada, cita, asistencia) se deriva al cerebro de crm y setters; la landing y la web, a seo_web; la producción de piezas, a redes_produccion; la conversación con el cliente, a account. Contradicciones resueltas: manda el 1-sep (Meta único) sobre PRECEDENCIA §5; manda el protocolo del 28-sep y su cuadro del 29-sep sobre rendimiento.md §4 (CPL de referencia, histórico); manda el cuadro del 29-sep (juicio por conjunto) sobre el criterio por anuncio del protocolo; manda D-39 (dos señales) sobre el nodo de fatiga de una señal de la app; manda RO sobre Cole Gordon en escalado y en abrir cuentas o BM nuevos. Fuentes que faltaban y se citan de forma indirecta: 11_DECISIONES_PARA_TOMAS.md (D-03, D-07, D-39, D-40, D-41), 06_KPIS_INTERNOS_RO_POR_PUESTO.md, 01_LA_CELULA.md, la oferta definitiva (.docx), DOCTRINA_META_ADS_2026/02_ARBOL_DE_DIAGNOSTICO.md (Desktop) y 14_GOOGLE_ADS_VIA_WINDSOR.md. Presupuesto (decisión de Tomás, 4-oct): fase agresiva de test a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar; el total es 600 €/mes y el escalado se plantea dentro de ese total. Google Ads: no se abren cuentas nuevas y las heredadas se mantienen solo mientras conviertan.",
   "pendientes_tomas": [
-   "Cuenta publicitaria nueva: calentamiento de 5-10 €/día 3-5 días (doctrina §6.4) frente a 50 €/día desde el día 1 (D1 del 28-sep). Prudente mientras tanto: subir por escalones hasta 50 €/día.",
-   "Método de escalado: vertical +20 % sin duplicar (copiloto y doctrina) frente al duplicado del conjunto «casi» del cuadro del 29-sep para los 300 €.",
-   "Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos?",
-   "Criterio de ganador y pausa por conjunto (cuadro del 29-sep): pendiente de que lo confirme la jefa de publicidad.",
-   "Marcar rendimiento.md §4 (CPL de Meta 2,31-5,79 €) como histórico.",
-   "Denominador del 45 €: por cita (ARRANQUE_CITA, D-03) frente a por lead (protocolo v3). Fijar cuál manda en cada pantalla.",
-   "Google Ads: sin SOP vigente ni conexión viva (muestra manual). Decidir qué cuentas heredadas se mantienen.",
-   "Firmar la regla propuesta de que todo conjunto nuevo nace con exclusiones de leads ya captados."
-  ]
+   "Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos? La recomendación era un solo conjunto con ganador; la respuesta n.º 40 solo fija que el escalado va dentro de los 600 €/mes.",
+   "Fondo de 300 € de RO (28-sep) para quien no tiene ganador el día 25: ¿sigue vivo con el total de 600 €/mes (respuesta n.º 39)? La ficha pub_sin_ganador_fin_mes_1 lo mantiene mientras tanto."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -43,6 +38,12 @@
    "texto": "Antes de tocar anuncios, mira lo de detrás: que el lead llegue a GHL y que alguien lo llame en menos de una hora.",
    "fuente": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/05_CUADRO_DE_MANDO_TEST.md:44",
    "autor": "RO"
+  },
+  {
+   "id": "pub_p_total_600",
+   "texto": "Cuenta nueva o test: fase agresiva a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar. El total es 600 €/mes y cualquier escalado se plantea dentro de ese total.",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 39 y 40)",
+   "autor": "Tomás"
   },
   {
    "id": "pub_p_ventanas",
@@ -72,7 +73,7 @@
    "id": "pub_p_juzgar_por_conjunto",
    "texto": "En el test de arranque se juzga por conjunto y por dinero: pausa a 90 € sin lead; ganador con 3 leads a 45 € o menos tras 135 €.",
    "fuente": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/05_CUADRO_DE_MANDO_TEST.md:17",
-   "autor": "RO"
+   "autor": "Tomás"
   },
   {
    "id": "pub_p_decide_con_ghl",
@@ -94,7 +95,7 @@
   },
   {
    "id": "pub_p_escalar_por_escrito",
-   "texto": "Subir presupuesto pasa las 5 puertas, va por escrito y se avisa al cliente antes.",
+   "texto": "Subir presupuesto pasa las 5 puertas, va por escrito, se avisa al cliente antes y se queda dentro del total de 600 €/mes.",
    "fuente": "ro-equipo:30_SKILLS/auditor-paid-account-meta-despacho/SKILL.md:427",
    "autor": "RO"
   },
@@ -106,8 +107,14 @@
   },
   {
    "id": "pub_p_meta_unico",
-   "texto": "Desde el 1-sep el canal es Meta único; Google solo en la cartera heredada que pase las 3 puertas. Manda el 1-sep sobre PRECEDENCIA §5.",
-   "fuente": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:29",
+   "texto": "Desde el 1-sep el canal es Meta único. En Google Ads no se abren cuentas nuevas; las heredadas se mantienen solo mientras conviertan (decisión de Tomás, 4-oct). Manda el 1-sep sobre PRECEDENCIA §5.",
+   "fuente": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:29 · decision_tomas_2026-10-04 (respuesta n.º 42)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "pub_p_exclusiones",
+   "texto": "Todo conjunto nuevo nace con exclusiones de los leads ya captados. El ganador del test se mide por lead (3 leads o más a 45 € o menos); el objetivo de coste por cita va aparte (D-03).",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 41)",
    "autor": "Tomás"
   }
  ],
@@ -1037,6 +1044,11 @@
      "linea": 362,
      "autor": "RO",
      "nota": "cementerio: campañas pausadas con presupuesto y zombis"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 39: cuenta nueva o test: fase agresiva a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar; total 600 €/mes."
     }
    ]
   },
@@ -4445,7 +4457,7 @@
      "aumentar la inversión"
     ]
    },
-   "sintoma": "La cuenta funciona y el cliente o el equipo quiere subir la inversión. Antes de subir se pasan las 5 puertas y se exige el primer cierre real.",
+   "sintoma": "La cuenta funciona y el cliente o el equipo quiere subir la inversión. Antes de subir se pasan las 5 puertas y se exige el primer cierre real. Se escala dentro del total de 600 €/mes (decisión de Tomás, 4-oct).",
    "gravedad": "media",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -4488,7 +4500,7 @@
      "solucion": [
       "Propón por escrito al cliente la subida, el ritmo y la ventana de vigilancia.",
       "Avísale antes de subir.",
-      "Sube +20 % cada 48-72 h, tope +50 % por semana, sobre el conjunto que funciona."
+      "Pasa el presupuesto al conjunto que funciona, por tramos, sin salir de los 600 €/mes del total."
      ],
      "quien": "trafficker",
      "plazo": "Esta semana"
@@ -4534,20 +4546,21 @@
      "canal": "correo",
      "para": "cliente",
      "cuando": "Al proponer la subida",
-     "texto": "Hola, {nombre}:\n\nLa campaña lleva {semanas} semanas estable: {leads} contactos y {citas} reuniones celebradas.\nTe propongo subir de {presupuesto_actual} a {presupuesto_nuevo} €/día, poco a poco, en {dias} días.\nLos costes suelen subir algo al crecer: lo vigilamos cada semana.\n¿Me confirmas por escrito y lo pongo en marcha el {fecha}?\n\nUn saludo,\n{firma}"
+     "texto": "Hola, {nombre}:\n\nLa campaña lleva {semanas} semanas estable: {leads} contactos y {citas} reuniones celebradas.\nTe propongo pasar más presupuesto al conjunto que mejor funciona: de {presupuesto_actual} a {presupuesto_nuevo} €/día, en {dias} días, sin pasar del total de 600 € al mes.\nLos costes suelen subir algo al crecer: lo vigilamos cada semana.\n¿Me confirmas por escrito y lo pongo en marcha el {fecha}?\n\nUn saludo,\n{firma}"
     }
    ],
    "que_no_hacer": [
     "No dupliques el conjunto para escalar: la copia compite consigo misma.",
+    "No pases de 600 €/mes en total: el escalado va dentro de ese total.",
     "No subas sin avisar al cliente.",
     "No escales sin medición ni sin primer cierre.",
     "No prometas que el coste por lead se mantendrá."
    ],
    "escalar": {
-    "cuando": "El cliente quiere subir sin pasar las puertas, o se propone duplicar el conjunto",
+    "cuando": "El cliente quiere pasar de 600 €/mes o subir sin pasar las puertas",
     "a": "jefa_publicidad"
    },
-   "exito": "La inversión sube por tramos con coste por cita dentro del objetivo durante 3 semanas.",
+   "exito": "El presupuesto se concentra en lo que funciona, dentro de 600 €/mes, con coste por cita en objetivo durante 3 semanas.",
    "reglas_relacionadas": [
     "muro_direccion",
     "medicion_hasta_el_cierre",
@@ -4571,7 +4584,7 @@
      "fichero": "ro-equipo:30_SKILLS/copiloto-paid-media-despachos/SKILL.md",
      "linea": 160,
      "autor": "RO",
-     "nota": "+20 % por ajuste, tope +50 % semanal"
+     "nota": "+20 % por ajuste, tope +50 % semanal (subordinado al total de 600 €/mes desde el 4-oct)"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/copiloto-paid-media-despachos/SKILL.md",
@@ -4595,7 +4608,7 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/05_CUADRO_DE_MANDO_TEST.md",
      "linea": 52,
      "autor": "RO",
-     "nota": "el cuadro del 29-sep usa un duplicado del conjunto «casi» para los 300 €: choque abierto, pendiente para Tomás"
+     "nota": "el cuadro del 29-sep usaba un duplicado del conjunto «casi» para los 300 €: superado; el escalado va dentro de los 600 €/mes"
     },
     {
      "fichero": "hormozi-cole-gordon:CEREBRO/08_PUBLICIDAD_DE_PAGO.md",
@@ -4607,7 +4620,12 @@
      "fichero": "hormozi-cole-gordon:ACCESO/PREGUNTAS/P08_escalar_sin_disparar_coste_por_llamada.md",
      "linea": 29,
      "autor": "Cole Gordon",
-     "nota": "Cole casi nunca sube el presupuesto de una campaña activa: manda RO (vertical +20 % y nunca duplicar) sobre Cole"
+     "nota": "Cole casi nunca sube el presupuesto de una campaña activa: manda RO (nunca duplicar y escalar dentro de los 600 €/mes) sobre Cole"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 40: escalar presupuesto: dentro del total de 600 €/mes."
     }
    ]
   },
@@ -4744,6 +4762,11 @@
      "linea": 8,
      "autor": "Tomás",
      "nota": "no dividir en test"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 39: cuenta nueva o test: fase agresiva a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar; total 600 €/mes."
     }
    ]
   },
@@ -6200,7 +6223,7 @@
      "campaña de búsqueda"
     ]
    },
-   "sintoma": "Solo en la cartera heredada: desde el 1-sep el canal es Meta único. Google se mantiene solo si pasa las 3 puertas.",
+   "sintoma": "Solo en la cartera heredada: desde el 1-sep el canal es Meta único. No se abren cuentas nuevas; las heredadas se mantienen solo mientras conviertan (decisión de Tomás, 4-oct).",
    "gravedad": "baja",
    "plazo": "Esta quincena",
    "diagnostico": [
@@ -6232,7 +6255,7 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "Cuenta fuera de las puertas.",
+     "causa": "La cuenta heredada ya no convierte.",
      "como_confirmar": "No es marca propia ni sub-nicho con búsqueda.",
      "solucion": [
       "Propón a la jefa de publicidad apagarla y pasar el dinero a Meta."
@@ -6325,6 +6348,11 @@
      "linea": 293,
      "autor": "RO",
      "nota": "Google Ads es una muestra manual"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 42: Google Ads: no se abren cuentas nuevas; las heredadas se mantienen solo mientras conviertan."
     }
    ]
   },
@@ -6387,7 +6415,7 @@
     },
     {
      "paso": 5,
-     "comprueba": "¿Cuenta publicitaria nueva? Calentamiento o 50 €/día: pendiente de Tomás.",
+     "comprueba": "¿Cuenta publicitaria nueva? Fase de test a 50 €/día durante 3-4 días, dentro del total de 600 €/mes.",
      "donde": "Business Manager",
      "si_falla": "c4"
     }
@@ -6428,10 +6456,11 @@
      "causa": "Cuenta nueva sin historial.",
      "como_confirmar": "Cuenta creada o parada meses.",
      "solucion": [
-      "Prudente: arranca bajo y sube +20 % cada 48-72 h hasta los 50 €/día; anótalo para Tomás."
+      "Arranca la fase de test a 50 €/día durante 3-4 días (decisión de Tomás, 4-oct).",
+      "Con ganadores, vuelve a bajar el diario para no pasar de 600 €/mes."
      ],
      "quien": "trafficker",
-     "plazo": "Días 1-5"
+     "plazo": "Días 1-4"
     }
    ],
    "acciones_inmediatas": [
@@ -6493,7 +6522,7 @@
      "fichero": "ro-equipo:30_SKILLS/copiloto-paid-media-despachos/SKILL.md",
      "linea": 121,
      "autor": "RO",
-     "nota": "cuenta nueva: calentamiento 5-10 €/día 3-5 días; choca con 50 €/día de D1, pendiente de Tomás"
+     "nota": "cuenta nueva: la doctrina pedía calentar a 5-10 €/día; superado por la decisión del 4-oct (50 €/día durante 3-4 días)"
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/03_DECISIONES_28SEP.md",
@@ -6506,6 +6535,16 @@
      "linea": 2554,
      "autor": "RO",
      "nota": "sin llamador no se enciende"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 39: cuenta nueva o test: fase agresiva a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar; total 600 €/mes."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 36: T1: para encender hace falta todo (prueba firmada por el titular, persona que llama, llamada registrada y 12 posts); pasa por delante del día 12."
     }
    ]
   },

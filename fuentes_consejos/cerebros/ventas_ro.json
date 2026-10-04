@@ -10,7 +10,7 @@
    "setters",
    "account"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
@@ -49,16 +49,13 @@
    "ro-app:fuentes_ventas/generar_ventas_ro.py",
    "ro-equipo:15_NUEVOS_CLIENTES/<cliente>/15_Reuniones/_fathom/ (reuniones de venta reales)"
   ],
-  "nota": "Cubre el circuito de venta de RO (llamada de 15, reunión de 45, segunda de decisión), objeciones, propuesta, contrato, seguimiento, reactivación, métricas de venta y prospección propia por correo y LinkedIn. El outreach para clientes (P2-06, P2-07) está en rojo como producto: solo compromisos de cartera hasta diciembre, fuera de venta. Manda Tomás sobre Cole Gordon y Hormozi. El setting de leads de clientes va al cerebro de setters; la configuración de GoHighLevel, al de crm; la entrega al cliente, al de account; la publicidad de RO, al de publicidad.",
+  "nota": "Cubre el circuito de venta de RO (llamada de 15, reunión de 45, segunda de decisión), objeciones, propuesta, contrato, seguimiento, reactivación, métricas de venta y prospección propia por LinkedIn. RO no hace correo en frío propio (decisión de Tomás, 4-oct). El outreach para clientes solo se hace con los que lo tienen contratado (P2-06 y P2-07, en rojo como producto y fuera de venta): las fichas de correo en frío valen solo para esas cuentas. Manda Tomás sobre Cole Gordon y Hormozi. El setting de leads de clientes va al cerebro de setters; la configuración de GoHighLevel, al de crm; la entrega al cliente, al de account; la publicidad de RO, al de publicidad.",
   "pendientes_tomas": [
-   "Garantía: el anuncio de reuniones mantiene «y si no, no nos pagas» y la venta no la nombra desde el 9-sep. Acción prudente en las fichas: ni ofrecerla ni negarla, remitir al documento de oferta y avisar a dirección. ¿Qué se responde exactamente?",
-   "En reuniones reales de septiembre se dijeron cifras de resultado (Imfor 15-sep, Lobo 11-sep, Geslabor e Impulsa 22-sep, AGC 17-sep «70-80 %»). El cerebro las prohíbe según C-D2-05, la cláusula de no garantía y el guion del setter. Confirmar.",
-   "Falta el documento de oferta del 1-sep con los «4 casos, uno por objeción»: las respuestas a objeciones no usan casos hasta tenerlo.",
-   "Correo en frío propio de RO a asesorías (Caso A): sigue pendiente de validación desde agosto. Mientras tanto ningún lote sin las seis casillas y revisión de dirección. ¿Está resuelto?",
-   "Volumen diario: Hormozi pide 100 contactos al día; los topes de RO son 20 invitaciones de LinkedIn a mano y 35-50 correos por buzón (Cole: 20). ¿Qué objetivo diario fija dirección?",
-   "Umbrales de coste por cita y de bajas tempranas están marcados como propuesta sin firmar en la app. ¿Se firman?",
-   "C-D2-04 dice que el precio lo decide Coti; el aviso de vigencia fija precio único. Las fichas derivan todo cambio de precio a dirección. ¿Quién decide una excepción?"
-  ]
+   "Falta el documento de oferta del 1-sep con los «4 casos, uno por objeción»: las respuestas a objeciones no usan casos hasta tenerlo. Lo sube Tomás (respuestas n.º 58-60).",
+   "Volumen diario de prospección de RO: el correo en frío propio queda fuera (respuesta n.º 48). Queda LinkedIn a mano con tope de 20 invitaciones al día. ¿Se fija un objetivo diario o se trabaja al tope? Hormozi pide 100 contactos.",
+   "Umbral de bajas tempranas (0 / 1 / ≥ 2 al trimestre): sigue como propuesta sin firmar en la app. El coste por cita se firmó el 4-oct (respuesta n.º 47)."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -69,14 +66,20 @@
   },
   {
    "id": "ventas_ro_p_precio_no_se_baja",
-   "texto": "El precio es único y no se baja: se cambia el marco. Descuentos, planes de pago o cambios de condiciones, solo dirección.",
-   "fuente": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:25",
+   "texto": "El precio es único y no se baja: se cambia el marco. Descuentos, planes de pago o cambios de condiciones, solo Tomás.",
+   "fuente": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:25 · decision_tomas_2026-10-04 (respuesta n.º 20)",
    "autor": "Tomás"
   },
   {
    "id": "ventas_ro_p_nada_de_promesas",
-   "texto": "Nunca prometas resultados, número de clientes, porcentajes ni plazos. La garantía no se nombra en la venta; si la sacan, no se ofrece.",
-   "fuente": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md:14",
+   "texto": "Nunca prometas resultados, número de clientes, porcentajes ni plazos: las cifras de resultado están prohibidas en la venta. No hay garantía; si la sacan, se dice que no la hay.",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 18 y 21) · central:skills/criterio-tomas-ro/LEYES.md:143",
+   "autor": "Tomás"
+  },
+  {
+   "id": "ventas_ro_p_sin_frio",
+   "texto": "RO no hace correo en frío propio. El outreach se hace solo para clientes que lo tienen contratado. El suelo de publicidad que se dice es «desde 600 €».",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 46 y 48)",
    "autor": "Tomás"
   },
   {
@@ -493,7 +496,7 @@
    "que_no_hacer": [
     "No presentes menú de opciones.",
     "No prometas resultados, cifras de leads ni plazos.",
-    "No nombres la garantía en la reunión.",
+    "No hables de garantía: no la hay. Si la sacan, dilo así.",
     "No digas «un único interlocutor» ni «responde por los resultados».",
     "No bajes el precio para cerrar."
    ],
@@ -568,7 +571,7 @@
      "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
      "linea": 13,
      "autor": "Tomás",
-     "nota": "La garantía no se dice en la reunión"
+     "nota": "La garantía no se dice en la reunión; desde el 4-oct no hay garantía"
     },
     {
      "fichero": "ro-app:indicadores.json",
@@ -581,6 +584,16 @@
      "linea": 6988,
      "autor": "Cole Gordon",
      "nota": "Encuadre del cierre en 2 llamadas; subordinado al guion de RO"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 21: cifras de resultado en la venta: prohibidas."
     }
    ]
   },
@@ -1848,6 +1861,11 @@
      "linea": 22,
      "autor": "RO",
      "nota": "Suelo antiguo 500-1.000: superado por el mínimo de 600 € (manda el aviso de vigencia)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 46: no se hace outreach para clientes salvo los que lo tienen contratado; suelo de publicidad que se dice: «desde 600 €»."
     }
    ]
   },
@@ -1996,7 +2014,7 @@
    "que_no_hacer": [
     "No bajes el precio ni inventes descuentos o planes de pago.",
     "No justifiques el precio con resultados prometidos.",
-    "No uses la garantía para cerrar.",
+    "No uses garantías ni resultados para cerrar: no hay garantía.",
     "No uses cifras de ahorro o ganancia como promesa: solo como ilustración del sector.",
     "No critiques a otras agencias."
    ],
@@ -2084,6 +2102,11 @@
      "linea": 191,
      "autor": "Tomás",
      "nota": "C-D2-12"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 20: un solo precio; las excepciones solo las decide Tomás y Coti no fija precios."
     }
    ]
   },
@@ -2691,7 +2714,7 @@
    "que_no_hacer": [
     "No critiques a la otra agencia.",
     "No prometas resultados, número de clientes, porcentajes de éxito ni plazos.",
-    "No uses la garantía para vencer la desconfianza.",
+    "No prometas garantías ni resultados para vencer la desconfianza.",
     "No des porcentajes de éxito."
    ],
    "escalar": {
@@ -2726,7 +2749,7 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/AGC/15_Reuniones/_fathom/2026-09-17_with-albert-sala_826952942.md",
      "linea": 102,
      "autor": "Tomás",
-     "nota": "Dice «70-80 %» de probabilidad: promesa a evitar (manda C-D2-05 sobre la práctica)"
+     "nota": "Dice «70-80 %» de probabilidad: cifras de resultado prohibidas en la venta (4-oct)"
     },
     {
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
@@ -2745,6 +2768,11 @@
      "linea": 3,
      "autor": "Tomás",
      "nota": "Una persona con nombre que lleva tu publicidad"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 21: cifras de resultado en la venta: prohibidas."
     }
    ]
   },
@@ -2770,13 +2798,13 @@
      "y si no consigo clientes"
     ]
    },
-   "sintoma": "El prospecto pregunta por la garantía o cita el anuncio «y si no, no nos pagas».",
+   "sintoma": "El prospecto pregunta por la garantía o cita un anuncio antiguo («y si no, no nos pagas»).",
    "gravedad": "alta",
    "plazo": "En la reunión",
    "diagnostico": [
     {
      "paso": 1,
-     "comprueba": "Viene de un anuncio que promete la garantía.",
+     "comprueba": "Viene de un anuncio antiguo que prometía la garantía.",
      "donde": "GoHighLevel > fuente del lead",
      "si_falla": "c1"
     },
@@ -2796,12 +2824,12 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "El anuncio la promete y la venta no la nombra.",
+     "causa": "Un anuncio antiguo la prometía.",
      "como_confirmar": "Fuente: anuncio de reuniones con la cláusula.",
      "solucion": [
-      "No la ofrezcas ni la niegues.",
-      "Di que las condiciones están en el documento de oferta y en el acuerdo.",
-      "Avisa a dirección el mismo día: es un caso abierto."
+      "Di con claridad que no hay garantía de resultados.",
+      "Explica lo que sí está firmado: sin alta, sin permanencia, aviso de 30 días, revisión a los 120 días.",
+      "Avisa a dirección el mismo día para que retire el anuncio."
      ],
      "quien": "ventas_ro",
      "plazo": "Hoy"
@@ -2828,7 +2856,7 @@
     }
    ],
    "acciones_inmediatas": [
-    "Responde con lo firmado, sin ofrecer garantía.",
+    "Responde que no hay garantía de resultados y explica lo que sí está firmado.",
     "Anota la pregunta en la tarjeta."
    ],
    "guiones": [
@@ -2836,7 +2864,7 @@
      "canal": "reunion",
      "para": "lead",
      "cuando": "Si pregunta",
-     "texto": "Te cuento lo que firmamos: no hay alta ni permanencia, te vas con 30 días de aviso y a los 120 días revisamos juntos los números de tu despacho para decidir si seguir, ajustar o parar."
+     "texto": "No hay garantía de resultados, y te lo digo claro. Lo que sí firmamos: no hay alta ni permanencia, te vas con 30 días de aviso y a los 120 días revisamos juntos los números de tu despacho para decidir si seguir, ajustar o parar."
     },
     {
      "canal": "reunion",
@@ -2848,72 +2876,51 @@
      "canal": "interno",
      "para": "equipo",
      "cuando": "Aviso a dirección",
-     "texto": "Tomás, {cliente} ha preguntado por la garantía del anuncio en la reunión de {fecha}. No la he ofrecido. ¿Cómo quieres que lo cerremos?"
+     "texto": "{cliente} ha preguntado en la reunión de {fecha} por la garantía de un anuncio antiguo. Le he dicho que no hay garantía. Conviene retirar ese anuncio."
     }
    ],
    "que_no_hacer": [
-    "No ofrezcas la garantía si el prospecto la saca.",
-    "No la metas en la propuesta ni en el contrato.",
-    "No niegues lo que dice el anuncio: remite al documento de oferta.",
-    "No prometas resultados, número de clientes, porcentajes de éxito ni plazos."
+    "No digas ni insinúes que hay garantía: no la hay.",
+    "No metas garantías en la propuesta ni en el contrato.",
+    "No prometas resultados, número de clientes, porcentajes de éxito ni plazos: las cifras de resultado están prohibidas."
    ],
    "escalar": {
-    "cuando": "Siempre que el prospecto insista en la garantía del anuncio.",
+    "cuando": "Si cita un anuncio que aún promete la garantía, o insiste en una devolución.",
     "a": "direccion"
    },
-   "exito": "Ninguna propuesta ni contrato con garantía; el 100 % de las preguntas avisadas a dirección.",
+   "exito": "Ninguna propuesta ni contrato con garantía; el prospecto sabe que no hay garantía de resultados.",
    "reglas_relacionadas": [
     "sin_garantia_resultado",
     "muro_direccion"
    ],
    "fuentes": [
     {
-     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
-     "linea": 8,
+     "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "9-sep: la garantía no se enseña en venta ni va al contrato"
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     },
     {
-     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
-     "linea": 14,
+     "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Si la saca, no se ofrece"
-    },
-    {
-     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
-     "linea": 16,
-     "autor": "Tomás",
-     "nota": "El anuncio sigue con la cláusula: hueco abierto"
-    },
-    {
-     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
-     "linea": 18,
-     "autor": "Tomás",
-     "nota": "1-sep: 2 reuniones válidas en 30 días o no paga. Manda el 1-sep con el matiz del 9-sep sobre LEYES C-D2-05"
+     "nota": "Respuesta n.º 21: cifras de resultado en la venta: prohibidas."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 143,
      "autor": "Tomás",
-     "nota": "C-D2-05 decía ninguna garantía: superado por el 1-sep con matiz del 9-sep"
+     "nota": "C-D2-05: ninguna garantía de resultado. Vuelve a mandar desde el 4-oct."
     },
     {
-     "fichero": "ro-equipo:40_MEMORIA/project_landing_bofu_reuniones.md",
-     "linea": 71,
-     "autor": "RO",
-     "nota": "La landing decía «sale en la llamada»: la pisa la decisión del 9-sep"
-    },
-    {
-     "fichero": "hormozi-cole-gordon:CEREBRO/12_PROCESO_DE_VENTA_Y_CIERRE.md",
-     "linea": 6152,
-     "autor": "Cole Gordon",
-     "nota": "La garantía no se regala: coincide; manda Tomás"
+     "fichero": "ro-equipo:40_MEMORIA/feedback_garantia_solo_en_oferta.md",
+     "linea": 16,
+     "autor": "Tomás",
+     "nota": "El anuncio antiguo prometía la cláusula: hay que retirarlo"
     },
     {
      "fichero": "hormozi-cole-gordon:CEREBRO/12_PROCESO_DE_VENTA_Y_CIERRE.md",
      "linea": 5991,
      "autor": "Cole Gordon",
-     "nota": "«¿Hay garantía?»"
+     "nota": "«¿Hay garantía?»: manda Tomás, no hay"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/11_TIJERA/03_GUION_SETTER_V1.md",
@@ -3368,7 +3375,7 @@
     "No uses plazas falsas.",
     "No prometas resultados.",
     "No metas miedo.",
-    "No ofrezcas la garantía para cerrar."
+    "No ofrezcas garantías para cerrar: no las hay."
    ],
    "escalar": {
     "cuando": "Se detecta una promesa hecha a un prospecto.",
@@ -4206,7 +4213,7 @@
    "que_no_hacer": [
     "No cambies cláusulas sin dirección.",
     "No asesores sobre lo legal del contrato.",
-    "No metas la garantía en el contrato.",
+    "No metas garantías ni resultados en el contrato.",
     "No rebajes el precio para que firme."
    ],
    "escalar": {
@@ -4881,13 +4888,18 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 5253,
      "autor": "RO",
-     "nota": "Coste por cita ≤ 40 / 41-60 / > 60 € (propuesta sin firmar)"
+     "nota": "Coste por cita ≤ 40 / 41-60 / > 60 € (firmado el 4-oct; se revisa con datos el 3-dic-2026)"
     },
     {
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 2635,
      "autor": "RO",
      "nota": "≤ 40 €/cita, ≤ 90 €/reunión, asistencia ≥ 80 %"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -5028,6 +5040,11 @@
      "linea": 249,
      "autor": "Hormozi",
      "nota": "CAC ≤ 1/3 del beneficio bruto de vida"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
     }
    ]
   },
@@ -6044,7 +6061,7 @@
     },
     {
      "paso": 4,
-     "comprueba": "Se respetan 35-50 envíos/día/buzón y el calentamiento.",
+     "comprueba": "Se respetan 35-50 envíos/día/buzón y el calentamiento (solo campañas de clientes con outreach contratado).",
      "donde": "Snov",
      "si_falla": "c4"
     },
@@ -6166,6 +6183,11 @@
      "linea": 994,
      "autor": "Cole Gordon",
      "nota": "Tope de 20 correos por buzón: más prudente; manda RO (35-50) con calentamiento"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 48: RO no hace correo en frío propio."
     }
    ]
   },
@@ -6274,7 +6296,8 @@
      "causa": "Fuera de vigencia.",
      "como_confirmar": "No es compromiso de cartera.",
      "solucion": [
-      "No lo hagas: P2-06 está en rojo."
+      "No lo hagas: P2-06 está en rojo.",
+      "Si el lote es para captar clientes de RO, no sale: RO no hace correo en frío propio (decisión de Tomás, 4-oct)."
      ],
      "quien": "direccion",
      "plazo": "Antes de enviar"
@@ -6371,6 +6394,16 @@
      "linea": 34,
      "autor": "RO",
      "nota": "P2-06 en rojo como producto: solo compromisos de cartera hasta diciembre; ritmo lo decide la dueña"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 48: RO no hace correo en frío propio."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 46: no se hace outreach para clientes salvo los que lo tienen contratado; suelo de publicidad que se dice: «desde 600 €»."
     }
    ]
   },
@@ -6524,7 +6557,7 @@
    "diagnostico": [
     {
      "paso": 1,
-     "comprueba": "El canal tiene tope propio (LinkedIn 20/día a mano; correo 35-50/buzón).",
+     "comprueba": "El canal tiene tope propio (LinkedIn 20/día a mano). Correo en frío solo en cuentas de clientes con outreach contratado: RO no hace correo en frío propio.",
      "donde": "Herramientas",
      "si_falla": "c1"
     },
@@ -6636,13 +6669,18 @@
      "fichero": "ro-equipo:40_MEMORIA/project_stack_outreach_confirmado.md",
      "linea": 33,
      "autor": "RO",
-     "nota": "35-50/día/buzón"
+     "nota": "35-50/día/buzón: solo en campañas de clientes con outreach contratado"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/11_TIJERA/01_CAPA_DE_VIGENCIA.md",
      "linea": 34,
      "autor": "RO",
      "nota": "P2-06 en rojo como producto: solo compromisos de cartera hasta diciembre; ritmo lo decide la dueña"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 48: RO no hace correo en frío propio."
     }
    ]
   },
@@ -7591,6 +7629,11 @@
      "linea": 87,
      "autor": "RO",
      "nota": "Aviso a 20 al día"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 48: RO no hace correo en frío propio."
     }
    ]
   },

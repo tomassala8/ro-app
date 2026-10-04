@@ -11,7 +11,7 @@
    "jefa_publicidad",
    "trafficker"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/qc-salida-ro/SKILL.md",
@@ -45,13 +45,11 @@
   ],
   "nota": "Cubre la publicación orgánica (Metricool, calendario, LinkedIn del titular, cuadrícula de 12, comentarios), la validación del cliente, la cola de producción de ClickUp (devueltas, vencidas, revisiones, rondas, bloqueos), el control de calidad de salida (gate fiscal, humanizador, gate visual) y la producción de creatividades para Meta (estáticos, guiones de vídeo, refresco y tests). Prefijo de ids: rp_. No cubre: la decisión de ángulos, el montaje y la lectura de campañas (cerebro de publicidad), la relación y las quejas del cliente más allá de la pieza (cerebro de account), la ficha de Google y la web (cerebro de seo_web) ni la carga de personas (cerebro de operaciones). Vigencia: desde el 1-sep-2026 redes, newsletter y blog quedan fuera del núcleo del producto y no hay rodajes obligatorios; las fichas valen para la cartera que los tiene contratados y para los 12 posts de la cuadrícula de lanzamiento, que sí son obligatorios antes de encender la publicidad.",
   "pendientes_tomas": [
-   "Comentarios y mensajes privados en redes: ¿responderlos en menos de 24 h es alcance de RO o del despacho? El indicador existe con umbral sin firmar y el SOP del LinkedIn del titular trata el community management como add-on. Mientras tanto la ficha rp_comentarios_sin_responder solo obliga a pasar los leads del privado el mismo día.",
-   "Volumen por defecto de redes cuando no hay pacto: la skill rrss-celula-orquestadora dice unas 40-43 piezas al mes y la pantalla Redes compara con un plan de RO de unas 7 programadas cada 14 días. La regla redes_volumen_pactado cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. Hay que fijar una cifra y cargar el plan de cada cliente.",
-   "Paquete de validación mensual: el SOP-P1-06 dice marcar como máximo 1 pieza para el ojo del cliente y el SOP-P1-09 y la célula permiten 2. La célula aplica 1 por defecto mientras se decide. Confirmar.",
-   "No hay SOP vigente de plazos de producción (SLA por tipo de pieza). La regla prod_plazo_avisar y las rondas de revisión D-58 citan 11_DECISIONES_PARA_TOMAS.md (2-oct), que no está en disco: subirlo a un repo.",
-   "Criterio de anuncio ganador y de pausa del protocolo de lanzamiento v3 (≥ 3 leads a ≤ 45 € y pausar a ≥ 90 € sin lead): figura como propuesta para que la fije Valeria. Confirmar si ya está fijado para que producción sepa cuándo le van a pedir variaciones.",
-   "Contradicción de método de test: tester-creatividades-despacho (1 campaña, 1 conjunto, base + 4 recortes de un mismo activo) frente al protocolo v3 del 28-sep (ABO, 3 conjuntos por ángulo, 5 estáticos distintos). Se aplica el protocolo v3 por ser decisión de Tomás y más reciente; conviene actualizar la skill."
-  ]
+   "Comentarios y mensajes privados en redes: ¿responderlos en menos de 24 h es alcance de RO o del despacho? El indicador existe con umbral sin firmar y el SOP del LinkedIn del titular trata el community management como add-on. Mientras tanto la ficha rp_comentarios_sin_responder solo obliga a pasar los leads del privado el mismo día. La respuesta n.º 43 solo fija el volumen: esto sigue abierto.",
+   "Paquete de validación mensual: el SOP-P1-06 dice marcar como máximo 1 pieza para el ojo del cliente y el SOP-P1-09 y la célula permiten 2. La célula aplica 1 por defecto mientras se decide. Confirmar. La respuesta n.º 43 no lo trata.",
+   "No hay SOP vigente de plazos de producción (SLA por tipo de pieza). La regla prod_plazo_avisar y las rondas de revisión D-58 citan 11_DECISIONES_PARA_TOMAS.md (2-oct), que no está en disco: subirlo a un repo."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -125,6 +123,12 @@
    "texto": "No asesoramos al cliente ni a sus seguidores sobre su negocio, contrato o normativa: lo que encontramos se convierte en piezas, no en consejos.",
    "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:1141",
    "autor": "RO"
+  },
+  {
+   "id": "rp_p_grilla_inicial",
+   "texto": "Sin volumen pactado, se hace una grilla inicial y luego se ve si hace falta más. No hay un volumen fijo por defecto.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 43)",
+   "autor": "Tomás"
   }
  ],
  "situaciones": [
@@ -1021,7 +1025,7 @@
      "plan de publicaciones"
     ]
    },
-   "sintoma": "Publicadas en el mes frente a previstas por red: verde ≥ 100 %, ámbar 75-99 %, rojo < 75 %. Hoy se mide a medias: falta cargar el plan de cada cliente y la app compara con el de RO por defecto.",
+   "sintoma": "Publicadas en el mes frente a previstas por red: verde ≥ 100 %, ámbar 75-99 %, rojo < 75 %. Hoy se mide a medias: falta cargar el plan de cada cliente y la app compara con un plan por defecto de unas 7 piezas cada 14 días, que no es la norma de RO. Sin pacto, se hace una grilla inicial y luego se ve si hace falta más (decisión de Tomás, 4-oct).",
    "gravedad": "media",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -1105,7 +1109,7 @@
      "como_confirmar": "El cliente no tiene plan propio en la app.",
      "solucion": [
       "Carga el volumen pactado del cliente.",
-      "Si no hay pacto escrito, pide al account que lo confirme."
+      "Si no hay pacto escrito: una grilla inicial y luego se decide con el account si hace falta más."
      ],
      "quien": "redes",
      "plazo": "Esta semana"
@@ -1141,25 +1145,30 @@
      "fichero": "ro-app:modulos/redes.js",
      "linea": 148,
      "autor": "RO",
-     "nota": "La pantalla compara con el plan de RO ≈ 7 programadas en 14 días."
+     "nota": "La pantalla compara con ≈ 7 programadas en 14 días: no es el volumen de RO (4-oct)."
     },
     {
      "fichero": "ro-equipo:30_SKILLS/rrss-celula-orquestadora/SKILL.md",
      "linea": 143,
      "autor": "RO",
-     "nota": "Volumen por defecto de la célula ≈ 40-43 piezas al mes (choca con la app: pendiente para Tomás)."
+     "nota": "Volumen de la célula ≈ 40-43 piezas al mes: no se aplica por defecto; sin pacto, una grilla inicial."
     },
     {
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 2041,
      "autor": "RO",
-     "nota": "Publica el volumen pactado; si no hay pacto, el de RO por defecto."
+     "nota": "Publica el volumen pactado; si no hay pacto, una grilla inicial y luego se ve si hace falta más."
     },
     {
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 1557,
      "autor": "RO",
      "nota": "Pausas y bajas las decide dirección."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 43: redes: una grilla inicial y luego ver si hace falta más."
     }
    ]
   },

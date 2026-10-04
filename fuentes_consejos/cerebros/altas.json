@@ -10,7 +10,7 @@
    "trafficker",
    "operaciones"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md",
@@ -29,25 +29,17 @@
    "ro-app:indicadores.json (tecnico_altas.*)",
    "central:skills/criterio-tomas-ro/LEYES.md"
   ],
-  "nota": "Cubre del día de la firma al día 90 (dueña técnica: Agus, vigila Mili) y los relojes del Método (garantía de 30 días y revisión del día 120). Plazos de encendido contados desde el alta del contrato (D-28: objetivo día 10, límite 12), que manda sobre el calendario de 14 días del 14-sep. El taller lo da Coti desde el 14-sep; las plantillas del alta que dicen «con Tomás» están desfasadas en ese punto. El correo DNS lo manda Yessica desde el 16-sep. Deriva a: publicidad (lectura del test por conjunto, días 5-30, fondo de 300 €), crm (velocidad de contacto y asistencia tras el encendido), account (relación a partir del día 30), personas_admin (facturación, cobro del primer mes, encargo RGPD) y direccion (garantía, precio, bajas).",
+  "nota": "Cubre del día de la firma al día 90 (dueña técnica: Agus, vigila Mili) y la revisión del día 120 del Método (no hay garantía: decisión de Tomás, 4-oct). Plazos de encendido contados desde el alta del contrato (D-28: objetivo día 10, límite 12), que manda sobre el calendario de 14 días del 14-sep. El taller lo da Coti desde el 14-sep; las plantillas del alta que dicen «con Tomás» están desfasadas en ese punto. Los registros DNS los hace la líder de onboarding (decisión de Tomás, 4-oct). Deriva a: publicidad (lectura del test por conjunto, días 5-30, fondo de 300 €), crm (velocidad de contacto y asistencia tras el encendido), account (relación a partir del día 30), personas_admin (facturación, cobro del primer mes, encargo RGPD) y direccion (precio, bajas).",
   "contradicciones_resueltas": [
    "Día de encendido: D-28 (2-oct, día 10 desde el alta del contrato, límite 12) manda sobre 03_LOS_PRIMEROS_14_DIAS.md (14-sep: prueba el día 10, encendido el 14).",
-   "Garantía: la oferta del 1-sep (2 reuniones válidas en 30 días, solo para quien la firmó) manda sobre LEYES C-D2-05; con el matiz de que no se repite en el alta (PLANTILLAS 00_LEEME:48) y D6 (Emex: no se habla).",
-   "Correo DNS: la decisión del 16-sep (lo manda Yessica) manda sobre la plantilla 03 del 10-sep (lo mandaba el account).",
+   "Garantía: no hay garantía (decisión de Tomás, 4-oct, respuesta n.º 18). Supera la oferta del 1-sep; no se menciona en el alta y, si el cliente la saca, se le dice que no la hay.",
+   "Registros DNS: los hace la líder de onboarding (decisión de Tomás, 4-oct, respuesta n.º 55), sobre la decisión del 16-sep y la plantilla 03 del 10-sep.",
    "Quién da el taller: Coti desde el 14-sep (TALLER_DE_LA_OFERTA/00_LEEME.md:4) manda sobre las plantillas 01 y 06 del 10-sep («con Tomás»).",
-   "Velocidad de contacto: el contrato (≤ 1 h) manda sobre < 5 min de kits antiguos; < 15 min solo como objetivo interno con persona dedicada (T5 pendiente).",
+   "Velocidad de contacto: el contrato (≤ 1 h y 4 intentos en 72 h) manda sobre < 5 min de kits antiguos; < 15 min solo como objetivo interno donde hay persona dedicada (decisión de Tomás, 4-oct).",
    "Resultados la primera semana (Cole, ER03.058) frente a la regla de RO sin previsiones: manda RO; se comunican hitos cuando ocurren, sin plazo."
   ],
   "pendientes_tomas": [
-   "Qué fecha de encendido se le dice al cliente: la plantilla 01 la da como hecho (D+12), la promesa de «14 días» no está firmada en ninguna parte (04_LO_PROMETIDO_EN_SALA.md:145-171). La ficha aplica: decir la fecha del D+12 como calendario de trabajo, sin contrapartida ni la palabra garantía.",
-   "T1 (00_VEREDICTO.md:23): condición completa de encendido (account, prueba firmada por el titular, persona que llama, llamada registrada en GHL, 12 posts) y si prevalece sobre el límite del día 12. La ficha aplica: no encender sin prueba y sin persona que llame; si eso empuja más allá del 12, se escala y queda fuera de plazo con causa anotada.",
-   "T2 (00_VEREDICTO.md:24): despachos sin persona que llame: fecha límite (propuesta 13-oct) o setter de RO. La ficha aplica: no se enciende y se escala a Coti.",
-   "T5 (00_VEREDICTO.md:27): objetivo de contacto (< 15 min solo con persona dedicada). La ficha usa el contrato (≤ 1 h) como suelo.",
-   "Umbrales propuestos sin firmar que usa la app: primer lead ≤ 3 / 4-7 / > 7 días; taller a entrega ≤ 5 / 6-7 / > 7 días hábiles; carga ≤ 5 / 6 / > 6 arranques. Firmar o corregir.",
-   "Actualizar las plantillas 01 y 06 del alta (dicen «Taller con Tomás») y la 03 (quién manda el DNS) con lo decidido el 14 y el 16-sep.",
-   "Sobre las contraseñas, el SOP-P0-02:90 pide guardar los accesos en un gestor y la skill onboarding-accesos-ro:25 pide no guardar ninguna. La ficha aplica la versión prudente: ninguna credencial guardada; acceso delegado.",
-   "Definir qué cuenta como «reunión válida» para la garantía (04_LO_PROMETIDO_EN_SALA.md:173-178). La app cuenta las citas marcadas «showed».",
-   "Traer al repo 11_DECISIONES_PARA_TOMAS.md (D-28, D-30, D-48, conexiones, objetivo de coste por cita), 06_KPIS_INTERNOS_RO_POR_PUESTO.md y 02_SOP_ONBOARDING_UNICO.md: varias reglas del área solo se pueden citar a través de reglas.json e indicadores.json."
+   "Traer al repo 11_DECISIONES_PARA_TOMAS.md (D-28, D-30, D-48, conexiones, objetivo de coste por cita) y 06_KPIS_INTERNOS_RO_POR_PUESTO.md (los sube Tomás, respuestas n.º 58-60), y 02_SOP_ONBOARDING_UNICO.md: varias reglas del área solo se pueden citar a través de reglas.json e indicadores.json."
   ],
   "fuentes_faltantes": [
    "11_DECISIONES_PARA_TOMAS.md (citado por reglas.json y generar_nuevos.py)",
@@ -55,7 +47,8 @@
    "02_SOP_ONBOARDING_UNICO.md (umbrales de accesos en el limbo, taller a entrega, retrasos técnicos)",
    "OFERTA_RO_METODO_CLIENTE_RENTABLE_DEFINITIVA.docx (1-sep)",
    "Checklist única del alta del Método: hoy repartida entre _arranque/, _lanzamiento/ y PLANTILLAS_CORREO_ALTA/"
-  ]
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -79,7 +72,7 @@
   {
    "id": "altas_p_rgpd_y_delegado",
    "texto": "Sin encargo de tratamiento firmado no se pide ningún acceso. Se entra como colaborador con el permiso mínimo; ninguna contraseña del cliente se pide ni se guarda.",
-   "fuente": "ro-equipo:30_SKILLS/onboarding-accesos-ro/SKILL.md:24-26",
+   "fuente": "ro-equipo:30_SKILLS/onboarding-accesos-ro/SKILL.md:24-26 · decision_tomas_2026-10-04 (respuesta n.º 38)",
    "autor": "RO"
   },
   {
@@ -108,14 +101,14 @@
   },
   {
    "id": "altas_p_sin_previsiones",
-   "texto": "Al cliente se le promete proceso y fechas, nunca cifras de leads, reuniones o clientes. La garantía no se repite en el alta: está en la oferta.",
+   "texto": "Al cliente se le promete proceso y fechas, nunca cifras de leads, reuniones o clientes. No hay garantía de resultados (decisión de Tomás, 4-oct): no se menciona.",
    "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/PLANTILLAS_CORREO_ALTA/08_AVISO_ENCENDIDO.md:31 · 00_LEEME.md:48",
    "autor": "RO"
   },
   {
    "id": "altas_p_infra_del_cliente",
-   "texto": "Nadie de RO toca el DNS, el dominio ni el correo de un cliente. Lo ejecuta su informático, con autorización escrita del titular, y la urgencia no es excepción.",
-   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:634",
+   "texto": "Los registros DNS los hace la líder de onboarding (decisión de Tomás, 4-oct), con autorización escrita del titular. Nadie más de RO toca el DNS, el dominio ni el correo de un cliente, y la urgencia no es excepción.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:634 · decision_tomas_2026-10-04 (respuesta n.º 55)",
    "autor": "Tomás"
   },
   {
@@ -126,8 +119,20 @@
   },
   {
    "id": "altas_p_dos_relojes",
-   "texto": "Hay dos relojes y no se mezclan: la garantía de 30 días corre desde el encendido y solo para quien la firmó; la revisión del día 120 corre también desde el encendido.",
-   "fuente": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md:153-168 · ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:19",
+   "texto": "Un solo reloj en el Método: la revisión del día 120 corre desde el encendido. No hay garantía de 30 días (decisión de Tomás, 4-oct). Si el primer mes va flojo, se mira con datos, sin promesas.",
+   "fuente": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md:19 · decision_tomas_2026-10-04 (respuesta n.º 18)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "altas_p_encender_con_todo",
+   "texto": "Al cliente se le da el día 12 como calendario de trabajo, nunca como promesa ni garantía. Para encender hace falta todo: prueba firmada por el titular, persona que llama, llamada registrada y 12 posts; eso pasa por delante del día 12. Un despacho sin persona que llame el 13-oct-2026 no se enciende y decide Tomás.",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 35, 36 y 37)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "altas_p_reunion_valida",
+   "texto": "Reunión válida es la cita a la que el lead se ha presentado. Es lo que cuenta la app (citas marcadas «showed»).",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 19) · ro-app:fuentes_nuevos/generar_nuevos.py:56",
    "autor": "Tomás"
   }
  ],
@@ -299,7 +304,7 @@
     "Culpar al cliente en el correo: di qué falta y qué haces tú."
    ],
    "escalar": {
-    "cuando": "Día 12 sin encender, o cualquier bloqueo que dependa de dirección (precio, contrato, garantía)",
+    "cuando": "Día 12 sin encender, o cualquier bloqueo que dependa de dirección (precio, contrato)",
     "a": "operaciones"
    },
    "exito": "Campaña encendida con prueba superada y persona que llama; causa del retraso anotada en la ficha (indicador «altas encendidas en plazo» vuelve a contar el alta).",
@@ -556,7 +561,17 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/00_VEREDICTO.md",
      "linea": 23,
      "autor": "RO",
-     "nota": "T1 recomienda no encender por calendario: ~200 € por despacho se queman midiendo la integración."
+     "nota": "T1 (firmada el 4-oct) pide no encender por calendario: ~200 € por despacho se queman midiendo la integración."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 36: T1: para encender hace falta todo (prueba firmada por el titular, persona que llama, llamada registrada y 12 posts); pasa por delante del día 12."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 35: el día 12 se da como calendario de trabajo, nunca como promesa ni garantía."
     }
    ]
   },
@@ -1206,7 +1221,7 @@
     },
     {
      "paso": 4,
-     "comprueba": "¿Es una decisión interna pendiente (account, precio, garantía, nicho)?",
+     "comprueba": "¿Es una decisión interna pendiente (account, precio, nicho)?",
      "donde": "Decisiones pendientes",
      "si_falla": "c4"
     }
@@ -1815,7 +1830,7 @@
     },
     {
      "paso": 2,
-     "comprueba": "¿Por qué es urgente: riesgo de baja, promesa en sala con fecha, garantía corriendo?",
+     "comprueba": "¿Por qué es urgente: riesgo de baja, promesa en sala con fecha, cliente con prisa?",
      "donde": "Notas del taller y de la venta",
      "si_falla": "c2"
     },
@@ -1945,7 +1960,7 @@
     },
     {
      "paso": 5,
-     "comprueba": "¿Lleva garantía firmada y con qué condiciones?",
+     "comprueba": "¿El acuerdo trae alguna cláusula de resultado o devolución? (no hay garantía desde el 4-oct)",
      "donde": "Contrato en Sign",
      "si_falla": "c5"
     }
@@ -1994,10 +2009,10 @@
     },
     {
      "id": "c5",
-     "causa": "Garantía sin verificar",
-     "como_confirmar": "No sabes si la firmó",
+     "causa": "Cláusula de resultado sin revisar",
+     "como_confirmar": "No sabes si el acuerdo la trae",
      "solucion": [
-      "Ábrelo en Sign y anótalo en la ficha antes de contar ningún reloj."
+      "Ábrelo en Sign y, si la trae, pásala a Tomás antes de decir nada al cliente."
      ],
      "quien": "tecnico_altas",
      "plazo": "48 h"
@@ -2019,12 +2034,12 @@
      "canal": "interno",
      "para": "equipo",
      "cuando": "Día de la firma",
-     "texto": "Firmado {cliente}. Alta: Agus. Account: {account o «pendiente, lo pide Coti hoy»}. Encender antes del {fecha_dia_10}. Garantía firmada: {si_no}. Encargo art. 28: {si_no}."
+     "texto": "Firmado {cliente}. Alta: Agus. Account: {account o «pendiente, lo pide Coti hoy»}. Encender antes del {fecha_dia_10}. Cláusula de resultado: {si_no}. Encargo art. 28: {si_no}."
     }
    ],
    "que_no_hacer": [
     "Inventar el nombre del account en el correo si no está decidido.",
-    "Repetir en la bienvenida la garantía, el precio o el alcance.",
+    "Repetir en la bienvenida el precio o el alcance, o hablar de garantía.",
     "Meter accesos y material en el correo de bienvenida: van en el 02, aparte.",
     "Firmar «el equipo»."
    ],
@@ -2079,7 +2094,7 @@
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/PLANTILLAS_CORREO_ALTA/01_BIENVENIDA.md",
      "linea": 7,
      "autor": "RO",
-     "nota": "Plantilla de bienvenida; dos citas como único CTA; no repetir garantía, precio ni alcance (líneas 28-30)."
+     "nota": "Plantilla de bienvenida; dos citas como único CTA; no repetir precio ni alcance (líneas 28-30)."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
@@ -2092,6 +2107,11 @@
      "linea": 43,
      "autor": "RO",
      "nota": "Asignar account es lo que más bloquea el arranque."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     }
    ]
   },
@@ -2582,8 +2602,8 @@
      "como_confirmar": "S1 vacío",
      "solucion": [
       "No enciendas.",
-      "Pide el nombre al titular en una llamada y pon fecha límite.",
-      "Si no lo da, escala a Coti."
+      "Pide el nombre al titular en una llamada: la fecha límite es el 13-oct-2026.",
+      "Si no lo da, no se enciende y decide Tomás; avisa a Coti."
      ],
      "quien": "account",
      "plazo": "Hoy"
@@ -2641,7 +2661,7 @@
    "que_no_hacer": [
     "Encender contra una centralita o contra «el despacho».",
     "Aceptar «entre todos».",
-    "Prometer que lo llamará RO sin decisión de dirección."
+    "Prometer que lo llamará RO: sin persona que llame no se enciende y decide Tomás."
    ],
    "escalar": {
     "cuando": "24 h después de pedirlo sin nombre",
@@ -2687,7 +2707,12 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/03_DEBATE_Y_CHOQUES.md",
      "linea": 109,
      "autor": "RO",
-     "nota": "T2: plazo para nombrarla (propuesto 13-oct) o setter de RO; pendiente de Tomás."
+     "nota": "T2: fecha límite el 13-oct-2026; si no la tiene, no se enciende y decide Tomás."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 37: T2: despacho sin persona que llame, fecha límite el 13-oct; si no la tiene, no se enciende y decide Tomás."
     }
    ]
   },
@@ -2838,7 +2863,7 @@
      "no hay contactos"
     ]
    },
-   "sintoma": "Días del encendido al primer lead en GHL: verde ≤ 3, ámbar 4-7, rojo más de 7 (umbral propuesto, sin firmar).",
+   "sintoma": "Días del encendido al primer lead en GHL: verde ≤ 3, ámbar 4-7, rojo más de 7 (firmado el 4-oct; se revisa con datos el 3-dic-2026).",
    "gravedad": "alta",
    "plazo": "Hoy",
    "diagnostico": [
@@ -2957,7 +2982,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 3163,
      "autor": "RO",
-     "nota": "Primer lead: ≤ 3 / 4-7 / > 7 días (días propuestos, sin firmar; base Hormozi ER04.059)."
+     "nota": "Primer lead: ≤ 3 / 4-7 / > 7 días (días propuestos, firmado el 4-oct; se revisa con datos el 3-dic-2026; base Hormozi ER04.059)."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/05_CUADRO_DE_MANDO_TEST.md",
@@ -2988,6 +3013,11 @@
      "linea": 38,
      "autor": "RO",
      "nota": "G10: no usar el upsert que machaca etiquetas."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3158,7 +3188,7 @@
      "piezas tarde"
     ]
    },
-   "sintoma": "Días hábiles del taller a la entrega a la célula: verde ≤ 5, ámbar 6-7, rojo más de 7 (umbral propuesto, sin firmar).",
+   "sintoma": "Días hábiles del taller a la entrega a la célula: verde ≤ 5, ámbar 6-7, rojo más de 7 (firmado el 4-oct; se revisa con datos el 3-dic-2026).",
    "gravedad": "media",
    "plazo": "48 h",
    "diagnostico": [
@@ -3250,7 +3280,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 3251,
      "autor": "RO",
-     "nota": "Taller a entrega: ≤ 5 / 6-7 / > 7 días hábiles (propuesta sin firmar; 02_SOP_ONBOARDING_UNICO.md no está en repo)."
+     "nota": "Taller a entrega: ≤ 5 / 6-7 / > 7 días hábiles (firmado el 4-oct; se revisa con datos el 3-dic-2026; 02_SOP_ONBOARDING_UNICO.md no está en repo)."
     },
     {
      "fichero": "ro-equipo:20_METODO/TALLER_DE_LA_OFERTA/01_KIT_DE_COTI.md",
@@ -3269,6 +3299,11 @@
      "linea": 49,
      "autor": "RO",
      "nota": "Cada cliente necesita 15 estáticos (3 ángulos × 5)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3457,7 +3492,7 @@
      "como_confirmar": "SPF, DKIM o MX no aparecen o el host está duplicado",
      "solucion": [
       "Revisa los tres detalles: MX con la misma prioridad, DKIM en una línea, host relativo o completo.",
-      "Pide la corrección al informático; nadie de RO toca su DNS."
+      "Pide la corrección al informático o, con autorización escrita del titular, la hace la líder de onboarding."
      ],
      "quien": "especialista_ghl",
      "plazo": "24 h"
@@ -3516,7 +3551,7 @@
     }
    ],
    "que_no_hacer": [
-    "Tocar el DNS del cliente aunque nos dé acceso.",
+    "Tocar el DNS del cliente sin ser la líder de onboarding y sin autorización escrita del titular.",
     "Escribir los registros de memoria o copiarlos de otro cliente.",
     "Mandar un segundo correo al informático por un registro olvidado."
    ],
@@ -3552,7 +3587,7 @@
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
      "linea": 165,
      "autor": "RO",
-     "nota": "Nadie de RO toca el DNS de un cliente."
+     "nota": "Nadie de RO toca el DNS de un cliente; desde el 4-oct, solo la líder de onboarding y con autorización escrita."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -3565,6 +3600,11 @@
      "linea": 808,
      "autor": "RO",
      "nota": "Casilla del píxel: verde con evento en 7 días."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 55: los registros DNS los hace la líder de onboarding."
     }
    ]
   },
@@ -3592,7 +3632,7 @@
      "un cliente por día"
     ]
    },
-   "sintoma": "Onboardings por semana: verde ≤ 5, ámbar 6, rojo más de 6 (cifra dicha en sala por Agus el 24-sep, sin firmar).",
+   "sintoma": "Onboardings por semana: verde ≤ 5, ámbar 6, rojo más de 6 (cifra dicha en sala por Agus el 24-sep, firmado el 4-oct; se revisa con datos el 3-dic-2026).",
    "gravedad": "media",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -3691,7 +3731,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 3317,
      "autor": "RO",
-     "nota": "Carga: ≤ 5 / 6 / > 6 (propuesta sin firmar)."
+     "nota": "Carga: ≤ 5 / 6 / > 6 (firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/01_ASIGNACION_PROVISIONAL.md",
@@ -3704,6 +3744,11 @@
      "linea": 52,
      "autor": "RO",
      "nota": "Anti-patrón: onboarding sin dueño único."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -4583,7 +4628,7 @@
     },
     {
      "paso": 2,
-     "comprueba": "¿Lleva garantía firmada y se cumplieron sus condiciones?",
+     "comprueba": "¿El acuerdo trae alguna cláusula de resultado o devolución?",
      "donde": "Contrato y GHL",
      "si_falla": "c2"
     },
@@ -4613,10 +4658,10 @@
     },
     {
      "id": "c2",
-     "causa": "Garantía en juego",
-     "como_confirmar": "Firmó la garantía de reuniones",
+     "causa": "Cláusula de resultado firmada",
+     "como_confirmar": "El acuerdo la recoge",
      "solucion": [
-      "No hables de devolución sin dirección: lo decide Tomás."
+      "No hables de devolución sin dirección: lo decide Tomás. No hay garantía de resultados."
      ],
      "quien": "direccion",
      "plazo": "Hoy"
@@ -4690,13 +4735,18 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 18,
      "autor": "Tomás",
-     "nota": "Oferta del 1-sep: mínimo 2 reuniones válidas en 30 días o no paga honorarios del periodo; manda sobre LEYES C-D2-05."
+     "nota": "La oferta del 1-sep traía una garantía: superada; no hay garantía desde el 4-oct."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 878,
      "autor": "Tomás",
      "nota": "Sube a dirección cualquier cifra o condición contractual."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     }
    ]
   },
@@ -5364,7 +5414,7 @@
     },
     {
      "paso": 3,
-     "comprueba": "¿Hubo penalización (precio o condiciones de garantía)?",
+     "comprueba": "¿Hubo penalización (precio o condiciones)?",
      "donde": "Hoja del taller",
      "si_falla": "c3"
     },
@@ -5398,7 +5448,7 @@
     },
     {
      "id": "c3",
-     "causa": "Se soltó precio o garantía",
+     "causa": "Se soltó precio o una promesa de resultado",
      "como_confirmar": "P = 1",
      "solucion": [
       "Repasa la tabla de lo que no se dice y la respuesta tipo."
@@ -5461,7 +5511,7 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/TALLER_OFERTA_CANONICO_2026-09/06_RUBRICA_DE_TALLER.md",
      "linea": 44,
      "autor": "RO",
-     "nota": "Penalización: precio, rango o condiciones de la garantía."
+     "nota": "Penalización: precio, rango o condiciones."
     }
    ]
   },
@@ -5751,13 +5801,18 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/03_DEBATE_Y_CHOQUES.md",
      "linea": 78,
      "autor": "RO",
-     "nota": "Se publican en bloque y se producen en paralelo a la parte trasera (condición T1 pendiente de firma)."
+     "nota": "Se publican en bloque y se producen en paralelo a la parte trasera (condición T1 firmada el 4-oct: para encender hace falta todo)."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/04_CHECKLIST_ANTES_DE_ENCENDER.md",
      "linea": 69,
      "autor": "RO",
      "nota": "O1-O2: 12 posts con CTA y bio con un enlace a la agenda."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 36: T1: para encender hace falta todo (prueba firmada por el titular, persona que llama, llamada registrada y 12 posts); pasa por delante del día 12."
     }
    ]
   },
@@ -5887,7 +5942,17 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/00_VEREDICTO.md",
      "linea": 27,
      "autor": "RO",
-     "nota": "T5: suelo exigible el contrato (< 1 h); < 15 min solo con persona dedicada; no tocar contratos (pendiente de Tomás)."
+     "nota": "T5: suelo exigible el contrato (≤ 1 h y 4 intentos en 72 h); < 15 min solo como objetivo interno con persona dedicada (4-oct). No tocar contratos sin Tomás."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 32: al despacho, primer intento en 1 h o menos y 4 intentos en 72 h; objetivo 5; < 15 min solo con persona dedicada; el setter de RO, < 5 min."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
@@ -6003,6 +6068,7 @@
     }
    ],
    "acciones_inmediatas": [
+    "Lo lleva la líder de onboarding: registros, correo, persecución y verificación.",
     "Usa la skill correo-dns-cliente-ro: se copia, no se redacta."
    ],
    "guiones": [
@@ -6031,7 +6097,7 @@
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
      "linea": 35,
      "autor": "Tomás",
-     "nota": "Yessica manda el correo DNS desde marketing@ con el account en copia (decisión de Tomás del 16-sep, manda sobre las plantillas del 10-sep, línea 39)."
+     "nota": "Los registros DNS los hace la líder de onboarding (decisión de Tomás del 4-oct); supera la del 16-sep (los mandaba Yessica, con el account en copia) y las plantillas del 10-sep."
     },
     {
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
@@ -6043,7 +6109,7 @@
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
      "linea": 128,
      "autor": "RO",
-     "nota": "Flujo con dueño: WhatsApp de aviso, llamada a las 48 h, Yessica verifica."
+     "nota": "Flujo con dueño: WhatsApp de aviso, llamada a las 48 h, la líder de onboarding verifica."
     },
     {
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
@@ -6062,6 +6128,11 @@
      "linea": 7,
      "autor": "RO",
      "nota": "Plantilla de persecución del número."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 55: los registros DNS los hace la líder de onboarding."
     }
    ]
   },
@@ -6298,7 +6369,7 @@
    ],
    "que_no_hacer": [
     "Dar cifras de leads, reuniones o clientes.",
-    "Mencionar la garantía.",
+    "Hablar de garantía: no la hay.",
     "Encender sin avisar de una subida de gasto prometida.",
     "Olvidar el aviso de PRUEBA 1."
    ],
@@ -6492,7 +6563,7 @@
   },
   {
    "id": "altas_reloj_garantia_30",
-   "titulo": "El cliente tiene la garantía de 30 días y se acerca el día 25",
+   "titulo": "Primer mes del Método: se acerca el día 25 con pocas reuniones o el cliente cita la «garantía»",
    "puestos": [
     "proyectos",
     "account",
@@ -6510,17 +6581,18 @@
      "dos reuniones",
      "reuniones válidas",
      "devolución",
+     "primer mes flojo",
      "reloj de la garantía"
     ]
    },
-   "sintoma": "Alta con garantía firmada (mínimo 2 reuniones válidas en 30 días desde el encendido). La app solo la cuenta en quien la firmó.",
+   "sintoma": "Se acerca el día 25 desde el encendido con menos de dos reuniones celebradas, o el cliente cita la garantía de la oferta del 1-sep. No hay garantía de resultados (decisión de Tomás, 4-oct). Reunión válida = cita a la que el lead se ha presentado.",
    "gravedad": "alta",
    "plazo": "48 h",
    "diagnostico": [
     {
      "paso": 1,
-     "comprueba": "¿La firmó de verdad? Ábrelo en el contrato antes de contar el reloj.",
-     "donde": "Contrato en Sign / hito garantía",
+     "comprueba": "¿El acuerdo trae alguna cláusula de resultado o devolución? Ábrelo antes de decir nada.",
+     "donde": "Contrato en Sign",
      "si_falla": "c1"
     },
     {
@@ -6545,10 +6617,10 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "No la firmó",
-     "como_confirmar": "El acuerdo no la lleva",
+     "causa": "El acuerdo trae una cláusula de resultado o devolución",
+     "como_confirmar": "Consta en el contrato firmado",
      "solucion": [
-      "No hay reloj de garantía. No se menciona."
+      "No la interpretes ni la menciones tú: pásala a Tomás hoy con el recuento real."
      ],
      "quien": "tecnico_altas",
      "plazo": "Hoy"
@@ -6558,7 +6630,7 @@
      "causa": "Va por debajo",
      "como_confirmar": "Menos de 2 reuniones el día 25",
      "solucion": [
-      "Coti avisa a dirección el día 25 con el dato y el plan."
+      "Coti avisa a dirección el día 25 con el dato y el plan, sin promesas al cliente."
      ],
      "quien": "proyectos",
      "plazo": "Hoy"
@@ -6585,7 +6657,7 @@
     }
    ],
    "acciones_inmediatas": [
-    "Comprueba en el contrato si la garantía aplica.",
+    "Comprueba en el contrato si hay alguna cláusula de resultado.",
     "El día 25, Coti da el aviso con datos."
    ],
    "guiones": [
@@ -6593,65 +6665,69 @@
      "canal": "interno",
      "para": "equipo",
      "cuando": "Día 25",
-     "texto": "Tomás: {cliente} tiene garantía. Desde el encendido del {fecha_encendido} lleva {n} reuniones celebradas de 2. Deberes del despacho: {cumple_o_no, con datos}. Propuesta: {propuesta}."
+     "texto": "Coti: {cliente} lleva {n} reuniones celebradas desde el encendido del {fecha_encendido}. Deberes del despacho: {cumple_o_no, con datos}. Cláusula de resultado en el acuerdo: {si_no}. Propuesta: {propuesta}."
+    },
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Si el cliente cita la garantía",
+     "texto": "{nombre}, te lo digo claro: no hay garantía de resultados. Lo que sí hacemos es el proceso y revisar contigo los números. Ahora llevamos {n} reuniones; para que lleguen más, necesito que {deber}. ¿Lo vemos juntos?"
     }
    ],
    "que_no_hacer": [
-    "Recordar la garantía al cliente en correos del alta.",
+    "Decir que hay garantía o insinuarla: no la hay.",
     "Hablar de devoluciones sin dirección.",
-    "Contar el reloj desde la firma: corre desde el encendido.",
+    "Contar como reunión una cita a la que el lead no se presentó.",
     "Hablar de garantía con Emex (D6)."
    ],
    "escalar": {
-    "cuando": "Día 25 con menos de 2 reuniones",
+    "cuando": "Día 25 con menos de 2 reuniones celebradas, o una cláusula firmada en juego",
     "a": "direccion"
    },
-   "exito": "Aviso del día 25 dado con datos y decisión de dirección antes del día 30.",
+   "exito": "Aviso del día 25 dado con datos; el cliente sabe que no hay garantía; si hay cláusula, decisión de Tomás antes del día 30.",
    "reglas_relacionadas": [
     "sin_garantia_resultado"
    ],
    "fuentes": [
     {
-     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
-     "linea": 18,
+     "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Oferta del 1-sep: mínimo 2 reuniones válidas en 30 días o no paga honorarios del periodo; manda sobre LEYES C-D2-05."
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 19: reunión válida = cita a la que el lead se ha presentado."
     },
     {
      "fichero": "ro-app:fuentes_nuevos/generar_nuevos.py",
      "linea": 56,
      "autor": "RO",
-     "nota": "Garantía: 30 días y 2 reuniones (D-30); cuenta las citas «showed» desde el encendido (líneas 655-663)."
+     "nota": "La app cuenta las citas «showed» desde el encendido (líneas 655-663)."
     },
     {
      "fichero": "ro-app:fuentes_nuevos/generar_nuevos.py",
      "linea": 767,
      "autor": "RO",
-     "nota": "Hito «Día 30 · garantía», dueña Coti; no aplica si el acuerdo no la lleva."
+     "nota": "Hito «Día 30», dueña Coti: desde el 4-oct es revisión del primer mes, no garantía."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md",
      "linea": 66,
      "autor": "RO",
-     "nota": "Avisa Coti el día 25; donde aparece la garantía, aparecen sus cuatro condiciones (línea 79)."
+     "nota": "Avisa Coti el día 25."
     },
     {
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "RO",
-     "nota": "Cuatro deberes: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h y registro en CRM."
+     "nota": "Cuatro deberes del despacho: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h y registro en CRM."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/03_DECISIONES_28SEP.md",
      "linea": 15,
      "autor": "Tomás",
      "nota": "D6: con Emex no se habla de la garantía."
-    },
-    {
-     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/PLANTILLAS_CORREO_ALTA/00_LEEME.md",
-     "linea": 48,
-     "autor": "RO",
-     "nota": "La garantía no se repite en el alta: está vendida y en la oferta."
     }
    ]
   },
@@ -6757,7 +6833,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 19,
      "autor": "Tomás",
-     "nota": "Dos relojes: 30 días la garantía, día 120 la revisión del dinero."
+     "nota": "Día 120: revisión del dinero. No hay garantía de 30 días (decisión de Tomás, 4-oct)."
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/TALLER_OFERTA_CANONICO_2026-09/04_ANTIRRECAIDA.md",

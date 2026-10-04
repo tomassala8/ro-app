@@ -6,7 +6,7 @@
    "direccion",
    "finanzas_direccion"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "central:skills/criterio-tomas-ro/LEYES.md",
@@ -30,23 +30,18 @@
    "ro-app:fuentes_consejos/motor_consejos.py",
    "ro-app:fuentes_consejos/cerebro_decisiones.py"
   ],
-  "nota": "Cubre decidir con datos (restricción única, coste por cliente, margen, caja), cartera en riesgo, impagos que decide Tomás, decisiones con reloj, precio y cómo actuar como dirección ante un cliente enfadado. No trae sueldos ni datos de personas: el coste del equipo se lee agregado. Deriva a: account (relación diaria y planes de cuenta), personas_admin (cobro operativo y RRHH), ventas_ro (venta y captación propia en detalle), publicidad y crm (diagnóstico técnico de campañas y embudo), altas (arranques). Muchas bandas de finanzas están «propuesta sin firmar» en indicadores.json: se aplican como dirección, no como ley.",
+  "nota": "Cubre decidir con datos (restricción única, coste por cliente, margen, caja), cartera en riesgo, impagos que decide Tomás, decisiones con reloj, precio y cómo actuar como dirección ante un cliente enfadado. No trae sueldos ni datos de personas: el coste del equipo se lee agregado. Deriva a: account (relación diaria y planes de cuenta), personas_admin (cobro operativo y RRHH), ventas_ro (venta y captación propia en detalle), publicidad y crm (diagnóstico técnico de campañas y embudo), altas (arranques). Las bandas de finanzas se firmaron tal cual el 4-oct y se revisan con datos el 3-dic-2026 (respuesta n.º 47).",
   "pendientes_tomas": [
-   "Norte: NORTE.md (beneficio de 30k a cierre de 2027, escalera 65-70k) convive con el 100k de MRR firmado el 30-ago y adelantado a 31-oct el 2-sep. Falta la enmienda; las fichas ponderan contra beneficio y usan el 100k solo para captación.",
-   "Precio: C-D2-04 (catálogo Coti, excepción Tomás) choca con la decisión del 12-jul (todo lo económico, Tomás). Las fichas suben todo precio a Tomás. Aclarar si Coti fija algo hoy.",
-   "Garantía: la regla sin_garantia_resultado y la ley C-D2-05 están superadas por la oferta del 1-sep (2 reuniones válidas en 30 días). Enmendar ley y regla.",
-   "Umbral escrito de compensación: C-D8-02 habla de «umbral escrito de dinero» y no existe. ¿Hasta qué importe puede ofrecer el account una compensación sin Tomás?",
-   "Impago: D-21 dice nunca más de 2 cuotas. ¿Se pausa el servicio automáticamente al llegar a 2 cuotas o siempre lo decide Tomás caso a caso?",
-   "Coste por cliente captado: D-13 mide solo inversión en Meta ÷ firmados (CAC de medios). ¿Se queda así o se añade el coste de venta (CAC completo) para el ratio de 3 a 1?",
-   "Bandas sin firmar en finanzas: margen bruto, peso y presupuesto del equipo, rentabilidad por cliente, clientes en pérdida, reserva de impuestos, concentración, tope de arranques y bajas. Firmar o corregir.",
-   "Satisfacción: el indicador (referencia de Cole, > 9) choca con C-D3-06 (las encuestas no sirven de alarma). ¿Se mide o se retira?",
-   "Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas."
-  ]
+   "Norte: el 4-oct Tomás fija el objetivo de acabar en «150» (respuesta n.º 25), pero falta confirmar la unidad. Mientras tanto las fichas ponderan contra beneficio (NORTE.md) y usan el 100k de MRR solo para captación.",
+   "Coste por cliente captado: objetivo máximo 700 € (respuesta n.º 26). Falta decir si el 700 € es solo publicidad (D-13, como mide la app) o el coste completo con venta para el ratio de 3 a 1. Aplicado: 700 € sobre la inversión en Meta.",
+   "Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir)."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
    "id": "dir_p_beneficio",
-   "texto": "El norte es el beneficio, no la facturación: toda propuesta se pondera contra beneficio, retención neta e ingresos por persona.",
+   "texto": "El norte es el beneficio, no la facturación: toda propuesta se pondera contra beneficio, retención neta e ingresos por persona. Tomás fija el objetivo 150 (pendiente de confirmar la unidad, 4-oct).",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:13",
    "autor": "Tomás"
   },
@@ -485,7 +480,7 @@
      "rectificativa"
     ]
    },
-   "sintoma": "Factura vencida en Holded con más de 60 días. Desde ese día no se reclama: decide Tomás. Nunca se acumulan más de dos cuotas.",
+   "sintoma": "Factura vencida en Holded con más de 60 días. Desde ese día no se reclama: decide Tomás. Nunca se acumulan más de dos cuotas. Con 2 cuotas, la app propone la pausa ese mismo día y decide Tomás.",
    "gravedad": "alta",
    "plazo": "48 h",
    "diagnostico": [
@@ -559,7 +554,7 @@
      "causa": "Tensión de caja del despacho.",
      "como_confirmar": "Lo dice el cliente o hay recibos devueltos repetidos.",
      "solucion": [
-      "Valora un plan de pago con fecha y cuotas, por escrito.",
+      "Un plan de pago solo lo aprueba Tomás: con fecha y cuotas, por escrito.",
       "Si es baja por liquidez con la relación intacta, deja tarea de reactivación con fecha."
      ],
      "quien": "direccion",
@@ -655,7 +650,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 325,
      "autor": "Tomás",
-     "nota": "C-D3-17: cobro siempre por SEPA; otra vía, se escala a Tomás."
+     "nota": "C-D3-17: cobro por SEPA; el primer cobro va con tarjeta (4-oct). Otra vía, a Tomás."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -674,6 +669,16 @@
      "linea": 3608,
      "autor": "Cole Gordon",
      "nota": "El cobro lo firma finanzas, con fecha de reintento y congelación del servicio si no contesta."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 23: impago: con 2 cuotas la app propone la pausa ese mismo día y decide Tomás; un plan de pago solo lo aprueba Tomás."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -816,7 +821,7 @@
     "cuando": "Rojo dos semanas seguidas con ventana de 30 días, o cualquier lectura por encima de 2.500 €.",
     "a": "direccion"
    },
-   "exito": "Coste por cliente captado ≤ 1.500 € a 30 días y vuelta a ≤ 700 € a 90 días, sin bajar el criterio de entrada.",
+   "exito": "Coste por cliente captado ≤ 1.500 € a 30 días y vuelta a ≤ 700 € a 90 días (máximo que fija Tomás), sin bajar el criterio de entrada.",
    "reglas_relacionadas": [
     "coste_cliente_ro_bandas",
     "umbrales_captacion_ro",
@@ -866,6 +871,11 @@
      "linea": 117,
      "autor": "Tomás",
      "nota": "CAC de referencia 700 € frente a 1.200-1.500 €: estaba abierto; lo cierra D-13 del 2-oct (manda D-13, más reciente)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
     }
    ]
   },
@@ -1224,7 +1234,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 233,
      "autor": "RO",
-     "nota": "Bandas del indicador de bajas con motivo (propuesta sin firmar)."
+     "nota": "Bandas del indicador de bajas con motivo (firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -1255,6 +1265,11 @@
      "linea": 257,
      "autor": "Tomás",
      "nota": "C-D3-07: el semáforo no salta escalones."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -1341,7 +1356,7 @@
      "como_confirmar": "Error, incidencia o queja abierta en los últimos 30 días.",
      "solucion": [
       "Llamada de un senior para escuchar.",
-      "Admite el error sin matices y ofrece dos compensaciones."
+      "Admite el error sin matices y ofrece dos compensaciones, habladas antes con Coti."
      ],
      "quien": "direccion",
      "plazo": "Hoy"
@@ -1472,6 +1487,11 @@
      "linea": 130,
      "autor": "Tomás",
      "nota": "Caso 25: la ventana de rescate que se dejó pasar con un correo del PM."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -1546,7 +1566,7 @@
      "como_confirmar": "Indicadores del cliente en ámbar o rojo.",
      "solucion": [
       "Plan de seis semanas con algo visible cada semana.",
-      "Revisa la garantía vigente si aplica."
+      "No hay garantía de resultados: no se negocia sobre ella."
      ],
      "quien": "account",
      "plazo": "48 h"
@@ -1639,6 +1659,11 @@
      "linea": 14,
      "autor": "Tomás",
      "nota": "Todo lo económico, precio incluido, lo decide Tomás (12-jul)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     }
    ]
   },
@@ -1684,7 +1709,7 @@
     },
     {
      "paso": 3,
-     "comprueba": "Qué se cambia: precio, alcance, forma de pago o garantía.",
+     "comprueba": "Qué se cambia: precio, alcance, forma de pago o una promesa de resultado.",
      "donde": "Propuesta",
      "si_falla": "c3"
     },
@@ -1719,10 +1744,10 @@
     },
     {
      "id": "c3",
-     "causa": "Se cambia algo que no es precio (forma de pago, garantía, alcance).",
+     "causa": "Se cambia algo que no es precio (forma de pago, alcance o una promesa de resultado).",
      "como_confirmar": "Pide transferencia, permanencia, exclusividad o un segundo canal.",
      "solucion": [
-      "Aplica la regla de oro correspondiente: SEPA único, sin permanencia, sin exclusividad, Meta único."
+      "Aplica la regla de oro correspondiente: tarjeta el primer cobro y luego SEPA, sin permanencia, sin exclusividad, Meta único."
      ],
      "quien": "direccion",
      "plazo": "48 h"
@@ -1752,7 +1777,7 @@
    "que_no_hacer": [
     "No digas un precio en una llamada sin aprobación.",
     "No conviertas una excepción en tarifa por repetición.",
-    "No uses la garantía como moneda de negociación."
+    "No ofrezcas garantías ni resultados como moneda de negociación: no hay garantía."
    ],
    "escalar": {
     "cuando": "Siempre. Hoy el precio y sus excepciones los decide Tomás.",
@@ -1775,7 +1800,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 136,
      "autor": "Tomás",
-     "nota": "C-D2-04: precio de catálogo Coti, excepción Tomás. Choca con DEC:14; manda en la práctica la decisión de Tomás y el precio único del 1-sep (§13 n.º 17)."
+     "nota": "C-D2-04 decía precio de catálogo de Coti y excepción de Tomás. Superada: precio único; las excepciones solo las decide Tomás y Coti no fija precios (4-oct)."
     },
     {
      "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
@@ -1806,6 +1831,21 @@
      "linea": 271,
      "autor": "RO",
      "nota": "Precio con % de publicidad: solo por decisión expresa de Tomás."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 20: un solo precio; las excepciones solo las decide Tomás y Coti no fija precios."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -1862,7 +1902,7 @@
     },
     {
      "paso": 5,
-     "comprueba": "Gravedad: si la compensación supera lo que el account puede ofrecer.",
+     "comprueba": "Gravedad: si hay que compensar algo, se habla primero con Coti.",
      "donde": "Importe estimado",
      "si_falla": "c4"
     }
@@ -1906,17 +1946,17 @@
      "causa": "Error grave: compensación económica.",
      "como_confirmar": "Importe relevante o daño de imagen.",
      "solucion": [
-      "Dos opciones de compensación concretas, decididas por dirección.",
-      "El gesto económico lo hace dirección."
+      "Dos opciones de compensación concretas, habladas primero con Coti.",
+      "Si Coti no puede cerrarlo, lo sube a Tomás."
      ],
-     "quien": "direccion",
+     "quien": "proyectos",
      "plazo": "48 h"
     }
    ],
    "acciones_inmediatas": [
     "Para lo que está causando daño.",
     "Llama al cliente hoy: admite el error y di qué estás haciendo.",
-    "Sube a Tomás las dos compensaciones propuestas con su coste."
+    "Habla primero con Coti de las dos compensaciones propuestas, con su coste."
    ],
    "guiones": [
     {
@@ -1935,12 +1975,12 @@
    "que_no_hacer": [
     "No expliques por qué pasó antes de admitir que pasó.",
     "No culpes a una persona del equipo ni al cliente.",
-    "No ofrezcas compensación económica sin dirección.",
+    "No ofrezcas una compensación sin hablarlo antes con Coti.",
     "No esperes a que el cliente reclame la compensación."
    ],
    "escalar": {
-    "cuando": "Siempre que haya compensación económica o daño de imagen.",
-    "a": "direccion"
+    "cuando": "Siempre que haya que compensar o haya daño de imagen: primero con Coti.",
+    "a": "proyectos"
    },
    "exito": "Cliente informado el mismo día, compensación elegida en 48 h y protocolo corregido en una semana.",
    "reglas_relacionadas": [
@@ -1978,7 +2018,12 @@
      "fichero": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
      "linea": 61,
      "autor": "RO",
-     "nota": "Las compensaciones las decide dirección; no culpar a nadie."
+     "nota": "Las compensaciones no las decide el account; desde el 4-oct se hablan primero con Coti. No culpar a nadie."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -2102,7 +2147,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 366,
      "autor": "RO",
-     "nota": "Bandas < 20 / 20-25 / > 25 % (referencia de mercado, sin firmar)."
+     "nota": "Bandas < 20 / 20-25 / > 25 % (referencia de mercado, firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "central:memoria/project_master_financiero_ro.md",
@@ -2127,6 +2172,11 @@
      "linea": 389,
      "autor": "Tomás",
      "nota": "C-D4-06: segundo responsable desde el día 1."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -2277,7 +2327,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 325,
      "autor": "Tomás",
-     "nota": "C-D3-17: SEPA como método único; otra vía, a Tomás."
+     "nota": "C-D3-17: SEPA; el primer cobro, con tarjeta (4-oct). Otra vía, a Tomás."
     },
     {
      "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
@@ -2290,6 +2340,11 @@
      "linea": 8160,
      "autor": "Hormozi",
      "nota": "Cobros rechazados: reintentar y no perder caja por churn involuntario."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -2430,7 +2485,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 322,
      "autor": "RO",
-     "nota": "Bandas del tope de arranques (orden Hormozi asumida el 29-sep, sin firmar)."
+     "nota": "Bandas del tope de arranques (orden Hormozi asumida el 29-sep, firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "ro-app:indicadores.json",
@@ -2455,6 +2510,11 @@
      "linea": 311,
      "autor": "RO",
      "nota": "Carga máxima por puesto: 12 por account, 16 por trafficker y por CRM."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -2910,7 +2970,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 785,
      "autor": "RO",
-     "nota": "Bandas ≥ 35 / 25-35 / < 25 % (mercado, sin firmar). Hormozi pide 80 % como techo teórico: manda la banda de RO."
+     "nota": "Bandas ≥ 35 / 25-35 / < 25 % (mercado, firmado el 4-oct; se revisa con datos el 3-dic-2026). Hormozi pide 80 % como techo teórico: manda la banda de RO."
     },
     {
      "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
@@ -2947,6 +3007,11 @@
      "linea": 939,
      "autor": "RO",
      "nota": "Exposición al dólar (no se mide aún)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3069,13 +3134,13 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 807,
      "autor": "RO",
-     "nota": "Peso del equipo: ≤ 55 / 55-65 / > 65 % (mercado AMI; Cole pide 25-30 %, manda la banda de RO, sin firmar)."
+     "nota": "Peso del equipo: ≤ 55 / 55-65 / > 65 % (mercado AMI; Cole pide 25-30 %, manda la banda de RO, firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "ro-app:indicadores.json",
      "linea": 829,
      "autor": "RO",
-     "nota": "Coste frente a presupuesto: ≤ 40.000 / 40.001-42.000 / > 42.000 € (sin firmar)."
+     "nota": "Coste frente a presupuesto: ≤ 40.000 / 40.001-42.000 / > 42.000 € (firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
@@ -3106,6 +3171,11 @@
      "linea": 2434,
      "autor": "Cole Gordon",
      "nota": "La mano de obra como techo de la rentabilidad."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3225,7 +3295,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 675,
      "autor": "RO",
-     "nota": "Fórmula y bandas (AMI ≥ 10 % por cliente; verde sin firmar)."
+     "nota": "Fórmula y bandas (AMI ≥ 10 % por cliente; verde firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -3250,6 +3320,11 @@
      "linea": 1361,
      "autor": "RO",
      "nota": "Las horas son solo aviso: no cuentan en el número de nadie."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3369,7 +3444,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 697,
      "autor": "RO",
-     "nota": "Bandas 0 / 1-2 / 3 o más (sin firmar)."
+     "nota": "Bandas 0 / 1-2 / 3 o más (firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
@@ -3400,6 +3475,11 @@
      "linea": 15,
      "autor": "Tomás",
      "nota": "R3: cuentas bajo el suelo con alcance nominal por escrito."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3549,6 +3629,11 @@
      "linea": 62,
      "autor": "Tomás",
      "nota": "C-D1-08: no se escala lo que no retiene."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
     }
    ]
   },
@@ -3781,7 +3866,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 873,
      "autor": "RO",
-     "nota": "Bandas ≥ 100 / 75-100 / < 75 % (propuesta sin firmar; subcuenta de reservas)."
+     "nota": "Bandas ≥ 100 / 75-100 / < 75 % (firmado el 4-oct; se revisa con datos el 3-dic-2026; subcuenta de reservas)."
     },
     {
      "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
@@ -3794,6 +3879,11 @@
      "linea": 3734,
      "autor": "Cole Gordon",
      "nota": "La factura más grande del empresario son los impuestos."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3919,7 +4009,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 300,
      "autor": "RO",
-     "nota": "Beneficio del mes: «ver el número que manda» (bandas sin firmar)."
+     "nota": "Beneficio del mes: «ver el número que manda» (firmado el 4-oct; se revisa con datos el 3-dic-2026)."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -3949,7 +4039,17 @@
      "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
      "linea": 11,
      "autor": "Tomás",
-     "nota": "Norte firmado el 30-ago: 100k de MRR recurrente; NORTE.md pendiente de enmienda (ver pendientes)."
+     "nota": "Norte firmado el 30-ago: 100k de MRR recurrente. El 4-oct Tomás fija el objetivo 150 (pendiente de confirmar la unidad); NORTE.md sigue pendiente de enmienda."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en «150» (pendiente de confirmar la unidad)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -4470,7 +4570,7 @@
      "pagar trimestral"
     ]
    },
-   "sintoma": "El cliente pide transferencia, tarjeta, plazo largo u otra forma de pago distinta de la domiciliación SEPA.",
+   "sintoma": "El cliente pide transferencia, plazo largo u otra forma de pago distinta de la tarjeta del primer cobro y la domiciliación SEPA de después.",
    "gravedad": "baja",
    "plazo": "48 h",
    "diagnostico": [
@@ -4534,7 +4634,7 @@
      "canal": "correo",
      "para": "cliente",
      "cuando": "Respuesta inicial de administración",
-     "texto": "Hola {nombre}:\n\nTodas nuestras colaboraciones se cobran por domiciliación SEPA: así no tienes que acordarte de pagar y puedes darte de baja con 30 días de aviso. Te adjunto el mandato. Si tienes algún motivo para necesitar otra vía, cuéntamelo y lo veo con dirección.\n\nUn saludo,"
+     "texto": "Hola {nombre}:\n\nLa primera cuota se cobra con tarjeta y las siguientes por domiciliación SEPA: así no tienes que acordarte de pagar y puedes darte de baja con 30 días de aviso. Te adjunto el mandato. Si tienes algún motivo para necesitar otra vía, cuéntamelo y lo veo con dirección.\n\nUn saludo,"
     }
    ],
    "que_no_hacer": [
@@ -4555,7 +4655,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 325,
      "autor": "Tomás",
-     "nota": "C-D3-17: SEPA único; otra vía, a Tomás."
+     "nota": "C-D3-17 decía SEPA único; enmendada el 4-oct: primer cobro con tarjeta, luego SEPA. Otra vía, a Tomás."
     },
     {
      "fichero": "central:memoria/feedback_cobros_sepa.md",
@@ -4568,6 +4668,11 @@
      "linea": 33,
      "autor": "RO",
      "nota": "Sin permanencia; 30 días de aviso."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -4936,7 +5041,7 @@
      "nota de los clientes"
     ]
    },
-   "sintoma": "Nota de 0 a 10 a «¿nos recomendarías?»: > 9 verde, 7-9 ámbar, < 7 rojo. Hoy no se mide.",
+   "sintoma": "Nota de 0 a 10 a «¿nos recomendarías?»: > 9 verde, 7-9 ámbar, < 7 rojo. Se mide cada trimestre y nunca sirve de alarma (decisión de Tomás, 4-oct).",
    "gravedad": "baja",
    "plazo": "Este mes",
    "diagnostico": [
@@ -5034,6 +5139,11 @@
      "linea": 98,
      "autor": "RO",
      "nota": "Las tres señales que preceden a una baja."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -5325,7 +5435,7 @@
     },
     {
      "paso": 3,
-     "comprueba": "Si la expectativa del cliente coincide con lo firmado (garantía, objetivo pactado, plazos).",
+     "comprueba": "Si la expectativa del cliente coincide con lo firmado (objetivo pactado, plazos). No hay garantía de resultados.",
      "donde": "Contrato y D0",
      "si_falla": "c3"
     },
@@ -5360,7 +5470,7 @@
      "causa": "Error nuestro que le cuesta dinero.",
      "como_confirmar": "Fallo comprobado.",
      "solucion": [
-      "Admite sin matices y ofrece dos compensaciones decididas por dirección."
+      "Admite sin matices y ofrece dos compensaciones, habladas antes con Coti."
      ],
      "quien": "direccion",
      "plazo": "Hoy"
@@ -5370,7 +5480,7 @@
      "causa": "Expectativa distinta de lo vendido.",
      "como_confirmar": "Espera resultados que el contrato no promete.",
      "solucion": [
-      "Vuelve a lo pactado por escrito con tacto: objetivo, garantía vigente y relojes."
+      "Vuelve a lo pactado por escrito con tacto: objetivo y revisión del día 120. No hay garantía de resultados."
      ],
      "quien": "direccion",
      "plazo": "48 h"
@@ -5470,7 +5580,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 18,
      "autor": "Tomás",
-     "nota": "Garantía vigente: 2 reuniones válidas en 30 días o no paga los honorarios del periodo."
+     "nota": "La oferta del 1-sep traía una garantía: superada. Desde el 4-oct no hay garantía."
     },
     {
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
@@ -5489,6 +5599,16 @@
      "linea": 34,
      "autor": "RO",
      "nota": "Un caso terminó en burofax reclamando daños: lo legal va con asesoría."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -5659,13 +5779,23 @@
      "fichero": "ro-equipo:40_MEMORIA/project_plan_paid_100k_31oct.md",
      "linea": 11,
      "autor": "Tomás",
-     "nota": "Norte a 31-oct con CAC límite de 700 € (2-sep)."
+     "nota": "Norte a 31-oct con CAC límite de 700 € (2-sep). El 4-oct Tomás confirma 700 € como máximo y fija el objetivo 150 (pendiente de confirmar la unidad)."
     },
     {
      "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
      "linea": 27,
      "autor": "Tomás",
      "nota": "Salvaguarda: captar sin rebajar el criterio de entrada; si la entrega se atasca, se frena la captación."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en «150» (pendiente de confirmar la unidad)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
     }
    ]
   },
@@ -5698,7 +5828,7 @@
      "los leads son malos",
      "no atienden los leads",
      "cero ventas",
-     "garantía en riesgo"
+     "compromiso de contacto"
     ]
    },
    "sintoma": "Leads con 0 intentos tras 24 h en toda la cartera, o clientes del Método en mes 2 (amarillo) o mes 3 (rojo) sin ninguna venta.",
@@ -5763,7 +5893,7 @@
      "causa": "Llaman tarde o pocas veces.",
      "como_confirmar": "Primer intento > 1 h o < 4 intentos.",
      "solucion": [
-      "Enséñale el dato y la relación con la garantía."
+      "Enséñale el dato y lo que firmó: ≤ 1 h y 4 intentos en 72 h, contados solo con llamadas registradas en GHL."
      ],
      "quien": "account",
      "plazo": "48 h"
@@ -5806,7 +5936,7 @@
     "No culpes al despacho delante de su equipo."
    ],
    "escalar": {
-    "cuando": "Mes 3 sin venta o la garantía en riesgo por los deberes del despacho.",
+    "cuando": "Mes 3 sin venta, o el despacho incumple sus deberes de contacto.",
     "a": "direccion"
    },
    "exito": "0 leads sin intento tras 24 h y ningún cliente del Método en mes 3 sin venta sin diagnóstico escrito.",
@@ -5834,7 +5964,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "Tomás",
-     "nota": "Los cuatro deberes del despacho que rigen la garantía."
+     "nota": "Los cuatro deberes del despacho: contacto ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h y registro en el CRM."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -5865,6 +5995,16 @@
      "linea": 16,
      "autor": "Tomás",
      "nota": "El objetivo es que el despacho cierre; si no cierra, no retiene."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 32: al despacho, primer intento en 1 h o menos y 4 intentos en 72 h; objetivo 5; < 15 min solo con persona dedicada; el setter de RO, < 5 min."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
