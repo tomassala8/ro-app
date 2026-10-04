@@ -161,10 +161,22 @@ def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=No
             ids += [i for i in ix[clave].get(valor, []) if i not in ids]
     out = [ficha(i) for i in ids]
     out = [f for f in out if f and visible(f, puesto)]
-    if puesto:  # las del puesto primero, sin quitar las demás
-        out.sort(key=lambda f: (puesto not in f.get("puestos", []), ORDEN_GRAVEDAD.get(f.get("gravedad"), 3)))
-    else:
-        out.sort(key=lambda f: ORDEN_GRAVEDAD.get(f.get("gravedad"), 3))
+    def especifica(f):  # la ficha con menos disparadores es la propia de esa señal; los árboles generales van detrás
+        d = f.get("disparadores", {})
+        return sum(len(d.get(k, []) or []) for k in ("tipos_consejo", "alertas", "indicadores"))
+
+    # las del puesto primero (sin quitar las demás), luego la más específica, luego la más grave
+    señal = [v for v in (tipo, alerta, indicador, regla) if v]
+
+    def nombrada(f):  # la ficha que lleva la señal en su nombre (seoweb_web_caida para web_caida) va delante
+        return not any(v.split(".")[-1] in f["id"] for v in señal)
+
+    def de_su_area(f):  # alerta pub_* → publicidad, acc_* → account, etc.
+        pre = (alerta or tipo or "").split("_")[0]
+        return not (pre and (f["area"].startswith(pre) or f["id"].startswith(pre)))
+
+    out.sort(key=lambda f: (bool(puesto) and puesto not in f.get("puestos", []), nombrada(f), de_su_area(f), especifica(f),
+                            ORDEN_GRAVEDAD.get(f.get("gravedad"), 3)))
     return out
 
 

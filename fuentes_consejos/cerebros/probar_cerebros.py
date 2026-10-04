@@ -48,7 +48,7 @@ RE_SECRETO = re.compile(r"(contrase[ñn]a|password|passwd|api[_ ]?key|token)\s*[
                         r"|sk-[A-Za-z0-9]{10,}", re.I)
 # consultas como las haría el equipo → área esperada en el primer resultado
 CONSULTAS = [
-    ("los leads no se presentan a las citas", {"crm", "setters"}),
+    ("los leads no se presentan a las citas", {"crm", "setters", "publicidad"}),
     ("el cliente está enfadado y quiere darse de baja", {"account", "comunicacion", "operaciones", "direccion"}),
     ("la campaña de meta no gasta", {"publicidad"}),
     ("el coste por lead se ha disparado", {"publicidad"}),
@@ -63,6 +63,11 @@ CONSULTAS = [
     ("whatsapp desconectado en gohighlevel", {"crm"}),
     ("leads sin llamar en el crm", {"crm", "setters", "account"}),
 ]
+
+# alerta de la app → área de la primera ficha
+DISPAROS = [("crm_citas_sin_estado", "crm"), ("web_caida", "seo_web"), ("pub_critico", "publicidad"),
+            ("acc_correos", "account"), ("seo_rojo", "seo_web"), ("redes_hueco", "redes_produccion"),
+            ("alta_fuera_plazo", "altas")]
 
 
 def raiz_repo(nombre):
@@ -191,6 +196,10 @@ def correr(estricto=False):
         got = r[0][1]["area"] if r else None
         if got not in esperadas:
             avisos.append(f"consulta «{q}» → {got} (esperado {'/'.join(sorted(esperadas))})")
+    for al, esperada in DISPAROS:
+        r = B.por_disparador(alerta=al)
+        if not r or r[0]["area"] != esperada:
+            errores.append(f"alerta {al} → {r[0]['id'] if r else None} (esperado {esperada})")
     # reserva: una setter no ve fichas de dirección ni de personas que no sean suyas
     fuga = [f["id"] for _, f in B.buscar("salida de una persona del equipo despido", puesto="setters", n=10)
             if f["area"] in B.RESERVADAS and "setters" not in f.get("puestos", [])]

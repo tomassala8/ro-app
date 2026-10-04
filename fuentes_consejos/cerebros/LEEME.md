@@ -1,5 +1,8 @@
 # Cerebros de área (4-oct-2026)
 
+Doce cerebros, uno por área: 477 fichas de situación y 141 principios. Cubren los 55 tipos de consejo y las 45
+alertas de la app. Cada ficha compacta para la IA ronda 680 tokens (p90 ≈ 1.080).
+
 Doce cerebros, uno por área, con **fichas de situación**: lo que le pasa a alguien del equipo y qué hacer.
 Sirven para aconsejar al equipo gastando muy poca IA.
 
@@ -39,6 +42,7 @@ python3 fuentes_consejos/cerebros/buscar.py "los leads no vienen a la reunión" 
 python3 fuentes_consejos/cerebros/buscar.py --alerta crm_sin_tocar
 python3 fuentes_consejos/cerebros/construir_indice.py     # tras editar un cerebro
 python3 fuentes_consejos/cerebros/probar_cerebros.py      # antes de cada PR
+python3 fuentes_consejos/cerebros/pendientes.py           # regenera PENDIENTES_TOMAS.md
 ```
 
 ## Editar un cerebro
@@ -46,4 +50,9 @@ python3 fuentes_consejos/cerebros/probar_cerebros.py      # antes de cada PR
 - Cambia el `<area>.json`, sube `_meta.version` y pon la fuente con fichero y línea.
 - Si es criterio sin documento, `{"fichero": "criterio", "autor": "RO", "nota": "sin fuente"}`.
 - Nada de correos, teléfonos, claves ni datos de personas. Las pruebas lo vigilan.
-- `_meta.pendientes_tomas` recoge lo que solo Tomás puede decidir.
+- `_meta.pendientes_tomas` recoge lo que solo Tomás puede decidir. Resumen en `PENDIENTES_TOMAS.md`.
+
+## Áreas
+
+direccion · operaciones · account · comunicacion · altas · publicidad · crm (con el diagnosticador del embudo de
+GoHighLevel, `crm_diagnostico_embudo`) · setters · seo_web · redes_produccion · ventas_ro · personas_admin.
