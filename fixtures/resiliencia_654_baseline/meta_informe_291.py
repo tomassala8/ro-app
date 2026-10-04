@@ -1,11 +1,7 @@
 """Semántica Meta para exportación local. Ningún resultado legado equivale a lead."""
 import datetime as dt,math,re
 TIPOS={'lead','onsite_conversion.lead_grouped','offsite_conversion.fb_pixel_lead','onsite_web_lead'}
-def numero(v,entero=False):
- try:
-  return v if type(v) in (int,float) and math.isfinite(v) and v>=0 and (not entero or int(v)==v and v<=9007199254740991) else None
- except OverflowError:
-  return None
+def numero(v,entero=False):return v if type(v) in (int,float) and math.isfinite(v) and v>=0 and (not entero or int(v)==v and v<=9007199254740991) else None
 def dia(v):
  try:return isinstance(v,str) and dt.date.fromisoformat(v).isoformat()==v
  except ValueError:return False

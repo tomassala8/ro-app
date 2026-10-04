@@ -24,3 +24,6 @@ Actualización645: corrección de cadencia640/641 integrada y verificada despué
 
 
 Actualización650 (corte actual): lector JSON estricto649, corrección conservadora de tarjetas secundarias Paid648 y portabilidad de pruebas307/453. Leer entrega/650_ULTIMO_CIERRE_PRE_CURSOR_CODEX.md. Carril aislado ahora29suites, incluyendo644/649; siguen pendientes los demás consumidores y la aceptación global. No ejecutar casos heredados que dependen de reglas privadas reales como si fueran fixtures portables.
+
+
+Actualización660: resiliencia654/656 integrada y probada en local y en esta entrega. Una sección malformada no tumba recomendaciones válidas de otras secciones o clientes; números no representables quedan desconocidos. Ver entrega/656_CEREBRO_RESILIENTE_LOCAL_Y_PARCHES_COMERCIALES_CODEX.md. Los parches652/653 siguen aislados y no se consideran aplicados.
