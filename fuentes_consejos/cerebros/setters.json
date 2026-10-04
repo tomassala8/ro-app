@@ -4879,7 +4879,7 @@
   },
   {
    "id": "setters_duda_preguntar_tomas",
-   "titulo": "No sé qué hacer con un lead",
+   "titulo": "Caso raro con un lead: no sé qué hacer ni a quién preguntar",
    "puestos": [
     "setters",
     "ventas_ro",
@@ -4897,7 +4897,9 @@
      "a quién pregunto",
      "no sé si encaja",
      "me bloqueo",
-     "dudas y bloqueos"
+     "dudas y bloqueos",
+     "no sé qué hacer con un lead",
+     "qué hago con este lead"
     ]
    },
    "sintoma": "Resultado «No lo sé: pregunto a Tomás», o el lead plantea algo que no está en el guion.",

@@ -3875,7 +3875,9 @@
      "subcuenta vacía",
      "archivar subcuenta",
      "no usan el crm",
-     "sin actividad en ghl"
+     "sin actividad en ghl",
+     "subcuenta sin contactos",
+     "gohighlevel sin uso"
     ]
    },
    "sintoma": "Subcuenta de GHL de un alta sin actividad. El motor no saca el aviso «subcuenta sin usar» en altas de menos de 90 días.",

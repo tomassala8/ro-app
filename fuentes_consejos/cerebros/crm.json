@@ -4408,7 +4408,7 @@
    "guiones": [
     {
      "canal": "interno",
-     "para": "operaciones",
+     "para": "equipo",
      "cuando": "Cuando la Salud del CRM no enseña la subcuenta de un cliente",
      "texto": "La subcuenta de {cliente} no está emparejada en la app y su Salud del CRM sale vacía. ¿Me confirmas cuál es la subcuenta correcta para enlazarla hoy?"
     }
@@ -4558,7 +4558,7 @@
    "guiones": [
     {
      "canal": "interno",
-     "para": "operaciones",
+     "para": "equipo",
      "cuando": "Cuando el montaje no está probado antes del encendido",
      "texto": "{cliente}: el montaje de GHL no está listo para el encendido del {fecha}. Falta {qué}. Propongo no encender la publicidad hasta que el contacto de prueba recorra el circuito entero. Lo tengo para el {fecha_nueva}."
     }
@@ -6034,7 +6034,7 @@
    "guiones": [
     {
      "canal": "interno",
-     "para": "operaciones",
+     "para": "equipo",
      "cuando": "Cuando un especialista supera el tope de subcuentas",
      "texto": "{especialista} lleva {n} subcuentas (tope 16). Con esta carga se le escapan los rojos. Propongo pasar {k} subcuentas a {otro} antes del {fecha}. ¿Lo validas?"
     }

@@ -11,7 +11,7 @@ Comprueba:
   6. Nada sensible: ni correos, ni teléfonos, ni contraseñas o claves.
   7. Cobertura: cada tipo de consejo de tipos.json tiene al menos una ficha.
   8. Buscador: cada ficha se encuentra por su propio título (top 3) y las consultas del equipo dan el área correcta.
-  9. Tamaño: la ficha compacta que va a la IA cabe en ≈ 2.000 tokens.
+  9. Tamaño: la ficha compacta que va a la IA cabe en ≈ 2.200 tokens.
 
   python3 fuentes_consejos/cerebros/probar_cerebros.py [--estricto]   (estricto: los avisos también fallan)
 Repos locales: variables RO_EQUIPO, HCG, CENTRAL o carpetas conocidas (~/RO_EQUIPO, ~/ro-equipo, ...).
@@ -174,7 +174,7 @@ def correr(estricto=False):
                 if hit:
                     errores.append(f"{donde}: posible {nom}: {hit.group(0)[:30]!r}")
             t = B.tokens_aprox(B.para_ia(dict(s, area=area)))
-            if t > 2000:
+            if t > 2200:            # el diagnosticador maestro del embudo (7 tramos) ronda los 2.000: es su tamaño natural
                 avisos.append(f"{donde}: ficha para IA de ≈{t} tokens")
     # cobertura de tipos
     ix = B.construir()

@@ -342,10 +342,16 @@ function fichaConsejo(f) {
   return h('details', { class: 'ia-ficha', 'data-ficha': f.id, style: { marginTop: '6px' } },
     h('summary', {}, icono('libro', { clase: 's' }), ' Cómo se resuelve'),
     lista('Hoy', f.hoy), lista('Comprueba primero', f.comprueba),
-    f.escalar?.a ? h('p', { class: 'ia-sub' }, `Escala a ${f.escalar.a}: ${f.escalar.cuando || ''}`) : null,
+    f.escalar?.a ? h('p', { class: 'ia-sub' }, `Escala a ${quien(f.escalar.a)}: ${f.escalar.cuando || ''}`) : null,
     f.exito ? h('p', { class: 'ia-sub' }, `Resuelto cuando: ${f.exito}`) : null,
     botonFichaEntera(f.id));
 }
+/** Los cerebros guardan a quién escalar como id de puesto o área («jefa_crm», «ventas_ro»): en pantalla, con nombre legible. */
+const QUIEN = { direccion: 'Dirección', operaciones: 'Operaciones', jefa_publicidad: 'jefa de publicidad', jefa_seo: 'jefa de SEO',
+  jefa_crm: 'jefa de CRM', ventas_ro: 'Ventas de RO', tecnico_altas: 'técnico de altas', administracion: 'Administración', rrhh: 'RRHH',
+  especialista_ghl: 'especialista de GoHighLevel', finanzas_direccion: 'Finanzas (Dirección)', personas_admin: 'Personas y administración',
+  seo_web: 'SEO y web', redes_produccion: 'Redes y producción', proyectos: 'Proyectos', crm: 'CRM', publicidad: 'Publicidad', altas: 'Altas' };
+const quien = a => String(a || '').replace(/[a-z_]+/g, w => QUIEN[w] || w);
 /** «Ver la ficha entera» dentro del propio consejo (sirve en cualquier pantalla, sin depender del Asistente). */
 function botonFichaEntera(id) {
   const zona = h('div');
@@ -390,7 +396,7 @@ export function fichaCompleta(api, f, { clienteId = null, pregunta = () => '' } 
       h('pre', { style: { whiteSpace: 'pre-wrap', font: 'inherit' } }, g.texto),
       h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(g.texto, 'Mensaje copiado') } }, 'Copiar')))),
     sec('Qué no hacer', ul(f.que_no_hacer)),
-    f.escalar?.a ? sec('Cuándo escalar', h('p', {}, `A ${f.escalar.a}: ${f.escalar.cuando || ''}`)) : null,
+    f.escalar?.a ? sec('Cuándo escalar', h('p', {}, `A ${quien(f.escalar.a)}: ${f.escalar.cuando || ''}`)) : null,
     f.exito ? sec('Resuelto cuando', h('p', {}, f.exito)) : null,
     zonaIA,
     f.fuentes?.length ? h('details', { style: { marginTop: 'var(--s-3)' } }, h('summary', { class: 'ia-sub' }, `De dónde sale (${f.fuentes.length} fuentes)`),

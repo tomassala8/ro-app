@@ -231,8 +231,8 @@ def buscar(texto, puesto=None, area=None, n=3, minimo=1.0):
         palabras = sum(min(bolsa[t], 6) * ix["idf"].get(t, 0) for t in comunes)
         explica = sum(ix["idf"].get(t, 1.0) for t in comunes) / masa
         p = (palabras + frase_pts.get(sid, 0)) * (0.3 + explica)
-        if puesto and suya(meta, puesto):
-            p *= 1.25
+        if puesto:   # lo de su puesto delante; lo de otros puestos sigue saliendo si la consulta lo pide claro
+            p *= 1.25 if suya(meta, puesto) else 0.8
         if qt & PISTA_AREA.get(meta["area"], set()):
             p *= 1.2
         if p >= minimo:

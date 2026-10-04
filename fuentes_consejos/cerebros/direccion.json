@@ -3272,7 +3272,9 @@
      "varios clientes no rentables",
      "perdemos dinero con varios",
      "cartera a pérdida",
-     "recortar cartera"
+     "recortar cartera",
+     "clientes que no son rentables",
+     "margen negativo por cliente"
     ]
    },
    "sintoma": "Clientes con rentabilidad negativa dos meses seguidos: 0 verde, 1-2 ámbar, 3 o más rojo.",
@@ -3568,7 +3570,9 @@
      "recuperar la inversión",
      "cuándo recuperamos",
      "periodo de recuperación",
-     "caja de la captación"
+     "caja de la captación",
+     "coste de captación tarda en recuperarse",
+     "cuánto tardamos en recuperar un cliente"
     ]
    },
    "sintoma": "Coste por cliente ÷ beneficio bruto mensual del cliente: verde ≤ 1 mes, ámbar 1-2, rojo > 2.",
@@ -5884,7 +5888,8 @@
      "productividad",
      "facturación por empleado",
      "eficiencia del equipo",
-     "cuota por hora"
+     "cuota por hora",
+     "rentabilidad del equipo"
     ]
    },
    "sintoma": "Facturación ÷ personas por debajo de la escalera: ~1.700 €/mes (jun-26), ~2.400 (jun-27), 3.300-3.500 (dic-27).",

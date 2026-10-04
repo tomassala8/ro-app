@@ -3649,7 +3649,7 @@
      "canal": "interno",
      "para": "equipo",
      "cuando": "Antes de la reunión mensual",
-     "texto": "Te paso el antes y después de [URL]: palabra [x], posición [antes] → [después], clics [antes] → [después], cambio hecho el [fecha]. Enséñalo en pantalla en la reunión."
+     "texto": "Te paso el antes y después de {url}: palabra {palabra}, posición {posicion_antes} → {posicion_despues}, clics {clics_antes} → {clics_despues}, cambio hecho el {fecha}. Enséñalo en pantalla en la reunión."
     }
    ],
    "que_no_hacer": [

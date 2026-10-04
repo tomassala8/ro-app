@@ -4715,7 +4715,7 @@
      "semáforo de llamadas"
     ]
    },
-   "sintoma": "En el CRM hay leads sin ningún intento más de 1 h laborable, la mediana al primer intento pasa de 4 h, o menos de 2-3 intentos en 72 h a los que no contestan. Se mira lunes y jueves.",
+   "sintoma": "En el CRM hay leads sin ningún intento más de 1 h laborable, la mediana al primer intento pasa de 4 h, o menos de 4 intentos en 72 h a los que no contestan (lo exigible por contrato). Se mira lunes y jueves.",
    "gravedad": "alta",
    "plazo": "Hoy",
    "diagnostico": [
