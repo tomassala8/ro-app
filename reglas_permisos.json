@@ -589,6 +589,15 @@
         "administracion"
       ]
     },
+    "contexto/contexto_clientes": {
+      "_4oct": "Contexto del cliente para la Ficha (fuentes_contexto/generar_contexto.py): quién es, qué quiere y cómo trabajar con él. Sin personas ni datos de contacto. Filas con cliente_id: cada uno ve solo sus clientes. Administración no, como el riesgo de baja.",
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
     "fuentes/hallazgos_medicion": {
       "modulos": [
         "ficha"

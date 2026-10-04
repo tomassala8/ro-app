@@ -74,7 +74,31 @@ dentro de la consulta, pruebas Python de hoy en `baterias.sh` y su pantalla con 
 
 ## 4. Contexto del cliente (fichas breves)
 
-<!-- CONTEXTO -->
+- **Qué es:** un resumen de cada cliente (a qué se dedica, qué quiere, qué nos ha dicho, qué le gusta y qué no, cómo
+  trabajar con él, situación actual y lo que aún no sabemos) para que el account lo tenga a mano en la ficha.
+- **Ya hecho (4-oct, rama del plan):**
+  - `fuentes_contexto/generar_contexto.py`: lee las fichas de un sitio PRIVADO (`RO_CONTEXTO_CLIENTES`, o
+    `fuentes_contexto/_privado/contexto_clientes/fichas_clientes.json`) y escribe `data/contexto/contexto_clientes.json`,
+    una fila por `cliente_id` de la app.
+  - Privacidad: quita las personas del cliente (`quien_esta_detras`), el account, nombre y fuentes; en las citas, el nombre
+    pasa a su papel; correos y teléfonos se borran. Nunca escribe vacío ni pisa un fichero bueno con uno mucho más pequeño.
+  - Dado de alta en `reglas_permisos.json` (`contexto/contexto_clientes`: solo la ficha; administración no). Cada uno ve
+    solo sus clientes (recorte por `cliente_id`).
+  - `fuentes_contexto/probar_contexto.py`: 21 casos con clientes inventados, en verde. Va a `baterias.sh`.
+- **Los datos reales:** las fichas NO van al repo. Tomás (o Astra) copia `fichas_clientes.json` a
+  `fuentes_contexto/_privado/contexto_clientes/` en el Mac (ignorado por git). Comprobado en seco con el fichero real:
+  67 clientes válidos.
+- **Esta noche:** nada. Sin el fichero privado no escribe; si está, el contrato graba `/api/modulo/contexto/contexto_clientes`
+  como cualquier otro dato.
+- **Falta:**
+  1. Pantalla (mañana, primero en `ficha.js`; en React con F6.4 «Ficha del cliente»): bloque de solo lectura «Contexto del
+     cliente» que lee `contexto/contexto_clientes`, coge la fila del cliente y enseña «Actualizado el …», la frase, las
+     listas y las citas; `huecos` en gris como «Nos falta saber…». Sin fila, no sale.
+  2. El paso en `despliegue/pasos.json` (poco frecuente: las fichas cambian a mano).
+  3. La hoja `contexto_clientes_2026-10-04.xlsx` trae más campos (zona objetivo, servicios prioritarios, propuesta de valor,
+     competidores, palabras clave, tono y vetos, objetivos de leads y citas, ticket medio…). No se usan: importes, decisor
+     e interlocutor piden antes una decisión de Tomás sobre quién los ve.
+- **Al mudarla:** la ruta de datos entra con F5.3 sin nada especial. Si un día se edita desde la app, pasa a tabla propia.
 
 ## 5. Copia propia de las APIs: nunca ceros (N-01 a N-12)
 
