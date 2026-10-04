@@ -20,6 +20,9 @@ AUD_MIN="${RO_AUDITORIAS_MIN:-4}"         # al menos una por enfoque (A, B, C, D
 AUD_MAX="${RO_AUDITORIAS:-8}"
 PLAN="migracion/PLAN_NOCHE.md"
 ARBOL_PLAN="$FUERA/plan_arbol.txt"        # huella del código contra el que se auditó
+if [ -z "${RO_EN_ENSAYO:-}" ] && { [ -L "$FUERA" ] || ls -d "$FUERA".real_* >/dev/null 2>&1; }; then
+  echo "✘ Hay un ensayo en marcha o sin cerrar ($FUERA apunta a él). Ciérralo: bash migracion/ensayo.sh --cerrar"; exit 1
+fi
 . migracion/_agente.sh
 PLANTILLA_PLAN="${RO_AGENTE_PLAN:-$PLANTILLA}"
 sin_llaves
@@ -27,7 +30,15 @@ sin_llaves
 primera() { head -1 "$PLAN" 2>/dev/null; }
 revisar() { python3 migracion/revisar_plan.py "$@"; }
 cuenta() { local c; c="$(grep -c "$1" "$PLAN" 2>/dev/null)"; echo "${c:-0}"; }
-auditorias() { cuenta '^## Auditoría '; }
+# auditorías hechas = el número más alto de «## Auditoría N» (una repetida por un corte no cuenta dos veces)
+auditorias() { local n; n="$(grep -oE '^## Auditoría [0-9]+' "$PLAN" 2>/dev/null | awk '{print $3}' | sort -n | tail -1)"; echo "${n:-0}"; }
+tiene_auditoria() { grep -qE "^## Auditoría $1([ :·]|\$)" "$PLAN"; }
+limpia_n() {   # la primera línea con texto tras su cabecera es «SIN CAMBIOS» (con o sin negrita o punto)
+  awk -v n="$1" '$0 ~ "^## Auditoría " n "([ :·]|$)" {f=1; next} f && NF {print; exit}' "$PLAN" | grep -qxE '[*_]*SIN CAMBIOS[*_]*\.?[[:space:]]*'
+}
+# Tope total (noche.sh lo pone si el plan no estaba hecho de antes): RO_PLAN_FIN, en segundos desde 1970.
+a_tiempo() { [ -z "${RO_PLAN_FIN:-}" ] || [ "$(date +%s)" -lt "$RO_PLAN_FIN" ]; }
+guardar_auditado() { arbol > "$ARBOL_PLAN"; rm -f "$FUERA/PLAN_NOCHE.auditado.md"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"; }
 pon_primera() {   # cambia la primera línea del plan
   local tmp; tmp="$(mktemp)"; { echo "$1"; tail -n +2 "$PLAN"; } > "$tmp" && cat "$tmp" > "$PLAN"; rm -f "$tmp"
 }
@@ -55,7 +66,9 @@ ultima_copia() { ls -t "$COPIAS"/PLAN_NOCHE.*.md 2>/dev/null | head -1; }
 vuelta() {   # vuelta <mensaje> <registro>: lanza al planificador con guardia, copia y deshacer
   local antes cab tam codigo
   antes="$(estado_repo)"; copia; cab="$(cabeceras)"; tam="$(tamano)"
-  lanzar "$MODELO_PLAN" "$1" "$2" "$TOPE" "$PLANTILLA_PLAN"; codigo=$?
+  local tope="$TOPE"
+  if [ -n "${RO_PLAN_FIN:-}" ]; then local queda=$(( RO_PLAN_FIN - $(date +%s) )); [ $queda -lt "$tope" ] && tope=$queda; [ $tope -lt 60 ] && tope=60; fi
+  lanzar "$MODELO_PLAN" "$1" "$2" "$tope" "$PLANTILLA_PLAN"; codigo=$?
   vigilar "$antes" "$2"
   if [ -f "$PLAN" ] && [ "$cab" -gt 0 ] && encogido "$cab" "$tam"; then
     echo "  ⚠ la vuelta dejó el plan más corto ($cab → $(cabeceras) pasos): se deshace"; cp "$(ultima_copia)" "$PLAN"; return 9
@@ -78,12 +91,16 @@ if primera | grep -q '^PLAN: AUDITADO' && revisar >/dev/null; then
 
 MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: A, pero SOLO sobre lo que nombra a estos ficheros, que han cambiado desde la última auditoría (rutas, funciones, números de línea, opciones). El resto ya está auditado: no lo toques.
 ${cambios:-(no tengo la lista: compara el plan con «git status» y «git diff»)}"
+  hecha=""
   for i in 1 2 3; do
-    vuelta "$msg" "$LOGS/plan_auditoria_$(printf %02d $n).log" && break; esperar_fallo $i
+    a_tiempo || break
+    if vuelta "$msg" "$LOGS/plan_auditoria_$(printf %02d $n).log" && revisar >/dev/null && tiene_auditoria $n; then hecha=1; break; fi
+    cp "$(ultima_copia)" "$PLAN"          # lo que dejó a medias, fuera
+    [ $i -lt 3 ] && esperar_fallo $i
   done
-  revisar || { echo "✘ Tras la puesta al día, el plan no pasa revisar_plan.py: vuelve a lanzar planear.sh."; exit 1; }
+  [ -n "$hecha" ] || { echo "✘ La auditoría de puesta al día no salió: el plan se queda como estaba (auditado contra el código de antes). Vuelve a lanzar planear.sh."; exit 1; }
   pon_primera "PLAN: AUDITADO · $n auditorías · puesta al día · $(date '+%Y-%m-%d %H:%M')"
-  arbol > "$ARBOL_PLAN"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"
+  guardar_auditado
   echo "✔ Plan al día."; exit 0
 fi
 
@@ -97,6 +114,7 @@ while :; do
     if revisar >/dev/null; then break; fi
     detalle="$(revisar | head -30)"
   else detalle="$(revisar | grep -v '^✘ faltan' | head -30)"; fi
+  a_tiempo || { echo "⏰ Se acabó el tiempo para planear: el plan se queda a medias ($(primera))."; exit 2; }
   r=$((r + 1))
   [ $r -gt "$RONDAS" ] && { echo "✘ $RONDAS vueltas y el plan sigue sin estar completo. Vuelve a lanzar planear.sh (sigue donde lo dejó)."; exit 1; }
   log="$LOGS/plan_escribe_$(printf %02d $r).log"
@@ -118,14 +136,16 @@ $detalle}"
     quieto=$((quieto + 1)); [ $quieto -ge 3 ] && { echo "✘ 3 vueltas sin escribir nada: mira $log"; exit 1; }
   else quieto=0; fi
 done
-primera | grep -q '^PLAN: \(COMPLETO\|AUDITADO\)' || pon_primera "PLAN: COMPLETO · $(date '+%Y-%m-%d %H:%M')"
+primera | grep -qE '^PLAN: (COMPLETO|AUDITADO)' || pon_primera "PLAN: COMPLETO · $(date '+%Y-%m-%d %H:%M')"
 echo "✔ Plan completo: $(cabeceras) pasos."
 
 # --- 2. auditorías hasta que una salga limpia ----------------------------------------------------------------------
 ENFOQUES=("A · ¿existe lo que nombra?" "B · ¿encaja la noche de principio a fin?" "C · ¿lo puede hacer un modelo rápido sin equivocarse?" "D · ¿respeta las líneas rojas?")
 limpia=""; fallos=0
 n=$(( $(auditorias) + 1 ))
+sin_tiempo=""
 while [ $n -le "$AUD_MAX" ]; do
+  a_tiempo || { sin_tiempo=1; break; }
   if [ $n -le 4 ]; then enfoque="${ENFOQUES[$((n - 1))]}"; else enfoque="todos (A, B, C y D), con lo que las anteriores no miraron"; fi
   log="$LOGS/plan_auditoria_$(printf %02d $n).log"
   echo "[$(date '+%H:%M')] auditoría $n ($enfoque) → $log"
@@ -134,6 +154,7 @@ while [ $n -le "$AUD_MAX" ]; do
 MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: $enfoque."
   vuelta "$msg" "$log"; codigo=$?
   if [ $codigo -ne 0 ]; then
+    [ $codigo -ne 9 ] && cp "$(ultima_copia)" "$PLAN"      # una auditoría cortada no deja cambios a medias
     fallos=$((fallos + 1)); echo "  ⚠ la auditoría no terminó (código $codigo)"
     [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log y vuelve a lanzar planear.sh"; exit 1; }
     [ $codigo -ne 9 ] && esperar_fallo $fallos
@@ -143,24 +164,26 @@ MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: $enfoque."
     echo "  ⚠ tras la auditoría el plan no pasa revisar_plan.py: se deshace y se repite"; cp "$(ultima_copia)" "$PLAN"
     fallos=$((fallos + 1)); [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log"; exit 1; }; continue
   fi
-  if ! grep -q "^## Auditoría $n " "$PLAN"; then
+  if ! tiene_auditoria $n; then
     echo "  ⚠ la auditoría no dejó su sección: se repite"
     fallos=$((fallos + 1)); [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log"; exit 1; }; continue
   fi
   fallos=0
   # ¿limpia? la primera línea con texto tras su cabecera es exactamente «SIN CAMBIOS»
-  if awk -v n="$n" '$0 ~ "^## Auditoría " n " " {f=1; next} f && NF {print; exit}' "$PLAN" | grep -qx 'SIN CAMBIOS'; then
+  if limpia_n $n; then
     echo "  ✔ auditoría $n: SIN CAMBIOS"; [ $n -ge "$AUD_MIN" ] && { limpia=1; break; }
   else echo "  · auditoría $n: con correcciones"; fi
   n=$((n + 1))
 done
-[ $n -gt "$AUD_MAX" ] && n=$AUD_MAX
+[ -z "$limpia" ] && n=$((n - 1))           # la última que se hizo
+if [ "$n" -lt 1 ]; then echo "⏰ Sin tiempo para auditar: el plan queda COMPLETO sin auditar."; exit 2; fi
 
-if [ -n "$limpia" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · la última sin cambios · $(date '+%Y-%m-%d %H:%M')"
+if [ -n "$sin_tiempo" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · sin tiempo para más · $(date '+%Y-%m-%d %H:%M')"
+elif [ -n "$limpia" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · la última sin cambios · $(date '+%Y-%m-%d %H:%M')"
 else pon_primera "PLAN: AUDITADO · $n auditorías · la última aún corrigió algo · $(date '+%Y-%m-%d %H:%M')"
   echo "⚠ Tras $AUD_MAX auditorías la última aún corrigió algo. El plan vale; si hay tiempo: RO_AUDITORIAS=$((AUD_MAX + 2)) bash migracion/planear.sh"
 fi
-arbol > "$ARBOL_PLAN"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"; chmod 644 "$FUERA/PLAN_NOCHE.auditado.md"
+guardar_auditado
 echo "✔ $(primera)"
 if grep -q '^## Dudas para Tomás' "$PLAN"; then
   echo; echo "Dudas que el planificador deja para Tomás (la noche usa la opción conservadora si no contestas):"

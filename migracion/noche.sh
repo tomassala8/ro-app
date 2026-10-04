@@ -44,20 +44,35 @@ hora_de() { date -r "$1" '+%Y-%m-%d %H:%M' 2>/dev/null || date -d "@$1" '+%Y-%m-
 # --- noche nueva o la misma de antes --------------------------------------------------------------------------------
 nueva=1
 if [ -s "$MARCA" ] && [ "${RO_NOCHE_NUEVA:-}" != "1" ]; then
-  FIN="$(cat "$MARCA")"; nueva=""
-  echo "Sigo la noche empezada (fin $(hora_de "$FIN")). Para empezar otra: RO_NOCHE_NUEVA=1 bash migracion/noche.sh"
+  FIN="$(cat "$MARCA")"
+  if [ "$FIN" -gt "$(date +%s)" ] 2>/dev/null; then
+    nueva=""; echo "Sigo la noche empezada (fin $(hora_de "$FIN")). Para empezar otra: RO_NOCHE_NUEVA=1 bash migracion/noche.sh"
+  else echo "La noche anterior acabó a las $(hora_de "$FIN") sin terminar: empiezo una nueva desde lo que diga PROGRESO.md."; fi
+fi
+# El ensayo cambia ~/RO_MIGRACION por la suya mientras dura: nunca una noche de verdad encima de un ensayo a medias.
+if [ -L "$FUERA" ] || ls -d "$FUERA".real_* >/dev/null 2>&1; then
+  echo "✘ $FUERA apunta a un ensayo o hay un ensayo sin cerrar ($(ls -d "$FUERA".real_* 2>/dev/null | head -1))."
+  echo "  Ciérralo con: bash migracion/ensayo.sh --cerrar"; exit 1
 fi
 
 if [ -n "$nueva" ]; then
   # 1. lo que cambió el plan fuera de migracion/ (config.py, despliegue/, fuentes/…), sin pisar lo de Astra; una vez por noche
   bash migracion/juntar_plan.sh || echo "⚠ juntar_plan.sh falló: F1.3 lo repite"
   # 2. el plan de la noche, escrito y auditado (si ya lo está y nada cambió, esto tarda un segundo)
+  #    Con tope: si el plan no estaba hecho de antes, como mucho RO_HORAS_PLAN horas (3); después la noche empieza con lo que haya.
   if [ "${RO_SIN_PLAN:-}" != "1" ]; then
-    bash migracion/planear.sh || echo "⚠ planear.sh no terminó: la noche sigue con el plan que haya y con PROMPTS_CURSOR.md"
+    RO_PLAN_FIN=$(( $(date +%s) + ${RO_HORAS_PLAN:-3} * 3600 )) bash migracion/planear.sh \
+      || echo "⚠ planear.sh no terminó: la noche sigue con el plan que haya y con PROMPTS_CURSOR.md"
   fi
   # 3. sin restos de otra noche o del ensayo
-  rm -f "$PLAN"
-  [ -f "$PLAN_NOCHE" ] && { cp "$PLAN_NOCHE" "$PLAN_GUARDADO"; chmod 444 "$PLAN_GUARDADO"; }
+  rm -f "$PLAN" "$FUERA/replan_claves.txt" "$FUERA/huellas_referencia.txt" "$FUERA/commit_f17.txt"
+  rm -f "$PLAN_GUARDADO"; [ -f "$PLAN_NOCHE" ] && { cp "$PLAN_NOCHE" "$PLAN_GUARDADO"; chmod 444 "$PLAN_GUARDADO"; }
+  # 4. la rama de la noche, puesta desde aquí (el agente no tiene que pelearse con ella)
+  if [ "$(git symbolic-ref -q --short HEAD)" != "migracion/v2" ]; then
+    git switch migracion/v2 2>/dev/null || git switch -c migracion/v2 2>/dev/null
+  fi
+  [ "$(git symbolic-ref -q --short HEAD)" = "migracion/v2" ] || {
+    echo "✘ No puedo poner la rama migracion/v2 (¿cambios sin commit que chocan con ella?). Mira «git status» y vuelve a lanzar."; exit 1; }
 fi
 
 # --- sin llaves reales: esta noche no hay ninguna (ver _agente.sh) ---------------------------------------------------
@@ -77,7 +92,9 @@ export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 # repo; por la mañana comprobar_manana.sh compara, vuelve a la copia lo que cambió y repite las puertas desde cero.
 HUELLAS="$FUERA/huellas_puertas.txt"; COPIA_JUECES="$FUERA/huellas_copia"
 if [ -n "$nueva" ] || [ ! -f "$HUELLAS" ]; then
-  rm -rf "$COPIA_JUECES"; rm -f "$HUELLAS"; mkdir -p "$COPIA_JUECES"
+  chmod -R u+w "$COPIA_JUECES" 2>/dev/null; rm -rf "$COPIA_JUECES"; rm -f "$HUELLAS"
+  [ -e "$COPIA_JUECES" ] && { echo "✘ No puedo borrar $COPIA_JUECES (de otra noche): bórralo a mano y vuelve a lanzar."; exit 1; }
+  mkdir -p "$COPIA_JUECES"
   ( for f in migracion/puerta.sh migracion/contrato.py migracion/contrato_escritura.py migracion/vectores_permisos.py \
              migracion/caidas.sh migracion/seguridad_http.py migracion/rendimiento.py migracion/servicios.sh \
              migracion/noche.sh migracion/planear.sh migracion/_agente.sh migracion/juntar_plan.sh migracion/revisar_plan.py \
@@ -91,7 +108,7 @@ if [ -n "$nueva" ] || [ ! -f "$HUELLAS" ]; then
     done; echo "# $(date '+%Y-%m-%d %H:%M') · copias en $COPIA_JUECES" ) > "$HUELLAS"
   chmod -R a-w "$COPIA_JUECES"; chmod 444 "$HUELLAS"
   # la comprobación de la mañana se lanza desde fuera del repo: la de dentro la podría cambiar el agente
-  cp migracion/comprobar_manana.sh "$FUERA/comprobar_manana.sh"; chmod 555 "$FUERA/comprobar_manana.sh"
+  rm -f "$FUERA/comprobar_manana.sh"; cp migracion/comprobar_manana.sh "$FUERA/comprobar_manana.sh"; chmod 555 "$FUERA/comprobar_manana.sh"
   echo "$RAIZ" > "$FUERA/app_dir.txt"
   echo "Huellas y copias de los ficheros que juzgan: $HUELLAS"
 fi
@@ -107,22 +124,33 @@ echo "Noche de migración · hasta $RO_FIN_NOCHE · ejecuta $MODELO · planea $M
 echo "Plan: $(head -1 "$PLAN_NOCHE" 2>/dev/null || echo 'NO HAY PLAN_NOCHE.md: se sigue PROMPTS_CURSOR.md')"
 echo "Cuaderno: $CUADERNO · registros: $LOGS"
 
-# paso en curso según el cuaderno: el 🔄, o el primer ⬜. Imprime «F2.3 2» (paso e intento).
+# paso en curso según el cuaderno: el 🔄, o el primer ⬜. Imprime «F2.3 2 -» o «F5.10 2 L-03» (paso, intento, fallo).
 paso_actual() {
   python3 - "$CUADERNO" <<'PY'
 import re, sys
 texto = open(sys.argv[1], encoding="utf-8").read()
-m = re.search(r"^- 🔄 (F\d+\.\d+)\b.*?intento (\d+)", texto, re.M) or re.search(r"^- 🔄 (F\d+\.\d+)\b", texto, re.M)
+def paso(marca):
+    for linea in texto.splitlines():
+        m = re.match(r"^\s*-\s*" + marca + r"\s*[*_`]*\s*(F\d+\.\d+)\b(.*)$", linea)
+        if m:
+            return m
+m = paso("🔄")
 if m:
-    print(m.group(1), m.group(2) if m.lastindex > 1 else 1)
+    resto = m.group(2)
+    i = re.search(r"intento\s*(\d+)", resto, re.I)
+    f = re.search(r"\b([LN]-\d+)\b", resto) if m.group(1) == "F5.10" else None
+    print(m.group(1), i.group(1) if i else 1, f.group(1) if f else "-")
 else:
-    m = re.search(r"^- ⬜ (F\d+\.\d+)\b", texto, re.M)
-    print(m.group(1) + " 1" if m else "")
+    m = paso("⬜")
+    print(m.group(1) + " 1 -" if m else "")
 PY
 }
 modelo_de() { case " $PASOS_FUERTES " in *" $1 "*) echo "$MODELO_FUERTE" ;; *) echo "$MODELO" ;; esac; }
 huella() { (git rev-parse HEAD; suma "$CUADERNO"; arbol) 2>/dev/null | tr '\n' ' '; }
-plan_vigente_para() { head -1 "$PLAN" 2>/dev/null | grep -q "^PLAN: VIGENTE · $1 "; }
+plan_vigente_para() { head -1 "$PLAN" 2>/dev/null | grep -qF "PLAN: VIGENTE · $1 · "; }        # <clave>
+plan_vigente_intento() { head -1 "$PLAN" 2>/dev/null | grep -qF "PLAN: VIGENTE · $1 · intento $2 "; }
+CLAVES="$FUERA/replan_claves.txt"   # una línea «<clave>|<intento>» por cada vez que se llamó a Fable de guardia
+veces() { local n; n="$(grep -cxF "$1" "$CLAVES" 2>/dev/null)"; echo "${n:-0}"; }
 
 # El plan de la noche no lo cambia el ejecutor: si aparece cambiado, se vuelve al auditado.
 guardar_plan() {
@@ -133,13 +161,29 @@ guardar_plan() {
   fi
 }
 
-replanear() {   # replanear <paso> <intento> <motivo>
-  planes=$((planes + 1))
+# Lo grabado en la fase 1 (contrato, fotos, vectores, casos, bases de partida, la app de hoy congelada) es la vara de medir:
+# al cerrar F1.7 se guarda su huella y el commit, y por la mañana comprobar_manana.sh mira que nada de eso se regrabó.
+huellas_referencia() {
+  [ -f "$FUERA/huellas_referencia.txt" ] && return 0
+  grep -q "^- ✅ F1.7" "$CUADERNO" 2>/dev/null || return 0
+  git rev-parse HEAD > "$FUERA/commit_f17.txt"
+  ( cd "$FUERA" && for d in contrato/viejo capturas/viejo vectores ref casos_escritura.json local.db.antes tuberia.db.antes excepciones_solidez.txt; do
+      [ -e "$d" ] && find "$d" -type f ! -name '*.db' ! -name '*.db-*' ! -name '*.log' ! -name '*.pyc' ! -path '*/__pycache__/*' \
+        ! -path '*/node_modules/*' ! -path 'ref/data/*' 2>/dev/null
+    done | LC_ALL=C sort | while IFS= read -r f; do shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; done
+  ) > "$FUERA/huellas_referencia.txt"
+  chmod 444 "$FUERA/huellas_referencia.txt"
+  echo "  Referencia de la fase 1 cerrada: huella guardada ($(wc -l < "$FUERA/huellas_referencia.txt" | tr -d ' ') ficheros)"
+}
+
+replanear() {   # replanear <clave> <intento> <motivo>
+  planes=$((planes + 1)); echo "$1|$2" >> "$CLAVES"
   local log="$LOGS/replan_$(printf %03d $planes).log" antes; antes="$(arbol)"
   echo "[$(date '+%H:%M')] Fable de guardia ($1, intento $2: $3) → $log"
   local msg; msg="$(cat "$RAIZ/migracion/PROMPT_REPLAN.md")
 
 MENSAJE DEL SUPERVISOR: paso $1, intento $2. Te llamo porque: $3.
+Primera línea exacta de PLAN_VUELTA.md: PLAN: VIGENTE · $1 · intento $2 · <hora>
 Último registro del ejecutor: $LOGS/vuelta_$(printf %03d $vuelta).log"
   local h_antes; h_antes="$(suma "$PLAN")"
   if lanzar "$MODELO_PLAN" "$msg" "$log" "$TOPE_REPLAN" "$PLANTILLA_PLAN" && [ "$(suma "$PLAN")" != "$h_antes" ] && plan_vigente_para "$1"; then
@@ -154,21 +198,27 @@ MENSAJE DEL SUPERVISOR: paso $1, intento $2. Te llamo porque: $3.
 # al relanzar la misma noche, los registros siguen numerándose (no se pisan los de antes)
 vuelta=$(ls "$LOGS"/vuelta_*.log 2>/dev/null | wc -l | tr -d ' '); planes=$(ls "$LOGS"/replan_*.log 2>/dev/null | wc -l | tr -d ' ')
 [ -n "$nueva" ] && { mkdir -p "$LOGS/antes"; mv "$LOGS"/vuelta_* "$LOGS"/replan_* "$LOGS/antes/" 2>/dev/null; vuelta=0; planes=0; }
-fallos_seguidos=0; sin_avance=0; fallos_plan=0; ultimo_fallo_plan=0; ultima_clave=""
+fallos_seguidos=0; sin_avance=0; fallos_plan=0; ultimo_fallo_plan=0
 while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   guardar_plan
-  read -r paso intento <<< "$(paso_actual)"; paso="${paso:-}"; intento="${intento:-1}"
+  huellas_referencia
+  read -r paso intento fallo <<< "$(paso_actual)"; paso="${paso:-}"; intento="${intento:-1}"; fallo="${fallo:--}"
+  clave="$paso"; [ "$fallo" != "-" ] && clave="$paso $fallo"
+  # al cambiar de paso (o de fallo), un plan de guardia que no es para el nuevo ya no vale: ni su GASTADO
+  if [ "$clave" != "${clave_anterior:-}" ] && [ -f "$PLAN" ] && ! plan_vigente_para "$clave"; then rm -f "$PLAN"; fi
+  clave_anterior="$clave"
   # Fable de guardia: si dejó de responder, se le vuelve a probar a la media hora
   if [ $fallos_plan -ge 2 ] && [ $(( $(date +%s) - ultimo_fallo_plan )) -ge 1800 ]; then fallos_plan=0; fi
   replan=""
+  # Como mucho dos llamadas por paso (o fallo de F5.10) e intento: nunca una por vuelta.
   if [ -n "$paso" ] && [ $fallos_plan -lt 2 ]; then
-    if head -1 "$PLAN" 2>/dev/null | grep -q "^PLAN: GASTADO" && [ "$ultima_clave" != "gastado/$paso/$intento" ]; then
-      ultima_clave="gastado/$paso/$intento"; replanear "$paso" "$intento" "el ejecutor marcó el plan como gastado: $(head -1 "$PLAN" | cut -c1-200)"; replan=1
-    elif [ "$intento" -ge 2 ] && ! head -1 "$PLAN" 2>/dev/null | grep -q "^PLAN: VIGENTE · $paso · intento $intento " \
-         && [ "$ultima_clave" != "$paso/$intento" ]; then
-      ultima_clave="$paso/$intento"; replanear "$paso" "$intento" "el intento $((intento - 1)) falló (mira «Intentos y notas» de PROGRESO.md)"; replan=1
-    elif [ $sin_avance -eq 2 ]; then
-      replanear "$paso" "$intento" "dos vueltas seguidas sin cambiar ni el cuaderno ni el código"; replan=1
+    n="$(veces "$clave|$intento")"
+    if head -1 "$PLAN" 2>/dev/null | grep -q "^PLAN: GASTADO" && [ "$n" -lt 2 ]; then
+      replanear "$clave" "$intento" "el ejecutor marcó el plan como gastado: $(head -1 "$PLAN" | cut -c1-200)"; replan=1
+    elif [ "$intento" -ge 2 ] && ! plan_vigente_intento "$clave" "$intento" && [ "$n" -eq 0 ]; then
+      replanear "$clave" "$intento" "el intento $((intento - 1)) falló (mira «Intentos y notas» de PROGRESO.md)"; replan=1
+    elif [ $sin_avance -eq 2 ] && [ "$n" -lt 2 ]; then
+      replanear "$clave" "$intento" "dos vueltas seguidas sin cambiar ni el cuaderno ni el código"; replan=1
     fi
   fi
 
@@ -179,9 +229,9 @@ while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   echo "[$(date '+%H:%M')] vuelta $vuelta · ${paso:-?} intento $intento · $modelo → $log"
   mensaje="$(cat "$PROMPT")
 
-MENSAJE DEL SUPERVISOR (vuelta $vuelta, $(date '+%H:%M')): según el cuaderno toca ${paso:-(no lo sé: léelo tú)}, intento $intento.
-Su sección del plan: python3 migracion/revisar_plan.py --seccion ${paso:-<paso>}"
-  if plan_vigente_para "$paso"; then
+MENSAJE DEL SUPERVISOR (vuelta $vuelta, $(date '+%H:%M')): según el cuaderno toca ${clave:-(no lo sé: léelo tú)}, intento $intento.
+Su sección del plan: python3 migracion/revisar_plan.py --seccion ${clave:-<paso>}"
+  if plan_vigente_para "$clave"; then
     mensaje="$mensaje
 Hay un plan de guardia VIGENTE para este paso en migracion/PLAN_VUELTA.md${replan:+ (recién escrito)}: síguelo antes que la sección."
   fi
@@ -191,7 +241,7 @@ AVISO: las dos últimas vueltas no han cambiado ni el cuaderno ni el código. Ap
   fi
   lanzar "$modelo" "$mensaje" "$log" "$TOPE_VUELTA"; codigo=$?
   despues="$(huella)"
-  if [ -f "$log.cortada" ]; then
+  if [ -f "$log.cortada" ]; then   # lanzar() solo la deja si el vigía la mató de verdad
     echo "  ⚠ vuelta cortada a los $TOPE_VUELTA s (colgada o demasiado larga): se relanza"; codigo=0
   fi
   if [ $codigo -ne 0 ]; then

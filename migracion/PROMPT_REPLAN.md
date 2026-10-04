@@ -5,8 +5,8 @@ Esta vuelta NO tocas código, ni la base, ni los servicios, ni git: solo lees y 
 1. Lee la sección del paso en el plan de la noche: `python3 migracion/revisar_plan.py --seccion <paso>` (en F5.10, la del fallo en curso). Lee en `migracion/PROGRESO.md` su línea 🔄 y sus «Intentos y notas», el `PLAN_VUELTA.md` anterior si lo hay (por qué se gastó), el informe de la última puerta y el final del último registro de vuelta.
 2. Averigua por qué falla. No repitas lo que ya se probó.
 3. Mira `date` y los cortes del reloj de PROGRESO.md: si el paso ya no cabe, el plan es su plan B.
-4. Escribe `migracion/PLAN_VUELTA.md`. La PRIMERA línea, exacta y sin comillas ni ```:
-   `PLAN: VIGENTE · <código del paso> · intento <n> · <hora>`
+4. Escribe `migracion/PLAN_VUELTA.md`. La PRIMERA línea es la que te da el supervisor, exacta y sin comillas ni ``` (en F5.10 lleva también el id del fallo):
+   `PLAN: VIGENTE · <paso>[ <id>] · intento <n> · <hora>`
    Después, en frases cortas:
    ```
    Por qué falló: <la causa, con la salida o el fichero:línea que lo demuestra>

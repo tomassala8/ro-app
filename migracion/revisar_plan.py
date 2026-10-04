@@ -24,10 +24,12 @@ PROGRESO = os.path.join(RAIZ, "migracion", "PROGRESO.md")
 PENDIENTES = os.path.join(RAIZ, "migracion", "PENDIENTES_LOGICA.md")
 FUERA = os.environ.get("RO_MIGRACION") or os.path.expanduser("~/RO_MIGRACION")
 
+# Una conexión con contraseña cuenta como llave salvo la del Postgres local de la noche (127.0.0.1/localhost/postgres).
 LLAVES = re.compile(r"(sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|github_pat_|AKIA[0-9A-Z]{16}|xox[bap]-|-----BEGIN [A-Z ]*PRIVATE KEY"
-                    r"|postgres(?:ql)?://[^:\s/]+:[^@\s<{$]+@)")
-CORREO = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
-CORREO_FALSO = re.compile(r"@(?:[\w-]+\.)*(?:test|example|invalid|ejemplo\.\w+|example\.\w+|localhost)$", re.I)
+                    r"|postgres(?:ql)?://[^:\s/]+:[^@\s<{$]+@(?!127\.0\.0\.1|localhost|postgres[:/]))")
+# Correo: el dominio acaba en letras (así «shadcn@2.3.0», «prisma@7.10.0» o «ro@127.0.0.1» no cuentan).
+CORREO = re.compile(r"(?<![\w/.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b")
+CORREO_FALSO = re.compile(r"(?:^git@github\.com$|@(?:[\w-]+\.)*(?:test|example|invalid|localhost)$|@ejemplo\.\w+$|@example\.\w+$|@users\.noreply\.github\.com$)", re.I)
 
 
 def leer(ruta):
@@ -91,15 +93,13 @@ def revisar():
         cuerpo = de_paso.get(codigo)
         if cuerpo is None:
             faltan.append(codigo)
-            continue
-        for campo in ("Hecho cuando:", "Plan B:"):
-            if campo not in cuerpo:
-                fallos.append(f"{codigo}: falta «{campo}»")
-    if "F5.10" in de_paso:
-        de_fallo = secciones(de_paso["F5.10"], 3)
-        for ident in abiertos():
-            if ident not in de_fallo:
-                faltan.append(ident)
+        else:
+            for campo in ("Hecho cuando:", "Plan B:"):
+                if campo not in cuerpo:
+                    fallos.append(f"{codigo}: falta «{campo}»")
+        if codigo == "F5.10":   # sus fallos van DENTRO de F5.10, justo después de él en la lista
+            de_fallo = secciones(cuerpo or "", 3)
+            faltan += [i for i in abiertos() if i not in de_fallo]
     for n, linea in enumerate(texto.splitlines(), 1):
         if LLAVES.search(linea):
             fallos.append(f"línea {n}: parece una llave o una conexión con contraseña")

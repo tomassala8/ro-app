@@ -51,13 +51,27 @@ echo
 echo "── excepciones aceptadas (diferencias que las puertas no cuentan) ──"
 for e in "$FUERA"/excepciones*.txt; do
   [ -f "$e" ] || continue
-  n="$(grep -cv '^\s*\(#\|$\)' "$e")"
-  echo "$(basename "$e"): $n línea(s)"; grep -v '^\s*\(#\|$\)' "$e" | sed 's/^/   /' | head -40
+  n="$(grep -cvE '^[[:space:]]*(#|$)' "$e")"
+  echo "$(basename "$e"): $n línea(s)"; grep -vE '^[[:space:]]*(#|$)' "$e" | sed 's/^/   /' | head -40
 done
 echo "  Cada una debe llevar un id L-/N- de PENDIENTES_LOGICA.md (o ser del plan B de F2.4) y su motivo. Si no, es ROJO."
-sin_id="$(cat "$FUERA"/excepciones.txt 2>/dev/null | grep -v '^\s*\(#\|$\)' | grep -cv '\(L\|N\)-[0-9]\|F2\.4')"
+sin_id="$(cat "$FUERA"/excepciones.txt 2>/dev/null | grep -vE '^[[:space:]]*(#|$)' | grep -cvE '(L|N)-[0-9]|F2\.4')"
 [ "${sin_id:-0}" -gt 0 ] && echo "✘ $sin_id excepción(es) sin id L-/N- ni F2.4: míralas antes de nada."
-[ "${1:-}" = "--huellas" ] && exit $(( ${#cambiados[@]} > 0 || ${sin_id:-0} > 0 ))
+# La referencia de la fase 1 (contrato, fotos, vectores, casos, bases de partida, la app de hoy congelada) no se regraba.
+regrabada=0
+if [ -f "$FUERA/huellas_referencia.txt" ]; then
+  r="$(cd "$FUERA" && (shasum -a 256 -c --quiet huellas_referencia.txt 2>/dev/null || sha256sum -c --quiet huellas_referencia.txt 2>/dev/null) | grep -v '^$' | head -20)"
+  if [ -n "$r" ]; then regrabada=1; echo; echo "✘ La referencia de la fase 1 cambió después de F1.7 (no debía):"; echo "$r" | sed 's/^/   /'
+  else echo "✔ La referencia de la fase 1 está como se grabó."; fi
+else echo "· No hay huella de la referencia (la fase 1 no llegó a cerrarse)."; fi
+# Piezas que usan las puertas y que se escriben durante la noche: no se pueden congelar, se enseñan para mirarlas.
+if [ -s "$FUERA/commit_f17.txt" ]; then
+  c17="$(cat "$FUERA/commit_f17.txt")"
+  piezas="$(git -c core.quotePath=false diff --stat "$c17" -- migracion/baterias.sh migracion/escalados.py 'v2/**/package.json' \
+    'v2/**/vitest.config.*' 'v2/**/jest*.json' 'v2/**/test/**' 'v2/**/*.e2e-spec.ts' 2>/dev/null | tail -25)"
+  [ -n "$piezas" ] && { echo; echo "⚠ Cambiaron desde el cierre de la fase 1 piezas que usan las puertas (míralas: ¿se ha relajado algo?):"; echo "$piezas" | sed 's/^/   /'; }
+fi
+[ "${1:-}" = "--huellas" ] && exit $(( ${#cambiados[@]} > 0 || ${sin_id:-0} > 0 || regrabada ))
 
 # ficheros cambiados → copia de antes, solo mientras se pasan las puertas
 noche="$(mktemp -d)"
@@ -86,9 +100,9 @@ for fase in $fases; do
   if bash migracion/puerta.sh "$fase"; then echo "✔ $fase VERDE"; else echo "✘ $fase ROJO (detalle en $FUERA/puertas/$fase.md)"; resultado=1; fi
 done
 echo
-if [ $resultado -eq 0 ] && [ ${#cambiados[@]} -eq 0 ] && [ "${sin_id:-0}" -eq 0 ]; then
+if [ $resultado -eq 0 ] && [ ${#cambiados[@]} -eq 0 ] && [ "${sin_id:-0}" -eq 0 ] && [ $regrabada -eq 0 ]; then
   echo "✔ TODO VERDE con las puertas de antes. PROGRESO.md es de fiar."
 else
   echo "⚠ Hay algo que mirar antes de creerse PROGRESO.md (arriba)."
 fi
-exit $(( resultado || ${#cambiados[@]} > 0 || ${sin_id:-0} > 0 ))
+exit $(( resultado || ${#cambiados[@]} > 0 || ${sin_id:-0} > 0 || regrabada ))

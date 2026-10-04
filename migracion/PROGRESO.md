@@ -5,7 +5,7 @@ ESTADO: SIN EMPEZAR
 Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho (puerta verde) · ⚠ plan B aplicado (ver motivo).
 Cada paso: su sección en `migracion/PLAN_NOCHE.md` (el plan de la noche, escrito y revisado antes) y el detalle en `migracion/PROMPTS_CURSOR.md` (mismo código). Hasta 3 intentos con enfoques distintos; luego, su plan B.
 Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/RO_MIGRACION/puertas/f1.md`
-Mientras dura: `🔄 F2.4 · 01:10 · intento 2/3 · <qué estás probando>` (el número de intento va en la línea del paso: si te relanzan, sigues por ahí).
+Mientras dura: `🔄 F2.4 · 01:10 · intento 2/3 · <qué estás probando>` (el número de intento va en la línea del paso: si te relanzan, sigues por ahí). En F5.10, con el fallo en curso: `🔄 F5.10 · 01:10 · L-03 · intento 2/3 · <qué>`.
 Al retomar, arranca solo lo de fases cerradas: `viejo` tras F1.4, `legado` tras F2.3, `api` y `web` tras F3.1. Nunca un `servicios.sh arrancar` a secas antes de F2.3: crearía tablas en `ro_app` vacía.
 
 Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 8 h en la primera vuelta y úsala como fin)

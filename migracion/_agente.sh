@@ -14,18 +14,39 @@ suma() { md5 -q "$1" 2>/dev/null || md5sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
 # lanzar <modelo> <mensaje> <registro> <tope en segundos> [plantilla]   (si se corta por tiempo, deja <registro>.cortada)
 # Una vuelta colgada (el modo -p a veces no sale) no puede bloquear la noche: pasado el tope se corta y se sigue.
+# Cursor va en su propio grupo de procesos: al cortar, se corta TODO lo que lanzó (servidores, navegadores, puertas),
+# no solo sus hijos directos. Y Ctrl+C corta la vuelta en curso y para el script (sin grupo propio, Ctrl+C no le llega).
+GRUPO_VIVO=""
+parar_vuelta() {
+  [ -n "$GRUPO_VIVO" ] || return 0
+  kill -TERM -- "-$GRUPO_VIVO" 2>/dev/null; kill -TERM "$GRUPO_VIVO" 2>/dev/null
+  sleep 3; kill -KILL -- "-$GRUPO_VIVO" 2>/dev/null; kill -KILL "$GRUPO_VIVO" 2>/dev/null; GRUPO_VIVO=""
+}
+trap 'echo; echo "Parado (Ctrl+C): corto la vuelta en curso. Para seguir, vuelve a lanzar el mismo script."; parar_vuelta; exit 130' INT TERM
+
 lanzar() {
   local orden="${5:-$PLANTILLA}"; orden="${orden//\{MODELO\}/$1}"
   rm -f "$3.cortada"; : > "$3"
   # >> (añadir): así el aviso del vigía no lo pisa lo que escriba el proceso al morir
-  # shellcheck disable=SC2086
-  $orden "$2" >> "$3" 2>&1 < /dev/null &
-  local pid=$!
-  ( exec >/dev/null 2>&1; sleep "$4"; touch "$3.cortada"; echo "[supervisor] vuelta cortada a los $4 s" >> "$3"
-    pkill -TERM -P "$pid" 2>/dev/null; kill -TERM "$pid" 2>/dev/null; sleep 20; kill -KILL "$pid" 2>/dev/null ) &
+  if command -v perl >/dev/null; then
+    # shellcheck disable=SC2086
+    perl -e 'setpgrp(0, 0); exec @ARGV or die "no se pudo lanzar: $!\n"' $orden "$2" >> "$3" 2>&1 < /dev/null &
+  else
+    # shellcheck disable=SC2086
+    $orden "$2" >> "$3" 2>&1 < /dev/null &
+  fi
+  local pid=$!; GRUPO_VIVO=$pid
+  ( exec >/dev/null 2>&1; sleep "$4"
+    kill -0 "$pid" 2>/dev/null || exit 0        # ya terminó: no es un corte
+    touch "$3.cortada"; echo "[supervisor] vuelta cortada a los $4 s" >> "$3"
+    kill -TERM -- "-$pid" 2>/dev/null; kill -TERM "$pid" 2>/dev/null; sleep 20
+    kill -KILL -- "-$pid" 2>/dev/null; kill -KILL "$pid" 2>/dev/null ) &
   local vigia=$!
   wait "$pid"; local codigo=$?
+  GRUPO_VIVO=""
   pkill -P "$vigia" 2>/dev/null; kill "$vigia" 2>/dev/null; wait "$vigia" 2>/dev/null   # y su «sleep», que no quede suelto
+  # cortada de verdad solo si el proceso murió por la señal del vigía
+  if [ -f "$3.cortada" ] && [ $codigo -ne 143 ] && [ $codigo -ne 137 ]; then rm -f "$3.cortada"; fi
   return $codigo
 }
 
@@ -51,7 +72,7 @@ sin_llaves() {
   for v in $(compgen -e); do
     case "$v" in
       CURSOR_*) ;;
-      *_API_KEY|*_APIKEY|*_TOKEN|*_SECRET|*_SECRET_KEY|*_PASSWORD|*_PASS|*_ACCESS_KEY*|DATABASE_URL|*_DATABASE_URL) unset "$v" ;;
+      *KEY*|*SECRET*|*TOKEN*|*CLAVE*|*PASS*|*CRED*|DATABASE_URL|*_DATABASE_URL|RO_SECRETOS_DIR|RO_TOKENS_DIR) unset "$v" ;;
     esac
   done
   local bin="$FUERA/sin_llavero/bin"; mkdir -p "$bin"
