@@ -39,8 +39,7 @@
    "Fecha de la factura del equipo: mapa de enrutado dice día 5 (colaboradores a facturas@) y también «facturas antes del 20» para el pago del 25. ¿Cuál vale para quién?",
    "Faltan SOPs: RRHH (incorporación de personas, evaluación quincenal, 1:1), factura rectificativa, cambio de cuota y baja (P7), impagos y facturación (están en 90_CONFIDENCIAL, no en repo).",
    "11_DECISIONES_PARA_TOMAS.md y 06_KPIS_INTERNOS no están en repo: la escalera 30/60/2 cuotas, el 1:1 trimestral y el mínimo de 3 personas se citan vía reglas.json. Los sube Tomás (respuestas n.º 58-60).",
-   "Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar.",
-   "Extras por reconocimiento (Mili §4, «06_ §B»): sin definir (respuesta n.º 52)."
+   "Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar."
   ],
   "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },

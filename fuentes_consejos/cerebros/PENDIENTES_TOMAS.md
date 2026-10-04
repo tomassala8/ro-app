@@ -3,10 +3,6 @@
 Lo que cada cerebro no puede cerrar solo. Entre tanto, la ficha aplica lo que dice cada punto.
 Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y vuelve a lanzar este script.
 
-## Dirección y finanzas (1)
-
-1. Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir).
-
 ## Operaciones y proyectos (control de cartera, ritmo y coordinación) (2)
 
 1. Umbral ámbar de «viernes a cero» (1-5): sigue como propuesta sin firmar en indicadores.json. Los compromisos vencidos sí se firmaron el 4-oct (respuesta n.º 47).
@@ -28,10 +24,6 @@ Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y 
 
 1. Gate del frontend de GHL con lectura propuesta el 5-oct-2026 (G1-G3): sin firma conocida.
 
-## Setters: llamar al lead, cualificar, agendar y confirmar citas (1)
-
-1. KPI y retribución del setter de RO: sin definir (respuesta n.º 50). La regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número.
-
 ## SEO, ficha de Google y web (2)
 
 1. Pilotos de fichas de profesionales y spam fighting (project_gmb_top1_cartera l.22): sin decisión. La «dominancia del mapa» ya no se promete (respuesta n.º 44).
@@ -49,10 +41,9 @@ Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y 
 2. Volumen diario de prospección de RO: el correo en frío propio queda fuera (respuesta n.º 48). Queda LinkedIn a mano con tope de 20 invitaciones al día. ¿Se fija un objetivo diario o se trabaja al tope? Hormozi pide 100 contactos.
 3. Umbral de bajas tempranas (0 / 1 / ≥ 2 al trimestre): sigue como propuesta sin firmar en la app. El coste por cita se firmó el 4-oct (respuesta n.º 47).
 
-## Personas (RRHH) y administración (facturación y cobros) (5)
+## Personas (RRHH) y administración (facturación y cobros) (4)
 
 1. Fecha de la factura del equipo: mapa de enrutado dice día 5 (colaboradores a facturas@) y también «facturas antes del 20» para el pago del 25. ¿Cuál vale para quién?
 2. Faltan SOPs: RRHH (incorporación de personas, evaluación quincenal, 1:1), factura rectificativa, cambio de cuota y baja (P7), impagos y facturación (están en 90_CONFIDENCIAL, no en repo).
 3. 11_DECISIONES_PARA_TOMAS.md y 06_KPIS_INTERNOS no están en repo: la escalera 30/60/2 cuotas, el 1:1 trimestral y el mínimo de 3 personas se citan vía reglas.json. Los sube Tomás (respuestas n.º 58-60).
 4. Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar.
-5. Extras por reconocimiento (Mili §4, «06_ §B»): sin definir (respuesta n.º 52).

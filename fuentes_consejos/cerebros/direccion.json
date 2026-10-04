@@ -31,9 +31,7 @@
    "ro-app:fuentes_consejos/cerebro_decisiones.py"
   ],
   "nota": "Cubre decidir con datos (restricción única, coste por cliente, margen, caja), cartera en riesgo, impagos que decide Tomás, decisiones con reloj, precio y cómo actuar como dirección ante un cliente enfadado. No trae sueldos ni datos de personas: el coste del equipo se lee agregado. Deriva a: account (relación diaria y planes de cuenta), personas_admin (cobro operativo y RRHH), ventas_ro (venta y captación propia en detalle), publicidad y crm (diagnóstico técnico de campañas y embudo), altas (arranques). Las bandas de finanzas se firmaron tal cual el 4-oct y se revisan con datos el 3-dic-2026 (respuesta n.º 47).",
-  "pendientes_tomas": [
-   "Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir)."
-  ],
+  "pendientes_tomas": [],
   "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta.",
   "contradicciones_resueltas": [
    "Norte: 150k de facturación mensual (Tomás, 4-oct, segunda ronda). El beneficio sigue mandando en cada propuesta; NORTE.md pendiente de enmienda.",
@@ -3389,7 +3387,7 @@
      "causa": "Tramo de entrada barato: retiene poco y cuesta igual.",
      "como_confirmar": "Pérdidas en cuotas bajas.",
      "solucion": [
-      "Lleva el caso a Tomás con números: es la decisión abierta de la cola de cuentas pequeñas."
+      "Lleva el caso a Tomás con números."
      ],
      "quien": "direccion",
      "plazo": "Este mes"
@@ -3430,7 +3428,7 @@
    ],
    "guiones": [],
    "que_no_hacer": [
-    "No decidas un recorte de cartera: es una decisión abierta que solo cierra Tomás.",
+    "No decidas recortar cartera desde aquí: eso solo lo decide Tomás.",
     "No subas el precio a cuentas en transición."
    ],
    "escalar": {
@@ -3458,7 +3456,7 @@
      "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
      "linea": 98,
      "autor": "Tomás",
-     "nota": "Decisión abierta: qué hacer con la cola de cuentas pequeñas."
+     "nota": "Cuentas pequeñas: cada caso lo decide Tomás."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
