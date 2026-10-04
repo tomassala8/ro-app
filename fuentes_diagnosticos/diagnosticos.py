@@ -41,8 +41,8 @@ UMBRALES = {
     "blog_ambar_pct": (50, "decisión de Tomás, 4-oct-2026"),
     "blog_rojo_pct": (70, "decisión de Tomás, 4-oct-2026"),
     # Tomás, 4-oct: «si tiene bastantes clics transaccionales puede llegar a salvar» → con este volumen baja un escalón
-    "blog_salvan_clics_utiles": (100, "criterio RO sobre decisión de Tomás, 4-oct-2026; cifra pendiente de Tomás"),
-    "blog_salvan_pct_utiles": (25, "criterio RO sobre decisión de Tomás, 4-oct-2026; cifra pendiente de Tomás"),
+    "blog_salvan_clics_utiles": (100, "decisión de Tomás, 4-oct-2026"),
+    "blog_salvan_pct_utiles": (25, "decisión de Tomás, 4-oct-2026"),
     "seo_clics_min": (30, "criterio RO"),
     "informativa_ambar_pct": (60, "criterio RO, pendiente de Tomás"),
     "marca_ambar_pct": (70, "criterio RO, pendiente de Tomás"),

@@ -24,13 +24,12 @@
   ],
   "nota": "Una ficha por diagnóstico de fuentes_diagnosticos/. Se dispara por el id del diagnóstico (disparadores.diagnosticos), no por alertas: así no cambia qué ficha sale para las alertas que ya existen.",
   "pendientes_tomas": [
-   "Cuántos clics de servicio «salvan» un SEO con mucho blog (hoy 100 en 28 días y el 25 % del total).",
    "Umbrales SEO de intención: informativa 60 %, marca 70 %."
   ],
   "decisiones_tomas": [
    "4-oct-2026: leads que no se pueden llamar, ámbar 20 % y rojo 35 %.",
    "4-oct-2026: Gmail u Hotmail no restan calidad de entrada (señal secundaria).",
-   "4-oct-2026: blog ámbar 50 % y rojo 70 %, pero con bastantes clics transaccionales baja un escalón."
+   "4-oct-2026: blog ámbar 50 % y rojo 70 %; baja un escalón si servicio y portada suman 100 clics en 28 días y el 25 % del total."
   ]
  },
  "principios": [
