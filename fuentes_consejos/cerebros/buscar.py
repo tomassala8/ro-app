@@ -28,7 +28,7 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 AREAS = ["direccion", "operaciones", "account", "comunicacion", "altas", "publicidad", "crm", "setters", "seo_web",
-         "redes_produccion", "ventas_ro", "personas_admin", "riesgo_baja"]
+         "redes_produccion", "ventas_ro", "personas_admin", "calidad", "riesgo_baja"]
 
 VACIAS = set("""a al algo ante antes con como cual cuando de del desde donde el ella ellos en entre es esa ese eso esta
 este esto estan esta fue ha han hay la las le les lo los mas me mi mis muy no nos o para pero por que se sea ser si sin
@@ -79,14 +79,14 @@ def indice():
 
 
 def construir():
-    sit, tipo, alerta, indic, regla, frases, docs = {}, {}, {}, {}, {}, {}, {}
+    sit, tipo, alerta, indic, regla, frases, docs, diag = {}, {}, {}, {}, {}, {}, {}, {}
     for area, c in cerebros().items():
         for s in c.get("situaciones", []):
             sid = s["id"]
             sit[sid] = {"area": area, "titulo": s.get("titulo", ""), "puestos": s.get("puestos", []),
                         "gravedad": s.get("gravedad", "")}
             d = s.get("disparadores", {})
-            for k, dest in (("tipos_consejo", tipo), ("alertas", alerta), ("indicadores", indic)):
+            for k, dest in (("tipos_consejo", tipo), ("alertas", alerta), ("indicadores", indic), ("diagnosticos", diag)):
                 for x in d.get(k, []) or []:
                     dest.setdefault(x, []).append(sid)
             for r in s.get("reglas_relacionadas", []) or []:
@@ -108,7 +108,7 @@ def construir():
             df[t] = df.get(t, 0) + 1
     n = max(1, len(docs))
     idf = {t: round(math.log(1 + n / v), 4) for t, v in df.items()}
-    return {"situaciones": sit, "tipo": tipo, "alerta": alerta, "indicador": indic, "regla": regla, "frases": frases,
+    return {"situaciones": sit, "tipo": tipo, "alerta": alerta, "indicador": indic, "regla": regla, "diagnostico": diag, "frases": frases,
             "docs": docs, "idf": idf}
 
 
@@ -168,20 +168,20 @@ PISTA_AREA = {a: {raiz(normal(w)) for w in ws} for a, ws in PISTA_AREA.items()}
 ORDEN_GRAVEDAD = {"alta": 0, "media": 1, "baja": 2}
 
 
-def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=None):
+def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=None, diagnostico=None):
     ix = indice()
     ids = []
-    for clave, valor in (("tipo", tipo), ("alerta", alerta), ("indicador", indicador), ("regla", regla)):
+    for clave, valor in (("tipo", tipo), ("alerta", alerta), ("indicador", indicador), ("regla", regla), ("diagnostico", diagnostico)):
         if valor:
-            ids += [i for i in ix[clave].get(valor, []) if i not in ids]
+            ids += [i for i in ix.get(clave, {}).get(valor, []) if i not in ids]
     out = [ficha(i) for i in ids]
     out = [f for f in out if f and visible(f, puesto)]
     def especifica(f):  # la ficha con menos disparadores es la propia de esa señal; los árboles generales van detrás
         d = f.get("disparadores", {})
-        return sum(len(d.get(k, []) or []) for k in ("tipos_consejo", "alertas", "indicadores"))
+        return sum(len(d.get(k, []) or []) for k in ("tipos_consejo", "alertas", "indicadores", "diagnosticos"))
 
     # las del puesto primero (sin quitar las demás), luego la más específica, luego la más grave
-    señal = [v for v in (tipo, alerta, indicador, regla) if v]
+    señal = [v for v in (tipo, alerta, indicador, regla, diagnostico) if v]
 
     def nombrada(f):  # la ficha que lleva la señal en su nombre (seoweb_web_caida para web_caida) va delante
         return not any(v.split(".")[-1] in f["id"] for v in señal)
@@ -292,11 +292,12 @@ def _main(argv):
     ap.add_argument("--tipo")
     ap.add_argument("--alerta")
     ap.add_argument("--indicador")
+    ap.add_argument("--diagnostico", help="id de fuentes_diagnosticos (crm_leads_no_calificados, seo_trafico_blog…)")
     ap.add_argument("--n", type=int, default=3)
     ap.add_argument("--ia", action="store_true", help="muestra el dict compacto que iría a la IA")
     a = ap.parse_args(argv)
-    if a.tipo or a.alerta or a.indicador:
-        res = [(None, f) for f in por_disparador(a.tipo, a.alerta, a.indicador, puesto=a.puesto)][: a.n]
+    if a.tipo or a.alerta or a.indicador or a.diagnostico:
+        res = [(None, f) for f in por_disparador(a.tipo, a.alerta, a.indicador, puesto=a.puesto, diagnostico=a.diagnostico)][: a.n]
     else:
         res = buscar(" ".join(a.texto), puesto=a.puesto, area=a.area, n=a.n)
     if not res:
