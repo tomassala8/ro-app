@@ -89,7 +89,7 @@ def construir():
             for r in s.get("reglas_relacionadas", []) or []:
                 regla.setdefault(r, []).append(sid)
             for p in d.get("palabras_clave", []) or []:
-                n = normal(p)
+                n = " ".join(fichas_de(p))
                 if n:
                     frases.setdefault(n, []).append(sid)
             # bolsa de palabras con pesos: palabras clave x3, título x2, síntoma x1
@@ -124,6 +124,21 @@ def principios(area):
     return cerebros().get(area, {}).get("principios", [])
 
 
+# palabras que delatan el área (raíces): si la consulta las dice, esa área sube un poco
+PISTA_AREA = {
+    "crm": {"crm", "gohighlevel", "ghl", "subcuenta", "embudo", "pipeline"},
+    "publicidad": {"meta", "campana", "anuncio", "publicidad", "cpl", "facebook", "ads", "presupuesto", "gasta"},
+    "seo_web": {"seo", "web", "google", "posicion", "ficha", "maps", "resena", "landing", "dominio"},
+    "redes_produccion": {"red", "redes", "post", "publicacion", "instagram", "linkedin", "diseno", "video"},
+    "setters": {"setter", "llamada", "agenda", "cita"},
+    "ventas_ro": {"prospecto", "venta", "propuesta", "cierre", "caro", "objecion"},
+    "altas": {"alta", "onboarding", "arranque", "acceso", "encendido", "taller"},
+    "account": {"account", "cliente", "informe", "reunion"},
+    "comunicacion": {"correo", "mail", "email", "contesto", "responder", "whatsapp", "queja"},
+    "personas_admin": {"factura", "cobro", "sepa", "impago", "nomina", "imputa", "hora", "vacacion", "empleado"},
+}
+
+PISTA_AREA = {a: {raiz(normal(w)) for w in ws} for a, ws in PISTA_AREA.items()}
 ORDEN_GRAVEDAD = {"alta": 0, "media": 1, "baja": 2}
 
 
@@ -143,26 +158,43 @@ def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=No
 
 
 def buscar(texto, puesto=None, area=None, n=3, minimo=1.0):
-    """Texto libre del equipo → [(puntos, ficha)], mejores primero. Frase exacta de palabra clave pesa más."""
+    """Texto libre del equipo → [(puntos, ficha)], mejores primero.
+
+    Puntos = frases clave contenidas en la consulta (por raíces, en cualquier orden) + palabras sueltas pesadas por
+    rareza (idf) y por dónde salen (palabra clave x3, título x2, síntoma x1), todo multiplicado por la parte de la
+    consulta que la ficha explica: una ficha que explica toda la pregunta gana a otra que comparte una palabra común.
+    """
     ix = indice()
-    q = normal(texto)
-    qt = set(fichas_de(texto))
-    puntos = {}
+    qs = fichas_de(texto)
+    qt = set(qs)
+    if not qt:
+        return []
+    masa = sum(ix["idf"].get(t, 1.0) for t in qt) or 1.0
+    frase_pts = {}
     for frase, ids in ix["frases"].items():
-        if frase and (f" {frase} " in f" {q} "):
+        ft = set(frase.split())
+        if not ft:
+            continue
+        dentro = len(ft & qt) / len(ft)
+        if dentro == 1 or (len(ft) >= 3 and dentro >= 0.67):
+            pts = (3 + 2 * len(ft)) * dentro
             for i in ids:
-                puntos[i] = puntos.get(i, 0) + 4 + len(frase.split())
-    for sid, bolsa in ix["docs"].items():
-        s = sum(bolsa[t] * ix["idf"].get(t, 0) for t in qt if t in bolsa)
-        if s:
-            puntos[sid] = puntos.get(sid, 0) + s
+                frase_pts[i] = max(frase_pts.get(i, 0), pts) + 0.5 * min(frase_pts.get(i, 0), pts)
     res = []
-    for sid, p in puntos.items():
+    for sid, bolsa in ix["docs"].items():
         meta = ix["situaciones"][sid]
         if area and meta["area"] != area:
             continue
+        comunes = [t for t in qt if t in bolsa]
+        if not comunes and sid not in frase_pts:
+            continue
+        palabras = sum(min(bolsa[t], 6) * ix["idf"].get(t, 0) for t in comunes)
+        explica = sum(ix["idf"].get(t, 1.0) for t in comunes) / masa
+        p = (palabras + frase_pts.get(sid, 0)) * (0.3 + explica)
         if puesto and puesto in meta.get("puestos", []):
             p *= 1.25
+        if qt & PISTA_AREA.get(meta["area"], set()):
+            p *= 1.2
         if p >= minimo:
             res.append((round(p, 2), sid))
     res.sort(key=lambda x: -x[0])
