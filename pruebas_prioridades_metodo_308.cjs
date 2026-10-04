@@ -30,7 +30,7 @@ function cargar(){
 }
 const RECO={cliente_id:'cliente-fixture',regla_id:'regla-fixture',area:'paid',titulo:'Revisar dato',motivo:'Evidencia fixture',accion:'Preparar revisión',evidencias:[]};
 const DATOS={recomendaciones:[RECO],cobertura:{clientes:[]}};
-function contexto(api){let ok=true;const c={servidor:true,persona:{id:'persona-fixture',estado:'activo',puestos:['account']},real:{id:'persona-fixture',estado:'activo',puestos:['account']},datos:{personas:[{id:'persona-fixture',estado:'activo',puestos:['account']}]},soloLectura:false,clientesVisibles:[{id:'cliente-fixture',nombre:'Cliente de prueba',activo_confirmado:true,detalle:true}],veModulo:m=>m==='prioridades-cliente',ver:()=>({ok:true}),nombre:id=>id,titulo:()=>{},vigente:()=>ok,invalidar:()=>{ok=false},api};return c;}
+function contexto(api){let ok=true;const c={servidor:true,persona:{id:'persona-fixture',estado:'activo',puestos:['account']},real:{id:'persona-fixture',estado:'activo',puestos:['account']},datos:{personas:[{id:'persona-fixture',estado:'activo',puestos:['account']}]},soloLectura:false,clientesVisibles:[{id:'cliente-fixture',nombre:'Cliente de prueba',activo_confirmado:true,detalle:true}],veModulo:m=>m==='prioridades-cliente',ver:()=>({ok:true}),nombre:id=>id,titulo:()=>{},vigente:()=>ok,invalidar:()=>{ok=false},api};c.clientes=c.clientesVisibles.map(x=>({...x,activo:true,estado:"activo"}));return c;}
 function main(){const n=new Nodo();n.main=true;return n;}
 function boton(root,txt){const n=root.descendants().find(n=>n.tag==='button'&&(n.textContent===txt||n.attrs['data-uso']===txt));assert(n,'Falta botón '+txt);return n;}
 const click=n=>n.attrs.on.click({currentTarget:n});

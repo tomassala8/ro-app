@@ -30,3 +30,6 @@ Actualización660: resiliencia654/656 integrada y probada en local y en esta ent
 
 
 Actualización661: integrada defensa de responsables y fuentes cambiantes657, y tabla Accounts659 alineada con la validación canónica305. El encargo copiable658 queda pendiente explícito. Parches comerciales652/653 aislados y reproducibles en entrega/parches_comerciales; no aplicar653 sin revisar las listas de diagnósticos y manifiestos del consumidor. Ver entrega/661_CIERRE_Y_TRASPASO_CURSOR.md. Este corte está guardado localmente; publicación externa pendiente de aprobación automática.
+
+
+Actualización666 local:658 fechas/papeles del encargo resuelto por662/663;665 invalida catálogos/asignaciones al copiar. Ver entrega/666_CONTEXTO_METODO_Y_COPIA_VIGENTE_CODEX.md. Esta actualización sigue SIN publicar;650 es el corte remoto. Nota664 es reproducción histórica superada por665, con pruebas portables posteriores en APP.

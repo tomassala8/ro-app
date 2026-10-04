@@ -1,29 +1,19 @@
 import {textoSeguro,fechaSegura,conectoresPara} from './_tarea_ia.js';
 const arr=x=>Array.isArray(x)?x:[];
-const id337=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(x);
-const roles=p=>Array.isArray(p?.puestos)&&p.puestos.length>0&&p.puestos.every(id337)&&new Set(p.puestos).size===p.puestos.length?p.puestos.slice().sort():null;
-const personaFirma337=p=>[id337(p?.id)?p.id:null,roles(p),p?.estado,p?.activo];
-const asignacionFirma337=a=>[a?.cliente_id,a?.persona_id,a?.silla,a?.desde,a?.hasta,a?.principal,a?.suplencia,a?.titular_id,a?.confianza,!!a?.duda];
+const roles=p=>arr(p?.puestos).filter(x=>typeof x==='string').slice().sort();
 export function ambitoPrioridades337(ctx){
  try{
-  if(!ctx.servidor||ctx.veModulo?.('prioridades-cliente')!==true||typeof ctx.ver!=='function'||ctx.vigente?.()===false)return null;
+  if(!ctx.servidor||ctx.veModulo?.('prioridades-cliente')!==true||typeof ctx.ver!=='function')return null;
   const catalogo=arr(ctx.datos?.personas),personas=[];
   for(const p of [ctx.real,ctx.persona]){
-   const rp=roles(p);if(!id337(p?.id)||p.estado!=='activo'||p.activo===false||!rp)return null;
+   if(typeof p?.id!=='string'||p.estado!=='activo'||p.activo===false)return null;
    const xs=catalogo.filter(x=>x?.id===p.id);if(xs.length!==1)return null;
-   const c=xs[0],rc=roles(c);if(c.estado!=='activo'||c.activo===false||!rc||JSON.stringify(rc)!==JSON.stringify(rp))return null;
-   personas.push(personaFirma337(c));
+   const c=xs[0];if(c.estado!=='activo'||c.activo===false||JSON.stringify(roles(c))!==JSON.stringify(roles(p)))return null;
+   personas.push([p.id,c.estado,c.activo,roles(c)]);
   }
-  if(!Array.isArray(ctx.clientes))return null;
-  const canon=ctx.clientes,cs=arr(ctx.clientesVisibles);
-  const activo=c=>id337(c?.id)&&c.activo_confirmado===true&&c.detalle===true&&c.activo!==false&&c.estado!=='baja';
-  const permiso=cid=>ctx.ver({tipo:'cliente_detalle',cliente_id:cid})?.ok===true;
-  const clientes=cs.filter(c=>activo(c)&&cs.filter(x=>x?.id===c.id).length===1&&canon.filter(x=>x?.id===c.id).length===1&&activo(canon.find(x=>x?.id===c.id))&&permiso(c.id));
+  const cs=arr(ctx.clientesVisibles),clientes=cs.filter(c=>typeof c?.id==='string'&&cs.filter(x=>x?.id===c.id).length===1&&c.activo_confirmado===true&&c.detalle===true&&ctx.ver({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true);
   const ids=clientes.map(c=>c.id).sort();
-  const clienteFirma=c=>[id337(c?.id)?c.id:null,c?.activo,c?.estado,c?.activo_confirmado,c?.detalle,id337(c?.id)&&permiso(c.id)];
-  const asignaciones=ctx.datos?.asignaciones;
-  if(asignaciones!=null&&!Array.isArray(asignaciones))return null;
-  return {ids,clientes,firma:JSON.stringify([personas,ids,catalogo.map(personaFirma337),canon.map(clienteFirma),cs.map(clienteFirma),Array.isArray(asignaciones)?asignaciones.map(asignacionFirma337):null,!!ctx.soloLectura,ctx.hoy,['prioridades-cliente','seo-web'].map(m=>[m,ctx.veModulo?.(m)===true])])};
+  return {ids,clientes,firma:JSON.stringify([personas,ids,!!ctx.soloLectura,ctx.hoy,['prioridades-cliente','seo-web'].map(m=>[m,ctx.veModulo?.(m)===true])])};
  }catch{return null;}
 }
 function periodo337(v){

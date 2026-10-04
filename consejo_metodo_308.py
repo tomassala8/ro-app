@@ -70,6 +70,19 @@ def recomendaciones_metodo308(doc,ids,personas,asignaciones,hoy):
     for m in proyectar_metodo308(doc,ids,personas,asignaciones,hoy):
         motivo='Cadencia quincenal confirmada del método; no sustituye contacto semanal ni reunión mensual del account. '
         motivo+=('Responsable actual pendiente de confirmar.' if not m['responsable_confirmado'] else 'No hay evidencia suficiente de celebración o programación.' if not m['ultima_confirmada'] else 'Última celebración registrada; la próxima revisión calculada no acredita cita agendada.')
+        evidencias=[{'fuente':'metodo_confirmado_local','fecha':hoy,'periodo':None,
+            'cobertura':'regla_confirmada_no_historial_exhaustivo','vigencia':'actual',
+            'texto':'Regla 15 días/trafficker confirmada; fecha de decisión/consulta no es fecha de una celebración.'}]
+        if m['ultima_confirmada'] and m['fuente_celebracion']:
+            evidencias.append({'fuente':'metodo_celebracion_confirmada','fecha':m['ultima_confirmada'],
+                'periodo':None,'cobertura':'registro_confirmado_no_historial_exhaustivo','vigencia':'referencia_historica',
+                'texto':f"Celebración confirmada el {m['ultima_confirmada']}; fuente: {m['fuente_celebracion']}. "
+                        'No atribuye participantes ni responsable histórico; el responsable mostrado es el actual.'})
+        if m['proxima_revision']:
+            evidencias.append({'fuente':'metodo_revision_calculada','fecha':hoy,'periodo':None,
+                'cobertura':'calculo_cadencia_no_agenda','vigencia':'actual',
+                'texto':f"Próxima revisión calculada: {m['proxima_revision']} (última celebración confirmada +15 días). "
+                        'La fecha de esta evidencia es la del cálculo; no acredita reunión programada o agendada.'})
         for area in ('paid','accounts'):
             out.append({'cliente_id':m['cliente_id'],'regla_id':REGLA if area=='paid' else REGLA+'_account','area':area,
                 'titulo':'Confirmar seguimiento quincenal con trafficker' if area=='paid' else 'Verificar programación del seguimiento con el especialista',
@@ -78,8 +91,7 @@ def recomendaciones_metodo308(doc,ids,personas,asignaciones,hoy):
                 'certeza':'regla_confirmada_ejecucion_por_contrastar','criterio_entrega':'Registrar responsable confirmado y fuente/fecha de celebración o programación; mantener revisión y cita agendada separadas.',
                 'responsabilidad':'Seguimiento y comprobación, no ejecución acreditada','ejecutor_operativo':'trafficker','comprobador_role':'account' if area=='accounts' else 'trafficker',
                 'modulo_destino':'reuniones','metodo_308':m,
-                'evidencias':[{'fuente':'metodo_confirmado_local','fecha':hoy,'periodo':None,'cobertura':'regla_confirmada_no_historial_exhaustivo',
-                    'vigencia':'actual','texto':'Regla 15 días/trafficker confirmada; fecha de decisión/consulta no es fecha de una celebración.'}]})
+                'evidencias':[dict(e) for e in evidencias]})
     return out
 
 def _scope(S,real,vista):
