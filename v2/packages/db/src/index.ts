@@ -9,5 +9,6 @@ export function crearPrisma(url = process.env.DATABASE_URL): PrismaClient {
   // Tope de conexiones de la API (RO_PG_POOL_MAX, 10 por defecto). Sumado al legado (servir.py: 4 libres más las de
   // los picos; 15-17 con 30 personas a la vez el 4-oct) tiene que quedar holgado bajo el límite de la Postgres en la nube.
   const max = Number(process.env.RO_PG_POOL_MAX ?? 10)
-  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max }) })
+  // Sin tope de espera, una base saturada deja la petición colgada para siempre: a los 5 s, error (y el filtro, 500).
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url, max, connectionTimeoutMillis: 5000 }) })
 }

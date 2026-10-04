@@ -17,3 +17,6 @@ alwaysApply: false
 - Claro siempre (nunca modo oscuro). Montserrat y Geist Mono servidas desde la app (sin Google Fonts).
 - Una pantalla en React solo sustituye al puente con sus fotos ≤ 0,5 % para todas las personas y los dos tamaños (`v2/tools/capturas`).
 - `public/legacy/` es una copia automática (`scripts/sync-legacy.mjs`): no se edita.
+- Los módulos de hoy se importan en el navegador en tiempo de ejecución: `import(/* webpackIgnore: true */ /* turbopackIgnore: true */ '/legacy/modulos/x.js')`. Nunca un `import` estático de `/legacy`.
+- Capas de Tailwind 4: `estilos.css` va sin capa y gana a cualquier utilidad. Si una utilidad no se nota, usa la clase de `estilos.css`; nada de `!important`. `box-sizing: border-box` ya viene de `estilos.css`.
+- Producción y puertas: `next build` + `.next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado, lo hace `migracion/servicios.sh`). `next start` no vale con `output: "standalone"`.

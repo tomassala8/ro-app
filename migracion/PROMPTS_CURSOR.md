@@ -58,6 +58,13 @@ Crea `migracion/baterias.sh <puerto>`: lanza contra ese puerto **todas** las bat
 
 `bash migracion/puerta.sh f1` → VERDE. `git push -u origin migracion/v2`.
 
+Con la puerta en verde, deja de solo lectura lo que es la referencia (nada de esto se vuelve a escribir esta noche):
+```bash
+chmod -R a-w ~/RO_MIGRACION/contrato/viejo ~/RO_MIGRACION/capturas/viejo ~/RO_MIGRACION/local.db.antes 2>/dev/null || true
+find ~/RO_MIGRACION/ref \( -name '*.py' -o -name '*.js' -o -name '*.html' -o -name '*.sql' \) -exec chmod a-w {} +   # solo el código: la referencia sí escribe anclas y estado en su carpeta
+```
+(Los vectores de permisos NO: F5.10 los regenera. Ni la carpeta `ref` entera: servir.py escribe ahí sus anclas.) Si un paso posterior necesita escribir ahí, es que va mal: plan B, no `chmod`.
+
 ---
 
 ## F2.1 · `avisos` → `tuberia_avisos`
@@ -72,11 +79,12 @@ Si `CAMBIOS.md` trae tablas o columnas nuevas (o si dudas): `bash v2/packages/db
 
 ```bash
 cd v2 && pnpm db:up && pnpm db:deploy && cd ..
+DATABASE_URL="postgresql://127.0.0.1:5432/ro_app?user=ro&password=ro" python3 migracion/validar_sqlite.py --sqlite ~/RO_MIGRACION/local.db.antes --pg
 DATABASE_URL="postgresql://127.0.0.1:5432/ro_app?user=ro&password=ro" python3 migracion/copiar_sqlite_a_pg.py --sqlite ~/RO_MIGRACION/local.db.antes
 # si existe:  … --sqlite ~/RO_MIGRACION/tuberia.db.antes --renombrar avisos=tuberia_avisos
 DATABASE_URL="postgresql://127.0.0.1:5432/ro_app?user=ro&password=ro" python3 despliegue/publicacion.py publicar data
 ```
-La copia tiene que decir «cuadrada» (si dice que una columna no se copia, vuelve a F2.2). Para repetir desde cero: `--vaciar` (pide «sí»; en esta base de pruebas, contesta tú).
+`validar_sqlite.py` va ANTES de copiar: un ✘ (byte NUL, texto que no es UTF-8, valor que no cabe en el tipo de Postgres) hace fallar la copia a medias. Se arregla en otra copia (`~/RO_MIGRACION/local.db.limpia`, nunca en `local.db.antes` ni en `local.db`) con la orden exacta en NOTAS_NOCHE.md, y se copia desde esa. Cada ⚠ (tipos mezclados en una columna) se apunta en NOTAS_NOCHE.md: al portar las rutas que la leen, compara y ordena como hoy. La copia tiene que decir «cuadrada» (si dice que una columna no se copia, vuelve a F2.2). Para repetir desde cero: `--vaciar` (pide «sí»; en esta base de pruebas, contesta tú).
 
 ## F2.4 · La app de hoy sobre Postgres
 
@@ -129,7 +137,7 @@ Para el grupo del paso (tabla §2.2 del plan):
 2. Añade sus rutas a `v2/apps/api/src/legado/rutas-en-nest.ts`.
 3. `bash migracion/puerta.sh f5 --rapido` para iterar; `bash migracion/puerta.sh f5` para cerrar.
 4. VERDE → commit «F5.x · <grupo> en Nest». ROJO tras 3 intentos → plan B, en este orden: (a) `git switch -C intento/<grupo>` (los cambios sin commit viajan contigo), `git add v2/ && git commit -m "intento <grupo>"` (solo `v2/`, nunca `PROGRESO.md`); (b) `git switch migracion/v2` (vuelve sin el módulo y con `rutas-en-nest.ts` como estaba; `PROGRESO.md` sigue con tus notas); (c) `git status` limpio salvo el cuaderno; ⚠ y siguiente.
-F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|access` como `despliegue/acceso_cf.py`. En `access`, la persona sale SOLO del JWT `Cf-Access-Jwt-Assertion` con su firma (claves del equipo), `aud` = `RO_CF_AUD`, emisor y caducidad comprobados, igual que `acceso_cf.py`; nunca de la cabecera del correo, ni de `X-RO-Yo`, `?yo=`, la galleta `ro_yo` o `X-Forwarded-*` (detrás de Next todo llega desde 127.0.0.1: la IP no prueba nada). Prueba e2e con curl: JWT falso, sin firma, con otro `aud` y caducado → 403; `X-RO-Yo: tomas` sin JWT → 403; las rutas que siguen en el proxy las sigue comprobando servir.py. Vive en `src/permisos/` (ahí sí se leen puestos; `rutas-declaradas.spec.ts` lo prohíbe fuera). Si F5.1 sale ⚠, F5.2–F5.9 van a ⚠ sin intentarlo.
+F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|access` como `despliegue/acceso_cf.py`. En `access`, la persona sale SOLO del JWT `Cf-Access-Jwt-Assertion` con su firma (claves del equipo), `aud` = `RO_CF_AUD`, emisor y caducidad comprobados, igual que `acceso_cf.py`; nunca de la cabecera del correo, ni de `X-RO-Yo`, `?yo=`, la galleta `ro_yo` o `X-Forwarded-*` (detrás de Next todo llega desde 127.0.0.1: la IP no prueba nada). Prueba e2e con curl: JWT falso, sin firma, con otro `aud` y caducado → 403; `X-RO-Yo: tomas` sin JWT → 403; las rutas que siguen en el proxy las sigue comprobando servir.py. Vive en `src/permisos/` (ahí sí se leen puestos; `rutas-declaradas.spec.ts` lo prohíbe fuera). **Rastro con dos escritores:** al terminar el escritor de «ver como», prueba e2e de 50 altas MEZCLADAS en el rastro a la vez (25 por Nest, 25 por el legado vía servir.py, en paralelo), y después `/api/rastro/verificar` → «ok» con cero huecos ni huellas rotas. Si falla, es el candado o la hora (ver la Guía de traducción): no sigas a F5.2 sin esto. Si F5.1 sale ⚠, F5.2–F5.9 van a ⚠ sin intentarlo.
 
 ## F5.10 · Fallos pendientes de lógica
 
@@ -161,7 +169,8 @@ Si algo no escala sobre Postgres y en SQLite sí, es un fallo de `despliegue/bas
 Lee `v2/apps/web/AGENTS.md` (esta versión de Next tiene cambios: consulta `node_modules/next/dist/docs/` antes de escribir rutas o layouts).
 1. `pnpm dlx shadcn@latest init -y --defaults` en `v2/apps/web` (y `add -y …`: sin `-y` se queda esperando una respuesta; necesita red) sin tocar `src/styles/ro-tema.css` ni el `globals.css` sin preflight (si el init los cambia, devuélvelos como estaban). Añade sidebar, command, dropdown-menu, dialog, sheet, tooltip.
 2. `src/lib/ctx.ts`: `crearCtx` de `app.js` en TypeScript, los 40 campos (`migracion/inventario/ctx.json`), mismo comportamiento.
-3. `PantallaPuente`: importa `/legacy/modulos/<fichero>` en el navegador y llama a `render(contenedor, ctx)`.
+3. `PantallaPuente`: importa `/legacy/modulos/<fichero>` en el navegador y llama a `render(contenedor, ctx)`. El import es en tiempo de ejecución, no de compilación: `import(/* webpackIgnore: true */ /* turbopackIgnore: true */ url)`; si no, Turbopack intenta empaquetar `/legacy` y falla el build (o mete una copia vieja). Los módulos de hoy se importan entre sí con rutas relativas (`import('./decisiones.js')`): por eso se cargan desde `/legacy/modulos/`, nunca copiados a otra carpeta.
+4. CSS (Tailwind 4): `estilos.css` va sin capa y `globals.css` declara `@layer theme, base, components, utilities`. Lo que no está en una capa gana SIEMPRE a lo que está en una, sea cual sea la especificidad: si una utilidad de Tailwind «no hace nada», es que `estilos.css` toca esa propiedad; no lo arregles con `!important` ni sacando Tailwind de su capa, usa la clase de `estilos.css`. `box-sizing: border-box` ya lo pone `estilos.css` (`* {…}`), y es lo que shadcn espera sin preflight.
 
 ## F6.2 · Carcasa en React (detrás de una variable)
 
@@ -183,7 +192,7 @@ Primero, si no existe, `src/components/ro/` (componentes.js en React, mismas cla
 
 ## F7.2 · render.yaml
 
-`v2/render.yaml` a partir de `despliegue/render.yaml` (y `PLAN_MAESTRO.md` §2.7–2.12): `ro-web` (Next, el ÚNICO servicio público), `ro-api` (Nest, **servicio privado** `type: pserv`, `RO_LEGADO_URL` al servicio privado del legado), `ro-legado` (**privado**) (la imagen de `despliegue/Dockerfile`, **una sola copia**, con la tubería y los bucles), `ro-base` (Postgres). Sin llaves. Cloudflare Access delante, como en `despliegue/DESPLIEGUE.md`. El grupo `ro-llaves` completo (comprueba con `python3 migracion/llaves_nube.py`: nada «FALTA en render.yaml») y solo en `ro-legado`. Sin `RO_AVISOS_SIN_BUCLE` (los escalados necesitan los bucles). El vigía, como cron o dentro del legado (N-18). ClickUp real apagado. En `ro-api`: `RO_ENTORNO=produccion`, `RO_IDENTIDAD=access`, sin `RO_RELOJ` (la API no arranca si no), y `preDeployCommand: pnpm --filter @ro/db migrate:deploy` (si falla, no se despliega). El cron `ro-copias` (cada hora, `despliegue/entrada.sh copias`, `RO_COPIAS_DIAS=7`, grupo con `RO_R2_*`), como en `despliegue/render.yaml` (§2.10). **Nunca ejecutes `llaves_nube.py --exportar`**: es de Tomás.
+`v2/render.yaml` a partir de `despliegue/render.yaml` (y `PLAN_MAESTRO.md` §2.7–2.12): `ro-web` (Next, el ÚNICO servicio público), `ro-api` (Nest, **servicio privado** `type: pserv`, `RO_LEGADO_URL` al servicio privado del legado), `ro-legado` (**privado**) (la imagen de `despliegue/Dockerfile`, **una sola copia**, con la tubería y los bucles), `ro-base` (Postgres). Sin llaves. Cloudflare Access delante, como en `despliegue/DESPLIEGUE.md`. El grupo `ro-llaves` completo (comprueba con `python3 migracion/llaves_nube.py`: nada «FALTA en render.yaml») y solo en `ro-legado`. Sin `RO_AVISOS_SIN_BUCLE` (los escalados necesitan los bucles). El vigía, como cron o dentro del legado (N-18). ClickUp real apagado. En `ro-api`: `RO_ENTORNO=produccion`, `RO_IDENTIDAD=access`, sin `RO_RELOJ` (la API no arranca si no), y `preDeployCommand: pnpm --filter @ro/db migrate:deploy` (si falla, no se despliega). El cron `ro-copias` (cada hora, `despliegue/entrada.sh copias`, `RO_COPIAS_DIAS=7`, grupo con `RO_R2_*` y `RO_B2_*`), como en `despliegue/render.yaml` (§2.10). **Nunca ejecutes `llaves_nube.py --exportar`**: es de Tomás.
 
 ## F7.3 · Informe y puerta 7
 
@@ -243,7 +252,11 @@ Una traducción que «funciona» pero redondea, ordena o cuenta distinto no da e
   - el rastro encadena `sha256(previa + json.dumps(campos, ensure_ascii=False, sort_keys=True))` → `huellaRastro(previa, campos)`, idéntica byte a byte;
   - además, Nest y el legado escriben en la MISMA tabla a la vez, así que todo alta en el rastro va dentro de una transacción con el MISMO candado que `base.py`: `SELECT pg_advisory_xact_lock(7262)` como primera orden DENTRO de `prisma.$transaction(async (tx) => …)` (el de transacción, `xact`; nunca `pg_advisory_lock` de sesión, que con el pool se queda cogido en otra petición). Si no, dos escritores rompen la cadena.
   - Después de portar el rastro, `/api/rastro/verificar` tiene que seguir diciendo «ok» con filas escritas por los dos.
+  - La huella lleva `[id, creada, quien, como, coleccion, accion, clave, datos, motivo, anula_a, origen]` (`_registrar` en `servir.py`). `creada` la pone la BASE (el `@default` de `schema.prisma`: texto UTC «AAAA-MM-DD HH:MM:SS», sin milisegundos): no la mandes desde JS ni con `now()`; insértala sin ella, léela de vuelta y mete en la huella ese mismo texto. `id` y `anula_a` vienen de Prisma como `BigInt`: a `Number` antes de la huella (si no, `json.dumps` y `JSON.stringify` no coinciden).
 - Los mensajes de error y los códigos se copian tal cual, también el 500 genérico «Error interno (el detalle queda en el registro del servidor).».
+
+**Búsqueda**
+- `/api/buscar` no usa SQL: `buscar_en()` busca en memoria, sin tildes ni mayúsculas (`_sin_tilde`), todas las palabras, y ordena por «empieza por» / «palabra que empieza» / resto. Pórtalo igual. Nunca `LIKE`/`ILIKE` de Postgres: distingue tildes, `ILIKE` no es el `LIKE` de SQLite (que ya ignora mayúsculas en ASCII) y `%`/`_` del texto buscado serían comodines.
 
 **Del JS de hoy a React (fase 6)**
 - Mismo DOM y mismas clases (`estilos.css`); shadcn solo donde la pieza es equivalente.

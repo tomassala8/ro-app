@@ -6,7 +6,8 @@
 #   ro-ligera          cada hora de 7 a 23 h de España: tubería ligera
 #   ro-completa        6:00 y 14:00: tubería completa (lectores en bruto, créditos, CRM en vivo)
 #   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
-#   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS)
+#   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS).
+#                      A las 3 y a las 15 UTC, además a Backblaze B2 (otra cuenta, inmutable 30 días)
 #   ro-base            UNA sola Postgres: rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con
 #                      bloqueo y los datos de cada módulo por versión (despliegue/publicacion.py)
 #
@@ -72,6 +73,10 @@ envVarGroups:
       - { key: RO_R2_BUCKET, sync: false }
       - { key: RO_R2_KEY_ID, sync: false }
       - { key: RO_R2_SECRET, sync: false }
+      - { key: RO_B2_ENDPOINT, sync: false }      # Backblaze B2, región UE (https://s3.eu-central-003.backblazeb2.com)
+      - { key: RO_B2_BUCKET, sync: false }        # bucket con Object Lock «compliance» 30 días por defecto
+      - { key: RO_B2_KEY_ID, sync: false }        # llave «solo escribir» de ese bucket
+      - { key: RO_B2_SECRET, sync: false }
 
 services:
   - type: web
@@ -144,7 +149,7 @@ services:
       - key: RO_COPIAS_DIAS
         value: "7"                # cuántos días se guardan las copias de cada hora; se cambia aquí
       - fromGroup: ro-comun
-      - fromGroup: ro-vigilancia   # RO_R2_*
+      - fromGroup: ro-vigilancia   # RO_R2_* y RO_B2_*
 
   - type: cron
     name: ro-noche

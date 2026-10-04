@@ -176,7 +176,13 @@ def _de_env_fichero(nombre):
 
 
 def secreto(nombre, obligatorio=False):
-    """Devuelve el valor (nunca lo imprime). Orden: carpeta privada → variable de entorno → .env → llavero."""
+    """Devuelve el valor (nunca lo imprime). Orden: carpeta privada → variable de entorno → .env → llavero.
+    Con RO_SIN_LLAVES=1 (la noche de la migración, la pone migracion/noche.sh) no hay ninguna llave real: el agente que
+    trabaja solo no puede leerlas ni llamar a un proveedor de verdad."""
+    if os.environ.get("RO_SIN_LLAVES") == "1":
+        if obligatorio:
+            sys.exit(f"Sin llaves esta noche (RO_SIN_LLAVES=1): «{nombre}» no se lee.")
+        return None
     d = os.environ.get("RO_SECRETOS_DIR")
     if d and (Path(d) / nombre).is_file():
         v = (Path(d) / nombre).read_text().strip()

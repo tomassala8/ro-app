@@ -33,11 +33,47 @@ RO_FIN_NOCHE="$(date -r "$FIN" '+%Y-%m-%d %H:%M' 2>/dev/null || date -d "@$FIN" 
 export RO_FIN_NOCHE RO_MIGRACION="$FUERA"
 # nada sale fuera esta noche (servicios.sh y puerta.sh también lo fuerzan)
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
+# Prisma deja hacer «migrate reset --force» a un agente si esta variable está puesta: nunca esta noche.
+unset PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION
 export RO_AVISOS_SIN_BUCLE=1
 # Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
 # no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
 # que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
 export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
+
+# --- sin llaves reales -------------------------------------------------------------------------------------------
+# Cursor trabaja solo y con tu usuario: podría leer el llavero del Mac. Esta noche no hay ninguna llave:
+#  · config.secreto() devuelve None con RO_SIN_LLAVES=1;
+#  · y una orden «security» falsa va delante en el PATH: muchos scripts (fuentes_*, ia.py, sincronia.py…) llaman al
+#    llavero directamente. La falsa niega cualquier lectura de contraseñas y deja pasar lo demás.
+export RO_SIN_LLAVES=1
+SIN_LLAVERO="$FUERA/sin_llavero/bin"; mkdir -p "$SIN_LLAVERO"
+cat > "$SIN_LLAVERO/security" <<'FALSA'
+#!/bin/sh
+# Orden «security» de la noche de migración: el llavero está cerrado para el agente.
+case "$1" in
+  find-generic-password|find-internet-password|dump-keychain|export|unlock-keychain|show-keychain-info)
+    echo "security: el llavero está cerrado esta noche (migracion/noche.sh)" >&2; exit 44 ;;
+esac
+exec /usr/bin/security "$@"
+FALSA
+chmod 755 "$SIN_LLAVERO/security"
+export PATH="$SIN_LLAVERO:$PATH"
+
+# --- huellas de las puertas --------------------------------------------------------------------------------------
+# Un agente que no pasa una prueba tiende a «arreglar» la prueba. Guardamos la huella de los ficheros que juzgan
+# (fuera del repo y solo lectura). Por la mañana: bash migracion/comprobar_manana.sh lo compara y repite las puertas
+# desde cero. capturar.mjs no va: el paso F1.4 puede tener que arreglarlo.
+HUELLAS="$FUERA/huellas_puertas.txt"
+if [ ! -f "$HUELLAS" ]; then
+  ( for f in migracion/puerta.sh migracion/contrato.py migracion/contrato_escritura.py migracion/vectores_permisos.py \
+             migracion/caidas.sh migracion/seguridad_http.py migracion/rendimiento.py migracion/servicios.sh \
+             v2/tools/capturas/comparar.mjs pruebas_*.py despliegue/pruebas_noche.py despliegue/pruebas_tokens.py; do
+      [ -f "$f" ] && { shasum -a 256 "$f" 2>/dev/null || sha256sum "$f"; }
+    done; echo "# commit $(git rev-parse HEAD) · $(date '+%Y-%m-%d %H:%M')" ) > "$HUELLAS"
+  chmod 444 "$HUELLAS"
+  echo "Huellas de las puertas guardadas en $HUELLAS"
+fi
 
 # --- el Mac despierto --------------------------------------------------------------------------------------------
 if command -v caffeinate >/dev/null; then caffeinate -dimsu -w $$ & fi

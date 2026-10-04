@@ -20,6 +20,9 @@ REGLAS QUE NO SE NEGOCIAN:
 - La app nueva tiene que funcionar entera a cada momento: lo que no ha pasado su puerta se queda por el proxy (Nest → servir.py) o con el front de hoy.
 - Datos reales SOLO en ~/RO_MIGRACION. No los pegues en el chat ni los subas a git. Nunca credenciales en ficheros.
 - Nunca toques `local.db`, `data/` ni nada que salga fuera (envíos, ClickUp, proveedores). Servidores solo en 127.0.0.1.
+- Esta noche no hay llaves (RO_SIN_LLAVES=1 y el llavero cerrado). Nunca intentes leer el llavero, `~/.ssh`, `.env` ni carpetas de claves, ni rodees esa barrera: si algo necesita una llave, es plan B (simulado) y se apunta.
+- Dependencias congeladas (`pnpm install --frozen-lockfile`, Prisma 7.10.0 exacto): no cambies versiones. Nunca definas `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION`.
+- Nunca cambies los ficheros que juzgan (`migracion/puerta.sh`, `contrato*.py`, `vectores_permisos.py`, `caidas.sh`, `seguridad_http.py`, `rendimiento.py`, `servicios.sh`, `comparar.mjs`, `pruebas_*.py`): sus huellas están guardadas y mañana se comprueban y se repiten todas las puertas desde cero. Si uno está mal de verdad, apúntalo en «Preguntas para Tomás» y usa `~/RO_MIGRACION/excepciones.txt` con su motivo.
 - Nunca `git push` a `main` ni `--force`. Solo `git push origin migracion/v2` (al final de cada fase, como copia de seguridad).
 - Al traducir Python o el JS de hoy, sigue la «Guía de traducción» del final de `migracion/PROMPTS_CURSOR.md` y usa `@ro/compat` (redondeo, JSON, huella del rastro, textos, orden, reloj): no lo reescribas.
 - Permisos en un solo sitio: toda ruta de Nest declara `@Permiso(...)` o `@Publico(...)` (v2/apps/api/src/permisos/). Nunca compruebes puestos o personas a mano en una ruta.

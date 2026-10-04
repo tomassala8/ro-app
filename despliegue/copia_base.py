@@ -21,6 +21,11 @@ borrado del bucket y el bloqueo del bucket impide borrar o sobrescribir una copi
 llave de la app. Borrar desde aquí solo con RO_R2_PODAR=si (no se usa en producción).
 Variables de R2 (opcionales): RO_R2_ENDPOINT (https://<cuenta>.r2.cloudflarestorage.com, jurisdicción UE),
       RO_R2_BUCKET, RO_R2_KEY_ID, RO_R2_SECRET. Necesita boto3 (va en requirements.txt del servidor).
+Copia inmutable (Backblaze B2, cuenta APARTE de Cloudflare y de Render, región UE): dos veces al día (RO_B2_HORAS, por
+defecto 3 y 15 UTC) la copia de esa hora sube también a B2. El bucket tiene Object Lock en modo «compliance» 30 días
+por defecto: ni la app, ni un atacante con Cloudflare, ni nosotros podemos borrarla antes. La llave es «solo escribir».
+Variables: RO_B2_ENDPOINT (https://s3.eu-central-003.backblazeb2.com o la que dé B2), RO_B2_BUCKET, RO_B2_KEY_ID,
+      RO_B2_SECRET. Sin ellas no pasa nada (salvo en producción, donde la copia lo dice en rojo a esas horas).
 """
 import gzip
 import hashlib
@@ -167,13 +172,22 @@ def filas_vivas(url):
         return {t: c.execute(f'SELECT count(*) FROM "{t}"').fetchone()[0] for t in tablas}
 
 
-def r2():
-    need = ("RO_R2_ENDPOINT", "RO_R2_BUCKET", "RO_R2_KEY_ID", "RO_R2_SECRET")
+def almacen(cual="R2"):
+    """Cliente S3 de R2 («R2») o de Backblaze B2 («B2») con sus variables RO_<cual>_*; None si faltan."""
+    need = tuple(f"RO_{cual}_{v}" for v in ("ENDPOINT", "BUCKET", "KEY_ID", "SECRET"))
     if not all(os.environ.get(v) for v in need):
         return None
     import boto3
-    return boto3.client("s3", endpoint_url=os.environ["RO_R2_ENDPOINT"], aws_access_key_id=os.environ["RO_R2_KEY_ID"],
-                        aws_secret_access_key=os.environ["RO_R2_SECRET"], region_name="auto")
+    return boto3.client("s3", endpoint_url=os.environ[need[0]], aws_access_key_id=os.environ[need[2]],
+                        aws_secret_access_key=os.environ[need[3]], region_name="auto")
+
+
+def r2():
+    return almacen("R2")
+
+
+def horas_b2():
+    return {int(h) for h in (os.environ.get("RO_B2_HORAS") or "3,15").split(",") if h.strip()}
 
 
 def podar(ahora, s3=None, bucket=None):
@@ -240,14 +254,27 @@ def copia_hora():
     if s3:
         for f in (dump, carpeta / "manifiesto.json"):
             s3.upload_file(str(f), bucket, f"copias/horas/{carpeta.name}/{f.name}")
+    # Copia inmutable en B2 a sus horas. Solo sube: la llave no puede ni listar ni borrar, y el bloqueo «compliance»
+    # del bucket guarda cada versión 30 días. Si falla, lo dice pero no tira la copia de la hora (ya está en R2).
+    b2, en_b2 = (almacen("B2") if ahora.hour in horas_b2() else None), False
+    if b2:
+        try:
+            for f in (dump, carpeta / "manifiesto.json"):
+                b2.upload_file(str(f), os.environ["RO_B2_BUCKET"], f"copias/diarias/{carpeta.name}/{f.name}")
+            en_b2 = True
+        except Exception as e:  # noqa: BLE001
+            print(f"✘ No se pudo subir a B2: {str(e)[:200]}")
     # En R2 no se borra desde la app (ver arriba): solo en disco, salvo RO_R2_PODAR=si.
     borradas = podar(ahora, s3 if os.environ.get("RO_R2_PODAR") == "si" else None, bucket)
     print(f"✔ copia de las {ahora:%H}:00 UTC: {round(dump.stat().st_size / 1e6, 2)} MB · {len(copia)} tablas · "
-          f"{sum(copia.values())} filas · leída entera · {'en R2' if s3 else 'solo en disco'} · "
+          f"{sum(copia.values())} filas · leída entera · {'en R2' if s3 else 'solo en disco'}"
+          f"{' y en B2 (inmutable 30 días)' if en_b2 else ''} · "
           f"{borradas} de más de {DIAS_HORAS:g} días borradas")
     if os.environ.get("RENDER") and not s3:
         # En Render el disco de un cron se pierde al terminar: sin R2, esta copia no sobrevive. Que se vea en rojo.
         sys.exit("✘ Sin R2 configurado: en Render esta copia se pierde al terminar el cron. Faltan RO_R2_* (Tomás).")
+    if os.environ.get("RENDER") and ahora.hour in horas_b2() and not en_b2:
+        sys.exit("✘ Tocaba la copia inmutable en B2 y no se ha hecho (faltan RO_B2_* o falló la subida).")
     return True
 
 

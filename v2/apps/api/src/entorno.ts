@@ -14,6 +14,10 @@ export function comprobarEntorno(env: NodeJS.ProcessEnv = process.env): void {
   if (env.RO_RELOJ && Number.isNaN(Date.parse(env.RO_RELOJ))) fallos.push(`RO_RELOJ no es una fecha: «${env.RO_RELOJ}».`);
   if (env.PORT && !/^\d{2,5}$/.test(env.PORT)) fallos.push('PORT tiene que ser un número.');
   if (env.HOST && !['127.0.0.1', '0.0.0.0'].includes(env.HOST)) fallos.push('HOST: 127.0.0.1 en el Mac; 0.0.0.0 solo dentro de un contenedor.');
+  // 0.0.0.0 con identidad «local» = cualquiera de la red elige quién es. Solo dentro de un contenedor (docker compose
+  // pone RO_EN_CONTENEDOR=1 y publica el puerto en 127.0.0.1); en el Mac, 127.0.0.1.
+  if (env.HOST === '0.0.0.0' && env.RO_IDENTIDAD !== 'access' && env.RO_EN_CONTENEDOR !== '1')
+    fallos.push('HOST=0.0.0.0 con RO_IDENTIDAD=local solo dentro de un contenedor (RO_EN_CONTENEDOR=1): usa 127.0.0.1.');
   if (env.RO_LEGADO_URL && !/^https?:\/\/[^/]+/.test(env.RO_LEGADO_URL)) fallos.push('RO_LEGADO_URL no es una URL.');
   if (nube && !env.RO_LEGADO_URL) fallos.push('RO_LEGADO_URL hace falta en producción (el servicio privado del legado).');
   if (fallos.length) {

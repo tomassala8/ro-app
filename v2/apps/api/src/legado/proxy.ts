@@ -16,6 +16,22 @@ function json(res: ServerResponse, estado: number, error: string) {
   res.end(JSON.stringify({ error }));
 }
 
+// En la nube (RO_IDENTIDAD=access) la persona sale solo del sello de Access. servir.py ya ignora ahí X-RO-Yo, ?yo= y
+// la galleta ro_yo; aquí además se quitan antes de reenviar (defensa en dos capas: si un día alguien arranca servir.py
+// sin el modo Access, no le llega nada con que hacerse pasar por otro).
+export function sinIdentidadLocal(url: string, cabeceras: IncomingMessage['headers']) {
+  const u = new URL(url, 'http://x');
+  u.searchParams.delete('yo');
+  const headers = { ...cabeceras };
+  delete headers['x-ro-yo'];
+  if (typeof headers.cookie === 'string') {
+    const resto = headers.cookie.split(';').filter((g) => g.split('=')[0].trim() !== 'ro_yo').join(';').trim();
+    if (resto) headers.cookie = resto;
+    else delete headers.cookie;
+  }
+  return { path: u.pathname + u.search, headers };
+}
+
 export function proxyLegado(base = process.env.RO_LEGADO_URL, { cuerpoMax = CUERPO_MAX, esperaMs = ESPERA_MS } = {}) {
   const destino = base ? new URL(base) : null;
   return (req: IncomingMessage, res: ServerResponse, siguiente: () => void) => {
@@ -35,15 +51,19 @@ export function proxyLegado(base = process.env.RO_LEGADO_URL, { cuerpoMax = CUER
       req.resume();
       return json(res, 413, 'Petición demasiado grande.');
     }
+    const limpio =
+      process.env.RO_IDENTIDAD === 'access'
+        ? sinIdentidadLocal(req.url ?? '/', req.headers)
+        : { path: req.url, headers: req.headers };
     const salida = pedirHttp(
       {
         protocol: destino.protocol,
         hostname: destino.hostname,
         port: destino.port,
         method: req.method,
-        path: req.url,
+        path: limpio.path,
         // Host: el de servir.py (comprueba que le hablan a él). Origin: servir.py lo admite con RO_ORIGEN_APP.
-        headers: { ...req.headers, host: destino.host, 'x-ro-via': 'nest' },
+        headers: { ...limpio.headers, host: destino.host, 'x-ro-via': 'nest' },
       },
       (respuesta) => {
         res.writeHead(respuesta.statusCode ?? 502, respuesta.headers);

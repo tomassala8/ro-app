@@ -2,7 +2,7 @@ import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import express from 'express';
 import request from 'supertest';
-import { proxyLegado } from './proxy.js';
+import { proxyLegado, sinIdentidadLocal } from './proxy.js';
 import { atiendeNest } from './rutas-en-nest.js';
 
 // Un «servir.py» de mentira que devuelve lo que recibe: así se ve que el proxy no cambia nada.
@@ -21,6 +21,19 @@ function legadoFalso() {
 }
 
 describe('proxy de legado', () => {
+  it('en la nube (access) quita X-RO-Yo, ?yo= y la galleta ro_yo; lo demás queda igual', () => {
+    const r = sinIdentidadLocal('/api/clientes?yo=tomas&x=1', {
+      'x-ro-yo': 'tomas',
+      cookie: 'a=1; ro_yo=tomas; b=2',
+      'cf-access-jwt-assertion': 'j',
+    });
+    expect(r.path).toBe('/api/clientes?x=1');
+    expect(r.headers['x-ro-yo']).toBeUndefined();
+    expect(r.headers.cookie).toBe('a=1; b=2');
+    expect(r.headers['cf-access-jwt-assertion']).toBe('j');
+    expect(sinIdentidadLocal('/x', { cookie: 'ro_yo=tomas' }).headers.cookie).toBeUndefined();
+  });
+
   it('lo que Nest atiende no pasa al legado', () => {
     expect(atiendeNest('GET', '/vivo')).toBe(true);
     expect(atiendeNest('GET', '/api/sesion')).toBe(false);

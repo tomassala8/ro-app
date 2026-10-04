@@ -24,6 +24,7 @@ services:
       HOST: 0.0.0.0
       PORT: "4000"
       RO_IDENTIDAD: ${RO_IDENTIDAD:-local}
+      RO_EN_CONTENEDOR: "1"   # entorno.ts: 0.0.0.0 con identidad local solo aquí dentro (expose, sin puerto publicado)
     depends_on: { postgres: { condition: service_healthy } }
     expose: ["4000"]
 

@@ -62,16 +62,24 @@ arrancar_uno() {
       esperar api; return $?
       ;;
     web)
-      # Compilada (next build + next start), como irá en la nube: las puertas miden velocidad y «next dev» compila
-      # cada página la primera vez. RO_WEB_DEV=1 para trabajar con recarga en caliente (no vale para cerrar puertas).
-      if [ -z "${RO_WEB_DEV:-}" ]; then
-        (cd v2/apps/web && RO_API_URL="http://127.0.0.1:4000" pnpm exec next build > "$LOGS/web_build.log" 2>&1) \
+      # Compilada y arrancada EXACTAMENTE como en la nube (v2/apps/web/Dockerfile): `output: "standalone"` no copia
+      # public/ (donde vive public/legacy, el front de hoy) ni .next/static, y no se arranca con «next start». Se copian
+      # y se arranca su server.js. Las puertas miden velocidad, y «next dev» compila cada página la primera vez.
+      # RO_WEB_DEV=1 para trabajar con recarga en caliente (no vale para cerrar puertas).
+      if [ -n "${RO_WEB_DEV:-}" ]; then
+        (cd v2/apps/web || exit 1
+         RO_API_URL="http://127.0.0.1:4000" nohup pnpm exec next dev -H 127.0.0.1 -p 3000 > "$LOGS/web.log" 2>&1 < /dev/null &
+         echo $! > "$PIDS/web.pid")
+      else
+        (cd v2/apps/web && RO_API_URL="http://127.0.0.1:4000" pnpm exec next build > "$LOGS/web_build.log" 2>&1 \
+           && rm -rf .next/standalone/apps/web/public .next/standalone/apps/web/.next/static \
+           && cp -R public .next/standalone/apps/web/public \
+           && cp -R .next/static .next/standalone/apps/web/.next/static) \
           || { echo "  ✘ la web no compila: $LOGS/web_build.log"; return 1; }
+        (cd v2/apps/web/.next/standalone/apps/web || exit 1
+         PORT=3000 HOSTNAME=127.0.0.1 RO_API_URL="http://127.0.0.1:4000" nohup node server.js > "$LOGS/web.log" 2>&1 < /dev/null &
+         echo $! > "$PIDS/web.pid")
       fi
-      (cd v2/apps/web || exit 1
-       RO_API_URL="http://127.0.0.1:4000" nohup pnpm exec next "$([ -n "${RO_WEB_DEV:-}" ] && echo dev || echo start)" -H 127.0.0.1 -p 3000 \
-         > "$LOGS/web.log" 2>&1 < /dev/null &
-       echo $! > "$PIDS/web.pid")
       esperar web; return $?
       ;;
   esac
@@ -89,7 +97,7 @@ parar_uno() {
   if [ -n "$quien" ]; then kill $quien 2>/dev/null; for _ in 1 2 3 4 5; do vivo "$1" || break; sleep 1; done; fi
   if vivo "$1"; then   # lsof no siempre ve los hijos (next-server): por su línea de órdenes, que lleva el puerto
     case "$1" in
-      web) pkill -f "next (dev|start) -H 127.0.0.1 -p 3000" ;;
+      web) pkill -f "next (dev|start) -H 127.0.0.1 -p 3000"; pkill -f "standalone/apps/web/server.js|^node server.js$" ;;
       viejo|legado) pkill -f "servir.py --bind 127.0.0.1 --puerto $(puerto_de "$1")" ;;
     esac
     for _ in 1 2 3 4 5; do vivo "$1" || break; sleep 1; done

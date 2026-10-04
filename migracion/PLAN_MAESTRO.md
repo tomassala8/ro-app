@@ -224,6 +224,7 @@ Para que funcionen de verdad en la nube:
 
 - **Qué:** `python3 despliegue/copia_base.py --hora`. Vuelca la Postgres entera (`pg_dump`), **la abre entera** y cuenta las filas de cada tabla contra la base viva (una copia que no se ha leído no cuenta), deja `manifiesto.json` (tamaño, huella sha256, filas por tabla) y la sube a Cloudflare R2 (otro proveedor: si cae Render, la copia sigue).
 - **Cuánto se guarda:** 7 días de copias de cada hora (168). Las más viejas se borran solas, en disco y en R2; la última nunca. **Se cambia con `RO_COPIAS_DIAS`** en `render.yaml` (por ejemplo 14 o 30); el coste en R2 es pequeño (la base de prueba ocupa 0,4 MB por copia).
+- **Copia inmutable diaria (4-oct, juntado con el hilo de buenas prácticas):** R2 cada hora durante 7 días para recuperar rápido (bloqueo de 7 días), **y** a las 3 y a las 15 UTC la misma copia a **Backblaze B2** en una cuenta aparte, con Object Lock «compliance» de 30 días. R2 protege de un error o de alguien con la llave de la app; B2, de alguien que se haga con Cloudflare o con todas nuestras llaves. Sustituye a la copia semanal en un disco desenchufado (si se quiere, una al mes sigue siendo buena idea). Sin `RO_B2_*` no sube y, en producción, la copia de esas horas sale en rojo.
 - **Dónde corre:** cron `ro-copias` cada hora en `despliegue/render.yaml` (y en `v2/render.yaml`, F7.2). Sin las llaves de R2 sale **en rojo**: en Render el disco de un cron se borra al terminar y la copia no sobreviviría. Las llaves de R2 (`RO_R2_*`) las crea Tomás en Cloudflare; hoy no existen.
 - **Restaurar:** `pg_restore --no-owner -d <base nueva> postgres.dump` de la hora que se quiera. Lo ensaya entero la puerta 7 (volcar, restaurar en otra base, misma API) y `copia_base.py --probar` el día 1 de cada mes.
 - **Además:** según el hilo «Buenas prácticas», la Postgres gratis de Render no tiene copias y las de pago traen recuperación a un momento dado de 3 o 7 días, que restaura en una base NUEVA (hay que cambiar `DATABASE_URL`). Es un plan B, no el principal. No lo he comprobado yo. **Antes del piloto, ensayo de restauración en Render de verdad.** La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
@@ -259,9 +260,9 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 | Riesgo | Qué lo para | Ya está | Lo activa Tomás | Cómo se comprueba |
 |---|---|---|---|---|
 | **Secuestro de datos (ransomware)**: alguien entra y cifra o borra la base | Copias cada hora fuera de Render, en R2 (otro proveedor). La app **solo sube**: no lista ni borra. El **bloqueo del bucket** (Bucket Lock de R2) impide borrar o sobrescribir una copia durante 7 días, aunque roben la llave. Las reglas de borrado del bucket quitan lo viejo, no la app | `copia_base.py --hora` (§2.10), sin borrar en R2 | Bucket `ro-copias` en UE con: bloqueo de 7 días en `copias/`, regla de borrado a 7 días en `copias/horas/` y a 30 en el resto, y una llave solo para ese bucket | Con la llave de la app, intentar borrar una copia → tiene que fallar. Y el ensayo de restauración (puerta 7 y `--probar` cada mes) |
-| Que el atacante tenga también la cuenta de Cloudflare | Una copia **desconectada**: una vez por semana, bajar la última copia a un disco externo que luego se desenchufa | — | Ponerlo en la agenda de Agus (5 minutos a la semana) | Restaurarla en el Mac una vez al mes |
+| Que el atacante (o un agente con llaves) tenga también la cuenta de Cloudflare | **Copia inmutable en otra casa:** dos veces al día la copia sube también a **Backblaze B2** (UE), en una cuenta aparte con otro correo y su propio segundo factor, con **Object Lock «compliance» de 30 días**: nadie, ni el dueño, la borra antes. La llave de la app es «solo escribir» | `copia_base.py --hora` (3 y 15 UTC, `RO_B2_*`); en producción sale en rojo si a esa hora no sube | T3b de `DESPLIEGUE.md` | Con la llave de la app, borrar o leer una copia de B2 → tiene que fallar. Restaurar una de B2 en el Mac una vez al mes |
 | **Entrar sin ser del equipo** | Cloudflare Access delante de todo. La app solo cree el sello firmado de Access (firma, `aud`, caducidad), nunca una cabecera; en producción no arranca en modo «local» ni con el reloj fijo | `acceso_cf.py`, `src/entorno.ts`, F5.1 | — | `python3 despliegue/seguridad_nube.py --dominio … --render …` tras cada despliegue: sin sesión o con cabeceras falsas, ninguna ruta da datos |
-| **Contraseña robada de un empleado** | **Segundo factor obligatorio** (Google Authenticator o la app de Google) | — | En Google Workspace: verificación en dos pasos **obligatoria** para todos. En Access: regla «Require › Authentication method › mfa» en la aplicación | Entrar con una cuenta de prueba sin segundo factor → Access no deja pasar |
+| **Contraseña robada de un empleado** | **Segundo factor obligatorio**, impuesto por Google (Google Authenticator o la app de Google), no por la app. Access solo deja entrar con Google: sin el «One-time PIN» de Cloudflare, que con un código al correo se saltaría el segundo factor | — | Google Workspace › verificación en dos pasos **obligatoria** para todos. En Access: método de entrada solo Google, **quitar One-time PIN** | Entrar con una cuenta de prueba sin segundo factor → Google no deja pasar. En la pantalla de Access no aparece «enviar código» |
 | Un empleado que se va | Quitarlo del grupo de Access (y de Google): pierde el acceso al momento | Solo Tomás da y quita accesos (D2) | Al dar de baja a alguien | Probar su correo → no entra |
 | **Ataques de denegación (DDoS)** y bots | Cloudflare en modo «proxied» absorbe el tráfico; Access corta en el borde a quien no ha entrado, antes de llegar a Render | — | En Cloudflare: Bot Fight Mode, reglas gestionadas del WAF (gratis), «Under Attack Mode» solo en emergencia, y una regla de límite de peticiones en `/api/` **por persona o muy alta por IP** (las 30 personas salen por la misma IP de la oficina: un límite bajo os bloquearía a vosotros) | `seguridad_nube.py` ve `cf-ray`. La carga de 30 personas (§2.6) da la cifra para el límite |
 | Saltarse Cloudflare por la dirección de Render | Desactivar las direcciones `*.onrender.com` (T8). `ro-api` y `ro-legado` como **servicios privados** (sin dirección pública): solo `ro-web` da la cara | Plan F7.2 | T8 en cada servicio público | `seguridad_nube.py --render …` |
@@ -269,6 +270,29 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 | Llaves robadas del repositorio | Nunca llaves en el repo (escáner de secretos); en Render, variables `sync: false` | Sí | — | `escaner_secretos.py --proyecto` |
 
 No lo he podido probar en la nube de verdad: la cuenta de Render, el dominio y las llaves de R2 aún no existen. Los nombres de los ajustes de Cloudflare y R2 son los de su panel a fecha de hoy; si alguno ha cambiado, el sitio es el mismo.
+
+### 2.13 Un agente solo toda la noche: lo que no puede tocar (4-oct)
+
+Cursor trabaja 8 horas con tu usuario del Mac y aprobando sus propias órdenes (`--force`). Eso le da, sin querer, acceso a tus llaves y a las pruebas que le juzgan. Lo que lo impide:
+
+| Riesgo | Qué lo para | Dónde |
+|---|---|---|
+| Lee llaves reales del llavero y llama a un proveedor de verdad | `RO_SIN_LLAVES=1` (config.secreto() no devuelve nada) y una orden `security` falsa delante en el PATH que niega leer contraseñas | `noche.sh` |
+| «Arregla» una prueba para pasarla | Huellas sha256 de los ficheros que juzgan, guardadas al lanzar fuera del repo y de solo lectura; regla expresa en el prompt; y por la mañana `comprobar_manana.sh` las compara, vuelve a la versión de antes si alguna cambió, reinicia todo y repite las puertas completas desde cero | `noche.sh`, `PROMPT_NOCHE.md`, `comprobar_manana.sh` |
+| Reescribe la referencia (contrato, fotos, base de partida) para que coincida | Solo lectura tras la puerta 1 (F1.7) | `PROMPTS_CURSOR.md` |
+| Datos de SQLite que Postgres no traga (byte NUL, texto no UTF-8, tipos mezclados) | `validar_sqlite.py` antes de copiar (F2.3) | `PROMPTS_CURSOR.md` |
+| Borra o empuja donde no debe | Solo `git push origin migracion/v2`; protección de `main` en GitHub | Tomás (abajo) |
+
+La orden `security` falsa es una barrera de PATH: quien llame a `/usr/bin/security` con la ruta entera la salta. La barrera de verdad es que el llavero esté bloqueado o que Cursor corra con otro usuario. Por eso lo de abajo.
+
+**Antes de lanzar (Tomás, 10 minutos):**
+1. GitHub › ro-app › Settings › Branches: regla de protección en `main` (sin push directo, sin force-push, sin borrar).
+2. Una copia de Time Machine del Mac justo antes de lanzar.
+3. Cursor › Settings › Agents › Auto-Run: «File-Deletion Protection» y «Dotfile Protection» activadas. En el ensayo de 1 hora, prueba `migracion/cursor_cli_permisos.json` como `.cursor/cli.json` (sin probar aquí: si `cursor-agent` se queja, se quita).
+4. Opcional, lo más seguro: lanzar la noche desde otro usuario de macOS sin tus llaves (con su propio `cursor-agent login`), o bloquear el llavero antes de irte (Acceso a Llaveros › Archivo › Bloquear llavero «inicio de sesión»).
+5. Por la mañana, antes de creerte PROGRESO.md: `bash migracion/comprobar_manana.sh`.
+
+**Next en modo autónomo:** `next.config.ts` usa `output: "standalone"`, así que se sirve con `node .next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado), no con `next start`. Lo hace `servicios.sh` y lo hace la imagen de Docker: lo que pasa las puertas es lo mismo que irá a la nube.
 
 ---
 
@@ -285,6 +309,8 @@ No lo he podido probar en la nube de verdad: la cuenta de Render, el dominio y l
 | `v2/tools/capturas` | que cada pantalla **se ve igual** (≤ 0,5 % de píxeles) y no tiene errores de página nuevos |
 | `migracion/baterias.sh` (la monta Cursor en la fase 1) | que las baterías de hoy y las focalizadas de Astra siguen verdes contra la app nueva |
 | `migracion/rendimiento.py`, `migracion/caidas.sh`, `migracion/seguridad_http.py` | velocidad, caídas y seguridad (§2.6) |
+| `migracion/validar_sqlite.py` | que los datos de SQLite caben en Postgres antes de copiarlos |
+| `migracion/comprobar_manana.sh` | por la mañana: que nadie tocó las puertas esta noche, y todas otra vez desde cero |
 | restauración (en `puerta.sh f7`) | que una copia de la base se restaura y responde igual (lo pide Astra antes de cualquier piloto) |
 
 **Ensayo del 4-oct** (en la nube de Claude, con datos inventados):
@@ -384,3 +410,4 @@ Pendientes para la noche (están en `PROGRESO.md`):
 - Tipos de verdad en la base (`timestamptz`, `boolean`, `jsonb`) cuando nada escriba ya en texto.
 - Rutas de verdad (`/mi-dia`) en vez de `#/mi-dia`, con redirección de las viejas.
 - Las puertas en cada PR (GitHub Actions con datos inventados).
+- Comprobaciones extra en esas puertas (no esta noche: necesitan red y paquetes nuevos): `squawk` sobre cada migración nueva (bloqueos largos y cambios peligrosos en Postgres), `knip` (código y dependencias sin usar), `eslint-plugin-security` y `pnpm audit --prod`.

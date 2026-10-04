@@ -17,3 +17,5 @@ alwaysApply: true
 - Si `migracion/inventario/CAMBIOS.md` trae algo que el plan no cubre, apúntalo en NOTAS_NOCHE.md y cúbrelo con la misma red (contrato/fotos/vectores) antes de seguir.
 - Castellano en textos, comentarios y commits. Frases cortas. Fechas absolutas (5-oct-2026).
 - Commits pequeños, uno por paso, con el código del paso delante («F2.4 · …»). Solo `git push origin migracion/v2`. Nunca push a `main` ni `--force`.
+- Esta noche no hay llaves (`RO_SIN_LLAVES=1`, llavero cerrado). Nunca leas el llavero, `~/.ssh` ni `.env`, ni rodees esa barrera: lo que necesita una llave va simulado (plan B) y se apunta.
+- Nunca cambies los ficheros que juzgan (`puerta.sh`, `contrato*.py`, `vectores_permisos.py`, `caidas.sh`, `seguridad_http.py`, `rendimiento.py`, `servicios.sh`, `comparar.mjs`, `pruebas_*.py`): tienen huella guardada y por la mañana se repite todo desde cero con la versión de antes.
