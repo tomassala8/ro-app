@@ -1,0 +1,16 @@
+---
+description: Reglas de la migración a Next + Nest + Postgres (siempre activas)
+alwaysApply: true
+---
+# Migración de la app de RO · reglas que mandan
+
+- El plan es `migracion/PLAN_MAESTRO.md`. Las órdenes de cada fase, `migracion/PROMPTS_CURSOR.md`. Lo hecho y lo pendiente de esta noche, `migracion/NOTAS_NOCHE.md` (léelo al empezar cada chat y apúntalo al acabar).
+- **Nada cambia para quien usa la app**: mismas pantallas, textos, colores, rutas de API, respuestas y 403. Una diferencia es un fallo, no una mejora. No "mejores" nada que no pida el plan.
+- **Se demuestra, no se supone**: cada fase acaba en una puerta (contrato, vectores de permisos, fotos, baterías). Sin verde no se pasa de fase. No digas «hecho» sin la salida de la orden.
+- **Lo de hoy no se toca**: la app vieja (raíz del repo) sigue funcionando. Lo nuevo vive en `v2/` y `migracion/`. Los únicos cambios en la raíz son los de §7 del plan, cada uno en su commit.
+- **Datos reales nunca al repo ni al chat**: grabaciones, vectores, fotos y copias de la base van a `~/RO_MIGRACION/`. No pegues en el chat filas de clientes, correos ni teléfonos: resume.
+- **Nunca** credenciales, tokens ni claves en ficheros versionados (ni de ejemplo). Variables de entorno y `.env` (ignorado).
+- Servidores siempre en `127.0.0.1` en local, nunca en `0.0.0.0` (el 2-oct se expusieron datos por la wifi).
+- Si `migracion/inventario/CAMBIOS.md` trae algo que el plan no cubre, apúntalo en NOTAS_NOCHE.md y cúbrelo con la misma red (contrato/fotos/vectores) antes de seguir.
+- Castellano en textos, comentarios y commits. Frases cortas. Fechas absolutas (5-oct-2026).
+- Commits pequeños, uno por paso del plan. Nada de `git push --force` ni de reescribir `main`.

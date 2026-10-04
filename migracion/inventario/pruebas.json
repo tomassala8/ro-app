@@ -1,0 +1,82 @@
+[
+  {
+    "fichero": "despliegue/pruebas_noche.py",
+    "lineas": 1232,
+    "doc": "despliegue/pruebas_noche.py · la batería nocturna (3:00) en UNA orden (carril C5, punto 3.6 del estudio 23)."
+  },
+  {
+    "fichero": "despliegue/pruebas_tokens.py",
+    "lineas": 48,
+    "doc": "despliegue/pruebas_tokens.py · la caché del token de acceso (~/RO_HERRAMIENTAS/cache_tokens.py) evita refrescos de más."
+  },
+  {
+    "fichero": "fuentes_alertas/probar_alertas.py",
+    "lineas": 253,
+    "doc": "probar_alertas.py · pruebas y capturas de «Alertas del departamento» (carril N4)."
+  },
+  {
+    "fichero": "fuentes_bandeja/probar_bandeja.py",
+    "lineas": 166,
+    "doc": "Prueba de M3 Bandeja v5 con Chrome sin cabeza (Playwright): consola, desbordes, recorte por persona, distribución de"
+  },
+  {
+    "fichero": "fuentes_consejos/probar_cerebro.py",
+    "lineas": 289,
+    "doc": "fuentes_consejos/probar_cerebro.py · pruebas del CEREBRO DE DECISIONES v2 (3-oct-2026)."
+  },
+  {
+    "fichero": "fuentes_ficha/probar_a4.py",
+    "lineas": 203,
+    "doc": "fuentes_ficha/probar_a4.py · A4 (2-oct): objetivo y semáforo del lunes desde la cabecera de la ficha, de punta a punta."
+  },
+  {
+    "fichero": "fuentes_ia/probar_gasto.py",
+    "lineas": 318,
+    "doc": "fuentes_ia/probar_gasto.py · pruebas del control de gasto de la IA (ia_gasto.py) con un PROVEEDOR SIMULADO."
+  },
+  {
+    "fichero": "fuentes_ia/probar_ia.py",
+    "lineas": 459,
+    "doc": "fuentes_ia/probar_ia.py · N3 · pruebas de la IA contra servir.py en marcha."
+  },
+  {
+    "fichero": "fuentes_incidencias/probar_incidencias.py",
+    "lineas": 160,
+    "doc": "Prueba de M14 Incidencias con Chrome sin cabeza (Playwright): consola, desbordes, recorte por persona, pestañas,"
+  },
+  {
+    "fichero": "fuentes_personas/probar_m20_m22.py",
+    "lineas": 68,
+    "doc": "Prueba en Chrome sin cabeza (Playwright) de M20 Personas, M21 Decisiones y M22 Conexiones."
+  },
+  {
+    "fichero": "fuentes_produccion/probar_equipo.py",
+    "lineas": 69,
+    "doc": "Prueba de M10 Producción y M11 Horas con Chrome sin cabeza (Playwright): consola, desbordes, recorte y capturas."
+  },
+  {
+    "fichero": "fuentes_reuniones/probar_m13_m15.py",
+    "lineas": 95,
+    "doc": "Prueba de M13 Informes mensuales y M15 Reuniones con Chrome sin cabeza (Playwright): consola, desbordes,"
+  },
+  {
+    "fichero": "pruebas_coherencia.py",
+    "lineas": 1258,
+    "doc": "pruebas_coherencia.py · UNA SOLA VERDAD: ¿cuenta cada pantalla lo mismo que la verdad única? (E0 ronda 5)"
+  },
+  {
+    "fichero": "pruebas_diseno.py",
+    "lineas": 135,
+    "doc": "pruebas_diseno.py · vigila la guía de estilo de la auditoría 30 (E0 ronda 9). HOY SOLO INFORMA: no falla."
+  },
+  {
+    "fichero": "pruebas_e0.py",
+    "lineas": 220,
+    "doc": "pruebas_e0.py · pruebas de aceptación de E0 contra servir.py ya arrancado (solo lectura: no escribe nada)."
+  },
+  {
+    "fichero": "pruebas_seguridad.py",
+    "lineas": 2032,
+    "doc": "pruebas_seguridad.py · reproduce cada hallazgo de 27_AUDITORIA_SEGURIDAD.md y comprueba que está cerrado (E0 ronda 6)."
+  }
+]

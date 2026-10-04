@@ -1,0 +1,1989 @@
+[
+  {
+    "fichero": "modulos/_bitacora.js",
+    "lineas": 39,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "fechas",
+      "hoy",
+      "nombre"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_deshacer.js",
+    "lineas": 133,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_gbp_bloques.js",
+    "lineas": 213,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datosModulo",
+      "persona",
+      "puestos",
+      "rastro",
+      "soloLectura",
+      "ver"
+    ],
+    "api_rutas": [
+      "gbp/borrador",
+      "gbp/responder"
+    ],
+    "datos_modulo": [
+      "gbp/gbp"
+    ],
+    "acciones_tipo": [
+      "gbp_responder"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_ir.js",
+    "lineas": 61,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_legible.js",
+    "lineas": 71,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./indice.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_modular.js",
+    "lineas": 258,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "clientesVisibles",
+      "datosModulo",
+      "nombre",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "ver"
+    ],
+    "api_rutas": [
+      "acciones",
+      "modular/acceso"
+    ],
+    "datos_modulo": [
+      "modular/tablero",
+      "modular/webs"
+    ],
+    "acciones_tipo": [
+      "aviso_account",
+      "modular_acceso",
+      "tarea",
+      "web_revisado"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_plegar_consejo.js",
+    "lineas": 40,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_telefono.js",
+    "lineas": 109,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_telefono.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_trabajo.js",
+    "lineas": 120,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_trabajo_ancho.js",
+    "lineas": 40,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_ventas_comun.js",
+    "lineas": 261,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "datosModulo",
+      "nombre",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "verDato"
+    ],
+    "api_rutas": [
+      "acciones",
+      "rastro"
+    ],
+    "datos_modulo": [
+      "ventas_ro/${nombre}"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/agenda.js",
+    "lineas": 563,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_plegar_consejo.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "nivel",
+      "nombre",
+      "persona",
+      "titulo",
+      "verDato",
+      "verdad"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "agenda/agenda"
+    ],
+    "acciones_tipo": [
+      "parcial"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ajustes.js",
+    "lineas": 866,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../ayudas.js",
+      "../componentes.js",
+      "../permisos.js",
+      "./_ir.js",
+      "./ajustes_conexiones.js",
+      "./personas_comun.js",
+      "./primera_semana.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "datos",
+      "fechas",
+      "hoy",
+      "nivel",
+      "nombre",
+      "params",
+      "real",
+      "servidor",
+      "soloLectura",
+      "ver"
+    ],
+    "api_rutas": [
+      "ajustes",
+      "ajustes/persona",
+      "altas",
+      "altas/alta",
+      "altas/baja",
+      "altas/cambio",
+      "altas/comprobar",
+      "altas/guia",
+      "altas/repartir",
+      "altas/tarea_hecha",
+      "avisos",
+      "avisos/visto",
+      "opiniones",
+      "opiniones/estado",
+      "recarga"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "asignacion",
+      "info",
+      "marcar",
+      "nota",
+      "para_tomas",
+      "persona",
+      "ver_como"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ajustes_avisos.js",
+    "lineas": 236,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "nombre",
+      "params",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "avisos_programados",
+      "avisos_programados/cambiar",
+      "avisos_programados/ejecutar",
+      "avisos_programados/hecho",
+      "avisos_programados/vista_previa"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "info",
+      "parcial"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ajustes_conexiones.js",
+    "lineas": 347,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_ir.js",
+      "./personas_comun.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datosModulo",
+      "nombre",
+      "params",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "vigia",
+      "vigia/probar"
+    ],
+    "datos_modulo": [
+      "ajustes/conexiones",
+      "conexiones/salud"
+    ],
+    "acciones_tipo": [
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/alertas.js",
+    "lineas": 732,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "clientes",
+      "datos",
+      "datosModulo",
+      "nombre",
+      "persona",
+      "rastro",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "alertas/p_${ctx.persona.id}"
+    ],
+    "acciones_tipo": [
+      "alerta_lote",
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/asistente_ia.js",
+    "lineas": 178,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./ia_componentes.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "params",
+      "servidor",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/bandeja.js",
+    "lineas": 1331,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_plegar_consejo.js",
+      "./ia_componentes.js",
+      "./indice.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "indicador",
+      "nivel",
+      "nombre",
+      "params",
+      "persona",
+      "rastro",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones",
+      "cliente/${cid}",
+      "envios"
+    ],
+    "datos_modulo": [
+      "bandeja/bandeja",
+      "bandeja/hilos",
+      "finanzas/impagos_clientes"
+    ],
+    "acciones_tipo": [
+      "asignar",
+      "cerrar",
+      "correo",
+      "info",
+      "llamada",
+      "responder_cliente"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/captacion.js",
+    "lineas": 1420,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js",
+      "./ajustes_conexiones.js",
+      "./ficha.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraIds",
+      "carteraPorSilla",
+      "clientes",
+      "datosModulo",
+      "fechas",
+      "hoy",
+      "indicador",
+      "indicadores",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "periodo",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones",
+      "cliente/${c.cliente_id}"
+    ],
+    "datos_modulo": [
+      "captacion/captacion",
+      "verdad/clientes"
+    ],
+    "acciones_tipo": [
+      "auditoria_semanal",
+      "aviso",
+      "bitacora_cuenta",
+      "info",
+      "inversion",
+      "motivo",
+      "quincenal_hecha",
+      "tarea"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/catalogo.js",
+    "lineas": 258,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "navegar",
+      "rastro",
+      "soloLectura"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "info",
+      "total"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/chat_equipo.js",
+    "lineas": 948,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "datosModulo",
+      "nombre",
+      "params",
+      "persona",
+      "rastro",
+      "servidor",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "canales",
+      "canales/buscar",
+      "canales/canal",
+      "canales/clickup",
+      "canales/estado",
+      "canales/grupo",
+      "canales/leido",
+      "canales/mensaje",
+      "canales/miembro",
+      "canales/preferencias"
+    ],
+    "datos_modulo": [
+      "chat_equipo/p_${pid}"
+    ],
+    "acciones_tipo": [
+      "app",
+      "cu",
+      "info",
+      "mensaje"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/crm.js",
+    "lineas": 780,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js",
+      "./ficha.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraIds",
+      "clientes",
+      "datosModulo",
+      "indicador",
+      "indicadores",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "ver",
+      "verDato",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "crm/crm"
+    ],
+    "acciones_tipo": [
+      "aviso_integracion",
+      "casilla_montaje",
+      "comparar_personas",
+      "escalar",
+      "info",
+      "lead",
+      "marcar_cita",
+      "mover_oportunidad",
+      "nota",
+      "proponer_reasignacion",
+      "reprogramar_cita",
+      "tarea"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/decisiones.js",
+    "lineas": 420,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_ir.js",
+      "./_legible.js",
+      "./_trabajo.js",
+      "./personas_comun.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "datos",
+      "datosModulo",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "decisiones",
+      "rastro"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "alta",
+      "baja",
+      "info",
+      "parcial"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/dinero_cliente.js",
+    "lineas": 418,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./dinero_comun.js",
+      "./dinero_v4.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "datosModulo",
+      "navegar",
+      "nivel",
+      "periodo",
+      "persona",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "finanzas/finanzas"
+    ],
+    "acciones_tipo": [
+      "info",
+      "revisar_oferta"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/dinero_comun.js",
+    "lineas": 159,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "datosModulo",
+      "periodo",
+      "soloLectura"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/dinero_m16_anuncios.js",
+    "lineas": 86,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./dinero_comun.js"
+    ],
+    "ctx_usa": [
+      "nivel"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/dinero_v4.js",
+    "lineas": 147,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "datosModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/en_rojo.js",
+    "lineas": 391,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [
+      "ambito",
+      "carteraIds",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "navegar",
+      "nombre",
+      "params",
+      "persona",
+      "rastro",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "verdad",
+      "verdadComun"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "en_rojo/atajos"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/envios.js",
+    "lineas": 390,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_ir.js",
+      "./personas_comun.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "params",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "envios",
+      "envios/reintentar",
+      "sincronia",
+      "sincronia/${ruta}"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ficha.js",
+    "lineas": 1576,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_bitacora.js",
+      "./_deshacer.js",
+      "./_gbp_bloques.js",
+      "./_legible.js",
+      "./_modular.js",
+      "./_plegar_consejo.js",
+      "./ficha_equipo.js",
+      "./ia_componentes.js",
+      "./objetivos_comun.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "alCambiarPeriodo",
+      "ambito",
+      "api",
+      "carteraPorSilla",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "periodo",
+      "persona",
+      "rastro",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "ver",
+      "verDato",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones",
+      "cliente/${id}",
+      "cliente/<id>",
+      "rastro"
+    ],
+    "datos_modulo": [
+      "ficha/basica",
+      "ficha/portal"
+    ],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "cobros",
+      "crear_reunion",
+      "horas_cliente",
+      "info",
+      "inversion",
+      "mensaje_chat",
+      "number",
+      "pedir_movil",
+      "responder_cliente"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ficha_equipo.js",
+    "lineas": 365,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "datos",
+      "datosModulo",
+      "fechas",
+      "hoy",
+      "nombre",
+      "persona",
+      "rastro",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "acciones",
+      "canales/mensaje"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "acta",
+      "marcar",
+      "tarea"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/finanzas.js",
+    "lineas": 984,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_ir.js",
+      "./dinero_comun.js",
+      "./dinero_v4.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "hoy",
+      "nombre",
+      "params",
+      "periodo",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "alta_facturacion",
+      "aviso_impago_account",
+      "cobro_reclamado",
+      "coste_equipo_mes",
+      "cuadre_decision",
+      "date",
+      "impago_estado",
+      "info",
+      "number",
+      "plan_de_cobro",
+      "recordatorio_impago",
+      "revisar_rebajas",
+      "revisar_rebajas_deshecho",
+      "total"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/gasto_ia.js",
+    "lineas": 197,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./personas_comun.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "titulo"
+    ],
+    "api_rutas": [
+      "ia/gasto",
+      "ia/gasto/reabrir",
+      "ia/gasto/topes"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/horas.js",
+    "lineas": 385,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./produccion_comun.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "datos",
+      "datosModulo",
+      "indicador",
+      "nombre",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "ver",
+      "zona"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "horas/horas"
+    ],
+    "acciones_tipo": [
+      "comparar_personas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ia_componentes.js",
+    "lineas": 473,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_legible.js",
+      "./ia_componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "carteraIds",
+      "ia",
+      "nivel",
+      "nombre",
+      "persona",
+      "rastro",
+      "soloLectura",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "ia/borrador",
+      "ia/copiloto",
+      "ia/estado",
+      "ia/lista"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "avisar"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/incidencias.js",
+    "lineas": 1148,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_legible.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "ambito",
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "navegar",
+      "nivel",
+      "params",
+      "persona",
+      "rastro",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "acciones",
+      "rastro"
+    ],
+    "datos_modulo": [
+      "alertas/p_${ctx.persona.id}",
+      "bandeja/bandeja",
+      "incidencias/incidencias"
+    ],
+    "acciones_tipo": [
+      "causa",
+      "decidir_incongruencia",
+      "info",
+      "no_aplica",
+      "quitar_acceso",
+      "revision_zadarma",
+      "traspaso",
+      "traspaso_revisado"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/indicadores.js",
+    "lineas": 95,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./indice.js"
+    ],
+    "ctx_usa": [
+      "indicador",
+      "indicadores",
+      "titulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/indice.js",
+    "lineas": 175,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [],
+    "ctx_usa": [
+      "datosModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/informe.js",
+    "lineas": 1201,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_plegar_consejo.js",
+      "./_trabajo.js",
+      "./informe_revisar.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraIds",
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "periodo",
+      "persona",
+      "rastro",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "informe/c_${pid}/${encodeURIComponent(cid)}",
+      "informe/comun",
+      "informe/i_${pid}",
+      "informe/p_${pid}",
+      "informe/p_<periodo>",
+      "informe/paridad"
+    ],
+    "acciones_tipo": [
+      "a_cero",
+      "analisis_mes",
+      "caida",
+      "datos_leads",
+      "info",
+      "inversion",
+      "no_cuadra",
+      "otro_mes",
+      "paridad_comprobada",
+      "responder_cliente",
+      "rota",
+      "viejo"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/informe_revisar.js",
+    "lineas": 193,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./informe.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "datosModulo",
+      "nombre",
+      "rastro",
+      "real",
+      "servidor",
+      "soloLectura",
+      "ver"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "informe/comun"
+    ],
+    "acciones_tipo": [
+      "analisis_mes",
+      "correo",
+      "inversion",
+      "marcar",
+      "pdf"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/informes_mensuales.js",
+    "lineas": 523,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_plegar_consejo.js",
+      "./informe_revisar.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "alCambiarPeriodo",
+      "api",
+      "clientes",
+      "datosModulo",
+      "hoy",
+      "navegar",
+      "nivel",
+      "nombre",
+      "periodo",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "informes/informes"
+    ],
+    "acciones_tipo": [
+      "aviso_mili",
+      "enviado_otra_via",
+      "url"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/mi_dia.js",
+    "lineas": 1017,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./ia_componentes.js",
+      "./indice.js",
+      "./mi_dia_bloques.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraPorSilla",
+      "celebraciones",
+      "clientes",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "indicador",
+      "indicadores",
+      "navegar",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones",
+      "avisos",
+      "canales/campana",
+      "modulo/prioridades/p_${encodeURIComponent(ctx.persona.id)}"
+    ],
+    "datos_modulo": [
+      "alertas/p_${ctx.persona.id}",
+      "mi_dia/config",
+      "primera_semana/guias"
+    ],
+    "acciones_tipo": [
+      "alerta",
+      "aviso",
+      "bloque",
+      "correo",
+      "decision",
+      "mencion",
+      "persona",
+      "recargar",
+      "revision",
+      "ronda"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/mi_dia_bloques.js",
+    "lineas": 2311,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./produccion_comun.js"
+    ],
+    "ctx_usa": [
+      "carteraIds",
+      "carteraPorSilla",
+      "clientes",
+      "clientesVisibles",
+      "cuotaEmpresa",
+      "datos",
+      "datosModulo",
+      "nombre",
+      "persona",
+      "servidor",
+      "veModulo",
+      "verdad"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/mi_perfil.js",
+    "lineas": 239,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "fechasDe",
+      "nombre",
+      "params",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "zona"
+    ],
+    "api_rutas": [
+      "perfil${pid ",
+      "perfil/zona"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/nuevos.js",
+    "lineas": 1105,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_plegar_consejo.js",
+      "./objetivos_comun.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraIds",
+      "clientes",
+      "datosModulo",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "persona",
+      "real",
+      "soloLectura",
+      "titulo",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "nuevos/nuevos"
+    ],
+    "acciones_tipo": [
+      "barras",
+      "casilla",
+      "crear_lista_onboarding",
+      "date",
+      "escalar",
+      "estado_alta",
+      "fechas_dn",
+      "info",
+      "number",
+      "objetivo_alta",
+      "pedir_accesos"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/objetivos_comun.js",
+    "lineas": 125,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../permisos.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "datosModulo",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "objetivos/objetivos"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/outreach.js",
+    "lineas": 309,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js",
+      "./_ventas_comun.js"
+    ],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientes",
+      "datos",
+      "fechas",
+      "hoy",
+      "nivel",
+      "nombre",
+      "persona",
+      "soloLectura",
+      "titulo",
+      "verDato",
+      "verdadComun"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "date",
+      "info",
+      "number"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/panel_direccion.js",
+    "lineas": 1222,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./dinero_v4.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "alIr",
+      "anio",
+      "corr",
+      "datos",
+      "datosModulo",
+      "guarda",
+      "hoy",
+      "mb",
+      "persona",
+      "primeroAvisos",
+      "quitarLectura",
+      "rastro",
+      "real",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "verDato"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "finanzas/direccion",
+      "finanzas/finanzas",
+      "panel_direccion/${nombre}"
+    ],
+    "acciones_tipo": [
+      "info",
+      "revisar_rebajas",
+      "total"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/panel_direccion_estilo.js",
+    "lineas": 6,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/paneles.js",
+    "lineas": 761,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [
+      "alCambiarPeriodo",
+      "carteraIds",
+      "clientesVisibles",
+      "datosModulo",
+      "navegar",
+      "params",
+      "periodo",
+      "persona",
+      "titulo",
+      "veModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "paneles/${herr}/${cli.id}",
+      "paneles/empresa/${cual === ",
+      "paneles/indice"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/personas.js",
+    "lineas": 671,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./_deshacer.js",
+      "./_ir.js",
+      "./_trabajo.js",
+      "./mi_perfil.js",
+      "./personas_comun.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "celebraciones",
+      "datos",
+      "datosModulo",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "verDato"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "captacion/captacion",
+      "personas_m20/contratacion",
+      "personas_m20/equipo",
+      "verdad/clientes",
+      "verdad/equipo"
+    ],
+    "acciones_tipo": [
+      "info",
+      "parcial"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/personas_comun.js",
+    "lineas": 131,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "servidor"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/primera_semana.js",
+    "lineas": 265,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_legible.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraIds",
+      "clientes",
+      "datos",
+      "datosModulo",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "acciones",
+      "opiniones",
+      "rastro"
+    ],
+    "datos_modulo": [
+      "primera_semana/guias"
+    ],
+    "acciones_tipo": [
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/produccion.js",
+    "lineas": 757,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./_deshacer.js",
+      "./_ir.js",
+      "./_trabajo_ancho.js",
+      "./produccion_comun.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraPorSilla",
+      "clientes",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "indicador",
+      "indicadores",
+      "navegar",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "ver",
+      "verdad"
+    ],
+    "api_rutas": [
+      "acciones",
+      "canales/canal"
+    ],
+    "datos_modulo": [
+      "produccion/marca",
+      "produccion/marca/p_${yo}",
+      "produccion/produccion"
+    ],
+    "acciones_tipo": [
+      "comentario",
+      "comparar_personas",
+      "horas_cliente",
+      "info",
+      "mover_estado",
+      "pieza_aprobar",
+      "pieza_pedir_cambios"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/produccion_comun.js",
+    "lineas": 279,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "datos"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/rastro.js",
+    "lineas": 52,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "servidor"
+    ],
+    "api_rutas": [
+      "rastro"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "info"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/redes.js",
+    "lineas": 412,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "carteraPorSilla",
+      "clientes",
+      "datosModulo",
+      "hoy",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "redes/redes"
+    ],
+    "acciones_tipo": [
+      "fallida",
+      "hueco",
+      "hueco_lo_cubro",
+      "info",
+      "mover",
+      "programar"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/reuniones.js",
+    "lineas": 571,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "../permisos.js",
+      "./_ir.js",
+      "./_plegar_consejo.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "alCambiarPeriodo",
+      "api",
+      "clientes",
+      "datosModulo",
+      "hoy",
+      "navegar",
+      "nivel",
+      "nombre",
+      "params",
+      "periodo",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [
+      "reuniones/reuniones"
+    ],
+    "acciones_tipo": [
+      "acta",
+      "clasificar_reunion",
+      "correo",
+      "file",
+      "info",
+      "url"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/seo.js",
+    "lineas": 755,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_gbp_bloques.js",
+      "./_ir.js",
+      "./_modular.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "carteraIds",
+      "clientes",
+      "datosModulo",
+      "navegar",
+      "nombre",
+      "params",
+      "persona",
+      "rastro",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "modular/webs",
+      "seo/seo",
+      "seo/webs"
+    ],
+    "acciones_tipo": [
+      "aviso_account",
+      "caida_lo_tengo",
+      "comprobar_posiciones",
+      "medir_velocidad",
+      "tarea"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/setters.js",
+    "lineas": 415,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_trabajo_ancho.js",
+      "./_ventas_comun.js"
+    ],
+    "ctx_usa": [
+      "nivel",
+      "nombre",
+      "persona",
+      "soloLectura",
+      "titulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cita",
+      "comparar_personas",
+      "lead",
+      "number",
+      "pasada",
+      "textarea"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/ventas_ro.js",
+    "lineas": 457,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js",
+      "./_trabajo.js",
+      "./_ventas_comun.js",
+      "./dinero_m16_anuncios.js",
+      "./dinero_v4.js"
+    ],
+    "ctx_usa": [
+      "hoy",
+      "nivel",
+      "periodo",
+      "soloLectura",
+      "titulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "contrato",
+      "info",
+      "propuesta",
+      "reunion"
+    ],
+    "usa_localStorage": false
+  }
+]

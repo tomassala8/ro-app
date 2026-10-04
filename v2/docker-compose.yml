@@ -1,0 +1,41 @@
+# v2/docker-compose.yml · entorno local de la app nueva.
+#   docker compose up -d postgres                 → solo la base (lo normal para desarrollar con «pnpm dev»)
+#   docker compose --profile completo up --build  → base + API (Nest) + web (Next), como en la nube
+# Contexto de construcción: la RAÍZ del repo (la web copia el front de hoy para el puente; la API lee reglas_permisos.json).
+name: ro-v2
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ro_app
+      POSTGRES_USER: ro
+      POSTGRES_PASSWORD: ${RO_PG_CLAVE:-ro}
+    ports: ["127.0.0.1:5432:5432"]          # solo este Mac, nunca la wifi
+    volumes: ["pg:/var/lib/postgresql/data"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U ro -d ro_app"], interval: 5s, retries: 20 }
+
+  api:
+    profiles: ["completo"]
+    build: { context: .., dockerfile: v2/apps/api/Dockerfile }
+    environment:
+      DATABASE_URL: postgresql://ro:${RO_PG_CLAVE:-ro}@postgres:5432/ro_app
+      HOST: 0.0.0.0
+      PORT: "4000"
+      RO_IDENTIDAD: ${RO_IDENTIDAD:-local}
+    depends_on: { postgres: { condition: service_healthy } }
+    expose: ["4000"]
+
+  web:
+    profiles: ["completo"]
+    build: { context: .., dockerfile: v2/apps/web/Dockerfile }
+    environment:
+      RO_API_URL: http://api:4000
+      HOSTNAME: 0.0.0.0
+      PORT: "3000"
+    depends_on: [api]
+    ports: ["127.0.0.1:3000:3000"]
+
+volumes:
+  pg: {}

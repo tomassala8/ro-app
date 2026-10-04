@@ -1,0 +1,224 @@
+[
+  {
+    "metodo": "GET",
+    "ruta": "/api/elegir",
+    "linea": 2072,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/",
+    "linea": 2076,
+    "prefijo": true
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/vivo",
+    "linea": 2077,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/modulo/",
+    "linea": 2185,
+    "prefijo": true
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/cliente/",
+    "linea": 2185,
+    "prefijo": true
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/buscar",
+    "linea": 2185,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/sesion",
+    "linea": 2196,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/indicadores",
+    "linea": 2237,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/ajustes",
+    "linea": 2258,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/rastro",
+    "linea": 2280,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/acciones",
+    "linea": 2291,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/recarga",
+    "linea": 2321,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/avisos",
+    "linea": 2330,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/decisiones",
+    "linea": 2338,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/buscar/indice",
+    "linea": 2342,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/contadores",
+    "linea": 2361,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/perfil",
+    "linea": 2375,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/preferencias",
+    "linea": 2381,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/opiniones",
+    "linea": 2387,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/opiniones/captura",
+    "linea": 2387,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/respuestas_mili",
+    "linea": 2407,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/rastro/verificar",
+    "linea": 2463,
+    "prefijo": false
+  },
+  {
+    "metodo": "GET",
+    "ruta": "/api/salud",
+    "linea": 2478,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/ver_dato",
+    "linea": 2514,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/rastro",
+    "linea": 2517,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/acciones",
+    "linea": 2548,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/decisiones",
+    "linea": 2710,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/recarga",
+    "linea": 2713,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/perfil/zona",
+    "linea": 2736,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/preferencias",
+    "linea": 2741,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/opinion",
+    "linea": 2761,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/opiniones/estado",
+    "linea": 2792,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/avisos/visto",
+    "linea": 2805,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/ajustes/",
+    "linea": 2813,
+    "prefijo": true
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/ajustes/persona",
+    "linea": 2867,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/ajustes/asignacion",
+    "linea": 2920,
+    "prefijo": false
+  },
+  {
+    "metodo": "POST",
+    "ruta": "/api/ajustes/confirmar",
+    "linea": 2941,
+    "prefijo": false
+  }
+]

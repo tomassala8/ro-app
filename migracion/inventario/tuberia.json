@@ -1,0 +1,462 @@
+{
+  "pasos": [
+    {
+      "id": "salud_conexiones",
+      "depende": []
+    },
+    {
+      "id": "lector_externos",
+      "depende": []
+    },
+    {
+      "id": "lector_snov",
+      "depende": [
+        "lector_externos"
+      ]
+    },
+    {
+      "id": "lector_captacion",
+      "depende": [
+        "lector_externos",
+        "lector_snov"
+      ]
+    },
+    {
+      "id": "lector_chat_clickup",
+      "depende": []
+    },
+    {
+      "id": "lector_clickup_equipo",
+      "depende": []
+    },
+    {
+      "id": "lector_anuncios_meta",
+      "depende": []
+    },
+    {
+      "id": "lector_hoja_informes",
+      "depende": []
+    },
+    {
+      "id": "panel_v29",
+      "depende": []
+    },
+    {
+      "id": "whatsapp",
+      "depende": []
+    },
+    {
+      "id": "base",
+      "depende": [
+        "whatsapp",
+        "lector_captacion"
+      ]
+    },
+    {
+      "id": "capa_e1",
+      "depende": [
+        "base",
+        "lector_externos",
+        "lector_snov",
+        "lector_captacion"
+      ]
+    },
+    {
+      "id": "bandeja",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "informes",
+      "depende": [
+        "capa_e1",
+        "lector_hoja_informes"
+      ]
+    },
+    {
+      "id": "captacion",
+      "depende": [
+        "capa_e1",
+        "lector_anuncios_meta"
+      ]
+    },
+    {
+      "id": "ficha",
+      "depende": [
+        "capa_e1",
+        "lector_chat_clickup"
+      ]
+    },
+    {
+      "id": "nuevos",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "crm",
+      "depende": [
+        "capa_e1",
+        "lector_captacion"
+      ]
+    },
+    {
+      "id": "seo",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "redes",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "reuniones",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "incidencias",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "produccion",
+      "depende": [
+        "capa_e1",
+        "lector_clickup_equipo"
+      ]
+    },
+    {
+      "id": "horas",
+      "depende": [
+        "produccion"
+      ]
+    },
+    {
+      "id": "personas",
+      "depende": [
+        "base",
+        "horas"
+      ]
+    },
+    {
+      "id": "decisiones",
+      "depende": [
+        "personas"
+      ]
+    },
+    {
+      "id": "conexiones",
+      "depende": [
+        "capa_e1",
+        "salud_conexiones"
+      ]
+    },
+    {
+      "id": "verificar_envios",
+      "depende": [
+        "salud_conexiones",
+        "bandeja"
+      ]
+    },
+    {
+      "id": "reconciliar_clickup",
+      "depende": [
+        "verificar_envios",
+        "produccion"
+      ]
+    },
+    {
+      "id": "copia_seguridad",
+      "depende": []
+    },
+    {
+      "id": "ventas",
+      "depende": [
+        "base"
+      ]
+    },
+    {
+      "id": "informe",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "agenda",
+      "depende": [
+        "base"
+      ]
+    },
+    {
+      "id": "chat_equipo",
+      "depende": [
+        "base"
+      ]
+    },
+    {
+      "id": "dinero",
+      "depende": [
+        "capa_e1",
+        "panel_v29"
+      ]
+    },
+    {
+      "id": "sueldos",
+      "depende": [
+        "base"
+      ]
+    },
+    {
+      "id": "paneles",
+      "depende": [
+        "capa_e1"
+      ]
+    },
+    {
+      "id": "modular",
+      "depende": []
+    },
+    {
+      "id": "hostinger",
+      "depende": []
+    },
+    {
+      "id": "gbp",
+      "depende": []
+    },
+    {
+      "id": "panel_direccion",
+      "depende": [
+        "panel_v29"
+      ]
+    },
+    {
+      "id": "atajos",
+      "depende": [
+        "ficha",
+        "crm",
+        "seo",
+        "redes",
+        "captacion",
+        "nuevos"
+      ]
+    },
+    {
+      "id": "verdad",
+      "depende": [
+        "agenda",
+        "atajos",
+        "bandeja",
+        "base",
+        "capa_e1",
+        "captacion",
+        "chat_equipo",
+        "conexiones",
+        "crm",
+        "decisiones",
+        "dinero",
+        "ficha",
+        "horas",
+        "hostinger",
+        "gbp",
+        "incidencias",
+        "informe",
+        "informes",
+        "modular",
+        "nuevos",
+        "panel_direccion",
+        "paneles",
+        "personas",
+        "produccion",
+        "redes",
+        "reuniones",
+        "seo",
+        "sueldos",
+        "ventas",
+        "whatsapp"
+      ]
+    },
+    {
+      "id": "catalogo",
+      "depende": []
+    },
+    {
+      "id": "emergencia",
+      "depende": [
+        "base",
+        "ficha",
+        "crm",
+        "seo",
+        "redes"
+      ]
+    },
+    {
+      "id": "foto",
+      "depende": [
+        "verdad",
+        "catalogo"
+      ]
+    },
+    {
+      "id": "primera_semana"
+    },
+    {
+      "id": "alertas",
+      "depende": [
+        "verdad"
+      ]
+    },
+    {
+      "id": "consejos",
+      "depende": [
+        "alertas",
+        "verdad"
+      ]
+    },
+    {
+      "id": "mi_dia",
+      "depende": [
+        "verdad",
+        "alertas",
+        "foto"
+      ]
+    }
+  ],
+  "generadores": [
+    "fuentes_agenda/generar_agenda.py",
+    "fuentes_ajustes/generar_conexiones.py",
+    "fuentes_alertas/capturar_a2a8.py",
+    "fuentes_alertas/generar_alertas.py",
+    "fuentes_alertas/guardia_alertas.py",
+    "fuentes_alertas/probar_alertas.py",
+    "fuentes_bandeja/generar_bandeja.py",
+    "fuentes_bandeja/generar_hilos.py",
+    "fuentes_bandeja/medir_bandeja.py",
+    "fuentes_bandeja/probar_bandeja.py",
+    "fuentes_captacion/anuncios_meta.py",
+    "fuentes_captacion/generar_captacion.py",
+    "fuentes_captacion/ghl_totales.py",
+    "fuentes_chat_equipo/generar_chat_equipo.py",
+    "fuentes_chat_equipo/partir_chat.py",
+    "fuentes_chat_equipo/tapado.py",
+    "fuentes_consejos/capturar_cerebro.py",
+    "fuentes_consejos/capturar_consejos.py",
+    "fuentes_consejos/cd_aprendizaje.py",
+    "fuentes_consejos/cd_diagnostico.py",
+    "fuentes_consejos/cd_prioridad.py",
+    "fuentes_consejos/cd_prudencia.py",
+    "fuentes_consejos/cerebro_decisiones.py",
+    "fuentes_consejos/generar_consejos.py",
+    "fuentes_consejos/motor_consejos.py",
+    "fuentes_consejos/probar_cerebro.py",
+    "fuentes_crm/generar_crm.py",
+    "fuentes_decisiones/generar_decisiones.py",
+    "fuentes_dinero/generar_cohortes.py",
+    "fuentes_dinero/generar_cuadre.py",
+    "fuentes_dinero/generar_dinero.py",
+    "fuentes_en_rojo/generar_atajos.py",
+    "fuentes_equipo/generar_equipo.py",
+    "fuentes_equipo/generar_primera_semana.py",
+    "fuentes_ficha/agenda_md.py",
+    "fuentes_ficha/generar_ficha.py",
+    "fuentes_ficha/personas_cliente.py",
+    "fuentes_ficha/probar_a4.py",
+    "fuentes_ficha/roles_contactos.py",
+    "fuentes_gbp/generar_gbp.py",
+    "fuentes_gbp/servidor_gbp.py",
+    "fuentes_horas/generar_horas.py",
+    "fuentes_hostinger/generar_hostinger.py",
+    "fuentes_ia/capturar_ia.py",
+    "fuentes_ia/extraer_hilos.py",
+    "fuentes_ia/lote_nocturno.py",
+    "fuentes_ia/precalcular.py",
+    "fuentes_ia/probar_gasto.py",
+    "fuentes_ia/probar_ia.py",
+    "fuentes_incidencias/generar_incidencias.py",
+    "fuentes_incidencias/probar_incidencias.py",
+    "fuentes_informe/generar_informe.py",
+    "fuentes_informe/partir_informe.py",
+    "fuentes_informes/generar_informes.py",
+    "fuentes_informes/importar_hoja_w5.py",
+    "fuentes_mi_dia/capturar_mi_dia.py",
+    "fuentes_mi_dia/generar_mi_dia.py",
+    "fuentes_mi_dia/medir_lo_mio.py",
+    "fuentes_mi_dia/resumen_mi_dia.py",
+    "fuentes_modular/acceso.py",
+    "fuentes_modular/capturar_modular.py",
+    "fuentes_modular/generar_modular.py",
+    "fuentes_nuevos/generar_nuevos.py",
+    "fuentes_objetivos/objetivos.py",
+    "fuentes_panel_direccion/generar_panel_direccion.py",
+    "fuentes_paneles/capturar_paneles.py",
+    "fuentes_paneles/generar_paneles.py",
+    "fuentes_paneles/periodos.py",
+    "fuentes_personas/comun.py",
+    "fuentes_personas/generar_personas.py",
+    "fuentes_personas/probar_m20_m22.py",
+    "fuentes_produccion/comun_equipo.py",
+    "fuentes_produccion/extraer_clickup.py",
+    "fuentes_produccion/generar_marca.py",
+    "fuentes_produccion/generar_produccion.py",
+    "fuentes_produccion/probar_equipo.py",
+    "fuentes_redes/generar_redes.py",
+    "fuentes_reuniones/generar_reuniones.py",
+    "fuentes_reuniones/probar_m13_m15.py",
+    "fuentes_seo/generar_seo.py",
+    "fuentes_seo/sr_condensar.py",
+    "fuentes_sueldos/generar_sueldos.py",
+    "fuentes_ventas/campana_cliente.py",
+    "fuentes_ventas/generar_ventas_ro.py",
+    "fuentes_verdad/generar_verdad.py",
+    "fuentes_whatsapp/generar_whatsapp.py"
+  ],
+  "fuera_del_repo_RO_HERRAMIENTAS": [
+    "captacion/captacion.py",
+    "clickup_api",
+    "clickup_api/chat.py",
+    "clickup_api/cu.py",
+    "externos.py",
+    "ghl_agencia",
+    "ghl_agencia/app.py",
+    "google",
+    "google/gbp.py",
+    "holded",
+    "holded/hd.py",
+    "hostinger",
+    "hostinger/hg.py",
+    "hostinger/pegar.sh",
+    "hostinger/pegar.sh.",
+    "meta",
+    "metricool/mc.py",
+    "modular",
+    "modular/pegar.sh",
+    "modular/pegar.sh.",
+    "snov",
+    "snov/sv.py",
+    "zadarma/zd.py",
+    "zoho",
+    "zoho/zbookings.py",
+    "zoho/zh.py",
+    "zoom/zm.py"
+  ],
+  "tareas_python_raiz": [
+    "avisos.py",
+    "avisos_programados.py",
+    "envios.py",
+    "sincronia.py",
+    "ia.py",
+    "ia_gasto.py",
+    "altas_personas.py",
+    "foto_diaria.py",
+    "build_data.py",
+    "generar_catalogo.py",
+    "telefono.py"
+  ]
+}

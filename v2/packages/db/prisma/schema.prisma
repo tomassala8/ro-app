@@ -1,0 +1,525 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model acciones {
+  id           BigInt  @id @default(autoincrement())
+  creada       String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien        String
+  herramienta  String
+  tipo         String
+  objeto       String
+  cliente_id   String?
+  modulo       String?
+  texto        String?
+  vista_previa String?
+  estado       String  @default("simulada")
+  resultado    String?
+  detalle      String?
+
+  @@index([objeto], map: "i_acc_obj")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model altas_tareas {
+  id         BigInt  @id @default(autoincrement())
+  creada     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  para       String
+  tipo       String
+  persona_id String
+  texto      String
+  quien      String
+  estado     String  @default("pendiente")
+  hecha      String?
+  hecha_por  String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model asignaciones {
+  id                BigInt  @id @default(autoincrement())
+  cliente_id        String
+  cliente_id_portal String?
+  persona_id        String
+  silla             String
+  principal         Int     @default(1)
+  suplencia         Int     @default(0)
+  titular_id        String?
+  desde             String?
+  hasta             String?
+  fuente            String?
+  confianza         String?
+  duda              String?
+  creado            String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  creado_por        String?
+
+  @@index([cliente_id, silla, hasta], map: "i_asig_cliente")
+  @@index([persona_id, hasta], map: "i_asig_persona")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model avisos {
+  id        BigInt  @id @default(autoincrement())
+  creado    String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  dia       String
+  tipo      String
+  clave     String
+  texto     String
+  estado    String  @default("para_avisar")
+  visto     String?
+  visto_por String?
+
+  @@unique([dia, tipo, clave])
+}
+
+model avisos_prog_cambios {
+  n        BigInt  @id @default(autoincrement())
+  regla_id String
+  campo    String
+  valor    String?
+  antes    String?
+  quien    String
+  hora     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+model avisos_prog_hechos {
+  n     BigInt @id @default(autoincrement())
+  clave String
+  quien String
+  hora  String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+
+  @@index([clave], map: "avisos_prog_hechos_clave")
+}
+
+model canal_campana {
+  persona_id    String  @id
+  hasta_id      Int     @default(0)
+  resumen_visto String?
+  hora          String?
+}
+
+model canal_grupos {
+  id         String  @id
+  nombre     String
+  cliente_id String?
+  creado_por String
+  creado     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+model canal_leidos {
+  persona_id String
+  canal_id   String
+  ultimo_id  Int
+  hora       String
+
+  @@id([persona_id, canal_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model canal_mensajes {
+  id         BigInt  @id @default(autoincrement())
+  canal_id   String
+  tipo       String
+  quien      String?
+  texto      String
+  hilo_de    Int?
+  menciones  String?
+  clave      String? @unique
+  alerta_id  String?
+  cliente_id String?
+  dueno_id   String?
+  vence      String?
+  ver        String?
+  datos      String?
+  creado     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+
+  @@index([canal_id, id], map: "canal_mensajes_canal")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model canal_miembros {
+  n          BigInt @id @default(autoincrement())
+  canal_id   String
+  persona_id String
+  operacion  String
+  quien      String
+  hora       String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+model canal_preferencias {
+  persona_id   String  @id
+  silenciados  String?
+  hora_resumen String?
+  actualizado  String?
+}
+
+model canal_resumenes {
+  persona_id String
+  dia        String
+  titulo     String?
+  texto      String?
+  datos      String?
+  creado     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+
+  @@id([persona_id, dia])
+}
+
+model datos_blob {
+  sha       String @id
+  contenido Bytes?
+}
+
+model datos_fichero {
+  version Int
+  ruta    String
+  sha     String?
+
+  @@id([version, ruta])
+}
+
+model datos_version {
+  id       BigInt  @id @default(autoincrement())
+  espacio  String?
+  creada   String?
+  origen   String?
+  estado   String?
+  ficheros Int?
+  bytes    Int?
+}
+
+model decisiones {
+  id               BigInt       @id @default(autoincrement())
+  creada           String       @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien            String
+  tipo             String
+  clave            String?
+  problema         String?
+  recomendacion    String?
+  respuesta        String?
+  respondida       String?
+  respondida_por   String?
+  anula_a          BigInt?
+  titulo           String?
+  cliente_id       String?
+  datos            String?
+  decisiones       decisiones?  @relation("decisionesTodecisiones", fields: [anula_a], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_decisiones decisiones[] @relation("decisionesTodecisiones")
+}
+
+model docs {
+  coleccion String
+  id        String
+  datos     String
+  uid       String?
+  ts        String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+
+  @@id([coleccion, id])
+}
+
+model ejecuciones {
+  id      BigInt  @id @default(autoincrement())
+  modo    String?
+  quien   String?
+  inicio  String?
+  fin     String?
+  estado  String?
+  resumen String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model envio_pasos {
+  id       BigInt  @id @default(autoincrement())
+  envio_id BigInt
+  estado   String
+  evento   String
+  hora     String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien    String?
+  intento  Int     @default(0)
+  motivo   String?
+  detalle  String?
+  envios   envios  @relation(fields: [envio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([envio_id, id], map: "i_envio_pasos")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model envios {
+  id           BigInt        @id @default(autoincrement())
+  clave        String        @unique
+  accion_id    Int?          @unique
+  creado       String        @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien        String
+  canal        String
+  tipo         String
+  objeto       String
+  cliente_id   String?
+  modulo       String?
+  destinatario String
+  remitente    String?
+  asunto       String?
+  texto        String?
+  huella_texto String
+  modo         String
+  envio_pasos  envio_pasos[]
+
+  @@index([quien], map: "i_envios_quien")
+}
+
+model historial {
+  n         BigInt  @id @default(autoincrement())
+  ts        String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien     String
+  coleccion String
+  id        String
+  operacion String
+  antes     String?
+  datos     String?
+}
+
+model ia_gasto {
+  id            BigInt  @id @default(autoincrement())
+  creada        String
+  dia           String
+  mes           String
+  quien         String
+  tarea         String
+  objeto        String?
+  modelo        String?
+  llave         String
+  lote          Int     @default(0)
+  entrada       Int     @default(0)
+  cache_escrita Int     @default(0)
+  cache_leida   Int     @default(0)
+  salida        Int     @default(0)
+  coste_usd     Float   @default(0) @db.Real
+  coste_eur     Float   @default(0) @db.Real
+  ok            Int
+  motivo        String?
+  peticion      String?
+
+  @@index([mes, dia], map: "ia_gasto_mes")
+}
+
+model ia_lotes {
+  id            String  @id
+  creado        String
+  quien         String
+  tarea         String
+  llave         String
+  modelo        String?
+  n             Int
+  reservado_eur Float   @db.Real
+  estado        String
+  cerrado       String?
+  peticiones    String?
+}
+
+model ia_topes {
+  id      BigInt  @id @default(autoincrement())
+  creada  String
+  quien   String
+  valores String
+  motivo  String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model incidencias {
+  id                   BigInt  @id @default(autoincrement())
+  creada               String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien                String
+  cliente_id           String?
+  titulo               String
+  donde                String?
+  por_que              String?
+  por_que_cambiado_por String?
+  prueba_aviso         String?
+  estado               String  @default("abierta")
+  responsable_id       String?
+  cerrada              String?
+  datos                String?
+}
+
+model llaves {
+  nombre     String  @id
+  valor      String?
+  rotada     String?
+  rotaciones Int?    @default(0)
+  origen     String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model opiniones {
+  id          BigInt  @id @default(autoincrement())
+  creada      String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien       String
+  tipo        String
+  prioridad   String  @default("gris")
+  texto       String
+  esperaba    String?
+  ruta        String?
+  pantalla    String?
+  ancho       Int?
+  alto        Int?
+  frescura    String?
+  captura     String?
+  estado      String  @default("nueva")
+  estado_por  String?
+  estado_hora String?
+}
+
+model pasos {
+  id        BigInt  @id @default(autoincrement())
+  ejecucion Int?
+  paso      String?
+  intento   Int?
+  inicio    String?
+  segundos  Float?  @db.Real
+  estado    String?
+  salida    String?
+  error     String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model persona_puestos {
+  persona_id String
+  puesto     String
+  principal  Int      @default(0)
+  personas   personas @relation(fields: [persona_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([persona_id, puesto])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model personas {
+  id              String            @id
+  nombre          String
+  alias           String?
+  alias_todos     String?
+  correo          String?           @unique
+  otros_correos   String?
+  nivel           Int?
+  jefe_id         String?
+  horas_mes       Float             @default(128) @db.Real
+  imputa_horas    String?
+  estado          String            @default("activo")
+  activo          Int               @default(1)
+  nota            String?
+  actualizado     String            @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  actualizado_por String?
+  persona_puestos persona_puestos[]
+}
+
+model preferencias {
+  persona  String
+  clave    String
+  valor    String
+  cambiado String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+
+  @@id([persona, clave])
+}
+
+model rastro_cortes {
+  id      Int    @id
+  motivo  String
+  anotado String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model rastro_incidencias {
+  n       BigInt @id @default(autoincrement())
+  tipo    String
+  desde   Int
+  hasta   Int
+  motivo  String
+  anotado String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model recargas {
+  id        BigInt  @id @default(autoincrement())
+  pedida    String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien     String
+  modo      String  @default("ligera")
+  estado    String  @default("pendiente")
+  empezada  String?
+  terminada String?
+  pasos     String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model registro {
+  id             BigInt     @id @default(autoincrement())
+  creada         String     @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien          String
+  como           String?
+  coleccion      String
+  accion         String?
+  clave          String?
+  datos          String?
+  motivo         String?
+  anula_a        BigInt?
+  origen         String     @default("app")
+  registro       registro?  @relation("registroToregistro", fields: [anula_a], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_registro registro[] @relation("registroToregistro")
+
+  @@index([coleccion, clave], map: "i_reg_col")
+  @@index([quien, creada], map: "i_reg_quien")
+}
+
+model registro_huellas {
+  id     Int    @id
+  huella String
+}
+
+model sellos {
+  paso           String  @id
+  ultimo_bueno   String?
+  ultimo_intento String?
+  estado         String?
+  motivo         String?
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sinc_cambios {
+  id         BigInt       @id @default(autoincrement())
+  clave      String       @unique
+  accion_id  Int?         @unique
+  mensaje_id Int?         @unique
+  creado     String       @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien      String
+  canal      String
+  tipo       String
+  objeto     String
+  objeto_ref String
+  cliente_id String?
+  modulo     String?
+  cambio     String
+  base       String?
+  ignorado   String?
+  modo       String
+  sinc_pasos sinc_pasos[]
+
+  @@index([objeto_ref, id], map: "i_sinc_obj")
+  @@index([quien], map: "i_sinc_quien")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model sinc_pasos {
+  id           BigInt       @id @default(autoincrement())
+  cambio_id    BigInt
+  estado       String
+  evento       String
+  hora         String       @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien        String?
+  intento      Int          @default(0)
+  motivo       String?
+  detalle      String?
+  sinc_cambios sinc_cambios @relation(fields: [cambio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([cambio_id, id], map: "i_sinc_pasos")
+}

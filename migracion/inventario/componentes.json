@@ -1,0 +1,537 @@
+[
+  {
+    "nombre": "urlSegura",
+    "clase": "function",
+    "linea": 22
+  },
+  {
+    "nombre": "h",
+    "clase": "function",
+    "linea": 30
+  },
+  {
+    "nombre": "ICONOS",
+    "clase": "const",
+    "linea": 66
+  },
+  {
+    "nombre": "icono",
+    "clase": "function",
+    "linea": 157
+  },
+  {
+    "nombre": "ICONO_MODULO",
+    "clase": "const",
+    "linea": 168
+  },
+  {
+    "nombre": "ICONO_GRUPO",
+    "clase": "const",
+    "linea": 178
+  },
+  {
+    "nombre": "marcaRO",
+    "clase": "function",
+    "linea": 181
+  },
+  {
+    "nombre": "iniciales",
+    "clase": "const",
+    "linea": 190
+  },
+  {
+    "nombre": "pluralDe",
+    "clase": "function",
+    "linea": 201
+  },
+  {
+    "nombre": "singularTras1",
+    "clase": "const",
+    "linea": 229
+  },
+  {
+    "nombre": "fmt",
+    "clase": "const",
+    "linea": 230
+  },
+  {
+    "nombre": "semaforo",
+    "clase": "function",
+    "linea": 264
+  },
+  {
+    "nombre": "cuentagotas",
+    "clase": "function",
+    "linea": 276
+  },
+  {
+    "nombre": "chipEstado",
+    "clase": "function",
+    "linea": 288
+  },
+  {
+    "nombre": "selloMedible",
+    "clase": "function",
+    "linea": 298
+  },
+  {
+    "nombre": "frescura",
+    "clase": "function",
+    "linea": 304
+  },
+  {
+    "nombre": "avisoParcial",
+    "clase": "function",
+    "linea": 314
+  },
+  {
+    "nombre": "fichaIndicador",
+    "clase": "function",
+    "linea": 342
+  },
+  {
+    "nombre": "logoCliente",
+    "clase": "function",
+    "linea": 371
+  },
+  {
+    "nombre": "saludCliente",
+    "clase": "function",
+    "linea": 378
+  },
+  {
+    "nombre": "tarjetaCliente",
+    "clase": "function",
+    "linea": 387
+  },
+  {
+    "nombre": "listaLoPrimero",
+    "clase": "function",
+    "linea": 407
+  },
+  {
+    "nombre": "tablaDensa",
+    "clase": "function",
+    "linea": 436
+  },
+  {
+    "nombre": "capaFlotante",
+    "clase": "function",
+    "linea": 555
+  },
+  {
+    "nombre": "vigilarCapas",
+    "clase": "function",
+    "linea": 665
+  },
+  {
+    "nombre": "menuElegir",
+    "clase": "function",
+    "linea": 708
+  },
+  {
+    "nombre": "poner",
+    "clase": "function",
+    "linea": 741
+  },
+  {
+    "nombre": "lineaTiempo",
+    "clase": "function",
+    "linea": 749
+  },
+  {
+    "nombre": "graficoSerie",
+    "clase": "function",
+    "linea": 764
+  },
+  {
+    "nombre": "marcasRedondas",
+    "clase": "function",
+    "linea": 791
+  },
+  {
+    "nombre": "grafico",
+    "clase": "function",
+    "linea": 810
+  },
+  {
+    "nombre": "REGLAS_COLOR",
+    "clase": "const",
+    "linea": 980
+  },
+  {
+    "nombre": "colorCifra",
+    "clase": "function",
+    "linea": 992
+  },
+  {
+    "nombre": "estadoVacio",
+    "clase": "function",
+    "linea": 1014
+  },
+  {
+    "nombre": "botonConfirmar",
+    "clase": "function",
+    "linea": 1033
+  },
+  {
+    "nombre": "candado",
+    "clase": "function",
+    "linea": 1063
+  },
+  {
+    "nombre": "panel",
+    "clase": "function",
+    "linea": 1068
+  },
+  {
+    "nombre": "plegadoMovil",
+    "clase": "function",
+    "linea": 1084
+  },
+  {
+    "nombre": "plegarSecundarias",
+    "clase": "function",
+    "linea": 1102
+  },
+  {
+    "nombre": "cifraPrincipal",
+    "clase": "function",
+    "linea": 1113
+  },
+  {
+    "nombre": "vacioLinea",
+    "clase": "function",
+    "linea": 1122
+  },
+  {
+    "nombre": "fichaCatalogo",
+    "clase": "function",
+    "linea": 1174
+  },
+  {
+    "nombre": "pieFase2",
+    "clase": "function",
+    "linea": 1209
+  },
+  {
+    "nombre": "variacion",
+    "clase": "function",
+    "linea": 1228
+  },
+  {
+    "nombre": "tile",
+    "clase": "function",
+    "linea": 1245
+  },
+  {
+    "nombre": "tiles",
+    "clase": "const",
+    "linea": 1279
+  },
+  {
+    "nombre": "rejillaTarjetas",
+    "clase": "const",
+    "linea": 1283
+  },
+  {
+    "nombre": "menuMas",
+    "clase": "function",
+    "linea": 1289
+  },
+  {
+    "nombre": "campoTexto",
+    "clase": "function",
+    "linea": 1321
+  },
+  {
+    "nombre": "esqueleto",
+    "clase": "function",
+    "linea": 1330
+  },
+  {
+    "nombre": "chipsFiltro",
+    "clase": "function",
+    "linea": 1345
+  },
+  {
+    "nombre": "PERIODO_IDS",
+    "clase": "const",
+    "linea": 1395
+  },
+  {
+    "nombre": "PERIODO_TEXTO",
+    "clase": "const",
+    "linea": 1396
+  },
+  {
+    "nombre": "COMPARACIONES",
+    "clase": "const",
+    "linea": 1397
+  },
+  {
+    "nombre": "fijarHoy",
+    "clase": "function",
+    "linea": 1417
+  },
+  {
+    "nombre": "hoyMadrid",
+    "clase": "function",
+    "linea": 1418
+  },
+  {
+    "nombre": "fechasDe",
+    "clase": "function",
+    "linea": 1437
+  },
+  {
+    "nombre": "fechas",
+    "clase": "const",
+    "linea": 1503
+  },
+  {
+    "nombre": "sumarDias",
+    "clase": "const",
+    "linea": 1506
+  },
+  {
+    "nombre": "fechaCorta",
+    "clase": "const",
+    "linea": 1512
+  },
+  {
+    "nombre": "rangoPeriodo",
+    "clase": "function",
+    "linea": 1516
+  },
+  {
+    "nombre": "rangoComparacion",
+    "clase": "function",
+    "linea": 1540
+  },
+  {
+    "nombre": "periodoCompleto",
+    "clase": "function",
+    "linea": 1554
+  },
+  {
+    "nombre": "leerPeriodo",
+    "clase": "function",
+    "linea": 1561
+  },
+  {
+    "nombre": "guardarPeriodo",
+    "clase": "function",
+    "linea": 1565
+  },
+  {
+    "nombre": "sumarSerie",
+    "clase": "function",
+    "linea": 1568
+  },
+  {
+    "nombre": "serieDelPeriodo",
+    "clase": "function",
+    "linea": 1580
+  },
+  {
+    "nombre": "deltaPeriodo",
+    "clase": "function",
+    "linea": 1590
+  },
+  {
+    "nombre": "selectorPeriodo",
+    "clase": "function",
+    "linea": 1682
+  },
+  {
+    "nombre": "pestanas",
+    "clase": "function",
+    "linea": 1712
+  },
+  {
+    "nombre": "vacio",
+    "clase": "function",
+    "linea": 1785
+  },
+  {
+    "nombre": "selectorCliente",
+    "clase": "function",
+    "linea": 1806
+  },
+  {
+    "nombre": "selectorPersona",
+    "clase": "function",
+    "linea": 1879
+  },
+  {
+    "nombre": "tablaApilable",
+    "clase": "function",
+    "linea": 1901
+  },
+  {
+    "nombre": "normalizarTelefono",
+    "clase": "function",
+    "linea": 1926
+  },
+  {
+    "nombre": "avisoFlotante",
+    "clase": "function",
+    "linea": 1931
+  },
+  {
+    "nombre": "copiar",
+    "clase": "function",
+    "linea": 1940
+  },
+  {
+    "nombre": "botonesContacto",
+    "clase": "function",
+    "linea": 1957
+  },
+  {
+    "nombre": "barraEtapas",
+    "clase": "function",
+    "linea": 1986
+  },
+  {
+    "nombre": "listaConIcono",
+    "clase": "function",
+    "linea": 1993
+  },
+  {
+    "nombre": "barraProgreso",
+    "clase": "function",
+    "linea": 2008
+  },
+  {
+    "nombre": "barraApilada",
+    "clase": "function",
+    "linea": 2020
+  },
+  {
+    "nombre": "embudoBarras",
+    "clase": "function",
+    "linea": 2037
+  },
+  {
+    "nombre": "ventanas",
+    "clase": "function",
+    "linea": 2048
+  },
+  {
+    "nombre": "formatoTexto",
+    "clase": "function",
+    "linea": 2063
+  },
+  {
+    "nombre": "limpiaTexto",
+    "clase": "function",
+    "linea": 2102
+  },
+  {
+    "nombre": "configurarVista",
+    "clase": "function",
+    "linea": 2122
+  },
+  {
+    "nombre": "deDondeSale",
+    "clase": "function",
+    "linea": 2124
+  },
+  {
+    "nombre": "NOMBRE_DEPARTAMENTO",
+    "clase": "const",
+    "linea": 2131
+  },
+  {
+    "nombre": "nombreDepartamento",
+    "clase": "const",
+    "linea": 2134
+  },
+  {
+    "nombre": "quitaPrefijoDepartamento",
+    "clase": "const",
+    "linea": 2137
+  },
+  {
+    "nombre": "nombrePersona",
+    "clase": "function",
+    "linea": 2140
+  },
+  {
+    "nombre": "enlaceFuente",
+    "clase": "function",
+    "linea": 2165
+  },
+  {
+    "nombre": "minilinea",
+    "clase": "function",
+    "linea": 2177
+  },
+  {
+    "nombre": "COMPARAR_CON",
+    "clase": "const",
+    "linea": 2205
+  },
+  {
+    "nombre": "selectorComparar",
+    "clase": "function",
+    "linea": 2208
+  },
+  {
+    "nombre": "lineaComparacion",
+    "clase": "function",
+    "linea": 2217
+  },
+  {
+    "nombre": "tarjetaKpi",
+    "clase": "function",
+    "linea": 2244
+  },
+  {
+    "nombre": "cascada",
+    "clase": "function",
+    "linea": 2283
+  },
+  {
+    "nombre": "barrasGanadoPerdido",
+    "clase": "function",
+    "linea": 2361
+  },
+  {
+    "nombre": "mapaCalor",
+    "clase": "function",
+    "linea": 2453
+  },
+  {
+    "nombre": "FUENTE_BANDAS",
+    "clase": "const",
+    "linea": 2485
+  },
+  {
+    "nombre": "bandasObjetivo",
+    "clase": "function",
+    "linea": 2486
+  },
+  {
+    "nombre": "estadoObjetivo",
+    "clase": "function",
+    "linea": 2489
+  },
+  {
+    "nombre": "barraObjetivo",
+    "clase": "function",
+    "linea": 2501
+  },
+  {
+    "nombre": "previsionCaja",
+    "clase": "function",
+    "linea": 2532
+  },
+  {
+    "nombre": "barrasDivergentes",
+    "clase": "function",
+    "linea": 2613
+  }
+]

@@ -1,0 +1,163 @@
+[
+  {
+    "fichero": "altas_personas.py",
+    "rutas": [
+      "/api/altas",
+      "/api/altas/",
+      "/api/altas/alta",
+      "/api/altas/baja",
+      "/api/altas/cambio",
+      "/api/altas/comprobar",
+      "/api/altas/departamento",
+      "/api/altas/guia",
+      "/api/altas/repartir",
+      "/api/altas/tarea_hecha"
+    ],
+    "subrutas": [],
+    "bucle_propio": false,
+    "lineas": 1133
+  },
+  {
+    "fichero": "avisos.py",
+    "rutas": [
+      "/api/canales",
+      "/api/canales/",
+      "/api/canales/buscar",
+      "/api/canales/campana",
+      "/api/canales/campana_vista",
+      "/api/canales/canal",
+      "/api/canales/clickup",
+      "/api/canales/estado",
+      "/api/canales/grupo",
+      "/api/canales/leido",
+      "/api/canales/mensaje",
+      "/api/canales/miembro",
+      "/api/canales/preferencias"
+    ],
+    "subrutas": [],
+    "bucle_propio": true,
+    "lineas": 1125
+  },
+  {
+    "fichero": "avisos_programados.py",
+    "rutas": [
+      "/api/avisos_programados",
+      "/api/avisos_programados/",
+      "/api/avisos_programados/cambiar",
+      "/api/avisos_programados/ejecutar",
+      "/api/avisos_programados/hecho",
+      "/api/avisos_programados/vista_previa"
+    ],
+    "subrutas": [],
+    "bucle_propio": true,
+    "lineas": 1063
+  },
+  {
+    "fichero": "despliegue/vigia.py",
+    "rutas": [
+      "/api/vigia",
+      "/api/vigia/probar"
+    ],
+    "subrutas": [],
+    "bucle_propio": true,
+    "lineas": 1081
+  },
+  {
+    "fichero": "envios.py",
+    "rutas": [
+      "/api/acciones",
+      "/api/envios",
+      "/api/envios/",
+      "/api/envios/envio",
+      "/api/envios/reintentar"
+    ],
+    "subrutas": [
+      "red",
+      "red_pero_entregado",
+      "token"
+    ],
+    "bucle_propio": true,
+    "lineas": 1118
+  },
+  {
+    "fichero": "fuentes_alertas/guardia_alertas.py",
+    "rutas": [
+      "/api/acciones"
+    ],
+    "subrutas": [
+      "no_aplica",
+      "posponer"
+    ],
+    "bucle_propio": false,
+    "lineas": 95
+  },
+  {
+    "fichero": "fuentes_gbp/servidor_gbp.py",
+    "rutas": [
+      "/api/gbp/borrador",
+      "/api/gbp/cola",
+      "/api/gbp/estado",
+      "/api/gbp/responder"
+    ],
+    "subrutas": [],
+    "bucle_propio": false,
+    "lineas": 197
+  },
+  {
+    "fichero": "fuentes_modular/acceso.py",
+    "rutas": [
+      "/api/modular/acceso"
+    ],
+    "subrutas": [],
+    "bucle_propio": false,
+    "lineas": 144
+  },
+  {
+    "fichero": "ia.py",
+    "rutas": [
+      "/api/ia/",
+      "/api/ia/borrador",
+      "/api/ia/consejo",
+      "/api/ia/consejo/informe",
+      "/api/ia/consejo/valorar",
+      "/api/ia/copiloto",
+      "/api/ia/estado",
+      "/api/ia/gasto",
+      "/api/ia/gasto/",
+      "/api/ia/lista"
+    ],
+    "subrutas": [
+      "ia_denegado"
+    ],
+    "bucle_propio": false,
+    "lineas": 1304
+  },
+  {
+    "fichero": "ia_gasto.py",
+    "rutas": [
+      "/api/ia/gasto/reabrir",
+      "/api/ia/gasto/topes"
+    ],
+    "subrutas": [],
+    "bucle_propio": false,
+    "lineas": 744
+  },
+  {
+    "fichero": "sincronia.py",
+    "rutas": [
+      "/api/acciones",
+      "/api/sincronia",
+      "/api/sincronia/",
+      "/api/sincronia/a_mano",
+      "/api/sincronia/cambio",
+      "/api/sincronia/elegir",
+      "/api/sincronia/objeto",
+      "/api/sincronia/reintentar"
+    ],
+    "subrutas": [
+      "red_pero_aplicado"
+    ],
+    "bucle_propio": true,
+    "lineas": 1449
+  }
+]
