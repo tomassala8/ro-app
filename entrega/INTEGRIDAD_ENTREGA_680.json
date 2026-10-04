@@ -1,0 +1,20 @@
+{
+  "estado": "local_no_publicado",
+  "github": "675/60a66c3",
+  "archivos": {
+    "fuentes_crm/generar_crm.py": "f93f924a4bfd4730f2f67086e871c93dccb1fc7a0943dfd607e27bfded8ae2c0",
+    "modulos/crm.js": "8055595059e042076d90cb6cc6186099cdc5bf8c241cdd98ea8435371e414396",
+    "modulos/_contacto_observado_677.js": "de9a975c8a11eb0c66bd370c56bedfe8f3e51b847c402d592f4cefe4dc8682dd",
+    "fixture_mensajes_crm_676.py": "bd243eba613e157e972ea7d16aedcacecaa26446377d9e49482d529aeb6112c1",
+    "probar_mensajes_crm_676.py": "00fb61020cee704afa35eab4cf198a3cc5d32246b648f9aa960875bfc295ba5f",
+    "probar_intentos_crm_672.py": "03d53ed20b23ada6158aa16f919ec8b3a74dfd71d5ea4e0db0e55e243da74411",
+    "probar_contacto_crm_677.cjs": "9939487809e14deb1d55ba7a51d2542c762fe41f93b47fbdafd405cfeb42833e",
+    "puente_publico_crm_677.py": "ac7d982370043cc2ec1ae73e2b183c0c554df6023bfd5ba8bf8399b385ad95f6",
+    "fixturebaseline_crm_677.js": "81ae00c2313d4d5a1650d08ad174b8056e3c5d1379b4a994347df81faae67fad",
+    "fixture_harness_crm_677.cjs": "16eb64277447e9cefcf441dc89d9dae9919cc2715703d6e41f1cd28cc1e11a69",
+    "probar_revision_mensajes_678C.py": "7eb343b86a31060fddbac905f4b68d7fa31e500c62a06f5e0a4198d28ed1a1b1",
+    "probar_alcance_crm_680.py": "901a881109c1b3c31f0768b0aae7a8ff4486fafc8d4e1319d67b4fe23244cd86",
+    "pruebas_crm_presentacion_424.cjs": "ce1526a18d695d5b3f5cf761db77f272b5fb1acdf5d2a0d883659c0ab7747df0",
+    "pruebas_mensajeria_crm_597.cjs": "405cf25b52fd1982bd3e650d93f4e3569730036f61a538caec2196a1dbd894a6"
+  }
+}

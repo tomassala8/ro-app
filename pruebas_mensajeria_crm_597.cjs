@@ -4,7 +4,7 @@ const {e,h,N}=new Function('require',base+';return {e,h,N};')(require);
 (async()=>{
 const savedNow=Date.now;Date.now=()=>Date.parse('2026-10-04T12:00:00Z');
 try{
-const M=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_crm_mediciones.js','utf8')).toString('base64'));Object.assign(e,M);
+const M=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_crm_mediciones.js','utf8')).toString('base64'));Object.assign(e,M);const M677=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_contacto_observado_677.js','utf8')).toString('base64'));Object.assign(e,M677);
 const src=fs.readFileSync(__dirname+'/modulos/crm.js','utf8'),piece=(a,b)=>src.slice(src.indexOf(a),src.indexOf(b,src.indexOf(a)));let options,nav=0,vigente=true,n=0;
 const test=(t,f)=>{f();n++;console.log('PASS '+t)};
 e.tablaDensa=o=>{options=o;return h('table',{},o.filas.map(f=>h('tr',{},o.columnas.map(c=>h('td',{},c.celda(f))))));};e.notaCompacta336=(h,t,...xs)=>h('details',{},t,...xs);e.chipEstado=(s,t)=>h('span',{},t);e.semaforo=()=> 'gris';e.fDiaRO=x=>x;
