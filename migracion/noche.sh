@@ -4,7 +4,7 @@
 #   bash migracion/noche.sh                      # 8 horas desde que el plan está listo
 #   RO_HORAS=7 bash migracion/noche.sh
 #   RO_MODELO=<ejecuta> RO_MODELO_PLAN=<planea> bash migracion/noche.sh
-#   RO_PASOS_FUERTES="F4.1 F4.2 F5.1 F5.10" bash migracion/noche.sh    # esos pasos, con RO_MODELO_FUERTE
+#   RO_PASOS_FUERTES="" bash migracion/noche.sh    # todo con Grok (por defecto F4.1 F4.2 F5.1 F5.10 van con RO_MODELO_FUERTE)
 #   RO_AGENTE="cursor-agent -p --force --model {MODELO}" bash migracion/noche.sh  # si tu versión usa otras opciones
 #
 # Cómo trabaja (Tomás, 4-oct):
@@ -26,7 +26,7 @@ HORAS="${RO_HORAS:-8}"
 MODELO="${RO_MODELO:-grok-code-fast-1}"                  # ejecuta (Tomás: Grok Fast)
 MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"        # planea y diagnostica
 MODELO_FUERTE="${RO_MODELO_FUERTE:-claude-sonnet-5-5}"   # solo para los pasos de RO_PASOS_FUERTES
-PASOS_FUERTES="${RO_PASOS_FUERTES:-}"
+PASOS_FUERTES="${RO_PASOS_FUERTES-F4.1 F4.2 F5.1 F5.10}"   # decidido por Tomás el 4-oct; RO_PASOS_FUERTES="" = todo con Grok
 TOPE_VUELTA="${RO_TOPE_VUELTA:-5400}"                    # una vuelta colgada se corta a los 90 min
 TOPE_REPLAN="${RO_TOPE_REPLAN:-1800}"
 PROMPT="$RAIZ/migracion/PROMPT_NOCHE.md"

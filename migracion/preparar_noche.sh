@@ -84,7 +84,7 @@ if command -v cursor-agent >/dev/null; then
     ojo "cursor-agent no anuncia -p / --force / --model" "mira «cursor-agent --help» y lánzalo con RO_AGENTE=\"cursor-agent <opciones> {MODELO}\" bash migracion/noche.sh"
   fi
   if [ $PROBAR = 1 ]; then
-    pares="RO_MODELO:$MODELO RO_MODELO_PLAN:$MODELO_PLAN"; [ -n "${RO_PASOS_FUERTES:-}" ] && pares="$pares RO_MODELO_FUERTE:$MODELO_FUERTE"
+    pares="RO_MODELO:$MODELO RO_MODELO_PLAN:$MODELO_PLAN"; [ -n "${RO_PASOS_FUERTES-F4.1 F4.2 F5.1 F5.10}" ] && pares="$pares RO_MODELO_FUERTE:$MODELO_FUERTE"
     for par in $pares; do
       var="${par%%:*}"; m="${par#*:}"
       r="$(cursor-agent -p --force --output-format text --model "$m" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
