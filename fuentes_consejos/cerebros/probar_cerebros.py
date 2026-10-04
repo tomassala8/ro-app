@@ -29,7 +29,7 @@ import buscar as B  # noqa: E402
 
 PREFIJO = {"direccion": "dir_", "operaciones": "ope_", "account": "acc_", "comunicacion": "com_", "altas": "alt_",
            "publicidad": "pub_", "crm": "crm_", "setters": "set_", "seo_web": "seo_", "redes_produccion": "rp_",
-           "ventas_ro": "ven_", "personas_admin": "per_"}
+           "ventas_ro": "ven_", "personas_admin": "per_", "calidad": "cal_"}
 CAMPOS = ["id", "titulo", "puestos", "disparadores", "sintoma", "gravedad", "plazo", "diagnostico", "causas",
           "acciones_inmediatas", "que_no_hacer", "escalar", "exito", "fuentes"]
 REPOS = {
@@ -89,9 +89,20 @@ def ids_app():
     return tipos, alertas, indic, reglas
 
 
+def ids_diagnosticos():
+    """Diagnósticos de calidad que existen (fuentes_diagnosticos/diagnosticos.py → CATALOGO)."""
+    sys.path.insert(0, str(APP / "fuentes_diagnosticos"))
+    try:
+        import diagnosticos as DG
+        return set(DG.CATALOGO)
+    except ImportError:
+        return set()
+
+
 def correr(estricto=False):
     errores, avisos = [], []
     tipos, alertas, indic, reglas = ids_app()
+    diags = ids_diagnosticos()
     lineas_cache = {}
     vistos = {}
     cb = B.cerebros()
@@ -135,7 +146,7 @@ def correr(estricto=False):
                     errores.append(f"{donde}/{x.get('id')}: causa sin solución")
             d = s.get("disparadores", {})
             for lista, valido, nom in (("tipos_consejo", tipos, "tipo"), ("alertas", alertas, "alerta"),
-                                        ("indicadores", indic, "indicador")):
+                                        ("indicadores", indic, "indicador"), ("diagnosticos", diags, "diagnóstico")):
                 for x in d.get(lista, []) or []:
                     if x not in valido:
                         errores.append(f"{donde}: {nom} inexistente {x!r}")
