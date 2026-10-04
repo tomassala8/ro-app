@@ -8,6 +8,9 @@ const env={h,S:{1:'4px',2:'8px',3:'12px',4:'16px'},NOWRAP:{whiteSpace:'nowrap'},
  tablaApilable:o=>{tables.push(o);return h('table',{},h('thead',{},o.columnas.map(c=>h('th',{},c.titulo))),h('tbody',{},o.filas.map(x=>h('tr',{},o.columnas.map(c=>h('td',{},c.celda?c.celda(x):x[c.clave]))))))},
  pAuditoria:()=>{audits++;return h('section',{'data-auditoria':''},'Auditoría existente')},sessionStorage:{setItem:(k,v)=>storage.push([k,v])}};
 vm.createContext(env);
+//671: resolver la dependencia ESM real del renderer, sin simular su resultado.
+vm.runInContext(fs.readFileSync(__dirname+'/modulos/_paid_mediciones.js','utf8').replace(/\bexport\s+/g,''),env);
+env.hoyMadrid=()=> '2026-10-04';
 vm.runInContext(s.slice(s.indexOf('function plegablePaid411('),s.indexOf('function cabeceraPaid411(')),env);
 vm.runInContext(s.slice(s.indexOf('function cifras('),s.indexOf('// ================================================================== LISTA')),env);
 vm.runInContext(s.slice(s.indexOf('function pEquipo('),s.indexOf('/** Auditoría semanal:')),env);

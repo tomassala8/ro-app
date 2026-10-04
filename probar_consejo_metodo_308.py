@@ -62,7 +62,7 @@ class Metodo308(unittest.TestCase):
    if n[0]==2:S.ACT.es_activo_id=lambda cid:False
    return self.lectura(p)
   with patch.object(C.M,'leer',side_effect=loader):
-   d=C.leer_metodo308(S,P[0],P[0]);self.assertEqual(d['sugerencias'],[]);self.assertEqual(d['_ids_308'],[])
+   d=C.leer_metodo308(S,P[0],P[0]);self.assertIsNone(d)  # Cambio durante IO: no reutilizar DTO ni metadatos.
  def test_current_owner_revalidated_before_API_response(self):
   S=self.entorno();initial=B.generar(hoy=HOY,metodo=D);S.E.crudo['asignaciones'][0]['confianza']='baja'
   with patch.object(C.M,'leer',side_effect=self.lectura):r=C.filtrar_recomendaciones308(S,P[0],P[0],initial)

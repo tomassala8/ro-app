@@ -129,13 +129,23 @@ def resumir_intentos(mensajes, creado, corte):
     """
     inicio,fin=timestamp_mensaje(creado),timestamp_mensaje(corte)
     if inicio is None or fin is None or inicio>fin:
-        return {'primer_min':None,'intentos_72h':None,'fechas_desconocidas':len(mensajes)}
+        return {'primer_min':None,'intentos_72h':None,'intentos_observados':None,'fechas_desconocidas':len(mensajes)}
     fechas=[timestamp_mensaje(x.get('dateAdded')) for x in mensajes]
     desconocidas=sum(t is None or t>fin for t in fechas)
     validas=sorted(t for t in fechas if t is not None and inicio<=t<=fin)
     return {'primer_min':(validas[0]-inicio)/60000 if validas and not desconocidas else None,
             'intentos_72h':sum(t<=inicio+72*3600e3 for t in validas) if not desconocidas else None,
+            'intentos_observados':len(validas) if not desconocidas else None,
             'fechas_desconocidas':desconocidas}
+
+def intentos_medidos672(lead):
+    """No certificar contadores de un cache legacy o de otro corte como actuales."""
+    n=lead.get('intentos');m=lead.get('intentos_medicion')
+    if type(n) is not int or not 0<=n<=9007199254740991 or not isinstance(m,dict):return False
+    if set(m)!={'fuente','estado','desde_ms','hasta_ms','completa'} or m.get('fuente')!='ghl_conversacion' or m.get('estado')!='observado_parcial' or m.get('completa') is not False:return False
+    desde,hasta=timestamp_mensaje(m.get('desde_ms')),timestamp_mensaje(m.get('hasta_ms'))
+    return desde is not None and hasta is not None and desde==timestamp_mensaje(lead.get('creado')) and desde<=hasta and hasta==AHORA_MS
+
 
 def ms_iso(ms):
     return dt.datetime.fromtimestamp(ms / 1000, MAD).strftime("%Y-%m-%d %H:%M") if ms else None
@@ -240,12 +250,19 @@ def leer_subcuenta(g, loc):
         if lead["es_lead"]:
             cv = g.req(loc, "GET", "/conversations/search", locationId=loc, contactId=c.get("id"), limit=5)
             msgs = []
-            for conv in (cv.get("conversations") or [])[:2]:
+            conversaciones = cv.get('conversations') if isinstance(cv,dict) else None
+            conversaciones_validas = isinstance(cv,dict) and '_error' not in cv and isinstance(conversaciones,list) and all(isinstance(x,dict) and isinstance(x.get('id'),str) and x['id'] for x in conversaciones)
+            for conv in (conversaciones[:2] if conversaciones_validas else []):
                 m = g.req(loc, "GET", f"/conversations/{conv['id']}/messages", limit=100)
-                msgs += (m.get("messages") or {}).get("messages", []) or []
+                paquete=m.get('messages') if isinstance(m,dict) else None
+                mensajes=paquete.get('messages') if isinstance(paquete,dict) else None
+                if not isinstance(m,dict) or '_error' in m or not isinstance(mensajes,list) or any(not isinstance(x,dict) for x in mensajes):
+                    conversaciones_validas=False
+                else:
+                    msgs += mensajes
             com = [x for x in msgs if x.get("messageType") in COMUNICACION]
             sal = sorted([x for x in com if x.get("direction") == "outbound" or (x.get("messageType") == "TYPE_CALL" and x.get("direction") != "inbound")],
-                         key=lambda x: iso_ms(x.get("dateAdded")) or 0)
+                         key=lambda x: timestamp_mensaje(x.get("dateAdded")) or 0)
             humanos = [x for x in sal if (x.get("source") or "").lower() not in AUTOMATICO]
             autos = [x for x in sal if (x.get("source") or "").lower() in AUTOMATICO]
             intentos_h = resumir_intentos(humanos, creado, AHORA_MS)
@@ -253,11 +270,12 @@ def leer_subcuenta(g, loc):
             wa = [x for x in sal if x.get("messageType") == "TYPE_WHATSAPP"]
             sms = [x for x in sal if x.get("messageType") in ("TYPE_SMS", "TYPE_CUSTOM_SMS", "TYPE_CUSTOM_PROVIDER_SMS")]
             lead.update({
-                "humano_min": intentos_h["primer_min"],
-                "auto_min": intentos_a["primer_min"],
+                "humano_min": intentos_h["primer_min"] if conversaciones_validas else None,
+                "auto_min": intentos_a["primer_min"] if conversaciones_validas else None,
                 "mensajes_fecha_desconocida": intentos_h["fechas_desconocidas"] + intentos_a["fechas_desconocidas"],
-                "intentos": len(humanos),
-                "intentos_72h": intentos_h["intentos_72h"],
+                "intentos": intentos_h["intentos_observados"] if conversaciones_validas else None,
+                "intentos_medicion": {"fuente":"ghl_conversacion", "estado":"observado_parcial" if conversaciones_validas and intentos_h["intentos_observados"] is not None else "desconocido", "desde_ms":creado, "hasta_ms":AHORA_MS, "completa":False},
+                "intentos_72h": intentos_h["intentos_72h"] if conversaciones_validas else None,
                 "llamadas": sum(1 for x in humanos if "CALL" in (x.get("messageType") or "")),
                 "respondio": any(x.get("direction") == "inbound" for x in com),
                 "wa_env": len(wa), "wa_fallo": sum(1 for x in wa if (x.get("status") or "").lower() in ("failed", "undelivered")),
@@ -417,7 +435,7 @@ def main():
         sin_uso = bool(v) and total_contactos is not None and total_contactos < 5
         hace24 = AHORA_MS - 24 * 3600e3
         hace72 = AHORA_MS - 72 * 3600e3
-        sin_tocar = [x for x in auto if x["creado"] and x["creado"] <= hace24 and not x.get("intentos") and not x["cita"]]
+        sin_tocar = [x for x in auto if x["creado"] and x["creado"] <= hace24 and intentos_medidos672(x) and x["intentos"] == 0 and not x["cita"]]
         juzg = [x for x in auto if x["creado"] and x["creado"] <= hace24]
         en1h = [x for x in juzg if x.get("humano_min") is not None and 0 <= x["humano_min"] <= 60]
         juzg72 = [x for x in auto if x["creado"] and x["creado"] <= hace72]
@@ -455,7 +473,7 @@ def main():
             M("rojo" if leads_ghl_7d / leads_meta_7d < 0.5 else "ambar", "integracion",
               f"Meta dio {int(leads_meta_7d)} leads en 7 días y a GoHighLevel llegaron {leads_ghl_7d}: revisar la conexión del formulario")
         if sin_tocar:
-            M("rojo", "sin_tocar", f"{len(sin_tocar)} lead{'s' if len(sin_tocar) != 1 else ''} de más de 24 h sin ningún intento apuntado en GHL")
+            M("rojo", "sin_tocar", f"{len(sin_tocar)} lead{'s' if len(sin_tocar) != 1 else ''} de más de 24 h sin intento observado en la copia parcial de GHL")
         if c14:
             if c14["sin_estado"] > 5 or (c14["sin_estado"] and c14["sin_estado_max_h"] > 48):
                 M("rojo", "sin_estado", f"{c14['sin_estado']} cita{'s' if c14['sin_estado'] != 1 else ''} de los últimos 14 días sin marcar si vino (la más antigua, hace {c14['sin_estado_max_h'] // 24} días)")
@@ -510,11 +528,13 @@ def main():
             "encendida": encendida, "meta_activa": meta_activa,
             "leads_meta_7d": leads_meta_7d, "leads_meta_sep": leads_meta_30d, "leads_ghl_7d": leads_ghl_7d,
             "leads_30d": len(auto) if v else emb.get("cohorte_30d"), "leads_manuales_30d": sum(1 for x in L if x["manual"]),
-            "sin_tocar_24h": len(sin_tocar) if v else None,
+            "sin_tocar_24h": len(sin_tocar) if v and any(intentos_medidos672(x) for x in auto) else None,
+            "sin_tocar_medicion": {"fuente":"ghl_conversacion", "cobertura":"parcial", "leads_observados":sum(intentos_medidos672(x) for x in auto), "leads_elegibles":len(auto), "completa":False},
             "velocidad": {"juzgables": len(juzg), "en_1h": len(en1h), "pct_1h": pct(len(en1h), len(juzg)),
                           "juzgables_72h": len(juzg72), "cuatro_en_72h": len(cuatro), "pct_4en72": pct(len(cuatro), len(juzg72)),
                           "mediana_min": round(statistics.median(tiempos)) if tiempos else None,
-                          "con_intento": sum(1 for x in auto if x.get("intentos")), "intentos_medios": round(sum(x.get("intentos", 0) for x in auto) / len(auto), 1) if auto else None,
+                          "con_intento": sum(1 for x in auto if x.get("intentos")), "intentos_medios": round(sum(x["intentos"] for x in auto if intentos_medidos672(x)) / sum(intentos_medidos672(x) for x in auto), 1) if any(intentos_medidos672(x) for x in auto) else None,
+                          "intentos_medios_cobertura": {"observados":sum(intentos_medidos672(x) for x in auto), "total":len(auto), "completa":False},
                           "auto_5min": len(auto_ok), "respondieron": sum(1 for x in auto if x.get("respondio"))} if v else None,
             "citas_14d": c14, "citas_30d": c30, "citas_90d": c90, "calendarios": len(v.get("calendarios", [])) if v else (cp.get("ghl") or {}).get("calendarios"),
             "embudo": {"cohorte_30d": len(opps30) if v else emb.get("cohorte_30d"), "estancados_72h": len(paradas) if v else emb.get("estancados_72h"),

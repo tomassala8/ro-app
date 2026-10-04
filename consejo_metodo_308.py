@@ -2,6 +2,8 @@
 Una revisión calculada no es una reunión agendada. No envía ni registra nada.
 """
 from collections import Counter
+from copy import deepcopy
+import re
 from datetime import date,timedelta
 import metodo_cuentas as M
 REGLA=M.REGLA_ID
@@ -14,7 +16,12 @@ def dia(v):
 
 def persona_unica(personas,pid):
     xs=[p for p in personas if isinstance(p,dict) and p.get('id')==pid] if isinstance(personas,list) else []
-    return xs[0] if isinstance(pid,str) and len(xs)==1 and xs[0].get('estado')=='activo' and xs[0].get('activo') is not False else None
+    if not isinstance(pid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',pid) or len(xs)!=1:return None
+    p=xs[0];roles=p.get('puestos')
+    if (p.get('estado')!='activo' or p.get('activo') is False or not isinstance(roles,list) or not roles
+            or any(not isinstance(x,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,100}',x) for x in roles)
+            or len(set(roles))!=len(roles)):return None
+    return p
 
 def responsable_confirmado(cid,pid,personas,asignaciones,hoy):
     p=persona_unica(personas,pid)
@@ -63,6 +70,19 @@ def recomendaciones_metodo308(doc,ids,personas,asignaciones,hoy):
     for m in proyectar_metodo308(doc,ids,personas,asignaciones,hoy):
         motivo='Cadencia quincenal confirmada del método; no sustituye contacto semanal ni reunión mensual del account. '
         motivo+=('Responsable actual pendiente de confirmar.' if not m['responsable_confirmado'] else 'No hay evidencia suficiente de celebración o programación.' if not m['ultima_confirmada'] else 'Última celebración registrada; la próxima revisión calculada no acredita cita agendada.')
+        evidencias=[{'fuente':'metodo_confirmado_local','fecha':hoy,'periodo':None,
+            'cobertura':'regla_confirmada_no_historial_exhaustivo','vigencia':'actual',
+            'texto':'Regla 15 días/trafficker confirmada; fecha de decisión/consulta no es fecha de una celebración.'}]
+        if m['ultima_confirmada'] and m['fuente_celebracion']:
+            evidencias.append({'fuente':'metodo_celebracion_confirmada','fecha':m['ultima_confirmada'],
+                'periodo':None,'cobertura':'registro_confirmado_no_historial_exhaustivo','vigencia':'referencia_historica',
+                'texto':f"Celebración confirmada el {m['ultima_confirmada']}; fuente: {m['fuente_celebracion']}. "
+                        'No atribuye participantes ni responsable histórico; el responsable mostrado es el actual.'})
+        if m['proxima_revision']:
+            evidencias.append({'fuente':'metodo_revision_calculada','fecha':hoy,'periodo':None,
+                'cobertura':'calculo_cadencia_no_agenda','vigencia':'actual',
+                'texto':f"Próxima revisión calculada: {m['proxima_revision']} (última celebración confirmada +15 días). "
+                        'La fecha de esta evidencia es la del cálculo; no acredita reunión programada o agendada.'})
         for area in ('paid','accounts'):
             out.append({'cliente_id':m['cliente_id'],'regla_id':REGLA if area=='paid' else REGLA+'_account','area':area,
                 'titulo':'Confirmar seguimiento quincenal con trafficker' if area=='paid' else 'Verificar programación del seguimiento con el especialista',
@@ -71,8 +91,7 @@ def recomendaciones_metodo308(doc,ids,personas,asignaciones,hoy):
                 'certeza':'regla_confirmada_ejecucion_por_contrastar','criterio_entrega':'Registrar responsable confirmado y fuente/fecha de celebración o programación; mantener revisión y cita agendada separadas.',
                 'responsabilidad':'Seguimiento y comprobación, no ejecución acreditada','ejecutor_operativo':'trafficker','comprobador_role':'account' if area=='accounts' else 'trafficker',
                 'modulo_destino':'reuniones','metodo_308':m,
-                'evidencias':[{'fuente':'metodo_confirmado_local','fecha':hoy,'periodo':None,'cobertura':'regla_confirmada_no_historial_exhaustivo',
-                    'vigencia':'actual','texto':'Regla 15 días/trafficker confirmada; fecha de decisión/consulta no es fecha de una celebración.'}]})
+                'evidencias':[dict(e) for e in evidencias]})
     return out
 
 def _scope(S,real,vista):
@@ -85,7 +104,7 @@ def _scope(S,real,vista):
     for c in clientes:
         if not isinstance(c,dict):continue
         cid=c.get('id')
-        if not isinstance(cid,str) or counts[cid]!=1 or S.ACT.es_activo_id(cid) is not True:continue
+        if not isinstance(cid,str) or counts[cid]!=1 or c.get('activo') is False or c.get('estado')=='baja' or S.ACT.es_activo_id(cid) is not True:continue
         if all(S.P.ver(p,{'tipo':'cliente_detalle','cliente_id':cid},S.P.contexto(p,raw)).get('ok') is True for p in ps):ids.append(cid)
     return raw,ps,ids
 
@@ -94,21 +113,26 @@ def leer_metodo308(S,real,vista):
     try:
         antes=_scope(S,real,vista)
         if not antes:return None
-        raw,ps,ids=antes;hoy=S.P.hoy_iso();h=dia(hoy)
+        raw,ps,ids=antes;ambito_inicial=deepcopy(antes);hoy=S.P.hoy_iso();h=dia(hoy)
         if not h:return None
         reglas=M.leer(M.REGLAS);reuniones=M.leer(M.REUNIONES)
         if not isinstance(reuniones,dict):return None
+        politica_inicial=deepcopy((reglas,reuniones))
         personas={p['id']:p for p in raw.get('personas') or [] if isinstance(p,dict) and persona_unica(raw.get('personas'),p.get('id'))}
         rows=M.sugerencias(reglas,raw.get('asignaciones') or [],personas,reuniones.get('reuniones') or [],reuniones.get('cobertura') or {},h,lambda cid:cid in ids)
         despues=_scope(S,real,vista)
-        if not despues:return None
+        if not despues or despues!=ambito_inicial:return None
         raw,ps,ids=despues
         rows=[r for r in rows if r.get('cliente_id') in ids]
         doc={'hoy':hoy,'sugerencias':rows,'cobertura_reuniones':reuniones.get('cobertura') or {}}
         # Sólo se devuelve el DTO final calculado sobre permisos/asignaciones actuales.
-        return {'hoy':hoy,'sugerencias':rows,'cobertura_reuniones':doc['cobertura_reuniones'],
+        resultado = {'hoy':hoy,'sugerencias':rows,'cobertura_reuniones':doc['cobertura_reuniones'],
                 '_proyeccion_308':proyectar_metodo308(doc,ids,raw.get('personas') or [],raw.get('asignaciones') or [],hoy),
                 '_ids_308':ids,'_personas_308':raw.get('personas') or [],'_asignaciones_308':raw.get('asignaciones') or []}
+        if politica_inicial!=(M.leer(M.REGLAS),M.leer(M.REUNIONES)):return None
+        final=_scope(S,real,vista)
+        if not final or final!=ambito_inicial or S.P.hoy_iso()!=hoy:return None
+        return resultado
     except (AttributeError,KeyError,TypeError,ValueError,OSError):return None
 
 

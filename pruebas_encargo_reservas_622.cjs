@@ -6,7 +6,7 @@ const box={require,__dirname,console,setImmediate,URLSearchParams,process,DTO622
 vm.runInContext(prefix+`
 (async()=>{
  let n=0;const check=(label,f)=>{f();n++;console.log('PASS',label)};
- async function render(){const b=cargar(),m=main(),c=contexto(async route=>route==='cerebro/operativo'?DTO622:{sugerencias:[]});c.clientesVisibles=[{id:'c1',nombre:'Cliente sintético',activo_confirmado:true,detalle:true}];await b.modulo.render(m,c);await click(boton(m,'Revisar'));return {b,m,c};}
+ async function render(){const b=cargar(),m=main(),c=contexto(async route=>route==='cerebro/operativo'?DTO622:{sugerencias:[]});c.clientesVisibles=[{id:'c1',nombre:'Cliente sintético',activo_confirmado:true,detalle:true}];c.clientes=c.clientesVisibles.map(x=>({...x,activo:true,estado:"activo"}));await b.modulo.render(m,c);await click(boton(m,'Revisar'));return {b,m,c};}
  const l=await render(),ta=l.m.descendants().find(n=>n.tag==='textarea'&&n.attrs['aria-label'].startsWith('Encargo'));
  check('hook real hasta textarea: nombre fuente legible y números cohorte',()=>{assert(ta);assert(ta.value.includes('Reservas enlazadas · GoHighLevel'));assert(!ta.value.includes('crm_embudo_observado'));assert(ta.value.includes('3 recibidos observados; 2 reservas'));assert(!ta.value.includes('3 reservas creadas'));});
  check('periodo/corte/cobertura y límites íntegros en encargo',()=>{for(const t of ['2026-10-01','2026-10-03','observación hasta','registros_observados_no_exhaustivos','canceladas','fecha futura','no acreditan asistencia, ventas','universos distintos'])assert(ta.value.includes(t),t);});

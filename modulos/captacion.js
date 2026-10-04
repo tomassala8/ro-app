@@ -2,7 +2,7 @@ import { sumaSeriePaid549, compararSeriesPaid549, fechaPaid549, minimoGastoPaid5
 import {ambitoPaid516,guardarPaid516,cargarLecturaPaid516} from './_intencion_paid_516.js';
 import { conteoMeta508, deltaMeta508, creativosMatriz508, cuentaMetaError508 } from './_matriz_paid_508.js';
 import { normalizarCita299, referenciaCita299, textoMetaQuincenal299 } from './_coste_cita_299.js';
-import { medirCplPaid, normalizarPaid, cplMovilPaid285 } from './_paid_mediciones.js';
+import { medirCplPaid, normalizarPaid, cplMovilPaid285, resumenNichoPaid671 } from './_paid_mediciones.js';
 import { medirEmbudoCRM, conteoCRM } from './_crm_mediciones.js';
 import { panelPaid } from './_panel_especialista.js';
 // modulos/captacion.js · M6 «Captación» · la Torre de Control de Paid dentro de la app (E5 del plan v2, 13_TORRE…).
@@ -830,16 +830,17 @@ function pEquipo(el, ctx, d, filas) {
     nichos.get(k).push(c);
   }
   const filasN = [...nichos.entries()].map(([k, cs]) => {
-    const g = cs.filter(c => c.dinero).reduce((s, c) => s + (c.gasto?.['7d'] || 0), 0), l = cs.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0);
-    return { nicho: k, cuentas: cs.length, nombres: cs.map(c => c.nombre).join(', '), leads: l, cpl: cs.some(c => c.dinero) && l ? g / l : null, dinero: cs.some(c => c.dinero) };
-  }).sort((a, b) => b.leads - a.leads);
+    const resumen = resumenNichoPaid671(cs,d,ctx.hoy||hoyMadrid());
+    return { nicho: k, nombres: cs.map(c => c.nombre).join(', '), ...resumen };
+  }).sort((a, b) => (b.leads??-1) - (a.leads??-1));
   el.append(plegablePaid411('Comparativa por nicho · 7 días',
     panel({ titulo: 'Comparativa por nicho · 7 días', icono: 'capas', sub: 'Solo cuentas con pauta activa. El nicho sale de la descripción del cliente.' },
       tablaApilable({ filas: filasN, columnas: [
         { clave: 'nicho', titulo: 'Nicho', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.nicho), h('small', { class: 'sub' }, x.nombres)) },
         { clave: 'cuentas', titulo: 'Cuentas', num: true },
-        { clave: 'leads', titulo: 'Leads', num: true, celda: x => num(x.leads) },
-        { clave: 'cpl', titulo: 'Coste registrado · unidad pendiente', num: true, celda: x => (x.dinero ? eur(x.cpl) : candado('—')) },
+        { clave: 'leads', titulo: 'Leads obs.', num: true, celda: x => x.leads===null?'—':num(x.leads) },
+        { clave: 'conDato', titulo: 'Datos', tituloCompleto:'Cuentas con descriptor válido / cuentas del nicho; no acredita cobertura total de Meta', num:true, celda:x=>`${x.conDato}/${x.cuentas}` },
+        { clave: 'cpl', titulo: 'CPL', tituloCompleto:'Misma semana, evento lead y moneda EUR; todas las cuentas con gasto autorizado. No mide cualificación ni ventas', num: true, celda: x => x.cpl===null?'—':eur(x.cpl) },
       ] }))));
   el.append(plegablePaid411('Auditoría semanal',pAuditoria(ctx, d, filas)));
 }

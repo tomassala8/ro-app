@@ -35,8 +35,8 @@ export function filtrosDesdeEnlace(hash,clientes){
   return {cliente,area};
 }
 
-export function instrucciones(r,nombre){
-  return encargoPrioridades337(r,nombre,AREAS);
+export function instrucciones(r,nombre,hoy=''){
+  return encargoPrioridades337(r,nombre,AREAS,hoy);
 }
 
 export function agruparPrioridades(recomendaciones, permitidos) {
@@ -165,7 +165,7 @@ export default {
           h('p',{class:'sub'},`Responsable: ${responsable(r)} · ${r.certeza||'Revisar evidencia'}`),
           h('div',{class:'ro-prioridades-herramientas'},
             borradorTarea(r),
-            h('details',{on:{toggle:()=>vigente()}},h('summary',{},'Preparar encargo para mi IA'),h('textarea',{'aria-label':`Encargo para IA de ${clienteTxt(r.cliente_id)}`,readOnly:true,rows:10,style:{width:'100%',maxWidth:'100%',minWidth:0,boxSizing:'border-box'}},instrucciones(r,clienteTxt(r.cliente_id))),h('button',{class:'bt pri','data-uso':'copiar-ia',on:{click:async e=>{await copiarBloque(e.currentTarget,e.currentTarget.parentElement.querySelector('textarea'),'Instrucciones copiadas. Revisa los accesos en tu IA.');}}},'Copiar encargo')),
+            h('details',{on:{toggle:()=>vigente()}},h('summary',{},'Preparar encargo para mi IA'),h('textarea',{'aria-label':`Encargo para IA de ${clienteTxt(r.cliente_id)}`,readOnly:true,rows:10,style:{width:'100%',maxWidth:'100%',minWidth:0,boxSizing:'border-box'}},instrucciones(r,clienteTxt(r.cliente_id),ctx.hoy)),h('button',{class:'bt pri','data-uso':'copiar-ia',on:{click:async e=>{await copiarBloque(e.currentTarget,e.currentTarget.parentElement.querySelector('textarea'),'Instrucciones copiadas. Revisa los accesos en tu IA.');}}},'Copiar encargo')),
             h('details',{on:{toggle:()=>vigente()}},h('summary',{},'Ver evidencia'),...(r.evidencias||[]).map(e=>h('p',{class:'sub'},evidenciaEncargo337(e))),h('p',{},r.criterio_entrega||'Confirmar el criterio de entrega antes de ejecutar.'))
           )
         )));
