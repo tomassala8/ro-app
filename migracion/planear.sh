@@ -132,9 +132,14 @@ while :; do
   [ $r -gt "$RONDAS" ] && { echo "✘ $RONDAS vueltas y el plan sigue sin estar completo. Vuelve a lanzar planear.sh (sigue donde lo dejó)."; exit 1; }
   log="$LOGS/plan_escribe_$(printf %02d $r).log"
   echo "[$(date '+%H:%M')] vuelta $r de escritura → $log · faltan: $(echo "$faltan" | wc -w | tr -d ' ')"
+  # Tomás (4-oct): al principio, mucho tiempo y esfuerzo en entender a fondo qué queremos. El análisis (A0) va solo,
+  # en su propia vuelta (o vueltas), antes de escribir ningún paso.
+  analisis=""
+  case " $faltan " in *" A0 "*) analisis="ESTA VUELTA ES SOLO EL ANÁLISIS (A0): no escribas ningún paso todavía. Léelo TODO antes (punto 1 de tus instrucciones), con calma: es la vuelta más importante de la noche." ;; esac
   msg="$(cat migracion/PROMPT_PLAN.md)
 
-MENSAJE DEL SUPERVISOR: vuelta $r de escritura. Faltan, en este orden: ${faltan:-ninguno}.
+MENSAJE DEL SUPERVISOR: vuelta $r de escritura. Faltan, en este orden: ${faltan:-ninguno}.${analisis:+
+$analisis}
 ${detalle:+Además, revisar_plan.py dice:
 $detalle}"
   antes="$(md5sum "$PLAN" 2>/dev/null || md5 -q "$PLAN" 2>/dev/null)"

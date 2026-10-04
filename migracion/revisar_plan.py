@@ -8,6 +8,8 @@
 
 Lo que mira (sin modelos: es una comprobación mecánica, la de fondo la hacen las auditorías):
   · la primera línea empieza por «PLAN: »;
+  · antes de los pasos, «## A0 · Análisis…» con sus cinco apartados, largo de verdad, y nombrando todo lo del 4-oct
+    que tiene que entrar (Tomás, 4-oct: «que al inicio se dedique mucho tiempo a analizar lo que realmente queremos»);
   · cada paso de PROGRESO.md (F1.1 … F7.4) tiene su sección «## <código> · …»;
   · cada sección de paso tiene «Hecho cuando:» y «Plan B:» (el ejecutor no improvisa ni el cierre ni la salida);
   · en F5.10, cada fallo «abierto» de PENDIENTES_LOGICA.md tiene su «### <id> · …» (manda el estado de la copia de
@@ -30,6 +32,13 @@ LLAVES = re.compile(r"(sk-[A-Za-z0-9_-]{16,}|ghp_[A-Za-z0-9]{20,}|github_pat_|AK
 # Correo: el dominio acaba en letras (así «shadcn@2.3.0», «prisma@7.10.0» o «ro@127.0.0.1» no cuentan).
 CORREO = re.compile(r"(?<![\w/.+-])[\w.+-]+@[\w-]+(?:\.[\w-]+)*\.[A-Za-z]{2,}\b")
 CORREO_FALSO = re.compile(r"(?:^git@github\.com$|@(?:[\w-]+\.)*(?:test|example|invalid|localhost)$|@ejemplo\.\w+$|@example\.\w+$|@users\.noreply\.github\.com$)", re.I)
+
+
+# El análisis (A0): qué apartados lleva y qué tiene que nombrar sí o sí (lo trabajado el 4-oct).
+APARTADOS_A0 = ("Qué queremos", "Lo que ya hay", "Todo lo del 4-oct que entra", "Riesgos y dudas", "Cómo sabremos que salió bien")
+NOMBRA_A0 = ("PR #2", "PR #3", "PR #4", "contexto del cliente", "PENDIENTES_LOGICA", "L-01", "N-01", "MCP", "Supabase",
+             "copias", "permisos", "entrega", "INTEGRAR.md", "Opus", "Grok")
+LARGO_A0 = 6000   # caracteres: un resumen de diez líneas no es un análisis
 
 
 def leer(ruta):
@@ -83,12 +92,28 @@ def secciones(texto, nivel):
 
 def revisar():
     if not os.path.exists(PLAN):
-        return ["no existe migracion/PLAN_NOCHE.md"], pasos()
+        return ["no existe migracion/PLAN_NOCHE.md"], ["A0"] + pasos()
     texto = leer(PLAN)
     fallos, faltan = [], []
     if not texto.startswith("PLAN: "):
         fallos.append("la primera línea no empieza por «PLAN: »")
     de_paso = secciones(texto, 2)
+    analisis = de_paso.get("A0")
+    if analisis is None:
+        faltan.append("A0")
+    else:
+        if len(analisis) < LARGO_A0:
+            fallos.append(f"A0: el análisis es corto ({len(analisis)} caracteres; al menos {LARGO_A0})")
+        apartados = secciones(analisis, 3)
+        titulos = [k.lower() for k in re.findall(r"^### (.+)$", analisis, re.M)]
+        for a in APARTADOS_A0:
+            if not any(t.startswith(a.lower()) for t in titulos):
+                fallos.append(f"A0: falta el apartado «### {a}»")
+        for n in NOMBRA_A0:
+            if n.lower() not in analisis.lower():
+                fallos.append(f"A0: no nombra «{n}» (todo lo del 4-oct tiene que estar en el análisis)")
+        if texto.find("\n## A0") > min([texto.find(f"\n## {c} ") for c in pasos() if texto.find(f"\n## {c} ") >= 0] or [len(texto)]):
+            fallos.append("A0: el análisis va ANTES de los pasos")
     for codigo in pasos():
         cuerpo = de_paso.get(codigo)
         if cuerpo is None:
