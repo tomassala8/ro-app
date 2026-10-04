@@ -16,7 +16,7 @@ class Metodo(unittest.TestCase):
     def calcular(self,eventos=None,cobertura=None,asig=None,puede=None):
         return M.sugerencias(self.reglas,self.asig if asig is None else asig,self.ps,eventos or [],cobertura or {},self.hoy,puede or (lambda cid:True))
     def reunion(self,fecha='2026-09-25',**extra):
-        return {'cliente_id':'a','fecha':fecha,'celebrada':True,'cliente_confirmado':True,'rol_responsable_confirmado':'trafficker','fuente':'zoom',**extra}
+        return {'evento_id':'reunion_fixture','cliente_id':'a','fecha':fecha,'celebrada':True,'cliente_confirmado':True,'rol_responsable_confirmado':'trafficker','fuente':'zoom',**extra}
     def test_cadencia15_con_trafficker_no_account(self):
         r=self.calcular()[0]
         self.assertEqual(r['cadencia_dias'],15);self.assertEqual(r['responsable_role'],'trafficker');self.assertEqual(r['responsable_id'],'p')

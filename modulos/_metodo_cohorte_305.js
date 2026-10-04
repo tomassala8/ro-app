@@ -8,7 +8,7 @@ export function proyectarMetodo305(doc,ids,personas,hoy){
  for(const r of doc.sugerencias){
   if(!scope.has(r?.cliente_id)||counts.get(r.cliente_id)!==1||r.regla_id!=='seguimiento_quincenal_especialista'||r.cadencia_dias!==15||r.responsable_role!=='trafficker'||r.incumplimiento!==null)continue;
   if(!['sin_dato','confirmar_responsable','en_cadencia','revisar_cadencia','confirmar_recencia'].includes(r.estado))continue;
-  const owners=filas(r.responsables_ids),ps=filas(personas).filter(p=>p?.id===r.responsable_id),owner=owners.length===1&&owners[0]===r.responsable_id&&ps.length===1&&ps[0].estado==='activo'&&ps[0].activo!==false?r.responsable_id:null;
+  const owners=filas(r.responsables_ids),ps=filas(personas).filter(p=>p?.id===r.responsable_id),owner=owners.length===1&&owners[0]===r.responsable_id&&ps.length===1&&ps[0].estado==='activo'&&ps[0].activo!==false&&Array.isArray(ps[0].puestos)&&ps[0].puestos.length>0&&ps[0].puestos.every(x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(x))&&new Set(ps[0].puestos).size===ps[0].puestos.length&&ps[0].puestos.includes('trafficker')?r.responsable_id:null;
   const ultima=dia(r.ultima_confirmada)&&r.ultima_confirmada<=hoy&&filas(r.fuentes_operativas).some(e=>e?.tipo==='reunion_celebrada'&&e.fecha===r.ultima_confirmada)?r.ultima_confirmada:null;
   const proxima=ultima&&r.proxima_revision===siguiente(ultima)?r.proxima_revision:null;
   const coherente=owner&&ultima&&proxima;

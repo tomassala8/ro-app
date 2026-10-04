@@ -20,8 +20,15 @@ export function estadoCadencia(r) {
   return validados.has(r)?r.estado === 'en_cadencia' ? 'verde' : r.estado === 'revisar_cadencia' ? 'ambar' : 'gris':'gris';
 }
 export function ambitoCadencia307(ctx){
- const filas=Array.isArray(ctx.clientes)?ctx.clientes:Array.isArray(ctx.clientesVisibles)?ctx.clientesVisibles:[],counts=new Map();
- for(const c of filas)if(typeof c?.id==='string')counts.set(c.id,(counts.get(c.id)||0)+1);
- const ids=filas.filter(c=>counts.get(c?.id)===1&&c.activo_confirmado===true&&ctx.ver?.({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true).map(c=>c.id).sort();
- return {ids,personas:ctx.datos?.personas||[],hoy:ctx.hoy,firma:JSON.stringify([ctx.real?.id,ctx.persona?.id,ctx.real?.estado,ctx.persona?.estado,ctx.real?.activo,ctx.persona?.activo,ctx.real?.puestos,ctx.persona?.puestos,ctx.veModulo?.('reuniones'),ctx.hoy,ids])};
+ const list=x=>Array.isArray(x)?x:[],id=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(x);
+ const activo=p=>p?.estado==='activo'&&p.activo!==false,roles=p=>Array.isArray(p?.puestos)&&p.puestos.length>0&&p.puestos.every(id)&&new Set(p.puestos).size===p.puestos.length;
+ const cs=list(ctx.clientes),vs=list(ctx.clientesVisibles),ps=list(ctx.datos?.personas),as=[ctx.real,ctx.persona];
+ let ids=[];
+ try{
+ const actores=as.every(p=>{const xs=ps.filter(x=>x?.id===p?.id);return id(p?.id)&&activo(p)&&roles(p)&&xs.length===1&&activo(xs[0])&&roles(xs[0])&&JSON.stringify([...p.puestos].sort())===JSON.stringify([...xs[0].puestos].sort());});
+ const permite=c=>id(c?.id)&&c.activo_confirmado===true&&c.detalle===true&&c.activo!==false&&c.estado!=='baja';
+ if(actores&&ctx.vigente?.()!==false&&ctx.veModulo?.('reuniones')===true)ids=cs.filter(c=>permite(c)&&cs.filter(x=>x?.id===c.id).length===1&&vs.filter(x=>x?.id===c.id).length===1&&vs.some(x=>x?.id===c.id&&permite(x))&&ctx.ver?.({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true).map(c=>c.id).sort();
+ const grants=cs.map(c=>[c?.id,ctx.ver?.({tipo:'cliente_detalle',cliente_id:c?.id})?.ok===true]);
+ return {ids,personas:actores?ps:[],hoy:ctx.hoy,firma:JSON.stringify([as,ps,cs,vs,ctx.datos?.asignaciones,ctx.hoy,ctx.veModulo?.('reuniones'),ctx.veModulo?.('ficha'),grants,ids])};
+ }catch{return {ids:[],personas:[],hoy:ctx.hoy,firma:null};}
 }

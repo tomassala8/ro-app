@@ -2,6 +2,7 @@
 La decisión humana manda sobre cadencias/roles de referencias antiguas.
 """
 import json
+import re
 from datetime import date, timedelta
 from pathlib import Path
 from fuentes_verdad import clientes_activos as ACT
@@ -22,6 +23,34 @@ def leer(p):
 def dia(v):
     try:return date.fromisoformat(v) if isinstance(v,str) else None
     except ValueError:return None
+
+
+def eventos_confirmados640(reuniones):
+    """Identidad global antes del scope: conflicto invalida todas las variantes.
+    No reconstruye identidad ni participación a partir de nombres o fechas.
+    """
+    grupos={}
+    for ev in reuniones if isinstance(reuniones,list) else []:
+        if not isinstance(ev,dict):continue
+        eid=ev.get('evento_id')
+        if not isinstance(eid,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',eid):continue
+        try:
+            huella=json.dumps(ev,sort_keys=True,separators=(',', ':'),ensure_ascii=True,allow_nan=False)
+        except (TypeError,ValueError,OverflowError):
+            huella=None
+        grupos.setdefault(eid,[]).append((huella,ev))
+    out=[]
+    for variantes in grupos.values():
+        huellas={h for h,_ in variantes}
+        if None in huellas or len(huellas)!=1:continue
+        ev=variantes[0][1]
+        if (not isinstance(ev.get('fuente'),str) or ev['fuente'] not in ('zoom','fathom','ghl','registro_local')
+                or not isinstance(ev.get('cliente_id'),str) or not ev['cliente_id']
+                or dia(ev.get('fecha')) is None or ev.get('celebrada') is not True
+                or ev.get('cliente_confirmado') is not True
+                or ev.get('rol_responsable_confirmado')!='trafficker'):continue
+        out.append(ev)
+    return out
 
 
 def responsables(cid,asignaciones,personas,hoy):
@@ -70,6 +99,7 @@ def sugerencias(reglas,asignaciones,personas,reuniones,cobertura,hoy,puede_ver):
     if not isinstance(hoy,date):raise ValueError('Falta el día de referencia.')
     cobertura=cobertura if isinstance(cobertura,dict) else {}
     out=[]
+    confirmados=eventos_confirmados640(reuniones)
     for r in reglas_confirmadas(reglas):
         cid=r.get('cliente_id')
         if not puede_ver(cid):continue
@@ -83,7 +113,7 @@ def sugerencias(reglas,asignaciones,personas,reuniones,cobertura,hoy,puede_ver):
             item.update(estado='confirmar_responsable',accion='confirmar_responsable',
                         recomendacion='Confirma el trafficker responsable de esta cuenta antes de programar su seguimiento.')
         eventos=[]
-        for ev in reuniones if isinstance(reuniones,list) else []:
+        for ev in confirmados:
             if not isinstance(ev,dict):continue
             f=dia(ev.get('fecha'))
             if ev.get('cliente_id')==cid and f and f<=hoy and ev.get('celebrada') is True and ev.get('cliente_confirmado') is True and ev.get('rol_responsable_confirmado')=='trafficker' and ev.get('fuente'):

@@ -18,3 +18,6 @@ Pendientes: paridad de mediciones artifact; disponibilidad/jornada/ausencias apr
 Datos/bases/caches/archivos generados por persona se conservan en el Mac y se excluyen de esta entrega. Los contactos incrustados no necesarios se sustituyen sólo en el checkout de publicación por ejemplos sintéticos; la copia operativa local se conserva. La app requiere sus fuentes privadas y configuración: este repositorio de código no es una copia operativa completa. No activar IA/envíos/ClickUp/Modular ni editar webs por migrar. No reescritura del historialGit: quitar datos del árbol actual no los elimina de commits antiguos.
 
 Disco observado7,5GB libres99%: comprobar antes de instalar dependencias/generar copias grandes. La revisión sigue sólo en127.0.0.1:8771 con salidas apagadas.
+
+
+Actualización645: corrección de cadencia640/641 integrada y verificada después del corte635. Consultar entrega/645_CADENCIA_INTEGRADA_Y_VERIFICADA_CODEX.md y pruebas644/643. La reproducción previa644 usa sólo funciones puras en fixtures/metodo_cuentas_640_original.py. No activar proveedores ni sustituir fuentes privadas por fixtures.635 sigue siendo el corte anterior verificable; esta actualización no cierra el objetivo general.

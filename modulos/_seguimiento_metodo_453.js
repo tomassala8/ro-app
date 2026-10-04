@@ -8,7 +8,7 @@ export function ambitoSeguimiento453(ctx){try{
  if(!dia(ctx.hoy)||ctx.veModulo?.('reuniones')!==true||ctx.vigente?.()===false)return null;
  const ps=list(ctx.datos?.personas),cs=list(ctx.clientes),vs=list(ctx.clientesVisibles);
  for(const actor of [ctx.real,ctx.persona]){const xs=ps.filter(p=>p?.id===actor?.id);if(!id(actor?.id)||!activo(actor)||!roles(actor)||xs.length!==1||!activo(xs[0])||!roles(xs[0])||JSON.stringify([...actor.puestos].sort())!==JSON.stringify([...xs[0].puestos].sort()))return null;}
- const ids=cs.filter(c=>id(c?.id)&&cs.filter(x=>x?.id===c.id).length===1&&c.activo_confirmado===true&&c.detalle!==false&&vs.filter(x=>x?.id===c.id).length===1&&vs.some(x=>x.id===c.id&&x.activo_confirmado===true&&x.detalle!==false)&&ctx.ver?.({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true).map(c=>c.id).sort();
+ const ids=cs.filter(c=>id(c?.id)&&cs.filter(x=>x?.id===c.id).length===1&&c.activo_confirmado===true&&c.detalle===true&&c.activo!==false&&c.estado!=='baja'&&vs.filter(x=>x?.id===c.id).length===1&&vs.some(x=>x.id===c.id&&x.activo_confirmado===true&&x.detalle===true&&x.activo!==false&&x.estado!=='baja')&&ctx.ver?.({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true).map(c=>c.id).sort();
  return {ids,firma:JSON.stringify([ctx.real,ctx.persona,ps,cs,vs,ctx.datos?.asignaciones,ctx.hoy,ctx.veModulo('reuniones'),ctx.veModulo('ficha'),cs.map(c=>[c?.id,ctx.ver?.({tipo:'cliente_detalle',cliente_id:c?.id})?.ok===true])])};
 }catch{return null;}}
 export function evidenciaSeguimiento453(e,hoy){

@@ -1,6 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
 const c={Date,Map,Set,Number,Array};vm.createContext(c);const s=fs.readFileSync(__dirname+'/modulos/_metodo_cohorte_305.js','utf8').replace(/export /g,'');Object.assign(c,vm.runInContext(`(()=>{${s};return {proyectarMetodo305,hitoReferencia305}})()`,c));
-let n=0;const test=(nombre,f)=>{f();n++;},today='2026-10-03',people=[{id:'t',estado:'activo'}];
+let n=0;const test=(nombre,f)=>{f();n++;},today='2026-10-03',people=[{id:'t',estado:'activo',puestos:['trafficker']}];
 const row=()=>({cliente_id:'c',regla_id:'seguimiento_quincenal_especialista',cadencia_dias:15,responsable_role:'trafficker',estado:'en_cadencia',incumplimiento:null,responsables_ids:['t'],responsable_id:'t',ultima_confirmada:'2026-09-25',proxima_revision:'2026-10-10',fuentes_operativas:[{tipo:'reunion_celebrada',fecha:'2026-09-25'}]});
 const doc=()=>({hoy:today,sugerencias:[row()],cobertura_reuniones:{completa:false}});
 const get=d=>c.proyectarMetodo305(d,['c'],people,today).get('c');
