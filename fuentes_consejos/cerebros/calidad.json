@@ -1,0 +1,1009 @@
+{
+ "_meta": {
+  "area": "calidad",
+  "titulo": "Diagnósticos de calidad (qué hay detrás de los números)",
+  "puestos": [
+   "account",
+   "especialista_ghl",
+   "jefa_crm",
+   "jefa_publicidad",
+   "jefa_seo",
+   "operaciones",
+   "seo",
+   "trafficker"
+  ],
+  "version": "1.1",
+  "fecha": "2026-10-04",
+  "fuentes_principales": [
+   "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+   "ro-equipo:30_SKILLS/pipeline-comercial-gohighlevel-despacho/SKILL.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/P2_MOTOR_CAPTACION/SOP-P2-10_reporte-quincenal-auditoria-leads.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-02_seo-local-paginas.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-07_pieza-informacional-anual.md",
+   "ro-app:fuentes_diagnosticos/diagnosticos.py"
+  ],
+  "nota": "Una ficha por diagnóstico de fuentes_diagnosticos/. Se dispara por el id del diagnóstico (disparadores.diagnosticos), no por alertas: así no cambia qué ficha sale para las alertas que ya existen.",
+  "pendientes_tomas": [
+   "Umbrales SEO de intención: informativa 60 %, marca 70 %."
+  ],
+  "decisiones_tomas": [
+   "4-oct-2026: leads que no se pueden llamar, ámbar 20 % y rojo 35 %.",
+   "4-oct-2026: Gmail u Hotmail no restan calidad de entrada (señal secundaria).",
+   "4-oct-2026: blog ámbar 50 % y rojo 70 %; baja un escalón si servicio y portada suman 100 clics en 28 días y el 25 % del total."
+  ]
+ },
+ "principios": [
+  {
+   "id": "cal_p_que_hay_detras",
+   "texto": "Un número que sube no es un resultado: mira qué hay detrás (quién es el lead, de dónde viene la visita).",
+   "fuente": "criterio",
+   "autor": "RO"
+  },
+  {
+   "id": "cal_p_primer_eslabon",
+   "texto": "De arriba abajo: si el lead es malo de origen, no se discute la atención del despacho.",
+   "fuente": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:40",
+   "autor": "RO"
+  },
+  {
+   "id": "cal_p_dato_no_culpa",
+   "texto": "La conversación con el despacho empieza por el dato y habla del sistema, no de la persona.",
+   "fuente": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:99",
+   "autor": "RO"
+  },
+  {
+   "id": "cal_p_muestra",
+   "texto": "Con poca muestra no hay veredicto: la app dice «sin dato» y no se concluye.",
+   "fuente": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:39",
+   "autor": "RO"
+  }
+ ],
+ "situaciones": [
+  {
+   "id": "cal_veredicto_embudo",
+   "titulo": "¿Leads malos o despacho que no atiende? Veredicto del embudo con datos",
+   "puestos": [
+    "account",
+    "jefa_crm",
+    "especialista_ghl",
+    "jefa_publicidad",
+    "trafficker",
+    "operaciones"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "crm_leads_no_calificados",
+     "crm_despacho_no_atiende",
+     "crm_leads_no_avanzan"
+    ],
+    "palabras_clave": [
+     "leads malos",
+     "los leads son malos",
+     "el despacho no atiende",
+     "quién tiene la culpa",
+     "leads o despacho",
+     "veredicto del embudo",
+     "no salen clientes de los leads",
+     "el cliente dice que los leads no sirven",
+     "lead malo de origen",
+     "lead bueno mal trabajado"
+    ]
+   },
+   "sintoma": "El cliente dice que «los leads no sirven» o RO cree que «el despacho no llama». La app da un veredicto: leads_malos, despacho_no_atiende, contacta_no_agenda, no_vienen o embudo_sano.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lee el veredicto y sus tres diagnósticos (calidad, atención, avance). Se para en el PRIMER eslabón roto, de arriba abajo.",
+     "donde": "App › ficha del cliente › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si dice «leads malos»: mira qué falla (sin teléfono, teléfono mal, extranjeros, spam). Abre 5 leads en GHL y confírmalo a ojo.",
+     "donde": "GHL › Contactos del mes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si dice «despacho no atiende»: comprueba que no llama desde su móvil sin apuntar (la app avisa si hay citas sin intentos).",
+     "donde": "GHL › Conversaciones · llamada al despacho",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si dice «contacta pero no agenda»: escucha o pide 5 llamadas descartadas como «mal lead». La mitad suelen ser errores de conversación.",
+     "donde": "Grabaciones o roleplay con el despacho",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si dice «no vienen»: revisa que el protocolo anti-plantón esté entero (confirmación, recordatorio 24 h, llamada a los 3 min).",
+     "donde": "GHL › Flujos y calendario",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Lead malo de origen (formulario o campaña)",
+     "como_confirmar": "Más del 35 % de los leads sin teléfono válido, extranjeros o spam.",
+     "solucion": [
+      "Pasa el caso a la ficha «Leads no calificados» y a publicidad: se arregla el formulario o la segmentación, no al despacho."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "El despacho no atiende o no registra",
+     "como_confirmar": "Menos del 70 % con intento en 24 h o un 20 % sin tocar.",
+     "solucion": [
+      "Sigue la ficha «El despacho no atiende los leads»: dato por delante, el sistema y no la persona."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Lead bueno mal trabajado en la llamada",
+     "como_confirmar": "Se atiende y responde, pero no llega a cita; las llamadas no piden la cita o dan precio en frío.",
+     "solucion": [
+      "QA de llamada con la rúbrica: una llamada, una habilidad, una persona, una semana."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "2 semanas"
+    },
+    {
+     "id": "c4",
+     "causa": "Protocolo anti-plantón incompleto",
+     "como_confirmar": "Asistencia por debajo del 60 % con 8 citas o más.",
+     "solucion": [
+      "Completa el protocolo y la recuperación a 48 h (WF-09)."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Quincena"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Enseña el veredicto al account con las cifras, no con opiniones.",
+    "No subas presupuesto hasta saber cuál es el eslabón roto."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "cliente",
+     "cuando": "Cuando el cliente dice que los leads no sirven",
+     "texto": "{nombre}, hemos mirado los {leads} leads de este mes uno a uno. {frase_veredicto} Te propongo que esta semana hagamos {accion} y lo volvemos a mirar con el dato del lunes."
+    }
+   ],
+   "que_no_hacer": [
+    "No culpes al despacho ni a la campaña sin mirar los tres diagnósticos.",
+    "No subas pauta para compensar: más inversión solo compra más leads sin llamar.",
+    "No des por bueno un veredicto con confianza «baja»."
+   ],
+   "escalar": {
+    "cuando": "El veredicto lleva dos quincenas igual sin plan, o el cliente amenaza con la baja",
+    "a": "operaciones"
+   },
+   "exito": "El cliente y RO coinciden en cuál es el eslabón roto y hay una acción con dueño y plazo.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 40,
+     "autor": "RO",
+     "nota": "recorrer de arriba abajo y parar en el primer eslabón roto"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 88,
+     "autor": "RO",
+     "nota": "discriminador lead malo de origen frente a lead bueno mal trabajado; escuchar 5 llamadas"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 99,
+     "autor": "RO",
+     "nota": "más inversión solo compra más leads sin llamar"
+    },
+    {
+     "fichero": "ro-app:fuentes_diagnosticos/diagnosticos.py",
+     "autor": "RO",
+     "nota": "veredicto_embudo(): orden calidad → atención → avance"
+    }
+   ]
+  },
+  {
+   "id": "cal_leads_no_calificados",
+   "titulo": "Leads no calificados: sin teléfono, teléfono mal escrito, correo falso o de fuera de España",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad",
+    "especialista_ghl",
+    "jefa_crm",
+    "account"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "crm_leads_no_calificados"
+    ],
+    "palabras_clave": [
+     "leads sin teléfono",
+     "teléfono mal",
+     "teléfono falso",
+     "correo falso",
+     "correo genérico",
+     "leads de latinoamérica",
+     "leads extranjeros",
+     "leads basura",
+     "leads spam",
+     "no se puede llamar al lead",
+     "whatsapp falla al lead",
+     "leads duplicados"
+    ]
+   },
+   "sintoma": "Muchos leads llegan sin teléfono, con el teléfono mal, con correos inventados o desde fuera de España. El despacho no los puede llamar y dice que «los leads son malos».",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Mira qué motivo domina en el diagnóstico: sin teléfono, mal escrito, extranjero, correo falso, spam o duplicado.",
+     "donde": "App › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Abre el formulario del anuncio o de la web: ¿el teléfono es obligatorio y con prefijo de España?",
+     "donde": "Meta › Formularios instantáneos · web › formulario",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si hay muchos teléfonos extranjeros: revisa la segmentación por país y por idioma de la campaña.",
+     "donde": "Meta Ads › Conjunto de anuncios › Ubicación",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay spam o nombres basura: mira si llegan por el formulario web sin protección (captcha, campo oculto).",
+     "donde": "Web › formulario · GHL › origen del contacto",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si el formulario es instantáneo con datos rellenados solos: compara la calidad con los leads de landing.",
+     "donde": "GHL › origen del contacto",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Formulario sin teléfono obligatorio o sin validar",
+     "como_confirmar": "El campo teléfono es opcional o acepta cualquier texto.",
+     "solucion": [
+      "Haz el teléfono obligatorio, con prefijo +34 por defecto y validación de 9 cifras.",
+      "Vuelve a medir en 2 semanas."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Campaña que llega fuera de España",
+     "como_confirmar": "Leads con prefijo +52, +57, +54 u otros; segmentación por idioma o «personas que viven o han estado».",
+     "solucion": [
+      "Segmenta solo «personas que viven en» España (o la provincia).",
+      "Excluye países y revisa el idioma."
+     ],
+     "quien": "trafficker",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Spam o bots en el formulario web",
+     "como_confirmar": "Nombres sin sentido, enlaces en los campos, correos de usar y tirar.",
+     "solucion": [
+      "Pide a web que active captcha o campo trampa.",
+      "Marca esos contactos como Perdido · duplicado/spam."
+     ],
+     "quien": "web",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Formulario instantáneo demasiado fácil",
+     "como_confirmar": "Los leads del formulario de Meta salen peor que los de la landing.",
+     "solucion": [
+      "Añade una pregunta de cualificación o pasa a formulario de mayor intención.",
+      "Acepta menos volumen a cambio de leads que se pueden llamar."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Enseña al despacho que el problema es de origen: así no se discute su atención.",
+    "Marca los inválidos como Perdido con su motivo (tel/email inválido o duplicado/spam)."
+   ],
+   "guiones": [
+    {
+     "canal": "whatsapp",
+     "para": "cliente",
+     "cuando": "Para avisar al despacho",
+     "texto": "Hola {nombre}, hemos visto que de los {leads} contactos del mes, {malos} no traen un teléfono que se pueda llamar. Es cosa nuestra, del formulario: lo estamos corrigiendo esta semana y te contamos el lunes cómo va."
+    }
+   ],
+   "que_no_hacer": [
+    "No cuentes los correos de Gmail o Hotmail como malos: en autónomos y pymes es lo normal.",
+    "No borres leads: márcalos como Perdido con motivo, que alimentan el ajuste de la campaña.",
+    "No subas presupuesto con el formulario roto."
+   ],
+   "escalar": {
+    "cuando": "Después del ajuste sigue por encima del 35 % dos semanas",
+    "a": "jefa_publicidad"
+   },
+   "exito": "Menos del 20 % de leads sin teléfono válido y el despacho deja de decir que «no se puede llamar a nadie».",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P2_MOTOR_CAPTACION/SOP-P2-10_reporte-quincenal-auditoria-leads.md",
+     "linea": 80,
+     "autor": "RO",
+     "nota": "definición dura de lead: interés explícito + datos de contacto; «me interesa» sin datos no es lead"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "validación por debajo del 40 % y sus 6 comprobaciones, entre ellas leads fuera de geografía"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/pipeline-comercial-gohighlevel-despacho/SKILL.md",
+     "linea": 115,
+     "autor": "RO",
+     "nota": "Perdido con motivo de lista cerrada: tel/email inválido, duplicado/spam"
+    },
+    {
+     "fichero": "ro-app:fuentes_diagnosticos/diagnosticos.py",
+     "autor": "RO",
+     "nota": "calidad_lead(): teléfono, correo y nombre; umbrales 20/35 % pendientes de Tomás"
+    }
+   ]
+  },
+  {
+   "id": "cal_despacho_no_atiende",
+   "titulo": "El despacho no atiende los leads: llegan buenos pero nadie los llama a tiempo",
+   "puestos": [
+    "account",
+    "especialista_ghl",
+    "jefa_crm",
+    "operaciones"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "crm_despacho_no_atiende"
+    ],
+    "palabras_clave": [
+     "el despacho no llama",
+     "el despacho no atiende los leads",
+     "nadie llama a los leads",
+     "leads sin atender",
+     "el despacho no responde a los leads",
+     "llama desde su móvil",
+     "el crm no refleja",
+     "tarda en llamar"
+    ]
+   },
+   "sintoma": "Los leads son buenos (se pueden llamar), pero menos del 90 % tiene un intento de una persona en 24 h o hay leads sin tocar.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La app avisa de «posible gestión fuera del CRM» (hay citas pero ningún intento registrado)?",
+     "donde": "App › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Hay una persona nombrada en el despacho que llama a los leads?",
+     "donde": "Ficha del cliente · última reunión",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿La persona está saturada (pocos intentos y siempre a la misma hora)?",
+     "donde": "GHL › Conversaciones · horas de llamada",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Está montado el primer mensaje automático en menos de 5 minutos?",
+     "donde": "GHL › Flujos",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Llama desde el móvil y el CRM no lo refleja",
+     "como_confirmar": "El despacho da fechas de llamadas que no constan en GHL.",
+     "solucion": [
+      "La conversación es «el CRM no refleja tu gestión», no «no llamas».",
+      "Instala el registro de 3 campos (quién, cuándo, resultado)."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Nadie nombrado para llamar",
+     "como_confirmar": "No hay una persona responsable de los leads.",
+     "solucion": [
+      "Pide al socio que nombre a una persona y su franja de llamada."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Persona nombrada pero saturada",
+     "como_confirmar": "Pocos intentos, siempre en la misma franja, cola creciente.",
+     "solucion": [
+      "Pon un tope de pauta y habla de delegar.",
+      "Instala la máquina (mensaje automático, aviso de llamada perdida) antes de reeducar."
+     ],
+     "quien": "account",
+     "plazo": "Quincena"
+    },
+    {
+     "id": "c4",
+     "causa": "Sin cadencia automática",
+     "como_confirmar": "No hay primer toque automático en 5 minutos.",
+     "solucion": [
+      "Activa el flujo de bienvenida y recordatorios del snapshot."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pasa al despacho la lista de leads sin tocar (con «Ver dato», que queda en el rastro).",
+    "No toques la campaña: el lead no es el problema."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "48 h después del primer aviso",
+     "texto": "{nombre}, te llamo con un dato: de los {leads} contactos de este mes, {sin} no tienen ninguna llamada apuntada. ¿Los habéis llamado desde el móvil? Si es así, apuntémoslo, porque si no parece que el sistema no funciona y no es verdad."
+    }
+   ],
+   "que_no_hacer": [
+    "No subas pauta para compensar.",
+    "No reproches sin dato.",
+    "No aceptes «ya lo cogerá alguien»."
+   ],
+   "escalar": {
+    "cuando": "72 h o dos quincenas por encima de 24 h",
+    "a": "operaciones"
+   },
+   "exito": "90 % o más de los leads con intento de una persona en menos de 24 h y cero leads sin tocar.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 93,
+     "autor": "RO",
+     "nota": "umbral: % en 24 h por debajo del 90 %, p90 por encima de 4 h, leads con 0 intentos"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 94,
+     "autor": "RO",
+     "nota": "si el despacho gestiona fuera del CRM: «el CRM no refleja tu gestión»"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 97,
+     "autor": "RO",
+     "nota": "causas por probabilidad e instalar la máquina antes de reeducar"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 99,
+     "autor": "RO",
+     "nota": "qué no hacer"
+    }
+   ]
+  },
+  {
+   "id": "cal_leads_no_avanzan",
+   "titulo": "Los leads llegan pero no avanzan en el pipeline: se quedan en la primera etapa",
+   "puestos": [
+    "especialista_ghl",
+    "jefa_crm",
+    "account"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "crm_leads_no_avanzan"
+    ],
+    "palabras_clave": [
+     "leads no avanzan",
+     "pipeline parado",
+     "se quedan en nuevo lead",
+     "no llegan a cita",
+     "oportunidades paradas",
+     "leads estancados",
+     "no pasan de etapa",
+     "embudo atascado",
+     "no vienen a la cita"
+    ]
+   },
+   "sintoma": "Entran leads, pero menos del 25 % llega a cita, la mayoría de oportunidades no se ha movido de su etapa en 7 días o a las citas viene menos del 60 %.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Mira el veredicto: si la calidad está en rojo, el problema es de origen, no de avance.",
+     "donde": "App › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Las oportunidades no se mueven porque nadie las mueve (el despacho trabaja pero no actualiza etapas)?",
+     "donde": "GHL › Oportunidades",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se contacta y responde, pero no se pide la cita?",
+     "donde": "Llamadas o roleplay",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Agendan y no vienen? Revisa el protocolo anti-plantón.",
+     "donde": "GHL › Calendario y flujos",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Leads malos de origen",
+     "como_confirmar": "La calidad del lead está en rojo.",
+     "solucion": [
+      "Sigue la ficha «Leads no calificados»."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Pipeline sin actualizar",
+     "como_confirmar": "El despacho dice que habló con ellos, pero la etapa sigue en Lead.",
+     "solucion": [
+      "Enseña a mover la etapa en el momento (Validado, Contactado, Reunión).",
+      "Revisa juntos las paradas una vez por semana."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "No pide la cita o da precio en frío",
+     "como_confirmar": "Llamadas sin petición de cita o con precio cerrado.",
+     "solucion": [
+      "QA con la rúbrica y guion de cualificación."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "2 semanas"
+    },
+    {
+     "id": "c4",
+     "causa": "Plantones",
+     "como_confirmar": "Asistencia por debajo del 60 % con 8 citas o más.",
+     "solucion": [
+      "Protocolo anti-plantón entero y recuperación a 48 h."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Quincena"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Repasa con el despacho las oportunidades paradas más antiguas.",
+    "Comprueba que las citas pasadas tienen estado."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Revisión semanal",
+     "texto": "Hola {nombre}: este mes han entrado {leads} contactos y {con_cita} han llegado a cita. {parados} siguen en la primera etapa. ¿Los repasamos juntos el {dia}? En 20 minutos vemos cuáles siguen vivos."
+    }
+   ],
+   "que_no_hacer": [
+    "No culpes al lead sin mirar la calidad.",
+    "No insistas más de 48 h tras un plantón.",
+    "No agendes a más de un mes vista."
+   ],
+   "escalar": {
+    "cuando": "Dos quincenas con menos del 15 % a cita",
+    "a": "jefa_crm"
+   },
+   "exito": "25 % o más de los leads a cita, oportunidades que se mueven cada semana y asistencia del 60 % o más.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 103,
+     "autor": "RO",
+     "nota": "contacta pero no agenda: agendado entre validados por debajo del 25 %"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 111,
+     "autor": "RO",
+     "nota": "no-show: asistencia por debajo del 60 % con 8 citas o más"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/pipeline-comercial-gohighlevel-despacho/SKILL.md",
+     "linea": 115,
+     "autor": "RO",
+     "nota": "pipeline único Lead → Validado → Contactado → Reunión → Propuesta → Cliente"
+    }
+   ]
+  },
+  {
+   "id": "cal_leads_baratos_malos",
+   "titulo": "Leads baratos pero malos: el coste por lead engaña",
+   "puestos": [
+    "trafficker",
+    "jefa_publicidad",
+    "account"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "pub_leads_baratos_malos"
+    ],
+    "palabras_clave": [
+     "coste por lead bajo pero no sirven",
+     "leads baratos",
+     "cpl engañoso",
+     "coste por lead calificable",
+     "la campaña da muchos leads malos",
+     "cpl bajo y sin clientes"
+    ]
+   },
+   "sintoma": "El coste por lead está en objetivo o por debajo, pero tantos leads no sirven que el coste por lead que se puede llamar supera la referencia en más de un 30 %.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Compara el coste por lead con el coste por lead calificable que da la app.",
+     "donde": "App › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Qué anuncio o formulario trae los leads malos? Cruza el origen de los no calificables.",
+     "donde": "GHL › origen · Meta › anuncios",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿La promesa del anuncio atrae cazadores de gratis («consulta gratis», «sin compromiso»)?",
+     "donde": "Meta › creativos",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se optimiza al lead, no al lead bueno",
+     "como_confirmar": "El objetivo de la campaña es el formulario enviado, sin señal de calidad.",
+     "solucion": [
+      "Sube a Meta la señal de lead calificado (conversiones del CRM).",
+      "Juzga la campaña por coste por lead calificable."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Un anuncio o formulario concentra la basura",
+     "como_confirmar": "La mayoría de los malos sale de una pieza.",
+     "solucion": [
+      "Apaga o corrige esa pieza.",
+      "Vuelve a medir con 50 leads."
+     ],
+     "quien": "trafficker",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Gancho de gratuidad",
+     "como_confirmar": "El creativo promete algo gratis que atrae a quien no va a contratar.",
+     "solucion": [
+      "Cambia el gancho por el cualificador del lector (a quién va dirigido)."
+     ],
+     "quien": "trafficker",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "En el informe al cliente, enseña también el coste por lead calificable.",
+    "No celebres un coste por lead bajo sin mirar la calidad."
+   ],
+   "que_no_hacer": [
+    "No bajes el coste por lead a costa de la calidad.",
+    "No toques precios ni presupuesto del cliente sin dirección."
+   ],
+   "escalar": {
+    "cuando": "El coste por lead calificable sigue un 30 % por encima de la referencia tras corregir",
+    "a": "jefa_publicidad"
+   },
+   "exito": "El coste por lead calificable vuelve a la referencia del cliente.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "validación cae: gancho amplio y promesa de gratuidad atraen cazadores"
+    },
+    {
+     "fichero": "ro-app:fuentes_diagnosticos/diagnosticos.py",
+     "autor": "RO",
+     "nota": "diag_cpl_enganoso(): coste por lead calificable = cpl ÷ (1 − % no calificables)"
+    }
+   ]
+  },
+  {
+   "id": "cal_seo_trafico_blog",
+   "titulo": "Mucho tráfico SEO pero de blog: tráfico poco calificado que no trae clientes",
+   "puestos": [
+    "seo",
+    "jefa_seo",
+    "account"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "seo_trafico_blog"
+    ],
+    "palabras_clave": [
+     "tráfico de blog",
+     "mucho tráfico pero no clientes",
+     "tráfico poco calificado",
+     "el blog trae las visitas",
+     "el seo no trae clientes",
+     "visitas que no convierten",
+     "tráfico informacional"
+    ]
+   },
+   "sintoma": "Más de la mitad de los clics de Google van a entradas de blog y pocos a las páginas de servicio o a la portada. Si las páginas de servicio ya suman bastantes clics, el diagnóstico baja un escalón: el blog suma, no tapa.",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Es la pieza informacional anual planificada? Entonces es esperado: comprueba que enlaza a la página de servicio.",
+     "donde": "Calendario SEO de la cuenta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Las páginas de servicio + ciudad están en el top 10 de sus palabras?",
+     "donde": "SE Ranking › palabras transaccionales",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Un blog sale por encima de la landing de servicio en una búsqueda de contratar (canibalización)?",
+     "donde": "Search Console › búsqueda › páginas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El blog trae visitas de fuera de la zona del despacho o de otros países?",
+     "donde": "Search Console › países",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Pieza informacional sin enlace a servicio",
+     "como_confirmar": "El blog con tráfico no enlaza a la landing del servicio.",
+     "solucion": [
+      "Enlaza el blog a la landing con texto descriptivo y una llamada a la acción."
+     ],
+     "quien": "seo",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Transaccional estancado",
+     "como_confirmar": "Las páginas de servicio + ciudad no se mueven.",
+     "solucion": [
+      "Prioriza lo transaccional local: la propuesta informacional no entra con lo transaccional parado."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c3",
+     "causa": "El blog roba la búsqueda de servicio",
+     "como_confirmar": "El blog sale por encima de la landing.",
+     "solucion": [
+      "Desoptimiza el blog para esa búsqueda y enlázalo a la landing."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "Tráfico de fuera de la zona",
+     "como_confirmar": "La mayoría de clics del blog vienen de otros países o provincias.",
+     "solucion": [
+      "No lo cuentes como éxito en el informe; céntrate en lo local."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "En el informe, separa clics de blog de clics de servicio.",
+    "Con el cliente, la frase es literal: «esto genera tráfico, pero no clientes directos»."
+   ],
+   "que_no_hacer": [
+    "No vendas el crecimiento de tráfico de blog como resultado.",
+    "No borres el blog con tráfico: enlázalo a servicio."
+   ],
+   "escalar": {
+    "cuando": "A mes 4 lo transaccional no se mueve con la cadena cumplida",
+    "a": "jefa_seo"
+   },
+   "exito": "Las páginas de servicio y la portada concentran la mitad o más de los clics de Google.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-02_seo-local-paginas.md",
+     "linea": 60,
+     "autor": "RO",
+     "nota": "intención transaccional, no informativa: «esto genera tráfico, pero no clientes directos»"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-07_pieza-informacional-anual.md",
+     "linea": 7,
+     "autor": "RO",
+     "nota": "la pieza informacional anual es planificada (patrón Avantik)"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-03_optimizacion-seo-mensual-quickwins.md",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "mes 4 sin movimiento transaccional: semáforo ámbar con plan"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/cerebros/seo_web.json",
+     "linea": 92,
+     "autor": "RO",
+     "nota": "principio: el contenido informacional genera tráfico, no clientes"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "Tomás",
+     "nota": "4-oct-2026: con bastantes clics transaccionales el blog puede salvarse"
+    }
+   ]
+  },
+  {
+   "id": "cal_seo_intencion_busqueda",
+   "titulo": "Las búsquedas que traen clics son dudas o el nombre del despacho, no gente que quiere contratar",
+   "puestos": [
+    "seo",
+    "jefa_seo",
+    "account"
+   ],
+   "disparadores": {
+    "diagnosticos": [
+     "seo_intencion_busqueda"
+    ],
+    "palabras_clave": [
+     "búsquedas informativas",
+     "solo nos buscan por el nombre",
+     "búsquedas de marca",
+     "intención de búsqueda",
+     "palabras que no venden",
+     "nos encuentran por modelo 303",
+     "tráfico que pregunta"
+    ]
+   },
+   "sintoma": "La mayoría de clics sin marca son dudas («qué es», «modelo 303», «plazo») o casi todos los clics buscan el nombre del despacho: el SEO no trae gente nueva que quiera contratar.",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Mira el reparto: marca, informativa, compra. ¿Qué domina?",
+     "donde": "App › Diagnósticos de calidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si domina la marca: ¿las páginas de servicio + ciudad tienen palabras en el top 10?",
+     "donde": "SE Ranking",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si domina lo informativo: ¿esas búsquedas caen en el blog o en páginas de servicio mal enfocadas?",
+     "donde": "Search Console › búsquedas › páginas",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Contenido enfocado a dudas",
+     "como_confirmar": "Las búsquedas con clics son preguntas fiscales o laborales.",
+     "solucion": [
+      "Pasa el foco a servicio + ciudad (checklist de 6 ítems del criterio de palabra)."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c2",
+     "causa": "Sin posiciones transaccionales",
+     "como_confirmar": "Solo entra quien ya conoce el despacho.",
+     "solucion": [
+      "Crea u optimiza las páginas transaccionales locales."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c3",
+     "causa": "Páginas de servicio mal enfocadas",
+     "como_confirmar": "Una página de servicio posiciona por una duda.",
+     "solucion": [
+      "Reescribe el título y el H1 hacia la intención de contratar."
+     ],
+     "quien": "seo",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "En el informe, separa los clics de marca del resto.",
+    "No cuentes las búsquedas de marca como captación nueva."
+   ],
+   "que_no_hacer": [
+    "No persigas palabras informativas con el transaccional parado.",
+    "No vendas los clics de marca como resultado del SEO."
+   ],
+   "escalar": {
+    "cuando": "Tres meses sin clics de compra con la cadena cumplida",
+    "a": "jefa_seo"
+   },
+   "exito": "Al menos un tercio de los clics sin marca buscan un servicio.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-02_seo-local-paginas.md",
+     "linea": 60,
+     "autor": "RO",
+     "nota": "criterio de palabra: incluye servicio e intención transaccional; ¿alguien lo buscaría para contratar?"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/cerebros/seo_web.json",
+     "linea": 92,
+     "autor": "RO",
+     "nota": "principio: primero lo transaccional local"
+    }
+   ]
+  }
+ ]
+}

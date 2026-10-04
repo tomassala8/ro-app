@@ -294,6 +294,17 @@ def _bloque(ficha, clave, campos=None):
     return {"estado": f.get("estado"), "hora": _hora(f), "datos": _encoger(d, 6)}
 
 
+def _riesgo_baja(cid):
+    """Semáforo en tres ejes (resultados, silencio, quejas) y su lectura (fuentes_riesgo/riesgo_baja.py), compacto."""
+    f = next((x for x in ((_j("riesgo/riesgo_baja.json", {}) or {}).get("clientes") or []) if x.get("cliente_id") == cid), None)
+    if not f:
+        return None
+    return {"semaforo": f.get("semaforo"), "nivel": f.get("nivel"), "patron": f.get("patron"), "lectura": f.get("lectura"),
+            "motivos": {k: (e or {}).get("motivos") for k, e in (f.get("ejes") or {}).items()},
+            "discrepancia": f.get("discrepancia"), "confianza": f.get("confianza"), "ficha_cerebro": f.get("ficha"),
+            "fuente": "fuentes_riesgo/riesgo_baja.py", "hora": (_j("riesgo/riesgo_baja.json", {}) or {}).get("generado")}
+
+
 def cliente_para_borrador(persona, cp, cid):
     """TODO lo que esta persona puede ver del cliente, compacto y con fecha: estado, equipo, captación, producción,
     reuniones, informe del mes, alertas (y cobros solo si los ve). Pasa por recortar_ficha, limpiar y recortar_dinero."""
@@ -335,6 +346,7 @@ def cliente_para_borrador(persona, cp, cid):
         "web_y_seo": {"search_console": _bloque(ficha, "gsc", ["periodo", "actual", "anterior", "datos_hasta"]), "analytics": _bloque(ficha, "ga4", ["periodo", "actual", "anterior"])},
         "redes": _bloque(ficha, "metricool"),
         "correos_abiertos": _bloque(ficha, "desk", ["tickets_abiertos", "ult_correo_saliente", "sin_contestar"]),
+        "riesgo_baja": _riesgo_baja(cid),
         "alertas": ficha.get("alertas") or [],
     }
     out = _sin_nulos(out)

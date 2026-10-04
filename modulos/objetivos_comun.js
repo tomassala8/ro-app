@@ -17,6 +17,7 @@ export const CAMPOS = ['leads_mes', 'coste_lead', 'coste_cita', 'ventas_mes', 'c
 const ALIAS = { presupuesto: 'inversion_mes' };
 const PRINCIPALES = ['leads_mes', 'coste_lead', 'coste_cita', 'ventas_mes'];
 export const COLORES = ['verde', 'ambar', 'rojo'];
+export const TONOS = ['calido', 'normal', 'frio'];
 const MODULOS = ['ficha', 'clientes-nuevos'];
 const SEMANAS_HISTORIAL = 12;
 /** Importe escrito en un texto (misma regla que objetivos.py): la nota del semáforo va sin importes. */
@@ -58,6 +59,9 @@ export function normalizar(a) {
     const color = String(vp.color || '').trim().toLowerCase().replace('á', 'a');
     out.color = COLORES.includes(color) ? color : null;
     out.nota = String(vp.nota || '').replace(RE_IMPORTE, '').replace(/\s{2,}/g, ' ').trim().replace(/\n/g, ' ').slice(0, 200);
+    out.queja = vp.queja === true;   // 4-oct: «se ha quejado esta semana» (eje de quejas del riesgo de baja)
+    const tono = String(vp.tono || '').trim().toLowerCase().replace('á', 'a').replace('í', 'i');
+    out.tono = TONOS.includes(tono) ? tono : null;   // 4-oct: calidez en la reunión (eje de relación)
   }
   return out;
 }
@@ -75,7 +79,7 @@ export function reducir(filas) {
         quien: f.quien, cuando: f.cuando, desde: f.modulo, accion_id: f.id };
       c.historial_objetivo.unshift({ accion_id: f.id, quien: f.quien, cuando: f.cuando, desde: f.modulo, campos: f.campos || {} });
     } else if (f.color) {
-      const s = { color: f.color, nota: f.nota || '', quien: f.quien, cuando: f.cuando, semana: f.semana, accion_id: f.id };
+      const s = { color: f.color, nota: f.nota || '', queja: !!f.queja, tono: f.tono || null, quien: f.quien, cuando: f.cuando, semana: f.semana, accion_id: f.id };
       c.semaforo = s;
       c.semanas = [s, ...c.semanas.filter(x => x.semana !== s.semana)];
     }

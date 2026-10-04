@@ -589,6 +589,17 @@
         "administracion"
       ]
     },
+    "riesgo/riesgo_baja": {
+      "_4oct": "Semáforo del cliente en tres ejes (resultados, silencio, quejas) y riesgo de baja (fuentes_riesgo/riesgo_baja.py). Filas con cliente_id: cada uno ve solo sus clientes. Administración no, como los correos (I-02).",
+      "modulos": [
+        "ficha",
+        "mi-dia",
+        "en-rojo"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
     "fuentes/hallazgos_medicion": {
       "modulos": [
         "ficha"

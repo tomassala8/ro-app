@@ -65,4 +65,7 @@ python3 fuentes_consejos/cerebros/pendientes.py           # regenera PENDIENTES_
 ## Áreas
 
 direccion · operaciones · account · comunicacion · altas · publicidad · crm (con el diagnosticador del embudo de
-GoHighLevel, `crm_diagnostico_embudo`) · setters · seo_web · redes_produccion · ventas_ro · personas_admin.
+GoHighLevel, `crm_diagnostico_embudo`) · setters · seo_web · redes_produccion · ventas_ro · personas_admin ·
+**calidad** (una ficha por diagnóstico de `fuentes_diagnosticos/`; se dispara con `por_disparador(diagnostico=...)` o
+`buscar.py --diagnostico <id>`, no con alertas) · **riesgo_baja** (4-oct, 11 fichas: interpreta la combinación de los tres ejes del semáforo del cliente —resultados,
+silencio y quejas— que calcula `fuentes_riesgo/riesgo_baja.py`; ver `fuentes_riesgo/LEEME.md`).
