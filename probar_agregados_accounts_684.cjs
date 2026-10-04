@@ -1,0 +1,26 @@
+const fs=require('fs'),path=require('path'),assert=require('assert/strict');
+const load=async rel=>import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(path.join(__dirname,rel),'utf8')).toString('base64'));
+(async()=>{
+ const old=await load('fixtures/control_resumen_684_baseline.js'),now=await load('modulos/control_cartera.js'),ob=await load('fixtures/accounts_reglas_684_baseline.js');
+ const source=fs.readFileSync(path.join(__dirname,'modulos/_operaciones_accounts_263.js'),'utf8');
+ const part=source.slice(source.indexOf('function agregar263('),source.indexOf('function horasPauta263('));
+ const cell=new Function("const numero=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0; const sinDato=detalle=>({valor:'—',estado:'gris',detalle});const observacion=(valor,detalle,estado='gris')=>({valor:String(valor),estado,detalle});"+part+';return agregar263;')();
+ const row=(v,extra={})=>({cliente_id:'fixture',account_id:'account_fixture',tickets:{medicion:{total:v,mas_48:v,entre_24_48:0}},revisiones:{medicion:{total:v,mas_48:v}},...extra});
+ const group=(fn,rows)=>fn(rows)[0];let n=0;const test=(name,fn)=>{fn();n++;};
+ test('baseline acepta fracción como ticket; actual desconocido',()=>{assert.equal(group(old.resumirAccountsControl,[row(.5)]).tickets.valor,.5);assert.equal(group(now.resumirAccountsControl,[row(.5)]).tickets.valor,null);});
+ test('baseline precisión insegura; actual no count',()=>{const v=Number.MAX_SAFE_INTEGER+1;assert.equal(group(old.resumirAccountsControl,[row(v)]).tickets48.valor,v);assert.equal(group(now.resumirAccountsControl,[row(v)]).tickets48.valor,null);});
+ test('sum overflow de dos válidos no total exacto',()=>{const rows=[row(Number.MAX_SAFE_INTEGER),row(1)];assert.equal(group(old.resumirAccountsControl,rows).tickets.valor,Number.MAX_SAFE_INTEGER+1);const x=group(now.resumirAccountsControl,rows);assert.equal(x.tickets.valor,null);assert.equal(x.tickets.medidos,2);assert.equal(x.revisiones48.valor,null);});
+ test('tipos y ausencias no cero ni conteo',()=>{for(const v of [null,undefined,true,false,'3',NaN,Infinity,-1,.5]){const x=group(now.resumirAccountsControl,[row(v)]);assert.equal(x.tickets.valor,null);assert.equal(x.tickets.medidos,0);assert.equal(x.revisiones48.valor,null);}});
+ test('positivo parcial conserva cobertura',()=>{const x=group(now.resumirAccountsControl,[row(3),row(null)]);assert.deepEqual(x.tickets,{valor:3,medidos:1,sin_dato:1});});
+ test('cero explícito no missing',()=>{assert.deepEqual(group(now.resumirAccountsControl,[row(0),row(null)]).tickets,{valor:0,medidos:1,sin_dato:1});});
+ test('horas fraccionarias mismo periodo conservadas',()=>{const rs=[row(1,{horas:{medicion:{total:1.25,periodo:'2026-09'}}}),row(2,{horas:{medicion:{total:.5,periodo:'2026-09'}}})];assert.equal(group(now.resumirAccountsControl,rs).horas.valor,1.75);});
+ test('meses distintos no suma horas',()=>{const rs=[row(1,{horas:{medicion:{total:1.25,periodo:'2026-09'}}}),row(2,{horas:{medicion:{total:.5,periodo:'2026-10'}}})];assert.equal(group(now.resumirAccountsControl,rs).horas.valor,null);});
+ test('horas enormes no infinito; otros conteos conservados',()=>{const x=group(now.resumirAccountsControl,[row(1,{horas:{medicion:{total:Number.MAX_VALUE,periodo:'2026-09'}}}),row(2,{horas:{medicion:{total:1.5,periodo:'2026-09'}}})]);assert.equal(x.horas.valor,1.5);assert.equal(x.horas.medidos,1);assert.equal(x.tickets.valor,3);});
+ test('grupos separados y entrada intacta',()=>{const rs=[row(2),{...row(3),account_id:'other_fixture'}],before=JSON.stringify(rs);const x=now.resumirAccountsControl(rs);assert.equal(x.length,2);assert.deepEqual(x.map(r=>r.tickets.valor),[2,3]);assert.equal(JSON.stringify(rs),before);});
+ test('tabla regla suma no representable gris',()=>{const rs=[{v:Number.MAX_SAFE_INTEGER},{v:1}];assert.equal(ob.agregar263(rs,x=>x.v,'Regla').valor,String(Number.MAX_SAFE_INTEGER+1));const x=cell(rs,r=>r.v,'Regla');assert.equal(x.valor,'—');assert.equal(x.estado,'gris');assert(x.detalle.includes('no se sustituye por cero'));});
+ test('tabla cuenta inválidos separados y mantiene referencia parcial',()=>{const rs=[{v:2},{v:.5},{v:NaN}];const x=cell(rs,r=>r.v,'Regla');assert.equal(x.valor,'2');assert(x.detalle.includes('1/3'));assert.equal(x.estado,'gris');});
+ const preparar=v=>now.prepararControlCartera({clientes:[{id:'fixture',activo_confirmado:true}],esOps:true,carteraIds:[],asignaciones:[],personas:[],hoy:'2026-10-04',fuentes:{produccion:{fuentes:{flujo:{hora:'2026-10-04T08:00:00Z'}},proyectos:[{cliente_id:'fixture',rev_account:v,rev_account_48:v,revisiones_account:{estado:'medido',fuente:'flujo',fecha:'2026-10-04T08:00:00Z'}}]}}})[0];
+ test('motor real no acredita revisión fraccionaria/insegura',()=>{for(const v of [.5,Number.MAX_SAFE_INTEGER+1,NaN,true,'2']){const x=preparar(v);assert.equal(x.revisiones.valor,'Sin dato');assert.equal(x.revisiones.medicion,undefined);assert.equal(x.revisiones.estado,'gris');}});
+ test('motor real conserva revisión conocida y cero explícito',()=>{assert.deepEqual(preparar(2).revisiones.medicion,{total:2,mas_48:2});assert.deepEqual(preparar(0).revisiones.medicion,{total:0,mas_48:0});assert.equal(preparar(0).revisiones.estado,'gris');});
+ console.log(`${n} grupos684 PASS: conteos exactos, unknown, pares de horas y celdas reales.`);
+})().catch(e=>{console.error(e);process.exitCode=1;});

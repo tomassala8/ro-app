@@ -129,7 +129,7 @@ export function prepararControlCartera({ clientes, persona_id, esOps, carteraIds
     const medicionRevision = p?.revisiones_account;
     const selloFlujo = docs.produccion?.fuentes?.flujo?.hora;
     const revisionMedida = medicionRevision?.estado === 'medido' && medicionRevision.fuente === 'flujo' && fechaValidaControl(hoy) && selloEvidenciaControl({generado:medicionRevision.fecha}) !== null && medicionRevision.fecha === selloFlujo && medicionRevision.fecha.slice(0,10) <= hoy;
-    if (p && revisionMedida && numero(p.rev_account) !== null && numero(p.rev_account_48) !== null && Number.isInteger(p.rev_account) && Number.isInteger(p.rev_account_48) && p.rev_account_48 <= p.rev_account) revisiones = celda(`${p.rev_account} en revisión · ${p.rev_account_48} >48h`, p.rev_account_48 > 0 ? 'ambar' : 'gris', 'ClickUp · flujo', { generado: selloFlujo }, 'Finalizar flujo no acredita aprobación. Esta copia no aporta un conteo exacto de 24–48h ni prioridad urgente de la tarea.');
+    if (p && revisionMedida && numero(p.rev_account) !== null && numero(p.rev_account_48) !== null && Number.isSafeInteger(p.rev_account) && Number.isSafeInteger(p.rev_account_48) && p.rev_account_48 <= p.rev_account) revisiones = celda(`${p.rev_account} en revisión · ${p.rev_account_48} >48h`, p.rev_account_48 > 0 ? 'ambar' : 'gris', 'ClickUp · flujo', { generado: selloFlujo }, 'Finalizar flujo no acredita aprobación. Esta copia no aporta un conteo exacto de 24–48h ni prioridad urgente de la tarea.');
     const selloHoras = docs.produccion?.fuentes?.horas?.hora;
     const horasLeidas = selloEvidenciaControl({generado:selloHoras}) !== null && fechaValidaControl(selloHoras?.slice(0,10)) && selloHoras.slice(0,10) <= hoy;
     const periodoHoras = fechaValidaControl(docs.produccion?.hoy) && docs.produccion.hoy <= hoy ? docs.produccion.hoy.slice(0,7) : null;
@@ -161,10 +161,13 @@ export function resumirAccountsControl(filas) {
   }
   return [...grupos].map(([account_id, rows]) => {
     const agregar = (key, campo) => {
-      const medidas = rows.map(r => r[key]?.medicion?.[campo]).filter(v => numero(v) !== null);
-      return {valor:medidas.length ? medidas.reduce((a,b)=>a+b,0) : null, medidos:medidas.length, sin_dato:rows.length-medidas.length};
+      const valido=v=>key==='horas'?numero(v)!==null&&v<=Number.MAX_SAFE_INTEGER:Number.isSafeInteger(v)&&v>=0;
+      const medidas = rows.map(r => r[key]?.medicion?.[campo]).filter(valido);
+      const suma=medidas.reduce((a,b)=>a+b,0);
+      const representable=Number.isFinite(suma)&&suma<=Number.MAX_SAFE_INTEGER&&(key==='horas'||Number.isSafeInteger(suma));
+      return {valor:medidas.length&&representable?suma:null, medidos:medidas.length, sin_dato:rows.length-medidas.length};
     };
-    const horasRows = rows.filter(r => numero(r.horas?.medicion?.total) !== null);
+    const horasRows = rows.filter(r => numero(r.horas?.medicion?.total) !== null&&r.horas.medicion.total<=Number.MAX_SAFE_INTEGER);
     const periodos = [...new Set(horasRows.map(r=>r.horas.medicion.periodo))];
     const horas = periodos.length === 1 ? {...agregar('horas','total'),periodo:periodos[0]} : {valor:null,medidos:0,sin_dato:rows.length,periodo:null};
     return {account_id,clientes:rows.length,asignaciones_confirmadas:rows.filter(r=>r.owner_confirmado).length,asignaciones_por_confirmar:rows.filter(r=>r.account_id&&!r.owner_confirmado).length,contacto_sin_dato:rows.length,

@@ -20,7 +20,8 @@ const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/st
  assert.equal(crm.normalizarFilaCRM({...row,error:'fixture'},fuente,'2026-10-03').citas_30d.celebradas,null);
  assert.equal(crm.normalizarFilaCRM(row,{hora:'2026-10-04'},'2026-10-03').leads_30d,null);
  const strip=s=>s.replace(/import[\s\S]*?from ['"][^'"]+['"];\n/g,'').replace('export default {','const modulo = {');
- const env={conteoCRM:crm.conteoCRM};vm.createContext(env);vm.runInContext(strip(fs.readFileSync(__dirname+'/modulos/crm.js','utf8'))+';globalThis.sum=sumar;',env);
+ const contacto677=await load('_contacto_observado_677.js');
+ const env={...crm,...contacto677};vm.createContext(env);vm.runInContext(strip(fs.readFileSync(__dirname+'/modulos/crm.js','utf8'))+';globalThis.sum=sumar;',env);
  let sum=env.sum([{citas_30d:{celebradas:3,no_presentadas:null}},{citas_30d:{celebradas:null,no_presentadas:1}}]);assert.equal(sum.asistencia,null);assert.equal(sum.sinTocar,null);assert.equal(sum.pctVerde,null);
  sum=env.sum([n]);assert.equal(sum.asistencia,75);assert.equal(sum.sinEstado14,null);
  // Quincenal real: no fuente->Sin dato y bitácora fuera de la ventana queda fuera de texto/copiar.

@@ -105,8 +105,10 @@ export function combinarInformesCartera617(rows,manual,anterior) {
 }
 
 function agregar263(rows,fn,detalle) {
-  const xs=rows.map(fn),medidas=xs.filter(x=>numero(x));
-  return medidas.length?observacion(medidas.reduce((a,b)=>a+b,0),`${detalle} ${medidas.length}/${rows.length} clientes medidos; el resto sin dato. Copia parcial.`):sinDato(detalle+' Ningún cliente tiene medición acreditada.');
+  const xs=rows.map(fn),medidas=xs.filter(x=>Number.isSafeInteger(x)&&x>=0);
+  const suma=medidas.reduce((a,b)=>a+b,0);
+  if(medidas.length&&!Number.isSafeInteger(suma))return sinDato(detalle+' La suma no es representable como conteo exacto; no se sustituye por cero.');
+  return medidas.length?observacion(suma,`${detalle} ${medidas.length}/${rows.length} clientes medidos; el resto sin dato. Copia parcial.`):sinDato(detalle+' Ningún cliente tiene medición acreditada.');
 }
 
 function horasPauta263(r) {

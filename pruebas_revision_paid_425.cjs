@@ -1,5 +1,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const prefix=fs.readFileSync('pruebas_revision_captacion_415.cjs','utf8').split('\nconst c={')[0],outer={require,console,process,__dirname:process.cwd()};vm.createContext(outer);vm.runInContext(prefix+';globalThis.ENV=e;globalThis.NODE=N;globalThis.H=h;',outer);const e=outer.ENV,N=outer.NODE,h=outer.H;
+vm.runInContext(fs.readFileSync('modulos/_ctr_paid_682.js','utf8').replaceAll('export ',''),e);
+vm.runInContext(fs.readFileSync('modulos/_serie_paid_549.js','utf8').replaceAll('export ',''),e);
 const src=fs.readFileSync('modulos/captacion.js','utf8'),components=fs.readFileSync('componentes.js','utf8');
 vm.runInContext(components.slice(components.indexOf('export function tablaApilable('),components.indexOf('// --------------------------------------------------- contacto:')).replace('export ',''),e);
 vm.runInContext(fs.readFileSync('modulos/_crm_mediciones.js','utf8').split('export const conteoCRM')[0].replaceAll('export ',''),e);

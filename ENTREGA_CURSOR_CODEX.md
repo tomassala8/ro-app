@@ -1,3 +1,7 @@
+# Actualización 685
+
+La última entrega verificada incorpora 680, 682 y 684. Consulta [el estado y los límites](entrega/685_ULTIMA_VERSION_VERIFICADA_CURSOR.md). 681 sigue pendiente de integración.
+
 # Corte680 · CRM local posterior a la publicación675
 
 Leer entrega/680_CRM_RESPUESTAS_Y_ALCANCE_LOCAL_CODEX.md e integridad680.676.3 y677 integrados localmente con revisión independiente678D y pruebas focales. Sin nueva captura de clientes ni cambios en proveedores. Este corte680 sigue local; GitHub conserva675/60a66c3. Los documentos de candidatos describen su revisión;680 manda sobre su estado de integración. No sustituir fuentes privadas por fixtures ni activar productores/IA/envíos. migracion/ yv2/ intactos.
