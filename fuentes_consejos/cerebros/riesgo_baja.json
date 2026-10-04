@@ -8,7 +8,7 @@
    "proyectos",
    "direccion"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "central:skills/criterio-tomas-ro/LEYES.md (C-D3-06 a C-D3-14)",
@@ -19,7 +19,7 @@
   ],
   "nota": "Interpreta la combinación de los tres ejes del semáforo del cliente (resultados, silencio, quejas) que calcula fuentes_riesgo/riesgo_baja.py. Cada patrón apunta a una ficha. Las fichas sobre una sola señal (queja, silencio, señales de baja) siguen en account y comunicacion: aquí está la lectura combinada.",
   "pendientes_tomas": [
-   "Umbrales de silencio: 7 días ámbar y 14 rojo desde nuestro último correo sin respuesta por ningún canal; 30 días sin ninguna respuesta, rojo. Aplicado como propuesta.",
+   "Umbrales de relación: 7 días ámbar y 14 rojo desde nuestro último correo sin respuesta por ningún canal; 30 días sin ninguna respuesta, rojo; una reunión sin presentarse en 30 días, ámbar, y dos, rojo. Aplicado como propuesta.",
    "Resultados: verde con 90 % del objetivo, ámbar 60-90 %, rojo por debajo; coste por lead hasta 1,3 veces el objetivo en ámbar. En los primeros 60 días no pone rojo.",
    "Quejas: rojo si hay una abierta o habla de baja; ámbar los 30 días siguientes. Hoy solo se detecta por el asunto del correo y la marca del account.",
    "Cartera de un account: misma escala que la D-41 (≤ 2 / 3-4 / ≥ 5 clientes en riesgo alto o crítico)."
@@ -36,6 +36,12 @@
    "id": "rb_p_silencio",
    "texto": "El silencio del cliente es alarma, no tranquilidad. Siete días sin contestar a nuestro último correo ya es ámbar: se llama, no se escribe otra vez.",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:250",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_reuniones",
+   "texto": "Faltar a una reunión sin reagendar es silencio aunque conteste los correos. Una ausencia en 30 días es ámbar, dos son rojo: se llama y se reagenda en la misma llamada.",
+   "fuente": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/codigo_semaforico.md:47",
    "autor": "Tomás"
   },
   {
@@ -236,7 +242,7 @@
   },
   {
    "id": "rb_queja_y_silencio",
-   "titulo": "El cliente se quejó y después dejó de contestar",
+   "titulo": "El cliente se quejó y después dejó de contestar o de venir a las reuniones",
    "puestos": [
     "account",
     "operaciones",
@@ -279,8 +285,8 @@
     },
     {
      "paso": 4,
-     "comprueba": "¿Ha cambiado quién decide en el despacho?",
-     "donde": "Contactos de la ficha, última reunión",
+     "comprueba": "¿Ha cambiado quién decide en el despacho? ¿Faltó a la última reunión?",
+     "donde": "Contactos de la ficha, agenda",
      "si_falla": "c4"
     }
    ],
@@ -549,7 +555,8 @@
      "desenganchado",
      "se está desenganchando",
      "pocos leads y silencio",
-     "no responde y no hay leads"
+     "no responde y no hay leads",
+     "no viene a las reuniones y no hay leads"
     ]
    },
    "sintoma": "Los resultados están por debajo del objetivo y no responde a nuestro último correo desde hace una semana o más. No se queja: se está desenganchando en silencio, que es como se van los más peligrosos.",
@@ -576,8 +583,8 @@
     },
     {
      "paso": 4,
-     "comprueba": "¿Hay reunión agendada?",
-     "donde": "Reuniones de la ficha",
+     "comprueba": "¿Hay reunión agendada? ¿Vino a la última?",
+     "donde": "Agenda, Reuniones de la ficha",
      "si_falla": "c4"
     }
    ],
@@ -615,8 +622,8 @@
     },
     {
      "id": "c4",
-     "causa": "No hay ninguna cita en el calendario que obligue a hablar.",
-     "como_confirmar": "Sin próxima reunión.",
+     "causa": "No hay ninguna cita que obligue a hablar, o falta a las que hay.",
+     "como_confirmar": "Sin próxima reunión, o no se presentó a la última.",
      "solucion": [
       "Agenda tú la reunión con un plan: «te queremos enseñar el plan del trimestre»."
      ],
@@ -846,10 +853,13 @@
      "siete días sin responder",
      "una semana sin contestar",
      "va bien pero no dice nada",
-     "silencio con resultados"
+     "silencio con resultados",
+     "no viene a las reuniones",
+     "no se presentó a la reunión",
+     "falta a las reuniones"
     ]
    },
-   "sintoma": "Los números están en objetivo pero no responde a nuestro último correo desde hace 7 días o más. Puede estar contento y ocupado, o desconectado. No lo sabes hasta que hablas con él.",
+   "sintoma": "Los números están en objetivo pero no responde a nuestro último correo desde hace 7 días o más, o no se ha presentado a una reunión. Puede estar contento y ocupado, o desconectado. No lo sabes hasta que hablas con él.",
    "gravedad": "media",
    "plazo": "48 h",
    "diagnostico": [
@@ -874,8 +884,14 @@
     {
      "paso": 4,
      "comprueba": "¿Cuánto hace que no hay ninguna respuesta suya por ningún canal?",
-     "donde": "Ficha: eje de respuesta",
+     "donde": "Ficha: eje de relación",
      "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Ha faltado a alguna reunión en el último mes? ¿Se reagendó?",
+     "donde": "Agenda, Reuniones de la ficha",
+     "si_falla": "c5"
     }
    ],
    "causas": [
@@ -919,10 +935,22 @@
      ],
      "quien": "account",
      "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "Falta a las reuniones sin reagendar.",
+     "como_confirmar": "Reunión pasada sin presentarse (noshow) en la agenda.",
+     "solucion": [
+      "Llama ese mismo día y reagenda en la llamada.",
+      "Pregunta si la hora o el formato le vienen mal; propón 15 minutos."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
     }
    ],
    "acciones_inmediatas": [
     "Llama en 48 h como mucho. No mandes otro correo.",
+    "Si faltó a una reunión, reagéndala en esa llamada.",
     "Si coge, cuéntale lo que va bien."
    ],
    "guiones": [
@@ -954,6 +982,12 @@
      "linea": 53,
      "autor": "RO",
      "nota": "No contesta emails en más de una semana: llamada directa"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 54,
+     "autor": "RO",
+     "nota": "Cancela reunión sin proponer nueva fecha: llamada y reagenda ese día"
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",

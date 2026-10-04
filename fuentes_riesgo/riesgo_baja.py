@@ -3,7 +3,8 @@
 
 Petición de Tomás (4-oct): que el semáforo del cliente distinga tres cosas, porque una sola no basta para ver una baja:
   · RESULTADOS  — ¿le estamos dando lo que espera? (leads, coste por lead y citas contra su objetivo; si no, la salud).
-  · SILENCIO    — ¿nos contesta? (días desde nuestro último correo sin que él responda por ningún canal).
+  · SILENCIO    — ¿nos contesta y viene? (días desde nuestro último correo sin que él responda por ningún canal, y si
+                  asiste a las reuniones: 4-oct, segunda petición de Tomás). En la pantalla se llama «Relación».
   · QUEJAS      — ¿se está quejando? (correo de queja abierto, incidencia con queja, rojo a mano, o el account lo marca).
 Buenos resultados con quejas, o malos resultados con un cliente que responde contento, son situaciones distintas y piden
 cosas distintas. La COMBINACIÓN de los tres ejes da un patrón con nombre y un nivel de riesgo de baja, y cada patrón
@@ -16,6 +17,8 @@ Lee lo que ya deja la tubería (nada nuevo que conectar para empezar):
   · data/objetivos/objetivos.json  objetivo del cliente y semáforo del lunes (con la marca «se ha quejado esta semana»)
   · data/bandeja/bandeja.json      correos del cliente sin contestar (su fecha cuenta como respuesta; la marca de queja)
   · data/incidencias/incidencias.json  incidencias con queja
+  · data/agenda/agenda.json        reuniones con el cliente de los últimos 14 días: «noshow» (Bookings, GHL), «showed» o
+                                   grabación de Zoom pegada (celebrada); las que no constan como celebradas
 Escribe data/riesgo/riesgo_baja.json: una fila por cliente (con cliente_id: el servidor solo la manda a quien ve ese
 cliente) y un resumen por account con la escala de la D-41 (≤ 2 bien · 3-4 vigilar · ≥ 5 crítico).
 
@@ -50,6 +53,9 @@ UMBRALES = {
     "salud_verde": 60, "salud_ambar": 40,   # igual que el chip de salud de la ficha
     "arranque_dias": 60,             # en los primeros 60 días los resultados no ponen rojo (sí ámbar)
     "queja_reciente_dias": 30,       # tras una queja hay «periodo amarillo»: no se vuelve directo a verde
+    "reuniones_dias": 30,            # ventana para contar las reuniones a las que no vino
+    "no_asiste_rojo": 2,             # 1 reunión sin presentarse → ámbar · 2 o más → rojo
+    "sin_constancia_ambar": 2,       # 2 reuniones pasadas sin constancia de que se celebraran → ámbar
     "cartera": (2, 4),               # escala de la D-41: ≤ 2 bien · 3-4 vigilar · ≥ 5 crítico
 }
 FIRMADO = False   # cambia a True cuando Tomás firme los umbrales (la pantalla dice «propuesta» mientras tanto)
@@ -163,7 +169,7 @@ def eje_resultados(r, hoy=None):
 
 def eje_silencio(c, hoy):
     """c: {ult_saliente, ult_entrante, ult_entrante_abierto, ult_llamada_contestada, ult_reunion, prox_reunion,
-           tiene_entrante_desk(bool)}. «Silencio» es el del CLIENTE: si él escribió y nosotros no, no está callado."""
+           tiene_entrante_desk(bool), reuniones_pasadas[{fecha, estado: asistio|no_asistio|sin_constancia}]}. «Silencio» es el del CLIENTE: si él escribió y nosotros no, no está callado."""
     U = UMBRALES
     respuestas = [(_fecha(c.get(k)), nom) for k, nom in (("ult_entrante", "correo"), ("ult_entrante_abierto", "correo"),
                                                         ("ult_llamada_contestada", "llamada"), ("ult_reunion", "reunión"))]
@@ -189,13 +195,34 @@ def eje_silencio(c, hoy):
         if sin_contacto is not None and sin_contacto >= U["sin_contacto_rojo_dias"]:
             color = "rojo"
             motivos.append(f"{sin_contacto} días sin ninguna respuesta suya (correo, llamada o reunión)")
-        if color == "rojo" and reunion_agendada:
-            color = "ambar"
-            motivos.append(f"Tiene reunión el {prox.isoformat()}: baja a ámbar")
+    # Asistencia a reuniones (Tomás, 4-oct): no presentarse es la señal 2 del código semafórico (cancelar sin reagendar).
+    ventana = [r for r in c.get("reuniones_pasadas") or []
+               if (_dias(r.get("fecha"), hoy) is not None and 0 <= _dias(r.get("fecha"), hoy) <= U["reuniones_dias"])]
+    no_vino = sorted(r["fecha"][:10] for r in ventana if r.get("estado") == "no_asistio")
+    dudosas = sorted(r["fecha"][:10] for r in ventana if r.get("estado") == "sin_constancia")
+    vino = sum(1 for r in ventana if r.get("estado") == "asistio")
+    if no_vino:
+        c_asist = "rojo" if len(no_vino) >= U["no_asiste_rojo"] else "ambar"
+        motivos.append(f"No se presentó a {len(no_vino)} reunión{'es' if len(no_vino) > 1 else ''} ({', '.join(no_vino)})")
+    elif len(dudosas) >= U["sin_constancia_ambar"]:
+        c_asist = "ambar"
+        motivos.append(f"{len(dudosas)} reuniones agendadas sin constancia de que se celebraran ({', '.join(dudosas)})")
+    else:
+        c_asist = "verde" if ventana else None
+        if dudosas:
+            motivos.append(f"La reunión del {dudosas[0]} no consta como celebrada")
+    if c_asist:
+        if color == "gris":
+            motivos = [m for m in motivos if not m.startswith("Sin fechas")]
+        color = c_asist if color == "gris" else _peor([color, c_asist])
+    if color == "rojo" and reunion_agendada and not no_vino:     # si falta a las reuniones, tenerla agendada no calma
+        color = "ambar"
+        motivos.append(f"Tiene reunión el {prox.isoformat()}: baja a ámbar")
     confianza = "medido" if c.get("tiene_entrante_desk") else "parcial"
     return {"color": color, "motivos": motivos, "dias_esperando": esperando or 0, "dias_sin_respuesta": sin_contacto,
             "ultima_respuesta": ult_resp.isoformat() if ult_resp else None, "canal_ultima_respuesta": canal,
             "ultimo_nuestro": salida.isoformat() if salida else None, "reunion_agendada": reunion_agendada,
+            "reuniones": {"asistio": vino, "no_asistio": len(no_vino), "sin_constancia": len(dudosas)},
             "confianza": confianza}
 
 
@@ -238,15 +265,15 @@ def eje_quejas(qs, hoy, fuentes_ok=True):
 # Cada patrón: nivel de riesgo, ficha del cerebro riesgo_baja y una lectura de una línea para el account.
 PATRONES = {
     "sano": ("bajo", "rb_sano_mantener", "Resultados, respuesta y tono bien: mantener el ritmo y pedir referidos cuando toque."),
-    "los_tres_mal": ("critico", "rb_los_tres_ejes_mal", "Malos resultados, se queja y ha dejado de contestar: baja casi decidida, hoy con Coti y Tomás."),
-    "queja_y_silencio": ("critico", "rb_queja_y_silencio", "Se quejó y luego se ha callado: está decidiendo sin nosotros. Llamar hoy."),
+    "los_tres_mal": ("critico", "rb_los_tres_ejes_mal", "Malos resultados, se queja y no contesta o no viene a las reuniones: baja casi decidida, hoy con Coti y Tomás."),
+    "queja_y_silencio": ("critico", "rb_queja_y_silencio", "Se quejó y luego se ha callado o falta a las reuniones: está decidiendo sin nosotros. Llamar hoy."),
     "insatisfecho_declarado": ("alto", "rb_sin_resultados_y_queja", "Sin resultados y lo dice: la queja tiene base. Plan con datos antes de hablar."),
-    "desenganche": ("alto", "rb_sin_resultados_y_silencio", "Sin resultados y sin contestar: se está desenganchando en silencio."),
+    "desenganche": ("alto", "rb_sin_resultados_y_silencio", "Sin resultados y sin contestar o sin venir a las reuniones: se está desenganchando en silencio."),
     "queja_con_resultados": ("alto", "rb_queja_con_resultados", "Los números van bien pero se queja: el problema es el servicio, el trato o la expectativa."),
-    "silencio_con_resultados": ("vigilar", "rb_silencio_con_resultados", "Los números van bien pero no contesta: puede estar contento o desconectado. Llamar."),
+    "silencio_con_resultados": ("vigilar", "rb_silencio_con_resultados", "Los números van bien pero no contesta o no viene a las reuniones: puede estar contento o desconectado. Llamar."),
     "paciente_sin_resultados": ("vigilar", "rb_sin_resultados_pero_contento", "No llegan los resultados pero responde y está a gusto: hay crédito, con fecha de caducidad."),
     "solo_queja": ("alto", "rb_queja_con_resultados", "Se queja y no hay dato de resultados para contrastar: escúchale y carga el objetivo."),
-    "solo_silencio": ("vigilar", "rb_silencio_con_resultados", "No contesta y no hay dato de resultados: llamar y cargar el objetivo."),
+    "solo_silencio": ("vigilar", "rb_silencio_con_resultados", "No contesta o no viene y no hay dato de resultados: llamar y cargar el objetivo."),
     "sin_datos": ("vigilar", "rb_sin_datos_para_juzgar", "Faltan datos para juzgar al cliente: el riesgo no se ve, no es que no exista."),
 }
 ORDEN_NIVEL = {n: i for i, n in enumerate(NIVELES)}
@@ -343,7 +370,34 @@ def _ritmo_mes(ventanas, hoy):
     return _ventana(ventanas, "mes_anterior")
 
 
-def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None):
+def reuniones_de(cid, eventos, historial, hoy):
+    """Reuniones con el cliente ya pasadas, de la agenda: asistió (showed, grabación de Zoom pegada o la reunión consta en
+    el historial de Reuniones ese día), no asistió (noshow) o sin constancia. Las canceladas no llegan a la agenda."""
+    celebradas = {str(h.get("fecha") or "")[:10] for h in historial or []}
+    por_dia = {}     # la misma reunión sale una vez por cada persona de RO que la tiene en su agenda: una por día
+    for e in eventos or []:
+        if e.get("tipo") != "cliente" or e.get("cliente_ref") != cid or not e.get("inicio"):
+            continue
+        dia = str(e["inicio"])[:10]
+        if _fecha(dia) is None or _fecha(dia) >= hoy:      # hoy aún puede celebrarse
+            continue
+        est = str(e.get("estado_cita") or "").lower()
+        if est == "showed" or e.get("celebrada") or dia in celebradas:
+            estado = "asistio"
+        elif est == "noshow":
+            estado = "no_asistio"
+        else:
+            estado = "sin_constancia"
+        previo = por_dia.get(dia)
+        if not previo or ORDEN_ASISTENCIA[estado] < ORDEN_ASISTENCIA[previo["estado"]]:   # manda lo celebrado
+            por_dia[dia] = {"fecha": dia, "estado": estado, "fuente": e.get("fuente")}
+    return sorted(por_dia.values(), key=lambda r: r["fecha"])
+
+
+ORDEN_ASISTENCIA = {"asistio": 0, "no_asistio": 1, "sin_constancia": 2}
+
+
+def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=None):
     """Fichero de cliente + objetivos + bandeja + incidencias → entrada normalizada para calcular()."""
     cid = doc.get("id")
     cart, _ = _datos(doc, "cartera")
@@ -375,6 +429,7 @@ def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None):
         "ult_llamada_contestada": max((x for x in zl if x), default=None),
         "ult_reunion": reu.get("ult_reunion"), "prox_reunion": reu.get("prox_reunion"),
         "tiene_entrante_desk": bool(desk.get("ult_correo_entrante")),
+        "reuniones_pasadas": reuniones_de(cid, eventos, reu.get("historial"), hoy),
     }
     qs = []
     for c in mios:
@@ -423,6 +478,7 @@ def generar(hoy=None, escribir=True):
     hoy = _fecha(hoy) or date.today()
     objetivos = {c["cliente_id"]: c for c in (_j(DATA / "objetivos/objetivos.json", {}) or {}).get("clientes", [])}
     accounts = {c.get("cliente_id"): c.get("account") for c in (_j(DATA / "verdad/clientes.json", {}) or {}).get("comun", [])}
+    eventos = (_j(DATA / "agenda/agenda.json", {}) or {}).get("eventos", []) or []
     correos = (_j(DATA / "bandeja/bandeja.json", {}) or {}).get("correos", []) or []
     inc_doc = _j(DATA / "incidencias/incidencias.json", {}) or {}
     incidencias = [x for v in inc_doc.values() if isinstance(v, list) for x in v if isinstance(x, dict)] \
@@ -432,7 +488,7 @@ def generar(hoy=None, escribir=True):
         doc = _j(p)
         if not doc or doc.get("activo_libro") not in (None, "Activo"):
             continue
-        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id"))), hoy))
+        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id")), eventos), hoy))
     filas.sort(key=lambda f: (-ORDEN_NIVEL[f["nivel"]], -f["puntos"], f.get("cliente") or ""))
     out = {
         "formato": 1, "generado": datetime.now().strftime("%Y-%m-%d %H:%M"), "hoy": hoy.isoformat(),

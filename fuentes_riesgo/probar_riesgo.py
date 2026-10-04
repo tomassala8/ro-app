@@ -74,6 +74,29 @@ ok(s["color"] == "rojo", "40 días sin ninguna respuesta suya → rojo aunque el
 s = RB.eje_silencio({"ult_saliente": d(16), "ult_entrante": d(20), "prox_reunion": (HOY + timedelta(days=3)).isoformat()}, HOY)
 ok(s["color"] == "ambar" and s["reunion_agendada"], "rojo con reunión agendada → ámbar")
 ok(RB.eje_silencio({"ult_saliente": d(9)}, HOY)["confianza"] == "parcial", "sin último correo entrante de Desk → confianza parcial")
+# asistencia a reuniones (Tomás, 4-oct)
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(5), "estado": "no_asistio"}]}, HOY)
+ok(s["color"] == "ambar" and s["reuniones"]["no_asistio"] == 1, "contesta correos pero no vino a una reunión → ámbar")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(5), "estado": "no_asistio"}, {"fecha": d(19), "estado": "no_asistio"}]}, HOY)
+ok(s["color"] == "rojo", "no vino a dos reuniones en 30 días → rojo")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(45), "estado": "no_asistio"}]}, HOY)
+ok(s["color"] == "verde", "la ausencia de hace 45 días ya no cuenta")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(3), "estado": "sin_constancia"}, {"fecha": d(10), "estado": "sin_constancia"}]}, HOY)
+ok(s["color"] == "ambar", "dos reuniones sin constancia de que se celebraran → ámbar")
+s = RB.eje_silencio({**RESPONDE, "reuniones_pasadas": [{"fecha": d(3), "estado": "sin_constancia"}]}, HOY)
+ok(s["color"] == "verde" and s["motivos"], "una sola sin constancia: se avisa, sin color")
+s = RB.eje_silencio({"ult_saliente": d(16), "ult_entrante": d(20), "prox_reunion": (HOY + timedelta(days=3)).isoformat(),
+                     "reuniones_pasadas": [{"fecha": d(4), "estado": "no_asistio"}]}, HOY)
+ok(s["color"] == "rojo", "si falta a las reuniones, tener otra agendada no baja el rojo")
+ev = [{"tipo": "cliente", "cliente_ref": "x", "inicio": d(4) + " 10:00", "estado_cita": "noshow", "persona_id": "a"},
+      {"tipo": "cliente", "cliente_ref": "x", "inicio": d(4) + " 10:00", "estado_cita": "confirmed", "celebrada": True, "persona_id": "b"},
+      {"tipo": "cliente", "cliente_ref": "x", "inicio": d(8) + " 12:00", "estado_cita": "noshow", "persona_id": "a"},
+      {"tipo": "cliente", "cliente_ref": "x", "inicio": d(12) + " 09:00", "estado_cita": "confirmed", "persona_id": "a"},
+      {"tipo": "cliente", "cliente_ref": "x", "inicio": HOY.isoformat() + " 18:00", "estado_cita": "confirmed", "persona_id": "a"},
+      {"tipo": "cliente", "cliente_ref": "otro", "inicio": d(2) + " 10:00", "estado_cita": "noshow", "persona_id": "a"}]
+r = {x["fecha"]: x["estado"] for x in RB.reuniones_de("x", ev, [{"fecha": d(12)}], HOY)}
+ok(r == {d(4): "asistio", d(8): "no_asistio", d(12): "asistio"},
+   f"agenda → asistencia: lo celebrado manda, una por día, la de hoy no cuenta, el historial confirma: {r}")
 
 ok(RB.eje_quejas([], HOY)["color"] == "verde", "sin quejas → verde")
 ok(RB.eje_quejas([], HOY, fuentes_ok=False)["color"] == "gris", "sin Desk ni semáforo → gris")
@@ -118,6 +141,7 @@ with tempfile.TemporaryDirectory() as t:
     (D / "objetivos").mkdir()
     (D / "bandeja").mkdir()
     (D / "verdad").mkdir()
+    (D / "agenda").mkdir()
 
     def fichero(cid, nombre, meta=None, desk=None, extra=None, libro="Activo"):
         fu = {"cartera": {"estado": "bien", "datos": {"account": "Persona A", "riesgo_panel": 30}},
@@ -139,12 +163,15 @@ with tempfile.TemporaryDirectory() as t:
         {"cliente_id": "dos", "objetivo": {"leads_mes": 20}, "semaforo": {"color": "verde", "semana": d(0)}, "semanas": []}]}))
     (D / "bandeja/bandeja.json").write_text(json.dumps({"correos": [
         {"cliente_id": "tres", "asunto": "Sin leads esta semana", "queja": True, "auto": False, "desde": d(1) + " 10:00", "url": "https://desk.example/1"}]}))
+    (D / "agenda/agenda.json").write_text(json.dumps({"eventos": [
+        {"tipo": "cliente", "cliente_ref": "uno", "inicio": d(6) + " 10:00", "estado_cita": "noshow", "persona_id": "persona_a"}]}))
     (D / "verdad/clientes.json").write_text(json.dumps({"comun": [{"cliente_id": c, "account": "persona_a"} for c in ("uno", "dos", "tres")]}))
     RB.DATA, RB.SALIDA = D, D / "riesgo" / "riesgo_baja.json"
     out = RB.generar(HOY)
     por = {f["cliente_id"]: f for f in out["clientes"]}
     ok(set(por) == {"uno", "dos", "tres"}, "solo clientes activos (la baja no sale)")
-    ok(por["uno"]["patron"] == "queja_con_resultados", f"uno: en objetivo + queja marcada por el account → {por['uno']['patron']}")
+    ok(por["uno"]["patron"] == "queja_y_silencio" and por["uno"]["ejes"]["silencio"]["reuniones"]["no_asistio"] == 1,
+       f"uno: en objetivo + queja marcada + no vino a la reunión → {por['uno']['patron']}")
     ok(por["dos"]["patron"] == "desenganche" and por["dos"]["nivel"] == "alto" and por["dos"]["discrepancia"], f"dos: gasta sin leads + 10 días callado → {por['dos']['patron']} · {por['dos']['nivel']}, y el lunes decía verde")
     ok(por["tres"]["semaforo"]["quejas"] == "rojo" and por["tres"]["semaforo"]["silencio"] == "verde",
        "tres: correo «Sin leads» → queja; nos escribió ayer → no está callado")

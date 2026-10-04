@@ -613,7 +613,7 @@ function pintarA4(caja, ctx, F, previo) {
 
 // 4-oct · Tomás: el semáforo distingue resultados, silencio y quejas; su combinación da el riesgo de baja y su ficha.
 const NIVEL_COLOR = { bajo: 'verde', vigilar: 'ambar', alto: 'rojo', critico: 'rojo' };
-const EJES = [['resultados', 'Resultados'], ['silencio', 'Respuesta'], ['quejas', 'Quejas']];
+const EJES = [['resultados', 'Resultados'], ['silencio', 'Relación'], ['quejas', 'Quejas']];   // Relación: contesta y viene a las reuniones
 function filaRiesgo(ctx, F) {
   const r = F.riesgo;
   const zona = h('div', { class: 'pila', style: { minWidth: '0' } });
