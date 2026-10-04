@@ -44,7 +44,10 @@ SOLO_FORMA = {"/api/rastro", "/api/rastro/verificar", "/api/salud"}
 # encuentra rutas nuevas, se añaden solas (ver rutas_get()).
 GET_FIJAS = ["/api/sesion", "/api/indicadores", "/api/ajustes", "/api/rastro", "/api/acciones", "/api/recarga",
              "/api/avisos", "/api/decisiones", "/api/buscar/indice", "/api/contadores", "/api/perfil",
-             "/api/preferencias", "/api/opiniones", "/api/respuestas_mili", "/api/rastro/verificar", "/api/salud"]
+             "/api/preferencias", "/api/opiniones", "/api/respuestas_mili", "/api/rastro/verificar", "/api/salud",
+             # 4-oct · cerebros de área (PR #2, migracion/INTEGRAR.md §1): buscar y abrir una ficha, sin IA. Cada puesto
+             # ve solo los cerebros que le tocan, así que se graba por persona como el resto.
+             "/api/ia/cerebro?q=los%20leads%20no%20vienen%20a%20la%20reuni%C3%B3n", "/api/ia/cerebro?id=rb_sano_mantener"]
 
 
 def rutas_get():

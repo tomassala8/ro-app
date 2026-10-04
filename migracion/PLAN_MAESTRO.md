@@ -405,6 +405,7 @@ Pendientes para la noche (están en `PROGRESO.md`):
 
 ## 8. Después de la noche (para que escale)
 
+- **Funciones nuevas** (cerebros, diagnósticos, riesgo de baja, contexto del cliente, copia propia de las APIs): una ficha por función en `migracion/INTEGRAR.md`, con su contrato, permisos, datos, pruebas y qué falta. Esta noche viajan como están; se mudan con su grupo.
 - Pasar a Nest lo que quedó en el legado (tubería y bucles con `@nestjs/schedule` y una cola; envíos, sincronía, IA, triaje con sus transacciones en Postgres), con las mismas puertas.
 - Pasar la matriz de permisos a tablas (`puestos`, `reglas`, `permisos_por_puesto`) con su pantalla en Ajustes y su rastro. El motor ya estará en un solo sitio (`@ro/permisos`).
 - Tipos de verdad en la base (`timestamptz`, `boolean`, `jsonb`) cuando nada escriba ya en texto.

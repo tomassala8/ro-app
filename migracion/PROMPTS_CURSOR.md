@@ -30,6 +30,7 @@ En `escaner_secretos.py`, añade `".next"`, `"dist"`, `"generated"` y `"legacy"`
 2. `python3 escaner_secretos.py --proyecto` en verde para lo que vas a añadir. Lo que marque, fuera del commit y apuntado.
 3. Commit «F1.3 · instantánea del código del Mac al empezar la migración» en la rama `migracion/v2` (nunca en `main`).
 3b. Junta el trabajo del 4-oct que aún está en PR: para cada rama de `migracion/RAMAS_A_JUNTAR.txt`, en orden, `git fetch origin <rama>` y, si `git merge-base --is-ancestor origin/<rama> HEAD` falla, `git merge --no-edit origin/<rama>`. Si choca: en los ficheros en conflicto, une las dos versiones si son listas o fichas que se suman (p. ej. los cerebros de `fuentes_consejos/cerebros/`: van las fichas de las dos), y si no, `git checkout --ours` del fichero; pasa su `probar_*.py` y apunta en NOTAS_NOCHE.md («Preguntas para Tomás») qué fichero y qué versión quedó. Nunca `--force`, nunca a `main`. Después, `python3 migracion/inventario.py --comparar` otra vez y añade a NOTAS_NOCHE.md lo nuevo (pantallas, rutas, ficheros de `data/`).
+3c. `noche.sh` ya ha juntado lo que el plan cambia fuera de `migracion/` y `v2/` (`migracion/juntar_plan.sh`: config.py, despliegue/, fuentes/…). Vuelve a pasarlo (no hace nada si ya está) y, si existe `~/RO_MIGRACION/choques_plan.txt`, resuelve cada fichero a mano: lo de Astra se queda y se añade lo de la rama que falte (`git diff <base> origin/claude/project-thread-rjes21 -- <fichero>`). Commit «F1.3 · plan juntado». Plan B: se queda el del Mac y se apunta en NOTAS_NOCHE.md qué falta.
 4. `mkdir -p ~/RO_MIGRACION && cp local.db ~/RO_MIGRACION/local.db.antes && git tag -f antes-de-migrar`. Si existe `despliegue/estado/tuberia.db`, cópiala a `~/RO_MIGRACION/tuberia.db.antes`.
 5. Copia congelada de la app de hoy (la referencia 8770/8780 se sirve desde ahí, así los arreglos de F5.10 no la cambian): `rsync -a --delete --exclude .git --exclude v2 --exclude node_modules --exclude capturas --exclude historia ./ ~/RO_MIGRACION/ref/`. Comprueba `ls ~/RO_MIGRACION/ref/servir.py`.
 
@@ -46,13 +47,15 @@ Abre 5 fotos al azar: tienen que enseñar la pantalla con datos, no «Cargando�
 Todo esto va con el reloj fijo (`RO_RELOJ`, lo ponen `servicios.sh`, `puerta.sh` y `noche.sh`): no lo quites, o lo grabado antes de medianoche no se parecerá a lo de después.
 Crea `~/RO_MIGRACION/excepciones_solidez.txt` con una línea por fallo heredado que ya conoces: `JSON roto  # N-13 servir.py da 500 con un JSON mal formado`.
 
+Funciones del 4-oct (`migracion/INTEGRAR.md`): el contrato ya graba `GET /api/ia/cerebro?q=…` e `?id=…` y el fichero del riesgo de baja (`datos_de_modulo`). Comprueba que salen en `~/RO_MIGRACION/contrato/viejo` con datos (no 404): si no, apúntalo en NOTAS_NOCHE.md.
+
 ## F1.5 · Casos de escritura
 
 Escribe `~/RO_MIGRACION/casos_escritura.json` (fuera del repo: lleva ids reales). Formato: lista de `{"persona", "ruta", "cuerpo", "como"?, "nota"}`, en orden. Para **cada POST de servir.py** (lista en `migracion/inventario/rutas_api.json`) al menos: un caso que funcione (200) con una persona que puede, y uno que se deniegue (403/400) con una que no o con un cuerpo malo. Mira el código de cada ruta para construir cuerpos válidos. Incluye casos de «ver como» (deben denegarse: es solo lectura) y de cliente fuera de cartera. **Nunca** casos de rutas que hablan con fuera (`/api/recarga` que lance la tubería, envíos, sincronía, IA, GBP, Modular): esas se quedan en el legado esta noche. Para `/api/recarga` (y cualquier POST que lance algo fuera), **solo el caso denegado** (403/400): cuenta para «casos cubren todos los POST». Comprueba con `bash migracion/puerta.sh f1` (paso «casos cubren todos los POST»).
 
 ## F1.6 · baterias.sh
 
-Crea `migracion/baterias.sh <puerto>`: lanza contra ese puerto **todas** las baterías que pueden apuntar a un servidor ya arrancado (`pruebas_e0.py --puerto`, y las de `migracion/inventario/pruebas.json` que admitan puerto o URL, incluidas las focalizadas de Astra: triaje, método e histórico, reuniones, campañas, cabeceras, si existen en el Mac). Las que arrancan su propio servidor o necesitan proveedores, no; la excepción es `python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes, sin red): inclúyela, y si algún caso ya falla contra la app de hoy, apúntalo y haz que `baterias.sh` solo falle con los casos que hoy pasan. Sale 1 si alguna falla. Pásalo contra 8770: lo que ya falla contra la app de hoy se apunta y se quita de la lista (no se arregla esta noche). Commit.
+Crea `migracion/baterias.sh <puerto>`: lanza contra ese puerto **todas** las baterías que pueden apuntar a un servidor ya arrancado (`pruebas_e0.py --puerto`, y las de `migracion/inventario/pruebas.json` que admitan puerto o URL, incluidas las focalizadas de Astra: triaje, método e histórico, reuniones, campañas, cabeceras, si existen en el Mac). Las que arrancan su propio servidor o necesitan proveedores, no; la excepción es `python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes, sin red): inclúyela, y si algún caso ya falla contra la app de hoy, apúntalo y haz que `baterias.sh` solo falle con los casos que hoy pasan. Sale 1 si alguna falla. Suma también las pruebas sin servidor de las funciones del 4-oct (ver `migracion/INTEGRAR.md`): `fuentes_consejos/cerebros/probar_cerebros.py`, `probar_en_app.py`, `fuentes_diagnosticos/probar_diagnosticos.py`, `fuentes_riesgo/probar_riesgo.py`, `fuentes_contexto/probar_contexto.py` y `fuentes/probar_lectura.py` (las que existan). Pásalo contra 8770: lo que ya falla contra la app de hoy se apunta y se quita de la lista (no se arregla esta noche). Commit.
 
 ## F1.7 · Puerta 1
 
@@ -73,7 +76,7 @@ En `despliegue/estado.py`, renombra la tabla de la tubería (y todas sus consult
 
 ## F2.2 · Esquema al día
 
-Si `CAMBIOS.md` trae tablas o columnas nuevas (o si dudas): `bash v2/packages/db/scripts/rehacer_base.sh`. Revisa el diff de `schema.prisma` y de `0_base/migration.sql`: cada modelo o columna nueva tiene que estar en NOTAS_NOCHE.md. `crear_base_pg.py` tiene que terminar sin ✘ (salvo el aviso de `avisos` si F2.1 fue ⚠). Commit.
+Tabla nueva que seguro trae: `fuente_lectura` (y su vista `fuente_ultimo_bueno`), de N-01 (`migracion/INTEGRAR.md` §5). Si `CAMBIOS.md` trae tablas o columnas nuevas (o si dudas): `bash v2/packages/db/scripts/rehacer_base.sh`. Revisa el diff de `schema.prisma` y de `0_base/migration.sql`: cada modelo o columna nueva tiene que estar en NOTAS_NOCHE.md. `crear_base_pg.py` tiene que terminar sin ✘ (salvo el aviso de `avisos` si F2.1 fue ⚠). Commit.
 
 ## F2.3 · Postgres con los datos
 

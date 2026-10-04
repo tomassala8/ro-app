@@ -43,6 +43,13 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       fi
     else ok "despliegue/base.py con los arreglos de Postgres"; fi
   fi
+  # Lo que el plan cambia fuera de migracion/ y v2/ lo junta noche.sh al empezar: aquí solo se mira si chocaría
+  if [ -f migracion/juntar_plan.sh ]; then
+    vista="$(bash migracion/juntar_plan.sh --ver 2>&1)"
+    n_choques=$(echo "$vista" | grep -c "✘")
+    [ "$n_choques" -eq 0 ] && ok "el resto del plan (config.py, despliegue/…) se junta sin choques: $(echo "$vista" | tail -1)" \
+      || ojo "$n_choques fichero(s) del plan chocan con cambios de Astra: $(echo "$vista" | grep "✘" | tr '\n' ' ')" "noche.sh deja el del Mac y Cursor los resuelve en F1.3; si es config.py, noche.sh no arranca hasta resolverlo"
+  fi
   # Punto de partida = código del Mac + el trabajo del 4-oct que aún está en PR (migracion/RAMAS_A_JUNTAR.txt)
   if [ -f migracion/RAMAS_A_JUNTAR.txt ]; then
     while read -r rama _; do

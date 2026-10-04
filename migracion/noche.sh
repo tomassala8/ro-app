@@ -51,12 +51,22 @@ export RO_AVISOS_SIN_BUCLE=1
 # que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
 export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 
+# --- el plan entero en el código del Mac --------------------------------------------------------------------------
+# La orden de preparar_noche.sh solo trae migracion/, v2/ y .cursor/. Lo demás que cambió el plan (config.py, despliegue/,
+# fuentes/…) se junta aquí sin pisar lo de Astra; los choques quedan en ~/RO_MIGRACION/choques_plan.txt para F1.3.
+bash migracion/juntar_plan.sh || echo "⚠ juntar_plan.sh falló: F1.3 lo repite"
+
 # --- sin llaves reales -------------------------------------------------------------------------------------------
 # Cursor trabaja solo y con tu usuario: podría leer el llavero del Mac. Esta noche no hay ninguna llave:
 #  · config.secreto() devuelve None con RO_SIN_LLAVES=1;
 #  · y una orden «security» falsa va delante en el PATH: muchos scripts (fuentes_*, ia.py, sincronia.py…) llaman al
 #    llavero directamente. La falsa niega cualquier lectura de contraseñas y deja pasar lo demás.
 export RO_SIN_LLAVES=1
+if ! grep -q RO_SIN_LLAVES config.py 2>/dev/null && [ "${RO_FORZAR:-}" != "1" ]; then
+  echo "✘ config.py no tiene la noche sin llaves (choque al juntar el plan: mira $FUERA/choques_plan.txt)."
+  echo "  Aplica el cambio de config.secreto() a mano, o bloquea el llavero y lanza con RO_FORZAR=1."
+  exit 1
+fi
 SIN_LLAVERO="$FUERA/sin_llavero/bin"; mkdir -p "$SIN_LLAVERO"
 cat > "$SIN_LLAVERO/security" <<'FALSA'
 #!/bin/sh
