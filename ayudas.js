@@ -303,7 +303,7 @@ function filtrar() {
   const q = $('#paleta-q').value.trim();
   PAL.q = q;
   const palabras = normal(q).split(/\s+/).filter(Boolean);
-  const todos = [...base(), ...(PAL.indice || [])].filter(x => typeof x.ir === 'string' && x.ir.startsWith('#/')); 
+  const todos = [...base(), ...(PAL.indice || [])].filter(x => typeof x.ir === 'string' && x.ir.startsWith('#/'));
   const clientes = A.estado.datos.clientes.filter(c => c.detalle);
   const clientesQ = ws => (ws.length ? clientes.filter(c => ws.every(w => normal(c.nombre).includes(w))) : []).slice(0, 5);
   const puntos = x => (!palabras.length ? 0 : x._t === palabras.join(' ') ? 0 : x._t.startsWith(palabras[0]) ? 1 : ` ${x._t}`.includes(` ${palabras[0]}`) ? 2 : 3);
