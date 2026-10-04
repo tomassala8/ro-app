@@ -10,7 +10,7 @@ alwaysApply: false
 
 - Esta versión de Next (16) trae cambios: antes de tocar rutas, layouts o configuración, lee la guía en `v2/apps/web/node_modules/next/dist/docs/` (ver `v2/apps/web/AGENTS.md`).
 - **El aspecto lo manda `estilos.css`** (se carga tal cual desde `/legacy/estilos.css`). Usa sus clases y tokens. Tailwind va sin preflight; sus utilidades solo con los colores del tema de RO (`bg-card`, `text-ink`, `border-line`, `text-good-ink`…: `src/styles/ro-tema.css`). Nada de colores, sombras ni píxeles sueltos.
-- shadcn: con versión fijada (`shadcn@<versión>`: la de `PLAN_NOCHE.md` o la apuntada en F6.1; nunca `@latest`). Los cambios de `package.json` y `pnpm-lock.yaml` que haga `shadcn add` se aceptan; nada más cambia de versión. `globals.css` no se reescribe: los tokens nuevos van a `src/styles/ro-tema.css`. Sus piezas con el tema de RO. Úsalas donde la pieza sea equivalente a la de hoy (diálogo, menú, pestañas, ⌘K, tooltip, hoja lateral). Si cambia el aspecto, gana `estilos.css`.
+- shadcn: `shadcn@4.17.0` siempre (estilo `base-nova`, piezas sobre Base UI; probada con Next 16 + React 19 + Tailwind 4). Nunca `@latest`. Los cambios de `package.json` y `pnpm-lock.yaml` que haga `shadcn add` se aceptan; nada más cambia de versión. `globals.css` no se reescribe: los tokens nuevos van a `src/styles/ro-tema.css`. Sus piezas con el tema de RO. Úsalas donde la pieza sea equivalente a la de hoy (diálogo, menú, pestañas, ⌘K, tooltip, hoja lateral). Si cambia el aspecto, gana `estilos.css`.
 - `ctx` (`src/lib/ctx.ts`) es el mismo de `app.js`. Una pantalla no hace `fetch` por su cuenta: `ctx.api`, `ctx.datosModulo`, `ctx.accion`, `ctx.verDato`.
 - Reglas de pantalla de hoy (LEEME «Reglas del módulo»): cliente primero; cada cifra con su sello y frescura; nada de `alert/confirm/prompt`; todo lo que se pulsa es `<button>` o `<a>`; en «ver como», nunca escribir (`ctx.soloLectura`).
 - Textos idénticos a los de hoy, en castellano. Nada de códigos de obra (D-xx, G2…) en pantalla.
@@ -20,3 +20,17 @@ alwaysApply: false
 - Los módulos de hoy se importan en el navegador en tiempo de ejecución: `import(/* webpackIgnore: true */ /* turbopackIgnore: true */ '/legacy/modulos/x.js')`. Nunca un `import` estático de `/legacy`.
 - Capas de Tailwind 4: `estilos.css` va sin capa y gana a cualquier utilidad. Si una utilidad no se nota, usa la clase de `estilos.css`; nada de `!important`. `box-sizing: border-box` ya viene de `estilos.css`.
 - Producción y puertas: `next build` + `.next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado, lo hace `migracion/servicios.sh`). `next start` no vale con `output: "standalone"`.
+
+## React y Next 16: reglas de oficio
+Guía completa: `v2/.agents/skills/vercel-react-best-practices/` (45 reglas de Vercel, con ejemplos). Léela antes de escribir la carcasa o una pantalla en React. Lo que aplica esta noche:
+- `await` siempre en `cookies()`, `headers()`, `props.params` y `props.searchParams` (en Next 16 son asíncronos).
+- `useEffect` solo para sincronizar con algo de fuera (DOM, `localStorage`, el puente con `/legacy`, una suscripción). Nunca para pedir datos (eso es `ctx`) ni para copiar un estado en otro: lo derivado se calcula en el render (`const vacio = items.length === 0`).
+- `useState(() => calcular())` si el valor inicial es caro; `setX((antes) => …)` en los callbacks.
+- Nada de `index.ts` que reexporta todo: importa de su fichero. `next/dynamic` para lo pesado que no se ve al cargar.
+- TypeScript: nada de `enum` (uniones de textos o un objeto `as const`).
+- Clases condicionales con `cn` (`src/lib/utils.ts`, lo crea `shadcn init`), no a mano.
+- Piezas de shadcn siempre desde `src/components/ui`; nunca `@base-ui/react` directo.
+- Un `Button` que pinta otra cosa (`render={<a href="#/x" />}`) lleva `nativeButton={false}`.
+- Los menús y diálogos de Base UI necesitan un contexto de apilado propio: `isolation: isolate` y `position: relative` en el contenedor raíz de la carcasa, NO en `body` (`body` lo pinta `estilos.css` y cambiaría las fotos).
+- `<Toaster />` al lado de `{children}`, no envolviéndolo.
+Lo que NO aplica esta noche (las pantallas usan `ctx` y direcciones `#/`): TanStack Query, nuqs, Server Actions, `React.cache`, Prisma.
