@@ -21,6 +21,10 @@ mkdir -p "$LOGS" "$PIDS"
 PG_URL="${DATABASE_URL:-postgresql://ro:ro@127.0.0.1:5432/ro_app}"
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
 export RO_AVISOS_SIN_BUCLE=1
+# Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
+# no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
+# que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
+export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 export RO_ORIGEN_APP="http://127.0.0.1:3000,http://localhost:3000"
 
 puerto_de() { case "$1" in viejo) echo 8770;; legado) echo 8771;; api) echo 4000;; web) echo 3000;; esac; }
@@ -53,8 +57,15 @@ arrancar_uno() {
       esperar api; return $?
       ;;
     web)
+      # Compilada (next build + next start), como irá en la nube: las puertas miden velocidad y «next dev» compila
+      # cada página la primera vez. RO_WEB_DEV=1 para trabajar con recarga en caliente (no vale para cerrar puertas).
+      if [ -z "${RO_WEB_DEV:-}" ]; then
+        (cd v2/apps/web && RO_API_URL="http://127.0.0.1:4000" pnpm exec next build > "$LOGS/web_build.log" 2>&1) \
+          || { echo "  ✘ la web no compila: $LOGS/web_build.log"; return 1; }
+      fi
       (cd v2/apps/web || exit 1
-       RO_API_URL="http://127.0.0.1:4000" nohup pnpm exec next dev -H 127.0.0.1 -p 3000 > "$LOGS/web.log" 2>&1 < /dev/null &
+       RO_API_URL="http://127.0.0.1:4000" nohup pnpm exec next "$([ -n "${RO_WEB_DEV:-}" ] && echo dev || echo start)" -H 127.0.0.1 -p 3000 \
+         > "$LOGS/web.log" 2>&1 < /dev/null &
        echo $! > "$PIDS/web.pid")
       esperar web; return $?
       ;;
@@ -65,12 +76,18 @@ arrancar_uno() {
 
 parar_uno() {
   local f="$PIDS/$1.pid"
-  if [ -f "$f" ]; then
-    kill "$(cat "$f")" 2>/dev/null; sleep 1
-    # next dev y pnpm dejan hijos: se paran por el puerto (solo lo que escucha en 127.0.0.1)
-    local quien; quien=$(lsof -nP -iTCP@127.0.0.1:"$(puerto_de "$1")" -sTCP:LISTEN -t 2>/dev/null)
-    [ -n "$quien" ] && kill $quien 2>/dev/null
-    rm -f "$f"
+  [ -f "$f" ] && kill "$(cat "$f")" 2>/dev/null && sleep 1
+  rm -f "$f"
+  # Siempre también por el puerto (solo lo que escucha en 127.0.0.1): next dev y pnpm dejan hijos, y un servicio
+  # arrancado a mano o en otra vuelta no tiene fichero de pid.
+  local quien; quien=$(lsof -nP -iTCP@127.0.0.1:"$(puerto_de "$1")" -sTCP:LISTEN -t 2>/dev/null)
+  if [ -n "$quien" ]; then kill $quien 2>/dev/null; for _ in 1 2 3 4 5; do vivo "$1" || break; sleep 1; done; fi
+  if vivo "$1"; then   # lsof no siempre ve los hijos (next-server): por su línea de órdenes, que lleva el puerto
+    case "$1" in
+      web) pkill -f "next (dev|start) -H 127.0.0.1 -p 3000" ;;
+      viejo|legado) pkill -f "servir.py --bind 127.0.0.1 --puerto $(puerto_de "$1")" ;;
+    esac
+    for _ in 1 2 3 4 5; do vivo "$1" || break; sleep 1; done
   fi
   echo "  · $1 parado"
 }

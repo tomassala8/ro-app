@@ -25,6 +25,7 @@ Render con «python3 despliegue/base.py --probar» (crea el esquema, inserta, co
 import os
 import re
 import sys
+import threading
 from pathlib import Path
 
 AHORA_PG = "to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')"
@@ -157,13 +158,66 @@ class CursorPG:
 _CLAVES, _AUTO = {}, {}
 
 
+# Conexiones reutilizadas: abrir una conexión nueva a Postgres en cada bloque «with» cuesta una ida y vuelta de red y
+# la autenticación (medido el 4-oct: /api/rastro/verificar pasaba de 17 ms en SQLite a 130 ms en Postgres local; en la
+# nube, con TLS, es más). Se guardan unas pocas conexiones libres; antes de reutilizar una se comprueba que sigue viva,
+# así que un reinicio de Postgres no da errores: la conexión rota se tira y se abre otra.
+_LIBRES, _CANDADO = [], threading.Lock()
+_MAX_LIBRES = int(os.environ.get("RO_PG_LIBRES", "4"))
+
+
+def _abrir(url):
+    try:
+        import psycopg as pg
+    except ImportError:
+        import psycopg2 as pg
+    return pg.connect(url)
+
+
+def _sana(con):
+    try:
+        if con.closed:
+            return False
+        con.cursor().execute("SELECT 1")
+        con.rollback()
+        return True
+    except Exception:
+        return False
+
+
+def _cerrar(con):
+    try:
+        con.close()
+    except Exception:
+        pass
+
+
+def _devolver(con):
+    if con is None:
+        return
+    try:
+        con.rollback()   # nada a medias pasa a la siguiente petición (y suelta el candado de transacción)
+    except Exception:
+        return _cerrar(con)
+    with _CANDADO:
+        if len(_LIBRES) < _MAX_LIBRES:
+            _LIBRES.append(con)
+            return
+    _cerrar(con)
+
+
 class ConexionPG:
     def __init__(self, url):
-        try:
-            import psycopg as pg
-        except ImportError:
-            import psycopg2 as pg
-        self._con = pg.connect(url)
+        self._con = None
+        while self._con is None:
+            with _CANDADO:
+                libre = _LIBRES.pop() if _LIBRES else None
+            if libre is None:
+                self._con = _abrir(url)
+            elif _sana(libre):
+                self._con = libre
+            else:
+                _cerrar(libre)
 
     def _claves(self, tabla):
         if tabla not in _CLAVES:
@@ -211,25 +265,29 @@ class ConexionPG:
         self._con.commit()
 
     def close(self):
-        self._con.close()
+        _devolver(self._con)
+        self._con = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, tipo, *_):
-        # como sqlite3: confirma si todo fue bien y deshace si hubo error. Además CIERRA: servir.py abre una conexión
-        # por bloque «with» y en Postgres cada conexión abierta cuenta (el plan Basic admite pocas).
+        # como sqlite3: confirma si todo fue bien y deshace si hubo error. Además la DEVUELVE: servir.py abre una
+        # conexión por bloque «with» y en Postgres cada conexión abierta cuenta (el plan Basic admite pocas): como
+        # mucho quedan RO_PG_LIBRES libres; las demás se cierran.
         try:
             (self._con.rollback if tipo else self._con.commit)()
+        except Exception:
+            _cerrar(self._con)
+            self._con = None
+            raise
         finally:
-            self._con.close()
+            self.close()
         return False
 
     def __del__(self):
-        try:
-            self._con.close()
-        except Exception:
-            pass
+        if getattr(self, "_con", None) is not None:
+            _cerrar(self._con)
 
 
 def conectar():

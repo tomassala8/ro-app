@@ -115,6 +115,58 @@ Reglas del backend (para cada ruta que se muda):
 - **Pantallas en React:** una a una, de menos a más riesgo. Una pantalla sustituye al puente solo con sus fotos ≤ 0,5 % para todas las personas y tamaños, y el contrato y las baterías en verde.
 - Sin Google Fonts. Claro siempre, nunca modo oscuro.
 
+### 2.5 Fuentes: copia propia de todo lo que llega de las APIs, y nunca ceros (Tomás, 4-oct)
+
+Regla: **lo que manda una API se guarda en nuestra base antes de usarlo. Si la API falla, se enseña lo último bueno con su hora y el aviso «Sin datos en tiempo real», nunca un 0 ni un vacío.**
+
+Cómo está hoy (revisado el 4-oct, detalle en `PENDIENTES_LOGICA.md` L-1 a L-12):
+- **Bien:** si un paso de la tubería falla entero, sus ficheros se restauran y se marca `dato_viejo`. Holded, GBP, Modular, Nuevos y Ventas ya sirven el último dato bueno. La ficha del cliente distingue «bien», «a cero» y «dato viejo».
+- **Mal:** lo que llega de las APIs solo vive en ficheros sueltos, no en la base.
+- **Mal:** cuando un lector se traga el error y escribe ceros, la tubería no lo ve. Pasa en SEO, Redes, CRM por subcuenta, Hostinger y Paneles.
+- **Mal:** el aviso de dato viejo no llega a las pantallas.
+- **Mal:** unos 200 `?? 0` en el front convierten «no sé» en «0».
+
+Cómo queda (paso F5.10, fallos L-1 a L-12):
+- **Tabla `fuente_lectura`** (se escribe solo, no se borra): fuente, recurso (cliente o cuenta), hora, ok, código, error, cuerpo (jsonb comprimido) y huella.
+  - Vista `fuente_ultimo_bueno` con la última lectura buena de cada fuente y recurso.
+  - Se guardan las 30 últimas lecturas buenas por recurso y 30 días de errores.
+- **Un solo `fuentes/lectura.py › leer(fuente, recurso, funcion)`**, que generaliza el `con_cache` de Holded:
+  - lectura buena → se guarda y se devuelve;
+  - error, vacío sospechoso o todo a 0 donde antes no lo estaba → devuelve la última buena marcada `{"_viejo": true, "_desde": hora}`;
+  - si nunca hubo dato → «sin dato», nunca 0.
+  - Todos los lectores pasan por aquí.
+- **Tubería:** cada paso declara sus claves mínimas y su recuento. Las cachés también se copian y se restauran. No se publica una versión si no se pudo bajar la anterior, ni una mucho más pequeña que la vigente.
+- **Pantalla:**
+  - un aviso común «Sin datos en tiempo real: lo último es de las HH:MM» en cada pantalla con alguna fuente vieja;
+  - el sello del menú sale de la tubería;
+  - «—» en vez de 0, y los totales dicen cuántos faltan.
+  - En React (fase 6) está prohibido `?? 0` / `|| 0` sobre una cifra que se pinta.
+- **Puerta:** las pruebas de solidez de `despliegue/pruebas_noche.py --solo-solidez`, más una por fuente (API falsa caída → último dato bueno + aviso, ningún 0), dentro de `baterias.sh`. Además, `nunca_ceros.mjs` cuenta los `?? 0` del front, y ese número solo puede bajar.
+
+En la nube, `ro-legado` (una sola copia) sigue siendo quien lee las APIs. La tabla vive en la misma Postgres, así que la copia de seguridad y la restauración de la fase 7 la cubren.
+
+### 2.6 Rápida, a prueba de caídas y segura (Tomás, 4-oct)
+
+Cada una con su puerta medible, en `puerta.sh` f3, f5, f6 y f7:
+
+| Qué | Cómo se mide | Pasa si |
+|---|---|---|
+| **Rápida** | `migracion/rendimiento.py`: cada GET del contrato (3 personas × 5 veces) y el tiempo hasta que cada pantalla está pintada (`capturar.mjs` → `_tiempos.json`), en la de hoy y en la nueva | ninguna ruta o pantalla es más de un 25 % más lenta que hoy (con un margen de 100 ms en la API y 300 ms en pantalla), y nada pasa de 1,5 s (API) o 3 s (pantalla) si hoy no pasaba |
+| **No se cae** | `migracion/caidas.sh`: ráfaga de 200 peticiones (20 a la vez); peticiones raras (ruta inexistente, JSON roto, 3 MB, Host ajeno, POST sin cabecera de la app); se cae el legado, se cae Nest, se reinicia Postgres | ningún 5xx ni cuelgue en la ráfaga; respuestas raras con 4xx limpio y sin la pila de errores; sin legado, 502 con mensaje en < 6 s y vuelta sola en < 60 s; lo mismo con Nest y con Postgres |
+| **Segura** | `migracion/seguridad_http.py`: cabeceras (CSP, X-Frame-Options, etc.), 13 rutas a ficheros sensibles (`.py`, `.db`, `.env`, `.git`, `data/`, `../`), accesos sin identificarse | ninguna cabecera perdida ni debilitada, nada sensible servido, nada que hoy se deniega y la nueva deja ver. Además de lo que ya había: permisos en un solo sitio (§2.2), vectores al 100 % y `pruebas_seguridad.py` en las baterías |
+
+**Planes B que ya están en la app nueva:**
+- el proxy contesta 413 a un cuerpo de más de 200 KB y 504 si el legado tarda más de 60 s;
+- Nest sigue vivo aunque se caiga el legado;
+- `despliegue/base.py` reutiliza conexiones a Postgres y tira las rotas, así que un reinicio de Postgres no da errores;
+- la guarda de permisos deniega lo no declarado;
+- todo va compilado (`next build` + `next start`), como en la nube.
+
+**Ensayado el 4-oct:**
+- caídas en verde, con un fallo heredado (JSON roto → 500, L-13);
+- seguridad en verde;
+- velocidad: el legado sobre Postgres era hasta 7 veces más lento que SQLite (17 → 130 ms en `/api/rastro/verificar`), porque abría una conexión por petición. Con la reutilización, 59 ms y puerta en verde.
+
 ---
 
 ## 3. Las redes de seguridad (hechas y ensayadas el 4-oct)
@@ -129,6 +181,7 @@ Reglas del backend (para cada ruta que se muda):
 | `migracion/vectores_permisos.py` | que el motor de permisos en TypeScript da las mismas respuestas que `permisos.py` |
 | `v2/tools/capturas` | que cada pantalla **se ve igual** (≤ 0,5 % de píxeles) y no tiene errores de página nuevos |
 | `migracion/baterias.sh` (la monta Cursor en la fase 1) | que las baterías de hoy y las focalizadas de Astra siguen verdes contra la app nueva |
+| `migracion/rendimiento.py`, `migracion/caidas.sh`, `migracion/seguridad_http.py` | velocidad, caídas y seguridad (§2.6) |
 | restauración (en `puerta.sh f7`) | que una copia de la base se restaura y responde igual (lo pide Astra antes de cualquier piloto) |
 
 **Ensayo del 4-oct** (en la nube de Claude, con datos inventados):
@@ -173,6 +226,7 @@ Regla general: **tres intentos con enfoques distintos** (cada uno apuntado en `P
 | El motor de permisos no llega al 100 % en 90 minutos | Se guarda lo hecho, se apunta qué vectores fallan y **no se muda a Nest ninguna ruta que dependa de permisos** (casi todas): se salta la fase 5 y se pasa a la 6. La app sigue entera por el proxy. |
 | Un grupo de rutas no pasa su puerta | Se quitan de `RUTAS_EN_NEST` (vuelven al proxy), se deja el código del módulo en una rama `intento/<grupo>` y se sigue con el siguiente grupo. |
 | La carcasa o una pantalla en React no queda igual | Se queda la de hoy. Una pantalla a medias nunca sustituye a la vieja. |
+| La velocidad, las caídas o la seguridad salen en rojo por algo que ya pasa en la app de hoy | Se arregla si es de la parte nueva (proxy, Nest, Next, `base.py`). Si es heredado, va a `PENDIENTES_LOGICA.md`, y mientras tanto su línea va a `~/RO_MIGRACION/excepciones_solidez.txt` (caídas) o `excepciones_rendimiento.txt` (velocidad) con su L-n. Así no bloquea la noche y queda en el informe. |
 | Un fallo de `PENDIENTES_LOGICA.md` no sale en 3 intentos | Se deja como estaba, con la prueba que lo demuestra marcada como pendiente (no borrada), y va al informe. Si es de **seguridad**, es **bloqueo para el piloto**. |
 | Algo de Cursor se cuelga (servidor que no responde, orden que no vuelve) | `bash migracion/servicios.sh parar todo && bash migracion/servicios.sh arrancar` y repetir el paso. |
 | Se rompe algo de la app de hoy | `git restore` de lo tocado; la base real nunca se toca (todo va sobre copias en `~/RO_MIGRACION/`). |

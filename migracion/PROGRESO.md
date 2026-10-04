@@ -15,9 +15,9 @@ Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/
 - ⬜ F1.1 Inventario del código del Mac y notas de la noche. Plan B: si `--comparar` falla, inventario sin comparar y apuntarlo.
 - ⬜ F1.2 Escáner de secretos sin falsos positivos de v2 (commit propio). Plan B: dejarlo como estaba y apuntar los falsos positivos.
 - ⬜ F1.3 Instantánea del código del Mac en la rama `migracion/v2` (tras el escáner) y copia de la base. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
-- ⬜ F1.4 Servicios de referencia y grabaciones: contrato, vectores, fotos. Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
+- ⬜ F1.4 Servicios de referencia y grabaciones: contrato, vectores, fotos (con sus tiempos), y `excepciones_solidez.txt` con los fallos heredados conocidos (L-13). Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
 - ⬜ F1.5 Casos de escritura (todos los POST de servir.py: uno que funciona y uno que se deniega). Plan B: ninguno; es imprescindible.
-- ⬜ F1.6 `migracion/baterias.sh` con todas las baterías que admiten puerto, verde contra la app de hoy (8770). Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
+- ⬜ F1.6 `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez` (último dato bueno de las fuentes), verde contra la app de hoy (8770). Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
 - ⬜ F1.7 `bash migracion/puerta.sh f1` en VERDE. Push de la rama. Plan B: ninguno; repetir lo que falte.
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
@@ -48,7 +48,7 @@ Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/
 - ⬜ F5.9 acciones, avisos y canales
 Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>`, ⚠ y siguiente grupo.
 Reloj: si faltan menos de 2 h para `RO_FIN_NOCHE`, los grupos que queden → ⚠ «sin tiempo» y a F5.10.
-- ⬜ F5.10 Fallos pendientes de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «L-n · …» y su estado en la lista. Máximo 90 min, pero los de seguridad se hacen aunque falte tiempo (antes de la fase 7). Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
+- ⬜ F5.10 Fallos pendientes (L-1 a L-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «L-n · …» y su estado en la lista. Máximo 90 min, pero los de seguridad se hacen aunque falte tiempo (antes de la fase 7). Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
 
 ## Fase 6 · Front en React + shadcn
 

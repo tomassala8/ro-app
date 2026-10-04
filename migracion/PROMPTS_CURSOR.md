@@ -36,7 +36,9 @@ python3 migracion/contrato.py grabar --base http://127.0.0.1:8770 --salida ~/RO_
 python3 migracion/vectores_permisos.py --salida ~/RO_MIGRACION/vectores
 cd v2/tools/capturas && node capturar.mjs --base http://127.0.0.1:8770 --modo viejo --salida ~/RO_MIGRACION/capturas/viejo
 ```
-Abre 5 fotos al azar: tienen que enseñar la pantalla con datos, no «Cargando…». Si alguna sale vacía, arregla la espera en `capturar.mjs` y repite. Mira `_errores.json`: los errores que ya tiene la app de hoy se apuntan (no se arreglan esta noche) y no cuentan contra la nueva.
+Abre 5 fotos al azar: tienen que enseñar la pantalla con datos, no «Cargando…». Si alguna sale vacía, arregla la espera en `capturar.mjs` y repite. Mira `_errores.json`: los errores que ya tiene la app de hoy se apuntan (no se arreglan esta noche) y no cuentan contra la nueva. `_tiempos.json` guarda cuánto tarda cada pantalla (lo usa la puerta de velocidad).
+Todo esto va con el reloj fijo (`RO_RELOJ`, lo ponen `servicios.sh`, `puerta.sh` y `noche.sh`): no lo quites, o lo grabado antes de medianoche no se parecerá a lo de después.
+Crea `~/RO_MIGRACION/excepciones_solidez.txt` con una línea por fallo heredado que ya conoces: `JSON roto  # L-13 servir.py da 500 con un JSON mal formado`.
 
 ## F1.5 · Casos de escritura
 
@@ -44,7 +46,7 @@ Escribe `~/RO_MIGRACION/casos_escritura.json` (fuera del repo: lleva ids reales)
 
 ## F1.6 · baterias.sh
 
-Crea `migracion/baterias.sh <puerto>`: lanza contra ese puerto **todas** las baterías que pueden apuntar a un servidor ya arrancado (`pruebas_e0.py --puerto`, y las de `migracion/inventario/pruebas.json` que admitan puerto o URL, incluidas las focalizadas de Astra: triaje, método e histórico, reuniones, campañas, cabeceras, si existen en el Mac). Las que arrancan su propio servidor o necesitan proveedores, no. Sale 1 si alguna falla. Pásalo contra 8770: lo que ya falla contra la app de hoy se apunta y se quita de la lista (no se arregla esta noche). Commit.
+Crea `migracion/baterias.sh <puerto>`: lanza contra ese puerto **todas** las baterías que pueden apuntar a un servidor ya arrancado (`pruebas_e0.py --puerto`, y las de `migracion/inventario/pruebas.json` que admitan puerto o URL, incluidas las focalizadas de Astra: triaje, método e histórico, reuniones, campañas, cabeceras, si existen en el Mac). Las que arrancan su propio servidor o necesitan proveedores, no; la excepción es `python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes, sin red): inclúyela, y si algún caso ya falla contra la app de hoy, apúntalo y haz que `baterias.sh` solo falle con los casos que hoy pasan. Sale 1 si alguna falla. Pásalo contra 8770: lo que ya falla contra la app de hoy se apunta y se quita de la lista (no se arregla esta noche). Commit.
 
 ## F1.7 · Puerta 1
 
@@ -95,7 +97,7 @@ Ensayado el 4-oct: sale igual a la primera. Si algo difiere es fontanería: cabe
 Lee `permisos.py`, `permisos.js`, `reglas_permisos.json` y `v2/packages/permisos/src/index.ts`. Traduce `permisos.py` a TypeScript función a función, con los mismos nombres en camelCase (carteraPorSilla, cartera, ambito, ver, contexto, recortar, nivelModulo, sinImportes, importesAQuitar, enlaceSeguro, mirandoComo…):
 - La matriz se lee de `reglas_permisos.json`. No copies reglas al código.
 - «Ver como» en Python es un hilo (`_HILO`); aquí, un objeto «vista» explícito (real + su contexto), nunca un global.
-- «Hoy» es el día en Europe/Madrid.
+- «Hoy» es el día en Europe/Madrid, y respeta `RO_RELOJ` igual que `permisos.py` (`ahora_madrid`): toda la noche va con el reloj fijo.
 - `cargar_modulos()` lee `modulos/indice.js` con expresiones regulares: mismo resultado (los vectores traen `modulos.json`).
 Completa `test/paridad.test.ts`: ver y ver_como de cada pregunta, nivel de cada módulo, cartera, ámbito y recorte de cada persona. `bash migracion/puerta.sh f4` al 100 %.
 Después, enchúfalo en la API: en `v2/apps/api/src/permisos/` crea `MotorRo implements MotorPermisos` (entrar = nivel del módulo o `ver()` del tipo, con los mismos códigos y mensajes que `servir.py`; recortar = `recortar()`) y ponlo en `permisos.module.ts` en lugar de `MotorSinPortar`. No toques la guarda, el recorte ni `rutas-declaradas.spec.ts`. Commit.
@@ -120,6 +122,8 @@ Lista: `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe; si no, `migracion/PENDIE
 3. La prueba pasa. Las rutas cuya respuesta cambia a propósito van a `~/RO_MIGRACION/excepciones.txt` con `# L-n <motivo>`.
 4. `bash migracion/puerta.sh f5` en VERDE → commit «L-n · <qué>» y estado `arreglado en v2 (<commit>)` en la lista.
 Tras 3 intentos sin salir: deshaz el arreglo, deja la prueba marcada como pendiente (`it.todo`/`skip` con «L-n»; nunca borrada), estado `pendiente: <motivo>` y siguiente. Los de **seguridad** se hacen aunque el reloj diga «sin tiempo», antes de la fase 7.
+Para L-1 a L-12 (fuentes), sigue `PLAN_MAESTRO.md` §2.5: primero L-1 (tabla `fuente_lectura` en `v2/packages/db` con su migración, y `fuentes/lectura.py › leer()` con su prueba), y luego cada lector pasa por `leer()` con una prueba de «API falsa caída → último dato bueno + aviso, ningún 0» añadida a `despliegue/pruebas_noche.py --solo-solidez`. Para L-10, escribe `migracion/nunca_ceros.mjs` (cuenta `?? 0` y `|| 0` sobre cifras pintadas en `modulos/` y `v2/apps/web/src`; guarda la cifra de partida en `~/RO_MIGRACION/nunca_ceros.txt` y falla si sube) y súmalo a `baterias.sh`. Ningún lector se prueba contra la API de verdad: siempre con una falsa en 127.0.0.1 o un módulo de mentira.
+Cuando arregles L-13, quita su línea de `~/RO_MIGRACION/excepciones_solidez.txt`.
 Los fallos `arreglado hoy`: comprueba que su prueba pasa también en la app nueva (`--pantallas` o la ruta); si no, trátalo como abierto.
 
 ---

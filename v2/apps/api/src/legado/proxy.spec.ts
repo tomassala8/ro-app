@@ -58,4 +58,25 @@ describe('proxy de legado', () => {
     const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:3000');
     expect(r.status).toBe(502);
   });
+
+  it('cuerpo por encima del tope (como servir.py) → 413, sin molestar al legado', async () => {
+    const legado = await legadoFalso();
+    const app = express();
+    app.use(proxyLegado(legado.url, { cuerpoMax: 10 }));
+    const r = await request(app).post('/api/rastro').set('Host', '127.0.0.1:3000').set('Content-Type', 'application/json').send('{"mucho":"texto de más"}');
+    expect(r.status).toBe(413);
+    expect(r.body).toEqual({ error: 'Petición demasiado grande.' });
+    legado.cerrar();
+  });
+
+  it('si el legado tarda demasiado, 504 con mensaje en vez de dejar la pestaña cargando', async () => {
+    const lento = createServer(() => {});
+    await new Promise<void>((ok) => lento.listen(0, '127.0.0.1', () => ok()));
+    const app = express();
+    app.use(proxyLegado(`http://127.0.0.1:${(lento.address() as AddressInfo).port}`, { esperaMs: 200 }));
+    const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:3000');
+    expect(r.status).toBe(504);
+    lento.closeAllConnections();
+    lento.close();
+  });
 });

@@ -9,6 +9,7 @@
 #   bash migracion/puerta.sh f5   igual que f3 (se pasa después de mover cada grupo de rutas a Nest)
 #   bash migracion/puerta.sh f6   igual que f3 (se pasa después de cada pantalla en React)
 #   bash migracion/puerta.sh f7   igual que f3 contra los contenedores + informe de la noche escrito
+#   f3/f5/f6/f7 miden además velocidad, caídas y seguridad (PLAN_MAESTRO §2.6)
 #   --rapido   (f3/f5/f6) contrato sin recorrer todos los clientes y fotos solo de escritorio: para iterar, no para cerrar
 #
 # Necesita los servicios en marcha (bash migracion/servicios.sh arrancar). Las pruebas de escritura usan bases y
@@ -23,6 +24,10 @@ mkdir -p "$FUERA/puertas" "$FUERA/logs"
 INFORME="$FUERA/puertas/$FASE.md"
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
 export RO_AVISOS_SIN_BUCLE=1
+# Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
+# no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
+# que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
+export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 ROJOS=()
 echo "# Puerta $FASE · $(date '+%d-%m-%Y %H:%M')" > "$INFORME"
 
@@ -84,6 +89,12 @@ fotos() {   # $1 = puerto
   (cd v2/tools/capturas && node capturar.mjs --base "http://127.0.0.1:$1" --modo nuevo --salida "$FUERA/capturas/nuevo" ${RAPIDO:+--solo-escritorio} \
     && node comparar.mjs "$FUERA/capturas/viejo" "$FUERA/capturas/nuevo" --umbral 0.5 ${RAPIDO:+--solo-escritorio})
 }
+velocidad() {   # $1 = puerto, $2 = nombre. La API siempre; las pantallas si hay _tiempos.json de las fotos
+  rm -rf "$FUERA/rendimiento/$2"
+  python3 migracion/rendimiento.py medir --base "http://127.0.0.1:$1" --salida "$FUERA/rendimiento/$2" \
+    && python3 migracion/rendimiento.py comparar "$FUERA/rendimiento/viejo" "$FUERA/rendimiento/$2" \
+         --capturas-viejo "$FUERA/capturas/viejo" --capturas-nuevo "$FUERA/capturas/${3:-ninguna}"
+}
 casos_cubren() {   # cada POST de servir.py tiene al menos un caso que funciona y uno que se deniega
   python3 - "$FUERA/casos_escritura.json" <<'PY'
 import json, sys
@@ -125,12 +136,14 @@ case "$FASE" in
     paso "escrituras de referencia (SQLite)" escritura_ref
     paso "notas de la noche" test -s migracion/NOTAS_NOCHE.md
     paso "baterías verdes contra la app de hoy" baterias 8770
+    paso "velocidad de la app de hoy medida" python3 migracion/rendimiento.py medir --base http://127.0.0.1:8770 --salida "$FUERA/rendimiento/viejo"
     ;;
   f2)
     paso "base al día (prisma migrate status)" bash -c "cd v2 && DATABASE_URL='$(pg_url ro_app)' pnpm --filter @ro/db exec prisma migrate status"
     paso "versión vigente de data publicada" bash -c "DATABASE_URL='$(pg_url ro_app)' python3 despliegue/publicacion.py versiones | grep -qi vigente"
     paso "contrato: hoy sobre Postgres = hoy sobre SQLite" contrato 8771 pg
     paso "escrituras: hoy sobre Postgres = hoy sobre SQLite" escritura pg
+    paso "velocidad: hoy sobre Postgres no es más lenta que sobre SQLite" velocidad 8771 pg
     ;;
   f3|f5|f6|f7)
     PUERTO=3000
@@ -140,7 +153,10 @@ case "$FASE" in
     paso "contrato: app nueva = app de hoy" contrato "$PUERTO" nuevo
     paso "escrituras: app nueva = app de hoy" escritura nuevo
     paso "fotos: cada pantalla ≤ 0,5 %" fotos "$PUERTO"
-    paso "batería pruebas_e0 contra la app nueva" baterias "$PUERTO"
+    paso "baterías contra la app nueva" baterias "$PUERTO"
+    paso "velocidad: la app nueva no es más lenta que la de hoy" velocidad "$PUERTO" nuevo nuevo
+    paso "seguridad desde fuera: igual o mejor que hoy" python3 migracion/seguridad_http.py --viejo http://127.0.0.1:8770 --nuevo "http://127.0.0.1:$PUERTO"
+    paso "aguanta caídas y peticiones raras" bash migracion/caidas.sh   # la última: reinicia el legado y Nest
     ;;
   f4)
     paso "permisos en TypeScript: 100 % de los vectores" bash -c "cd v2 && RO_VECTORES='$FUERA/vectores' pnpm --filter @ro/permisos test"

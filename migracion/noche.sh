@@ -34,6 +34,10 @@ export RO_FIN_NOCHE RO_MIGRACION="$FUERA"
 # nada sale fuera esta noche (servicios.sh y puerta.sh también lo fuerzan)
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
 export RO_AVISOS_SIN_BUCLE=1
+# Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
+# no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
+# que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
+export RO_RELOJ="${RO_RELOJ:-2026-10-05T07:30}"
 
 # --- el Mac despierto --------------------------------------------------------------------------------------------
 if command -v caffeinate >/dev/null; then caffeinate -dimsu -w $$ & fi
