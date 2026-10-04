@@ -20,7 +20,7 @@ export class PermisosGuard implements CanActivate {
     const req = contexto.switchToHttp().getRequest<{ vista?: Vista; method?: string; originalUrl?: string; url?: string }>();
     const metodo = (req.method ?? 'GET').toUpperCase();
     const escribe = metodo !== 'GET' && !declaracion.lecturaPorPost;
-    if (escribe && req.vista?.como) throw new ForbiddenException('«Ver como» es solo de lectura.');
+    if (escribe && req.vista?.como) throw new ForbiddenException('Estás en «ver como»: es solo lectura. No se escribe nada.'); // texto de servir.py
     const decision = this.motor.entrar(req.vista, declaracion);
     if (!decision.ok) throw new HttpException(decision.mensaje ?? 'Sin permiso.', decision.status ?? 403);
     if (req.vista?.como) {

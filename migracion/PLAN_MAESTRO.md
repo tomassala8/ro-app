@@ -158,6 +158,7 @@ Cada una con su puerta medible, en `puerta.sh` f3, f5, f6 y f7:
 |---|---|---|
 | **Rápida** | `migracion/rendimiento.py`: cada GET del contrato (3 personas × 5 veces) y el tiempo hasta que cada pantalla está pintada (`capturar.mjs` → `_tiempos.json`), en la de hoy y en la nueva | ninguna ruta o pantalla es más de un 25 % más lenta que hoy (con un margen de 100 ms en la API y 300 ms en pantalla), y nada pasa de 1,5 s (API) o 3 s (pantalla) si hoy no pasaba |
 | **No se cae** | `migracion/caidas.sh`: ráfaga de 200 peticiones (20 a la vez); peticiones raras (ruta inexistente, JSON roto, 3 MB, Host ajeno, POST sin cabecera de la app); se cae el legado, se cae Nest, se reinicia Postgres | ningún 5xx ni cuelgue en la ráfaga; respuestas raras con 4xx limpio y sin la pila de errores; sin legado, 502 con mensaje en < 6 s y vuelta sola en < 60 s; lo mismo con Nest y con Postgres |
+| **30 personas a la vez** | `migracion/rendimiento.py carga`: 30 personas abren la app a la vez (todas sus rutas, 6 en paralelo como el navegador, dos vueltas), primero en la de hoy y luego en la nueva, vigilando las conexiones a Postgres | ningún 5xx ni cuelgue; p95/p99 no peores que hoy (25 % y 100 ms de margen) si pasan de 1,5/3 s; menos de 60 conexiones a Postgres |
 | **Segura** | `migracion/seguridad_http.py`: cabeceras (CSP, X-Frame-Options, etc.), 13 rutas a ficheros sensibles (`.py`, `.db`, `.env`, `.git`, `data/`, `../`), accesos sin identificarse | ninguna cabecera perdida ni debilitada, nada sensible servido, nada que hoy se deniega y la nueva deja ver. Además de lo que ya había: permisos en un solo sitio (§2.2), vectores al 100 % y `pruebas_seguridad.py` en las baterías |
 
 **Planes B que ya están en la app nueva:**
@@ -170,6 +171,7 @@ Cada una con su puerta medible, en `puerta.sh` f3, f5, f6 y f7:
 **Ensayado el 4-oct:**
 - caídas en verde, con un fallo heredado (JSON roto → 500, N-13);
 - seguridad en verde;
+- 30 personas a la vez: la nueva daba **172 errores 500** de 2.340 peticiones (`envios.py` y `sincronia.py` crean sus tablas en cada petición y en Postgres eso choca). Arreglado en `base.py` (N-21): 0 errores en 3 pasadas, p95 igual que hoy (1,68 s frente a 1,66 s en este contenedor), p99 mejor (2,9 s frente a 4,2 s), 15–17 conexiones a Postgres. Una vez salieron 7 respuestas 504 justo tras reiniciar el legado; no se repitió.
 - velocidad: el legado sobre Postgres era hasta 7 veces más lento que SQLite (17 → 130 ms en `/api/rastro/verificar`), porque abría una conexión por petición. Con la reutilización, 59 ms y puerta en verde.
 
 ### 2.7 Las conexiones con las APIs, a la nube sin repetir las altas (Tomás, 4-oct)
@@ -249,14 +251,14 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 | Fase | Qué | Tiempo orientativo | Puerta |
 |---|---|---|---|
 | **0 · tarde (Tomás)** | traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, lanzar `noche.sh` | — | LISTO |
-| **1 · referencia** | inventario del Mac, escáner, instantánea del código, copia de la base, servicios, grabar contrato, vectores, fotos, casos de escritura, `baterias.sh` | 60 min | `puerta.sh f1` |
+| **1 · referencia** | inventario del Mac, escáner, instantánea del código + los PR #2, #3 y #4 (`RAMAS_A_JUNTAR.txt`), copia de la base y de la app de hoy (`~/RO_MIGRACION/ref`), servicios, grabar contrato, vectores, fotos, casos de escritura, `baterias.sh` | 60 min | `puerta.sh f1` |
 | **2 · base** | arreglo `avisos`→`tuberia_avisos`, `rehacer_base.sh` si cambiaron tablas, Postgres, copia, publicar `data`, la app de hoy sobre Postgres; arreglar `base.py` hasta que lea y escriba igual | 60–90 min | `puerta.sh f2` |
 | **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
-| **5 · API a Nest** | grupos de §2.2, uno a uno: se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | lo que quede hasta 2 h antes del final | `puerta.sh f5` por grupo |
-| **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8) | 30–45 min | `puerta.sh f4` |
-| **5.10 · fallos pendientes** | los 69 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-20 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 90 min; los de seguridad no se saltan por reloj | `puerta.sh f5` + la prueba de cada fallo |
-| **6 · front en React** | carcasa en `/carcasa`, `ctx.ts`, puente; carcasa a «/» con fotos iguales; pantallas una a una | lo que quede hasta 1 h antes del final | `puerta.sh f6` por pieza |
+| **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), como e2e que lanzan todas las puertas siguientes | 30–45 min | e2e en `puerta.sh` f3/f5/f6/f7 |
+| **5 · API a Nest** | grupos de §2.2, uno a uno, empezando por identidad + rastro de «ver como» (sin ellos, ninguna ruta de Nest puede pasar): se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | hasta 4 h antes del final | `puerta.sh f5` por grupo |
+| **5.10 · fallos pendientes** | los 70 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-21 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 1 h 45 antes del final; los de seguridad, hasta 75 min antes | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
+| **6 · front en React** | carcasa en `/carcasa` (y en «/» con `RO_CARCASA=1`), `ctx.ts`, puente; carcasa por defecto con fotos iguales; pantallas una a una | hasta 1 h antes del final | `puerta.sh f6` por pieza |
 | **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 
 **Reloj:** `noche.sh` exporta `RO_FIN_NOCHE`. Si faltan menos de 60 minutos, Cursor deja lo que esté haciendo (con su puerta verde, o deshecho) y pasa a la fase 7. Lo que no dé tiempo sigue otro día con el mismo sistema.
@@ -275,7 +277,7 @@ Regla general: **tres intentos con enfoques distintos** (cada uno apuntado en `P
 |---|---|
 | Una diferencia en la puerta 2 (la app de hoy sobre Postgres) no se arregla en `base.py` | Se apunta la ruta en `~/RO_MIGRACION/excepciones.txt` con el motivo («función bloqueada en Postgres») y se sigue. Va al informe como **bloqueo para el piloto**, no como migrada. Ejemplo ya conocido: el triaje responde 503 en Postgres a propósito (Astra). |
 | La puerta 3 no sale verde | Es fontanería (cabeceras, Host, compresión): arreglar en `src/legado/proxy.ts` o `next.config.ts`. Si tras 3 intentos sigue, apuntar y seguir con la fase 4 (que no depende de la 3). |
-| El motor de permisos no llega al 100 % en 90 minutos | Se guarda lo hecho, se apunta qué vectores fallan y **no se muda a Nest ninguna ruta que dependa de permisos** (casi todas): se salta la fase 5 y se pasa a la 6. La app sigue entera por el proxy. |
+| El motor de permisos no llega al 100 % en 90 minutos | Se guarda lo hecho, se apunta qué vectores fallan y **no se muda a Nest ninguna ruta que dependa de permisos** (casi todas): se saltan los grupos de rutas (F5.1–F5.9). Los fallos de F5.10 se arreglan igual, en el legado, y F5.11 se hace. La app sigue entera por el proxy. |
 | Un grupo de rutas no pasa su puerta | Se quitan de `RUTAS_EN_NEST` (vuelven al proxy), se deja el código del módulo en una rama `intento/<grupo>` y se sigue con el siguiente grupo. |
 | La carcasa o una pantalla en React no queda igual | Se queda la de hoy. Una pantalla a medias nunca sustituye a la vieja. |
 | La velocidad, las caídas o la seguridad salen en rojo por algo que ya pasa en la app de hoy | Se arregla si es de la parte nueva (proxy, Nest, Next, `base.py`). Si es heredado, va a `PENDIENTES_LOGICA.md`, y mientras tanto su línea va a `~/RO_MIGRACION/excepciones_solidez.txt` (caídas) o `excepciones_rendimiento.txt` (velocidad) con su L-n. Así no bloquea la noche y queda en el informe. |

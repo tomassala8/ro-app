@@ -3,6 +3,7 @@
 #
 #   bash migracion/servicios.sh arrancar [viejo|legado|api|web|todo]   (por defecto: todo)
 #   bash migracion/servicios.sh parar    [viejo|legado|api|web|todo]
+#   bash migracion/servicios.sh reiniciar legado api web     (varios a la vez; lo usa puerta.sh antes de comparar)
 #   bash migracion/servicios.sh estado
 #
 #   viejo   servir.py de hoy sobre una COPIA de la base (SQLite)    → 127.0.0.1:8770   la referencia
@@ -42,7 +43,11 @@ arrancar_uno() {
     viejo)
       [ -f "$FUERA/local.db.antes" ] || { echo "  ✘ falta $FUERA/local.db.antes (fase 1)"; return 1; }
       [ -f "$FUERA/viejo.db" ] || cp "$FUERA/local.db.antes" "$FUERA/viejo.db"
-      RO_DB="$FUERA/viejo.db" nohup python3 servir.py --bind 127.0.0.1 --puerto 8770 > "$LOGS/viejo.log" 2>&1 < /dev/null &
+      # La referencia corre desde la copia congelada de F1 (~/RO_MIGRACION/ref): los arreglos de F5.10 en servir.py
+      # no deben cambiar «la app de hoy». Sin copia, del árbol de trabajo (y avisa).
+      [ -f "$FUERA/ref/servir.py" ] || echo "  ⚠ falta $FUERA/ref (F1, paso 4): la referencia sale del árbol de trabajo"
+      local ref="$RAIZ"; [ -f "$FUERA/ref/servir.py" ] && ref="$FUERA/ref"   # servir.py se sitúa por __file__
+      RO_DB="$FUERA/viejo.db" nohup python3 "$ref/servir.py" --bind 127.0.0.1 --puerto 8770 > "$LOGS/viejo.log" 2>&1 < /dev/null &
       ;;
     legado)
       DATABASE_URL="$PG_URL" nohup python3 servir.py --bind 127.0.0.1 --puerto 8771 > "$LOGS/legado.log" 2>&1 < /dev/null &
@@ -93,14 +98,17 @@ parar_uno() {
 }
 
 orden="${1:-estado}"; que="${2:-todo}"
-[ "$que" = todo ] && lista="viejo legado api web" || lista="$que"
+[ "$que" = todo ] && lista="viejo legado api web" || lista="${*:2}"
 case "$orden" in
   arrancar)
     (cd v2 && docker compose up -d postgres > "$LOGS/postgres.log" 2>&1) || echo "  ⚠ docker compose up postgres falló: $LOGS/postgres.log"
     fallos=0; for s in $lista; do arrancar_uno "$s" || fallos=$((fallos+1)); done; exit $fallos ;;
   parar)
     for s in $lista; do parar_uno "$s"; done ;;
+  reiniciar)   # tras tocar código: si no, «arrancar» ve el servicio vivo y lo deja con el código de antes
+    for s in $lista; do parar_uno "$s"; done
+    fallos=0; for s in $lista; do arrancar_uno "$s" || fallos=$((fallos+1)); done; exit $fallos ;;
   estado)
     for s in viejo legado api web; do vivo "$s" && echo "  ✔ $s en 127.0.0.1:$(puerto_de "$s")" || echo "  ✘ $s parado"; done ;;
-  *) echo "uso: bash migracion/servicios.sh arrancar|parar|estado [viejo|legado|api|web|todo]"; exit 2 ;;
+  *) echo "uso: bash migracion/servicios.sh arrancar|parar|reiniciar|estado [viejo|legado|api|web|todo]"; exit 2 ;;
 esac

@@ -141,15 +141,24 @@ def comparar(a):
     v, n = Path(a.viejo).expanduser(), Path(a.nuevo).expanduser()
     rv, rn = json.loads((v / "respuestas.json").read_text()), json.loads((n / "respuestas.json").read_text())
     bv, bn = json.loads((v / "base.json").read_text()), json.loads((n / "base.json").read_text())
-    lineas = []
+    lineas, aceptadas = [], []
+    exc = C.leer_excepciones(a.excepciones)
     for x, y in zip(rv, rn):
-        if x["estado"] != y["estado"]:
+        motivo = C.excepcion(x["ruta"], exc)
+        if motivo is not None and (x["estado"] != y["estado"] or C.diferencias(x["respuesta"], y["respuesta"])):
+            aceptadas.append(f"- caso {x['n']} `{x['ruta']}` ({x['persona']}): {x['estado']} → {y['estado']} · {motivo}")
+        elif x["estado"] != y["estado"]:
             lineas.append(f"- caso {x['n']} `{x['ruta']}` ({x['persona']}): estado {x['estado']} → {y['estado']}")
         else:
             lineas += [f"- caso {x['n']} `{x['ruta']}` ({x['persona']}): {d}" for d in C.diferencias(x["respuesta"], y["respuesta"])]
     if len(rv) != len(rn):
         lineas.append(f"- {len(rv)} casos en la vieja, {len(rn)} en la nueva")
     for t in sorted(set(bv) | set(bn)):
+        motivo = C.excepcion(f"tabla:{t}", exc)
+        if motivo is not None:
+            if bv.get(t) != bn.get(t):
+                aceptadas.append(f"- tabla `{t}` · {motivo}")
+            continue
         if t not in bv or t not in bn:
             if not (bv.get(t) or bn.get(t)):
                 continue      # tabla que solo existe en un lado y está vacía (p. ej. las de la tubería): nada que comparar
@@ -166,6 +175,8 @@ def comparar(a):
             lineas.append(f"- tabla `{t}`: … {len(solo_v)} filas solo en la vieja y {len(solo_n)} solo en la nueva en total")
     informe = ["# Contrato de escritura: viejo frente a nuevo", "",
                f"**{len(rv)} casos · {len(bv)} tablas · {len(lineas)} diferencias.**", ""] + lineas
+    if aceptadas:
+        informe += ["", f"## ⚠ {len(aceptadas)} diferencias aceptadas (excepciones.txt)", ""] + aceptadas
     (n / "informe.md").write_text("\n".join(informe) + "\n", encoding="utf-8")
     print("\n".join(informe[:80]))
     sys.exit(1 if lineas else 0)
@@ -185,6 +196,7 @@ def main():
     c = sub.add_parser("comparar")
     c.add_argument("viejo")
     c.add_argument("nuevo")
+    c.add_argument("--excepciones", help="~/RO_MIGRACION/excepciones.txt (ver contrato.leer_excepciones)")
     a = ap.parse_args()
     {"base-limpia": base_limpia, "ejecutar": ejecutar, "comparar": comparar}[a.orden](a)
 

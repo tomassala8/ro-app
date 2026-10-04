@@ -50,7 +50,8 @@ parar_puerto() { local p; p=$(lsof -nP -iTCP@127.0.0.1:"$1" -sTCP:LISTEN -t 2>/d
 escritura_ref() {   # la app de hoy sobre SQLite (la referencia)
   parar_puerto 8780
   cp "$FUERA/local.db.antes" "$FUERA/esc_viejo.db"
-  RO_DB="$FUERA/esc_viejo.db" nohup python3 servir.py --bind 127.0.0.1 --puerto 8780 > "$FUERA/logs/esc_viejo.log" 2>&1 < /dev/null &
+  local ref="$RAIZ"; [ -f "$FUERA/ref/servir.py" ] && ref="$FUERA/ref"   # la copia congelada de F1, como en servicios.sh
+  RO_DB="$FUERA/esc_viejo.db" nohup python3 "$ref/servir.py" --bind 127.0.0.1 --puerto 8780 > "$FUERA/logs/esc_viejo.log" 2>&1 < /dev/null &
   esperar_puerto 8780 api/elegir || return 1
   rm -rf "$FUERA/escritura/viejo"
   python3 migracion/contrato_escritura.py ejecutar --base http://127.0.0.1:8780 --db "$FUERA/esc_viejo.db" \
@@ -76,7 +77,7 @@ escritura_lado() {   # $1 = pg (legado directo) | nuevo (Nest con proxy al legad
     --salida "$FUERA/escritura/$1"; local r=$?
   parar_puerto 8781; parar_puerto 4001; return $r
 }
-escritura() { escritura_ref && escritura_lado "$1" && python3 migracion/contrato_escritura.py comparar "$FUERA/escritura/viejo" "$FUERA/escritura/$1"; }
+escritura() { escritura_ref && escritura_lado "$1" && python3 migracion/contrato_escritura.py comparar "$FUERA/escritura/viejo" "$FUERA/escritura/$1" --excepciones "$FUERA/excepciones.txt"; }
 
 # --- contrato de lectura y fotos ---------------------------------------------------------------------------------
 contrato() {   # $1 = puerto, $2 = nombre de la grabación
@@ -87,7 +88,7 @@ contrato() {   # $1 = puerto, $2 = nombre de la grabación
 fotos() {   # $1 = puerto
   rm -rf "$FUERA/capturas/nuevo"
   (cd v2/tools/capturas && node capturar.mjs --base "http://127.0.0.1:$1" --modo nuevo --salida "$FUERA/capturas/nuevo" ${RAPIDO:+--solo-escritorio} \
-    && node comparar.mjs "$FUERA/capturas/viejo" "$FUERA/capturas/nuevo" --umbral 0.5 ${RAPIDO:+--solo-escritorio})
+    && node comparar.mjs "$FUERA/capturas/viejo" "$FUERA/capturas/nuevo" --umbral 0.5 --excepciones "$FUERA/excepciones.txt" ${RAPIDO:+--solo-escritorio})
 }
 velocidad() {   # $1 = puerto, $2 = nombre. La API siempre; las pantallas si hay _tiempos.json de las fotos
   rm -rf "$FUERA/rendimiento/$2"
@@ -110,15 +111,26 @@ baterias() {   # $1 = puerto. migracion/baterias.sh (lo monta Cursor en la fase 
   if [ -f migracion/baterias.sh ]; then bash migracion/baterias.sh "$1"; else python3 pruebas_e0.py --puerto "$1"; fi
 }
 
+# pg_dump/pg_restore de DENTRO del contenedor (misma versión que el servidor, 16) si Postgres va en Docker: el de brew
+# suele ser más nuevo y su volcado lleva órdenes que la 16 no entiende (SET transaction_timeout) → restauración en ROJO.
+docker_pg() { (cd v2 && docker compose ps --status running postgres 2>/dev/null | grep -q postgres); }
+pg_volcar() {
+  if docker_pg; then (cd v2 && docker compose exec -T postgres pg_dump -U ro --format=custom --no-owner ro_app) > "$1"
+  else pg_dump --format=custom --no-owner --file "$1" "$(pg_url ro_app)"; fi
+}
+pg_restaurar() {
+  if docker_pg; then (cd v2 && docker compose exec -T postgres pg_restore -U ro --no-owner -d ro_restaurada) < "$1"
+  else pg_restore --no-owner --dbname "$(pg_url ro_restaurada)" "$1"; fi
+}
 restauracion() {   # ensayo de recuperación (nota de Astra): volcar ro_app, restaurarla en otra base y que responda igual
   local dump="$FUERA/ro_app.dump"
-  pg_dump --format=custom --no-owner --file "$dump" "$(pg_url ro_app)" || return 1
+  pg_volcar "$dump" || return 1
   python3 - <<'PY' || return 1
 import psycopg
 with psycopg.connect("postgresql://ro:ro@127.0.0.1:5432/postgres", autocommit=True) as c:
     c.execute('DROP DATABASE IF EXISTS ro_restaurada WITH (FORCE)'); c.execute('CREATE DATABASE ro_restaurada')
 PY
-  pg_restore --no-owner --dbname "$(pg_url ro_restaurada)" "$dump" || return 1
+  pg_restaurar "$dump" || return 1
   parar_puerto 8782
   DATABASE_URL="$(pg_url ro_restaurada)" nohup python3 servir.py --bind 127.0.0.1 --puerto 8782 > "$FUERA/logs/restaurada.log" 2>&1 < /dev/null &
   esperar_puerto 8782 api/elegir || return 1
@@ -152,11 +164,15 @@ case "$FASE" in
     [ "$FASE" = f7 ] && paso "render.yaml: llaves completas y bucles encendidos" bash -c "python3 migracion/llaves_nube.py && test -f v2/render.yaml && ! grep -q RO_AVISOS_SIN_BUCLE v2/render.yaml"
     [ "$FASE" = f7 ] && [ -f migracion/escalados.py ] && paso "escalados sobre Postgres" python3 migracion/escalados.py
     paso "v2 compila, pasa sus pruebas y su lint" bash -c "cd v2 && pnpm build && pnpm test && pnpm lint"
+    # Sin esto se compara el código de ANTES: «arrancar» no toca un servicio que ya responde.
+    paso "legado, Nest y Next reiniciados con el código de ahora" bash migracion/servicios.sh reiniciar legado api web
+    paso "pruebas e2e de la API (F4.2: permisos que no vuelven atrás)" bash -c "cd v2 && DATABASE_URL='$(pg_url ro_app)' RO_VECTORES='$FUERA/vectores' pnpm --filter @ro/api test:e2e"
     paso "contrato: app nueva = app de hoy" contrato "$PUERTO" nuevo
     paso "escrituras: app nueva = app de hoy" escritura nuevo
     paso "fotos: cada pantalla ≤ 0,5 %" fotos "$PUERTO"
     paso "baterías contra la app nueva" baterias "$PUERTO"
     paso "velocidad: la app nueva no es más lenta que la de hoy" velocidad "$PUERTO" nuevo nuevo
+    paso "30 personas a la vez: sin errores ni más lenta que hoy" python3 migracion/rendimiento.py carga --base "http://127.0.0.1:$PUERTO" --referencia http://127.0.0.1:8770 --pg "$(pg_url ro_app)" ${RAPIDO:+--vueltas 1}
     paso "seguridad desde fuera: igual o mejor que hoy" python3 migracion/seguridad_http.py --viejo http://127.0.0.1:8770 --nuevo "http://127.0.0.1:$PUERTO"
     paso "aguanta caídas y peticiones raras" bash migracion/caidas.sh   # la última: reinicia el legado y Nest
     ;;

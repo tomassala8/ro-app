@@ -184,16 +184,33 @@ def diferencias(a, b, ruta="", max_n=20):
     return out[:max_n]
 
 
+def leer_excepciones(fichero):
+    """~/RO_MIGRACION/excepciones.txt: una línea por diferencia aceptada, «patrón  # motivo (con su L-n o N-n)».
+    Patrón: una ruta exacta (`/api/vivo`), o un prefijo acabado en `*` (`/api/modulo/seo/*`). La misma lista sirve
+    para el contrato de lectura y el de escritura (rutas), las tablas (`tabla:avisos`) y las fotos (`foto:crm`,
+    `foto:escritorio/tomas/*`). Sin motivo no vale: así nadie esconde una diferencia sin decir por qué."""
+    lista = []
+    f = Path(fichero).expanduser() if fichero else None
+    if f and f.exists():
+        for linea in f.read_text(encoding="utf-8").splitlines():
+            patron, _, motivo = linea.partition("#")
+            if patron.strip() and motivo.strip():
+                lista.append((patron.strip(), motivo.strip()))
+    return lista
+
+
+def excepcion(clave, lista):
+    """El motivo si `clave` está aceptada (exacta o por prefijo con `*`); si no, None."""
+    for patron, motivo in lista:
+        if patron == clave or (patron.endswith("*") and clave.startswith(patron[:-1])):
+            return motivo
+    return None
+
+
 def comparar(a):
     viejo, nuevo = Path(a.viejo).expanduser(), Path(a.nuevo).expanduser()
     informe, fallos, ok = ["# Contrato de la API: viejo frente a nuevo", ""], 0, 0
-    excepciones, aceptadas = {}, []
-    fe = Path(a.excepciones).expanduser() if getattr(a, "excepciones", None) else None
-    if fe and fe.exists():
-        for linea in fe.read_text(encoding="utf-8").splitlines():
-            ruta, _, motivo = linea.partition("#")
-            if ruta.strip():
-                excepciones[ruta.strip()] = motivo.strip()
+    excepciones, aceptadas = leer_excepciones(getattr(a, "excepciones", None)), []
     for cv in sorted(p for p in viejo.iterdir() if p.is_dir()):
         cn = nuevo / cv.name
         if not cn.exists():
@@ -203,8 +220,9 @@ def comparar(a):
         ev, en = json.loads((cv / "_estados.json").read_text()), json.loads((cn / "_estados.json").read_text())
         lineas = []
         for ruta, cod in sorted(ev.items()):
-            if ruta in excepciones and (en.get(ruta) != cod or cod == 200):
-                aceptadas.append(f"- `{ruta}` ({cv.name}): {cod} → {en.get(ruta)} · {excepciones[ruta]}")
+            motivo = excepcion(ruta, excepciones)
+            if motivo is not None and (en.get(ruta) != cod or cod == 200):
+                aceptadas.append(f"- `{ruta}` ({cv.name}): {cod} → {en.get(ruta)} · {motivo}")
                 continue
             if en.get(ruta) != cod:
                 lineas.append(f"- `{ruta}`: estado {cod} → {en.get(ruta)}")

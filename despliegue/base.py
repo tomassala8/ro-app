@@ -207,8 +207,23 @@ def _devolver(con):
     _cerrar(con)
 
 
+# Esquemas «CREATE … IF NOT EXISTS» que varios módulos (envios.py, sincronia.py…) lanzan en CADA petición. En SQLite
+# no cuesta nada; en Postgres, dos a la vez chocan («tuple concurrently updated», incluso «deadlock»): medido el 4-oct
+# con 30 personas a la vez, 172 errores 500. Ahora van de uno en uno (candado de transacción) y, si el script solo
+# crea lo que no existe, una vez por proceso y base.
+_ESQUEMAS_HECHOS, _CANDADO_ESQUEMA = set(), 7263
+
+
+def _solo_crea_si_no_existe(sql):
+    sin_cuerpos = re.sub(r"(?is)\bBEGIN\b.*?\bEND\b", "", re.sub(r"--[^\n]*", "", sql))   # cuerpos de disparadores
+    frases = [f.strip() for f in sin_cuerpos.split(";") if f.strip()]
+    patron = r"(?is)^CREATE\s+(UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF\s+NOT\s+EXISTS\b"
+    return bool(frases) and all(re.match(patron, f) for f in frases)
+
+
 class ConexionPG:
     def __init__(self, url):
+        self._url = url
         self._con = None
         while self._con is None:
             with _CANDADO:
@@ -255,9 +270,15 @@ class ConexionPG:
         return CursorPG(cur, lastrowid)
 
     def executescript(self, sql):
+        clave = (self._url, sql) if _solo_crea_si_no_existe(sql) else None
+        if clave in _ESQUEMAS_HECHOS:
+            return
         cur = self._con.cursor()
+        cur.execute(f"SELECT pg_advisory_xact_lock({_CANDADO_ESQUEMA})")
         cur.execute(esquema_postgres(sql))
         self._con.commit()
+        if clave:
+            _ESQUEMAS_HECHOS.add(clave)
 
     def cursor(self):
         return self

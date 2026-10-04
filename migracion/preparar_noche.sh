@@ -43,6 +43,15 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
       fi
     else ok "despliegue/base.py con los arreglos de Postgres"; fi
   fi
+  # Punto de partida = código del Mac + el trabajo del 4-oct que aún está en PR (migracion/RAMAS_A_JUNTAR.txt)
+  if [ -f migracion/RAMAS_A_JUNTAR.txt ]; then
+    while read -r rama _; do
+      case "$rama" in ''|\#*) continue;; esac
+      if ! git cat-file -e "origin/$rama" 2>/dev/null; then ojo "no veo la rama $rama en GitHub" "git fetch origin; si ya se juntó en main y se borró, quítala de migracion/RAMAS_A_JUNTAR.txt"
+      elif git merge-base --is-ancestor "origin/$rama" HEAD; then ok "tu código ya lleva $rama"
+      else ojo "tu código no lleva $rama" "Cursor la junta en F1.3 (si chocan, se queda tu versión y lo apunta). Si prefieres, júntala tú antes en main"; fi
+    done < migracion/RAMAS_A_JUNTAR.txt
+  fi
 else
   mal "esta carpeta no es un repositorio git" "ejecuta el script desde la carpeta de la app (la que tiene servir.py)"
 fi

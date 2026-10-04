@@ -1,0 +1,5 @@
+# Trabajo del 4-oct que la migración tiene que llevar dentro (punto de partida = código del Mac + esto).
+# Una rama por línea, en este orden (cada una contiene la anterior). Si Tomás ya los juntó en main, no hace nada.
+claude/project-thread-fig42s   # PR #2 · cerebros de área (477 fichas)
+claude/project-thread-wc3fje   # PR #3 · diagnósticos de calidad (lleva el #2)
+claude/project-thread-my4plb   # PR #4 · semáforo en tres ejes y riesgo de baja (lleva el #2; choca con el #3 en 3 ficheros de cerebros)

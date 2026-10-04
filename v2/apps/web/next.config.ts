@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const API = process.env.RO_API_URL ?? "http://127.0.0.1:4000";
+// F6.2: con RO_CARCASA=1 (en el `next build`), «/» enseña la carcasa en React sin cambiar la dirección: las fotos,
+// /api/elegir y los fetch relativos del front de hoy siguen funcionando igual. F6.3 la deja encendida por defecto.
+const CARCASA = process.env.RO_CARCASA === "1";
 
 const nextConfig: NextConfig = {
   // El navegador solo habla con Next. /api, /vivo y /logos pasan a Nest con la MISMA ruta que en servir.py,
@@ -11,6 +14,7 @@ const nextConfig: NextConfig = {
         { source: "/api/:ruta*", destination: `${API}/api/:ruta*` },
         { source: "/logos/:ruta*", destination: `${API}/logos/:ruta*` },
         { source: "/vivo", destination: `${API}/vivo` },
+        ...(CARCASA ? [{ source: "/", destination: "/carcasa" }] : []),
       ],
       afterFiles: [],
       // Estrangulador del front: lo que Next aún no tiene como página propia (empezando por «/», el index.html de hoy

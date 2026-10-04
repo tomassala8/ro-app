@@ -1,5 +1,5 @@
 // comparar.mjs · compara las fotos de la app vieja y la nueva, pantalla a pantalla, píxel a píxel.
-//   node comparar.mjs ~/RO_MIGRACION/capturas/viejo ~/RO_MIGRACION/capturas/nuevo [--umbral 0.5]
+//   node comparar.mjs ~/RO_MIGRACION/capturas/viejo ~/RO_MIGRACION/capturas/nuevo [--umbral 0.5] [--excepciones ~/RO_MIGRACION/excepciones.txt]
 //   [--solo-escritorio] [--pantallas mi-dia,en-rojo]   (para iterar: compara solo eso, como lo que capturó capturar.mjs)
 // También falla si la nueva tiene errores de página (_errores.json) que la de hoy no tenía.
 // Escribe <nuevo>/_diferencias/*.png (en rojo lo que cambia) y <nuevo>/_informe.md, ordenado de peor a mejor.
@@ -17,6 +17,18 @@ const viejo = dir(aViejo), nuevo = dir(aNuevo);
 const umbral = Number(resto[resto.indexOf('--umbral') + 1]) || 0.5;
 const soloEscritorio = resto.includes('--solo-escritorio');
 const soloPantallas = resto.includes('--pantallas') ? String(resto[resto.indexOf('--pantallas') + 1]).split(',') : null;
+// Diferencias aceptadas: líneas «foto:<pantalla>  # motivo» o «foto:<prefijo>*  # motivo» de excepciones.txt
+// (la misma lista que el contrato; ver migracion/contrato.py › leer_excepciones). Salen con ⚠ y no cuentan.
+const fExc = resto.includes('--excepciones') ? dir(String(resto[resto.indexOf('--excepciones') + 1])) : null;
+const excepciones = fExc && existsSync(fExc)
+  ? readFileSync(fExc, 'utf8').split('\n').map((l) => [l.split('#')[0].trim(), l.split('#').slice(1).join('#').trim()])
+    .filter(([p, m]) => p.startsWith('foto:') && m).map(([p, m]) => [p.slice(5), m])
+  : [];
+const aceptada = (rel) => {
+  const pantalla = rel.split('/').pop().replace(/\.png$/, '');
+  const hit = excepciones.find(([p]) => p === pantalla || p === rel || (p.endsWith('*') && rel.startsWith(p.slice(0, -1))));
+  return hit ? hit[1] : null;
+};
 const cuenta = (rel) => (!soloEscritorio || rel.startsWith('escritorio'))
   && (!soloPantallas || soloPantallas.some((p) => rel.endsWith(`/${p}.png`)));
 
@@ -45,10 +57,10 @@ for (const fv of pngs(viejo)) {
     mkdirSync(join(d, '..'), { recursive: true });
     writeFileSync(d, PNG.sync.write(dif));
   }
-  filas.push({ rel, pct, nota });
+  filas.push({ rel, pct, nota, motivo: pct > umbral ? aceptada(rel) : null });
 }
 filas.sort((x, y) => y.pct - x.pct);
-const malas = filas.filter((f) => f.pct > umbral);
+const malas = filas.filter((f) => f.pct > umbral && !f.motivo);
 // Errores de página: solo cuentan los que la app de hoy NO tenía (misma persona, tamaño, pantalla y mensaje).
 const leerErrores = (d) => (existsSync(join(d, '_errores.json')) ? JSON.parse(readFileSync(join(d, '_errores.json'), 'utf8')) : []);
 const clave = (e) => [e.persona, e.tamano, e.pantalla ?? String(e.url ?? '').split('#')[1] ?? '', String(e.error).replace(/https?:\/\/[^/\s]+/g, '')].join('|');
@@ -59,7 +71,7 @@ const informe = [
   `**${filas.length - malas.length} de ${filas.length} pantallas por debajo del ${umbral} % de píxeles distintos.**`, '',
   nErrores ? `**${nErrores} errores de página nuevos** (no estaban en la app de hoy; ver _errores.json): cuentan como fallo.\n` : '',
   '| Pantalla | % distinto | Nota |', '|---|---|---|',
-  ...filas.map((f) => `| ${f.pct > umbral ? '✘' : '✔'} \`${f.rel}\` | ${f.pct.toFixed(2)} | ${f.nota} |`),
+  ...filas.map((f) => `| ${f.motivo ? '⚠' : f.pct > umbral ? '✘' : '✔'} \`${f.rel}\` | ${f.pct.toFixed(2)} | ${[f.nota, f.motivo].filter(Boolean).join(' · ')} |`),
 ].join('\n');
 writeFileSync(join(nuevo, '_informe.md'), informe + '\n');
 console.log(informe.split('\n').slice(0, 30).join('\n'));

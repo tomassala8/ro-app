@@ -2,7 +2,7 @@ import { Controller, Get, INestApplication, Post } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { Permiso, Publico } from './declarar.js';
-import { MOTOR_PERMISOS, RASTRO_VER_COMO, type MotorPermisos, type RastroVerComo } from './motor.js';
+import { MOTOR_PERMISOS, MotorSinPortar, RASTRO_VER_COMO, RastroVerComoSinPortar, type MotorPermisos, type RastroVerComo } from './motor.js';
 import { PermisosModule } from './permisos.module.js';
 
 @Controller()
@@ -25,6 +25,9 @@ class Prueba {
   @Permiso({ modulo: 'crm', lecturaPorPost: 'solo lee' }) @Post('crm/ver') verPorPost() {
     return { ok: true };
   }
+  @Permiso({ modulo: 'crm', sinRecorte: 'prueba' }) @Get('roto') roto() {
+    throw new Error('detalle que no debe salir');
+  }
 }
 
 const DIR = { id: 'a', puestos: ['direccion'] };
@@ -34,9 +37,13 @@ const motor: MotorPermisos = {
   recortar: (_v, _d, cuerpo) => ({ ...(cuerpo as object), importe: undefined }),
 };
 
+// `null` = el rastro sin portar. Se mete a mano (no el de por defecto) para que la prueba siga valiendo después de F5.1.
 async function montar(vista?: object, rastro?: RastroVerComo | null) {
-  let mod = Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba] }).overrideProvider(MOTOR_PERMISOS).useValue(motor);
-  if (rastro !== null) mod = mod.overrideProvider(RASTRO_VER_COMO).useValue(rastro ?? { apuntar: () => undefined });
+  const mod = Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba] })
+    .overrideProvider(MOTOR_PERMISOS)
+    .useValue(motor)
+    .overrideProvider(RASTRO_VER_COMO)
+    .useValue(rastro === null ? new RastroVerComoSinPortar() : (rastro ?? { apuntar: () => undefined }));
   const app = (await mod.compile()).createNestApplication();
   app.use((req: { vista?: object }, _res: unknown, next: () => void) => ((req.vista = vista), next()));
   await app.init();
@@ -70,7 +77,10 @@ describe('permisos en un solo sitio', () => {
 
   it('«ver como» no puede escribir aunque la ruta no diga nada; solo `lecturaPorPost` pasa', async () => {
     app = await montar({ real: DIR, como: SEO });
-    await request(app.getHttpServer()).post('/crm').expect(403);
+    await request(app.getHttpServer())
+      .post('/crm')
+      .expect(403)
+      .expect({ error: 'Estás en «ver como»: es solo lectura. No se escribe nada.' }); // mismo cuerpo que servir.py
     await request(app.getHttpServer()).post('/crm/ver').expect(201);
   });
 
@@ -80,17 +90,28 @@ describe('permisos en un solo sitio', () => {
     await request(app.getHttpServer()).get('/crm').expect(200);
     expect(apuntadas).toEqual(['GET /crm']);
     await app.close();
-    app = await montar({ real: DIR, como: SEO }, null);   // el de por defecto: aún sin portar
+    app = await montar({ real: DIR, como: SEO }, null);   // rastro sin portar
     await request(app.getHttpServer()).get('/crm').expect(503);
     await app.close();
     app = await montar({ real: DIR }, null);              // sin «ver como» no hace falta
     await request(app.getHttpServer()).get('/crm').expect(200);
   });
 
+  // Se mete `MotorSinPortar` a mano (no el de por defecto) para que la prueba siga valiendo después de F4.1.
   it('sin motor portado, toda ruta con permiso se deniega', async () => {
-    const mod = await Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba] }).compile();
+    const mod = await Test.createTestingModule({ imports: [PermisosModule], controllers: [Prueba] })
+      .overrideProvider(MOTOR_PERMISOS)
+      .useClass(MotorSinPortar)
+      .overrideProvider(RASTRO_VER_COMO)
+      .useValue({ apuntar: () => undefined })
+      .compile();
     app = mod.createNestApplication();
     await app.init();
-    await request(app.getHttpServer()).get('/crm').expect(403);
+    await request(app.getHttpServer()).get('/crm').expect(403).expect({ error: 'Sin permiso.' });
+  });
+
+  it('un fallo inesperado sale como en servir.py, sin detalle', async () => {
+    app = await montar({ real: DIR });
+    await request(app.getHttpServer()).get('/roto').expect(500).expect({ error: 'Error interno (el detalle queda en el registro del servidor).' });
   });
 });

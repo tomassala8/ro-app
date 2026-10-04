@@ -16,7 +16,9 @@ alwaysApply: false
 - POST: exige `X-RO-App: 1` y JSON, como hoy. DTOs con `class-validator` que acepten exactamente lo que acepta hoy.
 - Rastro, historial, acciones y recargas son imborrables: lo garantiza la base (disparadores de la migración `0_base`). No los «arregles» con UPDATE/DELETE: crea una anulación.
 - Nada de hilos ni `setInterval` de negocio dentro de la API: los bucles siguen en el legado (Python, una sola copia).
-- `schema.prisma` sale de `packages/db/scripts/rehacer_base.sh`. No lo edites a mano esta noche; si hace falta un cambio de base, migración nueva con `pnpm db:migrate`.
+- `schema.prisma` sale de `packages/db/scripts/rehacer_base.sh`. Si hace falta una tabla nueva (p. ej. `fuente_lectura`, N-01): carpeta de migración escrita a mano (`prisma/migrations/<AAAAMMDDHHMMSS>_<nombre>/migration.sql`, solo `CREATE TABLE`/`ALTER … ADD`), su modelo a mano al final de `schema.prisma` con el comentario `// añadido la noche del 5-oct: <id>`, y `pnpm db:deploy` + `pnpm --filter @ro/db exec prisma generate`. **Nunca** `pnpm db:migrate` (`migrate dev`) ni `db push`: piden terminal y, con los disparadores de `0_base`, proponen borrar la base.
 - Esta noche los tipos se quedan como hoy (texto en fechas, 0/1 en booleanos): la app de hoy (legado) escribe en las mismas tablas.
 - Si `despliegue/base.py` no traduce algo (la app de hoy sobre Postgres falla), se arregla la traducción en `base.py`, de forma general, nunca la consulta en `servir.py`.
-- Tests: Vitest. Un e2e por ruta que compruebe 200 y 403 con dos personas distintas.
+- Tests: Vitest. Un e2e por ruta (`test/*.e2e-spec.ts`, lo lanza `puerta.sh`) que compruebe 200 y 403 con dos personas distintas.
+- Si una prueba de `src/permisos/` deja de valer porque portaste el motor (F4.1) o el rastro (F5.1), no se relaja: se le mete a mano lo que probaba (`overrideProvider(...).useClass(MotorSinPortar)`), y la prueba sigue diciendo lo mismo.
+- Errores: el filtro global (`src/permisos/errores.filter.ts`) ya responde `{"error": "…"}` como `servir.py`. Lanza `HttpException` con el texto EXACTO de `servir.py`.
