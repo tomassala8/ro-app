@@ -67,8 +67,10 @@ case "$RAIZ" in *"/Desktop/"*|*"Mobile Documents"*) ojo "la app está en una car
 echo "2 · Herramientas"
 N=$(version_mayor node); [ -n "$N" ] && [ "$N" -ge 22 ] && ok "Node $(node --version)" || mal "Node 22 o superior" "brew install node@22  (o nvm install 22)"
 if command -v pnpm >/dev/null; then ok "pnpm $(pnpm --version)"
-elif [ $INSTALAR = 1 ] && corepack enable 2>/dev/null && corepack prepare pnpm@10.28.0 --activate >/dev/null 2>&1; then ok "pnpm instalado con corepack"
-else mal "pnpm" "corepack enable && corepack prepare pnpm@10.28.0 --activate  (o: bash migracion/preparar_noche.sh --instalar)"; fi
+# Node 25+ ya no trae corepack: si no está, se instala con npm (Node de Homebrew no necesita sudo)
+elif [ $INSTALAR = 1 ] && { { corepack enable 2>/dev/null && corepack prepare pnpm@10.28.0 --activate >/dev/null 2>&1; } \
+     || npm install -g pnpm@10.28.0 >/dev/null 2>&1; } && command -v pnpm >/dev/null; then ok "pnpm $(pnpm --version) instalado"
+else mal "pnpm" "npm install -g pnpm@10.28.0  (o: bash migracion/preparar_noche.sh --instalar)"; fi
 P=$(python3 -c 'import sys;print(sys.version_info[1])' 2>/dev/null); [ -n "$P" ] && [ "$P" -ge 11 ] && ok "Python 3.$P" || mal "Python 3.11 o superior" "brew install python@3.12"
 # Python de Homebrew no deja instalar con pip a secas (PEP 668): se reintenta para el usuario. Van las del servidor
 # (psycopg, Pillow, playwright…): la noche las usa en las baterías y en el ensayo.
@@ -157,6 +159,7 @@ if [ -d v2 ] && command -v pnpm >/dev/null; then
     (cd v2 && docker compose up -d postgres >/dev/null 2>&1) && sleep 3 && (cd v2 && docker compose exec -T postgres pg_isready -U ro -d ro_app >/dev/null 2>&1) \
       && ok "Postgres de v2 arriba (127.0.0.1:5432, base ro_app)" || mal "no arranca el Postgres de v2" "cd v2 && docker compose up postgres  y mira el error"
   fi
+elif [ -d v2 ]; then mal "sin pnpm no se puede preparar v2/" "npm install -g pnpm@10.28.0 y repite con --instalar"
 else mal "no está la carpeta v2/" "trae el plan (ver la cabecera de este script)"; fi
 
 echo
