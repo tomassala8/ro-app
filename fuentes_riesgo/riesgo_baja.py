@@ -3,8 +3,10 @@
 
 Petición de Tomás (4-oct): que el semáforo del cliente distinga tres cosas, porque una sola no basta para ver una baja:
   · RESULTADOS  — ¿le estamos dando lo que espera? (leads, coste por lead y citas contra su objetivo; si no, la salud).
-  · SILENCIO    — ¿nos contesta y viene? (días desde nuestro último correo sin que él responda por ningún canal, y si
-                  asiste a las reuniones: 4-oct, segunda petición de Tomás). En la pantalla se llama «Relación».
+  · SILENCIO    — la RELACIÓN: ¿nos contesta, viene y está cálido? (días desde nuestro último correo sin que él responda
+                  por ningún canal; si asiste a las reuniones; y la calidez en la reunión, que marca el account cada lunes).
+                  En la pantalla se llama «Relación». Los resultados NO entran aquí: un cliente puede no decir nada malo
+                  en la reunión y no estar recibiendo nada (Tomás, 4-oct).
   · QUEJAS      — ¿se está quejando? (correo de queja abierto, incidencia con queja, rojo a mano, o el account lo marca).
 Buenos resultados con quejas, o malos resultados con un cliente que responde contento, son situaciones distintas y piden
 cosas distintas. La COMBINACIÓN de los tres ejes da un patrón con nombre y un nivel de riesgo de baja, y cada patrón
@@ -56,6 +58,8 @@ UMBRALES = {
     "reuniones_dias": 30,            # ventana para contar las reuniones a las que no vino
     "no_asiste_rojo": 2,             # 1 reunión sin presentarse → ámbar · 2 o más → rojo
     "sin_constancia_ambar": 2,       # 2 reuniones pasadas sin constancia de que se celebraran → ámbar
+    "tono_semanas": 4,               # calidez: se miran las últimas 4 semanas del semáforo del lunes
+    "frio_rojo": 2,                  # frío 1 vez → ámbar · 2 o más → rojo
     "cartera": (2, 4),               # escala de la D-41: ≤ 2 bien · 3-4 vigilar · ≥ 5 crítico
 }
 FIRMADO = False   # cambia a True cuando Tomás firme los umbrales (la pantalla dice «propuesta» mientras tanto)
@@ -169,7 +173,8 @@ def eje_resultados(r, hoy=None):
 
 def eje_silencio(c, hoy):
     """c: {ult_saliente, ult_entrante, ult_entrante_abierto, ult_llamada_contestada, ult_reunion, prox_reunion,
-           tiene_entrante_desk(bool), reuniones_pasadas[{fecha, estado: asistio|no_asistio|sin_constancia}]}. «Silencio» es el del CLIENTE: si él escribió y nosotros no, no está callado."""
+           tiene_entrante_desk(bool), reuniones_pasadas[{fecha, estado: asistio|no_asistio|sin_constancia}],
+           tonos[{semana, tono: calido|normal|frio}] (lo marca el account en el semáforo del lunes)}. «Silencio» es el del CLIENTE: si él escribió y nosotros no, no está callado."""
     U = UMBRALES
     respuestas = [(_fecha(c.get(k)), nom) for k, nom in (("ult_entrante", "correo"), ("ult_entrante_abierto", "correo"),
                                                         ("ult_llamada_contestada", "llamada"), ("ult_reunion", "reunión"))]
@@ -215,7 +220,17 @@ def eje_silencio(c, hoy):
         if color == "gris":
             motivos = [m for m in motivos if not m.startswith("Sin fechas")]
         color = c_asist if color == "gris" else _peor([color, c_asist])
-    if color == "rojo" and reunion_agendada and not no_vino:     # si falta a las reuniones, tenerla agendada no calma
+    # Calidez (Tomás, 4-oct): cómo estuvo en la reunión o la llamada. Solo lo sabe el account: lo marca cada lunes.
+    tonos = [t for t in c.get("tonos") or [] if _dias(t.get("semana"), hoy) is not None
+             and 0 <= _dias(t.get("semana"), hoy) < 7 * U["tono_semanas"]]
+    frios = sorted(t["semana"] for t in tonos if t.get("tono") == "frio")
+    if frios:
+        c_tono = "rojo" if len(frios) >= U["frio_rojo"] else "ambar"
+        motivos.append(f"Frío en la reunión {len(frios)} semana{'s' if len(frios) > 1 else ''} de las últimas {U['tono_semanas']}")
+        if color == "gris":
+            motivos = [m for m in motivos if not m.startswith("Sin fechas")]
+        color = c_tono if color == "gris" else _peor([color, c_tono])
+    if color == "rojo" and reunion_agendada and not no_vino and not frios:     # si falta a las reuniones, tenerla agendada no calma
         color = "ambar"
         motivos.append(f"Tiene reunión el {prox.isoformat()}: baja a ámbar")
     confianza = "medido" if c.get("tiene_entrante_desk") else "parcial"
@@ -223,6 +238,7 @@ def eje_silencio(c, hoy):
             "ultima_respuesta": ult_resp.isoformat() if ult_resp else None, "canal_ultima_respuesta": canal,
             "ultimo_nuestro": salida.isoformat() if salida else None, "reunion_agendada": reunion_agendada,
             "reuniones": {"asistio": vino, "no_asistio": len(no_vino), "sin_constancia": len(dudosas)},
+            "tono": tonos[0]["tono"] if tonos else None, "semanas_frio": len(frios),
             "confianza": confianza}
 
 
@@ -271,7 +287,7 @@ PATRONES = {
     "desenganche": ("alto", "rb_sin_resultados_y_silencio", "Sin resultados y sin contestar o sin venir a las reuniones: se está desenganchando en silencio."),
     "queja_con_resultados": ("alto", "rb_queja_con_resultados", "Los números van bien pero se queja: el problema es el servicio, el trato o la expectativa."),
     "silencio_con_resultados": ("vigilar", "rb_silencio_con_resultados", "Los números van bien pero no contesta o no viene a las reuniones: puede estar contento o desconectado. Llamar."),
-    "paciente_sin_resultados": ("vigilar", "rb_sin_resultados_pero_contento", "No llegan los resultados pero responde y está a gusto: hay crédito, con fecha de caducidad."),
+    "paciente_sin_resultados": ("vigilar", "rb_sin_resultados_pero_contento", "No llegan los resultados aunque en la reunión no diga nada malo: muchos se callan y lo sueltan de golpe. Cuéntaselo tú antes."),
     "solo_queja": ("alto", "rb_queja_con_resultados", "Se queja y no hay dato de resultados para contrastar: escúchale y carga el objetivo."),
     "solo_silencio": ("vigilar", "rb_silencio_con_resultados", "No contesta o no viene y no hay dato de resultados: llamar y cargar el objetivo."),
     "sin_datos": ("vigilar", "rb_sin_datos_para_juzgar", "Faltan datos para juzgar al cliente: el riesgo no se ve, no es que no exista."),
@@ -304,14 +320,15 @@ def combinar(R, S, Q):
         p = "sano"
     nivel, ficha, lectura = PATRONES[p]
     # Ajustes por intensidad: dos ejes en rojo suben un escalón; queja solo en ámbar (ya cerrada) baja a vigilar; silencio
-    # en rojo con buenos resultados sube a alto. Sin resultados pero contento se queda en vigilar aunque el eje esté en
-    # rojo: es lo que Tomás quiere distinguir (hay crédito); los puntos lo ponen arriba de su nivel.
+    # en rojo con buenos resultados sube a alto; sin resultados medidos en rojo sube a alto aunque el cliente no se queje.
     if p in ("insatisfecho_declarado", "desenganche") and len(rojo_en) >= 2:
         nivel = "critico"
     if p == "queja_con_resultados" and q == "ambar":
         nivel = "vigilar"
     if p == "silencio_con_resultados" and s == "rojo":
         nivel = "alto"
+    if p == "paciente_sin_resultados" and r == "rojo" and R.get("confianza") == "medido" and not R.get("arranque"):
+        nivel = "alto"      # Tomás: «el cliente se calla y luego de golpe lo dice»
     if Q.get("amenaza_baja"):
         nivel = "critico"
     puntos = PESO[r] + PESO[s] + (3 if q == "rojo" else PESO[q]) + (2 if Q.get("amenaza_baja") else 0)
@@ -328,7 +345,12 @@ def calcular(entrada, hoy=None):
     comb = combinar(R, S, Q)
     sem = entrada.get("semaforo_account") or {}
     discrepancia = None
-    if sem.get("color") == "verde" and comb["nivel"] in ("alto", "critico"):
+    if sem.get("color") == "verde" and R["color"] in ("ambar", "rojo") and R["confianza"] == "medido":
+        # Tomás, 4-oct: el account pone verde porque en la reunión el cliente no dice nada malo, pero no hay resultados;
+        # muchos se callan y luego lo sueltan de golpe. Los resultados se juzgan con datos, no con el tono de la reunión.
+        discrepancia = (f"El semáforo del lunes dice verde y los resultados están en {'rojo' if R['color'] == 'rojo' else 'ámbar'}: "
+                        "que no se queje en la reunión no quiere decir que esté bien")
+    elif sem.get("color") == "verde" and comb["nivel"] in ("alto", "critico"):
         discrepancia = f"El semáforo del lunes dice verde y los tres ejes dicen riesgo {comb['nivel_txt'].lower()}"
     elif sem.get("color") == "rojo" and comb["nivel"] == "bajo":
         discrepancia = "El account lo tiene en rojo y los datos no lo ven: apunta el motivo en la nota (los datos no lo saben todo)"
@@ -430,6 +452,8 @@ def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=Non
         "ult_reunion": reu.get("ult_reunion"), "prox_reunion": reu.get("prox_reunion"),
         "tiene_entrante_desk": bool(desk.get("ult_correo_entrante")),
         "reuniones_pasadas": reuniones_de(cid, eventos, reu.get("historial"), hoy),
+        "tonos": sorted([{"semana": s.get("semana"), "tono": s.get("tono")} for s in (obj or {}).get("semanas") or [] if s.get("tono")],
+                        key=lambda t: t["semana"] or "", reverse=True),
     }
     qs = []
     for c in mios:

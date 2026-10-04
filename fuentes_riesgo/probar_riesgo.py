@@ -88,6 +88,12 @@ ok(s["color"] == "verde" and s["motivos"], "una sola sin constancia: se avisa, s
 s = RB.eje_silencio({"ult_saliente": d(16), "ult_entrante": d(20), "prox_reunion": (HOY + timedelta(days=3)).isoformat(),
                      "reuniones_pasadas": [{"fecha": d(4), "estado": "no_asistio"}]}, HOY)
 ok(s["color"] == "rojo", "si falta a las reuniones, tener otra agendada no baja el rojo")
+s = RB.eje_silencio({**RESPONDE, "tonos": [{"semana": d(2), "tono": "frio"}, {"semana": d(9), "tono": "calido"}]}, HOY)
+ok(s["color"] == "ambar" and s["semanas_frio"] == 1, "frío en la reunión una semana → ámbar aunque conteste")
+s = RB.eje_silencio({**RESPONDE, "tonos": [{"semana": d(2), "tono": "frio"}, {"semana": d(16), "tono": "frio"}]}, HOY)
+ok(s["color"] == "rojo", "frío dos de las últimas cuatro semanas → rojo")
+s = RB.eje_silencio({**RESPONDE, "tonos": [{"semana": d(35), "tono": "frio"}, {"semana": d(2), "tono": "calido"}]}, HOY)
+ok(s["color"] == "verde" and s["tono"] == "calido", "frío de hace cinco semanas ya no cuenta; la última fue cálida")
 ev = [{"tipo": "cliente", "cliente_ref": "x", "inicio": d(4) + " 10:00", "estado_cita": "noshow", "persona_id": "a"},
       {"tipo": "cliente", "cliente_ref": "x", "inicio": d(4) + " 10:00", "estado_cita": "confirmed", "celebrada": True, "persona_id": "b"},
       {"tipo": "cliente", "cliente_ref": "x", "inicio": d(8) + " 12:00", "estado_cita": "noshow", "persona_id": "a"},
@@ -112,7 +118,10 @@ fichas = {s["id"] for s in json.loads((APP / "fuentes_consejos/cerebros/riesgo_b
 CASOS = [
     ("todo bien", cli(BIEN, RESPONDE), "sano", "bajo"),
     ("buenos resultados pero se queja (Tomás)", cli(BIEN, RESPONDE, QUEJA), "queja_con_resultados", "alto"),
-    ("malos resultados pero responde y feliz (Tomás)", cli(MAL, RESPONDE), "paciente_sin_resultados", "vigilar"),
+    ("malos resultados pero responde y feliz (Tomás): se calla y luego lo suelta", cli(MAL, RESPONDE), "paciente_sin_resultados", "alto"),
+    ("lo mismo en arranque (día 20)", cli({**MAL, "dias_desde_alta": 20}, RESPONDE), "paciente_sin_resultados", "vigilar"),
+    ("buenos resultados pero frío dos semanas", cli(BIEN, {**RESPONDE, "tonos": [{"semana": d(0), "tono": "frio"}, {"semana": d(7), "tono": "frio"}]}),
+     "silencio_con_resultados", "alto"),
     ("resultados flojos (ámbar) pero contento", cli({"objetivo_leads_mes": 30, "leads_ritmo_mes": 22}, RESPONDE), "paciente_sin_resultados", "vigilar"),
     ("buenos resultados y 9 días sin contestar", cli(BIEN, CALLADO), "silencio_con_resultados", "vigilar"),
     ("sin resultados y sin contestar", cli(MAL, CALLADO), "desenganche", "alto"),
@@ -131,6 +140,11 @@ f = RB.calcular(cli(BIEN, RESPONDE, [{"origen": "correo", "fecha": d(1), "texto"
 ok(f["nivel"] == "critico", "amenaza de baja sube a crítico aunque los resultados vayan bien")
 f = RB.calcular(cli(MAL, CALLADO, semaforo_account={"color": "verde", "semana": d(0)}), HOY)
 ok(bool(f["discrepancia"]), "semáforo del lunes en verde con riesgo alto → discrepancia")
+f = RB.calcular(cli({"objetivo_leads_mes": 30, "leads_ritmo_mes": 20}, RESPONDE, semaforo_account={"color": "verde"}), HOY)
+ok(f["discrepancia"] and "resultados" in f["discrepancia"],
+   "Tomás: el lunes en verde y los resultados en ámbar, aunque responda bien → discrepancia sobre los resultados")
+f = RB.calcular(cli({"salud": 30}, RESPONDE, semaforo_account={"color": "verde"}), HOY)
+ok(not f["discrepancia"], "con salud provisional (sin objetivo) no se acusa al account")
 f = RB.calcular(cli(BIEN, RESPONDE, semaforo_account={"color": "rojo"}), HOY)
 ok(bool(f["discrepancia"]), "account en rojo y datos en verde → discrepancia (que apunte el motivo)")
 
@@ -159,7 +173,7 @@ with tempfile.TemporaryDirectory() as t:
     fichero("baja", "Ya Baja", libro="Baja")
     (D / "objetivos/objetivos.json").write_text(json.dumps({"clientes": [
         {"cliente_id": "uno", "objetivo": {"leads_mes": 30, "coste_lead": 40}, "semaforo": {"color": "verde", "semana": d(0)},
-         "semanas": [{"semana": d(0), "color": "verde", "queja": True, "nota": "Se quejó en la llamada del trato"}]},
+         "semanas": [{"semana": d(0), "color": "verde", "queja": True, "tono": "frio", "nota": "Se quejó en la llamada del trato"}]},
         {"cliente_id": "dos", "objetivo": {"leads_mes": 20}, "semaforo": {"color": "verde", "semana": d(0)}, "semanas": []}]}))
     (D / "bandeja/bandeja.json").write_text(json.dumps({"correos": [
         {"cliente_id": "tres", "asunto": "Sin leads esta semana", "queja": True, "auto": False, "desde": d(1) + " 10:00", "url": "https://desk.example/1"}]}))
@@ -191,8 +205,14 @@ ok(red["uno"]["semaforo"]["queja"] is True and red["uno"]["semanas"][0]["queja"]
 n2 = OB.normalizar({"id": 2, "tipo": OB.TIPO_SEMAFORO, "cliente_id": "uno", "creada": "2026-10-05 08:00:00",
                     "vista_previa": json.dumps({"color": "verde", "queja": "sí"})})
 ok(n2.get("queja") is False, "solo true cuenta como queja (no textos)")
+n3 = OB.normalizar({"id": 3, "tipo": OB.TIPO_SEMAFORO, "cliente_id": "uno", "creada": "2026-10-05 08:00:00",
+                    "vista_previa": json.dumps({"color": "verde", "tono": "Frío"})})
+ok(n3.get("tono") == "frio" and OB.reducir([n3])["uno"]["semanas"][0]["tono"] == "frio", "el tono viaja por objetivos.py (Frío → frio)")
+ok(OB.normalizar({"id": 4, "tipo": OB.TIPO_SEMAFORO, "cliente_id": "uno", "creada": "2026-10-05 08:00:00",
+                  "vista_previa": json.dumps({"color": "verde", "tono": "raro"})}).get("tono") is None, "un tono raro no entra")
 js = (APP / "modulos/objetivos_comun.js").read_text()
-ok("out.queja = vp.queja === true" in js and "queja: !!f.queja" in js, "objetivos_comun.js repite la misma regla")
+ok("out.queja = vp.queja === true" in js and "queja: !!f.queja" in js and "out.tono = TONOS.includes(tono)" in js,
+   "objetivos_comun.js repite la misma regla (queja y tono)")
 
 print(f"\n{'FALLA' if FALLOS else 'OK'} ({len(FALLOS)} fallos)")
 sys.exit(1 if FALLOS else 0)

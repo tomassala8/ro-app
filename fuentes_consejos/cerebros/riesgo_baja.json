@@ -8,7 +8,7 @@
    "proyectos",
    "direccion"
   ],
-  "version": "1.1",
+  "version": "1.2",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "central:skills/criterio-tomas-ro/LEYES.md (C-D3-06 a C-D3-14)",
@@ -36,6 +36,18 @@
    "id": "rb_p_silencio",
    "texto": "El silencio del cliente es alarma, no tranquilidad. Siete días sin contestar a nuestro último correo ya es ámbar: se llama, no se escribe otra vez.",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:250",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_resultados_aparte",
+   "texto": "Los resultados se juzgan con datos, no con el tono de la reunión. Muchos clientes no dicen nada malo en la reunión, se callan y un día lo sueltan de golpe. Si no hay resultados, no es verde aunque la reunión haya ido bien.",
+   "fuente": "ro-app:fuentes_riesgo/riesgo_baja.py",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_calidez",
+   "texto": "La relación es contestar, venir a las reuniones y la calidez en ellas. Un cliente frío o distante en la reunión es una señal aunque conteste los correos: márcalo cada lunes.",
+   "fuente": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/codigo_semaforico.md:47",
    "autor": "Tomás"
   },
   {
@@ -892,6 +904,12 @@
      "comprueba": "¿Ha faltado a alguna reunión en el último mes? ¿Se reagendó?",
      "donde": "Agenda, Reuniones de la ficha",
      "si_falla": "c5"
+    },
+    {
+     "paso": 6,
+     "comprueba": "¿Cómo estuvo en la última reunión: cálido, normal o frío y distante?",
+     "donde": "Semáforo del lunes, acta de Fathom",
+     "si_falla": "c6"
     }
    ],
    "causas": [
@@ -946,6 +964,17 @@
      ],
      "quien": "account",
      "plazo": "Hoy"
+    },
+    {
+     "id": "c6",
+     "causa": "Se ha enfriado: está distante o seco en las reuniones.",
+     "como_confirmar": "Marcado frío en el semáforo del lunes una o más semanas.",
+     "solucion": [
+      "Abre la próxima reunión con cinco minutos de reconexión personal antes del dato.",
+      "Pregunta abierta: «¿cómo lo estás viendo tú?», y escucha."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
     }
    ],
    "acciones_inmediatas": [
@@ -1010,7 +1039,7 @@
   },
   {
    "id": "rb_sin_resultados_pero_contento",
-   "titulo": "No llegan los resultados pero el cliente responde y está contento",
+   "titulo": "No llegan los resultados pero el cliente responde y no dice nada malo en la reunión",
    "puestos": [
     "account",
     "operaciones",
@@ -1026,17 +1055,19 @@
      "pocos leads pero feliz",
      "malos resultados y responde",
      "está contento aunque no hay leads",
-     "paciente sin resultados"
+     "paciente sin resultados",
+     "en la reunión no dice nada malo",
+     "lo tengo en verde pero no hay resultados"
     ]
    },
-   "sintoma": "Los números están por debajo del objetivo pero el cliente contesta y no se queja. Hay crédito, pero tiene fecha de caducidad: si se entera él de que va mal, se pierde la autoridad.",
-   "gravedad": "media",
+   "sintoma": "Los números están por debajo del objetivo pero el cliente contesta y en la reunión no dice nada malo, así que el account lo pone en verde. Es un falso verde: muchos se callan y un día lo sueltan de golpe. Con los resultados en rojo, el riesgo es alto.",
+   "gravedad": "alta",
    "plazo": "Esta semana",
    "diagnostico": [
     {
      "paso": 1,
-     "comprueba": "¿Le hemos contado nosotros que los números van por debajo?",
-     "donde": "Correos salientes, último informe",
+     "comprueba": "¿Le hemos contado nosotros que los números van por debajo, con cifras, o solo hablamos de tareas en la reunión?",
+     "donde": "Correos salientes, último informe, acta",
      "si_falla": "c1"
     },
     {
@@ -1113,6 +1144,7 @@
     }
    ],
    "que_no_hacer": [
+    "Poner el semáforo en verde porque la reunión fue bien.",
     "Callarlo porque está contento.",
     "Prometer que el mes que viene se arregla.",
     "Dejarlo meses en el limbo."
@@ -1356,7 +1388,7 @@
   },
   {
    "id": "rb_semaforo_lunes_contradice",
-   "titulo": "El semáforo del lunes dice verde y los tres ejes dicen riesgo",
+   "titulo": "El semáforo del lunes dice verde y los resultados o los tres ejes dicen riesgo",
    "puestos": [
     "account",
     "operaciones",
@@ -1372,10 +1404,12 @@
      "discrepancia",
      "el account dice verde",
      "los datos dicen rojo",
-     "semáforo no cuadra"
+     "semáforo no cuadra",
+     "verde sin resultados",
+     "falso verde"
     ]
    },
-   "sintoma": "El account puso verde el lunes y los datos dan riesgo alto o crítico. O al revés: rojo a mano con los datos en verde. Una de las dos lecturas se está perdiendo algo.",
+   "sintoma": "El account puso verde el lunes y los resultados medidos están en ámbar o rojo, o los ejes dan riesgo alto o crítico. Es lo que más pasa: el cliente no dice nada malo en la reunión y se pone verde, pero no está recibiendo resultados. O al revés: rojo a mano con los datos en verde.",
    "gravedad": "media",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -1401,10 +1435,10 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "El account no ha leído las señales: verde por costumbre.",
-     "como_confirmar": "El eje lleva semanas en rojo.",
+     "causa": "Verde por cómo fue la reunión, no por los resultados.",
+     "como_confirmar": "Resultados en ámbar o rojo varias semanas y el lunes en verde.",
      "solucion": [
-      "Revisa el eje y ajusta el semáforo con su motivo."
+      "Pon el color de la relación como es y cuéntale al cliente los números esta semana (ficha «sin resultados pero no dice nada»)."
      ],
      "quien": "account",
      "plazo": "Hoy"

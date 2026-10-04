@@ -613,7 +613,9 @@ function pintarA4(caja, ctx, F, previo) {
 
 // 4-oct · Tomás: el semáforo distingue resultados, silencio y quejas; su combinación da el riesgo de baja y su ficha.
 const NIVEL_COLOR = { bajo: 'verde', vigilar: 'ambar', alto: 'rojo', critico: 'rojo' };
-const EJES = [['resultados', 'Resultados'], ['silencio', 'Relación'], ['quejas', 'Quejas']];   // Relación: contesta y viene a las reuniones
+const TONO_TXT = { calido: 'Cálido', normal: 'Normal', frio: 'Frío' };
+const TONO_COLOR = { calido: 'verde', normal: 'gris', frio: 'ambar' };
+const EJES = [['resultados', 'Resultados'], ['silencio', 'Relación'], ['quejas', 'Quejas']];   // Relación: contesta, viene y está cálido
 function filaRiesgo(ctx, F) {
   const r = F.riesgo;
   const zona = h('div', { class: 'pila', style: { minWidth: '0' } });
@@ -660,6 +662,10 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
     const estado = h('span', { class: 'sub', role: 'status' }, F.a4msg || '');
     // 4-oct · eje de quejas: hoy la app solo ve el asunto de los correos; lo que el account oye en llamadas y reuniones, lo marca aquí.
     const casillaQueja = h('input', { type: 'checkbox', checked: sHoy?.queja || null, style: { width: '20px', height: '20px', accentColor: 'var(--accent)' } });
+    // 4-oct · Tomás: la calidez en la reunión es relación, no resultados. El verde del lunes no tapa la falta de resultados.
+    const selTono = h('select', { 'aria-label': 'Cómo estuvo en la última reunión o llamada' },
+      [['', 'Sin reunión ni llamada esta semana'], ['calido', 'Cálido'], ['normal', 'Normal'], ['frio', 'Frío o distante']]
+        .map(([v, t]) => h('option', { value: v, selected: (sHoy?.tono || '') === v || null }, t)));
     const elegir = color => h('button', { type: 'button', class: `bt${sHoy?.color === color ? ' pri' : ''}`, title: `Guardar el semáforo en ${COLOR_TXT[color].toLowerCase()} con la nota`,
       on: { click: async e => {
         const nota = input.value.trim();
@@ -667,13 +673,16 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
         RE_IMPORTE.lastIndex = 0;
         e.currentTarget.disabled = true;
         try {
-          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota, queja: casillaQueja.checked } },
+          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota, queja: casillaQueja.checked, tono: selTono.value || null } },
             `Semáforo en ${COLOR_TXT[color].toLowerCase()}`);
         } catch (err) { estado.textContent = `No se ha guardado: ${err?.message || err}`; e.currentTarget.disabled = false; }
       } } }, chipEstado(color, COLOR_TXT[color]));
     hijos.push(campo,
       h('label', { class: 'fila', style: { gap: '8px', minWidth: '0', cursor: 'pointer' } }, casillaQueja,
         h('span', {}, 'Se ha quejado esta semana (correo, llamada, reunión o WhatsApp)')),
+      h('label', { class: 'fila', style: { gap: '8px', minWidth: '0', flexWrap: 'wrap' } },
+        h('span', {}, 'En la reunión o la llamada estuvo'), selTono),
+      lineaMeta('El color es tu lectura de la relación. Los resultados los mide la app aparte: un cliente que no dice nada malo en la reunión puede no estar recibiendo nada.'),
       h('div', { class: 'fila' }, h('span', { class: 'titulo-seccion' }, 'Ponlo en'), ['verde', 'ambar', 'rojo'].map(elegir)), estado);
   } else {
     hijos.push(vacioLinea('Lo ponen su account, operaciones y dirección. Tú lo ves, sin editar.', { icono: 'ojo' }));
@@ -691,6 +700,7 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
         h('span', { class: 'sub', style: { minWidth: '112px' } }, `Lunes ${fDiaRO(sem)}`),
         x ? chipEstado(x.color, COLOR_TXT[x.color]) : chipEstado('gris', 'Sin poner'),
         x?.queja ? chipEstado('rojo', 'Queja') : null,
+        x?.tono ? chipEstado(TONO_COLOR[x.tono], TONO_TXT[x.tono]) : null,
         x?.nota ? h('span', { style: { minWidth: '0', overflowWrap: 'anywhere' } }, x.nota) : null,
         x ? h('span', { class: 'sub' }, quienCuando(ctx, x)) : null);
     })));
