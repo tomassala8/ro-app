@@ -1,0 +1,21 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),cp=require('node:child_process');
+const base=fs.readFileSync('pruebas_urgencias_406.cjs','utf8').split('let n=0;')[0];
+const outer={require,console};vm.createContext(outer);vm.runInContext(base+';globalThis.B=box;globalThis.fixture=ctx;globalThis.dtoReal=dto;globalThis.node=N;globalThis.find=all;',outer);
+const B=outer.B,ctx=outer.fixture,dto=outer.dtoReal,N=outer.node,all=outer.find;
+let count=0;const test=async fn=>{await fn();count++;};
+(async()=>{
+await test(()=>{for(const k of ['lectura_desde_utc','lectura_hasta_utc']){const c=ctx(),d=dto();d[k]='2026-10-04T12:00:00Z';assert.equal(B.proyectarUrgencias406(c,d,B.ambitoUrgencias406(c)),null);}});
+await test(()=>{const c=ctx(),d=dto();d.filas[0].estado_leido_utc='2026-10-04T00:00:01Z';assert.equal(B.proyectarUrgencias406(c,d,B.ambitoUrgencias406(c)),null);});
+await test(async()=>{const c=ctx(),root=new N('main');await B.renderUrgencias406(root,c);all(root,x=>x.tag==='button')[0].events.click();const anchor=all(root,x=>x.tag==='a')[0];c.ver=()=>({ok:false});let prevented=false;anchor.events.click({preventDefault(){prevented=true;}});assert(prevented);assert.equal(root.textContent,'');});
+await test(async()=>{for(const change of [c=>c.datos.personas[0].estado='baja',c=>c.datos.personas.push({...c.datos.personas[0]}),c=>c.real={...c.real,id:'other'}]){const c=ctx(),root=new N('main');let done;c.api=()=>new Promise(r=>done=r);const promise=B.renderUrgencias406(root,c);change(c);done(dto());await promise;assert.equal(root.textContent,'');}});
+const stage=JSON.parse(cp.execFileSync('python3',['-c',`import json
+from pathlib import Path
+from datetime import datetime,timezone
+import urgencias_observadas_api_402 as B
+p=Path('../RECUPERACION_CODEX_2026-10-03/staging_urgencias_398/candidato.json').resolve()
+d,m,h=B.cargar(p);cat=B.verificar_fuentes(m,B._fuentes());ids=sorted({r['cliente_id'] for r in d['filas']});rows,cut=B.proyectar(d,ids,cat,datetime.now(timezone.utc));rows=[r for r in rows if not r['final_flujo_en_copia']];stamps=sorted((r['estado_leido_utc'] for r in rows),key=B.instante)
+print(json.dumps(dict(version='402.1',grupo='abiertas',urgencias_actuales=None,verificacion_conjunta=False,cumplimiento=None,cliente_ids=ids,filas=rows,estado='copia_observada',fuente_version='398.1',fuente='clickup_cache_local',cobertura='parcial',corte_preparacion_utc=B.iso(cut),generado=B.iso(datetime.now(timezone.utc)),lectura_desde_utc=stamps[0],lectura_hasta_utc=stamps[-1],abiertas_en_copia=len(rows),observaciones=len(rows))))`],{encoding:'utf8',maxBuffer:2000000}));
+await test(async()=>{const c=ctx(),clients=stage.cliente_ids.map((id,i)=>({id,nombre:'Cliente fixture '+i,activo_confirmado:true,detalle:true}));c.clientes=clients.map(x=>({...x}));c.clientesVisibles=clients;c.api=async()=>stage;const root=new N('main');await B.renderUrgencias406(root,c);assert(root.textContent.includes('pendientes de contraste'));assert(all(root,x=>x.tag==='button').length>0);assert(!root.textContent.includes('Urgencias actuales: 190'));assert(!stage.filas.some(r=>r.final_flujo_en_copia));});
+await test(async()=>{for(const role of ['account','trafficker']){const c=ctx();c.real.puestos=[role];const cid=stage.filas[0].cliente_id;c.clientes=[{id:cid,nombre:'Cartera fixture',activo_confirmado:true,detalle:true}];c.clientesVisibles=c.clientes.map(x=>({...x}));const rows=stage.filas.filter(r=>r.cliente_id===cid),stamps=rows.map(r=>r.estado_leido_utc).sort();const d={...stage,cliente_ids:[cid],filas:rows,abiertas_en_copia:rows.length,observaciones:rows.length,lectura_desde_utc:stamps[0],lectura_hasta_utc:stamps.at(-1)};c.api=async()=>d;const root=new N('main');await B.renderUrgencias406(root,c);assert(root.textContent.includes('Cartera fixture'));assert.equal(all(root,x=>x.tag==='button').length,1);const foreign={...d,filas:stage.filas,abiertas_en_copia:stage.filas.length,observaciones:stage.filas.length};assert.equal(B.proyectarUrgencias406(c,foreign,B.ambitoUrgencias406(c)),null);}});
+console.log(count+' grupos independientes407 PASS; fuente398 real verificada, sin emitir IDs ni contenido.');
+})().catch(e=>{console.error(e.message);process.exitCode=1;});

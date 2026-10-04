@@ -1,0 +1,25 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+(async()=>{const src=fs.readFileSync(path.join(__dirname,'modulos/_metricas_tarjetas_277.js'),'utf8');const helper=fs.readFileSync(path.join(__dirname,'modulos/_meta_semantica_285.js'),'utf8').replace(/export /g,'');const M=await import('data:text/javascript;base64,'+Buffer.from(src.replace(/^import .*;\n/gm,helper+'\n')).toString('base64')); let n=0;function test(f){f();n++;}
+ const ctx={hoy:'2026-10-03',clientesVisibles:[{id:'c',activo_confirmado:true,detalle:true}],ver:()=>({ok:true}),veModulo:()=>true};
+ const C={datos_hasta:'2026-10-02',ventanas:{serie:['2026-08-29','2026-10-02']},clientes:[{cliente_id:'c',serie:[{d:'2026-09-02',leads_meta:99},{d:'2026-09-03',leads_meta:2},{d:'2026-10-02',leads_meta:3},{d:'2026-10-03',leads_meta:77}]}]};
+ const P={hoy:'2026-10-03',proyectos:[{cliente_id:'c',horas_mes:14,horas_medicion:{estado:'medido',fuente:'horas',periodo:'2026-10',fecha:'2026-10-03 02:56',cobertura:'parcial',alcance:'entradas_leidas'}}]};const D={mes_cuota:'2026-10',mes_horas:'2026-09',clientes:[{cliente_id:'c',cuota_horas:{pautadas:20},coste_horas:{sep:999},cuota:9999}]};const rows=[{id:'c'}];const build=(x={})=>M.metricasTarjetas277(rows,x.ctx||ctx,{captacion:x.C||C,produccion:x.P||P,dinero:x.D||D});
+ test(()=>{const r=build()[0];assert.equal(r.leads30,null);assert.equal(r.resultadosMeta30,5);assert.equal(r.resultadosMeta30Medicion.desde,'2026-09-03');assert.equal(r.horasPct,70);assert.equal(r.horasObservadas,14);assert(!('cuota'in r));assert.equal(r.resultadosMeta30Medicion.cualificados,false)});
+ test(()=>assert.equal(build({D:{...D,mes_cuota:'2026-09'}})[0].horasPct,null));
+ test(()=>assert.equal(build({P:{...P,proyectos:[{...P.proyectos[0],horas_medicion:null}]}})[0].horasObservadas,null));
+ test(()=>assert.equal(build({ctx:{...ctx,veModulo:m=>m!=='dinero-cliente'}})[0].horasPct,null));
+ test(()=>assert.equal(build({ctx:{...ctx,ver:q=>({ok:q.tipo!=='horas_pautadas'})}})[0].horasPct,null));
+ test(()=>assert.equal(build({ctx:{...ctx,veModulo:m=>m!=='captacion'}})[0].resultadosMeta30,null));
+ test(()=>assert.equal(build({ctx:{...ctx,ver:()=>({ok:false})}}).length,0));
+ test(()=>assert.equal(build({ctx:{...ctx,clientesVisibles:[ctx.clientesVisibles[0],ctx.clientesVisibles[0]]}}).length,0));
+ test(()=>assert.equal(M.metricasTarjetas277([{id:'foreign'}],ctx,{captacion:C}).length,0));
+ test(()=>assert.equal(build({C:{...C,clientes:[C.clientes[0],C.clientes[0]]}})[0].resultadosMeta30,null));
+ test(()=>assert.equal(build({C:{...C,datos_hasta:'2026-10-01'}})[0].resultadosMeta30,null));
+ test(()=>{const c={...C.clientes[0],serie:[{d:'2026-10-02',leads_meta:0}]};assert.equal(M.muestraLeads30Tarjeta277(c,C).valor,null)});
+ test(()=>{const c={...C.clientes[0],serie:[{d:'2026-10-02',leads_meta:3},{d:'2026-10-02',leads_meta:3}]};assert.equal(M.muestraLeads30Tarjeta277(c,C),null)});
+ test(()=>{const c={...C.clientes[0],serie:[{d:'2026-10-02',leads_meta:1.2}]};assert.equal(M.muestraLeads30Tarjeta277(c,C).valor,null)});
+ test(()=>assert.equal(build({P:{...P,proyectos:[{...P.proyectos[0],horas_medicion:{...P.proyectos[0].horas_medicion,fecha:'2026-10-04'}}]}})[0].horasPct,null));
+ test(()=>assert.equal(build({D:{...D,clientes:[{...D.clientes[0],cuota_horas:{pautadas:0}}]}})[0].horasPct,null));
+ test(()=>{const old=JSON.stringify([rows,C,P,D]);build();assert.equal(JSON.stringify([rows,C,P,D]),old)});
+ test(()=>{const r=build({ctx:{...ctx,hoy:'2026-10-01'}})[0];assert.equal(r.resultadosMeta30,null);assert.equal(r.leads30,null);assert.equal(r.horasObservadas,null)});
+ test(()=>{const r=build({ctx:{...ctx,hoy:undefined}})[0];assert.equal(r.resultadosMeta30,null);assert.equal(r.leads30,null);assert.equal(r.horasObservadas,null)});
+ console.log(n+' pruebas277 PASS');})().catch(e=>{console.error(e);process.exitCode=1});

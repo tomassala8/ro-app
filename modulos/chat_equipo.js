@@ -14,11 +14,17 @@
 // R16 (contratos del servidor): «Añadir persona» solo sale si /api/canales trae `puede_anadir: true` en ese canal (RRHH y
 // Dirección: solo Tomás, y Cecilia en RRHH; el resto de equipos: su jefe, Mili y Tomás). Un mensaje que dice lo que cobra
 // alguien vuelve con 400 y el motivo en llano: se enseña tal cual debajo de la caja y el texto se queda para corregirlo.
+// 3-oct (Tomás: «chat usable de verdad para sustituir el de ClickUp» + orden de escalado oficial):
+//   · Mensajes directos 1 a 1 de la app («Nuevo mensaje directo»): solo esas dos personas, nunca en «ver como».
+//   · Adjuntar un cliente o una tarea (cada uno lo ve si puede abrirlo). Avisos del navegador si la persona los permite.
+//   · «Videollamada» (Jitsi en pestaña nueva, sala aleatoria) en grupos, canales y directos; «Pedir ayuda» con el orden de
+//     escalado (modulos/_escalar.js); en una petición de ayuda, quien la recibe puede «Pasar a <siguiente>».
 
 import {
-  h, fmt, icono, tile, tiles, chipEstado, chipsFiltro, vacio, vacioLinea, avisoParcial, frescura, iniciales, avisoFlotante,
+  h, fmt, icono, chipEstado, chipsFiltro, vacio, vacioLinea, avisoParcial, frescura, iniciales, avisoFlotante,
   selectorPersona,
 } from '../componentes.js';
+import { abrirPedirAyuda } from './_escalar.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -35,6 +41,19 @@ function vigilarCortes(raiz) {
 }
 
 const ID = 'chat-equipo';
+function vivo(S) { return (!S.raiz || S.raiz.isConnected) && (!S.ctx.vigente || S.ctx.vigente()); }
+function cargarEstilosChat() {
+  if (!document.getElementById('ro-chat-css')) document.head.append(h('link', { id: 'ro-chat-css', rel: 'stylesheet', href: './modulos/chat_equipo.css' }));
+}
+async function apiChat(S, ruta, opciones) {
+  if (!vivo(S)) throw new Error('La pantalla ha cambiado.');
+  if (S.ctx.soloLectura && opciones?.metodo && opciones.metodo !== 'GET') throw new Error('Estás en «ver como»: es solo lectura.');
+  const r = await S.ctx.api(ruta, opciones);
+  if (!vivo(S)) throw new Error('La pantalla ha cambiado.');
+  return r;
+}
+function notificarChat(S, ...args) { if (vivo(S)) avisoFlotante(...args); }
+
 
 // Sin hoja propia: clases comunes (bt, chips-f, panel, tiles, av, ico-c, vacio-g) y estilos en línea con tokens.
 const ANCHO = {
@@ -131,16 +150,19 @@ export default {
   grupo: 'Hoy',
   puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo' },
   async render(cont, ctx) {
+    cargarEstilosChat();
     vigilarCortes(cont);
     const pid = ctx.persona.id;
     const S = { ctx, pid, D: null, A: null, cuError: null, sel: null, vista: 'todos', buscar: '', res: null, abiertos: new Set(),
-      movilEnCanal: false, app: new Map(), cu: new Map(), filtroAviso: 'abiertos', verTodosCli: false, nuevoGrupo: false, anadir: false };
+      movilEnCanal: false, app: new Map(), cu: new Map(), filtroAviso: 'abiertos', verTodosCli: false, nuevoGrupo: false, anadir: false,
+      nuevoDirecto: false, adjuntos: [], adjuntar: false };
     // El índice de ClickUp (ligero) y los canales de la app, a la vez.
     // En «ver como» el chat de ClickUp de otra persona no se abre (el servidor da 403): ni se pide.
     const [rD, rA] = await Promise.allSettled([
       ctx.soloLectura ? Promise.reject(Object.assign(new Error('ver como'), { status: 403 })) : ctx.datosModulo(`chat_equipo/p_${pid}`),
       ctx.servidor ? ctx.api('canales') : Promise.reject(Object.assign(new Error('sin servidor'), { status: 0 })),
     ]);
+    if (!cont.isConnected || (ctx.vigente && !ctx.vigente())) return;
     if (rD.status === 'fulfilled') S.D = rD.value;
     else if (rD.reason?.status === 404) S.D = { _meta: {}, canales: [], menciones: [] };
     else S.cuError = ctx.soloLectura ? 'ver_como' : 'error';
@@ -151,7 +173,7 @@ export default {
         accion: h('button', { type: 'button', class: 'bt', on: { click: () => location.reload() } }, icono('recargar'), 'Recargar') }));
       return;
     }
-    const raiz = h('div', { style: { minWidth: '0', maxWidth: '100%', display: 'grid', gap: 'var(--s-4)', gridTemplateColumns: 'minmax(0, 1fr)' } });
+    const raiz = h('div', { class: 'ro-chat-equipo', style: { minWidth: '0', maxWidth: '100%', display: 'grid', gap: 'var(--s-4)', gridTemplateColumns: 'minmax(0, 1fr)' } });
     cont.append(raiz);
     S.raiz = raiz;
     // R15b: #/chat-equipo/nuevo abre «Nuevo grupo» con el nombre listo para escribir; #/chat-equipo/<canal>, ese canal.
@@ -159,12 +181,13 @@ export default {
     const nuevo = p0 === 'nuevo' && !!S.A && !ctx.soloLectura;
     if (nuevo) { S.nuevoGrupo = true; S.movilEnCanal = true; }
     else if (p0 && appCanales(S).some(c => c.id === p0)) S.sel = { tipo: 'app', id: p0 };
+    else if (p0 && S.A && !ctx.soloLectura && directoNuevo(S, p0)) S.sel = { tipo: 'app', id: p0 };
     else if (p0 && cuCanales(S).some(c => c.id === p0)) S.sel = { tipo: 'cu', id: p0 };
     if (S.sel) S.movilEnCanal = true;
     vigilarAncho(S);
     pintar(S);
     if (p0 && !nuevo && !S.sel) {
-      avisoFlotante(p0 === 'nuevo'
+      notificarChat(S, p0 === 'nuevo'
         ? (ctx.soloLectura ? 'Estás en «ver como»: los grupos los crea la persona real.' : 'Los grupos de la app necesitan el servidor.')
         : 'No encuentro ese canal entre los tuyos (o ya no existe).', { icono: 'alert' });
       history.replaceState(null, '', `#/${ID}`);
@@ -182,7 +205,20 @@ export default {
 };
 
 // ===================================================================== listas
-const ORDEN_TIPO = { avisos: 0, general: 1, equipo: 2, cliente: 3, propio: 4 };
+const ORDEN_TIPO = { avisos: 0, general: 1, directo: 2, equipo: 3, cliente: 4, propio: 5 };
+/** Un directo que todavía no tiene mensajes: entra en la lista de la pantalla (el servidor lo comprueba al escribir). */
+function directoNuevo(S, id) {
+  const m = /^dm-([a-z0-9_]+)--([a-z0-9_]+)$/.exec(id || '');
+  if (!m || ![m[1], m[2]].includes(S.pid) || m[1] === m[2]) return false;
+  const otro = m[1] === S.pid ? m[2] : m[1];
+  const po = (S.ctx.datos.personas || []).find(p => p.id === otro && p.activo);
+  if (!po) return false;
+  if (!canalApp(S, id)) S.A.canales.push({ id, tipo: 'directo', con: otro, nombre: po.alias || po.nombre, titulo: po.nombre || po.alias, por_que: 'Mensaje directo',
+    descripcion: 'Solo vosotros dos. No se ve en «ver como» (ni Mili ni Tomás).', no_leidos: 0, menciones: 0, abiertos: 0, mios: 0, ultimo: null, silenciado: false,
+    puede_escribir: true, solo_hilos: false, puede_anadir: false });
+  return true;
+}
+const idDirecto = (a, b) => { const [x, y] = [a, b].sort(); return `dm-${x}--${y}`; };
 function appCanales(S) {
   const deps = Object.fromEntries((S.A?.departamentos || []).map((d, i) => [d.id, i]));
   return (S.A?.canales || []).slice().sort((a, b) => (ORDEN_TIPO[a.tipo] - ORDEN_TIPO[b.tipo]) || ((deps[a.departamento] ?? 99) - (deps[b.departamento] ?? 99))
@@ -192,7 +228,7 @@ const cuCanales = S => (S.D?.canales || []).slice().sort((a, b) => (b.ultimo || 
 const canalApp = (S, id) => (S.A?.canales || []).find(c => c.id === id);
 const canalCu = (S, id) => (S.D?.canales || []).find(c => c.id === id);
 const iconoApp = (S, c) => c.tipo === 'avisos' ? ((S.A?.departamentos || []).find(d => d.id === c.departamento)?.icono || 'campana')
-  : c.tipo === 'general' ? 'megafono' : c.tipo === 'equipo' ? 'eq' : c.tipo === 'cliente' ? 'cli' : 'chat';
+  : c.tipo === 'general' ? 'megafono' : c.tipo === 'equipo' ? 'eq' : c.tipo === 'cliente' ? 'cli' : c.tipo === 'directo' ? 'persona' : 'chat';
 
 // ClickUp: «sin leer» = llegó después de tu última visita a ese canal en esta app (primera visita: las últimas 48 h).
 const visto = (S, c) => leer(`ro.chat.visto.${S.pid}.${c.id}`) || '';
@@ -203,6 +239,7 @@ function noLeidosCu(S, c) {
 const mencionesCu = (S, c) => (S.D?.menciones || []).filter(m => m.canal_id === c.id && (m.fecha || '') > (visto(S, c) || hace(7)) && !m.a_todos).length;
 
 function pintar(S) {
+  if (!vivo(S)) return;
   const { ctx, raiz } = S;
   const estrecho = ANCHO.estrecho();
   raiz.replaceChildren();
@@ -213,30 +250,32 @@ function pintar(S) {
   const noCu = cu.reduce((s, c) => s + noLeidosCu(S, c), 0);
   const mencCu = cu.reduce((s, c) => s + mencionesCu(S, c), 0);
   const app = appCanales(S);
-  const nAvisos = app.filter(c => c.tipo === 'avisos').length;
-  if (!ANCHO.movil()) raiz.append(tiles([
-    tile({ icono: 'campana', etiqueta: 'Avisos para ti', valor: S.A ? fmt.num(camp.avisos_para_ti || 0) : null, sinDato: 'sin servidor',
-      estado: camp.avisos_para_ti ? 'rojo' : 'verde', contexto: camp.avisos_para_ti ? 'Con tu nombre y sin «Lo tengo»' : 'Nada pendiente con tu nombre',
-      alPulsar: () => { const c = app.find(x => x.mios) || app.find(x => x.tipo === 'avisos'); if (c) { S.filtroAviso = 'tuyos'; abrir(S, { tipo: 'app', id: c.id }); } }, ir: 'Ver tus avisos' }),
-    tile({ icono: 'persona', etiqueta: 'Te han mencionado', valor: fmt.num((camp.menciones || 0) + mencCu), estado: (camp.menciones || mencCu) ? 'rojo' : 'verde',
-      contexto: (camp.menciones || mencCu) ? 'Sin leer, aquí y en ClickUp' : 'Nada nuevo desde tu última visita', alPulsar: () => { S.vista = 'menciones'; S.sel = null; S.movilEnCanal = false; pintar(S); }, ir: 'Ver menciones' }),
-    tile({ icono: 'chat', etiqueta: 'Sin leer', valor: fmt.num((camp.no_leidos || 0) + noCu), estado: (camp.no_leidos || noCu) ? 'ambar' : 'verde',
-      contexto: 'Sin contar los canales que silencias', alPulsar: () => { S.vista = 'sin_leer'; pintar(S); } }),
-    tile({ icono: 'eq', etiqueta: 'Tus canales', valor: fmt.num(app.length + cu.length),
-      contexto: `${fmt.num(nAvisos)} de avisos · ${fmt.num(app.length - nAvisos)} de la app · ${fmt.num(cu.length)} de ClickUp` }),
-  ]));
+  const cambioVista = v => { if (!vivo(S)) return; S.vista = v; if (v === 'menciones') { S.sel = null; S.movilEnCanal = false; } pintar(S); };
+  const nav = chipsFiltro({ etiqueta: 'Conversaciones', valor: S.vista,
+    opciones: [
+      { valor: 'todos', texto: 'Todo', icono: 'chat' },
+      { valor: 'sin_leer', texto: 'Sin leer', cuenta: (camp.no_leidos || 0) + noCu || null },
+      { valor: 'menciones', texto: 'Menciones y directos', cuenta: (camp.menciones || 0) + (camp.directos || 0) + mencCu || null },
+    ], alCambiar: cambioVista });
+  nav.querySelector('.et')?.remove();
+  raiz.append(h('nav', { class: 'chat-navegacion', 'aria-label': 'Vistas del chat' }, nav,
+    S.A ? h('button', { type: 'button', class: 'bt mini', 'aria-label': `Abrir avisos para ti: ${camp.avisos_para_ti || 0}`, on: { click: () => {
+      if (!vivo(S)) return;
+      const c = app.find(x => x.mios) || app.find(x => x.tipo === 'avisos');
+      if (c) { S.filtroAviso = 'tuyos'; abrir(S, { tipo: 'app', id: c.id }); }
+    } } }, icono('campana'), `Avisos${camp.avisos_para_ti ? ` · ${camp.avisos_para_ti}` : ''}`) : null));
 
-  const modo = !estrecho ? null : S.buscar ? 'buscar' : (S.vista === 'menciones' && !S.sel) ? 'menciones' : S.nuevoGrupo ? 'nuevo' : (S.movilEnCanal && S.sel) ? 'canal' : 'lista';
+  const modo = !estrecho ? null : S.buscar ? 'buscar' : (S.vista === 'menciones' && !S.sel) ? 'menciones' : (S.nuevoGrupo || S.nuevoDirecto) ? 'nuevo' : (S.movilEnCanal && S.sel) ? 'canal' : 'lista';
   const verLista = !estrecho || modo === 'lista' || modo === 'buscar';
   const verMain = !estrecho || modo !== 'lista';
-  const caja = h('div', { style: estrecho
+  const caja = h('div', { class: 'chat-caja', style: estrecho
     ? { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', border: 'var(--borde)', borderRadius: 'var(--r-l)', background: 'var(--card)', overflow: 'hidden', boxShadow: 'var(--sombra-1)' }
-    : { display: 'grid', gridTemplateColumns: '300px minmax(0, 1fr)', minHeight: '620px', height: 'calc(100vh - 330px)', maxHeight: '880px', border: 'var(--borde)', borderRadius: 'var(--r-l)', background: 'var(--card)', overflow: 'hidden', boxShadow: 'var(--sombra-1)' } });
+    : { display: 'grid', gridTemplateColumns: '280px minmax(0, 1fr)', minHeight: '380px', height: 'calc(100dvh - 230px)', maxHeight: '900px', border: 'var(--borde)', borderRadius: 'var(--r-l)', background: 'var(--card)', overflow: 'hidden', boxShadow: 'var(--sombra-1)' } });
   if (verLista) caja.append(lateral(S, estrecho, { sinLista: modo === 'buscar' }));
   if (verMain) caja.append(principal(S, estrecho));
   raiz.append(caja);
-  raiz.append(h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2) var(--s-4)', alignItems: 'center', justifyContent: 'space-between' } },
-    avisoParcial('Los avisos y los grupos de la app se guardan aquí, con rastro de cada mensaje. Nada sale a ClickUp ni a ningún otro sitio. Los canales de ClickUp se ven en espejo, solo lectura.', { tipo: 'info', titulo: 'Qué se guarda y dónde' }),
+  raiz.append(plegable('info', 'Qué se guarda y estado de las fuentes',
+    avisoParcial('Los mensajes de la app se guardan aquí. ClickUp es un espejo de lectura: para responder allí, abre ClickUp.', { tipo: 'info' }),
     frescura({ fuente: 'ClickUp chat', fecha: S.D?._meta?.generado, estado: S.D ? 'ok' : 'sin_dato' })));
   if (S.A) raiz.append(panelPreferencias(S));
   raiz.append(panelEspejo(S));
@@ -256,18 +295,6 @@ function lateral(S, estrecho, { sinLista = false } = {}) {
   input.addEventListener('blur', () => { caja.style.borderColor = ''; caja.style.boxShadow = ''; });
 
   const app = appCanales(S), cu = cuCanales(S);
-  const conMenc = app.filter(c => c.menciones).length + cu.filter(c => mencionesCu(S, c)).length;
-  const vistas = chipsFiltro({
-    etiqueta: 'Vista', valor: S.vista,
-    opciones: [
-      { valor: 'todos', texto: 'Todo', icono: 'chat' },
-      { valor: 'sin_leer', texto: 'Sin leer', icono: 'campana', cuenta: (app.filter(c => c.no_leidos && !c.silenciado).length + cu.filter(c => noLeidosCu(S, c)).length) || null, cuentaEstado: 'rojo' },
-      { valor: 'menciones', texto: 'Menciones', icono: 'persona', cuenta: conMenc || null, cuentaEstado: 'rojo' },
-    ],
-    alCambiar: v => { S.vista = v; if (v === 'menciones') { S.sel = null; S.movilEnCanal = false; } pintar(S); },
-  });
-  vistas.querySelector('.et')?.remove();
-
   const lista = h('div', { role: 'navigation', 'aria-label': 'Canales', style: { overflowY: 'auto', minHeight: '0', padding: 'var(--s-1) 0 var(--s-3)' } });
   const sinLeer = S.vista === 'sin_leer';
   const filtraApp = cs => cs.filter(c => !sinLeer || (c.no_leidos && !c.silenciado) || c.mios);
@@ -279,6 +306,8 @@ function lateral(S, estrecho, { sinLista = false } = {}) {
   if (S.A) {
     grupoApp('Avisos', filtraApp(app.filter(c => c.tipo === 'avisos')));
     grupoApp('General', filtraApp(app.filter(c => c.tipo === 'general')));
+    const nuevoDm = S.ctx.soloLectura ? null : h('button', { type: 'button', style: { ...EST.linkBt, textTransform: 'none', letterSpacing: '0' }, on: { click: () => { S.nuevoDirecto = true; S.nuevoGrupo = false; S.sel = null; S.movilEnCanal = true; pintar(S); } } }, icono('mas', { clase: 's' }), 'Nuevo');
+    grupoApp('Mensajes directos', filtraApp(app.filter(c => c.tipo === 'directo')), nuevoDm);
     grupoApp('Grupos de equipo', filtraApp(app.filter(c => c.tipo === 'equipo')));
     // De cliente: primero los que tienen mensajes; el resto, plegado (dirección ve los 68).
     const cli = filtraApp(app.filter(c => c.tipo === 'cliente'));
@@ -310,9 +339,8 @@ function lateral(S, estrecho, { sinLista = false } = {}) {
     }
   }
   if (!lista.querySelector('button[data-canal]')) lista.append(h('div', { style: { padding: '0 var(--s-4)' } }, vacioLinea(sinLeer ? 'Lo tienes todo leído.' : 'Sin canales.', { icono: 'ok' })));
-  return h('aside', { style: { display: 'grid', gridTemplateRows: 'auto auto minmax(0, 1fr)', borderRight: estrecho ? '0' : 'var(--borde)', background: 'var(--card-2)', minHeight: '0', minWidth: '0' } },
+  return h('aside', { style: { display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', borderRight: estrecho ? '0' : 'var(--borde)', background: 'var(--card-2)', minHeight: '0', minWidth: '0' } },
     h('div', { style: { padding: 'var(--s-3)', borderBottom: 'var(--borde-suave)' } }, caja),
-    sinLista ? null : h('div', { style: { padding: 'var(--s-2) var(--s-3)', borderBottom: 'var(--borde-suave)' } }, vistas),
     sinLista ? null : lista);
 }
 
@@ -333,10 +361,11 @@ function fila(S, { id, tipo, actual, ico, av, titulo, sub, n, mm, mios, silencia
 
 function filaApp(S, c, estrecho) {
   const ult = c.ultimo;
-  const quien = ult?.quien ? S.ctx.nombre(ult.quien).split(' ')[0] + ': ' : '';
+  const quien = ult?.quien ? (ult.quien === S.pid ? 'Tú: ' : S.ctx.nombre(ult.quien).split(' ')[0] + ': ') : '';
   const sub = c.tipo === 'avisos' ? (c.abiertos ? `${fmt.num(c.abiertos)} abiertos${c.mios ? ` · ${fmt.num(c.mios)} tuyos` : ''}` : 'Sin avisos abiertos')
     : ult ? `${quien}${ult.texto}` : (c.tipo === 'cliente' ? c.por_que : 'Sin mensajes todavía');
-  return fila(S, { id: c.id, actual: S.sel?.tipo === 'app' && S.sel.id === c.id && !estrecho, ico: iconoApp(S, c), titulo: c.titulo, sub,
+  return fila(S, { id: c.id, actual: S.sel?.tipo === 'app' && S.sel.id === c.id && !estrecho, ico: iconoApp(S, c), av: c.tipo === 'directo' ? (c.con ? S.ctx.nombre(c.con) : c.titulo) : null,
+    titulo: c.tipo === 'directo' && c.con ? S.ctx.nombre(c.con) : c.titulo, sub,
     n: c.no_leidos, mm: c.menciones, mios: c.tipo === 'avisos' ? c.mios : 0, silenciado: c.silenciado }, () => abrir(S, { tipo: 'app', id: c.id }));
 }
 
@@ -357,20 +386,23 @@ function nombreConversacion(S, c) {
 
 // ===================================================================== abrir y cargar
 async function abrir(S, sel, { sinHistoria = false } = {}) {
-  S.sel = sel; S.movilEnCanal = true; S.buscar = ''; S.res = null; S.nuevoGrupo = false; S.anadir = false;
+  if (!vivo(S)) return;
+  S.sel = sel; S.movilEnCanal = true; S.buscar = ''; S.res = null; S.nuevoGrupo = false; S.nuevoDirecto = false; S.anadir = false;
+  if (S.adjuntosDe !== sel.id) { S.adjuntos = []; S.adjuntar = false; S.adjuntosDe = sel.id; }
   if (S.vista === 'menciones') S.vista = 'todos';
   if (!sinHistoria) history.replaceState(null, '', `#/${ID}/${sel.id}`);
   S.ctx.rastro?.({ accion: 'chat_abrir', objeto: sel.id, detalle: sel.tipo === 'app' ? 'canal de la app' : 'ClickUp' });
   if (sel.tipo === 'cu') {
     const c = canalCu(S, sel.id);
     S.marcarDesde = (c && visto(S, c)) || hace(2);
-    if (!S.cu.has(sel.id)) { S.cargando = true; pintar(S); await cargarCu(S, sel.id); S.cargando = false; }
+    if (!S.cu.has(sel.id)) { S.cargando = true; pintar(S); await cargarCu(S, sel.id); if (!vivo(S) || S.sel?.id !== sel.id || S.sel?.tipo !== sel.tipo) return; S.cargando = false; }
     if (c) guardar(`ro.chat.visto.${S.pid}.${c.id}`, c.ultimo_msg?.fecha || c.ultimo || hace(0));
     return pintar(S);
   }
   S.cargando = !S.app.has(sel.id);
   pintar(S);
   await cargarApp(S, sel.id);
+  if (!vivo(S) || S.sel?.id !== sel.id || S.sel?.tipo !== sel.tipo) return;
   S.cargando = false;
   pintar(S);
   marcarLeido(S, sel.id);
@@ -378,31 +410,31 @@ async function abrir(S, sel, { sinHistoria = false } = {}) {
 
 async function cargarCu(S, id, antes) {
   try {
-    const r = await S.ctx.api(`canales/clickup?canal=${encodeURIComponent(id)}${antes ? `&antes=${encodeURIComponent(antes)}` : ''}`);
+    const r = await apiChat(S, `canales/clickup?canal=${encodeURIComponent(id)}${antes ? `&antes=${encodeURIComponent(antes)}` : ''}`);
     const prev = S.cu.get(id);
     S.cu.set(id, { mensajes: antes && prev ? [...r.mensajes, ...prev.mensajes] : r.mensajes, hay_mas: r.hay_mas });
-  } catch (e) { S.cu.set(id, { mensajes: [], hay_mas: false, error: e?.message || 'No se pudo leer el canal' }); }
+  } catch (e) { if (!vivo(S)) return; S.cu.set(id, { mensajes: [], hay_mas: false, error: e?.message || 'No se pudo leer el canal' }); }
 }
 
 async function cargarApp(S, id, antes) {
   try {
-    const r = await S.ctx.api(`canales/canal?id=${encodeURIComponent(id)}${antes ? `&antes=${antes}` : ''}`);
+    const r = await apiChat(S, `canales/canal?id=${encodeURIComponent(id)}${antes ? `&antes=${antes}` : ''}`);
     const prev = S.app.get(id);
     const mensajes = antes && prev ? [...r.mensajes, ...prev.mensajes.filter(m => !r.mensajes.some(x => x.id === m.id))] : r.mensajes;
     S.app.set(id, { ...r, mensajes, desde: prev?.desde ?? r.leido_hasta });
     const i = (S.A?.canales || []).findIndex(c => c.id === id);
     if (i >= 0) S.A.canales[i] = { ...S.A.canales[i], ...r.canal, no_leidos: S.A.canales[i].no_leidos, menciones: S.A.canales[i].menciones };
-  } catch (e) { S.app.set(id, { mensajes: [], hay_mas: false, miembros: [], error: e?.message || 'No se pudo leer el canal' }); }
+  } catch (e) { if (!vivo(S)) return; S.app.set(id, { mensajes: [], hay_mas: false, miembros: [], error: e?.message || 'No se pudo leer el canal' }); }
 }
 
 async function marcarLeido(S, id) {
   const d = S.app.get(id);
   const c = canalApp(S, id);
-  if (!d || !c || S.ctx.soloLectura) return;
+  if (!vivo(S) || !d || !c || S.ctx.soloLectura) return;
   const hasta = Math.max(0, ...d.mensajes.map(m => m.id));
   if (!hasta) return;
   try {
-    await S.ctx.api('canales/leido', { metodo: 'POST', cuerpo: { canal_id: id, hasta_id: hasta } });
+    await apiChat(S, 'canales/leido', { metodo: 'POST', cuerpo: { canal_id: id, hasta_id: hasta } });
     if (S.A?.campana && c.no_leidos && !c.silenciado) S.A.campana.no_leidos = Math.max(0, (S.A.campana.no_leidos || 0) - c.no_leidos);
     if (S.A?.campana && c.menciones) S.A.campana.menciones = Math.max(0, (S.A.campana.menciones || 0) - c.menciones);
     c.no_leidos = 0; c.menciones = 0;
@@ -411,19 +443,21 @@ async function marcarLeido(S, id) {
 }
 
 async function refrescarCanales(S) {
-  try { S.A = await S.ctx.api('canales'); } catch { /* se queda lo que había */ }
+  try { S.A = await apiChat(S, 'canales'); } catch { /* se queda lo que había */ }
 }
 
 async function buscar(S, q) {
+  if (!vivo(S)) return;
+  const token = S.busquedaToken = (S.busquedaToken || 0) + 1;
   S.buscar = q; S.res = null;
-  if (q) { S.sel = S.sel; }
   pintar(S);
   if (!q || q.length < 2) return;
-  try { S.res = await S.ctx.api(`canales/buscar?q=${encodeURIComponent(q)}`); }
-  catch { S.res = { resultados: [], clickup: [], error: true }; }
-  if (S.buscar !== q) return;
+  let resultado;
+  try { resultado = await apiChat(S, `canales/buscar?q=${encodeURIComponent(q)}`); }
+  catch { resultado = { resultados: [], clickup: [], error: true }; }
+  if (!vivo(S) || S.buscar !== q || S.busquedaToken !== token) return;
+  S.res = resultado;
   pintar(S);
-  const i = S.raiz.querySelector('input[type="search"]'); i?.focus(); i?.setSelectionRange(i.value.length, i.value.length);
 }
 
 // ===================================================================== zona central
@@ -435,6 +469,7 @@ function principal(S, estrecho) {
   const main = h('section', { 'aria-label': 'Conversación', style: { display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr) auto', minHeight: '0', minWidth: '0' } });
   if (S.buscar) return main.append(...vistaBusqueda(S, estrecho)), main;
   if (S.nuevoGrupo) return main.append(...vistaNuevoGrupo(S, estrecho)), main;
+  if (S.nuevoDirecto) return main.append(...vistaNuevoDirecto(S, estrecho)), main;
   if (!S.sel && S.vista === 'menciones') return main.append(...vistaMenciones(S, estrecho)), main;
   if (!S.sel) {
     main.append(h('div', {}), vacio({ icono: 'chat', titulo: 'Elige un canal', texto: 'A la izquierda tienes tus avisos, tus grupos y tus canales de ClickUp.' }), h('div', {}));
@@ -449,7 +484,8 @@ function cabecera(S, estrecho, { ico, titulo, meta, botones = [], debajo }) {
       h('div', { style: { display: 'grid', gap: 'var(--s-1)', minWidth: '0' } },
         h('h2', { style: EST.h2 }, botonVolver(S, estrecho), h('span', { style: { color: 'var(--accent)', display: 'inline-flex' } }, icono(ico)), titulo),
         meta ? h('span', { style: EST.meta }, meta) : null),
-      h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)', alignItems: 'center' } }, ...botones)),
+      botones.some(Boolean) ? h('details', { class: 'chat-opciones' }, h('summary', {}, icono('opciones'), 'Opciones'),
+        h('div', { class: 'chat-opciones-contenido' }, ...botones)) : null),
     debajo || null);
 }
 
@@ -469,7 +505,12 @@ function principalApp(S, main, estrecho) {
   const esAvisos = c.tipo === 'avisos';
   const botones = [
     miembros.length ? avatares(S, miembros) : null,
-    h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, disabled: S.ctx.soloLectura || null, 'aria-pressed': String(!!c.silenciado),
+    !esAvisos && !S.ctx.soloLectura ? h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, title: 'Abre una sala nueva (nombre aleatorio) y deja el botón para entrar en este chat',
+      on: { click: () => abrirVideollamada(S, c) } }, icono('video'), 'Videollamada') : null,
+    !S.ctx.soloLectura ? h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, title: 'Pedir ayuda o escalar a quien toca (orden de escalado de RO)',
+      on: { click: () => abrirPedirAyuda({ api: (ruta, opciones) => apiChat(S, ruta, opciones), soloLectura: S.ctx.soloLectura, contexto: { pantalla: `Chat del equipo · ${c.titulo}`, ruta: `#/${ID}/${c.id}`, cliente_id: c.cliente_id || null, cliente: c.cliente_id ? c.titulo : null },
+        alEnviar: async () => { await refrescarCanales(S); S.mantenerScroll = true; pintar(S); } }) } }, icono('sube'), 'Pedir ayuda') : null,
+    c.tipo === 'directo' ? null : h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, disabled: S.ctx.soloLectura || null, 'aria-pressed': String(!!c.silenciado),
       title: c.silenciado ? 'No suma en «sin leer» ni en la campana (las menciones sí)' : 'Deja de sumar en «sin leer» y en la campana; las menciones siguen llegando',
       on: { click: () => silenciar(S, c, !c.silenciado) } }, icono('ojo'), c.silenciado ? 'Silenciado' : 'Silenciar'),
     c.puede_anadir === true && !S.ctx.soloLectura ? h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, 'aria-expanded': String(S.anadir), on: { click: () => { S.anadir = !S.anadir; S.mantenerScroll = true; pintar(S); } } }, icono('mas'), 'Añadir persona') : null,
@@ -486,7 +527,7 @@ function principalApp(S, main, estrecho) {
     ], alCambiar: v => { S.filtroAviso = v; pintar(S); } });
     debajo.querySelector('.et')?.remove();
   }
-  main.append(cabecera(S, estrecho, { ico: iconoApp(S, c), titulo: c.titulo,
+  main.append(cabecera(S, estrecho, { ico: iconoApp(S, c), titulo: c.tipo === 'directo' && c.con ? S.ctx.nombre(c.con) : c.titulo,
     meta: [miembros.length ? `${fmt.num(miembros.length)} personas` : null, c.por_que, c.descripcion].filter(Boolean).join(' · '), botones, debajo }));
 
   const msgs = h('div', { role: 'log', 'aria-label': `Mensajes de ${c.titulo}`, style: estrecho ? { ...EST.msgs, maxHeight: '62vh' } : EST.msgs });
@@ -501,7 +542,7 @@ function principalApp(S, main, estrecho) {
     if (esAvisos && S.filtroAviso !== 'todos') ver = raiz.filter(m => m.aviso ? (abierto(m.aviso) && (S.filtroAviso !== 'tuyos' || m.aviso.responsable_id === S.pid)) : S.filtroAviso === 'abiertos' && m.tipo === 'evento' && m.dueno_id);
     if (!ver.length) msgs.append(h('div', { style: { padding: 'var(--s-4) var(--s-5)' } }, vacioLinea(esAvisos
       ? (S.filtroAviso === 'tuyos' ? 'Ningún aviso abierto con tu nombre en este canal.' : 'Sin avisos abiertos en este canal.')
-      : 'Todavía no hay mensajes. Escribe el primero abajo.', { icono: esAvisos ? 'ok' : 'chat' })));
+      : c.tipo === 'directo' ? `Todavía no habéis hablado. Escribe abajo: solo lo veréis ${S.ctx.nombre(c.con).split(' ')[0]} y tú.` : 'Todavía no hay mensajes. Escribe el primero abajo.', { icono: esAvisos ? 'ok' : 'chat' })));
     let dia = '', nuevos = false;
     for (const m of ver) {
       const f = local(m.hora);
@@ -568,18 +609,18 @@ function tarjetaAviso(S, c, m, hilo) {
 }
 
 async function marcarAviso(S, c, m, estado) {
-  if (S.ctx.soloLectura) return avisoFlotante('Estás en «ver como»: es solo lectura.', { icono: 'candado' });
+  if (S.ctx.soloLectura) return notificarChat(S, 'Estás en «ver como»: es solo lectura.', { icono: 'candado' });
   try {
-    const r = await S.ctx.api('canales/estado', { metodo: 'POST', cuerpo: { mensaje_id: m.id, estado } });
+    const r = await apiChat(S, 'canales/estado', { metodo: 'POST', cuerpo: { mensaje_id: m.id, estado } });
     m.aviso = r.aviso;
-    avisoFlotante(estado === 'lo_tengo' ? 'Anotado: lo tienes tú. El escalado se para.' : 'Marcada resuelta: se comprueba con el dato siguiente.');
+    notificarChat(S, estado === 'lo_tengo' ? 'Anotado: lo tienes tú. El escalado se para.' : 'Marcada resuelta: se comprueba con el dato siguiente.');
     S.mantenerScroll = true;
     await cargarApp(S, c.id);
     await refrescarCanales(S);
     S.mantenerScroll = true;
     pintar(S);
     avisarCampana();
-  } catch (e) { avisoFlotante(String(e?.message || 'No se pudo anotar'), { icono: 'alert' }); }
+  } catch (e) { notificarChat(S, String(e?.message || 'No se pudo anotar'), { icono: 'alert' }); }
 }
 
 function lineaEvento(S, m) {
@@ -616,8 +657,19 @@ function mensajeApp(S, c, m, hilo, { enHilo = false, donde, resultado = false } 
       h('b', { style: { fontWeight: '700', color: 'var(--ink)' } }, autor),
       h('span', { style: { ...EST.meta, fontVariantNumeric: 'tabular-nums' } }, resultado ? local(m.hora) : local(m.hora).slice(11)),
       donde ? h('span', { style: { ...EST.meta, fontWeight: '700', color: 'var(--accent-ink)' } }, donde) : null,
-      m.te_menciona ? chipEstado('ambar', 'Te menciona') : null),
+      m.te_menciona && c?.tipo !== 'directo' ? chipEstado('ambar', 'Te menciona') : null,
+      m.escalado ? chipEstado(m.escalado.subido ? 'gris' : 'ambar', m.escalado.subido ? `Pasada a ${S.ctx.nombre(m.escalado.siguiente)}` : 'Pide ayuda') : null),
     texto(m.texto, { yo, buscar: resultado ? S.buscar : '' }));
+  if (m.adjuntos?.length || m.botones?.length || m.escalado?.puede_subir) {
+    el.append(h('div', { style: { gridColumn: '2', display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)', marginTop: 'var(--s-1)' } },
+      ...(m.adjuntos || []).map(a => a.oculto
+        ? h('span', { class: 'chip gris', title: 'No puedes abrir lo que han adjuntado' }, icono(a.tipo === 'tarea' ? 'check' : 'cli', { clase: 's' }), a.nombre)
+        : h('a', { class: 'bt mini', style: { minHeight: 'var(--s-8)' }, href: a.ir, title: a.tipo === 'tarea' ? `Tarea${a.cliente ? ` de ${a.cliente}` : ''}` : 'Abrir la ficha del cliente' },
+          icono(a.tipo === 'tarea' ? 'check' : 'cli'), a.tipo === 'tarea' ? `Tarea: ${a.nombre.length > 60 ? a.nombre.slice(0, 57) + '…' : a.nombre}` : a.nombre)),
+      ...(m.botones || []).map(b => h('a', { class: 'bt mini', style: { minHeight: 'var(--s-8)' }, href: b.ir || b.url, ...(b.url ? { target: '_blank', rel: 'noopener noreferrer' } : {}) }, icono(b.url ? 'ext' : 'derecha'), b.texto)),
+      m.escalado?.puede_subir && !S.ctx.soloLectura ? h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, title: 'Si no encuentras quién lo resuelva, pásalo al siguiente de la cadena',
+        on: { click: () => subirAyuda(S, c, m) } }, icono('sube'), `No encuentro quién: pasar a ${S.ctx.nombre(m.escalado.siguiente).split(' ')[0]}`) : null));
+  }
   if (!enHilo && !resultado) {
     el.append(h('button', { type: 'button', 'aria-expanded': String(abiertoHilo), on: { click: () => { abiertoHilo ? S.abiertos.delete(m.id) : S.abiertos.add(m.id); S.mantenerScroll = true; pintar(S); } },
       style: { ...EST.linkBt, gridColumn: '2', justifySelf: 'start', margin: '0 calc(-1 * var(--s-2))' } },
@@ -632,21 +684,28 @@ function mensajeApp(S, c, m, hilo, { enHilo = false, donde, resultado = false } 
 
 /** Escribir en la app: queda en la base de la app (nunca sale fuera). En «ver como», desactivado (y el servidor lo rechaza). */
 async function escribir(S, c, textoMsg, hiloDe, motivoEl) {
+  if (!vivo(S)) return false;
   const t = (textoMsg || '').trim();
   if (!t) return false;
-  if (S.ctx.soloLectura) { avisoFlotante('Estás en «ver como»: es solo lectura.', { icono: 'candado' }); return false; }
+  if (S.ctx.soloLectura) { notificarChat(S, 'Estás en «ver como»: es solo lectura.', { icono: 'candado' }); return false; }
   try {
-    const r = await S.ctx.api('canales/mensaje', { metodo: 'POST', cuerpo: { canal_id: c.id, texto: t, hilo_de: hiloDe || null } });
-    if (r.no_lo_veran?.length) avisoFlotante(`${r.no_lo_veran.join(', ')} no está en este canal: no lo verá. Añádelo si hace falta.`, { icono: 'alert' });
-    else avisoFlotante('Enviado. Queda en la app, con rastro.', { icono: 'send' });
+    const adj = hiloDe ? [] : (S.adjuntos || []).map(a => ({ tipo: a.tipo, id: a.id }));
+    const r = await apiChat(S, 'canales/mensaje', { metodo: 'POST', cuerpo: { canal_id: c.id, texto: t, hilo_de: hiloDe || null, ...(adj.length ? { adjuntos: adj } : {}) } });
+    if (S.sel?.id !== c.id || S.sel?.tipo !== 'app') return false;
+    if (!hiloDe) { S.adjuntos = []; S.adjuntar = false; }
+    if (r.no_lo_veran?.length) notificarChat(S, `${r.no_lo_veran.join(', ')} no está en este canal: no lo verá. Añádelo si hace falta.`, { icono: 'alert' });
+    else if (r.no_ven_adjunto?.length) notificarChat(S, `Enviado. ${r.no_ven_adjunto.join(', ')} no puede abrir lo adjuntado: verá que hay un adjunto, pero no cuál.`, { icono: 'alert' });
+    else notificarChat(S, 'Enviado. Queda en la app, con rastro.', { icono: 'send' });
+    if (c.tipo === 'directo' && !c.ultimo) await refrescarCanales(S);
     if (hiloDe) S.abiertos.add(hiloDe);
     await cargarApp(S, c.id);
     return true;
   } catch (e) {
+    if (!vivo(S)) return false;
     const motivo = String(e?.message || 'No se pudo enviar');
     // 400 = el servidor lo rechaza por lo que dice (p. ej. un sueldo): su motivo, tal cual y fijo junto a la caja.
     if (e?.status === 400 && motivoEl) motivoEl.mostrar(motivo);
-    avisoFlotante(e?.status === 400 ? 'No se ha enviado: lee el motivo debajo de la caja.' : motivo, { icono: 'alert' });
+    notificarChat(S, e?.status === 400 ? 'No se ha enviado: lee el motivo debajo de la caja.' : motivo, { icono: 'alert' });
     return false;
   }
 }
@@ -687,13 +746,21 @@ function cajaEscribir(S, c) {
   const enviar = async () => { motivo.ocultar(); if (await escribir(S, c, ta.value, null, motivo)) { ta.value = ''; pintar(S); } };
   ta.addEventListener('input', () => { motivo.ocultar(); ta.style.height = 'auto'; ta.style.height = Math.min(140, ta.scrollHeight) + 'px'; });
   ta.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); enviar(); } });
-  const caja = h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 'var(--s-2)', alignItems: 'end', border: 'var(--borde)', borderRadius: 'var(--r-m)', padding: 'var(--s-1) var(--s-1) var(--s-1) var(--s-3)', background: 'var(--card)' } },
-    ta, h('button', { type: 'button', class: 'bt pri', disabled: S.ctx.soloLectura || null, on: { click: enviar } }, icono('send'), 'Enviar'));
+  const btAdj = h('button', { type: 'button', class: 'bt icono', 'aria-label': 'Adjuntar un cliente o una tarea', title: 'Adjuntar un cliente o una tarea', 'aria-expanded': String(!!S.adjuntar),
+    disabled: S.ctx.soloLectura || null, on: { click: () => { S.adjuntar = !S.adjuntar; S.borrador = ta.value; S.mantenerScroll = true; pintar(S); } } }, icono('link'));
+  const caja = h('div', { style: { display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr) auto', gap: 'var(--s-2)', alignItems: 'end', border: 'var(--borde)', borderRadius: 'var(--r-m)', padding: 'var(--s-1)', background: 'var(--card)' } },
+    btAdj, ta, h('button', { type: 'button', class: 'bt pri', disabled: S.ctx.soloLectura || null, on: { click: enviar } }, icono('send'), 'Enviar'));
+  if (S.borrador) { ta.value = S.borrador; S.borrador = ''; setTimeout(() => ta.focus(), 0); }
   ta.addEventListener('focus', () => { caja.style.borderColor = 'var(--accent-2)'; caja.style.boxShadow = 'var(--anillo)'; });
   ta.addEventListener('blur', () => { caja.style.borderColor = ''; caja.style.boxShadow = ''; });
+  const chipsAdj = (S.adjuntos || []).length ? h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' } },
+    S.adjuntos.map(a => h('button', { type: 'button', class: 'bt mini', style: { minHeight: 'var(--s-8)' }, title: 'Quitar el adjunto',
+      on: { click: () => { S.adjuntos = S.adjuntos.filter(x => x !== a); S.borrador = ta.value; S.mantenerScroll = true; pintar(S); } } },
+    icono(a.tipo === 'tarea' ? 'check' : 'cli', { clase: 's' }), a.tipo === 'tarea' ? `Tarea: ${a.nombre.slice(0, 40)}` : a.nombre, icono('cerrar', { clase: 's' })))) : null;
   return h('div', { style: { borderTop: 'var(--borde)', padding: 'var(--s-3) var(--s-4)', display: 'grid', gap: 'var(--s-2)', background: 'var(--card)' } },
-    conMenciones(S, c, ta), caja, motivo,
-    h('span', { style: { ...EST.meta, display: 'flex', alignItems: 'center', gap: 'var(--s-2)', flexWrap: 'wrap' } }, icono('candado', { clase: 's' }), 'Intro envía · Mayús+Intro, salto de línea · queda en la app, nunca sale a ClickUp · contraseñas, correos y teléfonos se tapan solos'));
+    S.adjuntar ? selectorAdjunto(S, ta) : null, chipsAdj, conMenciones(S, c, ta), caja, motivo,
+    h('span', { style: { ...EST.meta, display: 'flex', alignItems: 'center', gap: 'var(--s-2)', flexWrap: 'wrap' } }, icono('candado', { clase: 's' }), c.tipo === 'directo' ? 'Intro envía · solo lo veis los dos · no se ve en «ver como» · queda en la app, nunca sale a ClickUp · contraseñas, correos y teléfonos se tapan solos'
+      : 'Intro envía · Mayús+Intro, salto de línea · queda en la app, nunca sale a ClickUp · contraseñas, correos y teléfonos se tapan solos'));
 }
 
 function cajaRespuesta(S, c, m) {
@@ -717,14 +784,14 @@ async function silenciar(S, c, si) {
   const sil = new Set(S.A?.preferencias?.silenciados || []);
   si ? sil.add(c.id) : sil.delete(c.id);
   try {
-    const r = await S.ctx.api('canales/preferencias', { metodo: 'POST', cuerpo: { silenciados: [...sil], hora_resumen: S.A.preferencias.hora_resumen } });
+    const r = await apiChat(S, 'canales/preferencias', { metodo: 'POST', cuerpo: { silenciados: [...sil], hora_resumen: S.A.preferencias.hora_resumen } });
     S.A.preferencias = r.preferencias;
     await refrescarCanales(S);
-    avisoFlotante(si ? `${c.titulo}: silenciado. Las menciones siguen llegando.` : `${c.titulo}: vuelve a sumar en «sin leer».`, { icono: 'ojo' });
+    notificarChat(S, si ? `${c.titulo}: silenciado. Las menciones siguen llegando.` : `${c.titulo}: vuelve a sumar en «sin leer».`, { icono: 'ojo' });
     S.mantenerScroll = true;
     pintar(S);
     avisarCampana();
-  } catch (e) { avisoFlotante(String(e?.message || 'No se pudo guardar'), { icono: 'alert' }); }
+  } catch (e) { notificarChat(S, String(e?.message || 'No se pudo guardar'), { icono: 'alert' }); }
 }
 
 function personasActivas(S) {
@@ -736,17 +803,78 @@ function selectorAnadir(S, c, miembros) {
   const lista = personasActivas(S).filter(p => !miembros.includes(p.id));
   const sel = selectorPersona({ personas: lista, etiqueta: 'Añadir a', placeholder: 'Buscar persona…', alElegir: async p => {
     try {
-      await S.ctx.api('canales/miembro', { metodo: 'POST', cuerpo: { canal_id: c.id, persona_id: p.id } });
-      avisoFlotante(`${p.nombre} ya está en ${c.titulo}.`);
+      await apiChat(S, 'canales/miembro', { metodo: 'POST', cuerpo: { canal_id: c.id, persona_id: p.id } });
+      notificarChat(S, `${p.nombre} ya está en ${c.titulo}.`);
       S.anadir = false;
       await cargarApp(S, c.id);
       pintar(S);
     } catch (e) {
-      avisoFlotante(String(e?.message || 'No se pudo añadir'), { icono: 'alert' });
+      notificarChat(S, String(e?.message || 'No se pudo añadir'), { icono: 'alert' });
       if (e?.status === 403) { S.anadir = false; await refrescarCanales(S); S.mantenerScroll = true; pintar(S); }   // el permiso cambió: fuera el botón
     }
   } });
   return h('div', { style: { display: 'grid', gap: 'var(--s-1)' } }, h('span', { style: EST.meta }, c.cliente_id ? 'Solo entra quien puede abrir este cliente.' : 'Verá lo que ya hay en el canal (los avisos, solo los suyos).'), sel);
+}
+
+/** Selector de adjunto: busca entre los clientes que abres y las tareas que ves (GET /api/canales/adjuntables). */
+function selectorAdjunto(S, ta) {
+  const lista = h('div', { role: 'listbox', 'aria-label': 'Qué adjuntar', style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-1)' } }, h('span', { style: EST.meta }, 'Escribe para buscar…'));
+  const campo = h('input', { type: 'search', placeholder: 'Buscar un cliente o una tarea…', 'aria-label': 'Buscar qué adjuntar', style: EST.campo });
+  let t;
+  const buscarAdj = async () => {
+    try {
+      const r = await apiChat(S, `canales/adjuntables?q=${encodeURIComponent(campo.value.trim())}`);
+      const ops = (r.opciones || []).filter(o => !(S.adjuntos || []).some(a => a.tipo === o.tipo && a.id === o.id));
+      lista.replaceChildren(...(ops.length ? ops.map(o => h('button', { type: 'button', class: 'bt mini', role: 'option', style: { minHeight: 'var(--s-8)' },
+        on: { click: () => { if ((S.adjuntos || []).length >= 3) return notificarChat(S, 'Como mucho 3 adjuntos por mensaje.', { icono: 'alert' }); S.adjuntos = [...(S.adjuntos || []), o]; S.adjuntar = false; S.borrador = ta.value; S.mantenerScroll = true; pintar(S); } } },
+      icono(o.tipo === 'tarea' ? 'check' : 'cli', { clase: 's' }), o.tipo === 'tarea' ? `${o.nombre.slice(0, 50)}${o.cliente ? ` · ${o.cliente}` : ''}` : o.nombre))
+        : [h('span', { style: EST.meta }, 'Nada que puedas adjuntar con eso.')]));
+    } catch (e) { lista.replaceChildren(h('span', { style: EST.meta }, String(e?.message || 'No se pudo buscar'))); }
+  };
+  campo.addEventListener('input', () => { clearTimeout(t); t = setTimeout(buscarAdj, 250); });
+  setTimeout(() => { campo.focus(); buscarAdj(); }, 0);
+  return h('div', { style: { display: 'grid', gap: 'var(--s-1)', border: 'var(--borde-suave)', borderRadius: 'var(--r-m)', padding: 'var(--s-2)', background: 'var(--card-2)' } },
+    h('span', { style: EST.meta }, 'Adjuntar un cliente o una tarea. Quien no pueda abrirlo verá que hay un adjunto, pero no cuál.'), campo, lista);
+}
+
+/** Videollamada: el servidor abre una sala (nombre aleatorio) y deja el botón en el chat; aquí se abre en una pestaña nueva. */
+async function abrirVideollamada(S, c) {
+  if (!vivo(S)) return;
+  if (S.ctx.soloLectura) return notificarChat(S, 'Estás en «ver como»: es solo lectura.', { icono: 'candado' });
+  const ventana = window.open('about:blank', '_blank');       // se abre ya (si no, el navegador la bloquea tras la espera)
+  try {
+    const r = await apiChat(S, 'canales/videollamada', { metodo: 'POST', cuerpo: { canal_id: c.id } });
+    if (ventana) { try { ventana.opener = null; } catch { /* nada */ } ventana.location.href = r.url; }
+    else notificarChat(S, 'El navegador no ha dejado abrir la pestaña: entra con el botón del mensaje.', { icono: 'alert' });
+    notificarChat(S, r.proveedor === 'jitsi_publico' ? 'Videollamada abierta. La primera persona entra con Google, GitHub o Facebook; el resto, con el botón del chat.' : 'Videollamada abierta.', { icono: 'video' });
+    await cargarApp(S, c.id);
+    pintar(S);
+  } catch (e) { ventana?.close(); notificarChat(S, String(e?.message || 'No se pudo abrir la videollamada'), { icono: 'alert' }); }
+}
+
+/** «No encuentro quién: pasar a…»: solo quien recibió la petición de ayuda, una vez. */
+async function subirAyuda(S, c, m) {
+  if (S.ctx.soloLectura) return;
+  const nota = prompt(`Se lo pasas a ${S.ctx.nombre(m.escalado.siguiente)} con todo el contexto. ¿Añades algo? (opcional)`, '');
+  if (nota === null) return;
+  try {
+    const r = await apiChat(S, 'canales/escalar', { metodo: 'POST', cuerpo: { subir_de: m.id, texto: nota } });
+    notificarChat(S, `Pasado a ${r.para_nombre}. Le llega en un mensaje directo.`, { icono: 'sube' });
+    await cargarApp(S, c.id); await refrescarCanales(S); S.mantenerScroll = true; pintar(S); avisarCampana();
+  } catch (e) { notificarChat(S, String(e?.message || 'No se pudo pasar'), { icono: 'alert' }); }
+}
+
+// ------------------------------------------------------------- nuevo mensaje directo
+function vistaNuevoDirecto(S, estrecho) {
+  const yaHay = new Set(appCanales(S).filter(c => c.tipo === 'directo').map(c => c.con));
+  const sel = selectorPersona({ personas: personasActivas(S), etiqueta: 'Escribir a', placeholder: 'Buscar persona…',
+    detalle: p => `${p.puesto || ''}${yaHay.has(p.id) ? ' · ya tenéis conversación' : ''}`,
+    alElegir: p => { const id = idDirecto(S.pid, p.id); directoNuevo(S, id); S.nuevoDirecto = false; abrir(S, { tipo: 'app', id }); } });
+  return [cabecera(S, estrecho, { ico: 'persona', titulo: 'Nuevo mensaje directo', meta: 'Solo lo veis los dos. No se ve en «ver como» (ni Mili ni Tomás). Queda en la app, con rastro.' }),
+    h('div', { style: { padding: 'var(--s-4) var(--s-5)', display: 'grid', gap: 'var(--s-4)', alignContent: 'start', overflowY: 'auto' } }, sel,
+      avisoParcial('Para hablar de un cliente con más gente usa su grupo de cliente. Si necesitas que alguien lo resuelva, usa «Pedir ayuda»: llega a quien toca según el orden de escalado.', { tipo: 'info' })),
+    h('div', { style: { borderTop: 'var(--borde)', padding: 'var(--s-3) var(--s-4)', display: 'flex', gap: 'var(--s-2)', justifyContent: 'flex-end', flexWrap: 'wrap' } },
+      h('button', { type: 'button', class: 'bt', on: { click: () => { S.nuevoDirecto = false; S.movilEnCanal = false; pintar(S); } } }, 'Cancelar'))];
 }
 
 // ------------------------------------------------------------- nuevo grupo
@@ -761,11 +889,11 @@ function vistaNuevoGrupo(S, estrecho) {
     alElegir: p => { S.elegidos = [...elegidos, p]; pintar(S); } });
   const crear = async () => {
     try {
-      const r = await S.ctx.api('canales/grupo', { metodo: 'POST', cuerpo: { nombre: S.nombreGrupo || '', miembros: elegidos.map(p => p.id) } });
+      const r = await apiChat(S, 'canales/grupo', { metodo: 'POST', cuerpo: { nombre: S.nombreGrupo || '', miembros: elegidos.map(p => p.id) } });
       S.elegidos = []; S.nombreGrupo = ''; S.nuevoGrupo = false;
       await refrescarCanales(S);
       abrir(S, { tipo: 'app', id: r.id });
-    } catch (e) { avisoFlotante(String(e?.message || 'No se pudo crear'), { icono: 'alert' }); }
+    } catch (e) { notificarChat(S, String(e?.message || 'No se pudo crear'), { icono: 'alert' }); }
   };
   return [cabecera(S, estrecho, { ico: 'eq', titulo: 'Nuevo grupo', meta: 'Lo que se escriba queda en la app, con rastro. No sale a ClickUp.' }),
     h('div', { style: { padding: 'var(--s-4) var(--s-5)', display: 'grid', gap: 'var(--s-4)', alignContent: 'start', overflowY: 'auto' } },
@@ -877,11 +1005,11 @@ function vistaMenciones(S, estrecho) {
   const zona = h('div', { style: { ...EST.msgs, paddingTop: 'var(--s-1)' } });
   const app = (S.A?.campana?.items || []);
   const cu = S.D?.menciones || [];
-  if (!app.length && !cu.length) zona.append(h('div', { style: { padding: '0 var(--s-5)' } }, vacioLinea('Nadie te ha mencionado en tus canales.', { icono: 'ok' })));
+  if (!app.length && !cu.length) zona.append(h('div', { style: { padding: '0 var(--s-5)' } }, vacioLinea('Nadie te ha mencionado ni escrito en directo.', { icono: 'ok' })));
   app.forEach(x => {
     const c = canalApp(S, x.canal_id);
     const m = { id: x.id, tipo: 'mensaje', quien: x.quien, hora: x.hora, texto: x.texto, te_menciona: true };
-    zona.append(filaPulsable(mensajeApp(S, c, m, [], { enHilo: true, resultado: true, donde: `${x.canal}${x.tipo === 'aviso' ? ' · aviso para ti' : x.tipo === 'escalado' ? ' · te sube a ti' : ''}` }),
+    zona.append(filaPulsable(mensajeApp(S, c, m, [], { enHilo: true, resultado: true, donde: `${x.tipo === 'directo' || x.tipo === 'ayuda' ? 'Mensaje directo' : x.canal}${x.tipo === 'aviso' ? ' · aviso para ti' : x.tipo === 'escalado' ? ' · te sube a ti' : x.tipo === 'ayuda' ? ' · te pide ayuda' : ''}` }),
       () => { if (x.hilo_de) S.abiertos.add(x.hilo_de); abrir(S, { tipo: 'app', id: x.canal_id }); }));
   });
   cu.forEach(m => {
@@ -890,7 +1018,7 @@ function vistaMenciones(S, estrecho) {
       donde: `ClickUp · ${c?.tipo === 'canal' ? '#' : ''}${m.canal}${m.hilo_de ? ' · en un hilo' : ''}${m.a_todos ? ' · a todo el canal' : ''}` }),
     () => { if (!c) return; if (m.hilo_de) S.abiertos.add(m.hilo_de); abrir(S, { tipo: 'cu', id: c.id }); }));
   });
-  return [h('header', { style: EST.cab }, h('h2', { style: EST.h2 }, botonVolver(S, estrecho), h('span', { style: { color: 'var(--accent)', display: 'inline-flex' } }, icono('campana')), 'Te han mencionado'), h('span', { style: EST.meta }, 'Lo más reciente arriba. Pulsa para ir al canal.')), zona, h('div', {})];
+  return [h('header', { style: EST.cab }, h('h2', { style: EST.h2 }, botonVolver(S, estrecho), h('span', { style: { color: 'var(--accent)', display: 'inline-flex' } }, icono('campana')), 'Menciones y mensajes directos'), h('span', { style: EST.meta }, 'Lo más reciente arriba. Pulsa para ir a la conversación.')), zona, h('div', {})];
 }
 
 // ===================================================================== preferencias y espejo (plegados al pie)
@@ -913,13 +1041,13 @@ function panelPreferencias(S) {
   const guardarPref = async () => {
     const silenciados = [...S.raiz.querySelectorAll('input[type=checkbox][data-canal]')].filter(x => x.checked).map(x => x.dataset.canal);
     try {
-      const r = await S.ctx.api('canales/preferencias', { metodo: 'POST', cuerpo: { silenciados, hora_resumen: hora.value } });
+      const r = await apiChat(S, 'canales/preferencias', { metodo: 'POST', cuerpo: { silenciados, hora_resumen: hora.value } });
       S.A.preferencias = r.preferencias;
       await refrescarCanales(S);
-      avisoFlotante('Guardado.');
+      notificarChat(S, 'Guardado.');
       pintar(S);
       avisarCampana();
-    } catch (e) { avisoFlotante(String(e?.message || 'No se pudo guardar'), { icono: 'alert' }); }
+    } catch (e) { notificarChat(S, String(e?.message || 'No se pudo guardar'), { icono: 'alert' }); }
   };
   const res = S.A.campana?.resumen;
   return plegable('campana', 'Tus avisos: canales silenciados y resumen diario',
@@ -927,9 +1055,33 @@ function panelPreferencias(S) {
     h('div', { style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 'var(--s-2) var(--s-3)' } }, h('span', {}, 'Hora del resumen'), hora),
     h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-1) var(--s-4)' } }, h('span', { style: { ...EST.eyebrow, flexBasis: '100%' } }, 'Silenciar'), ...marcas),
     h('div', {}, h('button', { type: 'button', class: 'bt pri', disabled: S.ctx.soloLectura || null, on: { click: guardarPref } }, icono('ok'), 'Guardar')),
+    avisosNavegador(S),
     res ? h('div', { style: { display: 'grid', gap: 'var(--s-1)' } }, h('span', { style: EST.eyebrow }, 'Tu resumen de hoy'),
       h('pre', { style: { margin: '0', whiteSpace: 'pre-wrap', font: 'var(--t-cuerpo)', color: 'var(--ink)', background: 'var(--card-2)', border: 'var(--borde-suave)', borderRadius: 'var(--r-m)', padding: 'var(--s-3)' } }, res.texto))
       : h('span', { style: EST.meta }, `Tu resumen de hoy sale a las ${pref.hora_resumen || '08:30'}.`));
+}
+
+/** Avisos del navegador (3-oct): solo si la persona los permite; se guarda en este navegador (no en el servidor). Los
+ *  lanza carcasa.js al refrescar la campana: menciones, mensajes directos, peticiones de ayuda y avisos con tu nombre. */
+function avisosNavegador(S) {
+  const clave = `ro.notif.${S.pid}`;
+  const hay = typeof Notification !== 'undefined';
+  const permiso = hay ? Notification.permission : 'no';
+  const activo = hay && permiso === 'granted' && leer(clave) === '1';
+  const estado = !hay ? 'Este navegador no tiene avisos.' : permiso === 'denied' ? 'Los tienes bloqueados en el navegador: se cambian en los ajustes del sitio (el candado de la barra de direcciones).'
+    : activo ? 'Activados en este navegador: te llega un aviso cuando te mencionan, te escriben en directo o te piden ayuda, aunque estés en otra pestaña.'
+      : 'Apagados. Si los activas, el navegador te preguntará si los permites.';
+  return h('div', { style: { display: 'grid', gap: 'var(--s-1)' } }, h('span', { style: EST.eyebrow }, 'Avisos del navegador'),
+    h('span', {}, estado),
+    hay && permiso !== 'denied' && !S.ctx.soloLectura ? h('div', {}, h('button', { type: 'button', class: 'bt', on: { click: async () => {
+      if (activo) { guardar(clave, '0'); notificarChat(S, 'Avisos del navegador apagados.'); return pintar(S); }
+      if (!vivo(S)) return;
+      const r = permiso === 'granted' ? 'granted' : await Notification.requestPermission();
+      if (!vivo(S)) return;
+      if (r === 'granted') { guardar(clave, '1'); try { new Notification('Ranking Online', { body: 'Avisos activados: te llegarán las menciones, los directos y las peticiones de ayuda.', tag: 'ro-prueba' }); } catch { /* nada */ } }
+      notificarChat(S, r === 'granted' ? 'Avisos del navegador activados.' : 'No se han permitido los avisos.', { icono: r === 'granted' ? 'ok' : 'alert' });
+      pintar(S);
+    } } }, icono('campana'), activo ? 'Apagar los avisos del navegador' : 'Activar los avisos del navegador')) : null);
 }
 
 function panelEspejo(S) {

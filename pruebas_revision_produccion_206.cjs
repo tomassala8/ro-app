@@ -1,0 +1,19 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');const c={URL};vm.createContext(c);
+for(const f of ['_tarea_ia.js','_detalle_tarea_197.js','_transicion_produccion_206.js'])vm.runInContext(fs.readFileSync(__dirname+'/modulos/'+f,'utf8').replace(/^import[^;]+;\s*/gm,'').replace(/export function /g,'function ').replace(/export const /g,'const '),c);
+let n=0;const ctx={servidor:true,real:{id:'reviewer'},persona:{id:'reviewer'},veModulo:()=>true};const t={id:'task-1',cli:'cli-1',lista_id:'list-1',estado:'revisión técnica',tipo_estado:'custom'};
+const catalogo={'list-1':[{estado:t.estado,tipo:'custom'},{estado:'revisión project manager',tipo:'custom'},{estado:'corrección',tipo:'custom'}]};
+const capacidad={version:'206.1',activo:true};const token={modulo:'produccion',tarea_id:t.id,cliente_id:t.cli,lista_id:t.lista_id,expected_estado:t.estado,revision:'a'.repeat(64),bloqueada:false,acciones:{pieza_aprobar:{autorizacion_confirmada:true,destino:'revisión project manager'},pieza_pedir_cambios:{autorizacion_confirmada:true,destino:'corrección'}}};
+const prep=(ctxp={},tp={},cap=capacidad,tok=token,cat=catalogo,tipo='pieza_aprobar')=>c.prepararRevisionProduccion206({...ctx,...ctxp},{...t,...tp},tipo,cap,tok,cat);
+assert(prep().ok);n++;
+for(const patch of [{soloLectura:true},{pilotoLectura:true},{real:{id:'otro'}},{servidor:false},{vigente:()=>false},{veModulo:()=>false}]){assert(!prep(patch).ok);n++;}
+for(const cap of [null,{version:'191.1',activo:true},{version:'206.1',activo:false}]){assert(!prep({}, {},cap).ok);n++;}
+for(const patch of [{modulo:'mi-trabajo'},{tarea_id:'otra'},{cliente_id:'foreign'},{lista_id:'foreign'},{expected_estado:'otro'},{revision:'bad'},{bloqueada:true},{acciones:{pieza_aprobar:{autorizacion_confirmada:false,destino:'revisión project manager'}}}]){assert(!prep({}, {},capacidad,{...token,...patch}).ok);n++;}
+assert(!prep({}, {},capacidad,token,{'list-1':[...catalogo['list-1'],catalogo['list-1'][1]]}).ok);n++;
+assert(!prep({}, {tipo_estado:'closed'}).ok);assert(!prep({}, {cli:null}).ok);n++;
+const p=prep(),uuid='f61a94b8-2091-453e-9299-43b5b1758192',i=c.crearIntencionRevision206(ctx,t,p,uuid);assert.equal(i.payload.modulo,'produccion');assert.equal(i.payload.tipo,'pieza_aprobar');assert.equal(i.payload.vista_previa.transicion_produccion,true);assert(!('transicion_tablero' in i.payload.vista_previa));assert(!('cliente_id' in i.payload));n++;
+const pedir=prep({}, {},capacidad,token,catalogo,'pieza_pedir_cambios');assert.throws(()=>c.crearIntencionRevision206(ctx,t,pedir,uuid,'x'));assert.throws(()=>c.crearIntencionRevision206(ctx,t,pedir,uuid,'x'.repeat(2001)));assert.equal(c.crearIntencionRevision206(ctx,t,pedir,uuid,'Corrige titular').payload.vista_previa.comentario,'Corrige titular');n++;
+const r={ok:true,id:1,recibo_durable:true,intencion_guardada:{id:uuid,accion_id:1,repetida:false},cola_estado:'simulado',confirmacion_remota:false,recibo:{accion_id:1,cambio_id:2,tipo:'pieza_aprobar',modulo:'produccion',tarea_id:t.id,lista_id:t.lista_id,desde:t.estado,hasta:p.destino,intencion_id:uuid,estado_cola:'simulado',confirmacion_remota:false}};
+assert(c.validarReciboRevision206(r,i).valido);assert.equal(c.validarReciboRevision206(r,i).aceptacion_entregable,null);n++;
+for(const patch of [{tipo:'cambiar_estado'},{modulo:'mi-trabajo'},{tarea_id:'foreign'},{lista_id:'foreign'},{hasta:'complete'},{intencion_id:'foreign'},{estado_cola:'unknown'},{confirmacion_remota:true}]){assert(!c.validarReciboRevision206({...r,recibo:{...r.recibo,...patch}},i).valido);n++;}
+assert(!c.validarReciboRevision206({ok:true,id:1},i).valido);n++;
+console.log(n+' pruebas contrato206 PASS: módulo genuino, gate independiente, destinos/catálogo, intención, comentario y recibo ligado sin aceptación. Sin integración live.');

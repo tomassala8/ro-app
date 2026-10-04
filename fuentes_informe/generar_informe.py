@@ -30,6 +30,8 @@ AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
 sys.path.insert(0, str(APP / "fuentes"))
 import comun as C  # noqa: E402
+sys.path.insert(0, str(APP))
+from fuentes_informe import meta_productor_298 as META298  # noqa: E402
 
 sys.path[:0] = [os.path.expanduser(p) for p in ("~/RO_HERRAMIENTAS/google", "~/RO_HERRAMIENTAS/snov", "~/RO_HERRAMIENTAS/meta")]
 
@@ -399,49 +401,11 @@ LEAD_TIPOS = ("lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_p
 
 
 def leads_de(actions):
-    a = {x.get("action_type"): num(x.get("value")) for x in (actions or [])}
-    for t in LEAD_TIPOS:
-        if a.get(t):
-            return a[t]
-    return 0.0
+    return META298.M.leads(actions)[0]
 
 
 def meta_cliente(tk, cuenta):
-    rangos = {}
-    for p in PERIODOS:
-        rangos[(p["desde"], p["hasta"])] = 1
-        rangos[tuple(p["anterior"])] = 1
-    tr = [{"since": a, "until": b} for a, b in rangos]
-    campos = "spend,impressions,reach,frequency,actions,clicks"
-    r = meta_get(tk, f"/{cuenta}/insights", level="account", fields=campos, time_ranges=json.dumps(tr), limit=100)
-    if "_error" in r:
-        return {"_error": f"{r['_error']} {r['_msg'][:160]}"}
-    tot = {}
-    for x in r.get("data", []):
-        k = f"{x['date_start']}|{x['date_stop']}"
-        tot[k] = {"gasto": round(num(x.get("spend")), 2), "impresiones": int(num(x.get("impressions"))), "alcance": int(num(x.get("reach"))),
-                  "frecuencia": round(num(x.get("frequency")), 2), "clics": int(num(x.get("clicks"))), "leads": leads_de(x.get("actions"))}
-    dia = meta_get(tk, f"/{cuenta}/insights", level="account", fields="spend,actions", time_increment=1,
-                   time_range=json.dumps({"since": "2026-04-01", "until": "2026-10-01"}), limit=500)
-    serie = {}
-    while True:
-        for x in dia.get("data", []) or []:
-            serie[x["date_start"]] = [round(num(x.get("spend")), 2), leads_de(x.get("actions"))]
-        nxt = (dia.get("paging") or {}).get("next")
-        if not nxt or "_error" in dia:
-            break
-        try:
-            dia = json.load(urllib.request.urlopen(nxt, timeout=90))
-        except Exception:  # noqa: BLE001
-            break
-    camp = {}
-    for p in PERIODOS:
-        c = meta_get(tk, f"/{cuenta}/insights", level="adset", fields="campaign_name,adset_name,spend,impressions,frequency,actions",
-                     time_range=json.dumps({"since": p["desde"], "until": p["hasta"]}), limit=200)
-        camp[p["id"]] = [{"campana": C.sanear(x.get("campaign_name")), "conjunto": C.sanear(x.get("adset_name")), "gasto": round(num(x.get("spend")), 2),
-                          "impresiones": int(num(x.get("impressions"))), "frecuencia": round(num(x.get("frequency")), 2), "leads": leads_de(x.get("actions"))}
-                         for x in c.get("data", []) or []]
-    return {"totales": tot, "serie": serie, "conjuntos": camp}
+    return META298.leer(lambda path, **q: meta_get(tk, path, **q), cuenta, PERIODOS, AHORA, C.sanear)
 
 
 # ------------------------------------------------------------------ Snov.io
@@ -605,21 +569,7 @@ def snov_periodo(camps, pid):
 
 
 def meta_periodo(m, p):
-    if not m or "_error" in m:
-        return m and {"_error": m["_error"]}
-    k = f"{p['desde']}|{p['hasta']}"
-    ka = f"{p['anterior'][0]}|{p['anterior'][1]}"
-    act, ant = m["totales"].get(k), m["totales"].get(ka)
-    for x in (act, ant):
-        if x:
-            x["cpl"] = round(x["gasto"] / x["leads"], 2) if x["leads"] else None
-    dias = []
-    d0, d1 = D(p["desde"]), D(p["hasta"])
-    while d0 <= d1:
-        v = m["serie"].get(str(d0)) or [0, 0]
-        dias.append([str(d0), v[0], v[1]])
-        d0 += timedelta(days=1)
-    return {"actual": act, "anterior": ant, "serie": dias, "conjuntos": sorted(m["conjuntos"].get(p["id"], []), key=lambda x: -x["gasto"])}
+    return META298.periodo(m, p)
 
 
 def seranking_de(cid):
@@ -697,8 +647,7 @@ def construir(clientes, vivo):
                             "hora": v.get("leido"), "sitio": v.get("gsc_sitio") or e.get("gsc"),
                             "hasta_dato": (gsc or {}).get("hasta_dato"),
                             "nota": (gsc or {}).get("_error") or (None if e.get("gsc") else e.get("gsc_nota") or "sin sitio de Search Console emparejado")},
-                    "meta": {"estado": "rota" if meta and "_error" in meta else ("a_cero" if meta and not (meta.get("actual") or {}).get("gasto") else "bien") if meta else "sin_conectar",
-                             "hora": v.get("leido"), "cuenta": v.get("meta_cuenta"), "nota": (meta or {}).get("_error") or CORRECCIONES.get(cid, {}).get("_nota_meta") or (None if meta else (F.get("meta") or {}).get("nota") or "sin cuenta de Meta emparejada")},
+                    "meta": META298.fuente(meta, v.get("meta"), v.get("leido"), v.get("meta_cuenta"), (meta or {}).get("_error") or CORRECCIONES.get(cid, {}).get("_nota_meta") or (None if meta else (F.get("meta") or {}).get("nota") or "sin cuenta de Meta emparejada")),
                     "google_ads": {"estado": "bien" if gads else ("no_aplica" if cid not in GADS_PARADAS and cid not in GADS_FUERA_WINDSOR and cid not in looker else "sin_conectar"),
                                    "hora": gads_hora if gads else None, "medicion": "medias" if gads else "no",
                                    "nota": ("muestra sellada de septiembre: totales sin campañas ni serie diaria; el resto llega con la clave de Windsor" if gads else

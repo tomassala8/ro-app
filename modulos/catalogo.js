@@ -140,15 +140,16 @@ export default {
   grupo: 'Sistema',
   puestos_que_lo_ven: { direccion: 'todo' },
   render(cont, ctx) {
-    const meta = ctx.datos.meta;
-    const c0 = ctx.clientes.find(c => c.logo) || ctx.clientes[0];
+    const meta = ctx.datos?.meta || {};
+    const clientes = Array.isArray(ctx.clientesVisibles) ? ctx.clientesVisibles : [];
+    const c0 = clientes.find(c => c.logo) || clientes[0] || { id: 'ejemplo', nombre: 'Cliente de ejemplo' };
 
     cont.append(avisoParcial('Los ejemplos con cifras inventadas llevan «ejemplo». Los demás usan datos reales del panel v27.', { tipo: 'info', titulo: 'Catálogo vivo.' }));
     cont.append(...guiaEstilo());
     cont.append(...panelesV4());
 
     // ---------------- ola 0 · sistema visual (2-oct) ----------------
-    const vis = ctx.clientesVisibles.length ? ctx.clientesVisibles : ctx.clientes;
+    const vis = clientes;
     cont.append(bloque('Iconos', `icono(nombre, { clase: 's' | 'l', titulo }) · ${Object.keys(ICONOS).length} iconos de trazo 1,8 px (base: objeto P de la ficha v3)`,
       h('div', { class: 'fila', style: { gap: 'var(--s-2)' } }, Object.keys(ICONOS).map(n => h('span', { class: 'chip gris sin-punto', title: n }, icono(n, { clase: 's' }), n)))));
 
@@ -175,8 +176,8 @@ export default {
         { id: 'trabajo', texto: 'Trabajo', icono: 'check', cuenta: 14, cuentaEstado: 'rojo' }, { id: 'rastro', texto: 'Rastro', icono: 'hist' }],
         pintar: (id, z) => z.append(id === 'contactos'
           ? h('div', { style: { display: 'grid', gap: 'var(--s-6)', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', alignItems: 'start' } },
-              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '611 11 11 11', correo: 'ana@ejemplo.es', fuente: 'ejemplo, número inventado' }),
-              botonesContacto({ nombre: 'Ana Ejemplo', telefono: '611 11 11 11', correo: 'ana@ejemplo.es', modo: 'cabecera' }))
+              botonesContacto({ nombre: 'Contacto de ejemplo', telefono: '000000000', correo: 'contacto-1@example.invalid', fuente: 'ejemplo, número inventado' }),
+              botonesContacto({ nombre: 'Contacto de ejemplo', telefono: '000000000', correo: 'contacto-1@example.invalid', modo: 'cabecera' }))
           : vacio({ icono: 'vacio', titulo: `Pestaña «${id}» de ejemplo`, texto: 'Cada módulo pinta aquí su contenido. Cambiar de pestaña es instantáneo.' })) })));
 
     cont.append(bloque('Selector de cliente y barra de etapas', 'selectorCliente({ clientes: ctx.clientesVisibles, actual, alElegir, detalle, insignia }) · barraEtapas(etapas?, actual)',
@@ -185,10 +186,10 @@ export default {
 
     cont.append(bloque('Estado vacío grande, tabla apilable y lista con icono', 'vacio({ icono, titulo, texto, quien, accion, tono, borde }) · tablaApilable({ columnas, filas, alPulsar }) · listaConIcono([{ icono, texto, extra, href, estado }])',
       h('div', { style: { display: 'grid', gap: 'var(--s-6)', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))', alignItems: 'start' } },
-        vacio({ icono: 'plug', titulo: 'Este cliente no tiene Search Console conectado', texto: 'Sin la propiedad no hay clics ni búsquedas. Se da acceso a gmb1@rankingonline.es en Search Console.', quien: 'Constanza', borde: true }),
+        vacio({ icono: 'plug', titulo: 'Este cliente no tiene Search Console conectado', texto: 'Sin la propiedad no hay clics ni búsquedas. Se da acceso a contacto-2@example.invalid en Search Console.', quien: 'Constanza', borde: true }),
         vacio({ tono: 'celebrar', titulo: 'Bandeja a cero', texto: 'No te queda ningún correo de cliente sin contestar.', borde: true })),
       tablaApilable({
-        filas: ctx.clientes.slice(0, 5),
+        filas: clientes.slice(0, 5),
         columnas: [{ clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, c.nombre) }, { clave: 'responsable', titulo: 'Account' }, { clave: 'salud', titulo: 'Salud', num: true }],
       }),
       listaConIcono([
@@ -206,12 +207,12 @@ export default {
     cont.append(bloque('Chip de estado, sello y frescura', 'chipEstado(estado, texto) · selloMedible(medible, detalle) · frescura({fuente, edad_h, estado})',
       h('div', { class: 'fila' }, ['verde', 'ambar', 'rojo', 'gris', 'azul'].map(e => chipEstado(e, e))),
       h('div', { class: 'fila' }, selloMedible('hoy'), selloMedible('medias', 'qué falta'), selloMedible('no')),
-      h('div', { class: 'fila' }, (meta.fuentes || []).slice(0, 6).map(f => frescura({ fuente: f.fuente, edad_h: f.edad_h, estado: f.estado }))),
+      h('div', { class: 'fila' }, (Array.isArray(meta.fuentes) ? meta.fuentes : []).slice(0, 6).map(f => frescura({ fuente: f.fuente, edad_h: f.edad_h, estado: f.estado }))),
       h('div', { class: 'fila' }, candado(), candado('Solo quien lleva el cliente'))));
 
     cont.append(bloque('Tarjeta de cliente', 'tarjetaCliente({ nombre, logo, salud, motivo, extra, onAbrir })',
       h('div', { class: 'rejilla' },
-        tarjetaCliente({ ...c0, motivo: 'Sin responder', extra: `lleva ${c0.responsable}`, onAbrir: () => ctx.navegar(`en-rojo/${c0.id}`) }),
+        tarjetaCliente({ ...c0, motivo: 'Sin responder', extra: c0.responsable ? `lleva ${c0.responsable}` : 'Responsable sin dato', onAbrir: () => clientes.length ? ctx.navegar(`en-rojo/${c0.id}`) : avisoFlotante('Cliente ficticio del catálogo', { icono: 'cli' }) }),
         tarjetaCliente({ nombre: 'Despacho sin logo (ejemplo)', salud: 72, motivo: 'Al día' }))));
 
     cont.append(bloque('Lo primero hoy', 'listaLoPrimero([{ motivo, detalle, estado, botones }], { vacio })',
@@ -223,7 +224,7 @@ export default {
 
     cont.append(bloque('Tabla densa', 'tablaDensa({ columnas, filas, filtros, buscar, orden, alPulsar, puedePulsar, vacio }) · en móvil se apila',
       tablaDensa({
-        filas: ctx.clientes.slice(0, 8),
+        filas: clientes.slice(0, 8),
         buscar: { campos: ['nombre', 'responsable'] },
         filtros: [{ clave: 'responsable', titulo: 'Responsable' }],
         orden: { clave: 'salud', dir: 'asc' },

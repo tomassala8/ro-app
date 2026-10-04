@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO } from '../componentes.js';
 // modulos/outreach.js · M17 «Prospección y outreach» (E6). Dos pestañas medidas por separado: campañas de clientes
 // (primero) y campañas de RO. Respuestas de Snov.io de 30 días: se eligen varias y se asignan o clasifican de una vez.
 // Linked Helper y Explee no tienen API: entran por la hoja semanal declarada, con su propio sello.
@@ -172,7 +173,7 @@ function pintarFrente(zona, ctx, o, meta, frente, loc, gente) {
           const casilla = h('input', { type: 'checkbox', 'aria-label': `Elegir la respuesta de ${r.nombre_m}`, disabled: ctx.soloLectura || null, style: { width: 'var(--s-5)', height: 'var(--s-5)' } });
           casilla.checked = elegidas.has(r.id);
           casilla.addEventListener('change', () => { casilla.checked ? elegidas.add(r.id) : elegidas.delete(r.id); pintarBarra(); });
-          const horas = r.fecha ? Math.round((Date.now() - new Date(r.fecha.replace(' ', 'T'))) / 36e5) : null;
+          const horas = edadRespuestaRO(r.fecha);
           const d = loc.dueno[r.id], c = loc.clase[r.id];
           const clasif = v => h('button', { type: 'button', class: `bt mini${v === 'positiva' ? ' pri' : ''}`, 'data-clase': v, 'aria-pressed': String(c === v), 'aria-disabled': ctx.soloLectura ? 'true' : null,
             title: ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : `${CLASES.find(x => x.valor === v).texto}: pasa a ser tuya y sale de «Sin dueño»`,
@@ -221,7 +222,7 @@ function pintarFrente(zona, ctx, o, meta, frente, loc, gente) {
         { clave: 'cliente', titulo: 'Cliente', principal: true }, { clave: 'canales', titulo: 'Canales' },
         { clave: 'leads', titulo: 'Leads', num: true, celda: f => sd(f.leads) }, { clave: 'enviados', titulo: 'Enviados', num: true, celda: f => sd(f.enviados) },
         { clave: 'aceptaciones', titulo: 'Aceptadas en LinkedIn', num: true, celda: f => sd(f.aceptaciones) }, { clave: 'respuestas', titulo: 'Respuestas', num: true, celda: f => sd(f.respuestas) },
-        { clave: 'ultimo', titulo: 'Último lead', celda: f => (f.ultimo ? fechaCorta(String(f.ultimo).slice(0, 10)) : '—') },
+        { clave: 'ultimo', titulo: 'Último lead', celda: f => (f.ultimo ? fechaCortaRO(FECHAS_RO.dia(f.ultimo)) : '—') },
         { clave: 'prueba', titulo: 'Atajo', celda: f => abrirEn('ClickUp', f.prueba, { motivo: 'Sin tarea de informe' }) }] }),
       avisoParcial('Leads contados a partir de los avisos en los chats del equipo y de las hojas públicas. Las hojas privadas de Linked Helper necesitan permiso de lectura de hojas.', { titulo: 'A medias.' }),
       h('div', { class: 'fila', style: { marginTop: 'var(--s-3)' } }, frescura(fMili)))));
@@ -306,3 +307,5 @@ export default {
   puestos_que_lo_ven: { direccion: 'todo', jefa_crm: 'todo', outreach: 'suyo', operaciones: 'resumen' },
   async render(contenedor, ctx) { await pintar(contenedor, ctx); },
 };
+
+function edadRespuestaRO(fecha) { const h = FECHAS_RO.horasDesde(fecha); return h === null || h < 0 ? null : Math.round(h); }

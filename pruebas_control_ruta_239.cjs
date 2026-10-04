@@ -1,0 +1,40 @@
+const fs=require('node:fs');
+const prefijo=fs.readFileSync(__dirname+'/pruebas_control_macro_138.cjs','utf8').split('const macros=root.desc()')[0];
+new Function('require','__dirname',prefijo+String.raw`
+for(const [nombre,exports] of [['_historial_diario_364',['ambitoHistorial364','modeloHistorial364','historialVigente364','cargarHistorial364']],['_bandas_horas_381',['bandaHoras381']],['_imputa_personal_390',['ambitoImputa390','modeloImputa390','cargarImputa390']]])vm.runInContext('Object.assign(globalThis,(()=>{'+fs.readFileSync(APP+'/modulos/'+nombre+'.js','utf8').replace(/^import .*;$/gm,'').replace(/export /g,'')+';return {'+exports.join(',')+'};})())',b);
+vm.runInContext(fs.readFileSync(APP+'/modulos/_control_cartera_ruta_239.js','utf8').replace(/^import .*;$/gm,'').replace(/export /g,''),b);
+const activo=(id,puestos)=>({id,puestos,estado:'activo'});
+let n=0;
+const real=activo('r',['direccion','account']),vista=activo('v',['account']);
+assert.equal(b.puestoControl239(real,vista),'account');
+assert.equal(b.puestoControl239(real,real,'account'),'account');
+assert.equal(b.puestoControl239(real,real),'direccion');
+assert.equal(b.puestoControl239(vista,real,'direccion'),null);n++;
+for(const p of [{...vista,estado:'baja'},{...vista,estado:undefined},activo('v',['seo'])])assert.equal(b.puestoControl239(real,p),null);n++;
+assert(b.menuActual239({id:'mi-dia',subruta:'control-cartera'},'mi-dia','control-cartera'));
+assert(!b.menuActual239({id:'mi-dia'},'mi-dia','control-cartera'));
+assert(b.menuActual239({id:'mi-dia'},'mi-dia','account'));n++;
+const c={...ctx,real,persona:vista,params:['control-cartera','account'],servidor:true,titulo(){},api:async name=>({}),datosModulo:async name=>D.opcional(name)};
+const empty=o=>h('div',{},o.titulo);
+(async()=>{
+ let node=h('div',{});await b.renderControl239(node,c,()=>true,b.panelControlCartera,h,empty);
+ assert.equal(node.desc().filter(x=>x.tag==='table').length,1);assert(node.textContent.includes('Cliente uno'));assert(!node.textContent.includes('Cliente dos'));
+ assert(node.desc().some(x=>x.tag==='a'&&x.attrs.href==='#/mi-dia/account'));assert(!node.textContent.includes('Tus puestos'));n++;
+ node=h('div',{});await b.renderControl239(node,{...c,persona:real,params:['control-cartera','direccion']},()=>true,b.panelControlCartera,h,empty);
+ assert.equal(node.desc().filter(x=>x.tag==='table').length,2);assert(node.textContent.includes('Cliente dos'));n++;
+ let requests=0;node=h('div',{});await b.renderControl239(node,{...c,real:vista,persona:real,params:['control-cartera','direccion'],api:()=>{requests++;},datosModulo:()=>{requests++;}},()=>true,b.panelControlCartera,h,empty);assert.equal(requests,0);assert.equal(node.desc().filter(x=>x.tag==='table').length,0);n++;
+ node=h('div',{});await b.renderControl239(node,{...c,api:async()=>{throw Error('not allowed')},datosModulo:async()=>{throw Error('no source')}},()=>true,b.panelControlCartera,h,empty);assert(node.textContent.includes('Sin dato'));assert.equal(node.desc().filter(x=>x.tag==='table').length,1);n++;
+ let finishes=[],current=true;node=h('div',{},'nueva pantalla');const pending=b.renderControl239(node,{...c,api:()=>new Promise(r=>finishes.push(r)),datosModulo:()=>new Promise(r=>finishes.push(r))},()=>current,b.panelControlCartera,h,empty);current=false;finishes.forEach(r=>r({}));await pending;assert.equal(node.textContent,'nueva pantalla');n++;
+ requests=0;node=h('div',{});await b.renderControl239(node,{...c,veModulo:m=>m==='mi-dia',api:()=>{requests++},datosModulo:()=>{requests++}},()=>true,b.panelControlCartera,h,empty);assert.equal(requests,0);assert(!node.desc().some(x=>x.tag==='a'&&x.attrs.href==='#/horas'));n++;
+ const app=fs.readFileSync(APP+'/app.js','utf8');const marcar=app.slice(app.indexOf('function marcarActual()'),app.indexOf('\nfunction pintarMenu()'));
+ const links=[{dataset:{id:'mi-dia'},setAttribute(){this.selected=true},removeAttribute(){this.selected=false}},{dataset:{id:'mi-dia',subruta:'control-cartera'},setAttribute(){this.selected=true},removeAttribute(){this.selected=false}}];
+ Object.assign(b,{location:{hash:'#/mi-dia/control-cartera/account'},pintura:{id:'mi-dia'},estado:{real,persona:vista},document:{querySelectorAll:s=>s.includes('data-id')?links:[]}});vm.runInContext(marcar,b);b.marcarActual();assert(!links[0].selected);assert(links[1].selected);n++;
+ const etiqueta={textContent:''};const alias={dataset:{id:'mi-dia',subruta:'control-cartera'},attrs:{},setAttribute(k,v){this.attrs[k]=v},removeAttribute(k){delete this.attrs[k]},querySelector:()=>etiqueta};b.document.querySelectorAll=s=>s.includes('data-subruta')?[alias]:s.includes('data-id')?[alias]:[];b.estado={real,persona:real};b.location.hash='#/mi-dia/account';b.marcarActual();assert.equal(alias.attrs.href,'#/mi-dia/control-cartera/account');assert.equal(etiqueta.textContent,'Control de cartera');b.location.hash='#/mi-dia/direccion';b.marcarActual();assert.equal(etiqueta.textContent,'Control accounts y proyectos');n++;
+ assert(app.includes("'data-subruta':'control-cartera'"));assert(md.includes("if (ctx.params[0] === 'control-cartera')"));assert(md.includes('await renderControl239(cont, ctx, vigente, panelControlCartera, h, estadoVacio)'));n++;
+ console.log(n+' grupos239 PASS: matriz real aislada account/Ops, identidad doble, acceso denegado sin lecturas, fuentes fallidas neutrales, stale render, navegación y aria-current real.');
+})().catch(e=>{console.error(e);process.exitCode=1});
+`)(require,__dirname);
+const harness=fs.readFileSync(__dirname+'/pruebas_router_concurrencia.cjs','utf8');
+new Function('require','__dirname',harness.slice(0,harness.indexOf('(async()=>{'))+String.raw`
+(async()=>{const t=setup();let params;t.estado.modulos=[{id:'mi-dia',titulo:'Mi día',estado:'hecho',render:(cont,ctx)=>{params=ctx.params;cont.append(element('matrix'));}}];t.c.location.hash='#/mi-dia/control-cartera/account';await t.c.go(true);assert.deepEqual(Array.from(params),['control-cartera','account']);assert.equal(t.nodes['#main'].children[0].children[0].tag,'matrix');console.log('1 grupo239 router real PASS: subvista usa exclusivamente módulo MiDía visible con parámetros actuales.');})().catch(e=>{console.error(e);process.exitCode=1});
+`)(require,__dirname);

@@ -1,29 +1,12 @@
 #!/usr/bin/env python3
-"""ia_gasto.py · control de gasto de la IA a prueba de sustos (3-oct-2026).
+"""Control local de presupuesto IA: claims durables, fallo cerrado (candidato142).
 
-Encargo de Tomás: «no quiero una IA con tokens infinitos; me da miedo gastar muchísimo».
-Respuesta: la app usa la API de Anthropic (pago por uso, con clave de la Console; una suscripción Max NO vale para
-esto, ver ../52_IA_COSTE_Y_TOPES.md) y aquí se le ponen DOS cinturones además del tope duro de la Console:
-
-  1. Presupuesto en euros (por defecto 150 €/mes y 10 €/día; los fija Tomás en Sistema › Gasto de IA, con rastro).
-     Antes de CADA llamada se reserva su coste MÁXIMO posible (entrada estimada + max_tokens de salida al precio del
-     modelo). Si gastado + reservado + ese máximo pasa el tope, la llamada no sale. Así nadie salta el tope, ni con
-     diez personas pulsando a la vez. Después se apunta el coste REAL (tokens de entrada, caché escrita, caché leída y
-     salida × precio) en la tabla imborrable `ia_gasto` y se suelta la reserva.
-  2. Topes por persona (€/día) y por función (€/mes) y el de 40 generaciones/hora/persona de ia.py.
-
-  · 80 % del mes o del día → aviso a Tomás en #avisos-dirección (una vez por umbral y periodo).
-  · 100 % → la IA pasa SOLA a «modo reglas»: ia.estado() dice «sin conectar» con el motivo, las pantallas sirven lo
-    precalculado y los consejos por reglas (que ya existían), sin coste, y lo dicen en pantalla. Vuelve sola al día
-    siguiente (tope diario) o el día 1 (tope mensual), o cuando Tomás sube el tope.
-  · Si la Console corta (tope de gasto propio o de nivel, saldo agotado) también se pasa a modo reglas y se avisa.
-  · Modelo por tarea: barato (Haiku 4.5) para clasificar y consejos; mejor (Opus 5) para borradores; Sonnet 5 para
-    el copiloto. Caché de prompts en las instrucciones fijas. Lotes (Batch, mitad de precio) para lo que puede esperar.
-  · Llave de respaldo: segunda clave en OTRO espacio de trabajo de la Console con su propio tope pequeño. Solo se usa si
-    la principal falla por caída (red, 5xx, sobrecarga, clave revocada), NUNCA si falla por presupuesto agotado.
-  · «Ver como» no gasta: si quien está delante no es la persona vista, no sale ninguna llamada.
-
-Precios (USD por millón de tokens) copiados de https://platform.claude.com/docs/en/about-claude/pricing el 3-oct-2026.
+No equivale a la suscripción Max ni acredita un tope del proveedor. Tarifas
+heredadas sin verificar y ausencia del contador acreditado mantienen modo reglas.
+No se compra por una estimación de caracteres. Los resultados inciertos conservan
+su reserva; una segunda llave necesita presupuesto adicional. Los lotes están
+pausados hasta validar claim previo y recogida idempotente. Sin identidad real/vista
+coincidente tampoco se permite generar. Sólo Tomás nominal administra topes.
 """
 import json
 import math
@@ -32,15 +15,19 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+
+import ia_real_559 as IA_REAL
 
 S = None                       # el módulo servir (lo pone enganchar)
 MADRID = ZoneInfo("Europe/Madrid")
 FUENTE_PRECIOS = "https://platform.claude.com/docs/en/about-claude/pricing"
-FECHA_PRECIOS = "2026-10-03"
+FECHA_PRECIOS = None
+PRECIOS_VERIFICADOS = False  # No hay verificación oficial actual en este encargo local.
 
-# USD por millón de tokens: entrada, escritura de caché 5 min (1,25×), lectura de caché (0,1×), salida. Lotes: la mitad.
+# Catálogo histórico NO verificado: USD/millón. No habilita compras ni acredita tasas actuales.
 PRECIOS = {
     "claude-opus-5":     {"entrada": 5.00, "cache_escrita": 6.25, "cache_leida": 0.50, "salida": 25.00},
     "claude-opus-5-5":   {"entrada": 4.00, "cache_escrita": 5.00, "cache_leida": 0.20, "salida": 20.00},
@@ -48,7 +35,7 @@ PRECIOS = {
     "claude-haiku-4-5":  {"entrada": 1.00, "cache_escrita": 1.25, "cache_leida": 0.10, "salida": 5.00},
     "claude-fable-5-1":  {"entrada": 10.00, "cache_escrita": 12.50, "cache_leida": 0.25, "salida": 50.00},
 }
-PRECIO_DESCONOCIDO = PRECIOS["claude-fable-5-1"]     # un modelo que no está en la tabla se cobra como el más caro
+PRECIO_DESCONOCIDO = None # Sin tarifa exacta: no comprar. Catálogo heredado, no verificación externa actual.
 DESCUENTO_LOTE = 0.5
 
 TAREAS = {   # nombre en pantalla, modelo por defecto (variable de entorno que lo cambia), techo de salida, esfuerzo
@@ -87,6 +74,11 @@ CREATE TABLE IF NOT EXISTS ia_topes (
   id INTEGER PRIMARY KEY AUTOINCREMENT, creada TEXT NOT NULL, quien TEXT NOT NULL, valores TEXT NOT NULL, motivo TEXT);
 CREATE TRIGGER IF NOT EXISTS ia_topes_sin_update BEFORE UPDATE ON ia_topes BEGIN SELECT RAISE(ABORT, 'Un cambio de topes no se reescribe'); END;
 CREATE TRIGGER IF NOT EXISTS ia_topes_sin_delete BEFORE DELETE ON ia_topes BEGIN SELECT RAISE(ABORT, 'Un cambio de topes no se borra'); END;
+CREATE TABLE IF NOT EXISTS ia_reservas (
+  id TEXT PRIMARY KEY, creada TEXT NOT NULL, tarea TEXT NOT NULL, quien TEXT NOT NULL,
+  llave TEXT NOT NULL, reservado_eur REAL NOT NULL CHECK(reservado_eur >= 0),
+  estado TEXT NOT NULL CHECK(estado IN ('activa','incierta','cerrada')));
+CREATE TRIGGER IF NOT EXISTS ia_reservas_sin_delete BEFORE DELETE ON ia_reservas BEGIN SELECT RAISE(ABORT,'Una reserva no se borra'); END;
 CREATE TABLE IF NOT EXISTS ia_lotes (
   id TEXT PRIMARY KEY, creado TEXT NOT NULL, quien TEXT NOT NULL, tarea TEXT NOT NULL, llave TEXT NOT NULL, modelo TEXT,
   n INTEGER NOT NULL, reservado_eur REAL NOT NULL, estado TEXT NOT NULL, cerrado TEXT, peticiones TEXT);
@@ -129,26 +121,38 @@ def iniciar():
         con.executescript(TABLAS_SQL)
 
 
-def topes():
-    """Los vigentes: la última fila de ia_topes encima de los de por defecto."""
+def _topes_en(con):
     t = json.loads(json.dumps(TOPES_DEFECTO))
+    f = con.execute("SELECT valores FROM ia_topes ORDER BY id DESC LIMIT 1").fetchone()
+    if f:
+        v = json.loads(f[0], parse_constant=lambda _: (_ for _ in ()).throw(ValueError("Tope no finito")))
+        if not isinstance(v, dict): raise SinGasto("Topes ilegibles: no se compra IA.")
+        t.update(v)
+        t['funcion_mes_eur'] = {**TOPES_DEFECTO['funcion_mes_eur'], **(v.get('funcion_mes_eur') or {})}
+    try: return validar(t, TOPES_DEFECTO)
+    except (ValueError, TypeError, KeyError) as e: raise SinGasto("Topes inválidos: no se compra IA.") from e
+
+
+def topes():
     try:
-        with S.conectar() as con:
-            f = con.execute("SELECT valores FROM ia_topes ORDER BY id DESC LIMIT 1").fetchone()
-        if f:
-            v = json.loads(f[0])
-            fm = {**t["funcion_mes_eur"], **(v.get("funcion_mes_eur") or {})}
-            t.update(v)
-            t["funcion_mes_eur"] = fm
-    except Exception:
-        pass
-    return t
+        with S.conectar() as con: return _topes_en(con)
+    except SinGasto: raise
+    except Exception as e: raise SinGasto("No se puede verificar el presupuesto de IA: modo reglas.") from e
+
+
+def _importe(v):
+    if isinstance(v, bool) or not isinstance(v, (int,float)) or not math.isfinite(v) or v < 0:
+        raise SinGasto("Importe desconocido o inválido: no se compra IA.")
+    return float(v)
+
+
+def _suma_en(con, where, args):
+    filas = con.execute(f"SELECT coste_eur FROM ia_gasto WHERE {where}", args).fetchall()
+    return sum(_importe(r[0]) for r in filas), len(filas)
 
 
 def _suma(where, args):
-    with S.conectar() as con:
-        f = con.execute(f"SELECT COALESCE(SUM(coste_eur),0), COUNT(*) FROM ia_gasto WHERE {where}", args).fetchone()
-    return float(f[0] or 0), int(f[1] or 0)
+    with S.conectar() as con: return _suma_en(con, where, args)
 
 
 def gastado():
@@ -156,41 +160,53 @@ def gastado():
     return {"mes": _suma("mes=?", (m,))[0], "dia": _suma("dia=?", (d,))[0]}
 
 
-def _reservado(tarea=None, quien=None, llave=None):
-    """Lo reservado y aún sin apuntar: llamadas en vuelo (memoria) + lotes enviados sin recoger (base; sobrevive a un reinicio)."""
-    ok = lambda r_t, r_q, r_l: (tarea is None or r_t == tarea) and (quien is None or r_q == quien) and (llave is None or r_l == llave)
-    total = sum(e for e, r_t, r_q, r_l in _RESERVAS.values() if ok(r_t, r_q, r_l))
-    try:
-        with S.conectar() as con:
-            for e, r_t, r_q, r_l in con.execute("SELECT reservado_eur, tarea, quien, llave FROM ia_lotes WHERE estado='enviado'").fetchall():
-                if ok(r_t, r_q, r_l):
-                    total += float(e or 0)
-    except Exception:
-        pass
+def _reservado_en(con, tarea=None, quien=None, llave=None):
+    total = 0.0
+    for tabla, campo, estados in (("ia_reservas","reservado_eur","('activa','incierta')"),("ia_lotes","reservado_eur","('enviado')")):
+        for e, rt, rq, rl in con.execute(f"SELECT {campo}, tarea, quien, llave FROM {tabla} WHERE estado IN {estados}"):
+            if (tarea is None or rt==tarea) and (quien is None or rq==quien) and (llave is None or rl==llave): total += _importe(e)
     return total
+
+
+def _reservado(tarea=None, quien=None, llave=None):
+    with S.conectar() as con: return _reservado_en(con,tarea,quien,llave)
+
 
 
 # ======================================================================= precio
 def precio(modelo):
-    return PRECIOS.get(modelo) or next((p for k, p in PRECIOS.items() if str(modelo or "").startswith(k)), PRECIO_DESCONOCIDO)
+    if PRECIOS_VERIFICADOS is not True: raise SinGasto("Catálogo de tarifas pendiente de verificación: no se compra IA.")
+    p = PRECIOS.get(modelo) if isinstance(modelo,str) else None
+    if not isinstance(p,dict) or any(k not in p or _importe(p[k])<=0 for k in ('entrada','cache_escrita','cache_leida','salida')):
+        raise SinGasto("Modelo sin tarifa exacta válida: no se compra IA.")
+    return p
+
+
+def _tokens(uso):
+    if not isinstance(uso,dict): raise SinGasto("Uso no confirmado: conservar reserva.")
+    valores={}
+    for k in ('entrada','cache_escrita','cache_escrita_1h','cache_leida','salida'):
+        v=uso.get(k,0)
+        if type(v) is not int or v<0: raise SinGasto("Uso inválido: conservar reserva.")
+        valores[k]=v
+    return valores
 
 
 def coste(modelo, uso, lote=False, t=None):
-    """(usd, eur) de una llamada con su uso real: tokens sin caché, caché escrita, caché leída y salida (incluye el pensamiento)."""
-    p = precio(modelo)
-    usd = (uso.get("entrada", 0) * p["entrada"] + uso.get("cache_escrita", 0) * p["cache_escrita"]
-           + uso.get("cache_escrita_1h", 0) * p["entrada"] * 2          # caché de 1 hora: 2× la entrada
-           + uso.get("cache_leida", 0) * p["cache_leida"] + uso.get("salida", 0) * p["salida"]) / 1e6
-    if lote:
-        usd *= DESCUENTO_LOTE
-    cambio = (t or topes())["usd_a_eur"]
-    return round(usd, 6), round(usd * cambio, 6)
+    p, u = precio(modelo), _tokens(uso)
+    cambio = _importe((t or topes())['usd_a_eur'])
+    usd=(u['entrada']*p['entrada']+u['cache_escrita']*p['cache_escrita']+u['cache_escrita_1h']*p['entrada']*2+u['cache_leida']*p['cache_leida']+u['salida']*p['salida'])/1e6
+    if lote: usd *= DESCUENTO_LOTE
+    return round(_importe(usd),6),round(_importe(usd*cambio),6)
 
 
-def coste_maximo(modelo, texto_entrada, max_tokens, lote=False, t=None):
-    """Lo peor que puede costar: entrada estimada a 2,5 caracteres por token (prudente) sin caché + toda la salida permitida."""
-    entrada = math.ceil(len(texto_entrada) / 2.5) + 50
-    return coste(modelo, {"entrada": entrada, "salida": max_tokens}, lote, t)[1]
+def coste_maximo(modelo, texto_entrada, max_tokens, lote=False, t=None, entrada_tokens=None):
+    if type(entrada_tokens) is not int or entrada_tokens<0 or type(max_tokens) is not int or max_tokens<0:
+        raise SinGasto("Falta conteo de entrada acreditado; la estimación por caracteres no autoriza compras.")
+    p=precio(modelo); cambio=_importe((t or topes())['usd_a_eur'])
+    usd=(entrada_tokens*max(p['entrada'],p['cache_escrita'],p['cache_leida'],p['entrada']*2)+max_tokens*p['salida'])/1e6
+    if lote: raise SinGasto("Lotes en pausa: falta recuperación durable validada.")
+    return math.ceil(_importe(usd*cambio)*1e6)/1e6
 
 
 def modelo_de(tarea):
@@ -229,13 +245,25 @@ def _pausa_console():
 
 def modo():
     """{"modo": "ia"|"reglas", "motivo" (para dirección), "llano" (para el resto), gastado, topes}."""
-    t = topes()
-    g = gastado()
+    if not IA_REAL.autorizada():
+        return {"modo":"reglas", "motivo":IA_REAL.MOTIVO, "llano":"IA en pausa; seguimos con reglas.", "gastado":{"mes":None,"dia":None}, "topes":{}}
+    try:
+        t = topes()
+        g = gastado()
+        reservado = _reservado()
+    except Exception:
+        return {'modo':'reglas','motivo':'No se puede verificar el registro de gasto de IA.','llano':'IA en pausa; seguimos con reglas.','gastado':{'mes':None,'dia':None},'topes':{}}
     out = {"modo": "ia", "motivo": None, "llano": None, "gastado": g, "topes": {"mes_eur": t["mes_eur"], "dia_eur": t["dia_eur"]}}
     llano = "La IA ha llegado a su tope de gasto: la app sigue con reglas y lo ya preparado, sin coste. Lo reabre Tomás."
-    if not t.get("activa", True):
+    if PRECIOS_VERIFICADOS is not True:
+        out.update(modo='reglas',motivo='Catálogo de tarifas pendiente de verificación; no se autoriza compra de IA.',llano='IA en pausa; seguimos con reglas.')
+    elif not callable(getattr(PROVEEDOR,'contar_entrada',None)):
+        out.update(modo='reglas',motivo='Falta conteo de entrada acreditado; no se autoriza compra de IA.',llano='IA en pausa; seguimos con reglas.')
+    elif not t.get("activa", True):
         out.update(modo="reglas", motivo="IA apagada a mano por Tomás (Sistema › Gasto de IA): la app va con reglas y lo precalculado, sin coste.",
                    llano="La IA está en pausa: la app sigue con reglas y lo ya preparado, sin coste.")
+    elif g['mes'] + reservado >= t['mes_eur'] or g['dia'] + reservado >= t['dia_eur']:
+        out.update(modo='reglas',motivo='Presupuesto comprometido por gasto y reservas; verificar resultados pendientes antes de comprar más.',llano=llano)
     elif g["mes"] >= t["mes_eur"]:
         out.update(modo="reglas", llano=llano, motivo=f"Tope del mes alcanzado ({_e(g['mes'])} de {_e(t['mes_eur'])}): modo reglas, sin coste, "
                    "hasta el día 1 o hasta que subas el tope en Sistema › Gasto de IA.")
@@ -296,58 +324,58 @@ def _umbrales(t):
 
 # ======================================================================= reservar y apuntar
 def _comprobar_y_reservar(tarea, quien, llave, maximo, t):
-    """Bajo candado: ¿cabe esta llamada (en su peor caso) en todos los topes? Si cabe, la reserva y devuelve su id."""
-    m = modo()
-    if m["modo"] == "reglas":
-        raise SinGasto(m["motivo"])
-    g = m["gastado"]
-    res_total = _reservado()
-    for periodo, sello, valor, tope in (("mes", _mes(), g["mes"], t["mes_eur"]), ("día", _hoy(), g["dia"], t["dia_eur"])):
-        if valor + res_total + maximo > tope:
-            if not res_total:
-                # Lo que queda no da ni para el peor caso de UNA petición: a efectos prácticos, el 100 %. Se corta el
-                # periodo entero (modo reglas para todos, aviso a Tomás) hasta que cambie el día/mes o Tomás suba el tope.
-                _CORTES[(periodo, sello)] = tope
-                avisar(f"IA: tope del {periodo} agotado ({_e(valor)} de {_e(tope)}; lo que queda no cubre ni una petición). "
-                       "La app ha pasado sola a modo reglas, sin coste. Si quieres más, sube el tope en Sistema › Gasto de IA.",
-                       f"corte:{periodo}:{sello}")
-            raise SinGasto(f"Esta petición podría pasar el tope del {periodo} ({_e(valor)} gastados de {_e(tope)}). Sale por reglas.")
-    tope_f = float((t.get("funcion_mes_eur") or {}).get(tarea, (t.get("funcion_mes_eur") or {}).get("otra", 0)))
-    gf = _suma("mes=? AND tarea=?", (_mes(), tarea))[0] + _reservado(tarea=tarea)
-    if gf + maximo > tope_f:
-        raise SinGasto(f"«{(TAREAS.get(tarea) or TAREAS['otra'])['nombre']}» ha llegado a su tope del mes ({_e(gf)} de {_e(tope_f)}). Sale por reglas.")
-    if quien not in ("tuberia", "sistema"):
-        tope_p = float(t["persona_dia_eur"]) * (2 if quien == "tomas" else 1)
-        gp = _suma("dia=? AND quien=?", (_hoy(), quien))[0] + _reservado(quien=quien)
-        if gp + maximo > tope_p:
-            raise SinGasto(f"Has llegado a tu tope de IA de hoy ({_e(gp)} de {_e(tope_p)}). Mañana vuelve; mientras, reglas y lo ya preparado.")
-    if llave == "respaldo":
-        gr = _suma("mes=? AND llave='respaldo'", (_mes(),))[0] + _reservado(llave="respaldo")
-        if gr + maximo > float(t["respaldo_mes_eur"]):
-            raise SinGasto("La llave de respaldo ha llegado a su tope del mes.")
-    _N[0] += 1
-    rid = f"r{_N[0]}"
-    _RESERVAS[rid] = (maximo, tarea, quien, llave)
+    _exigir_real()
+    maximo=_importe(maximo)
+    if tarea not in TAREAS or not isinstance(quien,str) or not quien or llave not in ('principal','respaldo'):
+        raise SinGasto("Reserva sin identidad/función válida.")
+    if _pausa_console(): raise SinGasto("Console en pausa; no se compra IA.")
+    with S.conectar() as con:
+        if con.in_transaction: raise SinGasto("No reservar sobre una transacción ajena.")
+        con.execute('BEGIN IMMEDIATE')
+        vigente=_topes_en(con)
+        if not vigente['activa']: raise SinGasto("IA pausada: modo reglas.")
+        maximo=math.ceil(maximo*max(1,vigente['usd_a_eur']/_importe(t['usd_a_eur']))*1e6)/1e6
+        total=_reservado_en(con)
+        for where,arg,tope in (('mes=?',_mes(),vigente['mes_eur']),('dia=?',_hoy(),vigente['dia_eur'])):
+            if _suma_en(con,where,(arg,))[0]+total+maximo>tope: raise SinGasto("La petición no cabe en el presupuesto vigente: modo reglas.")
+        if _suma_en(con,'mes=? AND tarea=?',(_mes(),tarea))[0]+_reservado_en(con,tarea=tarea)+maximo>vigente['funcion_mes_eur'][tarea]: raise SinGasto("Tope de función: modo reglas.")
+        if _suma_en(con,'dia=? AND quien=?',(_hoy(),quien))[0]+_reservado_en(con,quien=quien)+maximo>vigente['persona_dia_eur']*(2 if quien=='tomas' else 1): raise SinGasto("Tope personal: modo reglas.")
+        if llave=='respaldo' and _suma_en(con,"mes=? AND llave='respaldo'",(_mes(),))[0]+_reservado_en(con,llave='respaldo')+maximo>vigente['respaldo_mes_eur']: raise SinGasto("Tope de respaldo: modo reglas.")
+        _exigir_real()
+        rid=uuid.uuid4().hex
+        con.execute('INSERT INTO ia_reservas VALUES (?,?,?,?,?,?,?)',(rid,ahora().strftime('%Y-%m-%d %H:%M:%S'),tarea,quien,llave,maximo,'activa'))
     return rid
 
 
-def apuntar(tarea, quien, objeto, modelo, llave, uso, ok, motivo=None, lote=False, peticion=None, t=None):
+def _retener_reserva(rid):
+    with S.conectar() as con: con.execute("UPDATE ia_reservas SET estado='incierta' WHERE id=? AND estado='activa'",(rid,))
+
+
+
+def apuntar(tarea, quien, objeto, modelo, llave, uso, ok, motivo=None, lote=False, peticion=None, t=None, reserva_id=None):
     t = t or topes()
     usd, eur = coste(modelo, uso or {}, lote, t)          # lo que se ha gastado de verdad, salga bien o no
     a = ahora()
     with S.conectar() as con:
+        con.execute('BEGIN IMMEDIATE')
+        if reserva_id:
+            r=con.execute('SELECT tarea,quien,llave,estado FROM ia_reservas WHERE id=?',(reserva_id,)).fetchone()
+            if not r or tuple(r[:3])!=(tarea,quien,llave) or r[3]=='cerrada': raise SinGasto('Reserva no válida para apuntar el gasto.')
         con.execute("INSERT INTO ia_gasto (creada, dia, mes, quien, tarea, objeto, modelo, llave, lote, entrada, cache_escrita, cache_leida, "
                     "salida, coste_usd, coste_eur, ok, motivo, peticion) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                     (a.strftime("%Y-%m-%d %H:%M:%S"), a.strftime("%Y-%m-%d"), a.strftime("%Y-%m"), quien, tarea,
                      str(objeto)[:120] if objeto else None, modelo, llave, 1 if lote else 0,
                      int((uso or {}).get("entrada", 0)), int((uso or {}).get("cache_escrita", 0)) + int((uso or {}).get("cache_escrita_1h", 0)), int((uso or {}).get("cache_leida", 0)),
                      int((uso or {}).get("salida", 0)), usd, eur, 1 if ok else 0, motivo, peticion))
+        if reserva_id: con.execute("UPDATE ia_reservas SET estado='cerrada' WHERE id=?",(reserva_id,))
     return eur
 
 
 # ======================================================================= llaves
 def clave_respaldo():
     """Segunda clave (otro espacio de trabajo de la Console): ANTHROPIC_API_KEY_RESPALDO o llavero «anthropic_api_key_respaldo»."""
+    if not IA_REAL.autorizada():
+        return None
     if time.time() - _CLAVE_R["t"] < 300:
         return _CLAVE_R["v"]
     v = (os.environ.get("ANTHROPIC_API_KEY_RESPALDO") or "").strip() or None
@@ -362,8 +390,15 @@ def clave_respaldo():
 
 
 def _clave_principal():
+    if not IA_REAL.autorizada():
+        return None
     ia = sys.modules.get("ia")
     return ia.clave() if ia else (os.environ.get("ANTHROPIC_API_KEY") or None)
+
+
+def _exigir_real():
+    if not IA_REAL.autorizada():
+        raise SinGasto(IA_REAL.MOTIVO)
 
 
 # ======================================================================= proveedor (Anthropic de verdad)
@@ -415,15 +450,18 @@ class ProveedorAnthropic:
                 "cache_escrita_1h": una_hora, "cache_leida": g("cache_read_input_tokens"), "salida": g("output_tokens")}
 
     def crear(self, clave, modelo, sistema, contexto, esquema, effort, max_tokens, tarea=None):
+        _exigir_real()
         import anthropic
         cliente = anthropic.Anthropic(api_key=clave, timeout=180, max_retries=1)
         pet = self.peticion(modelo, sistema, contexto, esquema, effort, max_tokens, tarea)
+        _exigir_real()
         try:
             if modelo.startswith(("claude-opus-5", "claude-fable")):   # respaldo por rechazo dentro de la misma llamada
                 pet["betas"] = ["server-side-fallback-2026-07-01"]
                 try:
                     r = cliente.beta.messages.create(**pet, fallbacks="default")
                 except TypeError:
+                    _exigir_real()
                     r = cliente.beta.messages.create(**pet, extra_body={"fallbacks": "default"})
             else:
                 r = cliente.messages.create(**pet)
@@ -439,6 +477,7 @@ class ProveedorAnthropic:
 
     # ---------------- lotes (Batch API: la mitad de precio, resultado en menos de 24 h)
     def lote_crear(self, clave, peticiones):
+        _exigir_real()
         import anthropic
         cliente = anthropic.Anthropic(api_key=clave, timeout=120, max_retries=1)
         try:
@@ -449,6 +488,7 @@ class ProveedorAnthropic:
 
     def lote_resultados(self, clave, lote_id):
         """None si aún no ha terminado; si no, {custom_id: (salida|None, modelo, uso, motivo)}."""
+        _exigir_real()
         import anthropic
         cliente = anthropic.Anthropic(api_key=clave, timeout=120, max_retries=1)
         if cliente.messages.batches.retrieve(lote_id).processing_status != "ended":
@@ -482,100 +522,67 @@ def tarea_de(sistema):
 
 
 def llamar(sistema, contexto, esquema, effort="medium", tarea=None):
-    """La puerta ÚNICA hacia el proveedor. Devuelve (salida, modelo) como antes; lanza RuntimeError con un motivo legible.
-    Comprueba modo, «ver como», topes (con reserva del peor caso), elige modelo y llave, apunta el coste real y avisa."""
-    if S is None:
-        raise SinGasto("El control de gasto no está enganchado (ia_gasto.enganchar): no sale ninguna llamada.")
-    tarea = tarea or tarea_de(sistema)
+    """No compra sin identidad, conteo acreditado y reserva durable previa.
+
+    El adaptador actual no incorpora contar_entrada: permanece en reglas hasta
+    integrar y verificar ese contrato; no se infiere un máximo por caracteres.
+    """
+    _exigir_real()
+    if S is None: raise SinGasto("Control de gasto sin conectar: no se compra IA.")
     real, persona, objeto = peticion_actual()
-    if real and persona and real != persona:
-        raise SinGasto("En «ver como» no se genera nada nuevo (y no se gasta).")
-    quien = real or "tuberia"
+    if not isinstance(real,str) or not real or real != persona or real in ('tuberia','sistema'):
+        raise SinGasto("Falta identidad real/vista coincidente; no se compra IA en ver como ni sin contexto.")
+    tarea = tarea or tarea_de(sistema)
+    if tarea not in TAREAS: raise SinGasto("Función IA desconocida.")
     t = topes()
-    if tarea == "consejo" and objeto and objeto not in (t.get("consejo_pantallas") or []):
-        # la carcasa pide la versión de la IA en CADA pantalla que se abre: sin esto serían miles de llamadas al día.
-        raise SinGasto("Consejos con IA solo en Mi día; aquí van por reglas (sin coste).")
-    modelo = modelo_de(tarea)
-    max_tokens = (TAREAS.get(tarea) or TAREAS["otra"])["max_tokens"]
+    if tarea=='consejo' and objeto not in (t.get('consejo_pantallas') or []): raise SinGasto("Consejo fuera de pantalla autorizada: reglas.")
+    modelo = modelo_de(tarea); precio(modelo)
+    max_tokens = TAREAS[tarea]['max_tokens']
+    entrada = json.dumps([sistema,contexto,esquema],ensure_ascii=False,allow_nan=False)
+    if len(entrada.encode('utf-8'))>524288: raise SinGasto("Contexto demasiado extenso; no se compra IA.")
+    contador = getattr(PROVEEDOR,'contar_entrada',None)
+    if not callable(contador): raise SinGasto("Falta contador de entrada acreditado: modo reglas, sin compra.")
+    _exigir_real()
+    conteo = contador(modelo,sistema,contexto,esquema,effort,max_tokens,tarea=tarea)
+    if not isinstance(conteo,dict) or conteo.get('acreditado') is not True or conteo.get('modelo')!=modelo or type(conteo.get('tokens')) is not int or conteo['tokens']<0:
+        raise SinGasto("Conteo de entrada no acreditado para este modelo: no se compra IA.")
+    maximo = coste_maximo(modelo,entrada,max_tokens,t=t,entrada_tokens=conteo['tokens'])
     clave_p = _clave_principal()
-    if not clave_p:
-        raise SinGasto("IA sin conectar: falta la clave de Anthropic.")
-    entrada_txt = sistema + json.dumps(contexto, ensure_ascii=False) + json.dumps(esquema)
-    maximo = coste_maximo(modelo, entrada_txt, max_tokens, t=t)
-    with _CANDADO:
-        rid = _comprobar_y_reservar(tarea, quien, "principal", maximo, t)
-    llave = "principal"
+    if not clave_p: raise SinGasto("IA sin clave: no se compra.")
+    rid = _comprobar_y_reservar(tarea,real,'principal',maximo,t)
+    llave='principal'
     try:
         try:
-            salida, mod, uso, motivo = PROVEEDOR.crear(clave_p, modelo, sistema, contexto, esquema, effort, max_tokens, tarea=tarea)
+            _exigir_real()
+            salida,mod,uso,motivo=PROVEEDOR.crear(clave_p,modelo,sistema,contexto,esquema,effort,max_tokens,tarea=tarea)
         except ErrorProveedor as e:
-            if e.tipo == "tope_console":
-                apuntar(tarea, quien, objeto, modelo, llave, {}, False, f"tope_console: {e}", t=t)
-                avisar(f"IA: la Console de Anthropic ha cortado ({e}). La app pasa a modo reglas, sin coste. "
-                       "Sube el límite en la Console y pulsa «Reabrir» en Sistema › Gasto de IA.", f"console:{_hoy()}")
-                raise SinGasto("La IA ha llegado al tope de gasto de la Console: modo reglas, sin coste.")
-            clave_r = clave_respaldo()
-            if e.tipo != "caida" or not clave_r:
-                apuntar(tarea, quien, objeto, modelo, llave, {}, False, f"error: {e}", t=t)
-                raise RuntimeError(str(e))
-            # caída de la principal: una vez, por la de respaldo (con su propio tope)
-            apuntar(tarea, quien, objeto, modelo, llave, {}, False, f"caida: {e}", t=t)
-            avisar(f"IA: la llave principal de Anthropic ha fallado ({e}). Se usa la de respaldo, con su tope de "
-                   f"{_e(float(t['respaldo_mes_eur']))} al mes.", f"respaldo:{_hoy()}")
-            with _CANDADO:
-                _RESERVAS.pop(rid, None)
-                rid = _comprobar_y_reservar(tarea, quien, "respaldo", maximo, t)
-            llave = "respaldo"
-            try:
-                salida, mod, uso, motivo = PROVEEDOR.crear(clave_r, modelo, sistema, contexto, esquema, effort, max_tokens, tarea=tarea)
-            except ErrorProveedor as e2:
-                apuntar(tarea, quien, objeto, modelo, llave, {}, False, f"{e2.tipo}: {e2}", t=t)
-                raise RuntimeError(f"Anthropic no responde ni con la llave de respaldo ({e2}).")
-        apuntar(tarea, quien, objeto, mod or modelo, llave, uso, motivo is None, motivo, t=t)
-        if motivo:
-            raise RuntimeError(motivo)
-        return salida, mod or modelo
-    finally:
-        with _CANDADO:
-            _RESERVAS.pop(rid, None)
-        try:
-            _umbrales(t)
-        except Exception:
-            pass
+            _retener_reserva(rid)  # Un timeout/rechazo posterior no demuestra coste cero.
+            if e.tipo=='tope_console':
+                apuntar(tarea,real,objeto,modelo,llave,{},False,'tope_console: resultado incierto',t=t)
+                raise SinGasto('Console en pausa; reserva incierta conservada.')
+            if e.tipo!='caida': raise SinGasto('Resultado del proveedor incierto; reserva conservada.')
+            clave_r=clave_respaldo()
+            if not clave_r: raise SinGasto('Resultado incierto sin respaldo; reserva conservada.')
+            # La primera reserva continúa: el segundo request consume otro presupuesto.
+            rid=_comprobar_y_reservar(tarea,real,'respaldo',maximo,t); llave='respaldo'
+            _exigir_real()
+            salida,mod,uso,motivo=PROVEEDOR.crear(clave_r,modelo,sistema,contexto,esquema,effort,max_tokens,tarea=tarea)
+        if not isinstance(uso,dict) or not uso or 'entrada' not in uso or 'salida' not in uso:
+            raise SinGasto('Respuesta sin uso acreditado; reserva conservada.')
+        apuntar(tarea,real,objeto,mod or modelo,llave,uso,motivo is None,motivo,t=t,reserva_id=rid)
+        try: _umbrales(t)
+        except Exception: pass
+        if motivo: raise SinGasto('Respuesta no utilizable; gasto registrado.')
+        return salida,mod or modelo
+    except BaseException:
+        _retener_reserva(rid)
+        raise
+
 
 
 # ======================================================================= lotes nocturnos (lo que puede esperar)
 def lote_enviar(tarea, trabajos, quien="tuberia"):
-    """trabajos = [(custom_id, sistema, contexto, esquema, effort)]. Reserva el peor caso de TODO el lote (a mitad de precio)
-    contra los topes; si no cabe, no se envía. Devuelve el id del lote."""
-    t = topes()
-    modelo = modelo_de(tarea)
-    max_tokens = (TAREAS.get(tarea) or TAREAS["otra"])["max_tokens"]
-    pets, maximo = [], 0.0
-    for cid, sistema, contexto, esquema, effort in trabajos:
-        p = ProveedorAnthropic.peticion(modelo, sistema, contexto, esquema, effort, max_tokens, tarea)
-        pets.append((cid, p))
-        maximo += coste_maximo(modelo, sistema + json.dumps(contexto, ensure_ascii=False), max_tokens, lote=True, t=t)
-    clave_p = _clave_principal()
-    if not clave_p:
-        raise SinGasto("IA sin conectar: falta la clave de Anthropic.")
-    with _CANDADO:
-        rid = _comprobar_y_reservar(tarea, "tuberia", "principal", maximo, t)
-    try:
-        lote_id = PROVEEDOR.lote_crear(clave_p, pets)
-    except ErrorProveedor as e:
-        with _CANDADO:
-            _RESERVAS.pop(rid, None)
-        raise RuntimeError(str(e))
-    try:
-        with S.conectar() as con:
-            con.execute("INSERT INTO ia_lotes (id, creado, quien, tarea, llave, modelo, n, reservado_eur, estado, peticiones) VALUES (?,?,?,?,?,?,?,?,?,?)",
-                        (lote_id, ahora().strftime("%Y-%m-%d %H:%M:%S"), quien, tarea, "principal", modelo, len(pets), round(maximo, 4),
-                         "enviado", json.dumps([c for c, _ in pets])))
-    finally:   # desde aquí, el peor caso del lote queda reservado en ia_lotes (en la base: sobrevive a un reinicio)
-        with _CANDADO:
-            _RESERVAS.pop(rid, None)
-    return lote_id
+    raise SinGasto("Lotes en pausa: falta claim previo, conteo acreditado y recuperación durable validados. No se ha enviado nada.")
 
 
 def reservado_en_lotes():
@@ -587,24 +594,7 @@ def reservado_en_lotes():
 
 
 def lote_recoger(lote_id):
-    """Si el lote ha terminado: apunta el coste real de cada resultado (a mitad de precio) y devuelve {custom_id: salida}."""
-    with S.conectar() as con:
-        f = con.execute("SELECT tarea, modelo, quien, estado FROM ia_lotes WHERE id=?", (lote_id,)).fetchone()
-    if not f or f[3] != "enviado":
-        return {}
-    res = PROVEEDOR.lote_resultados(_clave_principal(), lote_id)
-    if res is None:
-        return None
-    t = topes()
-    out = {}
-    for cid, (salida, mod, uso, motivo) in res.items():
-        apuntar(f[0], f[2], cid, mod or f[1], "principal", uso, motivo is None, motivo, lote=True, peticion=lote_id, t=t)
-        if salida is not None:
-            out[cid] = salida
-    with S.conectar() as con:
-        con.execute("UPDATE ia_lotes SET estado='cerrado', cerrado=? WHERE id=?", (ahora().strftime("%Y-%m-%d %H:%M:%S"), lote_id))
-    _umbrales(t)
-    return out
+    raise SinGasto("Recogida de lotes en pausa: requiere conciliación idempotente verificada; no se libera su reserva.")
 
 
 # ======================================================================= pantalla «Gasto de IA» (solo Tomás)
@@ -663,7 +653,7 @@ def resumen():
         "lotes": [{"id": r[0], "creado": r[1], "tarea": r[2], "n": r[3], "reservado_eur": r[4], "estado": r[5], "cerrado": r[6]} for r in lotes],
         "llaves": {"principal": bool(_clave_principal()), "respaldo": bool(clave_respaldo()),
                    "respaldo_mes_eur": round(_suma("mes=? AND llave='respaldo'", (m,))[0], 4)},
-        "precios": {"fuente": FUENTE_PRECIOS, "fecha": FECHA_PRECIOS, "lote": DESCUENTO_LOTE,
+        "precios": {"fuente": FUENTE_PRECIOS, "fecha": FECHA_PRECIOS, "verificados": PRECIOS_VERIFICADOS, "lote": DESCUENTO_LOTE,
                     "modelos": {k: v for k, v in PRECIOS.items() if k in {modelo_de(x) for x in TAREAS} | {"claude-opus-5", "claude-sonnet-5", "claude-haiku-4-5"}}},
     }
 
@@ -673,12 +663,13 @@ def _num(v, nombre, lim):
         x = float(v)
     except (TypeError, ValueError):
         raise ValueError(f"«{nombre}» tiene que ser un número.")
-    if not (lim[0] <= x <= lim[1]) or math.isnan(x):
+    if isinstance(v,bool) or not math.isfinite(x) or not (lim[0] <= x <= lim[1]):
         raise ValueError(f"«{nombre}» tiene que estar entre {lim[0]} y {lim[1]}.")
     return round(x, 2)
 
 
 def validar(nuevos, actuales):
+    if not isinstance(nuevos,dict): raise ValueError("Topes mal formados.")
     out = json.loads(json.dumps(actuales))
     for k in ("mes_eur", "dia_eur", "aviso_pct", "persona_dia_eur", "respaldo_mes_eur", "usd_a_eur"):
         if k in nuevos:

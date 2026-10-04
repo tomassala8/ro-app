@@ -1,3 +1,6 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO } from '../componentes.js';
+import {ambitoSeguimiento453,pintarSeguimiento453} from './_seguimiento_metodo_453.js';
+import { separarCadencias, textoCadencia, estadoCadencia, ambitoCadencia307 } from './_cadencia_metodo.js';
 // modulos/reuniones.js · M15 «Reuniones» (E11 del plan v2 · punto 8 de Mili · D-06).
 // Reuniones de Zoom de toda la cuenta de RO: internas, con cliente o con gente de fuera (por los dominios de los
 // participantes), tipo por el prefijo del nombre (Daily, Coordinación, 1:1, Seguimiento, Formación, Cliente) o «sin tipo»
@@ -16,6 +19,7 @@ import { llevarA } from './_ir.js';
 import { plegarConsejo } from './_plegar_consejo.js';
 import { botonConfirmar } from '../componentes.js';
 import { PUESTO } from '../permisos.js';
+import { botonProponerFecha } from './_propuesta_reunion.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -33,9 +37,8 @@ function vigilarCortes(raiz) {
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const fDiaRO = iso => fechaCortaRO(FECHAS_RO.dia(iso));
+const fDiaHoraRO = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia ? `${fechaCortaRO(dia)}${hora ? `, ${hora}` : ''}` : '—'; };
 
 /** Revisión 44 (R2): el puesto por su nombre («Técnica de altas»), no el id con el guion bajo quitado («tecnico altas»). */
 const puestoLegible = (id, nombre = '') => {
@@ -44,12 +47,18 @@ const puestoLegible = (id, nombre = '') => {
   return t.replace(/^Setters$/, 'Setter');
 };
 
+// La capacidad del DTO puede proceder del fallback128h del productor: sólo referencia.
+export function referenciaCapacidadReuniones280(p){
+ const h=p?.horas,c=p?.capacidad_h;
+ if(typeof h!=='number'||!Number.isFinite(h)||h<0||typeof c!=='number'||!Number.isFinite(c)||c<=0)return null;
+ return {horas:h,referencia_h:c,pct:h/c*100};
+}
 const ID = 'reuniones';
 const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const nombreMes = m => MES[Number(String(m).slice(5, 7)) - 1] || m;
 const Mayus = t => t ? t[0].toUpperCase() + t.slice(1) : t;
 const MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const diaSeparador = dia => { const d = new Date(dia + 'T12:00:00'); return `${Mayus(d.toLocaleDateString('es-ES', { weekday: 'long' }))} ${d.getDate()}-${MES3[d.getMonth()]}`; };
+const diaSeparador = iso => { const dia = FECHAS_RO.dia(iso); return dia ? `${Mayus(FECHAS_RO.diaSemana(dia, true))} ${fechaCortaRO(dia)}` : 'Fecha por contrastar'; };
 const TIPOS = ['Daily', 'Coordinación', '1:1', 'Seguimiento', 'Formación', 'Cliente'];
 const ICONO_TIPO = { Daily: 'cal', 'Coordinación': 'eq', '1:1': 'persona', Seguimiento: 'hist', 'Formación': 'libro', Cliente: 'maletin', 'Sin tipo': 'info' };
 const AMBITO = {
@@ -59,11 +68,11 @@ const AMBITO = {
 };
 // Tonos de marca para repartir por tipo (sin semáforo: no es bueno ni malo, es reparto)
 const TONO_TIPO = { Daily: 'var(--navy)', 'Coordinación': 'var(--accent)', '1:1': 'var(--accent-2)', Seguimiento: 'var(--mid)', 'Formación': 'var(--dim)', Cliente: 'var(--accent-ink)', 'Sin tipo': 'var(--off)' };
-const hm = h_ => { const m = Math.round((h_ || 0) * 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
+const hm = h_ => { if(typeof h_!=='number'||!Number.isFinite(h_)||h_<0)return 'Sin dato'; const m = Math.round(h_ * 60); return m < 60 ? `${m} min` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ''}`; };
 
 // Sin hoja propia (N6, auditoría 30): solo clases comunes de estilos.css y atributos style con tokens.
 const ALTO_CLIC = () => (matchMedia('(max-width: 640px)').matches ? 'calc(var(--s-10) + var(--s-1))' : 'var(--s-8)');
-const nombreMesAnio = m => `${nombreMes(m)}${String(m).slice(0, 4) !== String(new Date().getFullYear()) ? ` de ${String(m).slice(0, 4)}` : ''}`;
+const nombreMesAnio = m => `${nombreMes(m)}${String(m).slice(0, 4) !== FECHAS_RO.hoy().slice(0, 4) ? ` de ${String(m).slice(0, 4)}` : ''}`;
 /** Enlace a una herramienta de fuera con forma de botón pequeño (objetivo de clic ≥ 32 px; 44 en el móvil). */
 const enlaceBt = (href, ico, texto, title) => h('a', { class: 'bt mini', href, target: '_blank', rel: 'noopener', title: title || null, style: { minHeight: ALTO_CLIC() } }, icono(ico), texto);
 
@@ -91,13 +100,20 @@ export default {
   // Periodo común (ronda 9): las reuniones se cuentan por mes (capacidad de 128 h al mes) → este mes o el anterior.
   usa_periodo: ['mes', 'mes_ant'],
   async render(cont, ctx) {
+    const identidad=[ctx.real?.id,ctx.persona?.id];
+    const vigente307=()=>identidad[0]===ctx.real?.id&&identidad[1]===ctx.persona?.id&&(typeof ctx.vigente!=='function'||ctx.vigente())&&(typeof ctx.veModulo!=='function'||ctx.veModulo(ID)===true);
+    if(!vigente307())return;
+    const ambito307=ambitoCadencia307(ctx);
+    const ambitoMetodo453=ambitoSeguimiento453(ctx);
     vigilarCortes(cont);
     let D;
     try { D = await ctx.datosModulo('reuniones/reuniones'); }
     catch (e) {
+      if(!vigente307()||!cont.isConnected)return;
       cont.append(vacio({ icono: 'video', tono: 'aviso', borde: true, titulo: 'No se pudieron leer las reuniones', texto: String(e?.message || e), quien: 'Tomás (volver a generar los datos de reuniones)' }));
       return;
     }
+    if(!vigente307()||!cont.isConnected)return;
     const cola = { tipos: new Map(), actas: new Map() };
     if (ctx.servidor) {
       try {
@@ -108,15 +124,23 @@ export default {
         }
       } catch { /* sin cola */ }
     }
+    if(!vigente307()||!cont.isConnected)return;
     const raiz = h('div', { class: 'pila', style: { gap: 'var(--s-5)', minWidth: '0' } });
     cont.append(raiz);
-    const S = { D, cola, reuniones: juntar(D, cola), periodo: ctx.periodo };
+    let metodo = null;
+    if (ctx.servidor && ctx.api) {
+      try { metodo = await ctx.api('metodo/sugerencias'); }
+      catch { /* Overlay no disponible: conservar listas históricas con su límite explícito. */ }
+    }
+    if (!cont.isConnected||!vigente307()) return;
+    if(ambito307.firma!==ambitoCadencia307(ctx).firma)metodo=null;
+    const S = { D, cola, metodo, ambitoMetodo453, firmaMetodo307:ambito307.firma, vigente307, reuniones: juntar(D, cola), periodo: ctx.periodo };
     // R15b: #/reuniones/<id> (id de la reunión, de la asistencia «reunión·persona» o «AAAA-MM-DD_HHMM») abre esa reunión:
     // su mes, la pestaña de la lista sin filtro y la tarjeta resaltada, al centro y con el foco (llevarA de _ir.js).
     const objetivo = ctx.params?.[0] ? buscarReunion(S.reuniones, ctx.params[0]) : null;
     if (objetivo) S.mesForzado = objetivo.mes;
-    S.rehacer = () => { S.reuniones = juntar(D, S.cola); raiz.replaceChildren(); pintar(raiz, ctx, S); };
-    ctx.alCambiarPeriodo?.(p => { if (!raiz.isConnected) return; S.periodo = p; S.mesForzado = null; raiz.replaceChildren(); pintar(raiz, ctx, S); });
+    S.rehacer = () => { if(!vigente307()||!raiz.isConnected)return; S.reuniones = juntar(D, S.cola); raiz.replaceChildren(); pintar(raiz, ctx, S); };
+    ctx.alCambiarPeriodo?.(p => { if (!raiz.isConnected||!vigente307()) return; S.periodo = p; S.mesForzado = null; raiz.replaceChildren(); pintar(raiz, ctx, S); });
     pintar(raiz, ctx, S);
     if (objetivo) {
       irA(raiz, 'lista', '', { suave: false });
@@ -131,13 +155,13 @@ export default {
 /** Mes que se enseña y mes con el que se compara, sacados del periodo común (este mes · mes anterior). */
 function mesesDelPeriodo(S) {
   if (S.mesForzado) {   // R15b: se llegó a una reunión exacta → su mes, comparado con el anterior que tenga datos
-    const mes = S.mesForzado;
+    const mes = FECHAS_RO.mes(S.mesForzado);
     return { mes, mesAnt: (S.D._meta?.meses || []).filter(m => m < mes).pop() || null, comparar: true };
   }
   const p = S.periodo;
-  const hoyMes = new Date().toISOString().slice(0, 7);
-  const mes = (p?.desde || hoyMes).slice(0, 7);
-  const mesAnt = p ? (p.comp ? p.comp.desde.slice(0, 7) : null) : ((S.D._meta?.meses || []).filter(m => m < mes).pop() || null);
+  const hoyMes = FECHAS_RO.mes();
+  const mes = p?.desde == null ? hoyMes : FECHAS_RO.mes(p.desde);
+  const mesAnt = p ? (p.comp ? FECHAS_RO.mes(p.comp.desde) : null) : ((S.D._meta?.meses || []).filter(m => m < mes).pop() || null);
   return { mes, mesAnt, comparar: p ? p.comparar !== 'no' : true };
 }
 
@@ -152,7 +176,8 @@ function pintar(raiz, ctx, S) {
   plegarConsejo(raiz);   // ronda U (#1): el consejo de la carcasa, en una línea
 
   const { mes, mesAnt, comparar } = mesesDelPeriodo(S);
-  const mesPeriodo = (S.periodo?.desde || new Date().toISOString()).slice(0, 7);
+  if (!mes) { raiz.append(avisoParcial('El periodo no tiene una fecha válida; elige un periodo para ver los registros.', { titulo: 'Periodo por contrastar.' })); return; }
+  const mesPeriodo = S.periodo?.desde == null ? FECHAS_RO.mes() : FECHAS_RO.mes(S.periodo.desde);
   if (S.mesForzado && S.mesForzado !== mesPeriodo) {   // R15b: se llegó por enlace a una reunión de otro mes
     raiz.append(avisoParcial(h('span', {}, `Has llegado por un enlace: ves ${nombreMesAnio(mes)}, el mes de esa reunión. `,
       h('button', { type: 'button', class: 'bt mini', style: { minHeight: ALTO_CLIC() }, on: { click: () => { S.mesForzado = null; history.replaceState(null, '', `#/${ID}`); raiz.replaceChildren(); pintar(raiz, ctx, S); } } },
@@ -181,13 +206,16 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
   const pmAnt = (S.D.por_persona_mes || []).filter(x => x.mes === mesAnt);
   const mio = pm.find(x => x.persona_id === yo);
   const mioAnt = pmAnt.find(x => x.persona_id === yo);
-  const horas = veEquipo ? pm.reduce((s, x) => s + x.horas, 0) : (mio?.horas || 0);
-  const horasAnt = veEquipo ? pmAnt.reduce((s, x) => s + x.horas, 0) : (mioAnt?.horas || 0);
+  const horas = veEquipo ? (pm.length&&pm.every(x=>typeof x.horas==='number'&&Number.isFinite(x.horas)&&x.horas>=0)?pm.reduce((s,x)=>s+x.horas,0):null) : (typeof mio?.horas==='number'&&Number.isFinite(mio.horas)&&mio.horas>=0?mio.horas:null);
+  const horasAnt = veEquipo ? (pmAnt.length&&pmAnt.every(x=>typeof x.horas==='number'&&Number.isFinite(x.horas)&&x.horas>=0)?pmAnt.reduce((s,x)=>s+x.horas,0):null) : (typeof mioAnt?.horas==='number'&&Number.isFinite(mioAnt.horas)&&mioAnt.horas>=0?mioAnt.horas:null);
   const internas = delMes.filter(r => r.ambito === 'interna');
   const conCli = delMes.filter(r => r.ambito !== 'interna');
   const sinTipo = delMes.filter(r => !r.tipo_final);
   const sinActa = delMes.filter(r => !r.con_acta);
-  const cli = (S.D.clientes || []);
+  const ambito307=ambitoCadencia307(ctx);
+  const metodo307=S.firmaMetodo307===ambito307.firma?S.metodo:null;
+  const cadencias = separarCadencias(S.D.clientes || [], metodo307,ambito307);
+  const cli = cadencias.historicos;
   const sinReu = cli.filter(c => c.estado === 'sin_reunion');
   const conDatosAnt = mesAnt && (meta.meses || []).includes(mesAnt);
   const comp = textoAnt => (!comparar ? null : { texto: compTexto(mes, mesAnt, conDatosAnt ? textoAnt : null) });
@@ -196,15 +224,15 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
     + (S.periodo?.id === 'mes' ? ' · el mes anterior, en «Más», arriba' : ''));   // R12 (A2): «Este mes» ya está elegido
 
   // ---- tiles: ronda U (#1, molde común) pasan a «Contexto y cifras» (plegado, debajo); arriba van las pestañas ----
-  const cap = veEquipo ? null : (mio?.capacidad_h || 128);
+  const refCap = veEquipo ? null : referenciaCapacidadReuniones280(mio);
   const tarjetas = (tiles([
     tile({ icono: 'video', etiqueta: veEquipo ? 'Reuniones del mes' : 'Mis reuniones', valor: fmt.num(delMes.length), unidad: 'grabadas',
       comparacion: comp(`${fmt.num(S.reuniones.filter(r => r.mes === mesAnt).length)} en ${nombreMes(mesAnt || '')}`),
       contexto: `${fmt.num(internas.length)} internas · ${fmt.num(conCli.length)} con cliente o gente de fuera`, medible: 'medias', medibleDetalle: 'Solo las grabadas: las demás llegan cuando Zoom dé el permiso', frescura: { fuente: 'Zoom', fecha: meta.zoom_leido },
       ir: 'Ver la lista', alPulsar: () => irA(cont, 'lista', '') }),
-    tile({ icono: 'clock', etiqueta: veEquipo ? 'Horas en reuniones' : 'Mis horas en reuniones', valor: hm(horas), unidad: veEquipo ? `${fmt.num(pm.length)} personas` : `${fmt.num(mio?.pct_capacidad ?? 0, 1)} % de ${cap} h`,
+    tile({ icono: 'clock', etiqueta: veEquipo ? 'Horas en reuniones' : 'Mis horas en reuniones', valor: hm(horas), unidad: veEquipo ? `${fmt.num(pm.length)} personas` : refCap ? `${fmt.num(refCap.pct, 1)} % ref. ${refCap.referencia_h} h` : 'Referencia de capacidad: sin dato',
       comparacion: comp(`${hm(horasAnt)} en ${nombreMes(mesAnt || '')}`),
-      contexto: 'Tiempo conectado a reuniones grabadas · capacidad 128 h al mes', medible: 'medias', medibleDetalle: 'Solo reuniones grabadas', frescura: { fuente: 'Zoom', fecha: meta.zoom_leido },
+      contexto: 'Tiempo conectado a reuniones grabadas · cobertura parcial; capacidad del DTO sólo como referencia', medible: 'medias', medibleDetalle: 'Solo reuniones grabadas', frescura: { fuente: 'Zoom', fecha: meta.zoom_leido },
       ir: veEquipo ? 'Ver por persona' : 'Ver la lista', alPulsar: () => irA(cont, veEquipo ? 'personas' : 'lista', '') }),
     tile({ icono: 'flag', etiqueta: 'Sin tipo', valor: fmt.num(sinTipo.length), unidad: `de ${fmt.num(delMes.length)}`,
       estado: delMes.length ? (sinTipo.length === 0 ? 'verde' : 'ambar') : '', contexto: 'El tipo va al principio del nombre («Daily ·», «Cliente ·»…). Clasifícalas con un clic', medible: 'hoy',
@@ -212,19 +240,28 @@ function pintarMes(cont, ctx, S, mes, mesAnt, veEquipo, comparar) {
     tile({ icono: 'doc', etiqueta: 'Sin acta', valor: fmt.num(sinActa.length), unidad: `de ${fmt.num(delMes.length)}`,
       estado: delMes.length ? (sinActa.length === 0 ? 'verde' : 'ambar') : '', contexto: 'Acta = grabación o resumen de Zoom, o un documento subido', medible: 'hoy',
       ir: 'Ver cuáles', alPulsar: () => irA(cont, 'lista', 'sin_acta') }),
-    cli.length ? tile({ icono: 'maletin', etiqueta: `Clientes sin reunión en ${nombreMes(meta.mes_pasado)}`, valor: fmt.num(sinReu.length), unidad: `de ${fmt.num(cli.filter(c => c.estado !== 'exento' && c.estado !== 'no_aplica').length)}`,
-      estado: sinReu.length === 0 ? 'verde' : 'rojo', contexto: 'Misma regla que En rojo: ninguna en CRM, Fathom, Zoom ni WhatsApp; mantenimiento exento',
+    cli.length ? tile({ icono: 'maletin', etiqueta: `Clientes sin registro de reunión en ${nombreMes(meta.mes_pasado)}`, valor: fmt.num(sinReu.length), unidad: `de ${fmt.num(cli.filter(c => c.estado !== 'exento' && c.estado !== 'no_aplica').length)}`,
+      estado: 'gris', contexto: 'Regla histórica mensual: falta de registro en fuentes parciales; no prueba ausencia de reunión ni incumplimiento. Cohorte15d excluida.',
       medible: 'medias', medibleDetalle: 'CRM, Fathom, verificación, Zoom grabado y WhatsApp cuando esté conectado', frescura: { fuente: 'CRM + Zoom', fecha: meta.generado },
       ir: 'Ver cuáles', alPulsar: () => irA(cont, 'clientes', 'sin_reunion') }) : null,
   ].filter(Boolean)));
 
+  if (cadencias.seguimiento.length) {
+    cont.append(panel({ titulo: 'Seguimiento cada 15 días · trafficker', icono: 'video',
+      sub: 'El trafficker lleva la reunión; el account coordina y verifica el registro. La cohorte confirmada se evalúa aparte de la regla mensual antigua.' },
+      h('div', { class: 'cuerpo pila' },
+        h('p', { class: 'sub', style: { margin: 0 } }, `Cobertura: ${metodo307?.cobertura_reuniones?.completa ? 'completa para el intervalo declarado' : 'parcial'}. Sin evidencia no se afirma incumplimiento. Evaluación: ${metodo307?.hoy || 'sin fecha'}.`),
+        pintarSeguimiento453(h,ctx,cadencias.seguimiento,metodo307,{ambitoInicial:S.ambitoMetodo453,vigente:()=>cont.isConnected&&S.vigente307()&&ambito307.firma===ambitoCadencia307(ctx).firma}))));
+  }
+  else if (!metodo307) cont.append(avisoParcial('No se pudo contrastar el seguimiento de 15 días. Las listas mensuales inferiores son referencias antiguas de registros, no una evaluación del método vigente ni de incumplimiento.', { titulo: 'Cadencia pendiente de contraste.' }));
+
   // ---- pestañas: lo de cada día, primero ----
-  // Ronda U (#9): la vista por defecto es «Clientes sin reunión este mes» con «Preparar» (la hoja de la reunión en la ficha)
+  // Ronda U (#9): la vista por defecto es «Sin registro mensual · otras cuentas» con «Preparar» (la hoja de la reunión en la ficha)
   // y «Proponer fecha»; las grabaciones van en la segunda pestaña.
-  const hoyMes = (ctx.hoy || new Date().toISOString()).slice(0, 7);
-  const sinEsteMes = cli.filter(c => c.estado !== 'exento' && c.estado !== 'no_aplica' && !(c.ultima && c.ultima.slice(0, 7) >= hoyMes) && !(c.proxima && c.proxima.slice(0, 7) === hoyMes));
+  const hoyMes = FECHAS_RO.mes(ctx.hoy || FECHAS_RO.hoy());
+  const sinEsteMes = cli.filter(c => c.estado !== 'exento' && c.estado !== 'no_aplica' && !(c.ultima && FECHAS_RO.mes(c.ultima) >= hoyMes) && !(c.proxima && FECHAS_RO.mes(c.proxima) === hoyMes));
   const tabs = [
-    cli.length ? { id: 'mes', texto: 'Clientes sin reunión este mes', icono: 'maletin', cuenta: sinEsteMes.length || null, cuentaEstado: 'rojo' } : null,
+    cli.length ? { id: 'mes', texto: 'Sin registro mensual · otras cuentas', icono: 'maletin', cuenta: sinEsteMes.length || null, cuentaEstado: 'rojo' } : null,
     { id: 'lista', texto: veEquipo ? 'Grabaciones' : 'Mis grabaciones', icono: 'video', cuenta: sinTipo.length || null, cuentaEstado: 'rojo' },
     veEquipo ? { id: 'personas', texto: 'Por persona', icono: 'eq' } : null,
     cli.length ? { id: 'clientes', texto: 'Reunión con cada cliente', icono: 'maletin', cuenta: sinReu.length || null, cuentaEstado: 'rojo' } : null,
@@ -253,16 +290,11 @@ function pintarClientesMes(cli, sinEsteMes, ctx, hoyMes) {
   const filas = sinEsteMes.map(c => ({ ...c, cli: cliPorId.get(c.cliente_id) || { nombre: c.cliente } }))
     .sort((a, b) => (b.dias_sin ?? 999) - (a.dias_sin ?? 999));
   const mesTxt = MES_NOMBRE(hoyMes);
-  const proponer = c => botonConfirmar({ texto: h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--s-1)' } }, icono('cal', { clase: 's' }), 'Proponer fecha'), mini: true, soloLectura: ctx.soloLectura,
-    pregunta: `¿Mandar a ${c.cliente} el correo para buscar fecha? Hoy queda simulado (no sale).`, confirmar: 'Sí, mandar',
-    alConfirmar: async () => {
-      const r = await ctx.accion({ herramienta: 'desk', tipo: 'correo', objeto: `reunion:${c.cliente_id}:${hoyMes}`, cliente_id: c.cliente_id,
-        texto: `Hola,\n\n¿Buscamos un hueco para la reunión de ${mesTxt}? Repasamos los resultados de ${MES_NOMBRE(String(Number(hoyMes.slice(5, 7)) === 1 ? `${+hoyMes.slice(0, 4) - 1}-12` : `${hoyMes.slice(0, 4)}-${String(+hoyMes.slice(5, 7) - 1).padStart(2, '0')}`))} y los próximos pasos (30 minutos). Dime qué día te va mejor esta semana o la que viene.\n\nUn saludo,\n${ctx.nombre(ctx.real.id)} · Ranking Online`,
-        vista_previa: { asunto: `Reunión de ${mesTxt} · ${c.cliente}`, plantilla: 'proponer_reunion' } });
-      return `Correo en la cola de envíos (n.º ${r?.id ?? '—'}) · simulado`;
-    } });
+  // 3-oct (Tomás): «Proponer fecha» abre el correo YA REDACTADO (huecos de la agenda, motivo, firma) en un editor grande;
+  // «Enviar» → «Enviado · Deshacer» y pasa por envios.py (hoy, simulado). Pieza común: _propuesta_reunion.js.
+  const proponer = c => botonProponerFecha(ctx, { cliente_id: c.cliente_id, cliente: c.cliente });
   const sub2 = t => h('span', { style: { display: 'block', font: 'var(--t-meta)', color: 'var(--dim)' } }, t);
-  return panel({ titulo: `Clientes sin reunión en ${mesTxt}`, icono: 'maletin', sub: 'Lo más antiguo arriba. «Preparar» abre la hoja de la reunión en la ficha (resultados, lo pendiente, temas abiertos y el acta).' },
+  return panel({ titulo: `Clientes sin registro de reunión en ${mesTxt}`, icono: 'maletin', sub: 'Lo más antiguo arriba. «Preparar» abre la hoja de la reunión en la ficha (resultados, lo pendiente, temas abiertos y el acta).' },
     tablaDensa({
       filas, buscar: filas.length > 8 ? { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' } : null, porPagina: 25,
       alPulsar: c => ctx.navegar(`ficha/${c.cliente_id}/reunion`), puedePulsar: c => !!c.cli.detalle,
@@ -272,11 +304,11 @@ function pintarClientesMes(cli, sinEsteMes, ctx, hoyMes) {
           c.cli.detalle ? h('a', { class: 'bt mini pri', href: `#/ficha/${c.cliente_id}/reunion`, style: { minHeight: ALTO_CLIC() }, on: { click: e => e.stopPropagation() } }, icono('video', { clase: 's' }), 'Preparar') : null,
           c.cli.detalle ? h('span', { on: { click: e => e.stopPropagation() } }, proponer(c)) : null) },
         { clave: 'dias_sin', titulo: 'Última', num: true, celda: c => h('span', {}, c.ultima ? fDiaRO(c.ultima) : 'sin dato', c.dias_sin != null ? sub2(`hace ${fmt.plural(c.dias_sin, 'día', 'días')}`) : null) },
-        { clave: 'estado', titulo: 'Mes pasado', celda: c => c.estado === 'sin_reunion' ? chipEstado('rojo', 'Ninguna') : chipEstado('verde', 'Sí') },
+        { clave: 'estado', titulo: 'Mes pasado', celda: c => c.estado === 'sin_reunion' ? chipEstado('gris', 'Sin registro') : chipEstado('gris', 'Registro · ver fuente') },
         { clave: 'enlaces', titulo: 'Abrir', ordenable: false, celda: c => atajos(c) },
       ],
       etiquetaFila: c => `${c.cliente}: preparar la reunión`,
-      vacio: { titulo: `Todos tus clientes tienen reunión en ${mesTxt}`, porque: 'Hecha o con fecha este mes.', celebrar: true },
+      vacio: { titulo: `No hay casos sin registro en ${mesTxt}`, porque: 'No hay casos en la copia disponible; una fecha programada no confirma celebración ni cobertura completa.', celebrar: false },
     }));
 }
 
@@ -284,7 +316,7 @@ function pintarClientesMes(cli, sinEsteMes, ctx, hoyMes) {
 function compTexto(mes, mesAnt, textoAnt) {
   if (!mesAnt) return 'primer mes con datos';
   if (!textoAnt) return `sin datos de ${nombreMesAnio(mesAnt)}`;
-  const hoy = new Date().toISOString().slice(0, 7);
+  const hoy = FECHAS_RO.mes();
   return mes === hoy ? `mes en curso · ${textoAnt}` : textoAnt;
 }
 
@@ -329,7 +361,7 @@ function pintarLista(reus, ctx, S, mes) {
     if (!lista.length) {
       caja.replaceChildren(h('div', { class: 'cuerpo' }, vacioLinea(reus.length
         ? (v === 'sin_tipo' ? 'Todas tienen tipo.' : v === 'sin_acta' ? 'Todas tienen acta.' : 'Ninguna con este filtro: cambia el filtro para ver el resto.')
-        : `Ninguna reunión grabada en ${nombreMesAnio(mes)}. Si una no aparece, se hizo fuera del Zoom de RO.`,
+        : `Ninguna reunión grabada en ${nombreMesAnio(mes)}. Si una no aparece, confirma fecha, grabación y cobertura; no se puede deducir dónde se hizo.`,
       { icono: reus.length && (v === 'sin_tipo' || v === 'sin_acta') ? 'ok' : 'video', quien: reus.length ? null : 'Cada persona (reuniones siempre desde una cuenta de Zoom de RO)' })));
       return;
     }
@@ -467,15 +499,18 @@ function pintarPersonas(pm, pmAnt, ctx, mes) {
   const filas = pm.map(x => ({ ...x, ant: ant.get(x.persona_id) || null })).sort((a, b) => b.horas - a.horas);
   const cuadro = t => h('i', { 'aria-hidden': 'true', style: { width: 'var(--s-3)', height: 'var(--s-3)', borderRadius: 'var(--r-s)', display: 'inline-block', background: TONO_TIPO[t] || 'var(--off)' } });
   return h('div', { class: 'pila' },
-    panel({ titulo: 'Horas de reunión por persona', icono: 'eq', sub: 'Sin juicio: cada puesto tiene su contexto (un account se reúne más que un diseñador). Capacidad: 128 h al mes.' },
+    panel({ titulo: 'Horas de reunión por persona', icono: 'eq', sub: 'Horas en reuniones grabadas. Porcentaje respecto a referencia del DTO, no jornada contractual ni evaluación de desempeño.' },
       tablaDensa({
         filas, buscar: { campos: ['persona', 'nombre'], placeholder: 'Buscar persona' },
         columnas: [
           { clave: 'persona', titulo: 'Persona', principal: true, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(x.nombre || x.persona)), h('span', { style: { display: 'grid' } }, h('span', { style: { font: 'var(--t-h3)' } }, x.persona), h('span', { style: { font: 'var(--t-meta)', color: 'var(--dim)' } }, (x.puestos || []).slice(0, 2).map(p => puestoLegible(p, x.nombre || x.persona)).join(' · ')))) },
           { clave: 'reuniones', titulo: 'Reuniones', num: true, celda: x => fmt.num(x.reuniones) },
           { clave: 'horas', titulo: 'Horas', num: true, celda: x => h('span', { style: { display: 'grid', justifyItems: 'end' } }, hm(x.horas), x.ant ? h('span', { style: { font: 'var(--t-meta)', color: 'var(--dim)' } }, `${x.horas >= x.ant.horas ? '▲' : '▼'} ${hm(Math.abs(x.horas - x.ant.horas))}`) : null) },
-          { clave: 'pct_capacidad', titulo: '% de su capacidad', num: true, celda: x => h('span', { title: `${hm(x.horas)} de ${x.capacidad_h} h`, style: { display: 'grid', gridTemplateColumns: 'minmax(var(--s-16), 1fr) auto', gap: 'var(--s-2)', alignItems: 'center', minWidth: '120px' } },
-            barraProgreso({ valor: x.pct_capacidad, max: 25, etiqueta: `${fmt.num(x.pct_capacidad, 1)} % de su capacidad` }), `${fmt.num(x.pct_capacidad, 1)} %`) },
+          { clave: 'pct_capacidad', titulo: '% / referencia', num: true, celda: x => {
+            const r=referenciaCapacidadReuniones280(x);
+            if(!r)return h('span',{class:'sub'},'Sin dato');
+            return h('span',{title:`${hm(r.horas)} registradas / referencia del DTO ${r.referencia_h} h; cobertura parcial, no jornada pactada.`,style:{display:'grid',justifyItems:'end'}},`${fmt.num(r.pct,1)} % ref.`,h('small',{},`${r.referencia_h} h de referencia`));
+          } },
           { clave: 'horas_internas', titulo: 'Internas', num: true, celda: x => hm(x.horas_internas) },
           { clave: 'horas_cliente', titulo: 'Con fuera', num: true, valor: x => x.horas_cliente + x.horas_externas, celda: x => hm(x.horas_cliente + x.horas_externas) },
           { clave: 'por_tipo', titulo: 'Reparto por tipo', ordenable: false, celda: x => {
@@ -490,7 +525,7 @@ function pintarPersonas(pm, pmAnt, ctx, mes) {
       }),
       h('div', { class: 'cuerpo fila', style: { gap: 'var(--s-2) var(--s-4)', font: 'var(--t-meta)', color: 'var(--dim)' } },
         h('span', {}, 'Reparto por tipo:'), tiposPresentes.map(t => h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, cuadro(t), t)))),
-    avisoParcial('El % de capacidad usa las horas en que cada persona estuvo conectada a una reunión GRABADA del Zoom de RO, frente a 128 h al mes. Con la grabación automática desde el 2-oct, octubre será el primer mes completo. La barra se llena al 25 % para que se vea.', { titulo: 'Orientativo.' }));
+    avisoParcial('La proporción usa sólo horas registradas en reuniones grabadas y la referencia numérica recibida. El productor puede rellenar esa referencia con128h: no confirma jornada, calendario ni cobertura del mes. Un mes sin filas no equivale a cero reuniones.', { titulo: 'Orientativo.' }));
 }
 
 // --------------------------------------------------- reunión con cada cliente
@@ -498,8 +533,8 @@ function pintarClientes(cli, ctx, meta) {
   const mes = meta.mes_pasado;
   const cuenta = e => cli.filter(c => c.estado === e).length;
   const opciones = [
-    { valor: 'sin_reunion', texto: 'Sin reunión', icono: 'alert', cuenta: cuenta('sin_reunion'), cuentaEstado: 'rojo' },
-    { valor: 'ok', texto: 'Con reunión', icono: 'ok', cuenta: cuenta('ok') },
+    { valor: 'sin_reunion', texto: 'Sin registro', icono: 'alert', cuenta: cuenta('sin_reunion'), cuentaEstado: 'gris' },
+    { valor: 'ok', texto: 'Con registro', icono: 'ok', cuenta: cuenta('ok') },
     { valor: 'exento', texto: 'Exentos', icono: 'escudo', cuenta: cuenta('exento') },
     { valor: 'no_aplica', texto: 'No aplica', icono: 'info', cuenta: cuenta('no_aplica') },
     { valor: '', texto: 'Todos', cuenta: cli.length },
@@ -519,26 +554,26 @@ function pintarClientes(cli, ctx, meta) {
       columnas: [
         { clave: 'cliente', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c.cli), h('span', { style: { overflowWrap: 'anywhere' } }, c.cliente)) },
         { clave: 'account', titulo: 'Account', celda: c => c.account_id ? h('span', { class: 'fila', style: { gap: 'var(--s-2)', flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(ctx.nombre(c.account_id))), ctx.nombre(c.account_id)) : chipEstado('ambar', 'Sin account') },
-        { clave: 'estado', titulo: `Reunión en ${nombreMes(mes)}`, celda: c => c.estado === 'ok' ? chipEstado('verde', (n => n ? `${fmt.num(n)} ${n === 1 ? 'reunión' : 'reuniones'}` : 'Sí · verificada a mano')(c.reuniones_crm + c.reuniones_zoom + (c.reuniones_fathom || 0) + (c.reuniones_whatsapp || 0)))
-          : c.estado === 'sin_reunion' ? chipEstado('rojo', 'Ninguna') : c.estado === 'exento' ? h('span', {}, chipEstado('gris', 'Exento'), sub2(c.motivo_exento || ''))
+        { clave: 'estado', titulo: `Reunión en ${nombreMes(mes)}`, celda: c => c.estado === 'ok' ? chipEstado('gris', (n => Number.isFinite(n)&&n>0 ? `${fmt.num(n)} ${n === 1 ? 'registro' : 'registros'}` : 'Registro · ver fuente')(c.reuniones_crm + c.reuniones_zoom + (c.reuniones_fathom || 0) + (c.reuniones_whatsapp || 0)))
+          : c.estado === 'sin_reunion' ? chipEstado('gris', 'Sin registro') : c.estado === 'exento' ? h('span', {}, chipEstado('gris', 'Exento'), sub2(c.motivo_exento || ''))
             : h('span', {}, chipEstado('gris', 'No aplica'), sub2(c.motivo_no_aplica || '')) },
         { clave: 'fuentes', titulo: 'Dónde', ordenable: false, celda: c => {
           const n = [['CRM', c.reuniones_crm], ['Fathom', c.reuniones_fathom], ['Zoom', c.reuniones_zoom], ['WhatsApp', c.whatsapp_conectado ? c.reuniones_whatsapp : null]];
           const con = n.filter(([, v]) => v);
-          return h('span', { style: { display: 'grid', gap: 'var(--s-1)', justifyItems: 'start' } }, con.length ? h('span', {}, con.map(([t, v]) => `${t} ${v}`).join(' · ')) : sub2('en ninguna fuente'),
+          return h('span', { style: { display: 'grid', gap: 'var(--s-1)', justifyItems: 'start' } }, con.length ? h('span', {}, con.map(([t, v]) => `${t} ${v}`).join(' · ')) : sub2('sin registros observados en estas fuentes'),
             c.whatsapp_conectado ? null : h('span', { title: 'Los grupos de WhatsApp aún no están conectados', style: { font: 'var(--t-meta)', color: 'var(--dim)' } }, 'WhatsApp: sin dato'));
         } },
         { clave: 'ultima', titulo: 'Última', celda: c => h('span', {}, c.ultima ? fDiaRO(c.ultima) : 'sin dato', c.ultima ? sub2(fmt.hace(c.ultima)) : null, c.proxima ? sub2(`próxima ${fDiaRO(c.proxima)}`) : null) },
-        { clave: 'dias_sin', titulo: 'Días sin', num: true, celda: c => c.dias_sin === null || c.dias_sin === undefined ? sub2('sin dato') : h('b', { style: { color: c.dias_sin > 45 ? 'var(--bad-ink)' : c.dias_sin > 35 ? 'var(--warn-ink)' : 'inherit' } }, fmt.num(c.dias_sin)) },
+        { clave: 'dias_sin', titulo: 'Días sin', num: true, celda: c => c.dias_sin === null || c.dias_sin === undefined ? sub2('sin dato') : h('b', { title:'Antigüedad del último registro observado; no prueba ausencia de reuniones.', style: { color: 'var(--dim)' } }, fmt.num(c.dias_sin)) },
         { clave: 'enlaces', titulo: 'Abrir', ordenable: false, celda: c => atajos(c) },
       ],
       etiquetaFila: c => `${c.cliente}: ${c.estado}. Abrir la ficha`,
-      vacio: { titulo: v === 'sin_reunion' ? 'Todos tus clientes tuvieron reunión' : 'Ninguno con este filtro', porque: v === 'sin_reunion' ? `Nadie se quedó sin reunión en ${nombreMes(mes)}.` : '', celebrar: v === 'sin_reunion' },
+      vacio: { titulo: v === 'sin_reunion' ? 'Sin casos en la lectura disponible' : 'Ninguno con este filtro', porque: v === 'sin_reunion' ? `No hay casos sin registro en ${nombreMes(mes)}.` : '', celebrar: false },
     }));
   };
   repintar();
   return h('div', { class: 'pila' },
-    panel({ titulo: `La reunión del ciclo · ${nombreMes(mes)}`, icono: 'maletin', sub: meta.regla_cliente },
+    panel({ titulo: `Registros mensuales · ${nombreMes(mes)}`, icono: 'maletin', sub: meta.regla_cliente },
       h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja),
     avisoParcial('Cuenta las reuniones del CRM, las llamadas de Fathom de Tomás, la verificación manual de septiembre, las del Zoom de RO de 20 minutos o más con un cliente reconocido y las de los grupos de WhatsApp en cuanto estén conectados. Es la misma regla que usa En rojo. Las videollamadas por Meet o el teléfono personal no se ven.', { titulo: 'De dónde sale.' }));
 }

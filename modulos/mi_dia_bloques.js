@@ -1,3 +1,6 @@
+import { secundariosCRM317, textoConteo317, referenciaAlta317 } from './_crm_secundario_317.js';
+import { prepararControlEquipo313 } from './_control_equipo_313.js';
+import { separarCadencias, textoCadencia, estadoCadencia, ambitoCadencia307 } from './_cadencia_metodo.js';
 // modulos/mi_dia_bloques.js · M1 «Mi día»: los bloques (uno por id de data/mi_dia/config.json → bloques) y
 // «el número que manda» de cada puesto. Es un ORQUESTADOR: nada se recalcula; cada bloque lee lo que su módulo
 // ya sirve recortado por servir.py (ctx.datosModulo) y lo resume en una cifra, un motivo y 5 filas como mucho.
@@ -13,6 +16,8 @@
 import { h, fmt, semaforo, icono, barraProgreso, embudoBarras, tarjetaCliente, chipEstado, colorCifra, fechas as FECHAS, hoyMadrid } from '../componentes.js';
 import { REGLAS } from '../permisos.js';
 import { alDia, revisionesDelAccount } from './produccion_comun.js';
+import { clientesDia314, metaDia314, totalMetaDia314, resultadosFilaDia314, crmDia314, fuenteCrmDia314 } from './_resultados_dia_314.js';
+import { normalizarPaid } from './_paid_mediciones.js';
 
 // ------------------------------------------------------------------ utilidades
 // V2 · «hoy» = el día de la agencia en Madrid (helper común de fechas, V2-E), nunca el reloj del Mac (Tomás en Bali)
@@ -154,73 +159,26 @@ def('decisiones_48h', ['decisiones/reloj'], (ctx, D, b) => {
   };
 });
 
-function resultadosClientes(ctx, D, b, defAlcance) {
-  const cap = D.dato('captacion/captacion');
-  const al = alcance(b, defAlcance);
-  const cl = (cap.clientes || []).filter(c => c.meta_activa && (al === 'todo' || esMio(ctx, c.cliente_id, [c.equipo?.account, c.equipo?.trafficker, c.equipo?.crm])));
-  const ayer = suma(cl, c => c.leads?.ayer);
-  const media = suma(cl, c => c.leads?.['7d']) / 7;
-  const filas = [];
-  const primero = [];
-  for (const c of cl) {
-    const s = (c.serie || []).slice(-3);
-    const sin3 = s.length === 3 && suma(s, x => x.leads_meta) === 0 && (s[0].gasto_meta === undefined || suma(s, x => x.gasto_meta) > 0);
-    const l7 = n0(c.leads?.['7d']), l7p = n0(c.leads?.['7d_prev']);
-    const caida = l7p >= 4 && l7 < l7p * 0.7;
-    const integ = (c.avisos || []).find(a => a.clase_id === 'integracion');
-    if (sin3) {
-      filas.push({ texto: `${c.nombre} · sin leads 3 días con la campaña encendida`, extra: `${fmt.num(l7)} en 7 días`, estado: 'rojo', icono: 'target', href: hrefCap(ctx, c.cliente_id) });
-      primero.push({ peso: 3, icono: 'target', motivo: `${c.nombre} · sin leads 3 días`, detalle: 'Campaña encendida y 0 leads: diagnóstico hoy (leads a cero más de 3 días).', ruta: sinAlmohadilla(hrefCap(ctx, c.cliente_id)), clave: `sinleads:${c.cliente_id}`, cliente_id: c.cliente_id });
-    } else if (caida) filas.push({ texto: `${c.nombre} · leads −${Math.round((1 - l7 / l7p) * 100)} % frente a la semana anterior`, extra: `${fmt.num(l7)} frente a ${fmt.num(l7p)}`, estado: 'ambar', icono: 'baja', href: hrefCap(ctx, c.cliente_id) });
-    if (integ) filas.push({ texto: `${c.nombre} · ${integ.texto}`, estado: 'ambar', icono: 'plug', href: hrefCap(ctx, c.cliente_id) });
-  }
-  const crm = D.opcional('crm/crm');
-  if (crm) {
-    const subs = (crm.subcuentas || []).filter(s => s.cliente_id && cl.some(c => c.cliente_id === s.cliente_id) && n0(s.sin_tocar_24h) > 0);
-    const sinTocar = suma(subs, s => s.sin_tocar_24h);
-    if (sinTocar) filas.push({ texto: `${plural(sinTocar, 'lead')} que los despachos no han llamado en 24 h`, extra: subs.sort((a, b2) => b2.sin_tocar_24h - a.sin_tocar_24h).slice(0, 2).map(s => `${s.nombre} ${s.sin_tocar_24h}`).join(' · '), estado: 'rojo', icono: 'phone', href: ir(ctx, 'salud-crm', subs[0]?.sub_id) });
-  }
-  const delta = media ? Math.round(((ayer - media) / media) * 100) : null;
-  return {
-    valor: fmt.num(ayer), unidad: `leads ayer · ${plural(cl.length, 'cuenta')}`,
-    estado: escala(filas.some(f => f.estado === 'rojo'), filas.some(f => f.estado === 'ambar')),
-    comparacion: delta === null ? null : { delta, pct: true, texto: `frente a ${fmt.num(media, 1)} de media en 7 días` },
-    motivo: cl.length ? `${plural(filas.filter(f => f.estado === 'rojo').length, 'cosa')} en rojo en ${plural(cl.length, 'cuenta')} con Meta encendida.` : 'Ninguna cuenta con Meta encendida en tu alcance.',
-    filas: filas.sort(ordenEstado),
-    vacio: cl.length ? { titulo: 'Tus despachos van bien', texto: 'Ninguno sin leads, sin caídas fuertes ni leads sin llamar.', tono: 'celebrar' } : { titulo: 'Sin cuentas con Meta encendida', texto: 'Cuando uno de tus clientes encienda campaña, sus resultados de ayer salen aquí.' },
-    frescura: fresco('Meta + GoHighLevel', cap.captacion_generado || cap.generado), medible: 'hoy', primero,
-  };
+function resultadosClientes(ctx,D,b,defAlcance){
+ const cap=D.dato('captacion/captacion'),hoy=ctx.hoy||hoyISO(),al=alcance(b,defAlcance);
+ const cl=clientesDia314(ctx,cap.clientes).filter(c=>c.meta_activa&&(al==='todo'||esMio(ctx,c.cliente_id,[c.equipo?.account,c.equipo?.trafficker,c.equipo?.crm])));
+ const filas=cl.map(c=>{const m=resultadosFilaDia314(c,cap,hoy);return {texto:c.nombre,extra:m.extra,estado:m.estado,icono:'target',href:hrefCap(ctx,c.cliente_id)};});
+ const primero=cl.map(c=>({c,m:resultadosFilaDia314(c,cap,hoy)})).filter(x=>x.m.cpl.evaluable&&x.m.cpl.estado==='rojo').map(({c,m})=>({peso:3,icono:'target',motivo:`${c.nombre} · CPL frente a objetivo propio`,detalle:m.cpl.nota,ruta:sinAlmohadilla(hrefCap(ctx,c.cliente_id)),clave:`cpl:${c.cliente_id}`,cliente_id:c.cliente_id}));
+ const crm=D.opcional('crm/crm');
+ if(crm){const subs=(crm.subcuentas||[]).filter(s=>cl.some(c=>c.cliente_id===s.cliente_id)).map(s=>crmDia314(s,crm,hoy)).filter(s=>s.sin_tocar_24h>0);
+ if(subs.length)filas.push({texto:`${plural(suma(subs,s=>s.sin_tocar_24h),'contacto')} sin intento registrado en24h; contrastar con el despacho`,extra:'Lectura CRM parcial; no mide respuesta ni cualificación',estado:'ambar',icono:'phone',href:ir(ctx,'salud-crm',subs[0].sub_id)});}
+ const ayer=totalMetaDia314(cl.map(c=>metaDia314(c,cap,'ayer',hoy)));
+ return {valor:ayer===null?null:fmt.num(ayer),unidad:`eventos lead Meta ayer · ${plural(cl.length,'cuenta')}`,estado:filas.some(f=>f.estado==='rojo')?'rojo':filas.some(f=>f.estado==='ambar')?'ambar':'gris',comparacion:null,
+ motivo:'Referencias anteriores separadas de eventos acreditados. No mide contactos únicos, cualificación ni ventas.',filas,primero,vacio:{titulo:'Sin observaciones en la copia autorizada',texto:'No acredita ausencia de problemas ni resultados.'},frescura:fresco('Meta + GoHighLevel',cap),medible:'medias'};
 }
 def('resultados_ayer', ['captacion/captacion', 'crm/crm'], (ctx, D, b) => resultadosClientes(ctx, D, b, 'todo'));
 /** R12 (auditoría A3): lo PRIMERO del account son los resultados de sus despachos: leads, citas, coste por lead y ventas
  *  de cada cliente de su cartera (asignaciones), de Captación (Meta + GoHighLevel). La salud va después. */
-def('resultados_mios', ['captacion/captacion', 'crm/crm'], (ctx, D, b) => {
-  const base = resultadosClientes(ctx, D, b, 'mio');
-  const cap = D.dato('captacion/captacion');
-  const cartera = silla(ctx, 'account') || ctx.carteraIds;
-  const mios = (cap.clientes || []).filter(c => cartera.has(c.cliente_id));
-  const activos = mios.filter(c => c.meta_activa);
-  const l7 = suma(activos, c => c.leads?.['7d']), l7p = suma(activos, c => c.leads?.['7d_prev']);
-  const citas = c => c.ghl?.citas?.['7d']?.agendadas;
-  const ventas = c => c.ghl?.embudo?.funnel?.cerrado;
-  const veCpl = activos.some(c => c.cpl?.['7d'] !== undefined);
-  const resumenCli = activos.slice().sort((x, y) => n0(y.leads?.['7d']) - n0(x.leads?.['7d'])).map(c => {
-    const cpl = c.cpl?.['7d'];
-    const partes = [`${plural(n0(c.leads?.['7d']), 'lead')} en 7 días`, citas(c) !== undefined ? `${plural(n0(citas(c)), 'cita')} en 7 días` : 'citas sin GoHighLevel',
-      cpl !== undefined && cpl !== null ? `${eurC(cpl)}/lead` : null, ventas(c) !== undefined ? `${plural(n0(ventas(c)), 'venta marcada', 'ventas marcadas')} (90 días)` : null].filter(Boolean);
-    return { texto: c.nombre, extra: partes.join(' · '), estado: cpl !== undefined ? colorCifra('coste_lead', cpl) : sev(c.severidad), icono: 'target', href: hrefCap(ctx, c.cliente_id) };
-  });
-  const sinMeta = [...cartera].filter(id => !activos.some(c => c.cliente_id === id)).length;
-  const problemas = (base.filas || []).filter(f => f.estado === 'rojo' || f.estado === 'ambar');
-  return {
-    ...base,
-    valor: fmt.num(l7), unidad: `leads en 7 días · ${plural(activos.length, 'cuenta')} con Meta encendida`,
-    estado: base.estado,
-    comparacion: l7p ? { delta: Math.round(((l7 - l7p) / l7p) * 100), pct: true, texto: 'frente a los 7 días anteriores' } : null,
-    motivo: `Ayer: ${plural(suma(activos, c => c.leads?.ayer), 'lead')}. ${problemas.length ? `${plural(problemas.filter(f => f.estado === 'rojo').length, 'cosa')} en rojo. ` : ''}${sinMeta ? `${sinMeta} de tus ${cartera.size} clientes sin campaña de Meta encendida.` : ''}${veCpl ? '' : ' El coste por lead no es visible para tu puesto.'}`.trim(),
-    filas: [...problemas, ...resumenCli],
-    vacio: activos.length ? base.vacio : { titulo: 'Ningún cliente tuyo con Meta encendida', texto: 'Cuando uno encienda campaña, sus leads, citas y ventas salen aquí.' },
-  };
+def('resultados_mios', ['captacion/captacion','crm/crm'], (ctx,D,b)=>{
+ const base=resultadosClientes(ctx,D,b,'mio'),cap=D.dato('captacion/captacion'),hoy=ctx.hoy||hoyISO(),cartera=silla(ctx,'account')||ctx.carteraIds;
+ const activos=clientesDia314(ctx,cap.clientes).filter(c=>cartera.has(c.cliente_id)&&c.meta_activa),l7=totalMetaDia314(activos.map(c=>metaDia314(c,cap,'7d',hoy)));
+ return {...base,valor:l7===null?null:fmt.num(l7),unidad:`eventos lead Meta en7 días · ${plural(activos.length,'cuenta')}`,comparacion:null,
+ filas:activos.map(c=>{const m=resultadosFilaDia314(c,cap,hoy);return {texto:c.nombre,extra:m.extra,estado:m.estado,icono:'target',href:hrefCap(ctx,c.cliente_id)};}).concat(base.filas.filter(f=>f.icono==='phone'))};
 });
 
 def('captacion_ro', ['ventas_ro/ventas_ro', 'finanzas/finanzas', 'finanzas/direccion'], (ctx, D) => {
@@ -494,7 +452,7 @@ def('adm_conciliacion', ['finanzas/finanzas'], (ctx, D) => {
 def('ronda_mili', ['mi_dia/ronda_mili'], (ctx, D, b, extra) => {
   const r = D.dato('mi_dia/ronda_mili');
   const dia = hoyDia().getDay();
-  const items = (r.items || []).filter(x => x.f === 'Cada día' || (x.f === 'Cada semana' && (dia === 1 || dia === 5)));
+  const items = (r.items || []).filter(x => x.f === 'Cada día' || (x.f === 'Cada semana' && (dia === 1 || dia === 5))).map(x => x.id === 'r1' && x.donde === 'equipo' && x.que === 'Que nadie del equipo se quede sin imputar: quien ayer no llegó a 8 h, avisado.' ? { ...x, que: 'Revisar los registros de horas del equipo y aclarar los datos pendientes.', prueba: 'Registros observados y cobertura; sin jornada confirmada no se evalúa una obligación de 8 h.', referencia547: x.que } : x);
   const hechas = new Set((extra.acciones || []).filter(a => a.tipo === 'ronda' && String(a.objeto).startsWith(hoyISO())).map(a => String(a.objeto).split(':')[1]));
   const n = items.filter(x => hechas.has(x.id)).length;
   return {
@@ -595,28 +553,21 @@ def('produccion_ops', ['produccion/produccion'], (ctx, D) => {
   };
 });
 
-def('equipo_control', ['incidencias/incidencias', 'verdad/equipo', 'bandeja/bandeja', 'produccion/produccion'], (ctx, D, b, extra) => {
+def('equipo_control', ['incidencias/incidencias', 'horas/horas', 'bandeja/bandeja', 'produccion/produccion'], (ctx, D, b, extra) => {
   const inc = D.dato('incidencias/incidencias');
-  const eq = D.opcional('verdad/equipo');
-  const noImputan = (eq?.no_imputan_ayer || []).map(x => nombre(ctx, x.persona_id));
-  // V2: «Contesta» y «Revisa» de cada persona con controlPersona (la misma vara que su «Tu cumplimiento», su Bandeja y su «Lo mío»)
   const ctl = (inc.control || []).map(x => {
     if (!x.persona_ref) return x;
     const cp = controlPersona(ctx, D, x.persona_ref, extra);
     return { ...x, contesta: cp.contesta ? { ...x.contesta, mas48: cp.contesta.mas48, correos: cp.contesta.total } : x.contesta, revisa: cp.revisa ? { ...x.revisa, mas48: cp.revisa.mas48, total: cp.revisa.total } : x.revisa };
   });
-  // V2 (M4): «ayer» = el último día laborable de verdad (sábado 3 → viernes 2); si el dato es de antes, se dice
-  const ultLab = FECHAS.ultimoLaborable();
-  const diaImp = eq?.ayer ? `${FECHAS.diaSemana(eq.ayer)} ${diaCorto(eq.ayer)}` : '';
-  const cuandoImp = !eq?.ayer ? 'ayer' : eq.ayer === ultLab ? `el último día laborable (${diaImp})` : `el ${diaImp} (último dato; el ${FECHAS.diaSemana(ultLab)} ${diaCorto(ultLab)} todavía no ha llegado)`;
-  const malo = x => [n0(x.imputa?.ayer) === 0, n0(x.revisa?.mas48) > 5, n0(x.contesta?.mas48) > 0, n0(x.reune?.sin_reunion) > 0, n0(x.reune?.sin_correo_sem) > 0];
-  const filas = ctl.slice().sort((a, b2) => malo(b2).filter(Boolean).length - malo(a).filter(Boolean).length);
-  const enRojo = ctl.filter(x => malo(x).some(Boolean)).length;
+  const filas=prepararControlEquipo313(ctx,ctl,D.opcional('horas/horas'));
+  const medidas=filas.filter(x=>x.control_313.celdas.imputa.tipo==='observado').length;
+  const referencias=filas.filter(x=>x.control_313.celdas.imputa.tipo==='referencia').length;
+  const dia=filas[0]?.control_313.fecha;
   return {
-    valor: enRojo, unidad: `de ${plural(ctl.length, 'persona')} con algo en rojo`, estado: enRojo ? 'rojo' : 'verde',
-    motivo: 'Mapa de control por persona: imputa, revisa, contesta, se reúne y escribe cada semana. Pulsa para ver el mapa entero.',
-    filas: noImputan.length ? [{ texto: `No imputaron ${cuandoImp}: ${noImputan.join(', ')}`, extra: `${noImputan.length} de ${eq.cuentan} personas que imputan`, estado: 'ambar', icono: 'clock', href: '#/horas' }] : [],
-    mapa: filas, frescura: fresco('Incidencias · mapa de control', inc), medible: 'hoy',
+    valor: filas.length||null, unidad: 'personas en el ámbito autorizado', estado: 'gris',
+    motivo: `Mapa de registros por persona. ${medidas?`${medidas} con horas observadas del ${dia} (última fecha lunes–viernes; calendario no acreditado).`:'Horas diarias: sin observaciones tipadas suficientes.'} ${referencias?`${referencias} con referencia heredada marcada.`:''} Cobertura parcial: no se evalúa jornada, ausencia ni cumplimiento desde huecos de la copia.`,
+    filas: [], mapa: filas, frescura: fresco('Incidencias · horas autorizadas', inc), medible: 'medias',
   };
 });
 
@@ -691,28 +642,11 @@ def('semaforo_cartera', ['verdad/clientes'], (ctx, D) => {
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'medias', medibleDetalle: 'Reglas de gravedad de la verdad única; la salud, fórmula provisional',
   };
 });
-def('resultados_nicho', ['captacion/captacion'], (ctx, D) => {
-  const cap = D.dato('captacion/captacion');
-  const g = new Map();
-  // V2 (M14): una tienda online (Kiosko) no capta leads de despacho: fuera de la suma por nicho, como en Captación
-  const tienda = c => !!c.tienda_online || ctx.clientes.find(x => x.id === c.cliente_id)?.tipo_negocio === 'tienda_online' || TIENDAS_ONLINE.has(c.cliente_id);
-  const tiendas = (cap.clientes || []).filter(x => x.meta_activa && tienda(x));
-  for (const c of (cap.clientes || []).filter(x => x.meta_activa && !tienda(x))) {
-    const k = (c.nicho || 'sin nicho').split('(')[0].trim();
-    const e = g.get(k) || { leads: 0, gasto: 0, n: 0, conGasto: true };
-    e.leads += n0(c.leads?.['7d']); e.n += 1;
-    if (c.gasto?.['7d'] === undefined) e.conGasto = false; else e.gasto += n0(c.gasto['7d']);
-    g.set(k, e);
-  }
-  const l = [...g.entries()].map(([k, e]) => ({ k, ...e, cpl: e.conGasto && e.leads ? e.gasto / e.leads : null })).sort((a, b) => (b.cpl ?? -1) - (a.cpl ?? -1));
-  const ocultoDinero = l.some(x => !x.conGasto);
-  const algunoVisible = l.some(x => x.cpl !== null);
-  return {
-    valor: l.length, unidad: 'nichos con Meta encendida', estado: '',
-    motivo: `${!ocultoDinero ? 'Coste por lead de 7 días por nicho; techo general de 35 € sin objetivo cargado (D-03).' : algunoVisible ? 'Leads de 7 días por nicho. El coste por lead sale solo en los nichos de tus clientes; el resto lo ven dirección, operaciones y publicidad.' : 'Leads de 7 días por nicho. El coste lo ven dirección, operaciones, publicidad y el account de cada cliente.'}${tiendas.length ? ` Fuera: ${tiendas.map(x => x.nombre).join(', ')} (tienda online, no capta despachos).` : ''}`,
-    filas: l.map(x => ({ texto: `${x.k} · ${plural(x.n, 'cuenta')}`, extra: x.cpl !== null ? `${plural(x.leads, 'lead')} · ${eurG(x.cpl)}/lead` : plural(x.leads, 'lead'), estado: colorCifra('coste_lead', x.cpl), icono: 'capas', href: '#/captacion' })),
-    frescura: fresco('Meta', cap), medible: 'hoy',
-  };
+def('resultados_nicho',['captacion/captacion'],(ctx,D)=>{
+ const cap=D.dato('captacion/captacion'),g=new Map();
+ for(const c of clientesDia314(ctx,cap.clientes).filter(c=>c.meta_activa)){const k=c.nicho||'Sin nicho';if(!g.has(k))g.set(k,[]);g.get(k).push(c);}
+ return {valor:g.size,unidad:'nichos con Meta encendida',estado:'gris',motivo:'Recuentos por cliente; no se combinan eventos de unidad desconocida ni costes de ventanas distintas.',
+ filas:[...g].map(([k,cs])=>({texto:`${k} · ${plural(cs.length,'cuenta')}`,extra:cs.map(c=>`${c.nombre}: ${resultadosFilaDia314(c,cap,ctx.hoy||hoyISO()).extra}`).join(' · '),estado:'gris',icono:'capas',href:'#/captacion'})),frescura:fresco('Meta',cap),medible:'medias'};
 });
 def('gatillos_motor', ['dinero_cliente/dinero_cliente', 'captacion/captacion'], (ctx, D) => {
   const dc = D.dato('dinero_cliente/dinero_cliente');
@@ -721,10 +655,10 @@ def('gatillos_motor', ['dinero_cliente/dinero_cliente', 'captacion/captacion'], 
   const l = (dc.clientes || []).filter(c => n0(c.vida_meses) >= 1 && n0(c.vida_meses) < 3).map(c => ({ ...c, f: embudo.get(c.cliente_id) }))
     .filter(c => !c.f || !n0(c.f.cerrado));
   return {
-    valor: l.length, unidad: 'en el mes 2-3 sin venta del despacho', estado: l.length ? 'ambar' : 'verde',
-    motivo: 'Mes 2 sin venta = ámbar; mes 3 = rojo. «Venta del despacho» sale de la etapa «cerrado» de su GHL, que no todos marcan.',
+    valor: l.length, unidad: 'en el mes 2-3 sin cierre registrado o sin dato', estado: l.length ? 'ambar' : 'verde',
+    motivo: 'La regla del generador anterior avisa en meses 2-3 si falta etapa de cierre o dato. No acredita cero ventas: contrastar resultado comercial; una etapa «cerrado» tampoco confirma venta.',
     filas: l.map(c => ({ texto: c.nombre, extra: `mes ${Math.floor(n0(c.vida_meses)) + 1} · ${c.f ? `${n0(c.f.cita)} citas, ${n0(c.f.presupuesto)} presupuestos` : 'sin embudo en GHL'}`, estado: n0(c.vida_meses) >= 2 ? 'rojo' : 'ambar', icono: 'zap', href: hrefCliente(ctx, c.cliente_id) })),
-    frescura: fresco('Airtable + GoHighLevel', dc), medible: 'medias', medibleDetalle: 'La venta del despacho solo cuenta si el despacho la marca en su GHL',
+    frescura: fresco('Airtable + GoHighLevel', dc), medible: 'medias', medibleDetalle: 'Cobertura de etapas de GHL; no confirma ventas ni ausencia de ventas',
   };
 });
 
@@ -850,17 +784,16 @@ def('primero_cartera', ['bandeja/bandeja', 'bandeja/por_cliente'], (ctx, D) => {
 def('clientes_tarjetas', ['verdad/clientes'], (ctx, D) => {
   // R12 (C1): salud, estado y motivo de la verdad única: lo mismo que dice la ficha de cada cliente
   const peso = { critico: 0, atencion: 1, bien: 2 };
-  const l = ctx.clientes.filter(c => c.enCartera).map(c => { const v = verdad(ctx, c.id) || {}; return { ...c, salud: saludV(ctx, c.id), grav: v.gravedad, mot: (v.motivos || [])[0] }; })
-    .sort((a, b) => (peso[a.grav] ?? 3) - (peso[b.grav] ?? 3) || (a.salud ?? 101) - (b.salud ?? 101));
+  const l = ctx.clientes.filter(c => c.enCartera).map(c => { const v = verdad(ctx, c.id) || {}; return { ...c, salud: Number.isFinite(v.salud) && v.salud >= 0 ? v.salud : null, grav: v.gravedad, mot: (v.motivos || [])[0] }; })
+    .sort((a, b) => (peso[a.grav] ?? 3) - (peso[b.grav] ?? 3));
   const conSalud = l.filter(c => typeof c.salud === 'number');
-  const bien = conSalud.filter(c => c.salud >= 60).length;
   const crit = l.filter(c => c.grav === 'critico').length;
   return {
-    valor: l.length, unidad: `clientes · ${bien} con salud ≥ 60 · ${crit} ${crit === 1 ? 'crítico' : 'críticos'}`, estado: crit ? 'rojo' : semaforo(pct(bien, conSalud.length), { verde: 80, ambar: 60 }),
-    motivo: 'Lo crítico arriba y, dentro, de peor a mejor salud. Estado, salud y motivo: los mismos que la ficha.',
-    filas: l.map(c => ({ texto: `${c.nombre} · ${GRAV_TXT[c.grav] || 'sin estado'}${typeof c.salud === 'number' ? ` · salud ${c.salud}` : ''}`, extra: c.mot || '', estado: GRAV_EST[c.grav] || 'gris', icono: 'cli', href: hrefCliente(ctx, c.id) })),
+    valor: l.length, unidad: `clientes · ${conSalud.length} con índice registrado · ${crit} ${crit === 1 ? 'crítico' : 'críticos'}`, estado: crit ? 'rojo' : l.some(c => c.grav === 'atencion') ? 'ambar' : l.length && l.every(c => c.grav === 'bien') ? 'verde' : 'gris',
+    motivo: 'Estado registrado: lo crítico arriba. El índice registrado es provisional; no acredita desempeño, cobertura ni cumplimiento.',
+    filas: l.map(c => ({ texto: `${c.nombre} · ${GRAV_TXT[c.grav] || 'sin estado'}${typeof c.salud === 'number' ? ` · índice registrado ${c.salud}` : ''}`, extra: c.mot || '', estado: GRAV_EST[c.grav] || 'gris', icono: 'cli', href: hrefCliente(ctx, c.id) })),
     vacio: { titulo: 'Sin clientes asignados', texto: 'Cuando Mili te asigne clientes en Ajustes, salen aquí.', quien: 'Mili' },
-    frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'medias', medibleDetalle: 'Fórmula de salud provisional',
+    frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')), medible: 'medias', medibleDetalle: 'Índice provisional; el color procede del estado registrado, no del índice',
   };
 });
 /** R12 (A4): los correos y llamadas pendientes con la MISMA regla que la pantalla Bandeja (lo que el servidor manda a
@@ -881,9 +814,12 @@ const fresBandeja = bj => ['desk', 'zadarma'].map(k => { const f = bj.fuentes?.[
 /** Clientes sin la reunión del mes pasado: la regla de Reuniones con la verdad única («Reuniones» y «Tu cumplimiento»). */
 function reunionesCartera(ctx, D, al = 'mio') {
   const r = D.dato('reuniones/reuniones');
-  const l = (r.clientes || []).filter(c => (al === 'todo' || c.account_id === yo(ctx) || ctx.carteraIds.has(c.cliente_id)) && !['exento', 'no_aplica'].includes(c.estado));
+  const metodo = D.opcional('metodo/sugerencias');
+  const { historicos, seguimiento } = separarCadencias(r.clientes || [], metodo,ambitoCadencia307(ctx));
+  const l = historicos.filter(c => (al === 'todo' || c.account_id === yo(ctx) || ctx.carteraIds.has(c.cliente_id)) && !['exento', 'no_aplica'].includes(c.estado));
+  const actuales = seguimiento.filter(c => al === 'todo' || ctx.carteraIds.has(c.cliente_id) || c.responsable_id === yo(ctx));
   const sinR = c => { const v = verdad(ctx, c.cliente_id); return v && v.sin_reunion_mes_pasado !== undefined ? v.sin_reunion_mes_pasado : c.estado === 'sin_reunion'; };
-  return { r, l, sinR, sin: l.filter(sinR) };
+  return { r, l, metodo, actuales, sinR, sin: l.filter(sinR) };
 }
 def('bandeja_mia', ['bandeja/bandeja'], (ctx, D, b, extra) => {
   const { bj, c, ll, rojo, ambar } = bandejaComoPantalla(ctx, D, extra);
@@ -897,14 +833,16 @@ def('bandeja_mia', ['bandeja/bandeja'], (ctx, D, b, extra) => {
       .map(x => ({ peso: x.queja ? 3.6 : 3.1, icono: x.queja ? 'megafono' : 'mail', motivo: x.cliente ? `${x.cliente} · correo sin contestar` : `Correo sin contestar · «${x.asunto}»`, detalle: `${x.cliente ? `«${x.asunto}» · ` : 'Sin cliente reconocido · '}${esperaTxt(x)}`, ruta: `bandeja/${encodeURIComponent(x.id)}`, clave: `correo:${x.id}`, cliente_id: x.cliente_id, grupo: x.cliente_id ? `correo-cli:${x.cliente_id}` : null })),
   };
 });
-def('reuniones_ciclo', ['reuniones/reuniones'], (ctx, D, b) => {
-  const { r, l, sinR, sin } = reunionesCartera(ctx, D, alcance(b, 'mio'));
+def('reuniones_ciclo', ['reuniones/reuniones', 'metodo/sugerencias'], (ctx, D, b) => {
+  const { r, l, metodo, actuales, sinR, sin } = reunionesCartera(ctx, D, alcance(b, 'mio'));
   const sinProx = l.filter(c => !c.proxima);
+  const inventario = l.length + actuales.length;
+  const cadenciaConfirmada = c => /^\d{4}-\d{2}-\d{2}$/.test(c.ultima_confirmada || '') && c.ultima_confirmada <= ctx.hoy && /^\d{4}-\d{2}-\d{2}$/.test(c.proxima_revision || '') && c.proxima_revision >= ctx.hoy;
   return {
-    valor: sin.length, unidad: `sin la reunión de ${MESES[Number((r._meta?.mes_pasado || mesAnterior()).slice(5)) - 1]}`, estado: sin.length ? 'rojo' : sinProx.length ? 'ambar' : 'verde',
-    motivo: `Reunión del ciclo según su cadencia (D-08). ${plural(sinProx.length, 'cliente')} sin próxima fecha.`,
-    filas: [...sin, ...sinProx.filter(c => !sin.includes(c))].map(c => ({ texto: c.cliente, extra: sinR(c) ? `sin reunión · última ${c.ultima ? diaCorto(c.ultima) : 'nunca'}` : `sin próxima fecha · última ${c.ultima ? diaCorto(c.ultima) : '—'}`, estado: sinR(c) ? 'rojo' : 'ambar', icono: 'video', href: hrefCliente(ctx, c.cliente_id, 'comunicacion') })),
-    vacio: { titulo: 'Todas las reuniones del ciclo hechas', tono: 'celebrar' }, frescura: fresco('Zoom + CRM + Fathom', r), medible: 'hoy',
+    valor: inventario ? sin.length : null, unidad: `sin registro mensual del periodo ${/^\d{4}-\d{2}$/.test(r._meta?.mes_pasado || '') ? r._meta.mes_pasado : 'no confirmado'} (registro histórico)`, estado: actuales.some(c => estadoCadencia(c) === 'ambar') ? 'ambar' : actuales.some(c => estadoCadencia(c) === 'gris' || !cadenciaConfirmada(c)) || l.length > 0 || !(l.length + actuales.length) || !metodo || metodo.hoy !== ctx.hoy || !r._meta?.generado ? 'gris' : 'verde',
+    motivo: `Registros mensuales de otras cuentas: ${plural(sinProx.length, 'cliente')} sin próxima fecha; fuentes parciales, no incumplimiento. ${actuales.length} cuentas de seguimiento15d con trafficker, separadas. ${metodo ? '' : 'Overlay no disponible: confirmar cadencia vigente.'} ${!inventario ? 'Sin inventario suficiente: no se acredita cumplimiento.' : l.length ? 'Registros mensuales históricos: no acreditan una obligación vigente.' : ''}`,
+    filas: [...actuales.map(c => ({ texto: c.cliente || nomCli(ctx, c.cliente_id) || c.cliente_id, extra: `Seguimiento cada15d con trafficker · ${textoCadencia(c)}`, estado: estadoCadencia(c), icono: 'video', href: '#/prioridades-cliente' })), ...[...sin, ...sinProx.filter(c => !sin.includes(c))].map(c => ({ texto: c.cliente, extra: sinR(c) ? `sin registro · última ${c.ultima ? diaCorto(c.ultima) : 'sin dato'}` : `sin próxima fecha · última ${c.ultima ? diaCorto(c.ultima) : '—'}`, estado: 'gris', icono: 'video', href: hrefCliente(ctx, c.cliente_id, 'comunicacion') }))],
+    vacio: { titulo: 'Sin casos en los registros disponibles', texto: 'No acredita cobertura completa ni cumplimiento de reunión.' }, frescura: fresco('Zoom + CRM + Fathom', r), medible: 'hoy',
   };
 });
 def('trabajo_account', ['produccion/produccion', 'informes/informes'], (ctx, D, b, extra) => {
@@ -929,7 +867,7 @@ def('trabajo_account', ['produccion/produccion', 'informes/informes'], (ctx, D, 
     filas, vacio: { titulo: 'Trabajo al día', tono: 'celebrar' }, frescura: fresco('ClickUp + Desk', p), medible: 'hoy',
   };
 });
-def('cumplimiento', ['incidencias/incidencias', 'bandeja/bandeja', 'produccion/produccion', 'reuniones/reuniones'], (ctx, D, b, extra) => {
+def('cumplimiento', ['incidencias/incidencias', 'bandeja/bandeja', 'produccion/produccion', 'reuniones/reuniones', 'metodo/sugerencias'], (ctx, D, b, extra) => {
   const inc = D.dato('incidencias/incidencias');
   const c = (inc.control || []).find(x => x.persona_id === yo(ctx));
   if (!c) return { valor: null, unidad: '', estado: 'gris', motivo: 'Todavía no hay mapa de control para ti.', filas: [], vacio: { titulo: 'Sin datos de control', texto: 'El mapa de control sale de Incidencias (M14) para quien lleva clientes.' }, frescura: fresco('Incidencias', inc), medible: 'medias' };
@@ -944,7 +882,7 @@ def('cumplimiento', ['incidencias/incidencias', 'bandeja/bandeja', 'produccion/p
     { texto: 'Imputa', extra: `ayer ${fmt.num(c.imputa?.ayer, 1)} h · semana ${fmt.pct(c.imputa?.pct_sem)}`, estado: n0(c.imputa?.ayer) ? 'verde' : 'ambar', icono: 'clock' },
     { texto: 'Contesta', extra: `${fmt.num(contesta.mas48)} de ${plural(n0(contesta.total), 'correo')} sin contestar llevan más de 48 h (como tu Bandeja)`, estado: n0(contesta.mas48) ? 'rojo' : 'verde', icono: 'mail' },
     { texto: 'Revisa', extra: `${fmt.num(revisa.mas48)} de tus ${plural(n0(revisa.total), 'revisión del account', 'revisiones del account')} llevan más de 48 h (como Producción)`, estado: n0(revisa.mas48) > 5 ? 'rojo' : n0(revisa.mas48) ? 'ambar' : 'verde', icono: 'capas' },
-    { texto: 'Se reúne y escribe', extra: `${plural(n0(sinReunion), 'cliente')} sin la reunión del mes pasado · ${fmt.num(c.reune?.sin_correo_sem)} sin correo esta semana`, estado: n0(sinReunion) ? 'rojo' : n0(c.reune?.sin_correo_sem) ? 'ambar' : 'verde', icono: 'video' },
+    { texto: 'Coordina registros y escribe', extra: `${plural(n0(sinReunion), 'cliente')} sin registro mensual antiguo (fuentes parciales; no incumplimiento) · ${ru?.actuales?.length || 0} cuentas15d con trafficker separadas · ${fmt.num(c.reune?.sin_correo_sem)} sin correo esta semana`, estado: n0(sinReunion) ? 'rojo' : n0(c.reune?.sin_correo_sem) ? 'ambar' : 'verde', icono: 'video' },
     { texto: 'Llama', extra: `${fmt.num(c.llama?.sem)} llamadas esta semana`, estado: 'gris', icono: 'phone' },
   ];
   const rojos = filas.filter(f => f.estado === 'rojo').length;
@@ -957,7 +895,8 @@ def('cumplimiento', ['incidencias/incidencias', 'bandeja/bandeja', 'produccion/p
 
 // ------------------------------------------------------------- Publicidad (trafficker y Valeria)
 function cuentas(ctx, D, b, def2) {
-  const cap = D.dato('captacion/captacion');
+  const original = D.dato('captacion/captacion');
+  const cap = {...original,clientes:clientesDia314(ctx,original.clientes).map(c=>normalizarPaid(c,original,ctx.hoy||hoyISO()))};
   const al = alcance(b, def2);
   // R12 (B-A04): «mis cuentas» = la cartera de trafficker de las ASIGNACIONES (la misma de Personas y Dinero por cliente)
   // V2 (B-A3): con la cifra única de Captación (carteras_publicidad[persona]: principal + apoyo), la misma de «Mis cuentas»
@@ -988,7 +927,7 @@ def('cuentas_problema', ['captacion/captacion'], (ctx, D, b) => {
   const cp = cap.carteras_publicidad?.[yo(ctx)];
   const ids = new Set(todo ? (cap.criticos_casa || []) : (cp ? [...(cp.con_meta_ids || cp.principal || [])].filter(id => verdad(ctx, id)?.gravedad === 'critico') : l.filter(c => verdad(ctx, c.cliente_id)?.gravedad === 'critico').map(c => c.cliente_id)));
   const porId = new Map((cap.clientes || []).map(c => [c.cliente_id, c]));
-  const crit = [...ids].map(id => porId.get(id) || { cliente_id: id, nombre: nomCli(ctx, id) || id, equipo: {} });
+  const crit = [...ids].filter(id=>porId.has(id)).map(id=>porId.get(id));
   const urgentes = l.filter(c => c.severidad === 'critico' && !ids.has(c.cliente_id));
   const mia = !todo ? silla(ctx, 'trafficker') : null;
   const motivoMeta = c => sinImporte((c.motivos || [])[0]?.texto) || '';
@@ -1009,9 +948,9 @@ def('tabla_cuentas', ['captacion/captacion'], (ctx, D, b) => {
   const { cap, l } = cuentas(ctx, D, b, 'mio');
   const a = l.filter(c => c.meta_activa).sort((x, y) => ordenEstado({ estado: sev(x.severidad) }, { estado: sev(y.severidad) }));
   return {
-    valor: a.length, unidad: 'cuentas con Meta encendida', estado: escala(a.some(c => c.severidad === 'critico'), a.some(c => c.severidad === 'atencion')),
-    motivo: 'Gasto de ayer, leads y coste por lead de 7 días, con su semáforo (techo 35 €/lead sin objetivo, D-03).',
-    filas: a.map(c => ({ texto: c.nombre, extra: `${plural(n0(c.leads?.['7d']), 'lead')} en 7 días${c.cpl?.['7d'] !== undefined ? ` · ${eurG(c.cpl['7d'])}/lead · ayer ${eurG(c.gasto?.ayer)}` : ''}`, estado: sev(c.severidad), icono: 'res', href: hrefCap(ctx, c.cliente_id) })),
+    valor: a.length, unidad: 'cuentas con Meta encendida', estado: a.some(c=>c.severidad==='critico')?'rojo':a.some(c=>c.severidad==='atencion')?'ambar':'gris',
+    motivo: 'Resultados observados y referencias anteriores separados. El CPL requiere unidad, ventana y objetivo propios confirmados.',
+    filas: a.map(c => {const m=resultadosFilaDia314(c,cap,ctx.hoy||hoyISO());return { texto:c.nombre,extra:m.extra,estado:m.estado,icono:'res',href:hrefCap(ctx,c.cliente_id)};}),
     frescura: fresco('Meta', cap.captacion_generado || cap), medible: 'hoy',
   };
 });
@@ -1021,22 +960,17 @@ def('anomalias', ['captacion/captacion'], (ctx, D, b) => {
   for (const c of l) for (const m of c.motivos || []) if (/subió|bajó|cayó|frente a/i.test(m.texto)) an.push({ c, m });
   an.sort((x, y) => n0(y.c.gasto?.['7d']) - n0(x.c.gasto?.['7d']));
   return {
-    valor: an.length, unidad: 'cambios bruscos', estado: an.some(x => x.m.nivel === 'critico') ? 'rojo' : an.length ? 'ambar' : 'verde',
+    valor: an.length, unidad: 'señales anteriores por contrastar', estado:'gris',
     motivo: 'Frente a su media de 7 días, ordenados por dinero en juego.',
-    filas: an.map(x => ({ texto: `${x.c.nombre} · ${x.m.texto}`, extra: nombre(ctx, x.c.equipo?.trafficker), estado: x.m.nivel === 'critico' ? 'rojo' : 'ambar', icono: 'sube', href: hrefCap(ctx, x.c.cliente_id) })),
-    vacio: { titulo: 'Sin cambios bruscos', tono: 'celebrar' }, frescura: fresco('Meta', cap.captacion_generado || cap), medible: 'hoy',
+    filas: an.map(x => ({ texto: `${x.c.nombre} · ${x.m.texto}`, extra: nombre(ctx, x.c.equipo?.trafficker), estado:'gris',icono:'sube',href:hrefCap(ctx,x.c.cliente_id)})),
+    vacio: { titulo:'Sin señales en la copia autorizada'},frescura:fresco('Meta',cap.captacion_generado||cap),medible:'medias',
   };
 });
-def('embudo_cuentas', ['captacion/captacion'], (ctx, D, b) => {
-  const { cap, l } = cuentas(ctx, D, b, 'mio');
-  const a = l.filter(c => c.ghl?.conectado && n0(c.ghl?.embudo?.contactos_90d));
-  const rotos = a.filter(c => (c.cuello || []).some(x => x !== 'paid'));
-  return {
-    valor: rotos.length, unidad: `de ${a.length} con el embudo roto fuera de la publicidad`, estado: rotos.length ? 'ambar' : 'verde',
-    motivo: 'Lead → contacto → cita → asistencia, sacado de GHL (90 días), junto al gasto. Dónde se rompe.',
-    filas: a.map(c => { const f = c.ghl.embudo.funnel || {}; return { texto: c.nombre, extra: `${plural(n0(c.ghl.embudo.contactos_90d), 'contacto')} → ${plural(n0(f.cita), 'cita')} → ${plural(n0(f.presupuesto), 'presupuesto')} → ${plural(n0(f.cerrado), 'cerrado')}${(c.cuello || []).length ? ` · se rompe en ${(c.cuello || []).join(' y ')}` : ''}`, estado: (c.cuello || []).some(x => x !== 'paid') ? 'ambar' : 'verde', icono: 'cap', href: hrefCap(ctx, c.cliente_id) }; }).sort(ordenEstado),
-    frescura: fresco('GoHighLevel', cap.captacion_generado || cap), medible: 'hoy',
-  };
+def('embudo_cuentas',['captacion/captacion','crm/crm'],(ctx,D,b)=>{
+ const {cap,l}=cuentas(ctx,D,b,'mio'),crm=D.opcional('crm/crm'),ids=new Set(l.map(c=>c.cliente_id));
+ const subs=clientesDia314(ctx,crm?.subcuentas).filter(s=>ids.has(s.cliente_id)).map(s=>crmDia314(s,crm,ctx.hoy||hoyISO()));
+ return {valor:subs.length,unidad:'subcuentas observadas · no conversión',estado:'gris',motivo:'Stock actual de etapas CRM; no es una cohorte de leads Meta, cualificación ni ventas.',
+ filas:subs.map(s=>({texto:s.nombre,extra:Object.entries(s.embudo?.funnel||{}).map(([k,v])=>`${k}: ${v===null?'Sin dato':v}`).join(' · ')||'Etapas: Sin dato',estado:'gris',icono:'cap',href:ir(ctx,'salud-crm',s.sub_id)})),frescura:fresco('GoHighLevel',crm),medible:'medias'};
 });
 def('creatividades', ['produccion/produccion'], (ctx, D) => {
   const p = D.dato('produccion/produccion');
@@ -1120,7 +1054,8 @@ def('carga_trafficker', ['captacion/captacion'], (ctx, D) => {
 
 // ------------------------------------------------------------- CRM (especialista y Yessica)
 function subcuentas(ctx, D, b, def2) {
-  const crm = D.dato('crm/crm');
+  const original=D.dato('crm/crm');
+  const crm={...original,subcuentas:clientesDia314(ctx,original.subcuentas).map(s=>crmDia314(s,original,ctx.hoy||hoyISO()))};
   const al = alcance(b, def2);
   return { crm, l: (crm.subcuentas || []).filter(s => s.tipo === 'cliente' && (al === 'todo' || s.especialista_id === yo(ctx) || ctx.carteraIds.has(s.cliente_id))) };
 }
@@ -1131,35 +1066,36 @@ def('circuito_roto', ['crm/crm', 'captacion/captacion'], (ctx, D, b) => {
   const integ = (cap?.clientes || []).filter(c => ids.has(c.cliente_id)).flatMap(c => (c.avisos || []).filter(a => a.clase_id === 'integracion').map(a => ({ c, a })));
   const rotas = (crm.resumen?.integracion_rota || []).filter(nm => l.some(s => s.nombre === nm));
   return {
-    valor: integ.length + rotas.length, unidad: 'circuitos rotos', estado: integ.length + rotas.length ? 'rojo' : 'verde',
-    motivo: 'Leads de Meta que no llegan a GHL. Que el aviso llegue al móvil de quien llama no se puede medir todavía (falta un permiso de GoHighLevel).',
-    filas: [...rotas.map(nm => ({ texto: `${nm} · integración rota`, estado: 'rojo', icono: 'plug', href: ir(ctx, 'salud-crm', l.find(s => s.nombre === nm)?.sub_id) })), ...integ.map(x => ({ texto: `${x.c.nombre} · ${x.a.texto}`, estado: 'rojo', icono: 'plug', href: ir(ctx, 'salud-crm', l.find(s => s.cliente_id === x.c.cliente_id)?.sub_id) }))],
+    valor:integ.length+rotas.length?integ.length+rotas.length:null, unidad: 'referencias de integración por contrastar', estado:'gris',
+    motivo:'Sin unión de eventos Meta y contactos CRM no se acredita fuga. Contrasta las referencias de integración antes de diagnosticar.',
+    filas: [...rotas.map(nm => ({ texto: `${nm} · referencia de integración`, estado:'gris', icono: 'plug', href: ir(ctx, 'salud-crm', l.find(s => s.nombre === nm)?.sub_id) })), ...integ.map(x => ({ texto: `${x.c.nombre} · ${x.a.texto}`, estado:'gris', icono: 'plug', href: ir(ctx, 'salud-crm', l.find(s => s.cliente_id === x.c.cliente_id)?.sub_id) }))],
     vacio: { titulo: 'Ningún circuito roto detectado', tono: 'celebrar' }, frescura: fresco('Meta + GHL', crm), medible: 'medias', medibleDetalle: 'El circuito de punta a punta espera un permiso de GoHighLevel',
   };
 });
 def('leads_sin_tocar', ['crm/crm'], (ctx, D, b) => {
   const crm = D.dato('crm/crm');
   const al = alcance(b, 'mio');
-  const l = (crm.leads_sin_tocar || []).filter(x => al === 'todo' || x.especialista_id === yo(ctx) || ctx.carteraIds.has(x.cliente_id));
+  const ids=new Set(clientesDia314(ctx,crm.subcuentas).map(s=>s.cliente_id)),medido=fuenteCrmDia314(crm,ctx.hoy||hoyISO());
+  const l = (crm.leads_sin_tocar || []).filter(x => ids.has(x.cliente_id)&&(al === 'todo' || x.especialista_id === yo(ctx) || ctx.carteraIds.has(x.cliente_id)));
   const g = new Map(); for (const x of l) { const e = g.get(x.sub_id) || { s: x.subcuenta, n: 0 }; e.n += 1; g.set(x.sub_id, e); }
   const filas = [...g.entries()].sort((a, b2) => b2[1].n - a[1].n).map(([sid, e]) => ({ texto: `${e.s} · ${plural(e.n, 'lead')} sin ningún intento`, estado: e.n > 5 ? 'rojo' : 'ambar', icono: 'clock', href: ir(ctx, 'salud-crm', sid) }));
   return {
-    valor: l.length, unidad: 'leads de más de 24 h sin tocar', estado: l.length ? 'rojo' : 'verde',
-    motivo: `Velocidad del primer intento en la casa: ${fmt.pct(crm.resumen?.velocidad_pct_1h)} en menos de 1 h (garantía: 70 %).`,
-    filas, vacio: { titulo: 'Ningún lead sin tocar', tono: 'celebrar' }, frescura: fresco('GoHighLevel', crm), medible: 'hoy',
-    primero: filas.slice(0, 1).map(f => ({ peso: 3, icono: 'clock', motivo: f.texto, detalle: 'Que el despacho llame hoy: aviso al account y al despacho.', ruta: sinAlmohadilla(f.href), clave: `sintocar:${f.href}` })),
+    valor:l.length?l.length:null,unidad:medido?'contactos observados sin intento registrado':'referencias anteriores de contactos por contrastar',estado:l.length&&medido?'ambar':'gris',
+    motivo:'Registros de la copia; no acredita respuesta, cualificación o ausencia total de intentos.',
+    filas:filas.map(f=>({...f,estado:medido?'ambar':'gris'})),vacio:{titulo:'Sin observaciones en la copia autorizada'},frescura:fresco('GoHighLevel',crm),medible:'medias',primero:[],
   };
 });
 def('citas_sin_estado', ['crm/crm'], (ctx, D, b) => {
   const crm = D.dato('crm/crm');
   const al = alcance(b, 'mio');
-  const l = (crm.citas_sin_estado || []).filter(x => al === 'todo' || x.especialista_id === yo(ctx) || ctx.carteraIds.has(x.cliente_id));
+  const ids=new Set(clientesDia314(ctx,crm.subcuentas).map(s=>s.cliente_id)),medido=fuenteCrmDia314(crm,ctx.hoy||hoyISO());
+  const l = (crm.citas_sin_estado || []).filter(x => ids.has(x.cliente_id)&&(al === 'todo' || x.especialista_id === yo(ctx) || ctx.carteraIds.has(x.cliente_id)));
   const g = new Map(); for (const x of l) { const e = g.get(x.sub_id) || { s: x.subcuenta, n: 0 }; e.n += 1; g.set(x.sub_id, e); }
   return {
-    valor: l.length, unidad: `${l.length === 1 ? 'cita' : 'citas'} de los últimos 14 días sin marcar si vino`, estado: l.length ? 'rojo' : 'verde',
+    valor:l.length?l.length:null,unidad:medido?'citas observadas sin estado de asistencia':'referencias anteriores de citas por contrastar',estado:l.length&&medido?'ambar':'gris',
     motivo: 'Sin estado no hay asistencia: es el número que manda del especialista.',
-    filas: [...g.entries()].sort((a, b2) => b2[1].n - a[1].n).map(([sid, e]) => ({ texto: `${e.s} · ${plural(e.n, 'cita')}`, estado: 'rojo', icono: 'cal', href: ir(ctx, 'salud-crm', sid) })),
-    vacio: { titulo: 'Todas las citas marcadas', tono: 'celebrar' }, frescura: fresco('GoHighLevel', crm), medible: 'hoy',
+    filas: [...g.entries()].sort((a,b2)=>b2[1].n-a[1].n).map(([sid,e])=>({texto:`${e.s} · ${plural(e.n,'cita')}`,estado:medido?'ambar':'gris',icono:'cal',href:ir(ctx,'salud-crm',sid)})),
+    vacio:{titulo:'Sin observaciones en la copia autorizada'},frescura:fresco('GoHighLevel',crm),medible:'medias',
   };
 });
 def('whatsapp_fallidos', ['crm/crm'], (ctx, D, b) => {
@@ -1195,26 +1131,19 @@ def('subcuentas_rojo', ['crm/crm'], (ctx, D, b) => {
   };
 });
 def('tabla_especialista', ['crm/crm'], (ctx, D) => {
-  const crm = D.dato('crm/crm'); const l = crm.especialistas || [];
-  return {
-    valor: l.length, unidad: 'especialistas', estado: '',
-    motivo: 'Subcuentas, en verde, en rojo, leads sin tocar y citas sin estado.',
-    filas: l.map(e => ({ texto: `${e.nombre || nombre(ctx, e.id)} · ${plural(e.subcuentas, "subcuenta")}`, extra: `${e.verde} verde · ${e.rojo} rojo · ${e.sin_tocar} sin tocar · ${e.sin_estado} sin estado`, estado: e.rojo > e.verde ? 'rojo' : 'ambar', icono: 'persona', href: '#/salud-crm' })),
-    frescura: fresco('GoHighLevel', crm), medible: 'hoy',
-  };
+  const crm=D.dato('crm/crm'),r=secundariosCRM317(ctx,crm);
+  return {valor:r.especialistas.length||null,unidad:'especialistas con subcuentas autorizadas',estado:'gris',
+    motivo:'Recuentos de la copia dentro del ámbito actual; sin clasificación automática verde/rojo ni evaluación de rendimiento.',
+    filas:r.especialistas.map(e=>({texto:`${e.nombre} · ${plural(e.subcuentas,'subcuenta')} en el ámbito`,extra:`Contactos sin intento registrado: ${textoConteo317(e.sin_tocar)} · Citas sin estado (14 días): ${textoConteo317(e.sin_estado)}`,estado:'gris',icono:'persona',href:'#/salud-crm'})),
+    frescura:fresco('GoHighLevel',crm),medible:'medias'};
 });
 def('asistencia_velocidad', ['crm/crm'], (ctx, D) => {
-  const crm = D.dato('crm/crm'); const r = crm.resumen || {}; const c = r.citas_30d || {};
-  return {
-    valor: r.asistencia_pct === null || r.asistencia_pct === undefined ? '—' : fmt.pct(r.asistencia_pct), unidad: 'de asistencia (30 días)', estado: r.asistencia_pct ? semaforo(r.asistencia_pct, { verde: 75, ambar: 60 }) : 'gris',
-    motivo: r.asistencia_pct === null || r.asistencia_pct === undefined ? `Sin dato: ${fmt.num(c.sin_estado)} de ${fmt.num(c.agendadas)} citas de 30 días están sin marcar.` : 'Bien ≥ 75 % (D-45).',
-    filas: [
-      { texto: 'Primer intento en menos de 1 h', extra: `${fmt.pct(r.velocidad_pct_1h)} de ${fmt.num(r.velocidad_juzgables)} leads`, estado: semaforo(r.velocidad_pct_1h, { verde: 70, ambar: 40 }), icono: 'zap' },
-      { texto: 'Citas de 30 días', extra: `${fmt.num(c.agendadas)} agendadas · ${fmt.num(c.celebradas)} celebradas · ${fmt.num(c.no_presentadas)} no vinieron`, estado: 'gris', icono: 'cal' },
-      { texto: 'Despachos que cumplen la garantía', extra: `${fmt.num(r.despachos_cumplen_garantia)} de ${fmt.num(r.despachos_juzgables_garantia)}`, estado: r.despachos_cumplen_garantia ? 'ambar' : 'rojo', icono: 'crown' },
-    ],
-    frescura: fresco('GoHighLevel', crm), medible: 'medias', medibleDetalle: 'Casi nadie marca «se presentó»',
-  };
+  const crm=D.dato('crm/crm'),r=secundariosCRM317(ctx,crm);
+  return {valor:r.asistencia===null?null:fmt.pct(r.asistencia),unidad:'asistencia entre citas con resultado registrado (30 días)',estado:'gris',
+    motivo:`Copia parcial autorizada: ${r.asistencia_base} citas con resultado en ${r.asistencia_subcuentas} subcuentas comparables. No es conversión de leads ni tasa sobre todas las citas; no evalúa garantía contractual.`,
+    filas:[{texto:'Primer intento registrado en menos de 1 h',extra:r.velocidad===null?'Sin dato':`${fmt.pct(r.velocidad)} de ${r.velocidad_base} contactos juzgables · ${r.velocidad_subcuentas} subcuentas comparables`,estado:'gris',icono:'zap'},
+      ...[['agendadas','Citas agendadas'],['celebradas','Citas con asistencia registrada'],['no_presentadas','Citas marcadas como no presentadas'],['sin_estado','Citas sin resultado registrado']].map(([k,texto])=>({texto:`${texto} · ventana de 30 días`,extra:textoConteo317(r.citas[k]),estado:'gris',icono:'cal'}))],
+    frescura:fresco('GoHighLevel',crm),medible:'medias',medibleDetalle:'Fuente vigente por subcuenta; cobertura parcial, ceros sólo observados.'};
 });
 def('fuegos_crm', ['incidencias/incidencias'], (ctx, D) => {
   const inc = D.dato('incidencias/incidencias');
@@ -1305,13 +1234,10 @@ def('bloqueos_meta', ['nuevos/nuevos'], (ctx, D) => {
   };
 });
 def('carga_altas', ['nuevos/nuevos'], (ctx, D) => {
-  const n = D.dato('nuevos/nuevos'); const r = n.resumen || {};
-  return {
-    valor: fmt.num(r.carga_semana), unidad: `altas esta semana · tope ${r.carga_tope}`, estado: n0(r.carga_semana) > n0(r.carga_tope) ? 'rojo' : 'verde',
-    motivo: `Tope de arranques a la semana: ${r.carga_tope}. Mediana hasta el primer lead: ${fmt.num(r.primer_lead_mediana_dias)} días.`,
-    barras: [{ etiqueta: 'Esta semana', valor: n0(r.carga_semana), max: Math.max(n0(r.carga_tope), n0(r.carga_semana)), marca: n0(r.carga_tope) }],
-    frescura: fresco('ClickUp', n), medible: 'hoy',
-  };
+  const n=D.dato('nuevos/nuevos'),r=referenciaAlta317(n);
+  return {valor:r.carga===null?null:fmt.num(r.carga),unidad:'altas · referencia del generador anterior',estado:'gris',
+    motivo:`Carga semanal heredada: periodo y cobertura por contrastar${r.tope===null?'':` · tope de referencia ${r.tope}`}. ${r.mediana===null?'Primer resultado: Sin dato.':`Mediana heredada hasta el «primer lead»: ${fmt.num(r.mediana)} días; evento y cohorte no acreditados, no resultado cualificado RO.`}`,
+    barras:[],frescura:fresco('ClickUp · referencia de altas',n),medible:'medias'};
 });
 
 // ------------------------------------------------------------- SEO, web y ficha de Google
@@ -1870,74 +1796,43 @@ num('alerta_sin_plan', ['personas_m20/equipo'], (ctx, D) => {
     contexto: `${en.length} en alerta: ${sin.length} sin plan todavía y ${en.length - sin.length} con plan (como Personas). Cuentan aquí cuando pasan 7 días sin plan.`, frescura: fresco('Personas en alerta', e) };
 });
 num('cartera_salud', ['verdad/clientes'], (ctx, D) => {
-  // R12 (C1): la salud de la verdad única (la de la ficha), no la «100 − riesgo» del panel v27 que traía la sesión
-  const l = ctx.clientes.filter(c => c.enCartera).map(c => ({ ...c, salud: saludV(ctx, c.id), grav: verdad(ctx, c.id)?.gravedad })).filter(c => typeof c.salud === 'number');
-  // V2 (A4): un cliente en crítico (verdad única) nunca cuenta como bien aunque su salud pase de 60, y con alguno en crítico
-  // el indicador no puede salir en verde (Lucía: GAC en crítico con salud 62 → 11 de 12, en ámbar).
-  const crit = l.filter(c => c.grav === 'critico');
-  const b = l.filter(c => c.salud >= 60 && c.grav !== 'critico').length;
-  const s0 = l.length ? semaforo(pct(b, l.length), { verde: 80, ambar: 60 }) : 'gris';
-  return { titulo: 'salud de 60 o más y ningún crítico', valor: l.length ? fmt.pct(pct(b, l.length)) : null, unidad: `${b} de ${l.length}`, estado: crit.length && s0 === 'verde' ? 'ambar' : s0,
-    contexto: `La misma salud que la ficha de cada cliente (fórmula provisional: 40 de resultados, 30 de atención y 30 de arranque); un cliente crítico no cuenta como bien.${crit.length ? ` ${crit.length === 1 ? 'Crítico' : 'Críticos'}: ${crit.map(c => c.nombre).join(', ')}.` : ''}`,
+  const l = ctx.clientes.filter(c => c.enCartera);
+  const registrados = l.filter(c => { const s = verdad(ctx, c.id)?.salud; return Number.isFinite(s) && s >= 0; });
+  return { titulo: 'Índices registrados · provisional', valor: registrados.length, unidad: `de ${l.length} clientes`, estado: 'gris',
+    contexto: 'Cobertura de índices registrados en la copia. No evalúa salud, desempeño ni cumplimiento y no aplica el umbral anterior de 60.',
     frescura: fresco('Verdad única de clientes', D.opcional('verdad/clientes')) };
 });
-function citaObjetivo(ctx, D, todas) {
-  const cap = D.dato('captacion/captacion');
-  const l = (cap.clientes || []).filter(c => c.meta_activa && (todas || c.equipo?.trafficker === yo(ctx)));
-  const conCita = l.map(c => { const ci = n0(c.ghl?.citas?.mes_anterior?.agendadas); const g = c.gasto?.mes_anterior; return { c, coste: ci && g !== undefined ? g / ci : null }; }).filter(x => x.coste !== null);
-  const ok = conCita.filter(x => x.coste <= (x.c.objetivo?.coste_cita_objetivo || cap.parametros?.alarma_cita || 100)).length;
-  return { valor: conCita.length ? fmt.pct(pct(ok, conCita.length)) : null, unidad: conCita.length ? `${ok} de ${conCita.length} con coste por cita` : '', estado: conCita.length ? semaforo(pct(ok, conCita.length), { verde: 70, ambar: 50 }) : 'gris',
-    contexto: `${cap.resumen?.objetivos_cargados ?? 0} objetivos del alta cargados (D-03): mientras, alarma por encima de ${eurG(cap.parametros?.alarma_cita || 100)} por cita. ${l.length - conCita.length} cuentas sin citas el mes pasado no se pueden juzgar.`,
-    frescura: fresco('Meta + GHL', cap) };
+function citaObjetivo(ctx,D,todas){
+ const cap=D.dato('captacion/captacion'),l=clientesDia314(ctx,cap.clientes).filter(c=>c.meta_activa&&(todas||c.equipo?.trafficker===yo(ctx)));
+ const refs=l.filter(c=>c.dinero&&typeof c.coste_por_cita?.coste_por_cita_14d==='number'&&c.coste_por_cita.coste_por_cita_14d>0);
+ return {valor:null,unidad:'Coste por cita por confirmar',estado:'gris',contexto:`${refs.length} referencias anteriores en ${l.length} cuentas. Sin cohorte enlazada de gasto y citas no se evalúa el coste ni cumplimiento del objetivo.`,frescura:fresco('Meta + GoHighLevel',cap)};
 }
-/** R13 (regla de Tomás, 2-oct: cada puesto mide primero los resultados de sus clientes). El que manda del account =
- *  catálogo `account.resultados_de_su_cartera_frente_a_objetivo`: clientes de SU cartera (silla account de las asignaciones)
- *  con campaña encendida cuyos resultados están en objetivo ÷ los que tienen campaña encendida. Sin objetivo del alta
- *  cargado (D-03) se juzga con lo que hay: leads en 7 días, sin caída fuerte (> 30 %) y, si su puesto ve el coste por lead,
- *  por debajo del techo que usa Captación (`objetivo.cpl_usado`) y, con GoHighLevel, coste por cita ≤ `parametros.alarma_cita`.
- *  Ventas, solo en el texto (a medias). Nota R13 de E0 en dudas_pintura.md. */
-num('resultados_cartera', ['captacion/captacion'], (ctx, D) => {
-  // V2 (A4): el denominador es TODA su cartera de account (silla account de las asignaciones). Un cliente sin campaña de Meta
-  // encendida no está en objetivo (se dice cuántos y quiénes): nunca «100 %» con 7 de 8 sin campaña.
-  const cap = D.dato('captacion/captacion');
-  const cartera = silla(ctx, 'account') || ctx.carteraIds;
-  const mios = (cap.clientes || []).filter(c => cartera.has(c.cliente_id)); const act = mios.filter(c => c.meta_activa);
-  const fuera = c => { const l7 = n0(c.leads?.['7d']), l7p = n0(c.leads?.['7d_prev']); const cpl = c.cpl?.['7d'];
-    if (!l7) return 'sin leads en 7 días'; if (l7p >= 4 && l7 < l7p * 0.7) return `leads −${Math.round((1 - l7 / l7p) * 100)} %`;
-    if (cpl !== undefined && cpl !== null && c.objetivo?.cpl_usado && cpl > c.objetivo.cpl_usado) return 'coste por lead por encima del techo';
-    const ci = n0(c.ghl?.citas?.['7d']?.agendadas), g = c.gasto?.['7d'], techoCita = c.objetivo?.coste_cita_objetivo || cap.parametros?.alarma_cita;
-    if (c.ghl?.conectado && ci && g !== undefined && g !== null && techoCita && g / ci > techoCita) return 'coste por cita por encima del techo'; return null; };
-  const mal = act.map(c => ({ c, m: fuera(c) })).filter(x => x.m); const ok = act.length - mal.length;
-  const citas = suma(act, c => c.ghl?.citas?.['7d']?.agendadas); const conGhl = act.filter(c => c.ghl?.conectado).length;
-  if (!cartera.size) return { valor: null, contexto: 'No tienes clientes asignados como account todavía: el número sale cuando Mili te asigne clientes.' };
-  const total = cartera.size; const sinCamp = [...cartera].filter(id => !act.some(c => c.cliente_id === id));
-  const nomSin = sinCamp.map(id => nomCli(ctx, id) || id);
-  return { valor: fmt.pct(pct(ok, total)), unidad: `${ok} de ${plural(total, 'cliente')} en objetivo`,
-    estado: semaforo(pct(ok, total), { verde: 70, ambar: 50 }),
-    contexto: `${sinCamp.length ? `${sinCamp.length} de tus ${total} clientes no tienen campaña de Meta encendida y no cuentan como en objetivo (${nomSin.slice(0, 4).join(', ')}${nomSin.length > 4 ? ` y ${plural(nomSin.length - 4, 'cliente más', 'clientes más')}` : ''}). ` : ''}${act.length ? `Con campaña: ${ok} de ${act.length} en objetivo${mal.length ? `; fuera, ${mal.slice(0, 4).map(x => `${x.c.nombre} (${x.m})`).join(', ')}${mal.length > 4 ? ` y ${plural(mal.length - 4, 'cliente más', 'clientes más')}` : ''}` : ''}. ${plural(citas, 'cita')} en 7 días y ${plural(suma(act, c => c.ghl?.embudo?.funnel?.cerrado), 'venta marcada', 'ventas marcadas')} (90 días) ${conGhl === 1 ? 'en la única' : `en las ${conGhl}`} con GoHighLevel.` : 'Ninguno tiene campaña de Meta encendida.'} ${cap.resumen?.objetivos_cargados ?? 0} objetivos del alta cargados: mientras, techo general.`.replace(/\s+/g, ' ').trim(),
-    frescura: fresco('Meta + GoHighLevel', cap.captacion_generado || cap.generado) };
+num('resultados_cartera', ['captacion/captacion','crm/crm'], (ctx,D)=>{
+ const cap=D.dato('captacion/captacion'),cartera=silla(ctx,'account')||ctx.carteraIds,hoy=ctx.hoy||hoyISO();
+ const act=clientesDia314(ctx,cap.clientes).filter(c=>cartera.has(c.cliente_id)&&c.meta_activa),ms=act.map(c=>resultadosFilaDia314(c,cap,hoy).cpl),evaluables=ms.filter(m=>m.evaluable),ok=evaluables.filter(m=>m.real<=m.objetivo).length;
+ return {valor:evaluables.length?fmt.pct(pct(ok,evaluables.length)):null,unidad:`${ok} de ${evaluables.length} cuentas comparables con objetivo propio`,estado:evaluables.length?ok===evaluables.length?'verde':'ambar':'gris',
+ contexto:`CPL observado frente a objetivo vigente en semana cerrada. ${act.length-evaluables.length} cuentas pendientes de medir o confirmar objetivo. No acredita cualificación ni ventas; no aplica el umbral general anterior50/70%.`,frescura:fresco('Meta',cap)};
 });
 num('cita_objetivo_mias', ['captacion/captacion'], (ctx, D) => citaObjetivo(ctx, D, false));
 num('cita_objetivo_casa', ['captacion/captacion'], (ctx, D) => citaObjetivo(ctx, D, true));
 num('asistencia_mia', ['crm/crm'], (ctx, D) => {
-  const crm = D.dato('crm/crm'); const l = (crm.subcuentas || []).filter(s => s.especialista_id === yo(ctx));
-  const cel = suma(l, s => s.citas_30d?.celebradas), no = suma(l, s => s.citas_30d?.no_presentadas), sin = suma(l, s => s.citas_30d?.sin_estado);
-  return { valor: cel + no ? fmt.pct(pct(cel, cel + no)) : null, unidad: cel + no ? `${cel} de ${cel + no}` : '', estado: cel + no ? semaforo(pct(cel, cel + no), { verde: 75, ambar: 60 }) : 'gris',
-    // V2 (B-M6): la ventana al lado de cada cifra (30 días aquí, 14 en «Citas sin estado») y, sin citas, «sin citas en tu cartera»
-    contexto: cel + no ? `${plural(sin, 'cita')} de los últimos 30 días ${sin === 1 ? 'sigue' : 'siguen'} sin marcar.`
-      : !l.length ? 'Sin citas en tu cartera: todavía no llevas ninguna subcuenta de GoHighLevel.'
-        : sin ? `Sin dato: ${plural(sin, 'cita')} de los últimos 30 días sin marcar si vino. Márcalas y sale el número.` : 'Sin citas en los últimos 30 días en tus subcuentas.', frescura: fresco('GoHighLevel', crm) };
+  const crm=D.dato('crm/crm');
+  const propias=clientesDia314(ctx,crm.subcuentas).filter(s=>s.especialista_id===yo(ctx));
+  const r=secundariosCRM317(ctx,{...crm,subcuentas:propias});
+  return {valor:r.asistencia===null?null:fmt.pct(r.asistencia),unidad:`${r.asistencia_base} citas con resultado · 30 días`,estado:'gris',
+    contexto:`${r.asistencia_subcuentas} subcuentas propias comparables de ${r.filas.length} autorizadas. Sólo citas con resultado registrado, no todas las agendadas ni conversión de leads. ${r.asistencia===null?'Sin base comparable suficiente; ausencia de registros no acredita ausencia de citas. ':''}Cobertura parcial; sin evaluación de rendimiento ni garantía contractual.`,frescura:fresco('GoHighLevel',crm)};
 });
 num('crm_verde', ['crm/crm'], (ctx, D) => {
-  const crm = D.dato('crm/crm'); const r = crm.resumen || {};
-  return { valor: fmt.pct(r.pct_verde), unidad: `${r.verde} de ${r.encendidas} encendidas`, estado: semaforo(r.pct_verde, { verde: 80, ambar: 60 }), contexto: `${r.rojo} en rojo. ${crm.reglas?.verde_crm || ''}`.trim(), frescura: fresco('GoHighLevel', crm) };
+  const crm=D.dato('crm/crm'),r=secundariosCRM317(ctx,crm),recientes=r.filas.filter(s=>s._medicionCRM?.fechaValida===true).length;
+  return {valor:recientes?fmt.num(recientes):null,unidad:`subcuentas con lectura reciente de ${r.filas.length} autorizadas`,estado:'gris',
+    contexto:`Cobertura de la copia CRM, no porcentaje de salud verde. ${recientes?'Revisa contactos, intentos y resultados de citas en las tablas autorizadas.':'Sin lectura reciente suficiente; no se interpreta como cero actividad ni ausencia de leads.'} Los objetivos históricos de asistencia/velocidad no evalúan rendimiento ni garantía contractual.`,frescura:fresco('GoHighLevel',crm)};
 });
 /** R12 (B-A06): el aviso de SEO, igual que en su pantalla, cuando SE Ranking deja de ver muchas palabras de golpe. */
 function avisoSeRanking(l) {
   const des = suma(l, c => c.visibilidad?.desaparecen);
   const conGsc = l.filter(c => c.clics);
   const suben = conGsc.filter(c => n0(c.clics.var_mes) > 0).length;
-  return des > 50 ? `Cuidado con el dato de SE Ranking: dejó de ver ${fmt.num(des)} palabras de golpe esta semana y los clics de Google suben en ${suben} de ${conGsc.length} clientes. Parece un fallo suyo: compruébalo en Google antes de tocar nada.` : null;
+  return des > 50 ? `Cuidado con el dato de SE Ranking: dejó de ver ${fmt.num(des)} palabras de golpe esta semana y los clics de Google suben en ${suben} de ${conGsc.length} clientes. La diferencia no identifica la causa: contrasta buscador, ubicación, dispositivo y fecha antes de tocar nada.` : null;
 }
 num('seo_verde', ['seo/seo'], (ctx, D) => {
   // R12 (B-A05): la misma cifra, base, umbral y sello que «Clientes en verde» de SEO, ficha y webs (medibles = sin los grises)

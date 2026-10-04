@@ -70,9 +70,13 @@ for cid in muestra:
     n = c["ids"]["panel"]
     F = c["fuentes"]
     chequeos = [
-        ("cartera", "cuota (verdad única)", g(F, "cartera", "datos", "cuota"), g(verdad.get(cid), "cuota")),
-        ("horas", "horas mes anterior (Producción)", g(F, "horas", "datos", "horas_mes_ant"), g(proy.get(cid), "horas_mes_ant")),
-        ("tareas", "creadas mes anterior (Producción)", g(F, "tareas", "datos", "creadas_mes_ant"), g(proy.get(cid), "creadas_mes_ant")),
+        # si ningún módulo cubre al cliente, el bloque se queda con el del panel (sin «origen»): se coteja con el panel
+        ("cartera", "cuota (verdad única)", g(F, "cartera", "datos", "cuota"), g(verdad.get(cid), "cuota")) if g(F, "cartera", "origen")
+        else ("cartera", "cuota (panel)", g(F, "cartera", "datos", "cuota"), g(panel.get(n), "cuota")),
+        ("horas", "horas mes anterior (Producción)", g(F, "horas", "datos", "horas_mes_ant"), g(proy.get(cid), "horas_mes_ant")) if g(F, "horas", "origen")
+        else ("horas", "horas mes anterior (panel)", g(F, "horas", "datos", "horas_mes_ant"), g(panel.get(n), "horas_mes_ant")),
+        ("tareas", "creadas mes anterior (Producción)", g(F, "tareas", "datos", "creadas_mes_ant"), g(proy.get(cid), "creadas_mes_ant")) if g(F, "tareas", "origen")
+        else ("tareas", "creadas mes anterior (panel)", g(F, "tareas", "datos", "creadas_mes_ant"), g(flujo.get(n), "creadas_mes_ant")),
         ("informes", "informe sep", g(F, "informes", "datos", "sep", "estado"), g(informes.get(n), "sep", "estado")),
         ("desk", "correos abiertos (Bandeja)", g(F, "desk", "datos", "tickets_abiertos"), band_n.get(cid, 0)),
         ("reuniones", "última reunión (Reuniones)", g(F, "reuniones", "datos", "ult_reunion"), g(reus.get(cid), "ultima")),

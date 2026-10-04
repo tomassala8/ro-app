@@ -17,9 +17,12 @@ Funciones puras sobre datos ya leídos. La verdad, captación y CRM «completos�
 para puntuar y diagnosticar; lo que viaja al navegador pasa después por el recorte de dinero de ia.py.
 """
 import json
+from datetime import datetime
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from consejos_paid_crm_304 import neutralizar_consejo_paid_crm
 import cd_diagnostico as DG   # noqa: E402
 import cd_prioridad as PR     # noqa: E402
 import cd_prudencia as PZ     # noqa: E402
@@ -311,6 +314,7 @@ def enriquecer(persona, cands, ctx, nombre=lambda x: x, completo=True):
             c2["prudencia"] = faltas
         c2.pop("regla_diag", None)
         out.append(c2)
+    out = [neutralizar_consejo_paid_crm(c, datetime.now().date().isoformat()) for c in out]
     out.sort(key=lambda c: -c["orden"])
     return out
 

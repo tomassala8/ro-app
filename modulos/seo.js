@@ -1,3 +1,8 @@
+import {cargarObjetivos374,celdaObjetivo374,renderObjetivos374} from './_objetivos_seo_374.js';
+import {notaCompacta336} from './_nota_compacta_336.js';
+import { normalizarAlertasSEO, parPosicionSEO, posicionSEO, conteoSEO, cambioPosicionSEO, filasSeoAutorizadas, contextoMotoresSEO, configuracionActualMotoresSEO, paginasSEO, resumenClicsCarteraSEO } from './_seo_mediciones.js';
+import { oportunidadPagina332, ambitoOportunidades332 } from './_seo_oportunidades_332.js';
+import { panelSeo, panelWeb } from './_panel_especialista.js';
 // modulos/seo.js · M8 «SEO, ficha de Google y webs» (E8 del plan v2; fichas G3-1 a G3-4).
 //
 // Qué pinta (arriba lo de cada día, abajo lo de cada semana o mes):
@@ -53,7 +58,7 @@ const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.
 
 const JEFAS = ['direccion', 'finanzas_direccion', 'operaciones', 'proyectos', 'jefa_seo'];
 const EST = { rojo: 0, ambar: 1, gris: 2, verde: 3 };
-const TXT_EST = { rojo: 'Actuar', ambar: 'Vigilar', verde: 'Bien', gris: 'Sin dato' };
+const TXT_EST = { rojo: 'Actuar', ambar: 'Vigilar', verde: 'Señal anterior favorable', gris: 'Sin dato' };
 // números: siempre con el formateador común (punto de miles, coma decimal, signo «−»)
 const num = n => fmt.num(n);
 const numD = (n, d = 1) => fmt.num(n, d);
@@ -87,16 +92,14 @@ const motivo2 = t => { const s = String(t || ''); return h('span', { class: 'sub
 const MODULAR_PASO = 'Falta un paso de Tomás: en Modular DS, crear una clave de solo lectura (Mi perfil → API) y ejecutar pegar.sh. Después se ven las copias, las actualizaciones, la seguridad y si la web responde desde fuera.';
 
 function posCh(n) {
-  // rojo con cuentagotas (guía 3.4): fuera del top 100 va en gris; el aviso rojo ya lo da «Lo primero hoy»
-  const c = !n ? 'gris' : n <= 3 ? 'verde' : n <= 10 ? 'azul' : 'gris';
-  return h('span', { class: `chip sin-punto ${c}`, title: n ? `Posición ${n}` : 'Fuera del top 100 o sin dato', style: { minWidth: '36px', justifyContent: 'center' } }, n ? String(n) : '>100');
+  const valor=posicionSEO(n);
+  return h('span',{class:'chip sin-punto gris',title:valor===null?'Posición sin observación válida; no prueba estar fuera del top 100':`Posición observada ${valor}; no acredita objetivo cumplido`,style:{minWidth:'36px',justifyContent:'center'}},valor===null?'Sin dato':String(valor));
 }
-function deltaPos(antes, hoy) {
-  if (!antes && !hoy) return h('span', { class: 'sub' }, '—');
-  const a = antes || 101, b = hoy || 101;
-  if (a === b) return h('span', { class: 'sub' }, '=');
-  const sube = b < a;
-  return delta(sube, `${sube ? '▲' : '▼'} ${Math.abs(a - b) > 90 ? '' : Math.abs(a - b)}`);
+function deltaPos(antes,hoy) {
+  const d=cambioPosicionSEO(antes,hoy);
+  if(d===null)return h('span',{class:'sub'},'Sin comparación');
+  if(d===0)return h('span',{class:'sub'},'=');
+  return delta(d>0,`${d>0?'▲':'▼'} ${Math.abs(d)}`);
 }
 
 const nom = (ctx, id, completo) => (id ? (ctx.nombre ? ctx.nombre(id) : id) : null);
@@ -111,7 +114,7 @@ function rol(ctx) {
 
 // =================================================================== datos
 async function cargar(ctx) {
-  const [seo, webs, modular, tablero, rev] = await Promise.all([
+  const [seo, webs, modular, tablero, rev, objetivos374] = await Promise.all([
     ctx.datosModulo('seo/seo').catch(e => ({ _error: e.message })),
     ctx.datosModulo('seo/webs').catch(e => ({ _error: e.message })),
     // Modular DS: si el fichero no llega (sin generar o sin alta en el servidor), se trata como «sin conectar»
@@ -119,7 +122,9 @@ async function cargar(ctx) {
     // Tablero del equipo web (3-oct): todas las webs de Modular, solo para web, jefe de SEO y web, operaciones y dirección
     cargarTablero(ctx),
     revisadas(ctx),
+    cargarObjetivos374(ctx),
   ]);
+  seo.clientes=filasSeoAutorizadas(seo.clientes,ctx.clientesVisibles).map(f=>normalizarAlertasSEO(f,seo._meta,ctx.hoy));
   for (const f of seo.clientes || []) f.seo_quien = nom(ctx, f.seo_id) || 'Sin asignar';
   for (const w of webs.webs || []) w.web_quien = nom(ctx, w.web_id) || 'Sin asignar';
   // cruce web propia ↔ Modular: por cliente_id y, si no, por dominio (con o sin www)
@@ -129,7 +134,7 @@ async function cargar(ctx) {
   if (conectado) for (const m of modular.webs || []) { if (m.cliente_id) porCli.set(m.cliente_id, m); if (m.dominio || m.url) porDom.set(dom(m.dominio || m.url), m); }
   for (const w of webs.webs || []) w.modular = conectado ? (porCli.get(w.cliente) || porDom.get(dom(w.url)) || null) : undefined;
   return { seo, webs, modular: { conectado, meta: modular?._meta || {}, resumen: modular?.resumen || null },
-    tablero: conectado && tablero?._meta?.estado === 'conectado' ? tablero : null, rev };
+    tablero: conectado && tablero?._meta?.estado === 'conectado' ? tablero : null, rev, objetivos374 };
 }
 
 // =================================================================== portada
@@ -140,15 +145,10 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const base = r === 'seo' ? mias : filas;
   const webs = d.webs.webs || [];
   const misWebs = webs.filter(w => w.web_id === ctx.persona.id);
-  // R12 · UNA definición del número que manda (la misma que lee Mi día): data/seo/seo.json › resumen. Para toda la
-  // cartera se lee tal cual; para «tus clientes» se aplica la misma regla (sin grises) y el mismo umbral sobre tu parte.
+  // Las alertas de esta vista se resuelven con pares fechados; el resumen legado no acredita objetivos.
   const R = d.seo.resumen || {};
-  const U = R.umbral || { verde: 80, ambar: 60, texto: 'Bien desde el 80 % · mal bajo el 60 %' };
   const medibles = base.filter(f => f.estado !== 'gris');
-  const todaLaCartera = base === filas && R.clientes_total === filas.length;   // el servidor no ha recortado nada
-  const verdes = todaLaCartera && R.verdes !== undefined ? R.verdes : medibles.filter(f => f.estado === 'verde').length;
-  const baseVerde = todaLaCartera && R.clientes_seo !== undefined ? R.clientes_seo : medibles.length;
-  const pctVerde = todaLaCartera && R.pct_verde !== undefined ? R.pct_verde : medibles.length ? Math.round((verdes / medibles.length) * 100) : null;
+  const baseVerde = medibles.length;
   const metaS = d.seo._meta || {};
   const metaW = d.webs._meta || {};
   const fresSR = { fuente: 'SE Ranking', fecha: (metaS.seranking || {}).leido };
@@ -161,12 +161,13 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   ctx.titulo('SEO, ficha y webs', r === 'seo' ? `Tus ${mias.length} clientes de SEO · posiciones, clics y webs` : r === 'web' ? `Estado de ${webs.length} webs (todas, para cubrir guardias) · ${misWebs.length} a tu nombre` : `${filas.length} clientes con SEO · ${webs.length} webs vigiladas`);
 
   // ---------- 1 · cifras: el número que manda de cada puesto, primero
-  const sumSem = base.reduce((a, f) => a + (f.clics?.semana || 0), 0);
-  const sumAnt = base.reduce((a, f) => a + (f.clics?.semana_ant || 0), 0);
-  const fuera = base.reduce((a, f) => a + f.alertas.filter(x => x.tipo === 'fuera_top10').length, 0);
+  const cohorteClics=resumenClicsCarteraSEO(base,metaS,ctx.hoy);
+  const sumSem=cohorteClics.actual,sumAnt=cohorteClics.anterior;
+  const fuera = base.reduce((a, f) => a + f.alertas.filter(x=>x.tipo==='fuera_top10'&&x.acreditada===true).length, 0);
   const desap = base.reduce((a, f) => a + ((f.visibilidad || {}).desaparecen || 0), 0);
-  const top5h = base.reduce((a, f) => a + (f.reparto?.top5.hoy || 0), 0);
-  const top5m = base.reduce((a, f) => a + (f.reparto?.top5.mes || 0), 0);       // R12: solo palabras que SE Ranking ve hoy
+  const conTop5=base.filter(f=>conteoSEO(f.reparto?.top5?.hoy)!==null);
+  const top5h=conTop5.length?conTop5.reduce((a,f)=>a+f.reparto.top5.hoy,0):null;
+  const top5m=conTop5.length&&conTop5.every(f=>conteoSEO(f.reparto.top5.mes)!==null)?conTop5.reduce((a,f)=>a+f.reparto.top5.mes,0):null;       // R12: solo palabras que SE Ranking ve hoy
   const top5sin = base.reduce((a, f) => a + (f.reparto?.top5.sin_ver_hoy || 0), 0);
   const websRojo = webs.filter(w => w.estado === 'rojo');
   const avisosMed = webs.reduce((a, w) => a + w.avisos.length, 0);
@@ -178,19 +179,19 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
       contexto: 'Número que manda · una comprobación hoy', medible: 'medias', medibleDetalle: 'Una comprobación desde la IP de RO; la de cada 5 minutos y desde fuera llega con el despliegue', frescura: fresMon,
       ir: 'Ver las caídas', alPulsar: () => irPestana(cont, 'webs', 'caidas') }));
   } else if (r === 'seo') {
-    t.push(tile({ icono: 'star', etiqueta: 'Palabras en el top 5', valor: num(top5h), unidad: 'de las 15 por cliente', estado: enDuda ? 'gris' : top5h >= top5m ? 'verde' : top5m - top5h <= 2 ? 'ambar' : 'rojo',
-      comparacion: { delta: top5h - top5m, texto: 'frente a hace 30 días' }, contexto: `Número que manda · hoy frente a hace 30 días, solo palabras que SE Ranking ve hoy${top5sin ? ` · ${num(top5sin)} que estaban arriba hoy no las ve (no cuentan como caída)` : ''}`, medible: enDuda ? 'medias' : 'hoy', medibleDetalle: enDuda ? R.motivo_medible : null, frescura: fresSR,
+    t.push(tile({ icono: 'star', etiqueta: 'Palabras en el top 5', valor:top5h===null?null:num(top5h), unidad: 'de las 15 por cliente', estado:'gris',
+      comparacion:top5h!==null&&top5m!==null?{delta:top5h-top5m,texto:'frente a hace 30 días'}:null, contexto:`Recuento observado de la muestra; comparación de 30 días sólo con pares acreditados${top5sin ? ` · ${num(top5sin)} que estaban arriba hoy no las ve (no cuentan como caída)` : ''}`, medible: enDuda ? 'medias' : 'hoy', medibleDetalle: enDuda ? R.motivo_medible : null, frescura: fresSR,
       ir: 'Ver por cliente', alPulsar: () => irPestana(cont, 'seo') }));
   }
   if (r !== 'web') {
-    t.push(tile({ icono: 'medidor', etiqueta: 'Clientes en verde', valor: fmt.pct(pctVerde), unidad: `${verdes} de ${baseVerde}`, estado: enDuda ? 'gris' : semaforo(pctVerde, { verde: U.verde, ambar: U.ambar }),
-      contexto: `${enDuda ? 'A medias: SE Ranking en duda (abajo) · ' : ''}${U.texto}${base.length > baseVerde ? ` · ${base.length - baseVerde} sin dato fuera de la cuenta` : ''}`, medible: 'medias', medibleDetalle: R.motivo_medible || 'Las 15 palabras son provisionales (las de más búsquedas) y no todos tienen Search Console', frescura: fresGSC,
+    t.push(tile({ icono: 'medidor', etiqueta:'Clientes con alertas acreditadas',valor:base.filter(f=>f.alertas.some(a=>a.acreditada===true)).length,unidad:`de ${base.length} visibles`, estado:'gris',
+      contexto: `${enDuda ? 'A medias: SE Ranking en duda (abajo) · ' : ''}Alertas con evidencia fechada; no acredita objetivos SEO confirmados${base.length > baseVerde ? ` · ${base.length - baseVerde} sin dato fuera de la cuenta` : ''}`, medible: 'medias', medibleDetalle: R.motivo_medible || 'Las 15 palabras son provisionales (las de más búsquedas) y no todos tienen Search Console', frescura: fresGSC,
       ir: 'Ver el semáforo', alPulsar: () => irPestana(cont, 'seo') }));
-    t.push(tile({ icono: 'baja', etiqueta: 'Fuera del top 10', valor: num(fuera), unidad: 'palabras', estado: fuera ? 'rojo' : 'verde',
-      contexto: `${num(desap)} más «no aparecen» (a revisar)`, medible: 'hoy', medibleDetalle: 'Solo cuenta si sale en 2 comprobaciones seguidas', frescura: fresSR,
+    t.push(tile({ icono: 'baja', etiqueta:'Cambios fuera del top10 acreditados',valor:num(fuera),unidad:'consultas de la muestra',estado:fuera?'rojo':'gris',
+      contexto:`Sólo pares fechados del mismo motor; ${num(desap)} ausencias anteriores por contrastar`,medible:'medias',medibleDetalle:'No acredita objetivo contratado ni ausencia de cambios fuera de la muestra', frescura: fresSR,
       ir: 'Ver cuáles', alPulsar: () => irPestana(cont, 'seo', 'rojo') }));
-    t.push(tile({ icono: 'grafico', etiqueta: 'Clics · 7 días', valor: num(sumSem), estado: semaforo(variacion(sumSem, sumAnt), { verde: -10, ambar: -25 }),
-      comparacion: { delta: variacion(sumSem, sumAnt), pct: true, texto: 'frente a los 7 anteriores' }, contexto: `Hasta el ${fDiaRO(metaS.gsc?.hasta)} · ventana fija`, medible: 'hoy', medibleDetalle: 'Google da los clics con 2-3 días de retraso', frescura: fresGSC }));
+    t.push(tile({ icono: 'grafico', etiqueta: 'Clics · 7 días', valor:sumSem===null?null:num(sumSem),estado:'gris',
+      comparacion:sumSem!==null&&sumAnt!==null?{delta:variacion(sumSem,sumAnt),pct:true,texto:'frente a los 7 anteriores'}:null,contexto:`${cohorteClics.clientes} de ${base.length} clientes con ventanas compatibles${cohorteClics.ventana ? ` · ${fDiaRO(cohorteClics.ventana[0])} → ${fDiaRO(cohorteClics.ventana[1])}` : ' · ventana pendiente'}${cohorteClics.otras_ventanas ? ` · ${cohorteClics.otras_ventanas} con otro periodo excluidos` : ''} · cobertura parcial`, medible: 'hoy', medibleDetalle: 'Google da los clics con 2-3 días de retraso', frescura: fresGSC }));
   }
   t.push(tile({ icono: 'alert', etiqueta: 'Webs en rojo', valor: websRojo.length, unidad: `de ${webs.length}`, estado: websRojo.length ? 'rojo' : 'verde',
     contexto: `${caidas.length} sin responder · ${websRojo.length - caidas.length} spam o certificado`, medible: 'medias', medibleDetalle: 'Desde la IP de RO; desde fuera llega con el despliegue', frescura: fresMon,
@@ -210,10 +211,9 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const suben = conGsc.filter(f => (f.clics.var_mes || 0) > 0).length;
   if (r !== 'web' && totalDes > 50) {
     // R12: el mismo texto que lee Mi día (resumen.aviso_seranking) cuando se mira toda la cartera
-    ctxN.push(avisoParcial(todaLaCartera && R.aviso_seranking?.texto ? R.aviso_seranking.texto
-      : `SE Ranking dejó de ver ${num(totalDes)} palabras de golpe esta semana, y los clics de Google suben en ${suben} de ${conGsc.length} clientes. Parece un fallo suyo: compruébalo en Google antes de tocar nada. Las palabras que hoy no ve no cuentan como caída.`, { titulo: 'Cuidado con el dato de SE Ranking.' }));
+    ctxN.push(avisoParcial(`La copia anterior registra ${num(totalDes)} palabras sin posición. No acredita una caída ni su fecha. Los clics comparables de Google suben en ${suben} de ${conGsc.length} clientes con recuentos. La diferencia no identifica la causa: contrasta buscador, ubicación, dispositivo y fecha antes de tocar nada. Las palabras que hoy no ve no cuentan como caída.`, { titulo: 'Cuidado con el dato de SE Ranking.' }));
   }
-  if (r !== 'web') ctxN.push(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: SE Ranking da posiciones de hoy frente a hace 7 y 30 días, y Search Console, clics de 7 y 28 días (por días solo guarda 28).'));
+  if (r !== 'web') ctxN.push(h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, 'Esta pantalla no cambia con el periodo: SE Ranking muestra posiciones guardadas (la mejor de dos comprobaciones seguidas), frente a 7 y 30 días. Search Console muestra clics de 7 y 28 días hasta su último día con datos; no son posiciones de Maps ni un promedio comparable con una palabra concreta.'));
 
   // ---------- 2 · pestañas (cada puesto abre en la suya)
   const inicial = r === 'web' ? 'webs' : 'seo';
@@ -231,8 +231,8 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const franja = franjaEnLinea(franjaCifras([
     { etiqueta: 'Webs en rojo', valor: websRojo.length, estado: websRojo.length ? 'rojo' : '', alPulsar: () => irPestana(cont, 'webs', 'rojo') },
     { etiqueta: 'Sin responder', valor: caidas.length, estado: caidas.length ? 'rojo' : '', alPulsar: () => irPestana(cont, 'webs', 'caidas') },
-    r !== 'web' ? { etiqueta: 'Fuera del top 10', valor: fuera, estado: fuera ? 'rojo' : '', alPulsar: () => irPestana(cont, 'seo', 'rojo') } : null,
-    r !== 'web' ? { etiqueta: 'Clientes en verde', valor: pctVerde === null ? 'sin dato' : fmt.pct(pctVerde), titulo: enDuda ? 'A medias: SE Ranking en duda' : U.texto, alPulsar: () => irPestana(cont, 'seo') } : null,
+    r !== 'web' ? { etiqueta: 'Cambios top10 acreditados', valor: fuera, titulo: 'Consultas de la muestra con pares fechados del mismo motor. Cobertura parcial: cero no acredita cumplimiento de objetivos ni ausencia de cambios fuera de la muestra.', estado: fuera ? 'rojo' : '', alPulsar: () => irPestana(cont, 'seo', 'rojo') } : null,
+    r !== 'web' ? {etiqueta:'Señales anteriores por contrastar',valor:base.filter(f=>f._medicionSEO?.historicas>0).length,titulo:'Clientes con avisos de copia sin evidencia de comparación; no objetivos cumplidos', alPulsar: () => irPestana(cont, 'seo') } : null,
     { etiqueta: 'Fallos de medición', valor: avisosMed, alPulsar: () => irPestana(cont, 'webs', 'medicion') },
   ], { etiqueta: 'Cifras (llevan a su lista)' }));
   cont.append(pantallaAncha({ id: 'seo-web', filtros: franja, lista: p, contexto: ctxN, tituloContexto: 'Cifras, avisos del dato y cómo se mide' }));
@@ -254,25 +254,46 @@ function marcarChips(chips, opciones) {
   return chips;
 }
 
+// 3-oct (Tomás: «SE Ranking se ha roto») · la FECHA DEL DATO siempre a la vista, para que nadie confunda «dato del día» con
+// La fecha de posiciones permanece visible; programación/créditos son referencias, no promesa de ejecución local. Si la última lectura
+// falló o el dato tiene 2 días o más, aviso ámbar con el motivo (seo.json › _meta.seranking, de fuentes_seo/sr_leer.py).
+function lineaDatoSR(d) {
+  const m = d.seo?._meta?.seranking || {};
+  if (!m.texto_dia) return null;
+  const linea = h('div', { class: 'sub', style: { margin: '0', display: 'flex', alignItems: 'center', gap: 'var(--s-2, 8px)', flexWrap: 'wrap' } },
+    icono('cal', { clase: 's' }), h('b', { style: { color: 'var(--ink)' } }, m.texto_dia),
+    notaCompacta336(h,'Actualización y referencia de créditos',h('p',{},'La fecha indica la última lectura guardada. La ejecución automática local a las 6:00 no está acreditada; esta vista no garantiza próximas lecturas ni consumo gratuito.'),
+      m.creditos?.fuente ? h('a', { href: m.creditos.fuente, target: '_blank', rel: 'noopener', title: m.creditos.texto || '' }, 'Referencia documental de créditos ↗') : h('span',{},'Sin referencia de créditos disponible.')));
+  return m.aviso ? h('div', { class: 'pila', style: { gap: 'var(--s-2, 8px)' } }, avisoParcial(m.aviso, { titulo: 'Posiciones sin actualizar.' }), linea) : linea;
+}
+
+// 244 · Dos líneas por métrica, contexto completo en título/detalle; sin cálculos nuevos.
+function celdaCompactaSEO244(principal, detalle, titulo = detalle) {
+  return h('span', {title:titulo || '',style:{display:'block',minWidth:'0',lineHeight:'1.35'}},
+    h('span',{},principal), detalle?h('small',{class:'sub',style:{display:'block',fontSize:'12px',maxWidth:'240px',overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}},detalle):null);
+}
+
 // ------------------------------------------------------------------ pestaña SEO
 function pintarSeo(z, ctx, d, base, r) {
+  if (ctx.vigente && !ctx.vigente()) return;
+  { const l = lineaDatoSR(d); if (l) z.append(l); }
   if (!base.length) {
     z.append(vacio({ icono: 'star', titulo: r === 'seo' ? 'No tienes clientes de SEO asignados' : 'No hay clientes de SEO que puedas ver', texto: 'Las asignaciones (silla «SEO») salen de la fase 0 y las confirma Mili. Si falta un cliente tuyo, díselo a Jerónimo (jefe de SEO).', quien: 'Mili', borde: true }));
     return;
   }
   // lo primero hoy (máx. 7)
-  const prim = base.filter(f => f.estado === 'rojo' || f.estado === 'ambar').slice(0, 7);
-  z.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: r === 'jefa' ? 'Clientes en rojo y ámbar de toda la célula, con quién los lleva' : 'Tus clientes que piden algo hoy (máximo 7)' },
+  const prim=[...base.filter(f=>f.estado==='rojo'||f.estado==='ambar'),...base.filter(f=>f.estado==='gris'&&f._medicionSEO?.historicas>0)].slice(0,7);
+  const recomendaciones = panel({ titulo: 'Lo primero hoy', icono: 'zap', sub:'Cambios observados acreditados primero; señales anteriores en gris para contrastar. No certifica objetivos cumplidos (máximo 7).' },
     listaLoPrimero(prim.map((f, i) => ({
       estado: cuentagotas(f.estado, i, prim.length), icono: f.alertas[0]?.tipo === 'clics' ? 'grafico' : f.alertas[0]?.tipo === 'visibilidad' ? 'ojo' : 'star',
-      motivo: `${f.cliente} · ${f.motivo}`,
+      motivo:`${f.cliente} · ${f.estado==='gris'&&f._medicionSEO?.historicas>0?f.alertas.find(a=>!a.acreditada)?.texto:f.motivo}`,
       detalle: [nom(ctx, f.seo_id) ? `Lo lleva ${nom(ctx, f.seo_id)}` : 'Sin SEO asignado', f.n_alertas.rojo + f.n_alertas.ambar > 1 ? `${f.n_alertas.rojo + f.n_alertas.ambar - 1} avisos más` : null].filter(Boolean).join(' · '),
       botones: masAcciones(
         h('a', { class: 'bt mini', href: `#/seo-web/${f.cliente_id}` }, icono('cli'), 'Ver cliente'),
         f.seranking ? h('a', { href: f.seranking.prueba, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir en SE Ranking') : null,
         botonConfirmar({ texto: 'Crear tarea', pregunta: `¿Tarea en ClickUp para ${nom(ctx, f.seo_id) || 'el SEO'}?`, confirmar: 'Sí, crear', mini: true, soloLectura: ctx.soloLectura,
           alConfirmar: async () => { await ctx.accion({ herramienta: 'clickup', tipo: 'tarea', objeto: `SEO · ${f.cliente} · ${f.motivo}`.slice(0, 200), cliente_id: f.cliente_id, texto: f.motivo, vista_previa: `Tarea en la lista de SEO de ${f.cliente}: «${f.motivo}». Responsable: ${nom(ctx, f.seo_id) || 'sin asignar'}. Plazo 48 h.` }); return 'En la cola (simulación)'; } })),
-    })), { vacio: { titulo: 'Nada en rojo ni en ámbar', porque: 'Todos tus clientes de SEO van bien hoy.', celebrar: true } })));
+    })), { vacio: { titulo:'Sin alertas actuales acreditadas en esta muestra',porque:'Revisa fecha, motor y cobertura; no demuestra ausencia de cambios ni cumplimiento.',celebrar:false } }));
 
   // semáforo de la cartera con chips que se quedan
   const cuenta = e => base.filter(f => f.estado === e).length;
@@ -280,37 +301,46 @@ function pintarSeo(z, ctx, d, base, r) {
     { valor: '', texto: 'Todos', cuenta: base.length },
     { valor: 'rojo', texto: 'Actuar', icono: 'fire', cuenta: cuenta('rojo'), cuentaEstado: 'rojo' },
     { valor: 'ambar', texto: 'Vigilar', icono: 'alert', cuenta: cuenta('ambar') },
-    { valor: 'verde', texto: 'Bien', icono: 'ok', cuenta: cuenta('verde') },
+    { valor: 'verde', texto: 'Señal favorable', icono: 'info', cuenta: cuenta('verde') },
     { valor: 'sin_gsc', texto: 'Clics sin dato', icono: 'plug', cuenta: base.filter(f => !f.clics).length },
   ];
   const caja = h('div');
   const chips = marcarChips(chipsFiltro({ etiqueta: 'Estado', clave: `seo.estado.${ctx.persona.id}`, opciones: ops, alCambiar: () => pintar() }), ops);
   const pintar = () => {
+    if (ctx.vigente && !ctx.vigente()) return;
     const v = chips.valor();
-    const filas = base.filter(f => !v || (v === 'sin_gsc' ? !f.clics : f.estado === v));
+    const filas = base.filter(f => !v || (v === 'sin_gsc' ? !f.clics : f.estado === v)).map(f => ({ ...f, panelEspecialista: panelSeo({...f,clics:f.clics?{...f.clics,mes_ant:f._medicionSEO?.clics?.mes?f.clics.mes_ant:null}:null},d.seo._meta) }));
     caja.replaceChildren(tablaDensa({
-      filas, porPagina: 15, apilable: false,
+      filas, porPagina: 15, apilable: true,
       buscar: { campos: ['cliente', 'seo_quien', 'motivo'], placeholder: 'Buscar cliente o persona' },
       filtros: r === 'jefa' ? [{ clave: 'seo_quien', titulo: 'Lo lleva' }] : [],
       columnas: [
         { clave: 'cliente', titulo: 'Cliente', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente({ nombre: f.cliente, logo: (ctx.clientes.find(c => c.id === f.cliente_id) || {}).logo }), f.cliente) },
-        { clave: 'estado', titulo: 'Estado', valor: f => EST[f.estado], celda: f => h('span', { class: 'pila', style: { gap: S[1], minWidth: '200px' } }, estadoTexto(f.estado, TXT_EST[f.estado]), motivo2(f.motivo)) },
-        { clave: 'seo_quien', titulo: 'Lo lleva', celda: f => nom(ctx, f.seo_id) ? h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(nom(ctx, f.seo_id))), nom(ctx, f.seo_id)) : chipEstado('ambar', 'Sin asignar') },
-        { clave: 'top5', titulo: 'Top 5 de 15', num: true, valor: f => f.reparto?.top5.hoy ?? -1, celda: f => f.reparto ? h('span', { title: `Hace 30 días: ${f.reparto.top5.mes}` }, `${f.reparto.top5.hoy} `, f.reparto.top5.hoy === f.reparto.top5.mes ? h('span', { class: 'sub' }, '=') : delta(f.reparto.top5.hoy > f.reparto.top5.mes, `${f.reparto.top5.hoy > f.reparto.top5.mes ? '▲' : '▼'} ${Math.abs(f.reparto.top5.hoy - f.reparto.top5.mes)}`)) : h('span', { class: 'sub' }, 'se conecta') },
-        { clave: 'clics', titulo: 'Clics 7 días', num: true, valor: f => f.clics?.var_sem ?? -999, celda: f => f.clics ? h('span', {}, num(f.clics.semana), ' ', delta((f.clics.var_sem || 0) >= 0, pctTxt(f.clics.var_sem))) : h('span', { class: 'sub', title: f.gsc_nota || 'Search Console sin conectar' }, 'sin dato') },
-        { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: f => h('span', { class: 'fila', style: { gap: S[1], flexWrap: 'nowrap' } },
-          f.seranking ? h('a', { class: 'bt mini', href: f.seranking.prueba, target: '_blank', rel: 'noopener', title: 'Abrir el proyecto en SE Ranking' }, icono('ext'), 'SE Ranking') : null,
-          f.ga4_enlace ? h('a', { class: 'bt mini', href: f.ga4_enlace, target: '_blank', rel: 'noopener', title: 'Abrir Analytics' }, icono('ext'), 'Analytics') : null) },
-        { clave: 'vis', titulo: 'Visibilidad 7 días', num: true, valor: f => f.visibilidad?.var ?? -999, celda: f => f.visibilidad?.var === null || f.visibilidad?.var === undefined ? '—' : f.visibilidad.fiable === false ? h('span', { class: 'sub', title: `SE Ranking dejó de ver ${f.visibilidad.desaparecen} palabras de este cliente: la caída puede ser un fallo suyo. Compruébalo en Google.` }, 'sin dato fiable') : delta(f.visibilidad.var >= 0, pctTxt(f.visibilidad.var)) },
+        { clave:'objetivos',titulo:'Objetivo / páginas',ordenable:false,celda:f=>{
+          const op=filas.filter(x=>x.cliente_id===f.cliente_id).length===1&&typeof d.oportunidadesScope332==='string'&&ambitoOportunidades332(ctx)?.firma===d.oportunidadesScope332?oportunidadPagina332(f,d.seo._meta,ctx):null;
+          const objetivo=celdaObjetivo374(h,ctx,d.objetivos374,f.cliente_id);
+          if(!op)return celdaCompactaSEO244(objetivo,f.panelEspecialista.paginas===null?'Páginas: sin dato':`${f.panelEspecialista.paginas} páginas GSC · 28 d`);
+          const valido=()=>ambitoOportunidades332(ctx)?.firma===op.scope_firma;
+          const motivo=op.tipo==='descenso'?` · -${op.perdidos} clics observados`:op.tipo==='impresiones_sin_clics'?' · Sin clics':'';
+          return h('span',{},celdaCompactaSEO244(h('a',{href:`#/${op.ir}`,class:'sub enlace',title:`${op.accion} ${op.ventana.desde} → ${op.ventana.hasta}; lectura ${op.lectura}. ${op.nota}`,'aria-label':`Revisar página de ${f.cliente}: ${op.ruta}`,on:{click:e=>{if(!valido())e.preventDefault();}}},`Revisar ${op.ruta}`),`${op.clics} clics · ${op.impresiones} impresiones${motivo}`,op.accion),objetivo);
+        } },
+        { clave:'posiciones',titulo:'Consultas org. / Maps',ordenable:false,celda:f=>celdaCompactaSEO244(`Org: ${f.panelEspecialista.organico===null?'sin dato':f.panelEspecialista.organico} · Maps: ${f.panelEspecialista.maps===null?'sin dato':f.panelEspecialista.maps}`,`${f.panelEspecialista.consultas} consultas · ${f.panelEspecialista.sr || 'sin fecha'}`,`Consultas con posición observada, no posición media. Muestra provisional; ubicación y dispositivo en detalle. Fuente ${f.panelEspecialista.sr || 'sin fecha'}`) },
+        { clave:'clics',titulo:'Clics · 28 d',num:true,valor:f=>f.panelEspecialista.trafico??-1,celda:f=>celdaCompactaSEO244(f.panelEspecialista.trafico===null?'Sin dato':`${num(f.panelEspecialista.trafico)} clics`,`Antes: ${f.panelEspecialista.antes===null?'sin dato':num(f.panelEspecialista.antes)} · hasta ${f.panelEspecialista.hasta || 'sin fecha'}`,'Search Console: 28 días y los 28 anteriores cuando hay comparación acreditada; no posiciones de Maps.') },
+        { clave:'medicion',titulo:'Técnica / reseñas',ordenable:false,celda:f=>h('span',{},celdaCompactaSEO244('Schema: no medido',null),h('span',{class:'fila',style:{gap:S[1]}},h('a',{class:'sub enlace',href:`#/seo-web/webs/${f.cliente_id}`,'aria-label':`Revisar web de ${f.cliente}`},'Web'),h('button',{type:'button',class:'bt mini','aria-label':`Consultar reseñas de ${f.cliente}`,on:{click:()=>{if(ctx.vigente && !ctx.vigente())return;z.closest?.('#seo-pestanas')?.elegir?.('ficha');}}},'Reseñas'))) },
+        { clave:'pendiente',titulo:'Detalle',ordenable:false,celda:f=>h('a',{href:`#/seo-web/${f.cliente_id}`,class:'bt mini',title:f.panelEspecialista.accion,'aria-label':`Revisar ${f.cliente}: ${f.panelEspecialista.accion}`},'Revisar cliente') },
+        ...(r==='jefa'?[{clave:'seo_quien',titulo:'Lo lleva',celda:f=>nom(ctx,f.seo_id)||'Sin asignar'}]:[]),
       ],
-      alPulsar: f => ctx.navegar(`seo-web/${f.cliente_id}`),
+      alPulsar: f => { if (!ctx.vigente || ctx.vigente()) ctx.navegar(`seo-web/${f.cliente_id}`); },
       etiquetaFila: f => `${f.cliente}: ${TXT_EST[f.estado]}, ${f.motivo}. Abrir detalle`,
       vacio: { titulo: 'Ningún cliente en este estado', porque: 'Cambia el filtro de arriba.' },
     }));
   };
   pintar();
-  z.append(panel({ titulo: 'Semáforo de la cartera de SEO', icono: 'medidor', sub: 'Verde: clics de 28 días iguales o mejores (hasta −10 %) y ninguna de las 15 palabras fuera del top 10. Posiciones de hoy frente a hace 7 días; ventanas fijas de la fuente.' },
+  z.append(panel({ titulo: r==='seo'?'Mis clientes · revisión SEO':'Clientes · revisión SEO', icono: 'medidor', sub: 'Muestra parcial · objetivos por confirmar · orgánico y Maps separados. Pulsa un cliente para revisar fuente y contexto.' },
     h('div', { class: 'cuerpo', style: { paddingBottom: S[1] } }, chips), caja));
+  z.append(renderObjetivos374(h,ctx,d.objetivos374));
+  z.append(h('details',{},h('summary',{style:{minHeight:'44px'}},`Recomendaciones · ${prim.length} clientes de la muestra`),recomendaciones,
+    h('p',{class:'sub'},'Objetivos por confirmar. SE Ranking usa consultas provisionales y la mejor posición entre dos comprobaciones; región y dispositivo pendientes de identificar. Orgánico y Maps separados. Un dato ausente no es cero.')));
 
   // su célula (solo jefas): carga y estado por persona
   if (r === 'jefa') {
@@ -324,7 +354,7 @@ function pintarSeo(z, ctx, d, base, r) {
       h('div', { class: 'cuerpo' }, h('div', { class: 'rejilla' }, [...por.entries()].sort((a, b) => b[1].rojo - a[1].rojo || b[1].n - a[1].n).map(([k, o]) =>
         h('div', { style: { border: '1px solid var(--line)', borderRadius: 'var(--r-sm)', padding: S[3], background: 'var(--card)', display: 'grid', gap: S[2], minWidth: '0' } },
           h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap', fontWeight: '700', minWidth: '0' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(k)), h('span', { style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, k)),
-          h('span', { class: 'fila', style: { gap: `${S[1]} ${S[3]}` } }, estadoTexto('rojo', `${o.rojo} actuar`), estadoTexto('ambar', `${o.ambar} vigilar`), estadoTexto('verde', `${o.verde} bien`)),
+          h('span', { class: 'fila', style: { gap: `${S[1]} ${S[3]}` } }, estadoTexto('rojo', `${o.rojo} actuar`), estadoTexto('ambar', `${o.ambar} vigilar`), estadoTexto('verde', `${o.verde} señal favorable`)),
           h('span', { class: 'sub' }, `${num(o.n)} clientes de SEO`)))))));
   }
 
@@ -427,6 +457,7 @@ function pintarTablero(z, ctx, d, r) {
 
 // ------------------------------------------------------------------ pestaña Webs
 function pintarWebs(z, ctx, d, r, webObjetivo = null) {
+  if (ctx.vigente && !ctx.vigente()) return;
   const webs = d.webs.webs || [];
   const metaW = d.webs._meta || {};
   const M = d.modular || {};
@@ -434,10 +465,11 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
   // V2 · una sola regla de «lenta» (webs.json → _meta.lenta, la misma que Mi día y Alertas)
   const esLenta = w => (w.lenta !== undefined ? w.lenta : responde(w) && (w.comprobacion?.ms || 0) >= ((metaW.lenta || {}).umbral_ms || 5000));
   // Tablero del equipo web (Modular DS): lo primero que se ve en la pestaña para web, jefe de SEO y web y dirección
-  if (d.tablero) pintarTablero(z, ctx, d, r);
+  const tablero = d.tablero ? h('div') : null;
+  if (tablero) pintarTablero(tablero, ctx, d, r);
   // lo primero: caídas, spam y certificados
   const rojas = webs.filter(w => w.estado === 'rojo').slice(0, 7);
-  z.append(panel({ titulo: d.tablero ? 'Monitor de RO · webs en rojo' : 'Lo primero hoy', icono: 'zap', sub: 'Webs en rojo desde la IP de RO (caídas, spam, certificados). «Lo tengo» evita que suba (a Agus, y a Mili a la hora).' },
+  const recomendacionesWeb = panel({ titulo: d.tablero ? 'Monitor de RO · webs en rojo' : 'Lo primero hoy', icono: 'zap', sub: 'Webs en rojo desde la IP de RO (caídas, spam, certificados). «Lo tengo» evita que suba (a Agus, y a Mili a la hora).' },
     listaLoPrimero(rojas.map((w, i) => ({
       estado: cuentagotas('rojo', i, rojas.length), icono: w.motivo.includes('spam') ? 'escudo' : 'mundo_web',
       motivo: `${w.nombre} · ${w.motivo}`,
@@ -449,9 +481,9 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
         botonDeshacer({ texto: 'Lo tengo', hecho: 'Tuya', pri: true, icono: 'persona', soloLectura: ctx.soloLectura,
           alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'caida_lo_tengo', objeto: `${w.nombre} · ${w.motivo}`.slice(0, 200), texto: w.motivo, vista_previa: `${ctx.persona.nombre} coge «${w.motivo}» en ${w.url}. Se para la subida a Agus.` }); return 'Tuya · no sube a Agus'; } }),
         botonDeshacer({ texto: 'Avisar al account', hecho: 'Account avisado', icono: 'send', soloLectura: ctx.soloLectura,
-          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: w.nombre, texto: w.motivo, vista_previa: `Aviso interno al account de ${w.nombre}: «${w.motivo}». Nada sale al cliente.` }); return 'Avisado en su Mi día'; } }),
+          alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: w.nombre, texto: w.motivo, vista_previa: `Aviso interno al account de ${w.nombre}: «${w.motivo}». Nada sale al cliente.` }); return 'Registro local guardado; aviso al account sin confirmar'; } }),
         ...masAcciones(h('span'), h('a', { href: w.url, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir la web')).slice(1)],
-    })), { subir: !d.tablero, vacio: { titulo: 'Ninguna web en rojo', porque: 'Todas responden desde la IP de RO, sin spam ni certificados a punto de caducar.', celebrar: true } })));   // con tablero, en el móvil no se sube encima de él
+    })), { subir: !d.tablero, vacio: { titulo: 'Ninguna web en rojo', porque: 'Todas responden desde la IP de RO, sin spam ni certificados a punto de caducar.', celebrar: true } }));   // con tablero, en el móvil no se sube encima de él
 
   // todas las webs con chips
   const ops = [
@@ -504,19 +536,22 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
   const caja = h('div');
   const chips = marcarChips(chipsFiltro({ etiqueta: 'Ver', clave: `seo.webs.${ctx.persona.id}`, opciones: ops, alCambiar: () => pintar() }), ops);
   const pintar = () => {
+    if (ctx.vigente && !ctx.vigente()) return;
     const v = chips.valor();
-    const filas = webs.filter(w => !v || filtro[v]?.(w));
+    const filas = webs.filter(w => !v || filtro[v]?.(w)).map(w=>({...w,panelEspecialista:panelWeb(w)}));
     caja.replaceChildren(tablaDensa({
       filas, porPagina: 15, apilable: false,
       buscar: { campos: ['nombre', 'url', 'web_quien', 'motivo'], placeholder: 'Buscar web o persona' },
       filtros: [{ clave: 'web_quien', titulo: 'Lleva la web' }],
       columnas: [
         { clave: 'nombre', titulo: 'Web', principal: true, minAncho: '180px', celda: w => h('span', { class: 'pila', style: { gap: S[1] } }, h('b', {}, w.nombre), h('a', { class: 'sub enlace', href: w.url, target: '_blank', rel: 'noopener', style: TOQUE }, w.url.replace(/^https?:\/\//, '').replace(/\/$/, ''))) },
-        { clave: 'estado', titulo: 'Estado', valor: w => EST[w.estado], celda: w => h('span', { class: 'pila', style: { gap: S[1], minWidth: '200px' } }, estadoTexto(w.estado, TXT_EST[w.estado]), motivo2(w.motivo)) },
+        { clave: 'estado', titulo: 'Estado', valor: w => EST[w.estado], celda: w => h('span', { class: 'pila', style: { gap: S[1], minWidth: '120px',maxWidth:'180px' },title:w.motivo }, estadoTexto(w.estado, TXT_EST[w.estado]), h('small',{class:'sub',style:{fontSize:'12px',overflow:'hidden',whiteSpace:'nowrap',textOverflow:'ellipsis'}},w.motivo)) },
         { clave: 'http', titulo: 'Respuesta', num: true, valor: w => w.comprobacion?.estado || 0, celda: w => w.comprobacion?.estado ? String(w.comprobacion.estado) : h('span', { class: 'sub' }, 'sin respuesta') },
-        { clave: 'ms', titulo: 'Tiempo', num: true, valor: w => w.comprobacion?.ms ?? 99999, celda: w => w.comprobacion ? `${numD(w.comprobacion.ms / 1000, 1)} s` : '—' },
+        { clave: 'ms', titulo: 'Respuesta HTML', num:true,valor:w=>w.panelEspecialista.ms??-1,celda:w=>h('span',{class:'pila',style:{gap:S[1]}},w.panelEspecialista.ms===null?'Sin dato':`${numD(w.panelEspecialista.ms/1000,1)} s`,h('span',{class:'sub'},`Desde RO · ${w.panelEspecialista.fechaMonitor || 'sin fecha'} · no es PageSpeed`)) },
         { clave: 'cert', titulo: 'Certificado', num: true, valor: w => w.comprobacion?.cert_dias ?? -1, celda: w => w.comprobacion?.cert_dias !== null && w.comprobacion?.cert_dias !== undefined ? estadoTexto(semaforo(w.comprobacion.cert_dias, { verde: 31, ambar: 8 }), `${num(w.comprobacion.cert_dias)} días`) : h('span', { class: 'sub' }, 'no se pudo leer') },
         ...colsModular,
+        {clave:'plugins',titulo:'Plugins / rendimiento',ordenable:false,celda:w=>celdaCompactaSEO244(w.panelEspecialista.plugins===null?'Plugins: sin dato':`${w.panelEspecialista.plugins} plugins pendientes`,'PageSpeed: sin medición',`PageSpeed / LCP: sin medición · piloto bloqueado por cuota. Detalle Modular: ${w.panelEspecialista.fechaModular || 'sin fecha'}`)},
+        {clave:'pendiente',titulo:'Siguiente revisión',ordenable:false,celda:w=>h('details',{},h('summary',{style:{minHeight:'44px',whiteSpace:'nowrap'}},'Ver revisión'),h('p',{class:'sub',style:{maxWidth:'240px'}},w.panelEspecialista.accion))},
         { clave: 'web_quien', titulo: 'Lleva la web', celda: w => h('span', { style: { display: 'grid', gap: 'var(--s-1)' } }, nom(ctx, w.web_id) ? nom(ctx, w.web_id) : h('span', { class: 'sub' }, 'sin asignar'),
           w.web_aviso ? h('span', { class: 'sub', style: { overflowWrap: 'anywhere' } }, w.web_aviso) : null) },
       ],
@@ -537,6 +572,7 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
     : h('div', { class: 'fila', style: { gap: S[2] } }, chipEstado('gris', 'Modular sin conectar'), h('span', { class: 'sub', style: { flex: '1 1 320px', minWidth: '0' } }, MODULAR_PASO));
   z.append(panel({ titulo: 'Todas las webs', icono: 'mundo_web', sub: 'Las de todos los clientes y la de RO: el equipo web cubre guardias de todas. Copia, actualizaciones, seguridad y «fuera de RO» salen de Modular DS.' },
     h('div', { class: 'cuerpo pila', style: { paddingBottom: S[1], gap: S[2] } }, lineaModular, chips), caja));
+  z.append(h('details',{},h('summary',{style:{minHeight:'44px'}},`Incidencias y tareas web · ${rojas.length} avisos en la muestra`),recomendacionesWeb,...(tablero?[tablero]:[])));
 
   // avisos de medición
   const conAviso = webs.filter(w => w.avisos.length);
@@ -550,7 +586,7 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
     ['Desde la IP de RO', `una comprobación real de cada web desde el Mac de RO (${fDiaHoraRO(mon.leido)}): código de respuesta, redirección, tiempo, certificado y palabras de spam en la portada.`],
     M.conectado ? ['Desde fuera · Modular DS', 'vigila cada web desde fuera, sus copias, las actualizaciones y los fallos de seguridad. Caída de verdad = falla en los dos; si Modular la ve arriba y desde RO no responde, está «bloqueada solo para RO».']
       : ['Desde fuera · Modular sin conectar', MODULAR_PASO],
-    ['Velocidad · PageSpeed se conecta', 'falta la clave gratuita de PageSpeed. Sin ella no hay puntuación móvil (bien desde 85 · mal por debajo de 50 o con más de 2,5 s); aquí solo se ve el tiempo de servir la portada.'],
+    ['Velocidad · PageSpeed', 'La respuesta HTML de RO no mide la carga visual. El lector PageSpeed está preparado; el piloto del 3-oct devolvió límite de cuota y todavía no hay puntuación. Debe habilitarse una clave con cuota antes de automatizar la cartera.'],
   ]));
 }
 
@@ -561,18 +597,18 @@ function pintarFicha(z, ctx, d, base) {
   const filas = conMapa.flatMap(f => f.mapa.map(k => ({ cliente: f.cliente, cliente_id: f.cliente_id, k: k.k, mapa: k.mapa })));
   // Ronda U (50 §SEO): una línea, y debajo lo que sí se puede hacer hoy (posición en Maps)
   const gz = h('div'); z.append(gz); pestanaFichaGoogle(gz, ctx);   // 3-oct · reseñas por responder, llamadas y rutas (o «pendiente de aprobación de Google»)
-  z.append(panel({ titulo: 'Posiciones en Maps que ya da SE Ranking', icono: 'pin', sub: `Solo en los proyectos con buscador de Maps dado de alta. Posición de hoy · ${fmt.plural(filas.length, 'palabra', 'palabras')}, todas (la misma cuenta que Mi día).` },
+  z.append(panel({ titulo: 'Posiciones en Maps que ya da SE Ranking', icono: 'pin', sub: `Solo en los proyectos con buscador de Maps dado de alta. Posición de la última lectura · ${fmt.plural(filas.length, 'palabra', 'palabras')}, todas (la misma cuenta que Mi día).` },
     filas.length ? tablaDensa({ filas, porPagina: 15, apilable: false, columnas: [
       { clave: 'cliente', titulo: 'Cliente', principal: true, celda: x => h('a', { class: 'celda-cli', href: `#/seo-web/${x.cliente_id}`, style: { color: 'var(--ink)', textDecoration: 'none', ...TOQUE } }, x.cliente) },
       { clave: 'k', titulo: 'Palabra', celda: x => h('span', { style: { overflowWrap: 'anywhere' } }, x.k) },
       { clave: 'mapa', titulo: 'En Maps', num: true, celda: x => posCh(x.mapa) },
     ] })
-      : h('div', { class: 'cuerpo' }, vacioLinea('Ningún proyecto sigue Maps entre las 15 palabras. Para verlo, dar de alta el buscador de Maps en SE Ranking (gasta créditos: pedir permiso).', { icono: 'pin', quien: 'Jerónimo' }))));
+      : h('div', { class: 'cuerpo' }, vacioLinea('Sin posiciones Maps observadas en esta muestra de hasta 15 consultas. No acredita ausencia de seguimiento; contrasta la configuración y la fecha en SE Ranking.', { icono: 'pin', quien: 'Jerónimo' }))));
   z.append(piePlegado('Lo que enseñará en cuanto se conecte · 5 cosas', [
     ['Reseñas nuevas sin responder', 'las de 1-3 estrellas arriba; 24 h → Jerónimo (jefe de SEO), 48 h → account'],
-    ['Tasa de llamada de la ficha', 'clics de llamada ÷ vistas · bien por encima del 7 % · mal por debajo del 2 %'],
+    ['Tasa de llamada de la ficha', 'clics de llamada ÷ vistas de la misma ventana; objetivo propio pendiente de ratificar, sin umbral universal'],
     ['Acciones desde la ficha', 'llamadas + rutas + clics a la web + mensajes, frente al mes anterior'],
-    ['Actividad', 'días desde la última publicación o foto · mal con más de 30 días'],
+    ['Actividad', 'fecha de la última publicación o foto y cadencia acordada; sin inventario no acredita cumplimiento'],
     ['Ficha a punto', 'las 9 casillas del ciclo mensual en ClickUp'],
   ]));
 }
@@ -588,7 +624,7 @@ function pintarDetalle(cont, ctx, d, id) {
       cont.append(vacio({ icono: 'candado', titulo: 'El SEO de este cliente no es de tu puesto', texto: `Lo ve quien lleva el cliente y el jefe de SEO (Jerónimo). Si necesitas algo de ${c.nombre}, habla con ${c.responsable}.`, quien: c.responsable, accion: volver, borde: true }));
     } else {
       ctx.titulo(c ? c.nombre : 'Cliente', '');
-      cont.append(vacio({ icono: 'star', titulo: c ? `${c.nombre} no tiene SEO` : 'No encuentro ese cliente', texto: c ? 'No aparece como cliente con servicio de SEO ni con proyecto en SE Ranking.' : `No hay cliente «${id}».`, accion: volver, borde: true }));
+      cont.append(vacio({ icono: 'star', titulo:c?'SEO sin fuente visible confirmada':'No encuentro ese cliente',texto:c?'Esta copia no aporta una fila SEO autorizada y activa de este cliente; no acredita ausencia de servicio o seguimiento.' : `No hay cliente «${id}».`, accion: volver, borde: true }));
     }
     return;
   }
@@ -606,7 +642,7 @@ function pintarDetalle(cont, ctx, d, id) {
       h('div', { style: { minWidth: 0, flex: '1 1 260px' } },
         h('h2', {}, f.cliente),
         h('div', { class: 'meta-linea', style: { marginTop: S[1] } },
-          f.web ? h('span', {}, icono('link'), h('a', { href: f.web, target: '_blank', rel: 'noopener', style: { display: 'inline-flex', alignItems: 'center', minHeight: 'var(--s-8)', minWidth: 'var(--s-8)' } }, f.web.replace(/^https?:\/\//, '').replace(/\/$/, ''))) : null,
+          f.web ? h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: S[1], minWidth: '0', maxWidth: '100%' } }, icono('link'), h('a', { href: f.web, target: '_blank', rel: 'noopener', style: { display: 'inline-flex', alignItems: 'center', minHeight: 'var(--s-8)', minWidth: '0', maxWidth: '100%', overflowWrap: 'anywhere', whiteSpace: 'normal' } }, f.web.replace(/^https?:\/\//, '').replace(/\/$/, ''))) : null,
           f.seranking ? h('span', {}, icono('star'), `${num(f.seranking.seguidas)} palabras seguidas · ${f.seranking.buscadores} buscadores`) : null,
           nom(ctx, f.seo_id) ? h('span', {}, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(nom(ctx, f.seo_id))), nom(ctx, f.seo_id)) : null),
         h('div', { class: 'fila', style: { marginTop: S[3], gap: S[2] } }, chipEstado(f.estado, TXT_EST[f.estado]), h('span', { class: 'sub', style: { overflowWrap: 'anywhere', minWidth: 0 } }, f.motivo))),
@@ -616,18 +652,20 @@ function pintarDetalle(cont, ctx, d, id) {
         f.ga4_enlace ? h('a', { class: 'bt', href: f.ga4_enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Analytics') : h('span', { class: 'bt', 'aria-disabled': 'true', title: 'Falta emparejar Analytics' }, icono('plug'), 'Analytics: falta emparejar'),
         h('a', { class: 'bt', href: 'https://business.google.com/locations', target: '_blank', rel: 'noopener' }, icono('ext'), 'Ficha de Google')))));
 
+  if (f.seranking) { const l = lineaDatoSR(d); if (l) cont.append(l); }
   // tarjetas (5 → una fila de 5). Ventanas fijas de la fuente, dichas en cada etiqueta.
   const k = f.clics;
   const t = [];
-  t.push(tile({ icono: 'star', etiqueta: 'Palabras en el top 5', valor: f.reparto ? num(f.reparto.top5.hoy) : null, unidad: f.reparto ? 'de 15' : null, estado: f.reparto ? (f.reparto.top5.hoy >= f.reparto.top5.mes ? 'verde' : f.reparto.top5.mes - f.reparto.top5.hoy <= 2 ? 'ambar' : 'rojo') : 'gris',
-    comparacion: f.reparto ? { delta: f.reparto.top5.hoy - f.reparto.top5.mes, texto: 'frente a hace 30 días' } : null, contexto: f.reparto ? `${num(f.top10_15 ?? 0)} de 15 en el top 10${f.reparto.top5.sin_ver_hoy ? ` · ${num(f.reparto.top5.sin_ver_hoy)} que hoy SE Ranking no ve (no cuentan)` : ''}` : 'Sin dato · sin proyecto en SE Ranking', medible: f.reparto ? 'hoy' : 'no',
-    medibleDetalle: 'Bien si sube o se mantiene; mal si baja 3 o más', frescura: f.seranking ? { fuente: 'SE Ranking', fecha: f.seranking.ultima } : null }));
-  t.push(tile({ icono: 'grafico', etiqueta: 'Clics · 28 días', valor: k ? num(k.mes) : null, estado: k ? semaforo(k.var_mes, { verde: -10, ambar: -25 }) : 'gris',
+  const top5Hoy=conteoSEO(f.reparto?.top5?.hoy),top5Mes=conteoSEO(f.reparto?.top5?.mes),top10Hoy=conteoSEO(f.top10_15);
+  t.push(tile({ icono: 'star', etiqueta: 'Palabras en el top 5', valor: top5Hoy===null?null:num(top5Hoy), unidad: top5Hoy===null?null:'de 15', estado:'gris',
+    comparacion: top5Hoy!==null&&top5Mes!==null ? { delta: top5Hoy-top5Mes, texto: 'frente a hace 30 días' } : null, contexto: f.reparto ? `${top10Hoy===null?'Top 10 sin dato':`${num(top10Hoy)} de 15 en el top 10`}${f.reparto.top5?.sin_ver_hoy ? ` · ${num(f.reparto.top5.sin_ver_hoy)} que hoy SE Ranking no ve (no cuentan)` : ''}` : 'Sin dato · sin proyecto en SE Ranking', medible: f.reparto ? 'hoy' : 'no',
+    medibleDetalle:'Recuento observado; no acredita objetivo de servicio + ciudad cumplido', frescura: f.seranking ? { fuente: 'SE Ranking', fecha: f.seranking.ultima } : null }));
+  t.push(tile({ icono: 'grafico', etiqueta: 'Clics · 28 días', valor: k ? num(k.mes) : null, estado:'gris',
     comparacion: k ? { delta: k.var_mes, pct: true, texto: 'frente a los 28 anteriores' } : null, contexto: k ? `Últimos 7 días: ${num(k.semana)} (${pctTxt(k.var_sem)})` : `Sin dato · ${f.gsc_nota || 'Search Console sin conectar'}`, medible: k ? 'hoy' : 'no', frescura: k ? { fuente: 'Search Console', fecha: d.seo._meta.gsc.leido } : null }));
   t.push(tile({ icono: 'ojo', etiqueta: 'Impresiones · 28 días', valor: k ? num(k.impresiones) : null, comparacion: k ? { delta: k.var_impr, pct: true, texto: 'frente a los 28 anteriores' } : null, contexto: k ? `CTR ${numD(k.ctr, 2)} % · posición ${numD(k.posicion, 1)}` : 'Sin dato · Search Console sin conectar', medible: k ? 'hoy' : 'no' }));
-  t.push(tile({ icono: 'medidor', etiqueta: 'Visibilidad · 7 días', valor: f.visibilidad?.var !== null && f.visibilidad?.var !== undefined ? pctTxt(f.visibilidad.var) : null,
-    estado: f.visibilidad?.var === null || f.visibilidad?.var === undefined || f.visibilidad.fiable === false ? 'gris' : f.visibilidad.var <= -15 ? 'rojo' : f.visibilidad.var <= -5 ? 'ambar' : 'verde',
-    contexto: f.visibilidad?.fiable === false ? `Sin dato fiable: SE Ranking dejó de ver ${num(f.visibilidad.desaparecen)} palabras · compruébalo en Google` : f.visibilidad?.desaparecen ? `${num(f.visibilidad.desaparecen)} «no aparecen»: comprobar` : 'Mal si cae más del 15 %', medible: 'medias', medibleDetalle: d.seo._meta.visibilidad }));
+  const vis=f._medicionSEO?.visibilidad,historica=f.visibilidad_original?.var;
+  t.push(tile({icono:'medidor',etiqueta:vis?'Visibilidad estimada · par fechado':'Visibilidad anterior · por contrastar',valor:vis?.var!==null&&vis?.var!==undefined?pctTxt(vis.var):typeof historica==='number'&&Number.isFinite(historica)?pctTxt(historica):null,
+    estado:'gris',contexto:vis?`${vis.pares} pares ${vis.desde}–${vis.hasta}; estimación, no tráfico real`:'Sin cohorte/motores/fechas verificables; no acredita una caída actual ni objetivo cumplido',medible:'medias',medibleDetalle:'La configuración de ubicación/dispositivo debe contrastarse aparte'}));
   const ga = f.ga4?.actual;
   t.push(tile({ icono: 'users', etiqueta: 'Usuarios · 30 días', valor: ga ? num(ga.usuarios) : null, comparacion: ga && f.ga4.anterior ? { delta: variacion(ga.usuarios, f.ga4.anterior.usuarios), pct: true, texto: 'frente a los 30 anteriores' } : null,
     contexto: ga ? `${num(ga.conversiones)} conversiones` : 'Sin dato · Analytics sin emparejar', medible: ga ? 'hoy' : 'no', frescura: f.ga4?.hora ? { fuente: 'Analytics', fecha: f.ga4.hora } : null }));
@@ -638,35 +676,50 @@ function pintarDetalle(cont, ctx, d, id) {
   cont.append(rejillaTarjetas(conDato));
   if (sinDato.length) cont.append(vacioLinea(`Sin dato · ${sinDato.join(' · ')}`, { icono: 'plug', quien: 'Agus' }));
   if (f.alertas.length) {
-    cont.append(panel({ titulo: 'Avisos de esta semana', icono: 'alert' },
+    cont.append(panel({ titulo: 'Avisos guardados y cambios acreditados', icono: 'alert' },
       listaLoPrimero(f.alertas.slice(0, 7).map((a, i, l) => ({ estado: cuentagotas(a.gravedad, i, l.length), icono: a.tipo === 'clics' ? 'grafico' : a.tipo === 'visibilidad' ? 'ojo' : 'star', motivo: a.texto,
-        detalle: a.tipo === 'desaparece' ? 'Puede ser desindexación o un fallo de la comprobación de SE Ranking: buscar la palabra en Google en una ventana privada.' : a.tipo === 'fuera_top10' ? 'Regla: si en 48 h no hay tarea, sube a Jerónimo (jefe de SEO).' : '',
+        detalle: a.tipo === 'desaparece' ? 'Puede ser desindexación o un fallo de la comprobación de SE Ranking: buscar la palabra en Google en una ventana privada.' : a.acreditada?'Cambio observado; contrastar objetivo, contexto y siguiente revisión.':'Señal anterior sin par fechado acreditado; no se exige un plazo de respuesta desde esta copia.',
         botones: [botonDeshacer({ texto: 'Hecho / no aplica', hecho: 'Marcada', soloLectura: ctx.soloLectura, alHacer: () => { ctx.rastro({ accion: 'alerta_seo_vista', objeto: `${f.cliente_id}:${a.palabra || a.tipo}`, detalle: a.texto }); return 'Queda en el rastro'; } })] })))));
   }
 
   // pestañas por fuente: Posiciones (SE Ranking) · Clics de Google (Search Console) · Web y ficha
   const pintarPosiciones = z => {
+    z.append(renderObjetivos374(h,ctx,d.objetivos374,f.cliente_id));
+    const motores=contextoMotoresSEO(f);
+    z.append(panel({titulo:'Contexto de las posiciones',icono:'info',sub:'Consultas provisionales; el objetivo #1 para asesoría/gestoría o cada servicio + ciudad debe confirmarse en Prioridades por cliente.'},
+      h('div',{class:'cuerpo pila'},h('p',{class:'sub'},`Lectura posiciones: ${f.seranking?.ultima||'Sin fecha'}. Orgánico y Maps no son intercambiables. La mejor de dos comprobaciones no es una posición diaria única.`),
+        motores.length?motores.map(m=>h('p',{class:'sub'},`${m.principal?'Motor principal: ':'Motor configurado: '}${m.buscador||'Buscador sin dato'} · ${m.dispositivo||'Dispositivo sin dato'} · ${m.region||'Localidad sin dato'} · contexto ${m.fecha||'sin fecha'}`)):vacioLinea('Dispositivo y localidad sin metadatos en esta copia; no se infieren de la palabra, el nombre del cliente ni su dirección.',{icono:'info'}),
+        h('p',{class:'sub'},'La configuración de motores no vincula por sí sola cada celda Maps a un dispositivo/localidad. No es un geogrid.'),
+        h('a',{class:'bt mini',href:`#/prioridades-cliente?cliente=${encodeURIComponent(f.cliente_id)}`},'Confirmar objetivo, servicios y ciudad'))));
     const tabla15 = f.informe15.length ? tablaDensa({ filas: f.informe15, porPagina: 0, apilable: false, columnas: [
       { clave: 'k', titulo: 'Palabra', principal: true, celda: p => h('span', { style: { fontWeight: '600', display: 'inline-block', minWidth: '180px' } }, p.k) },
       { clave: 'vol', titulo: 'Búsquedas', num: true, celda: p => num(p.vol) },
-      { clave: 'hoy', titulo: 'Hoy', num: true, celda: p => posCh(p.hoy) },
+      { clave: 'hoy', titulo: 'Orgánico · mejor lectura', num: true, celda: p => posCh(p.hoy) },
+      { clave: 'mapa', titulo: 'Maps · observado', num: true, celda: p => posCh(p.mapa) },
       { clave: 'sem', titulo: 'Hace 7 días', num: true, celda: p => pos(p.sem) },
       { clave: 'mes', titulo: 'Hace 30 días', num: true, celda: p => pos(p.mes) },
-      { clave: 'd', titulo: 'En 7 días', num: true, celda: p => deltaPos(p.sem, p.hoy) },
+      {clave:'d',titulo:'Cambio acreditado · 7 d',num:true,celda:p=>parPosicionSEO(p,ctx.hoy)?deltaPos(p.sem,p.hoy):h('span',{class:'sub'},'Sin comparación')},
     ] })
       : vacioLinea('Posiciones: se conecta. Este cliente no tiene proyecto en SE Ranking emparejado; sin él no hay 15 palabras del informe ni alarma de top 10.', { icono: 'star', quien: nom(ctx, f.seo_id) || 'Jerónimo' });
     let rep = null;
     if (f.reparto) {
-      rep = ventanas([['top3', 'Top 3'], ['top5', 'Top 5'], ['top10', 'Top 10'], ['fuera', 'Fuera']].map(([kk, tt]) => ({ titulo: tt, valor: num(f.reparto[kk].hoy), sub: `hace 30 días: ${num(f.reparto[kk].mes)}` })));
+      rep = ventanas([['top3', 'Top 3'], ['top5', 'Top 5'], ['top10', 'Top 10'], ['fuera', 'Fuera']].map(([kk, tt]) => ({ titulo: tt, valor: conteoSEO(f.reparto[kk]?.hoy)===null?'Sin dato':num(f.reparto[kk].hoy), sub: `hace 30 días: ${conteoSEO(f.reparto[kk]?.mes)===null?'Sin dato':num(f.reparto[kk].mes)}` })));
       rep = h('div', { class: 'cuerpo', style: { paddingBottom: '0' } }, rep);
     }
-    const mov = f.movimientos;
+    const mov=f.movimientos;
+    const subidas=(mov?.suben||[]).filter(x=>parPosicionSEO({...x,sem:x.antes},ctx.hoy)?.delta>0);
+    const bajadas=(mov?.bajan||[]).filter(x=>parPosicionSEO({...x,sem:x.antes},ctx.hoy)?.delta<0);
     const lista = (arr, sube) => arr.length ? h('ul', { class: 'lista-i' }, arr.map(m => h('li', {}, h('span', { style: { flex: '1', minWidth: '0', overflowWrap: 'anywhere' } }, m.k), h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'sub' }, `${pos(m.antes)} →`), posCh(m.hoy)))))
-      : vacioLinea(sube ? 'Ninguna sube esta semana.' : 'Ninguna baja esta semana.', { icono: sube ? 'sube' : 'baja' });
-    z.append(panel({ titulo: 'Las 15 palabras del informe', icono: 'star', sub: `${d.seo._meta.informe15 || ''} Posición de hoy frente a hace 7 y 30 días (ventanas fijas de SE Ranking).`.trim() }, rep, h('div', { class: 'cuerpo' }, tabla15)));
+      : vacioLinea('Sin movimientos comparables en esta muestra; no acredita ausencia de cambios.', { icono: sube ? 'sube' : 'baja' });
+    z.append(panel({ titulo: 'Las 15 palabras del informe', icono: 'star', sub: `${d.seo._meta.informe15 || ''} Mejor posición de dos comprobaciones frente a hace 7 y 30 días (ventanas fijas de SE Ranking).`.trim() }, rep, h('div', { class: 'cuerpo' }, tabla15)));
+    const configuraciones=configuracionActualMotoresSEO(f,ctx.hoy);
+    if(configuraciones.length)z.append(h('details',{class:'panel',style:{padding:'12px 18px'}},
+      h('summary',{style:{cursor:'pointer',minHeight:'44px',display:'flex',alignItems:'center'}},'Configuración de SERanking observada'),
+      h('p',{class:'sub'},'Esta lectura describe la configuración consultada. No acredita la ciudad, el dispositivo ni el canal de las posiciones históricas, ni el objetivo contratado.'),
+      configuraciones.map(m=>h('p',{class:'sub'},`Motor ${m.motor} · ${m.buscador||'Buscador sin dato'} · ${m.region||'Localidad sin dato'} · ${m.dispositivo||'Dispositivo sin dato'} · ${m.idioma||'Idioma sin dato'} · ${m.maps} · lectura ${m.fecha}`))));
     z.append(mov ? dos(
-      panel({ titulo: 'Suben · 7 días', icono: 'sube', sub: `${num(mov.n_suben)} de todas las seguidas; las que más` }, h('div', { class: 'cuerpo' }, lista(mov.suben, true))),
-      panel({ titulo: 'Bajan · 7 días', icono: 'baja', sub: `${num(mov.n_bajan)} de todas las seguidas; las que más` }, h('div', { class: 'cuerpo' }, lista(mov.bajan, false))))
+      panel({ titulo: 'Suben · 7 días', icono: 'sube', sub:`${subidas.length} filas comparables de la muestra; no inventario completo`},h('div',{class:'cuerpo'},lista(subidas,true))),
+      panel({ titulo: 'Bajan · 7 días', icono: 'baja', sub:`${bajadas.length} filas comparables de la muestra; no inventario completo`},h('div',{class:'cuerpo'},lista(bajadas,false))))
       : panel({ titulo: 'Suben y bajan · 7 días', icono: 'sube' }, h('div', { class: 'cuerpo' }, vacioLinea('Se conecta: sin proyecto en SE Ranking.', { icono: 'star' }))));
   };
   const pintarClics = z => {
@@ -674,15 +727,19 @@ function pintarDetalle(cont, ctx, d, id) {
       z.append(panel({ titulo: 'Search Console', icono: 'grafico' }, h('div', { class: 'cuerpo' }, vacioLinea(`${f.gsc_estado === 'a_cero' ? 'Search Console a cero' : 'Search Console sin conectar'}: ${f.gsc_nota || 'sin sitio emparejado'}. Hay que dar acceso de lectura a gmb1 de RO en la propiedad del cliente.`, { icono: 'plug', quien: 'Agus' }))));
       return;
     }
+    const medicion=paginasSEO(f,d.seo._meta,ctx.hoy);
+    z.append(h('p',{class:'sub'},`Search Console · lectura ${medicion.lectura||'sin fecha'} · ${medicion.ventana?`${medicion.ventana.desde} a ${medicion.ventana.hasta}`:'ventana sin confirmar'} · muestra parcial; clics no son leads ni ventas.`));
+    z.append(h('p',{class:'sub'},'Publicaciones y artículos, frecuencia acordada, cambios de schema y entregas: sin inventario acreditado en esta fuente. Contrastar tareas y CMS antes de afirmar publicado, optimizado o cumplido.'));
     const v = f.clics?.ventanas?.mes || [];
     z.append(panel({ titulo: 'Clics diarios desde Google · 28 días', icono: 'grafico', sub: `${v.length ? `Del ${fDiaRO(v[0])} al ${fDiaRO(v[1])}` : 'Últimos 28 días'} · ventana fija de Search Console (va 2-3 días por detrás), no cambia con un periodo` },
       h('div', { class: 'cuerpo' }, grafico({ x: f.gsc.serie.map(([x]) => x), series: [{ nombre: 'Clics', y: f.gsc.serie.map(([, y]) => y) }], alto: 200, vacio: 'Sin clics en estos 28 días' }))));
-    const tablaPag = tablaDensa({ filas: f.gsc.paginas.map(([u, cl, im, ps, ant]) => ({ u, cl, im, ps, ant })), porPagina: 15, apilable: false, columnas: [
-      { clave: 'u', titulo: 'Página', principal: true, celda: x => h('a', { href: x.u, target: '_blank', rel: 'noopener', class: 'enlace', style: { overflowWrap: 'anywhere', ...TOQUE, minWidth: '180px' } }, x.u.replace(/^https?:\/\/[^/]+/, '') || '/') },
+    const tablaPag = tablaDensa({ filas: medicion.filas.map(x=>({...x,u:x.url,cl:x.clics,im:x.impresiones,ps:x.posicion,ant:x.anterior})), porPagina: 15, apilable: false, columnas: [
+      { clave: 'u', titulo: 'Página', principal: true, celda: x => x.enlace?h('a', { href: x.enlace, target: '_blank', rel: 'noopener', class: 'enlace', style: { overflowWrap: 'anywhere', ...TOQUE, minWidth: '180px' } }, x.u.replace(/^https?:\/\/[^/]+/, '') || '/'):h('span',{},'URL no válida para abrir') },
       { clave: 'cl', titulo: 'Clics', num: true, celda: x => num(x.cl) },
       { clave: 'im', titulo: 'Impresiones', num: true, celda: x => num(x.im) },
       { clave: 'ps', titulo: 'Posición', num: true, celda: x => numD(x.ps, 1) },
-      { clave: 'ant', titulo: 'Cambio', num: true, celda: x => (x.ant === null || x.ant === undefined ? h('span', { class: 'sub' }, 'nueva') : delta(x.cl >= x.ant, pctTxt(variacion(x.cl, x.ant)))) },
+      { clave: 'ant', titulo: 'Cambio', num: true, celda: x => x.perdidos===null?h('span',{class:'sub'},'Sin comparación'):h('span',{class:'sub'},`${num(x.perdidos)} clics menos observados`) },
+      { clave:'accion',titulo:'Siguiente revisión',ordenable:false,celda:x=>h('span',{style:{maxWidth:'340px',overflowWrap:'anywhere'}},x.accion) },
     ] });
     const tablaBus = tablaDensa({ filas: f.gsc.busquedas.map(([q, cl, im, ps, ant]) => ({ q, cl, im, ps, ant })), porPagina: 15, apilable: false, columnas: [
       { clave: 'q', titulo: 'Búsqueda', principal: true, celda: x => h('span', { style: { fontWeight: '600', display: 'inline-block', minWidth: '180px' } }, x.q) },
@@ -692,8 +749,8 @@ function pintarDetalle(cont, ctx, d, id) {
       { clave: 'ant', titulo: 'Antes', num: true, celda: x => (x.ant ? numD(x.ant, 1) : '—') },
     ] });
     z.append(h('div', { class: 'pila' },   // R13: dos tablas de 5 columnas, una debajo de otra (en .dos la segunda quedaba cortada)
-      panel({ titulo: 'Páginas que más clics traen', icono: 'doc', sub: '28 días frente a los 28 anteriores' }, h('div', { class: 'cuerpo' }, f.gsc.paginas.length ? tablaPag : vacioLinea('Sin clics en 28 días.', { icono: 'doc' }))),
-      panel({ titulo: 'Búsquedas que traen clics', icono: 'buscar', sub: 'Posición media de 28 días y la de los 28 anteriores' }, h('div', { class: 'cuerpo' }, f.gsc.busquedas.length ? tablaBus : vacioLinea('Sin búsquedas con clics.', { icono: 'buscar' })))));
+      panel({ titulo: 'Páginas · siguiente revisión', icono: 'doc', sub: 'Primero descensos observados; después impresiones. Comparación sólo con ventana acreditada; no objetivos cumplidos.' }, h('div', { class: 'cuerpo' }, medicion.filas.length ? tablaPag : vacioLinea('Sin páginas en la muestra disponible; no acredita cero clics en todo el sitio.', { icono: 'doc' }))),
+      panel({ titulo: 'Búsquedas que traen clics', icono: 'buscar', sub: 'Posición media de 28 días y la de los 28 anteriores' }, h('div', { class: 'cuerpo' }, f.gsc.busquedas.length ? tablaBus : vacioLinea('Sin búsquedas en la muestra disponible; no acredita ausencia de búsquedas o clics.', { icono: 'buscar' })))));
   };
   const pintarWeb = z => {
     z.append(dos(
@@ -705,16 +762,15 @@ function pintarDetalle(cont, ctx, d, id) {
             : w.modular === undefined ? h('span', { class: 'sub' }, 'Modular sin conectar: falta la clave de solo lectura de Tomás.') : h('span', { class: 'sub' }, 'Esta web no está en Modular DS.'),
           ...w.avisos.map(a => avisoParcial(`${a.texto} Qué hacer: ${a.que_hacer}`, { titulo: a.titulo + '.' })),
           h('div', { class: 'fila' },
-            botonConfirmar({ texto: 'Medir velocidad', pregunta: 'PageSpeed se conecta: ¿dejar la petición en la cola?', confirmar: 'Sí, en cola', mini: true, soloLectura: ctx.soloLectura,
-              alConfirmar: async () => { await ctx.accion({ herramienta: 'pagespeed', tipo: 'medir_velocidad', objeto: w.url, cliente_id: f.cliente_id, texto: 'Medir velocidad móvil', vista_previa: `PageSpeed móvil de ${w.url} (cuando haya clave)` }); return 'En la cola (simulación)'; } }),
+            h('span', { class:'sub' }, 'PageSpeed: lector preparado; piloto bloqueado por cuota. Todavía sin medición.'),
             h('a', { class: 'bt mini', href: w.url, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir la web')))
           : h('div', { class: 'cuerpo' }, vacioLinea('Sin web registrada: el portal no tiene la web de este cliente.', { icono: 'mundo_web' }))),
       bloqueFichaGoogle(ctx, f.cliente_id, { modulo: 'seo-web' })));   // 3-oct · ficha de Google (Business Profile)
   };
   cont.append(pestanas({
-    clave: `seo.detalle.${ctx.persona.id}`, activa: 'pos', etiqueta: 'Fuentes del cliente',
+    clave: `seo.detalle.${ctx.persona.id}`, activa: ctx.params?.[1]==='clics'?'clics':'pos', etiqueta: 'Fuentes del cliente',
     pestanas: [
-      { id: 'pos', texto: 'Posiciones', icono: 'star', cuenta: f.alertas.filter(a => a.tipo === 'fuera_top10').length, cuentaEstado: 'rojo' },
+      { id: 'pos', texto: 'Posiciones', icono: 'star', cuenta:f.alertas.filter(a=>a.tipo==='fuera_top10'&&a.acreditada===true).length, cuentaEstado: 'rojo' },
       { id: 'clics', texto: 'Clics de Google', icono: 'grafico' },
       { id: 'web', texto: 'Web y ficha', icono: 'mundo_web', cuenta: w && w.estado === 'rojo' ? 1 : 0, cuentaEstado: 'rojo' },
     ],
@@ -722,12 +778,12 @@ function pintarDetalle(cont, ctx, d, id) {
   }));
 
   // botones de la semana (gastan créditos → doble confirmación)
-  cont.append(panel({ titulo: 'Acciones', icono: 'zap', sub: 'Todo queda en la cola en simulación; nada se ejecuta hasta el despliegue.' },
+  cont.append(panel({ titulo: 'Acciones', icono: 'zap', sub: 'Estas acciones dejan un registro local. No acreditan ejecución ni confirmación de SE Ranking, ClickUp o avisos al equipo.' },
     h('div', { class: 'cuerpo fila' },
       botonConfirmar({ texto: 'Lanzar comprobación de posiciones', pregunta: 'Gasta créditos de SE Ranking. ¿Seguro?', confirmar: 'Sí, gastar', mini: true, soloLectura: ctx.soloLectura || !f.seranking,
         alConfirmar: async () => { await ctx.accion({ herramienta: 'seranking', tipo: 'comprobar_posiciones', objeto: `proyecto ${f.seranking.proyecto}`, cliente_id: f.cliente_id, texto: 'Comprobación de posiciones', vista_previa: `SE Ranking · proyecto ${f.seranking.proyecto} (${f.cliente}) · ${f.seranking.seguidas} palabras · gasta créditos` }); return 'En la cola (simulación, doble confirmación hecha)'; } }),
       botonDeshacer({ texto: 'Avisar al account', hecho: 'Account avisado', soloLectura: ctx.soloLectura,
-        alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: f.cliente, cliente_id: f.cliente_id, texto: f.motivo, vista_previa: `Aviso interno al account de ${f.cliente}: «${f.motivo}».` }); return 'Avisado en su Mi día'; } }))));
+        alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'aviso_account', objeto: f.cliente, cliente_id: f.cliente_id, texto: f.motivo, vista_previa: `Aviso interno al account de ${f.cliente}: «${f.motivo}».` }); return 'Registro local guardado; aviso al account sin confirmar'; } }))));
 }
 
 /** Barrido v1: enlaces sueltos en tablas y líneas de datos con zona de toque de 32 px (WCAG 2.5.8). */
@@ -740,11 +796,15 @@ export default {
   puestos_que_lo_ven: { direccion: 'todo', finanzas_direccion: 'todo', operaciones: 'todo', proyectos: 'todo', jefa_seo: 'todo', tecnico_altas: 'resumen', jefa_publicidad: 'resumen', account: 'suyo', trafficker: 'suyo', seo: 'suyo', ficha_google: 'suyo', web: 'suyo' },
   async render(cont, ctx) {
     vigilarCortes(cont);
+    const oportunidadesScope332=ambitoOportunidades332(ctx)?.firma||null;
     const d = await cargar(ctx);
+    d.oportunidadesScope332=oportunidadesScope332;
+    if (!cont.isConnected || (ctx.vigente && !ctx.vigente())) return;
     if (d.seo._error || d.webs._error) {
       cont.append(vacio({ icono: 'alert', tono: 'aviso', titulo: 'No llegan los datos de SEO', texto: `${d.seo._error || d.webs._error}. Se generan con fuentes_seo/generar_seo.py.`, quien: 'Agus', borde: true }));
       return;
     }
+    cont.append(notaCompacta336(h,'SEO · seguimiento histórico; objetivos por confirmar',h('p',{},'Las consultas de esta vista son un seguimiento histórico; no todas son objetivos confirmados. Revisa los objetivos y la evidencia de cada cliente en Prioridades por cliente. Las posiciones de Google y Maps deben contrastarse por fecha y contexto.')));
     const [id] = ctx.params;
     // R15a (A2): #/seo-web/webs/<cliente> → pestaña «Webs» con la fila de esa web resaltada
     if (id === 'webs') pintarPortada(cont, ctx, d, { webObjetivo: ctx.params[1] || '' });

@@ -64,7 +64,24 @@ def _vigente(a, hoy):
     return True
 
 
-def cartera_por_silla(persona, asignaciones, hoy=None):
+# Contratos explícitos: solo «sí» confirma un servicio. No equivale a tener una silla.
+SERVICIOS_SILLA = {
+    "seo": ("seo",), "trafficker": ("publicidad",), "crm": ("crm_ghl",),
+    "ghl": ("crm_ghl",), "web": ("web", "mantenimiento"),
+    "redes": ("redes", "social_media"), "outreach": ("outreach",),
+}
+SERVICIOS_JEFATURA = {
+    "jefa_seo": ("seo",), "jefa_publicidad": ("publicidad",),
+    "jefa_crm": ("crm_ghl", "outreach"),
+}
+
+
+def servicio_contratado(cliente, claves):
+    servicios = cliente.get("servicios") or {}
+    return any(servicios.get(k) == "sí" for k in claves)
+
+
+def cartera_por_silla(persona, asignaciones, hoy=None, clientes=None):
     hoy = hoy or hoy_iso()
     sillas = _sillas_de(persona)
     out = {}
@@ -76,12 +93,34 @@ def cartera_por_silla(persona, asignaciones, hoy=None):
         if a.get("silla") and sillas and a["silla"] not in sillas and not a.get("suplencia"):
             continue
         out.setdefault(a.get("silla") or "sin_silla", set()).add(a["cliente_id"])
+    # Tomás 3-oct («sillas_de_equipo»): web y redes son equipos transversales. Con la silla por su puesto, sus clientes
+    # de esa silla son TODOS los que tienen esa silla asignada a alguien (el servicio activo), no solo los suyos.
+    for silla in REGLAS.get("sillas_de_equipo") or []:
+        if silla in sillas:
+            todos = {a["cliente_id"] for a in asignaciones if a.get("silla") == silla and _vigente(a, hoy)
+                     and not (a.get("suplencia") and not a.get("hasta"))}
+            if todos:
+                out.setdefault(silla, set()).update(todos)
+    if clientes is not None:
+        por_id = {c["id"]: c for c in clientes}
+        for silla, ids in out.items():
+            claves = SERVICIOS_SILLA.get(silla)
+            if claves:
+                out[silla] = {cid for cid in ids if cid in por_id and servicio_contratado(por_id[cid], claves)}
+        # Las jefaturas ven su servicio completo. Web/redes son transversales;
+        # SEO y paid individuales mantienen sus asignaciones de clientes contratados.
+        for silla in REGLAS.get("sillas_de_equipo") or []:
+            if silla in sillas and silla in SERVICIOS_SILLA:
+                out[silla] = {c["id"] for c in clientes if servicio_contratado(c, SERVICIOS_SILLA[silla])}
+        for puesto, claves in SERVICIOS_JEFATURA.items():
+            if puesto in persona.get("puestos", []):
+                out["servicio_" + puesto] = {c["id"] for c in clientes if servicio_contratado(c, claves)}
     return out
 
 
-def cartera(persona, asignaciones, hoy=None):
+def cartera(persona, asignaciones, hoy=None, clientes=None):
     ids = set()
-    for s in cartera_por_silla(persona, asignaciones, hoy).values():
+    for s in cartera_por_silla(persona, asignaciones, hoy, clientes).values():
         ids |= s
     return ids
 
@@ -107,6 +146,8 @@ def _es_jefe(persona, objetivo):
 
 def _cumple(caso, persona, dato, cp):
     puestos = persona.get("puestos", [])
+    if "identidades" in caso and persona.get("id") not in caso["identidades"]:
+        return False
     if "puestos" in caso and not any(p in caso["puestos"] for p in puestos):
         return False
     if "ambito" in caso and ambito(persona) not in caso["ambito"]:
@@ -183,6 +224,8 @@ def ver(persona, dato, cp=None):
 
 def _ver(persona, dato, cp=None):
     cp = cp or {}
+    if dato.get("cliente_id") and solo_su_cartera(persona) and dato["cliente_id"] not in cp.get("cartera_ids", set()):
+        return {"ok": False, "nivel": "no", "motivo": "Este cliente no está en tu cartera ni en tu servicio contratado."}
     regla = REGLAS["tipos"].get(dato.get("tipo"))
     if not regla:
         return {"ok": False, "nivel": "no", "motivo": f"Tipo de dato desconocido: {dato.get('tipo')}. Por defecto, no se enseña."}
@@ -198,16 +241,30 @@ def _ver(persona, dato, cp=None):
     return {"ok": False, "nivel": "no", "motivo": regla.get("no") or "No visible para tu puesto."}
 
 
+def solo_su_cartera(persona):
+    """Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT): ¿esta persona solo recibe los clientes de su cartera, en todas partes?
+    Accounts y equipos/jefaturas de servicio tienen scope limitado; los puestos con ámbito todos lo conservan.
+    En «ver como» manda la persona vista (Tomás viendo como Lucía recibe lo de Lucía)."""
+    if ambito(persona) == "todos":
+        return False
+    puestos = set(persona.get("puestos", []))
+    return bool(puestos & (set(REGLAS.get("solo_su_cartera", {}).get("puestos") or [])
+                          | set(SERVICIOS_JEFATURA)
+                          | {p for p in puestos if _sillas_de({"puestos": [p]}) & set(SERVICIOS_SILLA)}))
+
+
 def contexto(persona, crudo):
-    por_silla = cartera_por_silla(persona, crudo["asignaciones"])
+    # Consumidores de horas pueden no tener catálogo: servicio desconocido no concede cartera.
+    clientes = crudo.get("clientes") or []
+    por_silla = cartera_por_silla(persona, crudo["asignaciones"], clientes=clientes)
     ids = set()
     for s in por_silla.values():
         ids |= s
-    return {"cartera_ids": ids, "cartera_por_silla": por_silla, "personas": crudo["personas"]}
+    return {"cartera_ids": ids, "cartera_por_silla": por_silla, "personas": crudo["personas"], "clientes_por_id": {c["id"]: c for c in clientes}}
 
 
 # ---------------------------------------------------------------- recorte
-COMUNES = ["id", "nombre", "responsable_id", "responsable_texto", "salud", "salud_fuente", "semaforo", "nuevo", "sin_account", "tipo_negocio"]
+COMUNES = ["id", "nombre", "responsable_id", "responsable_texto", "salud", "salud_fuente", "semaforo", "nuevo", "sin_account", "tipo_negocio", "activo_confirmado"]
 DETALLE = ["web", "descripcion", "descripcion_completa", "alta", "tickets_abiertos", "pend_horas", "dias_sin_reunion", "ult_reunion",
            "prox_reunion", "informe_anterior", "revision48", "enlace_clickup", "equipo", "servicios"]
 PERSONA_PUBLICA = ["id", "nombre", "alias", "puestos", "prueba", "estado", "activo", "jefe", "zona", "rol", "pais", "fecha_ingreso", "cumple_dia_mes", "etiquetas"]
@@ -224,14 +281,17 @@ def recortar(persona, crudo):
     v = lambda d: ver(persona, d, cp)
     nombre = {p["id"]: p.get("alias") or p["nombre"] for p in crudo["personas"]}
     clientes = []
+    solo_mios = solo_su_cartera(persona)          # Tomás 3-oct: el account no recibe ni el nombre de un cliente ajeno
     for c in crudo["clientes"]:
+        if solo_mios and c["id"] not in cp["cartera_ids"]:
+            continue
         out = {k: c.get(k) for k in COMUNES}
         out["logo"] = crudo["logos"].get(c["id"])
         out["responsable"] = nombre.get(c.get("responsable_id")) if c.get("responsable_id") else (c.get("responsable_texto") or "sin responsable")
         out["enCartera"] = c["id"] in cp["cartera_ids"]
         out["detalle"] = v({"tipo": "cliente_detalle", "cliente_id": c["id"]})["ok"]
         if out["detalle"]:
-            quita = importes_a_quitar(v({"tipo": "cuota", "cliente_id": c["id"]})["ok"], v({"tipo": "inversion", "cliente_id": c["id"]})["ok"])
+            quita = importes_a_quitar(v({"tipo": "cuota", "cliente_id": c["id"]})["ok"], v({"tipo": "inversion", "cliente_id": c["id"]})["ok"], v({"tipo": "cobros", "cliente_id": c["id"]})["ok"], v({"tipo": "dinero_empresa", "cliente_id": c["id"]})["ok"])
             for k in DETALLE:
                 # Ronda 6 (A2): «servicios.publicidad_fuente» y otros textos llevan euros; sin cuota o sin inversión, esos fuera.
                 out[k] = sin_importes(c.get(k), quita)
@@ -247,10 +307,12 @@ def recortar(persona, crudo):
     for a in crudo["alarmas"]:
         resp = nombre.get(a.get("responsable_id")) if a.get("responsable_id") else (a.get("responsable_texto") or "sin responsable")
         if a.get("ambito") == "cliente":
+            if solo_mios and a.get("cliente_id") not in cp["cartera_ids"]:
+                continue
             fila = {k: a.get(k) for k in ("id", "cliente_id", "cliente", "gravedad", "tipo", "desde", "responsable_id")}
             fila.update({"ambito": "cliente", "responsable": resp})
             if por_id.get(a.get("cliente_id"), {}).get("detalle") and v({"tipo": "alarma_detalle", "cliente_id": a.get("cliente_id")})["ok"]:
-                quita = importes_a_quitar(v({"tipo": "cuota", "cliente_id": a.get("cliente_id")})["ok"], v({"tipo": "inversion", "cliente_id": a.get("cliente_id")})["ok"])
+                quita = importes_a_quitar(v({"tipo": "cuota", "cliente_id": a.get("cliente_id")})["ok"], v({"tipo": "inversion", "cliente_id": a.get("cliente_id")})["ok"], v({"tipo": "cobros", "cliente_id": a.get("cliente_id")})["ok"], v({"tipo": "dinero_empresa", "cliente_id": a.get("cliente_id")})["ok"])
                 fila.update({"texto": sin_importes(a.get("texto"), quita),
                              "accion": sin_importes(a.get("accion"), quita),
                              "enlace": enlace_seguro(a.get("enlace"))})
@@ -263,17 +325,37 @@ def recortar(persona, crudo):
             if ok:
                 alarmas.append({**a, "responsable": resp})
 
-    mias = [a for a in crudo["asignaciones"] if a.get("persona_id") == persona["id"]]
+    mias = [a for a in crudo["asignaciones"] if a.get("persona_id") == persona["id"]
+            and (not solo_mios or a.get("cliente_id") in cp["cartera_ids"])]
     return {
         "clientes": clientes,
         "alarmas": alarmas,
         "carteraIds": sorted(cp["cartera_ids"]),
         "carteraPorSilla": {k: sorted(s) for k, s in cp["cartera_por_silla"].items()},
         "ambito": ambito(persona),
+        "soloSuCartera": solo_mios,
         "personas": directorio(crudo["personas"]),
         "asignaciones": mias,
-        "meta": crudo["meta"],
+        "meta": meta_de_cartera(crudo["meta"]) if solo_mios else crudo["meta"],
     }
+
+
+def meta_de_cartera(meta):
+    """La carcasa necesita fechas y estado de fuentes, no contadores/historia globales."""
+    out = {k: meta[k] for k in ("generado", "construido") if k in meta}
+    if isinstance(meta.get("fuentes"), list):
+        out["fuentes"] = [{k: f[k] for k in ("fuente", "estado", "generado", "fecha", "actualizado") if k in f}
+                          for f in meta["fuentes"] if isinstance(f, dict)]
+    return out
+
+
+def solo_filas_de(o, ids):
+    """Tomás 3-oct: a cualquier profundidad, fuera las filas con cliente_id de un cliente que no está en «ids»."""
+    if isinstance(o, dict):
+        return {k: solo_filas_de(v, ids) for k, v in o.items()}
+    if isinstance(o, list):
+        return [solo_filas_de(x, ids) for x in o if not (isinstance(x, dict) and x.get("cliente_id") and x["cliente_id"] not in ids)]
+    return o
 
 
 # ------------------------------------------------------------ enmascarado
@@ -363,8 +445,8 @@ RE_IMPORTE = re.compile(r"(?i:~?\d[\d.,]*(?:\s*[-–]\s*\d[\d.,]*)?\s*(?:k\s*€
 # Ronda 11 (B-A02, auditoría 34): nada de «[importe]» a la vista. Se quita la frase que lleva el importe o, si es la única,
 # el importe con su preposición («Gasto en Meta: 142,58 €» → «Gasto en Meta»; «2 leads a 167 € cada uno» → «2 leads»).
 # Y se distingue de qué es cada importe por las palabras de alrededor: con «/mes», «cuota», «factura»… es CUOTA; el
-# «techo» general de coste por lead es una regla de la casa (la ve quien ve la inversión; a los demás, sin cifra); lo demás,
-# gasto de publicidad (INVERSIÓN).
+# «techo» general sigue ligado a inversión. 580: marcador más próximo en la misma cláusula;
+# un importe desconocido no se convierte automáticamente en inversión. Familias adicionales requieren contexto explícito.
 RE_CUOTA_CERCA = re.compile(r"(?i)(/\s*mes|al mes|mensual|cuota|factur|recurrente|cobr|impag|mantenimiento)")
 RE_TECHO_CERCA = re.compile(r"(?i)techo")
 _CONECTOR = r"(?:\s*(?:[:=]|\bde\b|\ba\b|\bcon\b|\bpor\b|\ben\b|\bsobre\b))?"
@@ -372,16 +454,13 @@ _COLA = r"(?:\s*(?:/\s*(?:mes|día|dia|lead|cita|mes\b)|al mes|cada uno|cada una
 
 
 def tipo_importe(texto, ini, fin):
-    antes, despues = texto[max(0, ini - 40):ini], texto[fin:fin + 25]
-    if RE_TECHO_CERCA.search(antes[-25:]):
-        return "regla"
-    if RE_CUOTA_CERCA.search(despues) or RE_CUOTA_CERCA.search(antes):
-        return "cuota"
-    return "inversion"
+    from clasificacion_importes_580 import clasificar_importe_580
+    return clasificar_importe_580(texto, ini, fin)
 
 
 def _fuera(tipo, quitar):
-    return tipo in quitar or (tipo == "regla" and "inversion" in quitar)
+    from clasificacion_importes_580 import fuera_importe_580
+    return fuera_importe_580(tipo, quitar)
 
 
 def _quitar_importes_texto(t, quitar):
@@ -416,7 +495,7 @@ CLAVES_TEXTO_LIBRE = re.compile(r"(?i)^(consultas?|b[uú]squedas?|keywords?|pala
 RE_IMPORTE_SIMBOLO = re.compile(r"\d[\d.,]*\s*(?:€|\$)|(?:€|\$)\s*\d[\d.,]*")
 
 
-def sin_importes_libre(o, quitar=("cuota", "inversion")):
+def sin_importes_libre(o, quitar=("cuota", "inversion", "cobros", "dinero_empresa")):
     """Ronda 12 (R13): para listas de búsquedas/consultas/palabras clave. Solo quita importes con símbolo (€ o $)."""
     quitar = set(quitar or ())
     if not quitar:
@@ -431,7 +510,7 @@ def sin_importes_libre(o, quitar=("cuota", "inversion")):
     return re.sub(r"\s{2,}", " ", t).strip()
 
 
-def sin_importes(o, quitar=("cuota", "inversion")):
+def sin_importes(o, quitar=("cuota", "inversion", "cobros", "dinero_empresa")):
     """Quita importes (1.470 €, 297 €/día, $500…) de cualquier texto, a cualquier profundidad, sin dejar huecos.
     «quitar»: qué importes («cuota», «inversion»); por defecto, los dos. El techo general de coste por lead solo se deja
     a quien ve la inversión."""
@@ -445,9 +524,10 @@ def sin_importes(o, quitar=("cuota", "inversion")):
     return _quitar_importes_texto(o, quitar) if isinstance(o, str) else o
 
 
-def importes_a_quitar(ve_cuota, ve_inversion):
+def importes_a_quitar(ve_cuota, ve_inversion, ve_cobros=None, ve_dinero_empresa=None):
     """Qué importes no ve una persona en los textos de un cliente."""
-    return tuple(k for k, ve in (("cuota", ve_cuota), ("inversion", ve_inversion)) if not ve)
+    return (tuple(k for k, ve in (("cuota", ve_cuota), ("inversion", ve_inversion)) if not ve)
+            + tuple(k for k, ve in (("cobros", ve_cobros), ("dinero_empresa", ve_dinero_empresa)) if ve is False))
 
 
 ESQUEMAS_OK = re.compile(r"^(https?://|mailto:|tel:|sip:|#|/(?!/)|\./|\.\./|[\w\-]+\.html)", re.I)

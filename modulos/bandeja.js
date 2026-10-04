@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/bandeja.js · M3 «Bandeja» v5 (3-oct-2026): una pantalla para TRABAJAR la bandeja, no para mirarla.
 // Encargo de Tomás: «¿cómo puede ser que la parte de responder correos sea pequeñita y esté a la derecha?».
 //
@@ -25,6 +26,8 @@ import { MODULOS } from './indice.js';
 import { iaDe, estilos as estilosIA, ETIQUETA_GRAVEDAD } from './ia_componentes.js';
 import { conDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_plegar_consejo.js';
+import {filasTriaje432,ambitoTriaje432,intencionTriaje432,guardarTriaje432,estadoTriaje432,previaTriaje432} from './_triaje_durable_432.js';
+import {consultarTriaje440} from './_triaje_lectura_exacta_440.js';
 
 const ID = 'bandeja';
 
@@ -42,9 +45,8 @@ function vigilarCortes(raiz) {
 
 // §2.3: fechas con el formato único de la app: «2-oct» y «2-oct, 17:34».
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const fDiaRO = iso => fechaCortaRO(FECHAS_RO.dia(iso));
+const fDiaHoraRO = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia ? `${fechaCortaRO(dia)}${hora ? `, ${hora}` : ''}` : '—'; };
 
 const PLANTILLAS = [
   { id: 'recibido', texto: 'Recibido', cuerpo: n => `Hola${n ? ' ' + n : ''},\n\nRecibido, gracias. Lo estoy mirando y te digo algo antes de que acabe el día.\n\nUn saludo,` },
@@ -65,7 +67,7 @@ const PUESTOS_ASIGNAR = ['direccion', 'operaciones', 'proyectos'];   // R16
 const puedeAsignar = ctx => (ctx.persona?.puestos || []).some(p => PUESTOS_ASIGNAR.includes(p));
 
 const relojTxt = horas => {
-  if (horas === null || horas === undefined) return '—';
+  if (typeof horas !== 'number' || !Number.isFinite(horas) || horas < 0) return '—';
   const hr = Math.round(horas);
   return hr < 24 ? `${hr} h` : `${Math.floor(hr / 24)} d ${hr % 24} h`;
 };
@@ -75,15 +77,16 @@ const yoDe = ctx => (ctx.persona || {}).id;
 const leerS = k => { try { return localStorage.getItem(k); } catch { return null; } };
 const guardarS = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
 function edadH(fecha) {
-  if (!fecha) return null;
-  const d = new Date(String(fecha).replace(' ', 'T'));
-  return Number.isNaN(+d) ? null : Math.max(0, (Date.now() - d) / 36e5);
+  const horas = FECHAS_RO.horasDesde(fecha);
+  return horas !== null && horas >= 0 ? horas : null;
 }
-const fres = (f, nombre) => f ? { fuente: nombre, edad_h: edadH(f.hora), estado: f.estado === 'bien' ? 'ok' : 'viejo' } : { fuente: nombre, estado: 'sin datos' };
+const fres = (f, nombre) => {
+  const edad = edadH(f?.hora);
+  return f ? { fuente: nombre, edad_h: edad, estado: edad === null ? 'sin datos' : f.estado === 'bien' ? 'ok' : 'viejo' } : { fuente: nombre, estado: 'sin datos' };
+};
 const RX_HUECO = /\[[^\]\n]{1,80}\]/g;
-/** «2026-10-03T03:22:10Z» (UTC) → «2026-10-03 05:22» en la hora del navegador. */
-const horaLocal = iso => { const s = String(iso || ''); if (!/Z$|[+-]\d\d:?\d\d$/.test(s)) return s; const d = new Date(s); if (Number.isNaN(+d)) return s;
-  const p2 = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())} ${p2(d.getHours())}:${p2(d.getMinutes())}`; };
+/** UTC/offset → texto de negocio Madrid; inválido/sólo-fecha no inventa hora. */
+const horaLocal = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia && hora ? `${dia} ${hora}` : ''; };
 const conTitulo = (el, t) => { if (t) el.title = t; return el; };
 const origenTxt = r => (r.origen === 'vivo' ? `IA · ${String(r.generado || '').slice(11, 16)}` : r.origen === 'precalculado' ? `Propuesta del ${fDiaRO(r.generado)}` : '');
 const kbd = t => h('kbd', { style: { font: 'var(--t-meta)', border: 'var(--borde)', borderRadius: 'var(--r-s)', padding: '0 var(--s-1)', background: 'var(--card)', color: 'var(--mid)' } }, t);
@@ -102,9 +105,9 @@ export default {
       cont.append(vacio({ icono: 'inbox', tono: 'aviso', borde: true, titulo: 'No se pudo leer la bandeja', texto: String(e?.message || e), quien: 'Tomás (regenerar con fuentes_bandeja/generar_bandeja.py)' }));
       return;
     }
-    let acciones = [];
+    let acciones = [], accionesTriajeLeidas432 = false;
     if (ctx.servidor) {
-      try { acciones = (await ctx.api(`acciones?modulo=${ID}`)).acciones || []; } catch { /* sin cola: no pasa nada */ }
+      try { const lectura = await ctx.api(`acciones?modulo=${ID}`); if(Array.isArray(lectura?.acciones)){acciones=lectura.acciones;accionesTriajeLeidas432=true;} } catch { /* el triaje no escribe sin lectura de la cola */ }
     }
     // el estado sigue vivo entre rutas (#/bandeja ↔ #/bandeja/<id> en el móvil) y al volver: borradores, envíos con
     // «Deshacer» en marcha y lo escrito no se pierden
@@ -112,6 +115,7 @@ export default {
     let S;
     if (MEM && MEM.clave === clave) { S = MEM.S; S.D = D; refrescarAcciones(S, acciones); aplicarRuta(ctx, S); }
     else { S = crearEstado(ctx, D, acciones); MEM = { clave, S }; }
+    S.accionesTriajeLeidas432 = accionesTriajeLeidas432;
     S.cont = cont;
     S.rehacer = () => { cont.replaceChildren(); pintar(cont, ctx, S); };
     S.rehacer();
@@ -187,7 +191,7 @@ function crearEstado(ctx, D, acciones) {
   });
   const todo = ctx.nivel === 'todo';
   const esAccount = (ctx.persona?.puestos || []).includes('account');
-  const S = { D, items, todo, triaje: D.triaje || [], porObjeto, sel: null, q: '', acc: leerS('ro.bandeja.account2') || '',
+  const S = { D, items, todo, triaje: Array.isArray(D.triaje) ? D.triaje : null, porObjeto, sel: null, q: '', acc: leerS('ro.bandeja.account2') || '',
     filtro: null, orden: leerS('ro.bandeja.orden') || 'urgencia', alt: null, pestCentro: 'conv',
     ctxAbierto: leerS('ro.bandeja.contexto') === null ? null : leerS('ro.bandeja.contexto') === '1', ampliado: false, textos: new Map(), borradores: new Map(),
     clientes: new Map(), hilos: null, envios: new Map(), pendientes: new Map(), adjuntos: new Map(), esAccount };
@@ -229,8 +233,8 @@ function filtrar(ctx, S, id = S.filtro) {
     .filter(x => !S.acc || (x.cliente_id ? (x.account_id ? ctx.nombre(x.account_id) : 'Sin account') : 'Correos sin cliente') === S.acc)
     .filter(x => !q || normal(`${x.cliente || ''} ${x.asunto || ''} ${x.numero || ''} ${x.numero_oculto || ''} ${x.account || ''}`).includes(q))
     .sort(S.orden === 'antiguo'
-      ? (a, b) => (!a.cliente_id - !b.cliente_id) || (b.horas || 0) - (a.horas || 0)   // los sin cliente (no se contestan), al final
-      : (a, b) => (!a.cliente_id - !b.cliente_id) || (b.queja - a.queja) || ((RANGO[a.gravedad] ?? 3) - (RANGO[b.gravedad] ?? 3)) || (b.horas || 0) - (a.horas || 0));
+      ? (a, b) => (!a.cliente_id - !b.cliente_id) || ordenHorasRO(a.horas, b.horas)   // los sin cliente (no se contestan), al final
+      : (a, b) => (!a.cliente_id - !b.cliente_id) || (b.queja - a.queja) || ((RANGO[a.gravedad] ?? 3) - (RANGO[b.gravedad] ?? 3)) || ordenHorasRO(a.horas, b.horas));
 }
 
 // ---------------------------------------------------------------- pantalla
@@ -243,9 +247,9 @@ function pintar(cont, ctx, S) {
   S.modo = modoDe(cont);
 
   // otras vistas (reparto, WhatsApp, de dónde sale): en el menú «Más» de la lista; la barra de arriba solo al estar en una de ellas
-  const pendTriaje = S.triaje.filter(t => !S.porObjeto.has(String(t.numero))).length;
+  const pendTriaje = filasTriaje432(ctx,S)?.length;
   const otras = S.otras = [
-    S.todo ? { id: 'triaje', texto: `Correos sin responsable (${fmt.num(pendTriaje)})`, icono: 'persona' } : null,
+    S.todo ? { id: 'triaje', texto: `Correos sin responsable (${pendTriaje===undefined?'—':fmt.num(pendTriaje)} observados)`, icono: 'persona' } : null,
     { id: 'whatsapp', texto: 'WhatsApp uno a uno', icono: 'wa' },
     { id: 'como', texto: 'De dónde sale cada correo', icono: 'info' },
   ].filter(Boolean);
@@ -645,15 +649,16 @@ function barraAcciones(ctx, S, x) {
   return h('div', { class: 'fila', role: 'toolbar', 'aria-label': 'Acciones de un clic', style: { gap: 'var(--s-1)' } }, items);
 }
 
-async function accionDirecta(ctx, S, x, tipo, texto, vista_previa, herramienta = 'desk') {
-  if (ctx.soloLectura) { avisoFlotante('Estás en «ver como»: no se cambia nada.', { icono: 'candado' }); return; }
+async function accionDirecta(ctx, S, x, tipo, texto, vista_previa, herramienta = 'desk', { repintar = true } = {}) {
+  if (ctx.soloLectura) { avisoFlotante('Estás en «ver como»: no se cambia nada.', { icono: 'candado' }); return false; }
   try {
     const r = await ctx.accion({ herramienta, tipo, objeto: x.numero, cliente_id: x.cliente_id || null, texto, vista_previa });
     x.acciones.push({ tipo, texto, quien: (ctx.real || ctx.persona).id, hora: horaLocal(new Date().toISOString()), id: r?.id });
     marcarDeAcciones(x);
     avisoFlotante(`${etiquetaTipo(tipo)} en la cola simulada: no ha salido nada`);
-    if (S.modo === 'uno') S.rehacer(); else { pintarColLista(ctx, S); pintarCentro(ctx, S); }
-  } catch (e) { avisoFlotante(`No se ha podido: ${e?.message || e}`, { icono: 'alert' }); }
+    if (repintar) { if (S.modo === 'uno') S.rehacer(); else { pintarColLista(ctx, S); pintarCentro(ctx, S); } }
+    return true;
+  } catch (e) { avisoFlotante(`No se ha podido: ${e?.message || e}`, { icono: 'alert' }); return false; }
 }
 const despachar = (ctx, S, x) => programar(ctx, S, x, 'despachado', `Despachado sin respuesta (${x.numero})`, { ticket: x.numero, motivo: 'atendido por otra vía o no pide respuesta' });
 const esperar = (ctx, S, x) => programar(ctx, S, x, 'esperando_cliente', `Esperando al cliente (${x.numero})`, { ticket: x.numero });
@@ -821,7 +826,7 @@ function editor(ctx, S, x) {
       on: { click: () => { guardarTexto(S); modo = v; S.textos.set(x.id, { ...(S.textos.get(x.id) || {}), modo: v }); pintarCentro(ctx, S); } } }, icono(ic, { clase: 's' }), ' ', txt)));
   const asuntoTxt = (t0.asunto || `RE: ${x.asunto || ''}`).trim();
   const linea = modo === 'responder'
-    ? h('span', { class: 'sub', style: { minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 160px' }, title: `De marketing@rankingonline.com · Para el contacto del ticket ${x.numero}${x.dominio ? ` (@${x.dominio})` : ''} · Asunto: ${asuntoTxt}` },
+    ? h('span', { class: 'sub', style: { minWidth: '0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: '1 1 160px' }, title: `De contacto-1@example.invalid · Para el contacto del ticket ${x.numero}${x.dominio ? ` (@${x.dominio})` : ''} · Asunto: ${asuntoTxt}` },
       `Para: contacto de ${x.numero}${x.dominio ? ` (@${x.dominio})` : ''} · ${asuntoTxt}`)
     : h('span', { class: 'sub', style: { flex: '1 1 160px' } }, 'Nota interna en el ticket: el cliente no la ve');
   const ampliar = h('button', { type: 'button', class: 'bt mini icono', 'aria-pressed': String(!!S.ampliado), title: S.ampliado ? 'Editor normal' : 'Ampliar el editor (para textos largos)', 'aria-label': 'Ampliar el editor',
@@ -1002,15 +1007,36 @@ function editor(ctx, S, x) {
     ta.addEventListener('input', () => S.textos.set(x.id, { ...(S.textos.get(x.id) || {}), textoNota: ta.value }));
   }
 
-  function enviar(siguiente) {
+  let guardandoNota = false;
+  async function enviar(siguiente) {
+    if (guardandoNota || ctx.soloLectura) return;
     aviso.querySelector('[data-error]')?.remove();
     const err = m => { aviso.prepend(h('div', { class: 'aviso', role: 'alert', 'data-error': '' }, icono('alert', { clase: 's' }), h('span', {}, m))); ajustarEditor(S); };
     const texto = ta.value.trim();
     if (!texto) { err(modo === 'nota' ? 'La nota está vacía.' : 'La respuesta está vacía.'); ta.focus(); return; }
     if (modo === 'nota') {
-      S.textos.set(x.id, { ...(S.textos.get(x.id) || {}), textoNota: '' });
-      if (siguiente) { accionDirecta(ctx, S, x, 'nota_interna', texto, { privada: true, ticket: x.numero }).then(() => mover(ctx, S, 1)); }
-      else accionDirecta(ctx, S, x, 'nota_interna', texto, { privada: true, ticket: x.numero });
+      // Conserva el borrador hasta que la cola confirme el guardado; un fallo permite reintentar aquí.
+      S.textos.set(x.id, { ...(S.textos.get(x.id) || {}), textoNota: ta.value });
+      guardandoNota = true;
+      btEnviar.disabled = btSig.disabled = ta.disabled = true;
+      try {
+        const ok = await accionDirecta(ctx, S, x, 'nota_interna', texto, { privada: true, ticket: x.numero }, 'desk', { repintar: false });
+        if (!ok) return;
+        // Si se editó desde otra vista mientras se guardaba, no borres ese nuevo borrador.
+        if (S.textos.get(x.id)?.textoNota === ta.value) {
+          ta.value = '';
+          S.textos.set(x.id, { ...(S.textos.get(x.id) || {}), textoNota: '' });
+        }
+        // Una navegación manual durante el guardado no debe cambiar al correo siguiente de otra selección.
+        if (S.sel === x.id) {
+          if (siguiente) mover(ctx, S, 1);
+          else if (S.modo === 'uno') S.rehacer();
+          else { pintarColLista(ctx, S); pintarCentro(ctx, S); }
+        }
+      } finally {
+        guardandoNota = false;
+        btEnviar.disabled = btSig.disabled = ta.disabled = !!ctx.soloLectura;
+      }
       return;
     }
     if (!puedeResponder) { err('Este cliente no lo llevas: deja una nota interna.'); return; }
@@ -1029,7 +1055,7 @@ function editor(ctx, S, x) {
     }
     const t = S.textos.get(x.id) || {};
     const r = S.borradores.get(x.id);
-    const ok = programar(ctx, S, x, 'responder', texto, { de: 'marketing@rankingonline.com', asunto: t.asunto || `RE: ${x.asunto || ''}`, firma_de: real.id, con_firma: !t.sinFirma,
+    const ok = programar(ctx, S, x, 'responder', texto, { de: 'contacto-1@example.invalid', asunto: t.asunto || `RE: ${x.asunto || ''}`, firma_de: real.id, con_firma: !t.sinFirma,
       nota_interna: `Enviado desde el panel por ${real.nombre}.`, ticket: x.numero, adjuntos_simulados: (S.adjuntos.get(x.id) || []).map(a => a.nombre),
       borrador_ia: r?.ok ? { origen: r.origen, editado: texto !== String(r.cuerpo || '').trim() } : null }, { siguiente });
     if (ok && r?.ok) ctx.rastro?.({ accion: 'ia_usar', objeto: x.numero, detalle: { origen: r.origen, editado: texto !== String(r.cuerpo || '').trim() } });
@@ -1249,82 +1275,55 @@ function nombrePersona(ctx, id) {
 
 // ---------------------------------------------------------------- triaje (correos sin responsable)
 function pintarTriaje(z, ctx, S) {
-  const pend = S.triaje.filter(t => !S.porObjeto.has(String(t.numero)));
-  const chips = chipsFiltro({ etiqueta: 'Propuesta', clave: 'bandeja.triaje', opciones: [
-    { valor: 'seguro', texto: 'Cliente seguro', icono: 'ok', cuenta: pend.filter(t => t.propuesta === 'seguro').length },
-    { valor: 'dudoso', texto: 'Dudoso', icono: 'info', cuenta: pend.filter(t => t.propuesta === 'dudoso').length },
-    { valor: 'sin_cliente', texto: 'Sin cliente', icono: 'alert', cuenta: pend.filter(t => t.propuesta === 'sin_cliente').length },
-  ], alCambiar: () => pintarL() });
-  const caja = h('ul', { class: 'primero' });
-  const mas = h('div', { class: 'tabla-mas' });
-  const cab = h('div', { class: 'cuerpo pila' }, h('p', { class: 'sub' },
-    `Correos abiertos en Desk sin nadie asignado. Propuesta: el account del cliente si el remitente es de una cuenta de cliente. Muchos son de nov-2025 a jul-2026: probablemente baste con cerrarlos. Fuera quedan ${fmt.num(S.D.ruido?.['triaje · ruido'] || 0)} avisos que no son de clientes.`), chips);
-  z.append(h('div', { class: 'panel' }, h('header', {}, h('div', {}, h('h2', {}, icono('persona'), 'Correos sin responsable'), h('p', { class: 'sub' }, 'Repartir: asignar al account propuesto o cerrar'))), cab, caja, mas));
-  let limite = 40;
-  function pintarL() {
-    const v = chips.valor();
-    const xs = pend.filter(t => t.propuesta === v).sort((a, b) => (a.dias ?? 9e9) - (b.dias ?? 9e9));
-    caja.replaceChildren(); mas.replaceChildren();
-    if (!xs.length) { caja.append(h('li', { style: { display: 'block' } }, vacio({ icono: 'ok', tono: 'celebrar', titulo: 'Nada por repartir aquí' }))); return; }
-    for (const t of xs.slice(0, limite)) {
-      caja.append(h('li', {},
-        h('span', { class: `ico-c s ${t.propuesta === 'seguro' ? '' : t.propuesta === 'dudoso' ? 'ambar' : 'gris'}` }, icono(t.propuesta === 'seguro' ? 'persona' : t.propuesta === 'dudoso' ? 'info' : 'alert')),
-        h('div', {}, h('div', { class: 'mot' }, t.asunto || '(sin asunto)'),
-          h('div', { class: 'det meta-linea' }, h('span', {}, t.cliente || 'sin cliente'), h('span', {}, `desde ${fDiaRO(t.fecha)} (${t.dias ?? '—'} días laborables)`), h('span', {}, t.motivo))),
-        h('div', { class: 'acc' },
-          t.url ? h('a', { class: 'bt mini', href: t.url, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en Desk') : null,
-          t.agente_propuesto_id && puedeAsignar(ctx) ? botonConfirmar({ texto: `Asignar a ${ctx.nombre(t.agente_propuesto_id)}`, pregunta: `¿Asignar a ${ctx.nombre(t.agente_propuesto_id)}?`, confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-            alConfirmar: async () => { await ctx.accion({ herramienta: 'desk', tipo: 'asignar', objeto: t.numero, cliente_id: t.cliente_id || null, texto: `Asignar a ${t.agente_propuesto}`, vista_previa: { a: t.agente_propuesto_id, ticket: t.numero, origen: 'triaje' } }); S.porObjeto.set(String(t.numero), [{ tipo: 'asignar' }]); setTimeout(pintarL, 900); return 'En la cola simulada'; } }) : null,
-          botonConfirmar({ texto: 'Cerrar sin contestar', pregunta: '¿Cerrar (antiguo o ya resuelto)?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
-            alConfirmar: async () => { await ctx.accion({ herramienta: 'desk', tipo: 'cerrar', objeto: t.numero, cliente_id: t.cliente_id || null, texto: `Cerrar ${t.numero} desde el reparto (sin responsable, ${t.dias} días)`, vista_previa: { estado: 'Cerrado', ticket: t.numero } }); S.porObjeto.set(String(t.numero), [{ tipo: 'cerrar' }]); setTimeout(pintarL, 900); return 'En la cola simulada'; } }))));
-    }
-    if (xs.length > limite) mas.append(h('button', { type: 'button', class: 'bt', on: { click: () => { limite += 60; pintarL(); } } }, icono('mas'), `Ver más (${xs.length - limite})`));
+  const inicial=filasTriaje432(ctx,S);
+  if(inicial===null){z.append(h('p',{role:'status'},'No hay una lectura de reparto autorizada disponible.'));return;}
+  const firma=()=>JSON.stringify(inicial.map(t=>ambitoTriaje432(ctx,S,t)));
+  const inicialFirma=firma(),vivo=()=>ctx.vigente?.()!==false&&z.isConnected&&firma()===inicialFirma&&filasTriaje432(ctx,S)!==null;
+  const chips=chipsFiltro({etiqueta:'Propuesta',clave:'bandeja.triaje',opciones:[
+    {valor:'seguro',texto:'Cliente seguro',cuenta:inicial.filter(t=>t.propuesta==='seguro').length},
+    {valor:'dudoso',texto:'Dudoso',cuenta:inicial.filter(t=>t.propuesta==='dudoso').length},
+    {valor:'sin_cliente',texto:'Sin cliente',cuenta:inicial.filter(t=>t.propuesta==='sin_cliente').length},
+  ],alCambiar:()=>pintarL()});
+  // Esta lista no tiene la columna de icono de «primero»: texto ancho + acciones.
+  z.append(h('style',{},`
+    .primero.triaje432>li{grid-template-columns:minmax(0,1fr) minmax(160px,34%);gap:8px 16px}
+    .primero.triaje432>li>.triaje432-texto{min-width:0;overflow-wrap:anywhere}
+    .primero.triaje432>li>.acc{grid-column:auto;min-width:0;display:flex;flex-wrap:wrap;justify-content:flex-end}
+    .primero.triaje432 .acc .bt,.primero.triaje432 .acc .confirmar{max-width:100%;white-space:normal}
+    @media(max-width:640px){.primero.triaje432>li{grid-template-columns:minmax(0,1fr)}.primero.triaje432>li>.acc{grid-column:1;justify-content:flex-start}}
+  `));
+  const caja=h('ul',{class:'primero triaje432'}),mas=h('div',{class:'tabla-mas'});
+  z.append(panel({titulo:'Correos sin responsable',icono:'persona'},h('div',{class:'cuerpo pila'},h('p',{class:'sub'},'Tickets observados en la copia. Una intención local no acredita asignación ni cierre en Desk; los pendientes conservan su fuente.'),S.accionesTriajeLeidas432!==true?h('p',{role:'status'},'No se pudo leer el registro local. Recarga esta vista o consulta Envíos antes de otra intención.'):null,chips),caja,mas));
+  let limite=40;
+  function pintarL(){
+    if(!vivo()){z.replaceChildren();return;}
+    const xs=filasTriaje432(ctx,S).filter(t=>t.propuesta===chips.valor()).sort((a,b)=>(a.dias??9e9)-(b.dias??9e9));
+    caja.replaceChildren();mas.replaceChildren();
+    if(!xs.length){caja.append(h('li',{},vacio({titulo:'Sin tickets observados en esta selección',texto:'La copia parcial no acredita ausencia de pendientes.',celebrar:false})));return;}
+    const boton=(t,tipo)=>{
+      const scope=ambitoTriaje432(ctx,S,t,tipo);
+      if(!scope)return null;
+      const anterior=previaTriaje432(ctx,S,t,tipo);
+      const guardar=async()=>{
+        if(!vivo()||!ambitoTriaje432(ctx,S,t,tipo)){z.replaceChildren();throw Error('El contexto cambió; revisa la vista actual.');}
+        try{await consultarTriaje440(ctx,S,t,tipo);}catch(error){if(!vivo())z.replaceChildren();throw error;}
+        if(!vivo()||!ambitoTriaje432(ctx,S,t,tipo)){z.replaceChildren();throw Error('El contexto cambió; revisa la vista actual.');}
+        const i=intencionTriaje432(ctx,S,t,tipo);
+        if(i.recibo)return 'Intención local guardada · Desk sin confirmar.';
+        const ok=await guardarTriaje432(ctx,S,t,i);
+        if(!vivo()||!ok){z.replaceChildren();throw Error('Resultado sin confirmar en un contexto que cambió. Consulta Envíos.');}
+        pintarL();if(!i.recibo)throw Error(i.mensaje);
+        return 'Intención local guardada · Desk sin confirmar.';
+      };
+      return botonConfirmar({texto:anterior?.recibo?'Intención guardada':anterior?.estado==='sin_confirmar'?'Reintentar misma intención':tipo==='asignar'?`Solicitar asignación a ${ctx.nombre(t.agente_propuesto_id)}`:'Solicitar cierre',pregunta:'Se guardará una intención local; Desk seguirá sin confirmar.',confirmar:'Guardar intención',mini:true,soloLectura:ctx.soloLectura,alConfirmar:guardar});
+    };
+    for(const t of xs.slice(0,limite))caja.append(h('li',{},h('div',{class:'triaje432-texto'},h('div',{class:'mot'},t.asunto||'(sin asunto)'),h('div',{class:'det'},t.cliente||'Sin cliente confirmado',' · ',fDiaRO(t.fecha),' · ',t.motivo||'Propuesta pendiente de contraste'),h('span',{class:'sub',role:'status'},estadoTriaje432(ctx,S,t))),h('div',{class:'acc'},t.url?h('a',{class:'bt mini',href:t.url,target:'_blank',rel:'noopener',on:{click:e=>{if(!vivo()){e.preventDefault();z.replaceChildren();}}}},'Abrir en Desk'):null,boton(t,'asignar'),boton(t,'cerrar'),h('a',{href:'#/envios',on:{click:e=>{if(!vivo())e.preventDefault();}}},'Envíos'))));
+    if(xs.length>limite)mas.append(h('button',{type:'button',class:'bt',on:{click:()=>{if(!vivo()){z.replaceChildren();return;}limite+=60;pintarL();}}},'Ver más'));
   }
   pintarL();
 }
 
-// ---------------------------------------------------------------- WhatsApp (W6)
-function pintarWhatsapp(z) {
-  z.append(panel({ titulo: 'WhatsApp uno a uno', icono: 'wa', sub: 'Hueco preparado: llega con WhatsApp Business conectado' },
-    h('div', { class: 'cuerpo pila' },
-      vacio({ icono: 'wa', titulo: 'Aún sin conectar', quien: 'Tomás (con su móvil)',
-        texto: 'Con la coexistencia de WhatsApp Business los chats uno a uno con clientes entrarán aquí, mezclados con los correos y con la misma cuenta atrás de 24 y 48 h. Los grupos («Concilia-Ranking» y parecidos) siguen en el móvil. No antes del 16-oct (cambio del alta de Meta del 15-oct).' }),
-      h('div', {}, h('b', {}, 'Lo que hace Tomás (7 pasos):'),
-        h('ol', {}, ['Actualizar WhatsApp Business y hacer copia de seguridad', 'Cartera de negocio verificada en Meta', 'Subcuenta de GHL aparte «Clientes RO», sin flujos', 'Dar de alta el número con su móvil (coexistencia)', 'Volver a vincular WhatsApp Web', 'Permiso de GHL para leer y escribir conversaciones', 'Abrir la app del móvil cada 13 días (la app avisará a los 12)'].map(t => h('li', {}, t)))),
-      h('div', { class: 'fila' }, h('button', { type: 'button', class: 'bt', 'aria-disabled': 'true', title: 'Llega con WhatsApp Business conectado' }, icono('wa'), 'Contestar por WhatsApp · todavía no')))));
-}
-
-// ---------------------------------------------------------------- de dónde sale
-function pintarComo(z, ctx, S) {
-  const D = S.D;
-  const deps = D.departamentos || [];
-  const legibles = deps.filter(d => d.legible);
-  const sinPermiso = deps.filter(d => d.activo && !d.legible);
-  const reglas = [
-    ['mail', 'Correo sin contestar', 'El último mensaje del ticket es del cliente y el ticket no está cerrado (cualquier estado abierto o en espera de Desk: Abierto, En espera, Escalado, Por resolver, Por responder, En seguimiento).'],
-    ['clock', 'Tiempo esperando', 'En horas y días laborables (de lunes a viernes), desde el último mensaje del cliente. Ámbar a las 24 h y rojo a las 48 h.'],
-    ['alert', 'Queja', 'El asunto habla de pocos leads, urgencia, baja, cancelar, reclamar, errores o problemas. Las quejas nunca se esconden por antiguas.'],
-    ['zap', 'Avisos automáticos y reenvíos', 'Zapier, boletines y circulares de marketing («¿Sabes…? Descúbrelo en esta guía», «Nota informativa»: no cuentan como correo de cliente sin contestar), reenvíos, avisos de Drive y de calendario («Cancelado:», «Invitación:», «Elemento compartido»…). Van aparte.'],
-    ['filtro', 'Fuera de la bandeja', 'Correos del propio equipo, avisos de reuniones agendadas, candidaturas, respuestas automáticas, alertas y plataformas.'],
-    ['phone', 'Llamada sin devolver', 'Entrante perdida (también las de 0 segundos) de los últimos 5 días laborables sin ninguna llamada contestada después con ese número. Un intento nuestro sin respuesta no cuenta como devuelta.'],
-    ['clock', 'Esperando al cliente', 'Lo marcas tú cuando le toca al cliente: deja de contar como «sin responder» y espera en su filtro.'],
-    ['doc', 'Hilo del correo', 'Se lee aquí cuando la app ya tiene el hilo (los correos que ha leído la IA); si no, «Leer el hilo en Desk».'],
-    ['candado', 'Correos sin cliente', 'Proveedores y números desconocidos: solo los ven Operaciones y Dirección.'],
-  ];
-  z.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Cómo se cuenta', icono: 'info', sub: 'Las mismas reglas en la Bandeja, la ficha del cliente y Mi día' },
-      h('div', { class: 'cuerpo pila' }, h('ul', { class: 'lista-i' }, reglas.map(([ic, k, v]) => h('li', {}, h('span', { class: 'ico-c s' }, icono(ic)), h('span', { class: 't', style: { whiteSpace: 'normal' } }, h('b', {}, k + ': '), v)))),
-        h('div', { class: 'fila' }, frescura(fres(D.fuentes?.desk, 'Desk')), frescura(fres(D.fuentes?.zadarma, 'Zadarma')),
-          h('a', { class: 'bt mini', href: 'https://my.zadarma.com/mystatistics/', target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir Zadarma')))),
-    panel({ titulo: 'Departamentos de Desk', icono: 'inbox', sub: `${legibles.length} de ${deps.length} se pueden leer` },
-      h('div', { class: 'cuerpo pila' },
-        sinPermiso.length ? avisoParcial(`La app solo puede abrir los correos de ${legibles.map(d => d.nombre.replace(/\.$/, '')).join(', ')}. Faltan ${sinPermiso.length} departamentos activos (${sinPermiso.map(d => d.nombre).join(', ')}): hay que dar acceso a esos departamentos en Desk al usuario con el que lee la app.`, { titulo: 'Falta un permiso.' }) : null,
-        h('ul', { class: 'lista-i' }, deps.slice().sort((a, b) => (b.legible - a.legible) || (b.activo - a.activo)).map(d =>
-          h('li', {}, h('span', { class: `ico-c s ${d.legible ? 'verde' : d.activo ? 'ambar' : 'gris'}` }, icono(d.legible ? 'ok' : d.activo ? 'candado' : 'vacio')),
-            h('span', { class: 't' }, String(d.nombre).replace(/\.$/, '')), h('span', { class: 'x' }, d.legible ? `${fmt.num(d.abiertos)} abiertos` : d.activo ? 'sin permiso' : 'desactivado')))))),
-  ));
-  const NOMBRE_RUIDO = { 'remitente @rankingonline': 'Del propio equipo', 'tomas@': 'Reenviados por Tomás', 'triaje · ruido': 'Sin responsable y sin cliente', 'aviso de reunión agendada/BOFU': 'Avisos de reunión agendada' };
-  const ruido = Object.entries(D.ruido || {});
-  if (ruido.length) z.append(panel({ titulo: 'Fuera de la bandeja', icono: 'filtro', sub: 'No son correos de clientes' },
-    h('div', { class: 'cuerpo' }, h('ul', { class: 'lista-i' }, ruido.map(([k, n]) => h('li', {}, h('span', { class: 'ico-c s gris' }, icono('filtro')), h('span', { class: 't' }, NOMBRE_RUIDO[k] || (k.charAt(0).toUpperCase() + k.slice(1))), h('span', { class: 'x' }, fmt.num(n))))))));
+function ordenHorasRO(a, b) {
+  const valida = n => typeof n === 'number' && Number.isFinite(n) && n >= 0;
+  return valida(a) && valida(b) ? b - a : valida(a) ? -1 : valida(b) ? 1 : 0;
 }

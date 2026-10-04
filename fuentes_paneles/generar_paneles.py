@@ -36,6 +36,7 @@ sys.path.insert(0, str(APP / "fuentes"))
 sys.path.insert(0, str(AQUI))
 import comun as C  # noqa: E402
 import periodos as PER  # noqa: E402
+import meta_mediciones_220 as META220  # noqa: E402
 
 for p in ("google", "meta", "metricool", "ghl_agencia", "zoho", "zadarma"):
     sys.path.insert(0, os.path.expanduser(f"~/RO_HERRAMIENTAS/{p}"))
@@ -439,11 +440,7 @@ def psi_leer(c):
 
 # ====================================================================== Meta Ads
 def leads_de(actions):
-    a = {x.get("action_type"): num(x.get("value")) for x in (actions or [])}
-    for t in ("lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead", "onsite_web_lead"):
-        if a.get(t):
-            return a[t]
-    return 0.0
+    return META220.leads(actions)[0]
 
 
 def meta_paginar(tk, path, **q):
@@ -457,43 +454,80 @@ def meta_paginar(tk, path, **q):
         datos += r.get("data", []) or []
         url = (r.get("paging") or {}).get("next")
         n += 1
-    return datos, None
+    return datos, "paginacion_incompleta" if url else None
 
 
 def meta_leer(tk, c):
+    from datetime import timezone
+    from zoneinfo import ZoneInfo
+    try:
+        from fuentes_paneles import meta_envelope_373 as META373
+    except ModuleNotFoundError:
+        import meta_envelope_373 as META373
+    leido_utc = datetime.now(timezone.utc)
     cuenta = c["meta"]
-    out = {"cuenta": cuenta, "nombre": c.get("meta_nombre"), "leido": AHORA, "errores": []}
-    info = get_json(f"https://graph.facebook.com/v26.0/{cuenta}?" + urllib.parse.urlencode({"access_token": tk, "fields": "name,account_status,currency,timezone_name"}))
+    out = {"cuenta": cuenta, "nombre": c.get("meta_nombre"), "leido": AHORA, "errores": [], "medicion_meta": META220.descriptor(AHORA)}
+    info = get_json(f"https://graph.facebook.com/v26.0/{cuenta}?" + urllib.parse.urlencode({"access_token": tk, "fields": "account_id,name,account_status,currency,timezone_name"}))
     if "_error" in info:
-        out["_error"] = f"{info['_error']} {info.get('_msg', '')[:160]}"
+        out["_error"] = "lectura_cuenta_meta_fallida"
         return out
-    out["estado_cuenta"], out["moneda"] = info.get("account_status"), info.get("currency")
+    out["estado_cuenta"], out["moneda"] = info.get("account_status"), META220.contexto_cuenta(cuenta, info.get("currency"))["moneda"]
+    out["zona_horaria"] = None
+    aid = cuenta.removeprefix("act_") if isinstance(cuenta, str) else None
+    try:
+        zona_cuenta = ZoneInfo(info["timezone_name"])
+        out["zona_horaria"] = zona_cuenta.key
+        hasta_diaria = min(HOY, leido_utc.astimezone(zona_cuenta).date())
+    except (KeyError, TypeError, ValueError):
+        hasta_diaria = HOY  # compatibilidad legacy; ninguna zona/medición se inventa.
+    out["mediciones_diarias_373"] = None
     # estado y presupuesto
     for nivel, campos in (("campaigns", "name,effective_status,objective,daily_budget,lifetime_budget"),
                           ("adsets", "name,effective_status,campaign_id,daily_budget,lifetime_budget,optimization_goal"),
                           ("ads", "name,effective_status,adset_id,campaign_id")):
         d, err = meta_paginar(tk, f"/{cuenta}/{nivel}", fields=campos, limit=200)
         if err:
-            out["errores"].append(f"{nivel}: {err}")
+            out["errores"].append(f"{nivel}: lectura_incompleta")
         out[nivel] = {x["id"]: {"nombre": C.sanear(x.get("name")), "estado": x.get("effective_status"), "objetivo": x.get("objective") or x.get("optimization_goal"),
-                               "inversion_diaria": r2(num(x.get("daily_budget")) / 100) if x.get("daily_budget") else None,
-                               "inversion_total": r2(num(x.get("lifetime_budget")) / 100) if x.get("lifetime_budget") else None,
+                               "inversion_diaria": META220.numero(x.get("daily_budget")) / 100 if META220.numero(x.get("daily_budget")) is not None else None,
+                               "inversion_total": META220.numero(x.get("lifetime_budget")) / 100 if META220.numero(x.get("lifetime_budget")) is not None else None,
                                "campana": x.get("campaign_id"), "conjunto": x.get("adset_id")} for x in d}
     # serie diaria por campaña
-    d, a = [], date.fromisoformat(DESDE_SERIE)
-    while a <= HOY:   # por tramos de 90 días: las cuentas grandes dan error con todo de golpe
-        b = min(a + timedelta(days=89), HOY)
+    d, a, paginas_completas = [], date.fromisoformat(DESDE_SERIE), True
+    while a <= hasta_diaria:   # por tramos de 90 días: las cuentas grandes dan error con todo de golpe
+        b = min(a + timedelta(days=89), hasta_diaria)
         x, err = meta_paginar(tk, f"/{cuenta}/insights", level="campaign", time_increment=1, limit=500,
-                              fields="campaign_id,spend,impressions,clicks,inline_link_clicks,actions",
+                              fields="account_id,campaign_id,spend,impressions,clicks,inline_link_clicks,actions",
                               time_range=json.dumps({"since": a.isoformat(), "until": b.isoformat()}))
         if err:
-            out["errores"].append(f"serie {a}: {err}")
+            paginas_completas = False
+            out["errores"].append(f"serie {a}: lectura_incompleta")
         d += x
         a = b + timedelta(days=1)
+    leido_utc = datetime.now(timezone.utc)  # fin de lectura diaria, no fecha revivida del caché
+    try:
+        out["mediciones_diarias_373"] = META373.proyectar({
+            "request": {"cuenta_id": aid, "level": "campaign", "time_increment": 1,
+                        "desde": DESDE_SERIE, "hasta": hasta_diaria.isoformat()},
+            "account": {"id": info.get("account_id"), "currency": info.get("currency"), "timezone_name": info.get("timezone_name")},
+            "leido_utc": leido_utc.isoformat(), "response": {"data": d}, "paginas_completas": paginas_completas},
+            [{"cliente_id": c.get("id"), "cuenta_id": aid, "moneda": info.get("currency"),
+              "zona": info.get("timezone_name"), "confirmada": True}])
+    except ValueError:
+        out["errores"].append("mediciones_diarias_373: contexto_o_periodo_no_acreditado")
     serie = {}
     for x in d:
-        serie.setdefault(x["campaign_id"], {})[x["date_start"]] = [r2(num(x.get("spend"))), int(num(x.get("impressions"))), int(num(x.get("clicks"))),
-                                                                     int(num(x.get("inline_link_clicks"))), leads_de(x.get("actions"))]
+        fila = META220.fila(x, AHORA, 'campaign_diario', cuenta=cuenta, moneda=out.get('moneda'))
+        if not fila['medicion']['periodo_valido'] or x['date_start'] != x['date_stop'] or not DESDE_SERIE <= x['date_start'] <= HOY.isoformat() or not isinstance(x.get('campaign_id'), str) or not x['campaign_id']:
+            out['errores'].append('Serie: identidad o periodo diario inválido; fila apartada.')
+            continue
+        vector = [fila[k] for k in ('gasto', 'impresiones', 'clics', 'clics_enlace', 'leads')]
+        dias = serie.setdefault(x['campaign_id'], {})
+        if x['date_start'] in dias and dias[x['date_start']] != vector:
+            dias[x['date_start']] = [None] * 5
+            out['errores'].append('Serie: fila repetida discordante; medición desconocida.')
+        else:
+            dias[x['date_start']] = vector
     out["gasto_serie"] = serie   # [gasto, impresiones, clics, clics en el enlace, leads] · «gasto*» lo recorta servir.py
     # por periodo (exacto: alcance y frecuencia no se pueden sumar por días)
     rangos = []
@@ -511,19 +545,24 @@ def meta_leer(tk, c):
                 x, e2 = meta_paginar(tk, f"/{cuenta}/insights", level=nivel, fields=campos, time_range=json.dumps({"since": a, "until": b}), limit=500)
                 d += x
                 if e2:
-                    errs.append(f"{a}: {e2[:80]}")
+                    errs.append(f"{a}: lectura_incompleta")
             if errs:
                 out["errores"].append(f"{nivel}: {'; '.join(errs)[:300]}")
         for x in d:
+            fila = META220.fila(x, AHORA, nivel, cuenta=cuenta, moneda=out.get('moneda'))
+            if not fila['medicion']['periodo_valido'] or (x['date_start'], x['date_stop']) not in rangos or (idc and (not isinstance(x.get(idc), str) or not x[idc])):
+                out['errores'].append(f'{nivel}: identidad o periodo inválido; fila apartada.')
+                continue
             k = f"{x['date_start']}|{x['date_stop']}"
-            fila = {"gasto": r2(num(x.get("spend"))), "impresiones": int(num(x.get("impressions"))), "alcance": int(num(x.get("reach"))),
-                    "frecuencia": r2(num(x.get("frequency"))), "clics": int(num(x.get("clicks"))), "clics_enlace": int(num(x.get("inline_link_clicks"))),
-                    "leads": leads_de(x.get("actions"))}
-            dest = out["periodos"].setdefault(k, {})
-            if idc:
-                dest.setdefault(nivel, {})[x[idc]] = fila
-            else:
-                dest["cuenta"] = fila
+            dest = out['periodos'].setdefault(k, {})
+            target = dest.setdefault(nivel, {}) if idc else dest
+            key = x[idc] if idc else 'cuenta'
+            if key in target and target[key] != fila:
+                for campo in (*META220.CAMPOS, 'leads'):
+                    fila[campo] = None
+                fila['medicion']['campos_observados'] = []
+                out['errores'].append(f'{nivel}: fila repetida discordante; medición desconocida.')
+            target[key] = fila
     return out
 
 
@@ -859,15 +898,12 @@ def construir(cls):
                                      "indexacion": ix, "experiencia": ps})
         # Meta
         me = cache_leer("meta", cid) if c.get("meta") else None
-        f["meta"] = {"estado": ("rota" if (me or {}).get("_error") else "bien" if me and (me.get("gasto_serie") or me.get("periodos")) else "a_cero" if me else "sin_leer") if c.get("meta") else "sin_conectar",
+        me = META220.preparar_cache(me) if me else None
+        f["meta"] = {"estado": ("rota" if (me or {}).get("_error") else "bien" if me and (me.get("gasto_serie") or me.get("periodos")) else "sin_dato" if me else "sin_leer") if c.get("meta") else "sin_conectar",
                      "hora": (me or {}).get("leido"), "nombre": c.get("meta_nombre"), "abrir": ENLACE["meta"](c) if c.get("meta") else None,
                      "nota": nota_error((me or {}).get("_error")) or (None if c.get("meta") else "Sin cuenta publicitaria de Meta emparejada")}
         if me and not me.get("_error"):
-            serie = {cmp: {d: v[1:] for d, v in s.items()} for cmp, s in (me.get("gasto_serie") or {}).items()}
-            gasto = {cmp: {d: v[0] for d, v in s.items()} for cmp, s in (me.get("gasto_serie") or {}).items()}
-            escribir_fila("meta", c, {"cuenta": me.get("cuenta"), "cuenta_nombre": me.get("nombre"), "leido": me.get("leido"), "estado_cuenta": me.get("estado_cuenta"),
-                                      "campanas": me.get("campaigns"), "conjuntos": me.get("adsets"), "anuncios": me.get("ads"),
-                                      "serie": serie, "gasto_serie": gasto, "periodos": me.get("periodos"), "errores": me.get("errores")})
+            escribir_fila("meta", c, META220.proyectar_cache(me, cliente_id=c.get('id')))
         # GHL
         gh = cache_leer("ghl", cid) if c.get("ghl") else None
         f["ghl"] = {"estado": ("rota" if (gh or {}).get("_error") else "bien" if gh else "sin_leer") if c.get("ghl") else "sin_conectar",

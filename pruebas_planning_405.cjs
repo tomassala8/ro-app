@@ -1,0 +1,22 @@
+const fs=require('fs'),path=require('path');
+const prefix=fs.readFileSync(path.join(__dirname,'pruebas_operaciones_equipo_262.cjs'),'utf8').split('(async()=>{')[0];
+const old=fs.readFileSync(path.join(__dirname,'pruebas_planning_observado_360.cjs'),'utf8');
+const fixtures=old.slice(old.indexOf("const SHA360="),old.indexOf('(async()=>{',old.indexOf("const SHA360=")));
+const tests=`
+load('_planning_observado_360.js',['accountPlanning405']);
+const fixture405=()=>{const d=fixture360();d.version='405.1';d.fuente_version='395.1';d.sha256_candidato='f0503e6e5edeaff1fabffb602e5a2bb80ed3e2c432c2bf9fad03ec25c0f8a292';d.corte_preparacion_utc='2026-10-03T17:30:00Z';d.estados_incluidos=['backlog','diario','en curso','planning mensual','planning semanal'];d.filas=d.estados_incluidos.map((estado,i)=>({...d.filas[0],tarea_id:'t'+i,estado}));d.observaciones=5;return d;};
+const ctx405=()=>{const c=ctx360();c.api=async()=>fixture405();return c;};
+const render405=async(n,ctx)=>{const result=await c.panelPlanningObservado360(n,ctx);const d=all(n,x=>x.attrs['data-planning-proyectos-412']!==undefined)[0];if(d){d.open=true;d.events.toggle();}return result;};
+(async()=>{
+await test('405 all five exact states accepted no history',()=>{const ctx=ctx405(),m=c.proyectarPlanning360(ctx,fixture405(),c.ambitoPlanning360(ctx));assert.equal(m.filas.length,5);assert.equal(m.estados.length,5);assert(m.ampliado);assert(!('rompe_semanal' in m.filas[0]));});
+await test('405 renderer account6/project8 columns and observed counts',async()=>{const n=new N('main'),ctx=ctx405();await render405(n,ctx);const t=all(n,x=>x.tag==='table');assert.deepEqual(t.map(n=>all(n,x=>x.tag==='th').length),[6,8]);assert(text(t[0]).includes('Persona actual'));assert(text(n).includes('Planning semanal'));assert(text(n).includes('En curso'));assert(!text(n).includes('cumplido'));});
+for(const change of [d=>d.filas[0].estado='Hoy',d=>d.estados_incluidos.push('diario'),d=>d.corte_preparacion_utc='2026-10-03T16:00:00Z',d=>d.corte_preparacion_utc='2026-10-03T19:00:00Z',d=>d.sha256_candidato='0'.repeat(64),d=>d.filas.push({...d.filas[0]})])await test('405 bad contract rejected',()=>{const ctx=ctx405(),d=fixture405();change(d);assert.equal(c.proyectarPlanning360(ctx,d,c.ambitoPlanning360(ctx)),null);});
+await test('405 canonical ACT missing duplicate stalevisible denied',async()=>{for(const mutate of [ctx=>ctx.clientes=[],ctx=>ctx.clientes.push({...ctx.clientes[0]}),ctx=>ctx.clientes[0].activo_confirmado=false]){const ctx=ctx405();mutate(ctx);const d=fixture405();assert.equal(c.proyectarPlanning360(ctx,d,c.ambitoPlanning360(ctx)),null);}});
+await test('405 revoke during GET and opening clears summaries',async()=>{const ctx=ctx405(),n=new N('main');let finish;ctx.api=()=>new Promise(r=>finish=r);const p=c.panelPlanningObservado360(n,ctx);ctx.clientes[0].activo_confirmado=false;finish(fixture405());await p;assert.equal(text(n),'');const c2=ctx405(),n2=new N('main');await render405(n2,c2);const d=all(n2,x=>x.attrs['data-planning-cliente'])[0];c2.ver=()=>({ok:false});d.open=true;d.events.toggle();assert.equal(text(n2),'');});
+await test('405 filters do not invent zero or reset whole state inventory',async()=>{const ctx=ctx405(),n=new N('main');await render405(n,ctx);const selector=all(n,x=>x.tag==='select')[0];selector.value='c2';selector.events.change();assert(text(n).includes('Sin observaciones'));assert(!text(n).includes('≥0'));selector.value='';selector.events.change();assert.equal(all(n,x=>x.attrs['data-planning-cliente']).length,1);});
+await test('405 current owner ambiguous not historical attribution',()=>{const ctx=ctx405(),scope=c.ambitoPlanning360(ctx);assert.equal(c.accountPlanning405(scope,'c1',ctx.hoy).id,'a');ctx.datos.asignaciones[0].confianza='alta';ctx.clientes[0].equipo.account[0].confianza='alta';ctx.clientesVisibles[0].equipo.account[0].confianza='alta';assert.equal(c.accountPlanning405(c.ambitoPlanning360(ctx),'c1',ctx.hoy).confirmada,false);});
+await test('405 legacy355 preserved without new empty columns',async()=>{const ctx=ctx360(),n=new N('main');await render405(n,ctx);assert.equal(all(n,x=>x.tag==='th').length,5);assert(!text(n).includes('Planning semanal'));});
+console.log(checks+' grupos405 UI PASS · modelo y renderer360 reales');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+`;
+new Function('require','__dirname',prefix+fixtures+tests)(require,__dirname);

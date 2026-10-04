@@ -274,7 +274,7 @@ def simulado():
         if n in (0, 2, 4):
             revs.append({'name': f'{cuenta}/{loc}/reviews/C{n}', 'reviewer': {'displayName': 'Persona de prueba C'},
                          'starRating': ['ONE', 'TWO', 'THREE'][n // 2],
-                         'comment': 'Me cobraron una cuota que no esperaba y nadie me llamó (escribidme a prueba@ejemplo.es o al ' + '6' + '00 000 000).',
+                         'comment': 'Me cobraron una cuota que no esperaba y nadie me llamó (escribidme a contacto-1@example.invalid o al ' + '6' + '00 000 000).',
                          'createTime': iso(40 if n != 4 else 6), 'updateTime': iso(40 if n != 4 else 6)})
         if n == 0:
             revs.append({'name': f'{cuenta}/{loc}/reviews/D{n}', 'reviewer': {'isAnonymous': True}, 'starRating': 'TWO',

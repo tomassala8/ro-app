@@ -45,3 +45,28 @@ despliegue/lista_access.txt
 # Migración: notas y plan de vuelta de cada noche, solo en el Mac (PLAN_NOCHE.md sí va al repositorio)
 migracion/PLAN_VUELTA.md
 migracion/NOTAS_NOCHE.md
+
+# Dinero por cliente y rastro de operaciones: nunca a GitHub (3-oct)
+fuentes_dinero/cuotas.json
+fuentes_dinero/impagos_estado.json
+fuentes_incidencias/rastro_operaciones.json
+
+# Contextos SEO por cliente: registro privado
+fuentes_seo/contextos_confirmados.json
+
+# Objetivos históricos por cliente: pendientes de contraste, privados
+fuentes_seo/objetivos_candidatos.json
+
+# Registros operativos y vínculos del histórico: privados, separados del código
+fuentes_metodo/reglas_operativas.json
+fuentes_metodo/evidencias_reuniones.json
+fuentes_verdad/servicios_confirmados.json
+fuentes_verdad/objetivos_clientes.json
+fuentes_historial_reuniones/*.json
+
+# L-16: fuentes privadas locales; no incluir en Git
+fuentes_dinero/*.json
+**/_log_*.txt
+**/_cache_*.json
+fuentes/_muestras/
+fuentes_captacion/anuncios.json

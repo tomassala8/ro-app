@@ -1,3 +1,7 @@
+import { panelPlanningObservado360 } from './_planning_observado_360.js';
+import { panelComparacionSemanal296 } from './_produccion_creadas_287.js';
+import { metricasProyectoBaseline, sumarMetricaBaseline, planificacionBaseline, tablaProduccionBaseline, fuenteProduccionBaseline, CSS_PRODUCCION_BASELINE } from './_produccion_baseline.js';
+import { resumirAccountsProduccion237, textoRevisionAccount237 } from './_produccion_accounts_237.js';
 // modulos/produccion.js · M10 Producción (E7 del plan v2; ficha G3 «Producción creativa»; Mili, bloque 5 de su «Mi día»).
 // Cola de cada persona (hoy y semana, por fecha y prioridad) · revisión del account y técnica (48 h) · bloqueadas ·
 // devueltas · piezas a la primera y en fecha · trabajo no planificado (D-24) · carga frente a 12/16 (D-07) ·
@@ -7,6 +11,7 @@
 // proyectos y revisiones por cliente (quien ve ese cliente). Botones: ctx.accion() → cola «simulada»; nada se escribe en ClickUp.
 
 import { llevarA } from './_ir.js';
+import { prepararRevisionProduccion206, crearIntencionRevision206, validarReciboRevision206 } from './_transicion_produccion_206.js';
 import {
   h, fmt, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, panel, frescura, icono, iniciales,
   tablaDensa, logoCliente, botonConfirmar, fichaCatalogo, pieFase2, semaforo, vacioLinea, campoTexto,
@@ -16,6 +21,43 @@ import { botonDeshacer } from './_deshacer.js';
 import { fichaMarca } from './produccion_comun.js';
 import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
 import { selectorPersona, barraMini, prioridad, vence, chipDias, estadoTxt, PUESTO_TXT, S, R, punto, estadoTexto, lineaFuentes, etiquetasDe, cuentagotas, ancharBuscador, esMovil, GRUPOS_AHORA, alDia, diaCortoTxt, revisionesDelAccount } from './produccion_comun.js';
+
+// 137 · Contadores de proyecto sólo con medición específica, nunca con defaults heredados.
+const fechaRevision137 = (sello, hoy) => {
+  if (typeof sello !== 'string' || typeof hoy !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(hoy)) return false;
+  const dia = sello.slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dia) || dia > hoy) return false;
+  const d = new Date(`${dia}T00:00:00Z`);
+  return !Number.isNaN(+d) && d.toISOString().slice(0, 10) === dia && !Number.isNaN(+new Date(sello.replace(' ', 'T')));
+};
+export function medicionRevisionProyecto137(p, fuentes, hoy, tipo = 'account') {
+  const m = p?.[`revisiones_${tipo}`], fecha = fuentes?.flujo?.hora;
+  const n = p?.[`rev_${tipo}`], mas48 = p?.[`rev_${tipo}_48`];
+  return m?.estado === 'medido' && m.fuente === 'flujo' && m.fecha === fecha && fechaRevision137(fecha, hoy)
+    && Number.isInteger(n) && n >= 0 && Number.isInteger(mas48) && mas48 >= 0 && mas48 <= n ? { n, mas48, fecha } : null;
+}
+export function prepararRevisionesProyectos137(filas, fuentes, hoy) {
+  return (Array.isArray(filas) ? filas : []).filter(p => p && typeof p === 'object').map(p => {
+    const a = medicionRevisionProyecto137(p, fuentes, hoy), t = medicionRevisionProyecto137(p, fuentes, hoy, 'tecnica');
+    return { ...p, rev_account: a?.n ?? null, rev_account_48: a?.mas48 ?? null,
+      rev_tecnica: t?.n ?? null, rev_tecnica_48: t?.mas48 ?? null, _revision_account: a, _revision_tecnica: t };
+  });
+}
+export function resumenRevisionesProyectos137(filas) {
+  const conRevision = filas.filter(p => (p._revision_account?.mas48 || 0) > 0 || (p._revision_tecnica?.mas48 || 0) > 0);
+  const sinDato = filas.filter(p => !p._revision_account || !p._revision_tecnica).length;
+  return { conRevision, sinDato, valor: conRevision.length || (!sinDato && filas.length ? 0 : null),
+    estado: conRevision.length ? 'ambar' : sinDato || !filas.length ? 'gris' : 'verde',
+    detalle: `${filas.length - sinDato} proyectos con ambas mediciones · ${sinDato} con alguna revisión sin dato. Copia parcial; no acredita inventario completo.` };
+}
+export function medicionFilasRevision137(filas, fuentes, hoy) {
+  const fuenteValida = Array.isArray(filas) && fechaRevision137(fuentes?.tareas?.hora, hoy);
+  const edadesValidas = Array.isArray(filas) && filas.every(r => typeof r.dias === 'number' && Number.isFinite(r.dias) && r.dias >= 0 && typeof r.mas48 === 'boolean');
+  const medido = fuenteValida && edadesValidas;
+  return { medido, valor: medido ? filas.filter(r => r.mas48).length : null,
+    estado: medido && filas.some(r => r.mas48) ? 'ambar' : 'gris',
+    detalle: medido ? `${filas.length} filas observadas en la copia de ${fuentes.tareas.hora}; cobertura parcial.` : 'Sin medición de edad acreditada: falta sello de tareas o campos de las filas. No equivale a cero.' };
+}
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -49,29 +91,177 @@ const GRUPOS = [
   { valor: 'olvidada', texto: 'Olvidadas (> 30 días)', icono: 'hist' },
 ];
 
+// La raíz pertenece a una única navegación e identidad; el contenedor principal se reutiliza.
+export function montarVistaVigente(cont, ctx) {
+  const raiz = h('div', { class: 'pila', 'data-vista-operativa': ID });
+  cont.replaceChildren(raiz);
+  const identidad = [ctx.persona?.id, ctx.real?.id, !!ctx.soloLectura];
+  const ruta = typeof location === 'undefined' ? null : location.hash;
+  const vigente = () => raiz.isConnected && raiz.parentNode === cont &&
+    (typeof ctx.vigente !== 'function' || ctx.vigente()) &&
+    (ruta === null || location.hash === ruta) &&
+    identidad[0] === ctx.persona?.id && identidad[1] === ctx.real?.id && identidad[2] === !!ctx.soloLectura;
+  return { raiz, vigente };
+}
+
+export function estadoAccionLocal(a) {
+  const estado = a?.envio_estado !== undefined && a.envio_estado !== null
+    ? a.envio_estado : a?.estado;
+  const remoto = a?.envio_estado !== undefined && a.envio_estado !== null;
+  const conocido = remoto || ['simulada', 'simulado', 'pendiente', 'ok'].includes(estado);
+  const textos = { simulada: 'Simulación local · sin envío confirmado', simulado: 'Simulación local · sin envío confirmado',
+    pendiente: 'Pendiente · sin envío confirmado', enviado: 'Enviado · confirmación pendiente',
+    confirmado: 'Envío confirmado · contrastar resultado en ClickUp', ok: 'Registro local · sin confirmación del proveedor' };
+  return { valida: conocido && Object.hasOwn(textos, estado), estado, texto: (conocido && textos[estado]) || 'Acción no confirmada; revisar Envíos',
+    confirmada: a?.envio_estado === 'confirmado' };
+}
+
+export function decisionesVisibles(acciones, bases, tipos) {
+  const permitidas = new Map(bases.map(x => [String(x.id), x]));
+  const out = new Map();
+  // GET acciones devuelve id DESC. La última acción sustituye la anterior, incluso si falla.
+  for (const a of (acciones || []).slice().reverse()) {
+    const id = String(a.objeto), base = permitidas.get(id);
+    if (!base || !tipos.includes(a.tipo)) continue;
+    const cli = base.cli ?? base.cliente_id;
+    if (a.cliente_id && a.cliente_id !== cli) continue;
+    const estado = estadoAccionLocal(a);
+    out.delete(id);
+    if (estado.valida) out.set(id, { ...a, seguimiento: estado });
+  }
+  return out;
+}
+
+export async function registrarAccionVigente(ctx, vigente, accion) {
+  if (!vigente() || ctx.soloLectura || !ctx.servidor) throw new Error('Vista obsoleta o sólo lectura: no se guarda la acción.');
+  const respuesta = await ctx.accion(accion);
+  if (!vigente()) throw new Error('La vista ha cambiado; revisa el registro local en Envíos.');
+  if (respuesta?.ok !== true || !estadoAccionLocal(respuesta).valida) throw new Error('La acción no tiene un registro válido confirmado por el servidor; revisa Envíos.');
+  return respuesta;
+}
+
+//211: intenciones en memoria de la pestaña, separadas por identidad y tarea.
+//No persiste comentarios en almacenamiento del navegador ni fabrica confirmaciones.
+const INTENCIONES_REVISION211 = new Map();
+export function piezaRevision211(t, datos) {
+  const token = datos?.transiciones_revision?.[t?.id];
+  if (!token || token.modulo !== 'produccion' || token.tarea_id !== t?.id || token.cliente_id !== t?.cli
+      || token.expected_estado !== t?.estado || typeof token.lista_id !== 'string' || typeof token.tipo_estado !== 'string'
+      || (t.lista_id != null && t.lista_id !== token.lista_id) || (t.tipo_estado != null && t.tipo_estado !== token.tipo_estado)) return null;
+  return { ...t, lista_id: token.lista_id, tipo_estado: token.tipo_estado };
+}
+export function crearControlRevision211(ctx, vigente, datos, uuid = () => globalThis.crypto?.randomUUID?.()) {
+  const identidad = JSON.stringify([ctx.real?.id, ctx.persona?.id, !!ctx.soloLectura, !!ctx.pilotoLectura]);
+  const key = t => JSON.stringify([identidad, t?.id]);
+  const actual = () => vigente() && ctx.servidor && !ctx.soloLectura && !ctx.pilotoLectura
+    && ctx.real?.id === ctx.persona?.id && ctx.veModulo?.('produccion') === true;
+  const permiso = (t, tipo) => {
+    const p = piezaRevision211(t, datos);
+    return p ? prepararRevisionProduccion206(ctx, p, tipo, datos?.capacidad_revision,
+      datos?.transiciones_revision?.[t.id], datos?.estados_detalle) : { ok: false, motivo: 'No hay copia y permiso de revisión confirmados para esta pieza. Abrir en ClickUp o actualizar.' };
+  };
+  const estado = t => INTENCIONES_REVISION211.get(key(t));
+  async function enviar(t, tipo, comentario = '') {
+    if (!actual() || datos?.capacidad_revision?.activo !== true) throw Error('Revisión no habilitada o pantalla obsoleta: no se guarda.');
+    let req = estado(t);
+    if (req?.enCurso) throw Error('Esta intención ya está en curso.');
+    if (req && (req.pieza.cli !== t.cli || (t.lista_id != null && req.pieza.lista_id !== t.lista_id))) throw Error('La pieza cambió de cliente o lista: revisar Envíos, sin reenviar este contenido.');
+    if (req?.resultado) return req.resultado;
+    if (req && req.intento.payload.tipo !== tipo) throw Error('Hay otra intención sin confirmar para esta pieza. Revisar Envíos antes de decidir otra cosa.');
+    if (!req) {
+      const p = permiso(t, tipo);
+      if (!p.ok) throw Error(p.motivo);
+      const intento = crearIntencionRevision206(ctx, piezaRevision211(t, datos), p, uuid(), comentario);
+      req = { intento: JSON.parse(JSON.stringify(intento)), pieza: { cli: t.cli, lista_id: piezaRevision211(t, datos).lista_id }, enCurso: false, resultado: null };
+      INTENCIONES_REVISION211.set(key(t), req);
+    }
+    req.enCurso = true;
+    try {
+      // Retry siempre conserva payload, comentario, revisión y UUID originales.
+      const respuesta = await ctx.accion(JSON.parse(JSON.stringify(req.intento.payload)));
+      if (!actual()) throw Error('La vista cambió: revisar Envíos. La respuesta no se aplica a esta pantalla.');
+      const recibo = validarReciboRevision206(respuesta, req.intento);
+      if (!recibo.valido) throw Error(respuesta?.requiere_revision
+        ? 'Guardado local sin cambio enviable confirmado: revisar fuente y Envíos. No crear otra intención.'
+        : 'Sin recibo durable confirmado: revisar Envíos o reintentar la misma intención.');
+      const textos = {simulado:'Registrado en RO · simulación, sin envío confirmado a ClickUp',pendiente:'Registrado en RO · pendiente de ClickUp',
+        enviado:'Enviado · pendiente de comprobar en ClickUp',confirmado:recibo.confirmacion_remota?'Releído y confirmado en ClickUp':'Registro local confirmado; sin confirmación remota acreditada',
+        fallido:'Cambio fallido · revisar Envíos',conflicto:'Conflicto · revisar Envíos',descartado:'Cambio descartado · revisar Envíos'};
+      req.resultado = { ...recibo, tipo, texto: textos[recibo.estado], respuesta };
+      return req.resultado;
+    } finally { req.enCurso = false; }
+  }
+  return { permiso, estado, enviar };
+}
+
 export default {
   id: ID,
   titulo: 'Producción',
   grupo: 'Equipo',
   async render(cont, ctx) {
+    const vista = montarVistaVigente(cont, ctx);
+    const vigente = vista.vigente;
+    cont = vista.raiz;
     vigilarCortes(cont);
+    // 351 · Las fuentes se leen antes de pintar; una espera no debe parecer una página vacía.
+    const carga351 = h('p', { class: 'sub', role: 'status', 'data-produccion-carga': '351' }, 'Cargando producción y revisiones…');
+    cont.append(carga351);
     let D;
     try { D = alDia(await ctx.datosModulo('produccion/produccion'), ctx.hoy || undefined); } catch (e) {
+      if (!vigente()) return;
+      carga351.remove();
       cont.append(vacio({ icono: 'alert', tono: 'aviso', titulo: 'No se han podido leer los datos de producción', texto: String(e.message || e), quien: 'quien mantiene la app' }));
       return;
     }
+    if (!vigente()) return;
+    let datosRevision = { capacidad_revision: { activo: false, version: '206.1' }, transiciones_revision: {}, estados_detalle: {} };
+    if (ctx.servidor && ctx.api) {
+      try { datosRevision = await ctx.api('produccion/transiciones'); } catch { /* capacidad desconocida: sin botones mutantes */ }
+      if (!vigente()) return;
+    }
+    const controlRevision = crearControlRevision211(ctx, vigente, datosRevision);
+    const accionRevision = (t, tipo, comentario = '') => {
+      const caja = h('span', { class: 'pila', style: { gap: S[1] } });
+      const pintar = () => {
+        if (!vigente()) return;
+        const req = controlRevision.estado(t), p = controlRevision.permiso(t, tipo);
+        const enviado = req?.resultado;
+        const mismo = !req || req.intento.payload.tipo === tipo;
+        const listo = mismo && !req?.enCurso && (req ? datosRevision?.capacidad_revision?.activo === true && !ctx.soloLectura && !ctx.pilotoLectura : p.ok);
+        const b = h('button', { type: 'button', class: 'bt mini', disabled: !listo || !!enviado,
+          title: !mismo ? 'Otra intención pendiente: revisar Envíos.' : p.motivo || '', on: { click: async () => {
+            if (!vigente() || !caja.isConnected) return;
+            b.disabled = true;
+            try { await controlRevision.enviar(t, tipo, comentario); } catch (e) {
+              if (vigente() && caja.isConnected) { pintar(); caja.append(h('span', { class: 'estado error', role: 'alert' }, e?.message || 'Sin recibo confirmado: revisar Envíos.')); }
+              return;
+            }
+            if (vigente() && caja.isConnected) pintar();
+          } } }, req && !enviado ? 'Reintentar misma intención' : tipo === 'pieza_aprobar' ? 'Aprobar' : tipo === 'pieza_pedir_cambios' ? 'Guardar petición' : 'A revisión');
+        caja.replaceChildren(b);
+        if (enviado) caja.append(h('span', { class: 'sub', role: 'status' }, enviado.texto));
+        else if (req) caja.append(h('span', { class: 'sub' }, req.enCurso ? 'Guardando; aún sin recibo confirmado…' : 'Hay una intención sin recibo confirmado. El reintento conserva el contenido original.'));
+        else if (!p.ok) caja.append(h('span', { class: 'sub' }, p.motivo));
+        if (req) caja.append(h('a', { href: '#/envios', class: 'sub' }, 'Revisar Envíos'));
+      };
+      pintar(); return caja;
+    };
     const yo = ctx.persona.id;
     const puestos = ctx.persona.puestos || [];
     // Ronda U (#13): marca y brief del cliente dentro de la tarea (data/produccion/marca.json, recortado por cliente) y los
     // pedidos de creatividades de publicidad (acciones de Captación que la persona puede ver).
     const MARCA = new Map();
     // primero el fichero propio (clientes de tus tareas y tu cartera); quien ve los clientes (dirección, jefas), el general
-    try { for (const m of (await ctx.datosModulo(`produccion/marca/p_${yo}`))?.clientes || []) MARCA.set(m.cli, m); } catch { /* sin fichero propio */ }
-    try { for (const m of (await ctx.datosModulo('produccion/marca'))?.clientes || []) if (!MARCA.has(m.cliente_id)) MARCA.set(m.cliente_id, m); } catch { /* sin marca: la fila lo dice */ }
+    try { const r = await ctx.datosModulo(`produccion/marca/p_${yo}`); if (!vigente()) return; for (const m of r?.clientes || []) MARCA.set(m.cli, m); } catch { /* sin fichero propio */ }
+    if (!vigente()) return;
+    try { const r = await ctx.datosModulo('produccion/marca'); if (!vigente()) return; for (const m of r?.clientes || []) if (!MARCA.has(m.cliente_id)) MARCA.set(m.cliente_id, m); } catch { /* sin marca: la fila lo dice */ }
+    if (!vigente()) return;
     const PEDIDOS = new Map();
     if (ctx.servidor && ctx.api && ctx.veModulo?.('captacion')) {
       try {
-        for (const a of (await ctx.api('acciones?modulo=captacion')).acciones || []) {
+        const r = await ctx.api('acciones?modulo=captacion');
+        if (!vigente()) return;
+        for (const a of r.acciones || []) {
           if (a.tipo !== 'tarea' || !String(a.vista_previa || '').includes('pedido_creatividad') || !a.cliente_id) continue;
           let vp = {}; try { vp = JSON.parse(a.vista_previa); } catch { /* texto */ }
           (PEDIDOS.get(a.cliente_id) || PEDIDOS.set(a.cliente_id, []).get(a.cliente_id)).push({ ...a, vp });
@@ -82,6 +272,7 @@ export default {
     if (ctx.servidor && ctx.api) {
       try {
         const r = await ctx.api('canales/canal?id=avisos-redes');
+        if (!vigente()) return;
         for (const msg of r.mensajes || []) {
           const pd = msg.pedido;
           if (!pd?.cliente_id || [...(PEDIDOS.get(pd.cliente_id) || [])].some(a => String(a.id) === String(pd.id))) continue;
@@ -90,6 +281,8 @@ export default {
         }
       } catch { /* sin canal: solo los de Captación */ }
     }
+    if (!vigente()) return;
+    carga351.remove();
     const comparar = ctx.ver({ tipo: 'comparar_personas' }).ok;
     const soloRRHH = puestos.includes('rrhh') && !puestos.some(p => ['direccion', 'operaciones'].includes(p));
     const dir = puestos.some(p => ['direccion', 'operaciones', 'proyectos'].includes(p));
@@ -105,7 +298,7 @@ export default {
       : `Escribe para varias áreas y responde ante ${p.jefe ? alias(p.jefe) : 'su jefa'}. No lleva clientes propios: su carga es su cola.`);
     const propia = personas.find(p => p.persona_id === yo);
 
-    ctx.titulo('Producción', 'Cola, revisiones y plazos de lo que produce cada uno · ClickUp con la llave propia');
+    ctx.titulo('Producción', 'Tareas, revisiones y plazos de tu equipo');
 
     // ---- cabecera: frescura de cada fuente ----
     // R14 · UN solo sello: la hora real de cada fuente y su límite (el de data/fuentes.json, el mismo de los consejos).
@@ -118,15 +311,17 @@ export default {
     ctxN.push(lineaFuentes(['tareas', 'flujo', 'horas', 'anuncios'].map(fuenteDe),
       h('p', { class: 'sub', style: { margin: '0', maxWidth: '72ch' } }, `Foto de ClickUp, no un periodo: los porcentajes son de los últimos 30 días y no cambian con el periodo de otras pantallas. Pantalla preparada el ${fDiaHoraRO(D.generado)}.`),
       { quien: 'Mili', como: '«Actualizar ahora»' }));
+    if (D.notas?.estados?.fecha) ctxN.push(lineaFuentes([{ fuente: D.notas.estados.fuente, nombre: 'Estados por lista', fecha: D.notas.estados.fecha, limite_h: LIMITE.tareas }], { quien: 'Mili', como: 'Contrastar catálogo y tareas en ClickUp' }));
+    ctxN.push(avisoParcial('Copia parcial de tareas. Los hitos de revisión o cierre no acreditan entrega aceptada ni rendimiento personal. Backlog sin fecha cercana y tareas no asignadas quedan fuera de esta cola; usa ClickUp para el inventario completo. Los porcentajes históricos requieren contrastar estados por lista.', { tipo: 'info', titulo: 'Alcance de esta vista.' }));
     if (D.dato_de && D.dato_de < D.hoy) ctxN.push(avisoParcial(`Las tareas son de ClickUp del ${diaCortoTxt(D.dato_de)}. Las fechas se cuentan con hoy, ${diaCortoTxt(D.hoy)}: lo que vencía el ${diaCortoTxt(D.dato_de)} ya sale en «Vencidas».`, { tipo: 'info' }));
 
     // ---- pestañas por frecuencia de uso de cada puesto ----
-    const proyectos = D.proyectos || [];
+    const proyectos = prepararRevisionesProyectos137(D.proyectos, F, D.hoy);
     const revisiones = D.revisiones || [];
     // V2 (A-A5): a un account, la pestaña cuenta SUS revisiones de más de 48 h (la misma cifra que Mi día); a quien dirige, todas
     const revMias = revisionesDelAccount(D, yo);
     const esAccountSolo = puestos.includes('account') && !puestos.some(p => ['direccion', 'operaciones', 'proyectos'].includes(p));
-    const cuentaRev = esAccountSolo ? revMias.mas48.length : revisiones.filter(r => r.mas48).length;
+    const cuentaRev = medicionFilasRevision137(Array.isArray(D.revisiones) ? (esAccountSolo ? revMias.todas : D.revisiones) : undefined, F, D.hoy).valor;
     const piezas = piezasPorRevisar();
     const meToca = piezas.filter(x => x.toca && x.vigente).length;
     const P = {
@@ -180,7 +375,7 @@ export default {
     const irACola = pid => { colaDe = pid; tabs.elegir('cola'); tabs.querySelector('[role=tabpanel]')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
 
     tabs = pestanas({
-      pestanas: orden.map(k => P[k]), clave: `${ID}.pestana.${yo}`, etiqueta: 'Vistas de producción', unaFila: true,
+      pestanas: orden.map(k => P[k]), clave: `${ID}.pestana.${yo}${ctx.operacionesVista ? '.operaciones' : ''}`, activa:ctx.operacionesVista === 'proyectos' ? 'proyectos' : undefined, etiqueta: 'Vistas de producción', unaFila: true,
       pintar: (id, z) => {
         if (id === 'porrevisar') pintarPorRevisar(z);
         if (id === 'cola') pintarCola(z);
@@ -237,7 +432,7 @@ export default {
             contexto: 'Fecha pasada y sin entregar', ir: 'Ver las vencidas', alPulsar: () => elegir('vencida') }),
           tile({ icono: 'zap', etiqueta: 'Para hoy', valor: filas.filter(r => r.grupo === 'hoy').length, contexto: `Diario, en curso o con fecha hoy (${diaCortoTxt(D.hoy)}), sin las vencidas · ${fmt.num(filas.filter(r => r.grupo === 'semana').length)} esta semana`, ir: 'Ver las de hoy', alPulsar: () => elegir('hoy') }),
           tile({ icono: 'candado', etiqueta: 'Bloqueadas', valor: bloqueadas.length, estado: bloqueadas.length ? 'ambar' : 'verde', contexto: `${fmt.num(bloqCliente)} ${bloqCliente === 1 ? 'espera' : 'esperan'} material del cliente · ${fmt.plural(bloqueadas.length - bloqCliente, 'interna', 'internas')} · ${fmt.num(p.en_revision)} en revisión`, ir: 'Ver las bloqueadas', alPulsar: () => elegir('bloqueada') }),
-          tile({ icono: 'check', etiqueta: 'En fecha (30 días)', valor: p.pct_en_fecha === null ? null : fmt.pct(p.pct_en_fecha), unidad: p.con_fecha_30d ? `de ${p.con_fecha_30d}` : '',
+          tile({ icono: 'check', etiqueta: 'Hitos en fecha (30 días)', valor: p.pct_en_fecha === null ? null : fmt.pct(p.pct_en_fecha), unidad: p.con_fecha_30d ? `de ${p.con_fecha_30d}` : '',
             estado: semaforo(p.pct_en_fecha, { verde: 90, ambar: 75 }), contexto: calidad || 'Últimos 30 días, ventana fija', medible: p.con_fecha_30d ? 'hoy' : 'medias', medibleDetalle: D.notas?.entregas }),
         ]));
         // R12 · una sola cifra de «tu cola»: la de Mi día (GRUPOS_AHORA). Lo que espera a otros va aparte y se ve con «Todo».
@@ -393,13 +588,14 @@ export default {
           tile({ icono: 'clock', etiqueta: 'Toda la revisión interna > 48 h', valor: mas48, unidad: `de ${fmt.num(internas.filter(x => x.vigente).length)}`, estado: semaforo(mas48, { verde: 5, ambar: 20, mejorSi: 'bajo' }), contexto: `Objetivo: 5 o menos · últimos 30 días; ${fmt.num(internas.filter(x => !x.vigente).length)} olvidadas aparte`, medible: 'hoy' }),
           hayMias ? tile({ icono: 'persona', etiqueta: 'Mis piezas esperando', valor: piezas.filter(x => x.mia && x.vigente).length, contexto: `${fmt.num(piezas.filter(x => x.mia && x.vigente && x.externo).length)} esperan al cliente`, ir: 'Ver mis piezas', alPulsar: () => elegirAlcance('mias') }) : null,
         ].filter(Boolean)),
-        avisoParcial('«Aprobar» y «Pedir cambios» quedan apuntados en la cola de acciones de la app, con tu nombre y la hora. Se aplicará en ClickUp cuando Tomás lo active; hasta entonces, la pieza sigue igual en ClickUp. Quién aprueba qué también lo decide Tomás: hoy, el account del cliente, la jefa del área en la revisión técnica, y Mili y Tomás en todas. Nadie se aprueba a sí mismo.', { tipo: 'info', titulo: 'En simulación.' }),
+        avisoParcial('Las revisiones se registran en RO. Comprueba su envío a ClickUp en Envíos; el registro no supone que el entregable esté aceptado. Si no aparece confirmación, revisa el seguimiento antes de volver a guardar.', { tipo: 'info', titulo: 'Revisión con seguimiento.' }),
         panel({ titulo: 'Por revisar', icono: 'check', sub: 'Piezas que esperan un visto bueno, juntas por cliente o por quién las revisa. Las que más llevan esperando, arriba. Pulsa el título para abrirla en ClickUp.' },
           h('div', { class: 'cuerpo pila', style: { paddingBottom: S[1], gap: S[2] } }, chipsA, chipsG), cajaLista)));
       function elegirAlcance(v) { const t = opciones.find(o => o.valor === v)?.texto; [...chipsA.querySelectorAll('button')].find(b => t && b.textContent.startsWith(t))?.click(); }
       const abiertos = new Map();   // grupo → cuántas filas a la vista
       let gruposVista = esMovil() ? 6 : 10;
       function pintarLista() {
+        if (!vigente()) return;
         const todas = piezas.filter(x => alcance === 'toca' ? x.toca : alcance === 'mias' ? x.mia : alcance === 'cliente' ? x.externo : !x.externo);
         const base = conOlvidadas ? todas : todas.filter(x => x.vigente);
         const olvidadas = todas.length - todas.filter(x => x.vigente).length;
@@ -444,39 +640,35 @@ export default {
           h('span', {}, `De ${x.autoresTxt}`), h('span', {}, otra));
         const acciones = h('div', { class: 'fila', style: { gap: S[2], flex: 'none' } });
         const pintarAcciones = () => {
-          const ya = decididas.get(x.id);
-          if (ya) { acciones.replaceChildren(estadoTexto('azul', `${ya.tipo === 'pieza_aprobar' ? 'Aprobada' : 'Cambios pedidos'} por ${alias(ya.quien)} · en simulación`, 'Apuntada en la cola de acciones. Se aplicará en ClickUp cuando Tomás lo active.')); return; }
-          if (!x.puedo) { acciones.replaceChildren(h('span', { class: 'sub' }, x.externo ? 'No se aprueba desde aquí' : x.mia ? `Es tuya: la revisa ${x.revisor.texto}` : `La revisa ${x.revisor.texto}`)); return; }
-          // Ronda U (#4): «Aprobar» es interno (ClickUp va por la sincronía): al primer clic y «Deshacer» 8 s.
-          const aprobar = botonDeshacer({ texto: 'Aprobar', hecho: x.a ? `Aprobada · pasa a «${estadoTxt(x.a)}»` : 'Aprobada', soloLectura: ctx.soloLectura, pri: true, icono: 'ok',
-            alHacer: async () => {
-              await ctx.accion({ herramienta: 'clickup', tipo: 'pieza_aprobar', objeto: x.id, cliente_id: x.cli || undefined,
-                texto: `Aprobar «${x.tarea}»`, vista_previa: { tarea: urlTarea(x), de: x.estado, a: x.a, autor: x.autoresTxt, cliente: x.clienteNombre } });
-              decididas.set(x.id, { tipo: 'pieza_aprobar', quien: yo });
-              setTimeout(pintarAcciones, 2400);
-              return 'Aprobada en la cola de acciones (simulación). Se aplicará en ClickUp cuando Tomás lo active.';
-            } });
-          const pedir = h('button', { type: 'button', class: 'bt mini', 'aria-disabled': ctx.soloLectura ? 'true' : null, title: ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : null,
-            on: { click: () => { if (!ctx.soloLectura) formularioCambios(); } } }, 'Pedir cambios');
+          if (!vigente()) return;
+          const ya = decididas.get(String(x.id));
+          const permisoActual = controlRevision.permiso(x, 'pieza_aprobar').ok || controlRevision.permiso(x, 'pieza_pedir_cambios').ok;
+          if (ya && !permisoActual && !controlRevision.estado(x)) { acciones.replaceChildren(estadoTexto('azul', `${ya.tipo === 'pieza_aprobar' ? 'Aprobación propuesta' : 'Cambios propuestos'} por ${alias(ya.quien)} · ${ya.seguimiento.texto}`, ya.seguimiento.texto)); return; }
+          if (!x.puedo && !permisoActual && !controlRevision.estado(x)) { acciones.replaceChildren(h('span', { class: 'sub' }, x.externo ? 'No se aprueba desde aquí' : x.mia ? `Es tuya: la revisa ${x.revisor.texto}` : `La revisa ${x.revisor.texto}`)); return; }
+          const aprobar = accionRevision(x, 'pieza_aprobar');
+          const permisoCambios = controlRevision.permiso(x, 'pieza_pedir_cambios');
+          const motivoCambios = permisoCambios.ok ? null : controlRevision.permiso(x, 'pieza_aprobar').ok
+            ? 'No hay un destino de devolución confirmado en esta lista. Solicita los cambios desde ClickUp y actualiza la copia.'
+            : permisoCambios.motivo;
+          const pedir = h('button', { type: 'button', class: 'bt mini', disabled: !permisoCambios.ok,
+            title: motivoCambios, 'aria-description': motivoCambios,
+            on: { click: () => { if (vigente() && !ctx.soloLectura && !ctx.pilotoLectura) formularioCambios(); } } }, 'Pedir cambios');
           acciones.replaceChildren(aprobar, pedir);
         };
         const formularioCambios = () => {
           let texto = '';
           const error = h('p', { class: 'sub', role: 'alert', style: { margin: '0', color: 'var(--bad-ink)' } });
-          const enviar = h('button', { type: 'button', class: 'bt mini pri', on: { click: async () => {
-            if (texto.trim().length < 3) { error.textContent = 'Escribe qué hay que cambiar: le llega al autor.'; return; }
-            enviar.disabled = true;
-            try {
-              await ctx.accion({ herramienta: 'clickup', tipo: 'pieza_pedir_cambios', objeto: x.id, cliente_id: x.cli || undefined,
-                texto: `Cambios en «${x.tarea}»: ${texto.trim()}`, vista_previa: { tarea: urlTarea(x), de: x.estado, a: (REGLAS.revision_piezas || {}).pedir_cambios_a || 'corrección', autor: x.autoresTxt, cliente: x.clienteNombre, comentario: texto.trim() } });
-              decididas.set(x.id, { tipo: 'pieza_pedir_cambios', quien: yo });
-              acciones.replaceChildren(h('span', { class: 'estado', role: 'status' }, '✓ Cambios pedidos en la cola de acciones (simulación). Se aplicará en ClickUp cuando Tomás lo active.'));
-              setTimeout(pintarAcciones, 2400);
-            } catch (err) { enviar.disabled = false; error.textContent = `No se pudo: ${err?.message || err}`; }
-          } } }, 'Enviar petición');
+          const guardar = h('div');
+          const prepararPeticion = () => {
+            if (!vigente()) return;
+            guardar.replaceChildren(texto.trim().length >= 3 && texto.length <= 2000
+              ? accionRevision(x, 'pieza_pedir_cambios', texto)
+              : h('span', { class: 'sub' }, 'Explica los cambios en 3 a 2.000 caracteres.'));
+          };
           acciones.replaceChildren(h('div', { class: 'pila', style: { gap: S[2], minWidth: 'min(100%, 320px)' } },
-            campoTexto({ etiqueta: 'Qué hay que cambiar', filas: 2, requerido: true, placeholder: 'Por ejemplo: el titular no es el aprobado; usa el del brief', alCambiar: v => { texto = v; error.textContent = ''; } }),
-            error, h('div', { class: 'fila', style: { gap: S[2] } }, enviar, h('button', { type: 'button', class: 'bt mini', on: { click: pintarAcciones } }, 'Cancelar'))));
+            campoTexto({ etiqueta: 'Qué hay que cambiar', filas: 2, requerido: true, placeholder: 'Describe la corrección para el autor', alCambiar: v => { texto = v; error.textContent = ''; prepararPeticion(); } }),
+            error, guardar, h('button', { type: 'button', class: 'bt mini', on: { click: pintarAcciones } }, 'Volver')));
+          prepararPeticion();
           acciones.querySelector('textarea')?.focus();
         };
         pintarAcciones();
@@ -489,7 +681,9 @@ export default {
       pintarLista();
       // las ya apuntadas (de cualquiera que vea Producción): sin botones, con quién y que es simulación
       if (ctx.api) ctx.api(`acciones?modulo=${ID}`).then(r => {
-        for (const a of (r?.acciones || []).slice().reverse()) if (a.tipo === 'pieza_aprobar' || a.tipo === 'pieza_pedir_cambios') decididas.set(String(a.objeto), { tipo: a.tipo, quien: a.quien });
+        if (!vigente()) return;
+        const resueltas = decisionesVisibles(r?.acciones, piezas, ['pieza_aprobar', 'pieza_pedir_cambios']);
+        for (const [id, a] of resueltas) if (!decididas.has(id)) decididas.set(id, a);
         if (decididas.size) pintarLista();
       }).catch(() => { /* sin servidor: solo las de esta sesión */ });
     }
@@ -498,10 +692,8 @@ export default {
       const v = vence(r.vence);
       const estV = v.estado === 'rojo' && !(v.dias > corte) ? 'ambar' : v.estado;
       const c = r.cli ? cliNombre.get(r.cli) : null;
-      const puedeRev = mia && ['diario', 'en curso', 'planning semanal', 'próximo sprint'].includes(r.estado);
-      // Ronda U (#4): «A revisión» es interno (ClickUp va por la sincronía, hoy simulada): al primer clic y «Deshacer» 8 s.
-      const accionRev = () => botonDeshacer({ texto: 'A revisión', hecho: 'Pasada a revisión del account', soloLectura: ctx.soloLectura, icono: 'send',
-        alHacer: async () => { await ctx.accion({ herramienta: 'clickup', tipo: 'mover_estado', objeto: r.id, texto: `Mover «${r.tarea}» a revisión del account`, vista_previa: { de: r.estado, a: 'revisión project manager', tarea: urlTarea(r) } }); return 'Hecho en la app · pendiente de ClickUp'; } });
+      const puedeRev = controlRevision.permiso(r, 'mover_estado').ok || controlRevision.estado(r)?.intento.payload.tipo === 'mover_estado';
+      const accionRev = () => accionRevision(r, 'mover_estado');
       // Ronda U (#13): «Brief y marca» en la propia tarea (logo, colores, tono, lo vetado, carpeta y última pieza aprobada)
       const hueMarca = h('div', { hidden: true, style: { flexBasis: '100%', minWidth: '0' } });
       const botonMarca = r.cli ? h('button', { type: 'button', class: 'bt mini', 'aria-expanded': 'false', 'data-marca': r.cli, on: { click: () => {
@@ -509,7 +701,7 @@ export default {
         if (abrir && !hueMarca.childNodes.length) hueMarca.append(fichaMarca({ cliente: c || { id: r.cli, nombre: r.cliente }, marca: MARCA.get(r.cli), pedidos: PEDIDOS.get(r.cli) || [], tarea: r, alias }));
       } } }, icono('spark'), 'Brief y marca') : null;
       const accionAvisar = () => botonConfirmar({ texto: 'Avisar', pregunta: '¿Dejar un comentario al account pidiendo el material?', confirmar: 'Sí, avisar', mini: true, soloLectura: ctx.soloLectura,
-        alConfirmar: async () => { await ctx.accion({ herramienta: 'clickup', tipo: 'comentario', objeto: r.id, texto: `Bloqueada por falta de material del cliente (${r.cliente}). ¿Lo pides tú?`, vista_previa: { tarea: urlTarea(r) } }); return 'Comentario en la cola simulada'; } });
+        alConfirmar: async () => { await registrarAccionVigente(ctx, vigente, { herramienta: 'clickup', tipo: 'comentario', objeto: r.id, texto: `Bloqueada por falta de material del cliente (${r.cliente}). ¿Lo pides tú?`, vista_previa: { tarea: urlTarea(r) } }); return 'Comentario en la cola simulada'; } });
       if (esMovil()) {
         // móvil: fila compacta de 2 líneas · título (enlace a ClickUp) + acción, y una línea meta: punto y plazo · cliente · estado
         const una = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: '0' };
@@ -519,7 +711,7 @@ export default {
           accion || h('span'),
           h('div', { class: 'sub', style: { ...una, gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: S[2] } },
             estadoTexto(estV || (r.grupo === 'bloqueada' ? 'ambar' : 'gris'), v.texto),
-            h('span', { style: una }, `· ${c ? c.nombre : (r.cliente || 'Interno')} · ${estadoTxt(r.estado)}${r.devuelta ? ' · devuelta' : ''}`)),
+            h('span', { style: una }, `· ${c ? c.nombre : (r.cliente || 'Interno')} · ${estadoTxt(r.estado)}${r.estado_determinado === false ? ' · estado por contrastar en ClickUp' : ''}${r.devuelta ? ' · revisión previa registrada' : ''}`)),
           botonMarca ? h('div', { style: { gridColumn: '1 / -1' } }, botonMarca) : null,
           h('div', { style: { gridColumn: '1 / -1', minWidth: '0' } }, hueMarca));
       }
@@ -530,7 +722,7 @@ export default {
           h('a', { href: urlTarea(r), target: '_blank', rel: 'noopener', title: `${r.tarea} · abrir en ClickUp`, style: { color: 'var(--ink)', fontWeight: '600', textDecoration: 'none', overflowWrap: 'anywhere', display: 'block', minHeight: '32px', padding: '6px 0' } }, r.tarea),
           h('div', { class: 'fila sub', style: { gap: `${S[1]} ${S[3]}` } },
             h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap', fontWeight: '600', color: 'var(--mid)' } }, c ? logoCliente(c) : icono('cli', { clase: 's' }), c ? c.nombre : (r.cliente || 'Interno')),
-            estadoTexto(r.grupo === 'bloqueada' ? 'ambar' : r.grupo === 'revision' ? 'azul' : 'gris', estadoTxt(r.estado)),
+            estadoTexto(r.grupo === 'bloqueada' ? 'ambar' : r.grupo === 'revision' ? 'azul' : 'gris', `${estadoTxt(r.estado)}${r.estado_determinado === false ? ' · por contrastar' : ''}`),
             estadoTexto(estV || 'gris', v.texto),
             r.dias_estado !== null && r.dias_estado !== undefined ? h('span', {}, `${fmt.num(r.dias_estado, r.dias_estado < 10 ? 1 : 0)} días en este estado`) : null,
             r.devuelta ? chipEstado('ambar', 'Devuelta') : null,
@@ -550,32 +742,33 @@ export default {
       const rtec = revisiones.filter(r => r.estado === 'revisión técnica');
       const bloq = revisiones.filter(r => r.estado === 'bloqueado');
       const mias = revisiones.filter(r => (accountDe(r.cliente_id) ?? r.account_id) === yo);
+      const medAccount = medicionFilasRevision137(Array.isArray(D.revisiones) ? rpm : undefined, F, D.hoy), medTecnica = medicionFilasRevision137(Array.isArray(D.revisiones) ? rtec : undefined, F, D.hoy), medMias = medicionFilasRevision137(Array.isArray(D.revisiones) ? revMias.todas : undefined, F, D.hoy);
       const callados = [...new Set(bloq.map(r => r.cliente_id))].filter(id => ctx.verdad?.(id)?.bloqueo_callado).length;
       let filtro = '';
       let solo = false;
       const tl = tiles([
-        tile({ icono: 'persona', etiqueta: 'Account > 48 h', valor: rpm.filter(r => r.mas48).length, unidad: `de ${rpm.length}`, estado: semaforo(rpm.filter(r => r.mas48).length, { verde: 0, ambar: 5, mejorSi: 'bajo' }),
-          contexto: 'Plazo del account: 48 h', medible: 'hoy', ir: 'Ver las revisiones', alPulsar: () => fijar('revisión project manager') }),
-        tile({ icono: 'aj', etiqueta: 'Técnica > 48 h', valor: rtec.filter(r => r.mas48).length, unidad: `de ${rtec.length}`, estado: semaforo(rtec.filter(r => r.mas48).length, { verde: 0, ambar: 5, mejorSi: 'bajo' }),
-          contexto: 'De la especialista. Plazo: 48 h', medible: 'hoy', ir: 'Ver las revisiones', alPulsar: () => fijar('revisión técnica') }),
+        tile({ icono: 'persona', etiqueta: 'Account > 48 h', valor: medAccount.valor ?? 'Sin dato', unidad: medAccount.medido ? `${rpm.length} filas en copia` : 'Copia sin medición', estado: medAccount.estado,
+          contexto: medAccount.detalle, medible: 'hoy', ir: 'Ver las revisiones', alPulsar: () => fijar('revisión project manager') }),
+        tile({ icono: 'aj', etiqueta: 'Técnica > 48 h', valor: medTecnica.valor ?? 'Sin dato', unidad: medTecnica.medido ? `${rtec.length} filas en copia` : 'Copia sin medición', estado: medTecnica.estado,
+          contexto: medTecnica.detalle, medible: 'hoy', ir: 'Ver las revisiones', alPulsar: () => fijar('revisión técnica') }),
         tile({ icono: 'candado', etiqueta: 'Bloqueadas (cliente)', valor: bloq.length, unidad: callados ? `${fmt.num(callados)} con bloqueo callado` : '',
           estado: !bloq.length ? 'verde' : callados ? 'rojo' : 'ambar',
           contexto: 'Callado si la más antigua pasa de 5 días', medible: 'hoy', ir: 'Ver las bloqueadas', alPulsar: () => fijar('bloqueado') }),
-        esAccount ? tile({ icono: 'cli', etiqueta: 'Tus revisiones > 48 h', valor: revMias.mas48.length, unidad: `de ${fmt.num(revMias.todas.length)}`, estado: revMias.mas48.length > 5 ? 'rojo' : revMias.mas48.length ? 'ambar' : 'verde',
-          contexto: 'Revisión del account en tus clientes · la misma cifra que «Tu cumplimiento» en Mi día', ir: 'Ver las revisiones', alPulsar: () => { solo = true; boton.setAttribute('aria-pressed', 'true'); fijar('revisión project manager'); } }) : null,
+        esAccount ? tile({ icono: 'cli', etiqueta: 'Tus revisiones > 48 h', valor: medMias.valor ?? 'Sin dato', unidad: medMias.medido ? `${revMias.todas.length} filas en copia` : 'Copia sin medición', estado: medMias.estado,
+          contexto: medMias.detalle, ir: 'Ver las revisiones', alPulsar: () => { solo = true; boton.setAttribute('aria-pressed', 'true'); fijar('revisión project manager'); } }) : null,
       ].filter(Boolean));
       const boton = h('button', { type: 'button', class: 'bt', 'aria-pressed': 'false', hidden: !esAccount }, icono('persona'), 'Solo mis clientes');
       boton.addEventListener('click', () => { solo = boton.getAttribute('aria-pressed') !== 'true'; boton.setAttribute('aria-pressed', String(solo)); tabla(); });
       const chips = chipsFiltro({ etiqueta: 'Espera a', opciones: [
-        { valor: '', texto: 'Todo', cuenta: revisiones.length },
-        { valor: 'revisión project manager', texto: 'Al account', icono: 'persona', cuenta: rpm.length },
-        { valor: 'revisión técnica', texto: 'Técnica', icono: 'aj', cuenta: rtec.length },
+        { valor: '', texto: 'Todo', cuenta: medicionFilasRevision137(D.revisiones, F, D.hoy).medido ? revisiones.length : null },
+        { valor: 'revisión project manager', texto: 'Al account', icono: 'persona', cuenta: medAccount.medido ? rpm.length : null },
+        { valor: 'revisión técnica', texto: 'Técnica', icono: 'aj', cuenta: medTecnica.medido ? rtec.length : null },
         { valor: 'bloqueado', texto: 'Al cliente (bloqueada)', icono: 'candado', cuenta: bloq.length, cuentaEstado: 'rojo' },
       ], alCambiar: v => { filtro = v; tabla(); } });
       function fijar(v) { const t = { 'revisión project manager': 'Al account', 'revisión técnica': 'Técnica', bloqueado: 'Al cliente' }[v]; [...chips.querySelectorAll('button')].find(b => b.textContent.startsWith(t))?.click(); }
       let edad = '';
       const chipsEdad = chipsFiltro({ etiqueta: 'Antigüedad', clave: `${ID}.edad`, valor: 'reciente', opciones: [
-        { valor: '', texto: 'Todas', cuenta: revisiones.length },
+        { valor: '', texto: 'Todas', cuenta: medicionFilasRevision137(D.revisiones, F, D.hoy).medido ? revisiones.length : null },
         { valor: 'reciente', texto: 'Hasta 30 días', icono: 'clock', cuenta: revisiones.filter(r => (r.dias || 0) <= 30).length },
         { valor: 'olvidada', texto: 'Más de 30 días (olvidadas)', icono: 'hist', cuenta: revisiones.filter(r => (r.dias || 0) > 30).length, cuentaEstado: 'rojo' },
       ], alCambiar: v => { edad = v; tabla(); } });
@@ -596,10 +789,10 @@ export default {
             { clave: 'espera', titulo: 'Espera a' },
             { clave: 'quien', titulo: 'La hizo' },
             { clave: 'account', titulo: 'Account' },
-            { clave: 'dias', titulo: 'Tiempo', num: true, celda: r => chipDias(r.dias, { ambar: corte }) },
+            { clave: 'dias', titulo: 'Tiempo', num: true, celda: r => fechaRevision137(F.tareas?.hora, D.hoy) && typeof r.dias === 'number' && Number.isFinite(r.dias) && r.dias >= 0 ? chipDias(r.dias, { ambar: corte }) : estadoTexto('gris', 'Sin dato') },
           ],
           alPulsar: r => window.open(urlTarea(r), '_blank', 'noopener'), etiquetaFila: r => `${r.tarea}: abrir en ClickUp`,
-          vacio: { titulo: 'Nada esperando revisión', porque: 'Ninguna tarea de tus clientes está en revisión ni bloqueada.', celebrar: true },
+          vacio: { titulo: 'Sin filas de revisión en este filtro', porque: 'La copia y sus filtros no acreditan que no haya otras revisiones; contrasta ClickUp.', celebrar: false },
         })));
       }
       tabla();
@@ -610,54 +803,68 @@ export default {
 
     // ================================================================ proyectos
     function pintarProyectos(z) {
-      if (!proyectos.length) { z.append(vacio({ icono: 'cli', titulo: 'Sin proyectos que ver', texto: 'No llevas clientes con carpeta en ClickUp.', quien: 'Mili (asignaciones)' })); return; }
-      const conRev = proyectos.filter(p => p.rev_account_48 || p.rev_tecnica_48);
-      const noPlan = proyectos.filter(p => p.no_planificadas >= 5);
-      const sinMes = proyectos.filter(p => p.sin_tareas_mes);
-      const venc = proyectos.reduce((s, p) => s + (p.vencidas || 0), 0);
-      let chipSel = '';
-      const tl = tiles([
-        tile({ icono: 'clock', etiqueta: 'Revisión > 48 h', valor: conRev.length, unidad: `de ${proyectos.length}`, estado: conRev.length ? 'rojo' : 'verde', contexto: 'Proyectos con revisión del account o técnica fuera de plazo', ir: 'Ver los proyectos', alPulsar: () => fijar('rev') }),
-        tile({ icono: 'capas', etiqueta: 'No planificado', valor: noPlan.length, estado: noPlan.length ? 'ambar' : 'verde', contexto: 'Proyectos con 5 o más esta semana', medible: 'hoy', ir: 'Ver los proyectos', alPulsar: () => fijar('noplan') }),
-        tile({ icono: 'cal', etiqueta: 'Sin tareas este mes', valor: sinMes.length, estado: sinMes.length ? 'ambar' : 'verde', contexto: 'Ni creadas en el mes ni en los 5 últimos días del anterior', ir: 'Ver los proyectos', alPulsar: () => fijar('sinmes') }),
-        tile({ icono: 'alert', etiqueta: 'Con fecha pasada', valor: venc, estado: venc ? 'ambar' : 'verde', contexto: 'Tareas del proyecto con fecha límite pasada, en cualquier estado (no es la cola de nadie)' }),
-      ]);
-      const chips = chipsFiltro({ etiqueta: 'Ver', opciones: [
-        { valor: '', texto: 'Todos', cuenta: proyectos.length }, { valor: 'rev', texto: 'Revisión > 48 h', cuenta: conRev.length, cuentaEstado: 'rojo' },
-        { valor: 'bloq', texto: 'Con bloqueos', cuenta: proyectos.filter(p => p.bloqueadas).length, cuentaEstado: 'rojo' },
-        { valor: 'noplan', texto: 'No planificado', cuenta: noPlan.length }, { valor: 'sinmes', texto: 'Sin tareas del mes', cuenta: sinMes.length },
-      ], alCambiar: v => { chipSel = v; tabla(); } });
-      chipSel = chips.valor();
-      function fijar(v) { [...chips.querySelectorAll('button')][['', 'rev', 'bloq', 'noplan', 'sinmes'].indexOf(v) + 1]?.click(); }
-      const caja = h('div');
-      const filtroF = { rev: p => p.rev_account_48 || p.rev_tecnica_48, bloq: p => p.bloqueadas, noplan: p => p.no_planificadas >= 5, sinmes: p => p.sin_tareas_mes };
-      function tabla() {
-        const base = proyectos.filter(p => !chipSel || filtroF[chipSel](p)).map(p => ({ ...p, cliente: cliNombre.get(p.cliente_id)?.nombre || p.cliente, account: (accountDe(p.cliente_id) ?? p.account_id) ? alias(accountDe(p.cliente_id) ?? p.account_id) : 'sin account' }));
-        const horas = base.some(p => ctx.ver({ tipo: 'horas_cliente', cliente_id: p.cliente_id }).ok);
-        const corteB = cuentagotas(base.filter(p => p.bloqueadas).map(p => p.bloqueo_max), 14);
-        caja.replaceChildren(ancharBuscador(tablaDensa({ porPagina: esMovil() ? 8 : 15,
-          filas: base, buscar: { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' }, filtros: [{ clave: 'account', titulo: 'Account' }],
-          columnas: [
-            { clave: 'cliente', titulo: 'Proyecto', principal: true, celda: p => h('span', { class: 'celda-cli' }, logoCliente(cliNombre.get(p.cliente_id) || { nombre: p.cliente }), p.cliente) },
-            { clave: 'account', titulo: 'Account' },
-            { clave: 'abiertas', titulo: 'Abiertas', num: true },
-            { clave: 'rev_account', titulo: 'Rev. account', num: true, celda: p => p.rev_account ? (p.rev_account_48 ? estadoTexto('ambar', `${fmt.num(p.rev_account)} · ${fmt.num(p.rev_account_48)} > 48 h`) : fmt.num(p.rev_account)) : '0' },
-            { clave: 'rev_tecnica', titulo: 'Rev. técnica', num: true, celda: p => p.rev_tecnica ? (p.rev_tecnica_48 ? estadoTexto('ambar', `${fmt.num(p.rev_tecnica)} · ${fmt.num(p.rev_tecnica_48)} > 48 h`) : fmt.num(p.rev_tecnica)) : '0' },
-            { clave: 'bloqueadas', titulo: 'Bloqueadas', num: true, celda: p => p.bloqueadas ? estadoTexto(p.bloqueo_max > corteB ? 'rojo' : p.bloqueo_max > 2 ? 'ambar' : 'verde', `${fmt.num(p.bloqueadas)} · ${fmt.num(p.bloqueo_max)} d`) : '0' },
-            { clave: 'no_planificadas', titulo: 'No planif. semana', num: true, celda: p => p.no_planificadas >= 5 ? estadoTexto('ambar', fmt.num(p.no_planificadas)) : fmt.num(p.no_planificadas) },
-            { clave: 'vencidas', titulo: 'Vencidas', num: true },
-            { clave: 'creadas_mes', titulo: 'Tareas del mes', num: true, celda: p => p.sin_tareas_mes ? estadoTexto('ambar', 'ninguna') : fmt.num(p.creadas_mes) },
-            horas ? { clave: 'horas_mes', titulo: 'Horas del mes', num: true, celda: p => fmt.num(p.horas_mes, 1) } : null,
-          ].filter(Boolean),
-          alPulsar: p => ctx.navegar(`ficha/${p.cliente_id}`), etiquetaFila: p => `Abrir la ficha de ${p.cliente}`,
-          vacio: { titulo: 'Ningún proyecto con esto', porque: 'Cambia el filtro.', celebrar: true },
-        })));
+      if (!vigente()) return;
+      if (!proyectos.length) { z.append(vacio({ icono:'cli',titulo:'Sin proyectos que ver',texto:'No hay proyectos disponibles en esta proyección autorizada.' }));return; }
+      let accountSel='',buscar='';
+      const hoyOwners=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      const matrizAccounts=()=>resumirAccountsProduccion237({proyectos,
+        clientes:(ctx.clientesVisibles||[]).filter(c=>ctx.ver({tipo:'cliente_detalle',cliente_id:c.id}).ok),
+        personas:ctx.datos?.personas||[],asignaciones:ctx.datos?.asignaciones||[],hoy:hoyOwners});
+      const nombreAccount=id=>id?alias(id):'Account por confirmar';
+      const root=h('div',{class:'prod-baseline pila',style:{marginTop:S[4]}}),zonaAccounts=h('div'),zonaPlanningObservado=h('div',{'data-inventario-produccion-405':''}),zonaProyectos=h('div',{tabindex:'-1','aria-label':'Proyectos filtrados por account'}),zonaPlan=h('div');
+      const fuenteVisible=()=>fuenteProduccionBaseline(matrizAccounts().proyectos,D);
+      const seleccionar=id=>{
+        if(!vigente())return;
+        const g=matrizAccounts().grupos.find(g=>(g.account_id||'__sin')===id);if(!g)return;
+        accountSel=id;pintar();zonaProyectos.focus?.({preventScroll:true});zonaProyectos.scrollIntoView?.({block:'start',behavior:'auto'});
+      };
+      const metrica=(p,key)=>metricasProyectoBaseline(p,D)[key];
+      const claves=['bloqueadas','cliente','sin_mes','creadas_semana','no_plan','cerradas_semana'];
+      const cuenta=(g,key)=>sumarMetricaBaseline(g.proyectosFilas.map(p=>metrica(p,key)),g.proyectos);
+      function pintar(){
+        if(!vigente())return;
+        const alcance=matrizAccounts(),owners=new Map(alcance.grupos.flatMap(g=>g.clientes_ids.map(id=>[id,g.account_id])));
+        const grupos=alcance.grupos.map(g=>({...g,proyectosFilas:alcance.proyectos.filter(p=>g.clientes_ids.includes(p.cliente_id))})).sort((a,b)=>Number(!a.account_id)-Number(!b.account_id)||nombreAccount(a.account_id).localeCompare(nombreAccount(b.account_id),'es'));
+        if(accountSel&&!grupos.some(g=>(g.account_id||'__sin')===accountSel))accountSel='';
+        const revision=(g,tipo,edad=false)=>sumarMetricaBaseline(g.proyectosFilas.map(p=>metrica(p,tipo)),g.proyectos,edad?'mas48':'valor');
+        zonaAccounts.replaceChildren(tablaProduccionBaseline({h,ambito:'account',titulo:'Por account',sub:fuenteVisible(),filas:grupos,vigente,alFila:g=>seleccionar(g.account_id||'__sin'),columnas:[
+          {titulo:'Account',valor:g=>nombreAccount(g.account_id)}, {titulo:'Proyectos',num:true,valor:g=>g.proyectos},
+          {titulo:'Rev. account',num:true,valor:g=>revision(g,'account')},{titulo:'+48 h',clave:'account_48',num:true,valor:g=>revision(g,'account',true)},
+          {titulo:'Rev. técnica',num:true,valor:g=>revision(g,'tecnica')},{titulo:'+48 h',clave:'tecnica_48',num:true,valor:g=>revision(g,'tecnica',true)},
+          ...claves.map((key,i)=>({titulo:['Bloqueadas','En el cliente','Sin tareas este mes','Creadas semana','No planificadas','Cerradas semana'][i],clave:key,num:true,valor:g=>cuenta(g,key)}))]}));
+        const select=h('select',{'aria-label':'Filtrar proyectos por account',on:{change:e=>{if(!vigente())return;accountSel=e.target.value;pintar();}}},
+          h('option',{value:'',selected:!accountSel},'Todos'),grupos.map(g=>h('option',{value:g.account_id||'__sin',selected:accountSel===(g.account_id||'__sin')},nombreAccount(g.account_id))));
+        const reset=h('button',{type:'button',class:'bt mini',disabled:!accountSel&&!buscar,on:{click:()=>{if(!vigente())return;accountSel='';buscar='';pintar();zonaProyectos.focus?.({preventScroll:true});}}},'Restablecer account');
+        const input=h('input',{type:'search',value:buscar,placeholder:'Buscar proyecto','aria-label':'Buscar proyecto autorizado',on:{input:e=>{if(!vigente())return;buscar=e.target.value;pintarProyectosFiltrados();}}});
+        const filtros=h('div',{class:'pb-filtros'},h('span',{},'Account'),select,input,reset);
+        const caja=h('div');
+        function pintarProyectosFiltrados(){
+          if(!vigente())return;
+          const actual=matrizAccounts(),permitidos=new Set(actual.proyectos.map(p=>p.cliente_id));
+          const ids=new Set(actual.grupos.filter(g=>!accountSel||(g.account_id||'__sin')===accountSel).flatMap(g=>g.clientes_ids));
+          const base=alcance.proyectos.filter(p=>permitidos.has(p.cliente_id)&&ids.has(p.cliente_id)).map(p=>({...p,cliente:cliNombre.get(p.cliente_id)?.nombre||p.cliente,account:nombreAccount(owners.get(p.cliente_id))})).filter(p=>!buscar||String(p.cliente).toLocaleLowerCase('es').includes(buscar.toLocaleLowerCase('es')));
+          reset.disabled=!accountSel&&!buscar;
+          caja.replaceChildren(tablaProduccionBaseline({h,ambito:'proyecto',titulo:'Por proyecto',sub:accountSel?`Proyectos de ${nombreAccount(grupos.find(g=>(g.account_id||'__sin')===accountSel)?.account_id)}`:'Todos los accounts autorizados',filas:base,vigente,
+            alFila:p=>{if(vigente()&&ctx.ver({tipo:'cliente_detalle',cliente_id:p.cliente_id}).ok)ctx.navegar(`ficha/${p.cliente_id}`);},columnas:[
+              {titulo:'Proyecto',valor:p=>p.cliente},...['account','tecnica','bloqueadas','cliente','creadas_mes','creadas_semana','no_plan','cerradas_semana'].map((key,i)=>({titulo:['Rev. account','Rev. técnica','Bloqueadas','En el cliente','Creadas mes','Creadas semana','No planificadas','Cerradas semana'][i],clave:key,num:true,valor:p=>metrica(p,key)}))]}));
+        }
+        pintarProyectosFiltrados();zonaProyectos.replaceChildren(filtros,caja);
+        const plan=planificacionBaseline(D,ctx.datos?.personas||[]);
+        zonaPlan.replaceChildren(tablaProduccionBaseline({h,titulo:'Disciplina de planificación',sub:`Mensual → semanal → diario · semana del ${plan.lunes||'Sin dato'}`,filas:plan.filas,vigente,columnas:[
+          {titulo:'Quién crea',valor:x=>alias(x.persona_id)},
+          {titulo:'Creadas',num:true,valor:x=>({valor:x.creadas,referencia:true,detalle:plan.detalle})},
+          {titulo:'Al planning',num:true,valor:()=>({valor:null,detalle:'Campo no incluido en el DTO autorizado.'})},
+          {titulo:'Fuegos directos',num:true,valor:()=>({valor:null,detalle:'Campo no incluido en el DTO autorizado.'})},
+          {titulo:'Rompen el semanal',num:true,valor:x=>({valor:x.semana,referencia:true,detalle:'Clasificación heredada de la copia; no juicio disciplinario.'})},
+          {titulo:'Semana pasada',num:true,valor:x=>({valor:Number.isSafeInteger(x.semana_ant)&&x.semana_ant>=0?x.semana_ant:null,referencia:true,detalle:'Referencia de la copia anterior.'})},
+          {titulo:'Ejemplos',valor:x=>(x.ejemplos||[]).map(e=>e.tarea).filter(Boolean).slice(0,2).join(' · ')||'Sin dato'},
+        ]}),h('details',{class:'pb-nota'},h('summary',{},'Fuentes y disponibilidad de los indicadores'),
+          h('p',{},`${plan.detalle}${plan.faltan_identidades?` ${plan.faltan_identidades} filas de planificación sin identidad canónica; no se atribuyen por nombre.`:''}`),
+          h('p',{},'Revisiones: descriptor de fuente y cobertura parcial. Bloqueadas: filas visibles con ID único. Un cero heredado sin descriptor se presenta — (sin dato). Referencia copia conserva valores positivos antiguos, sin certificar periodo, inventario o entrega aceptada.'),
+          h('p',{},'La tabla principal no trae revisión del cliente/pendientes de envío, al planning ni fuegos. La comparación adicional muestra creaciones y finales cuando hay una fuente acreditada. No se promete que aparezcan en la próxima recarga.')));
       }
-      tabla();
-      z.append(h('div', { class: 'pila', style: { marginTop: S[4] } }, tl,
-        panel({ titulo: 'Proyectos', icono: 'cli', sub: 'Una fila por cliente con carpeta en ClickUp. Pulsa para abrir su ficha. Las horas son un aviso, no una base.' },
-          h('div', { class: 'cuerpo', style: { paddingBottom: S[1] } }, chips), caja),
-        avisoParcial('«No planificado» = tarea creada esta semana que entró directamente en el plan de la semana, en diario, en la próxima tanda o en curso sin ser un fuego. Sale del flujo de tareas del panel de Mili.', { tipo: 'info' })));
+      pintar();root.append(h('style',{},CSS_PRODUCCION_BASELINE),zonaAccounts,h('details',{class:'pb-nota',on:{toggle:()=>{if(!vigente())root.replaceChildren();}}},h('summary',{},'Leyenda de colores y datos'),h('p',{},'— sin dato. Colores de referencia del panel original: ámbar / rojo por account: revisión account +48 h 1 / 6; técnica +48 h 3 / 10; bloqueadas 1 / 5; sin tareas del mes 1 / 2; no planificadas 3 / 8. Por proyecto, edad observada +48 h en revisión/bloqueo se destaca en rojo. La copia es parcial; el gris no certifica cumplimiento.')),zonaProyectos,zonaPlanningObservado,zonaPlan,panelComparacionSemanal296(ctx,D));z.append(root);
+      if(ctx.servidor===true)Promise.resolve().then(()=>{if(vigente()&&zonaPlanningObservado.isConnected){const scoped=Object.create(ctx);Object.defineProperty(scoped,'vigente',{value:()=>vigente()&&zonaPlanningObservado.isConnected});return panelPlanningObservado360(zonaPlanningObservado,scoped);}}).catch(()=>{if(vigente()&&zonaPlanningObservado.isConnected)zonaPlanningObservado.replaceChildren(h('p',{class:'sub'},'Inventario observado no disponible. No acredita ausencia de tareas.'));});
     }
 
     // ================================================================ equipo (solo quien puede comparar · D-83)
@@ -731,7 +938,7 @@ export default {
         ]));
         bloque.append(panel({ titulo: 'Piezas de tus clientes', icono: 'grafico', sub: 'Media de la cuenta = 100. El índice junta coste por resultado y porcentaje de clics, sin euros. Más de 1.000 impresiones en 30 días.' }, tablaAnuncios(deCliente, true)));
       } else if (dir || comparar) {
-        bloque.append(vacioLinea('Sin anuncios de tus clientes: ninguna cuenta con pauta activa en Meta es tuya.', { icono: 'grafico' }));
+        bloque.append(vacioLinea('No hay anuncios disponibles de tus clientes en esta copia. Contrasta cobertura y fecha de Meta.', { icono: 'grafico' }));
       }
       z.append(bloque);
     }

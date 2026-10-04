@@ -1,0 +1,30 @@
+// Revisión independiente: loader compartido ejecuta módulos reales, con catálogo y DTO ficticios.
+const fs613=require('fs'),path613=require('path');
+let fuente613=fs613.readFileSync(path613.join(__dirname,'pruebas_operaciones_accounts_263.cjs'),'utf8');
+fuente613=fuente613.replace('prepararAccounts263,renderAccounts263,KPIS263','combinarInformeDeclarado614,prepararAccounts263,renderAccounts263,KPIS263');
+const extra613=String.raw`
+ const nota613='Declaraciones activas por mes del informe, no por fecha de envío. Cero no acredita ausencia de envío ni cumplimiento; no hay verificación externa.';
+ const dto613=(n=2)=>({version:'611.1',periodo_informe:'2026-09',source_kind:'registro_equipo',clientes:[{cliente_id:'c1',informes_declarados:n,source_kind:'registro_equipo',verificacion_externa:false,cumplimiento:null}],cobertura:'parcial',verificacion_externa:false,cumplimiento:null,nota:nota613});
+ const ctx613=(extra={})=>{const c=autorizado(extra);c.datos={...c.datos,personas:[{...c.real},{id:'a1',estado:'activo',puestos:['account']}]};return c;};
+ const kpiTabla613=root=>tables(root).find(t=>heads(t).join('|').startsWith('Proyecto|Account|Riesgo|'));
+ async function render613(dto,d=null,cx=null){const r=h('main',{});r.connected=true;const c=cx||ctx613();let n=0;c.api=async ruta=>{if(ruta.startsWith('clientes/evidencias_kpi/informes?')){n++;assert.equal(ruta,'clientes/evidencias_kpi/informes?periodo_informe=2026-09');if(dto instanceof Error)throw dto;return dto;}return null};c.datosModulo=async ruta=>ruta==='informes/informes'?d:null;await renderAccounts263(r,c,'accounts');return {r,c,n};}
+ const manual613=await render613(dto613());
+ check('613 renderer mensual manual gris y ocho KPIs presentes',()=>{const t=kpiTabla613(manual613.r);assert(t);assert.match(text(t),/2 decl\./);assert.equal(heads(t).length,11);assert.equal(manual613.n,1);assert.equal(walk(t).some(x=>x.attrs['data-estado']==='verde'&&text(x)==='2 decl.'),false);});
+ const cero613=await render613(dto613(0));check('613 cero declaración explícita gris no ausencia de envío',()=>{assert.match(text(kpiTabla613(cero613.r)),/0 decl\./);});
+ const error613=await render613(Error('fixture'));check('613 error no fabrica declaración0 ni elimina proyecto',()=>{assert.match(text(kpiTabla613(error613.r)),/Cliente fixture/);assert.doesNotMatch(text(kpiTabla613(error613.r)),/0 decl\./);});
+ const informe613={_meta:{generado:'2026-10-03T10:00:00Z'},filas:[{cliente_id:'c1',mes:'2026-09',estado:'enviado',enviado:{fecha:'2026-10-02',ticket:'42',url:'https://desk.zoho.eu/support/tickets/42',asunto:'Informe mensual septiembre',pdf:true,metodo:'Desk en vivo'}}]};
+ const both613=await render613(dto613(2),informe613);check('613 Desk observado principal no suma declaraciones',()=>{const t=kpiTabla613(both613.r);assert.match(text(t),/1 obs\./);assert.doesNotMatch(text(t),/3 obs\.|3 decl\./);assert.doesNotMatch(text(t),/2 decl\./);});
+ for(const mutate of [d=>d.periodo_informe='2026-10',d=>d.clientes[0].cliente_id='ajeno',d=>d.clientes.push({...d.clientes[0]}),d=>d.clientes[0].informes_declarados=null,d=>d.clientes[0].verificacion_externa=true]){const dto=dto613();mutate(dto);const x=await render613(dto);check('613 DTO incompatible no manual0 ni ajeno',()=>{assert.doesNotMatch(text(kpiTabla613(x.r)),/2 decl\.|0 decl\.|ajeno/)});}
+ const real611=JSON.parse(require('child_process').execFileSync('python3',['-c',"import json\nfrom probar_resumen_informes_611 import Informes611\nf=Informes611()\nf.setUp()\ntry:\n f.body['periodo_informe']='2026-09'\n f.crear()\n status,dto=f.get({'periodo_informe':['2026-09']})\n assert status==200\n print(json.dumps(dto))\nfinally:\n f.tearDown()"],{cwd:__dirname,encoding:'utf8'}));
+ const m612=await import('file://'+path.join(dir,'_informes_declarados_612.mjs'));
+ const cb=ctx613();cb.clientes[0].id='uno';cb.clientesVisibles[0].id='uno';const sb=m612.ambitoResumenInformes612(cb,'2026-09');sb.vigente=()=>true;const mb=m612.proyectarResumenInformes612(cb,real611,sb);
+ check('613 puente DTO real611 de SQLite temporal a612',()=>{assert(mb);const ce=m612.celdaInformeDeclarado612(mb,'uno');assert.equal(ce.valor,'1 decl.');assert.equal(ce.estado,'gris');assert.equal(ce.informes_declarados,1);assert.equal(mb.cumplimiento,null);assert.match(ce.detalle,/mes del informe, no mes de envío/);});
+ const ledgerCell={valor:'2 decl.',estado:'gris',informes_declarados:2,detalle:'Mes de informe septiembre, no fecha envío',vigente:()=>true},obsCell={valor:'1 obs.',estado:'gris',medicion:{tipo:'envio_observado'},detalle:'Desk'};
+ check('613 combinar no score/green y detalle separado de Desk',()=>{const c=combinarInformeDeclarado614(obsCell,ledgerCell);assert.equal(c.valor,'1 obs.');assert.match(c.detalle,/Registro manual separado: 2 decl\./);assert.equal(c.estado,'gris');const m=combinarInformeDeclarado614({valor:'—',estado:'gris'},ledgerCell);assert.equal(m.valor,'2 decl.');assert.equal(m.cumplimiento,null);});
+ check('613 revocación de celda no sustituye observación',()=>assert.equal(combinarInformeDeclarado614(obsCell,{...ledgerCell,vigente:()=>false}),obsCell));
+ for(const mode of ['ACT','epoch','module']){const c=ctx613(),r=h('main',{});r.connected=true;let fin,inicio;const started=new Promise(a=>inicio=a);c.api=async ruta=>{if(ruta.startsWith('clientes/evidencias_kpi/informes?')){inicio();return new Promise(a=>fin=a)}return null};const pending=renderAccounts263(r,c,'accounts');await started;if(mode==='ACT')c.clientes[0].activo_confirmado=false;if(mode==='epoch')c.vigente=()=>false;if(mode==='module')c.veModulo=()=>false;fin(dto613());await pending;check('613 revoke '+mode+' durante GET sin publicar declaración',()=>{assert.doesNotMatch(text(r),/2 decl\./);assert.equal(tables(r).length,0)});}
+`;
+const anchor=" console.log(grupos+' grupos PASS";
+if(!fuente613.includes(anchor)||!fuente613.includes('combinarInformeDeclarado614,prepararAccounts263'))throw Error('Adaptar loader real sin omitir assertions');
+fuente613=fuente613.replace(anchor,extra613+'\n'+anchor);
+new Function('require','__dirname',fuente613)(require,__dirname);

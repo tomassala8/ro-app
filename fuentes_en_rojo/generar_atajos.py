@@ -35,6 +35,11 @@ DEL_PORTAL = {"clickup": "clickup", "clickupFolder": "clickupFolder", "drive": "
 
 def main():
     clientes = leer("clientes.json", [])
+    # Los mismos clientes que el semáforo: no conservar atajos de una cartera antigua.
+    verdad = leer("verdad/clientes.json", {})
+    vigentes = {c["cliente_id"] for c in verdad.get("clientes", []) if c.get("cliente_id")}
+    if vigentes:
+        clientes = [c for c in clientes if c["id"] in vigentes]
     portal = {f["cliente_id"]: f for f in leer("ficha/portal.json", {}).get("filas", [])}
     capt = {c["cliente_id"]: c for c in leer("captacion/captacion.json", {}).get("clientes", []) if c.get("cliente_id")}
     crm = {s["cliente_id"]: s for s in leer("crm/crm.json", {}).get("subcuentas", []) if s.get("cliente_id")}

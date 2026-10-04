@@ -287,8 +287,25 @@ def p_metricool():
 
 
 def p_seranking():
-    d, _, ms = pedir("https://api4.seranking.com/sites", {"Authorization": "Token " + secreto("seranking_project_key")})
-    return {"ms": ms, "detalle": f"responde · {len(d or [])} proyectos (lectura de la lista, sin gastar créditos)"}
+    # 3-oct: SE Ranking apagó api4.seranking.com (403 «No token» con cualquier llave) y unificó sus dos API en
+    # api.seranking.com/v1 con UNA llave. Leer proyectos y posiciones no gasta créditos (solo la API de datos los gasta).
+    d, _, ms = pedir("https://api.seranking.com/v1/project-management/sites", {"Authorization": "Token " + secreto("seranking_project_key")})
+    out = {"ms": ms, "detalle": f"responde · {len(d or [])} proyectos (lectura de la lista, sin gastar créditos)"}
+    # Vigilancia del dato, no solo de la llave: la lectura diaria de posiciones (fuentes_seo/sr_leer.py, 6:00) tiene que
+    # haber ido bien en las últimas 36 h. Si no, aviso con el motivo que dejó la última lectura.
+    try:
+        est = json.loads((APP / "fuentes_seo" / "_cache" / "seranking_estado.json").read_text())
+        hora = datetime.strptime(est.get("hora", "")[:16], FMT)
+        horas = (datetime.now() - hora).total_seconds() / 3600
+        if est.get("ok") is False:
+            out["aviso"] = f"la lectura diaria de posiciones falló a las {est['hora'][11:16]} del {est['hora'][8:10]}-{est['hora'][5:7]}: {est.get('error')}"
+        elif horas > 36:
+            out["aviso"] = f"la lectura diaria de posiciones no corre desde el {est['hora'][:10]} (debería cada día a las 6:00)"
+        else:
+            out["detalle"] += f" · posiciones del {est.get('dia_dato')} leídas a las {est['hora'][11:16]}"
+    except Exception:
+        out["aviso"] = "todavía no hay lectura diaria de posiciones (fuentes_seo/sr_leer.py)"
+    return out
 
 
 GHL = "https://services.leadconnectorhq.com"
@@ -494,9 +511,9 @@ CONEXIONES = [
          renovar={"url": "https://app.metricool.com/", "donde": "Ajustes de la cuenta › API (plan Advanced)"},
          pegar=f"{H}/metricool/pegar.sh", caducidad="no caduca"),
     dict(id="seranking", nombre="SE Ranking (proyectos)", grupo="SEO", icono="globe", llaves=["seranking_project_key"], prueba=p_seranking,
-         dueno="tomas", critica=False, que_da="posiciones de los proyectos SEO", modulos="SEO, Informe del cliente",
-         renovar={"url": "https://online.seranking.com/admin.api.dashboard.html", "donde": "Ajustes › API › llave de la API de PROYECTOS (no la de datos)"},
-         pegar=f"{H}/seranking/pegar.sh", caducidad="no caduca", limite="los datos gastan créditos: la prueba solo lista proyectos"),
+         dueno="tomas", critica=True, que_da="posiciones de los proyectos SEO (lectura diaria a las 6:00, sin créditos)", modulos="SEO, Ficha, Informe del cliente",
+         renovar={"url": "https://online.seranking.com/admin.api.dashboard.html", "donde": "API › Panel › la llave (desde 2025 una sola para las dos API)"},
+         pegar=f"{H}/seranking/pegar.sh", caducidad="no caduca", limite="leer proyectos y posiciones no gasta créditos (https://seranking.com/api/api-credits-system/); solo la API de datos y «comprobar posiciones» los gastan"),
     dict(id="ghl_agencia_app", nombre="GoHighLevel · agencia (app que rota)", grupo="GoHighLevel", icono="base",
          llaves=["ghl_app_client_id", "ghl_app_client_secret", "ghl_app_refresh_token"], prueba=p_ghl_app,
          dueno="tomas", critica=True, que_da="contactos, oportunidades y citas de las 66 subcuentas", modulos="Salud del CRM, Captación, Ficha, Paneles",
@@ -679,6 +696,12 @@ def evaluar(c):
     if r.get("aviso") and c["id"] == "zadarma":
         fila.update({"color": "ambar", "estado": "saldo_bajo", "titular": "Saldo bajo", "detalle": f"{r['detalle']} · {r['aviso']}",
                      "que_hacer": "Tomás: recarga saldo en my.zadarma.com (Finanzas › Recargar).", "quien_id": "tomas"})
+    elif r.get("aviso") and c["id"] == "seranking":
+        # 3-oct: la llave responde pero la lectura diaria de posiciones falla o no corre → rojo (la app la usa) y aviso al dueño
+        fila.update({"color": "rojo", "estado": "dato_viejo", "ok": False, "titular": "La llave vale, pero las posiciones no se leen",
+                     "detalle": f"{r['detalle']} · {r['aviso']}", "error_llano": r["aviso"],
+                     "que_hacer": "Agus: lanza «python3 fuentes_seo/sr_leer.py» y mira el motivo; si dice que la llave no vale, es de Tomás (pegar.sh). Si SE Ranking cambió la API, pídeselo a Claude con este aviso.",
+                     "quien_id": "agustina"})
     elif r.get("aviso"):
         fila.update({"color": "ambar", "estado": "sin_uso_reciente", "titular": "Funciona, sin uso reciente", "detalle": f"{r['detalle']} · {r['aviso']}",
                      "que_hacer": "Agus: nada que hacer si la próxima vuelta completa sale bien; si sale «rota», Tomás vuelve a instalar la app.", "quien_id": "agustina"})

@@ -51,7 +51,10 @@ HILOS_A_LA_VEZ = 3
 
 _CORREO = re.compile(r'[\w.+-]+@[\w-]+(?:\.[\w-]+)+')
 _TEL = re.compile(r'(?:\+?\d[\d\s.\-]{7,}\d)')
-_PIE = re.compile(r'(NOTA LEGAL|PROTECCI[ÓO]N DE DATOS\s*-|LEGAL NOTE|AVISO LEGAL|AVISO (?:DE|SOBRE) CONFIDENCIALIDAD|CONFIDENCIALIDAD:|-{8,}|'
+_PIE = re.compile(r'(NOTA LEGAL|PROTECCI[ÓO]N DE DATOS\s*[-:.]|De conformidad con (?:el|lo dispuesto|la normativa|el Reglamento)|REGLAMENTO \(UE\) 2016/679|'
+                  r'(?:es|son|tienen? car[áa]cter) (?:estrictamente |totalmente )?confidencial|Agencia Espa[ñn]ola de Protecci[óo]n de Datos|puede (?:poner|presentar) (?:una )?reclamaci[óo]n|si (?:lo|la|usted lo) ha recibido por error|ha recibido este (?:correo|mensaje) por error|'
+                  r'Puede (?:acceder a|consultar) (?:la )?informaci[óo]n (?:adicional|sobre)|Este (?:mensaje|correo)(?: electr[óo]nico)? y (?:cualquier|sus|los) (?:archivo|fichero|anexo|adjunto|documento)|'
+                  r'Per a informaci[óo] sobre protecci[óo] de dades|Este (?:e-?mail|correo(?: electr[óo]nico)?|mensaje) y,? (?:en su caso|la informaci[óo]n)|informaci[óo]n de car[áa]cter confidencial|Piense en el medio ambiente|se ruega que se notifique|Si (?:usted )?no es el destinatario|Si considera que sus derechos|Informaci[óo] addicional:|Pot obtenir informaci[óo]|Pol[íi]tica de [Pp]rivacidad|INFORMACI[ÓO]N CONFIDENCIAL|LEGAL NOTE|AVISO LEGAL|AVISO (?:DE|SOBRE) CONFIDENCIALIDAD|CONFIDENCIALIDAD:|-{8,}|'
                   r'Este (?:correo|mensaje)(?: electr[óo]nico)?(?: y sus (?:anexos|adjuntos))? (?:puede contener|es confidencial|contiene|va dirigido|se dirige)|'
                   r'La informaci[óo]n (?:contenida|incluida) en (?:este|el presente)|De acuerdo con (?:lo establecido en )?la (?:legislaci[óo]n|normativa) vigente|'
                   r'En cumplimiento de(?:l| la| lo)? (?:Reglamento|normativa|Ley|dispuesto)|Le informamos (?:de )?que (?:sus|los) datos|Antes de imprimir|'
@@ -60,6 +63,7 @@ _PIE = re.compile(r'(NOTA LEGAL|PROTECCI[ÓO]N DE DATOS\s*-|LEGAL NOTE|AVISO LEG
                   r'Confidencialidad\.|La informaci[óo] continguda|Li recordem que les seves dades|Les (?:seves )?dades personals|AV[ÍI]S LEGAL|'
                   r'Aquest (?:missatge|correu)(?: electr[òo]nic)? (?:i|pot|[ée]s|cont[ée]|va adre)|Este correo electr[óo]nico y, en su caso)', re.I)
 _CITA = re.compile(r'(\bDe:\s.{1,120}?\s(?:Enviado(?: el)?|Fecha|Sent):|\bDesde:\s.{1,120}?\sPara:|\bFrom:\s.{1,120}?\sSent:|\bEl\s.{4,140}?\sescribi[óo]:|\bOn\s.{4,140}?\swrote:|-{3,}\s*(?:Mensaje original|Original Message)|-{3,}\s*(?:en|el|on)\s+\w{3},\s*\d|_{6,})', re.I | re.S)
+_SOLO_PIE = re.compile(r'\s*(?:\S+\s+)?(?:NOTA LEGAL|AVISO LEGAL|LEGAL NOTE|PROTECCI[ÓO]N DE DATOS|AVISO (?:DE|SOBRE) CONFIDENCIALIDAD)', re.I)
 _CREDENCIAL = re.compile(r"(?i)\b(usuari[oa]s?|user(?:name)?|login|contrase(?:ñ|n)a|password|passw(?:or)?d|pass|clave|pwd|pin)(\s*[:=]\s*)(\S+)")
 
 
@@ -76,11 +80,14 @@ PATRONES = _patrones()
 
 def limpio(t):
     t = str(t or '').replace('\r', '')
+    if _SOLO_PIE.match(t):
+        return ''                         # el mensaje entero es el pie legal («Enviado! NOTA LEGAL…»): no aporta nada
     for rx in (_CITA, _PIE):
         # el primer corte a partir del carácter 20 (si empieza por ahí, el mensaje entero es cita o pie: se deja y se ve)
-        m = next((m for m in rx.finditer(t) if m.start() > 20), None)
+        m = next((m for m in rx.finditer(t) if m.start() > (0 if rx is _PIE else 20)), None)
         if m:
             t = t[:m.start()]
+
     t = _TEL.sub('…', _CORREO.sub('[correo]', t))
     t = re.sub(r'[ \t]+', ' ', t)
     # los correos de Desk llegan en una sola línea: se parte en párrafos por frases de saludo y de cierre

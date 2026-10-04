@@ -1,9 +1,0 @@
-# Cada hora de 7 a 23 h de España (el servidor va en Europe/Madrid: sin líos de verano/invierno).
-[Unit]
-Description=App RO · tubería ligera cada hora
-[Timer]
-OnCalendar=*-*-* 07..23:30:00 Europe/Madrid
-Unit=ro-tarea@ligera.service
-Persistent=false
-[Install]
-WantedBy=timers.target

@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/personas.js · M20 Personas (E7 + ficha de Cecilia, RRHH, en 10_FICHAS/G1).
 // Número que manda de Cecilia: personas en alerta sin conversación ni plan en 7 días (verde 0 · ámbar 1 · rojo 2+).
 // Cada uno ve lo suyo; su jefa, su equipo; Cecilia, Mili y Tomás, todos. El recorte lo hace servir.py por persona_id
@@ -9,6 +10,7 @@ import {
   fmt, tile, tiles, pestanas, chipsFiltro, chipEstado, tablaApilable, vacio, vacioLinea, panel, avisoParcial,
   barraProgreso, lineaTiempo, copiar, avisoFlotante, icono, frescura, selloMedible, limpiaTexto, graficoSerie, deDondeSale, hoyMadrid,
 } from '../componentes.js';
+import { panoramaHoras } from './horas.js';
 import { PUESTO } from '../permisos.js';
 import { h, elegir, estilosLocales, cabPersona, campo, dias, leerCola, vp } from './personas_comun.js';
 import { llevarA } from './_ir.js';
@@ -45,29 +47,37 @@ export default {
   puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', rrhh: 'todo' },
 
   async render(cont, ctx) {
+    if (ctx.vigente && !ctx.vigente()) return;
+    const raiz = h('div', { 'data-personas-vista': '' });
+    cont.replaceChildren(raiz);
+    cont = raiz;
+    const vigente = () => raiz.isConnected && (!ctx.vigente || ctx.vigente());
     estilosLocales();
-    // Auditoría 37 (causa 4): las cinco lecturas salen A LA VEZ (antes, una detrás de otra: ~3 s en 4G lenta).
+    // Auditoría 37 (causa 4): las lecturas salen A LA VEZ (antes, una detrás de otra: ~3 s en 4G lenta).
     const verCola = ['direccion', 'operaciones', 'rrhh'].some(p => ctx.persona.puestos.includes(p));
+    const pH = ctx.veModulo?.('horas') ? ctx.datosModulo('horas/horas').catch(() => null) : Promise.resolve(null);
     const pE = ctx.datosModulo('personas_m20/equipo');
     pE.catch(() => null);
     const pC = ctx.servidor && verCola ? ctx.datosModulo('personas_m20/contratacion').catch(() => null) : Promise.resolve(null);
     const pCola = leerCola(ctx, verCola ? 'ajustes' : null);
-    const pVE = ctx.datosModulo('verdad/equipo').catch(() => null);
     const pCarteras = ctx.datosModulo('verdad/clientes').then(v => v?.carteras || []).catch(() => []);
     let E;
     try { E = await pE; }
     catch (e) {
+      if (!vigente()) return;
       cont.append(vacio({ icono: 'eq', titulo: 'No se pudieron leer los datos de personas', texto: e.message, quien: 'Agus', tono: 'aviso',
         accion: h('span', { class: 'sub' }, 'Falta generar los datos de personas de hoy.') }));
       return;
     }
     // Apuntes de la app: los de los ficheros + la cola viva (Mili, Tomás y Cecilia ven la de RRHH; los demás, la suya).
-    const [C, colaTodas, VE, carteras] = await Promise.all([pC, pCola, pVE, pCarteras]);
+    const [C, colaTodas, carteras, horasDoc] = await Promise.all([pC, pCola, pCarteras, pH]);
+    if (!vigente()) return;
     CARTERAS = carteras;
     // V2 (petición de V2-C1, B-A3): la cartera de publicidad es UNA, la de Captación y Mi día (verdad carteras[] = captacion.json ›
     // carteras_publicidad): los clientes que LLEVA (principal); el apoyo va aparte y no cuenta contra el tope de 16.
     // Antes Personas sumaba principal + apoyo (Lina 21, Valeria 19 «por encima»); ahora Lina 19 (+2 de apoyo), Valeria 11 (+8).
     let CP = null; try { CP = ctx.veModulo?.('captacion') ? (await ctx.datosModulo('captacion/captacion'))?.carteras_publicidad || null : null; } catch { CP = null; }
+    if (!vigente()) return;
     const cola = colaTodas.filter(a => (a.tipo || '').startsWith('personas_'));
     const P = E.personas.map(p => {
       const x = { ...p, cartera: { ...(p.cartera || {}) } };
@@ -94,7 +104,7 @@ export default {
     YO = yo;
     const equipo = P.length > 1 || !porId[yo];
     const nombre = Object.fromEntries((ctx.datos.personas || []).map(p => [p.id, p.alias || p.nombre]));
-    const fr = { fuente: 'ClickUp · horas', fecha: E._meta.corte_horas, estado: 'ok' };
+    const fr = { fuente: `ClickUp · corte ${E._meta.corte_horas || 'sin fecha'} · cobertura no acreditada`, fecha: E._meta.corte_horas };
 
     ctx.titulo('Personas', equipo
       ? `${P.length} personas que puedes ver · alertas, carga, imputación, ausencias, 1:1 y nota del mes${veSueldos(ctx) ? ' · sueldos en su pestaña, con rastro' : ''}`
@@ -104,24 +114,15 @@ export default {
     const plan = p => p.apuntes.filter(a => a.tipo === 'plan').slice(-1)[0];
     const sinPlan = enAlerta.filter(p => !plan(p));
     const vencidas = sinPlan.filter(p => dias(p.alerta.desde) >= 7);
-    // Misma regla que Horas (verdad única): activos que imputan, sin dudosos, bajas ni setters; «sin imputar» = 0 h el último día laborable.
-    // VE (verdad/equipo) y CARTERAS (R12 · la cartera de cada persona sale de la verdad única: principal, apoyo y cuántos
-    // entran en cada pantalla) ya llegaron arriba, en la misma tanda.
+    // Solo valores numéricos de las personas autorizadas; cero no acredita jornada ni cobertura.
     const sinSetters = p => !(p.puestos || []).includes('setters');
     const imputan = P.filter(p => p.imputa && p.estado === 'activo' && sinSetters(p));
-    const ceroIds = new Set((VE?.no_imputan_ayer || []).map(x => x.persona_id));
-    const ceroAyer = VE ? imputan.filter(p => ceroIds.has(p.persona_id)) : imputan.filter(p => !p.horas.ayer);
-    const noAyer = imputan.filter(p => (p.horas.ayer ?? 0) < 8);
-    // V2 (B-M12): la base es la gente que ves. Valeria ve a su equipo (4): «0 de 4», no «0 de 28» de toda la empresa.
-    const cuentanEquipo = equipo && verCola && VE?.cuentan ? VE.cuentan : imputan.length;
+    const ceroAyer = imputan.filter(p => horasRegistradas(p.horas?.ayer) === 0);
+    const noAyer = imputan.filter(p => enFiltroHoras(p, 'ayer'));
     const sobre = P.filter(p => p.sobre_capacidad.length);
-    const horasSobre = P.filter(p => p.estado !== 'baja' && !p.sobre_capacidad.length && p.imputa && (p.horas?.pct_128 ?? 0) > 100).length;
-    const hoy = hoyISO();
-    const en14 = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10);
+    const { hoy, en14, mesNota, trimestre, diaMes } = periodosPersonasRO();
     const ausProx = ausencias.filter(a => a.hasta >= hoy && a.desde <= en14);
-    const mesNota = new Date(Date.now() - 864e5 * 5).toISOString().slice(0, 7);
     const conNota = P.filter(p => p.apuntes.some(a => a.tipo === 'nota' && (a.datos.mes || '').startsWith(mesNota)));
-    const trimestre = `${new Date().getFullYear()}-T${Math.floor(new Date().getMonth() / 3) + 1}`;
     const con1a1 = P.filter(p => p.apuntes.some(a => a.tipo === '1a1' && (a.datos.trimestre === trimestre)));
     const activas = P.filter(p => p.estado === 'activo');
 
@@ -157,10 +158,10 @@ export default {
     const franja = franjaCifras([
       { etiqueta: 'En alerta sin plan (+7 días)', valor: vencidas.length, estado: vencidas.length ? 'rojo' : '', alPulsar: ir('alerta'),
         titulo: sinPlan.length ? `${enAlerta.length} en alerta: ${sinPlan.length} sin plan todavía y ${enAlerta.length - sinPlan.length} con plan` : 'Todas con conversación y plan' },
-      { etiqueta: 'Por encima de su capacidad', valor: sobre.length, estado: sobre.length > 1 ? 'rojo' : '', alPulsar: ir('carga'), titulo: 'Accounts > 12 proyectos · trafficker y CRM > 16' },
-      { etiqueta: 'Ayer sin imputar', valor: ceroAyer.length, estado: ceroAyer.length > 3 ? 'rojo' : '', alPulsar: ir('imputa'), titulo: `0 h el último día laborable · ${noAyer.length} por debajo de 8 h` },
-      { etiqueta: 'Ausencias en 14 días', valor: ausProx.length, alPulsar: ir('ausencias'), titulo: ausProx.length ? `${ausProx.filter(a => !a.suplente).length} sin suplente` : 'Ninguna registrada' },
-      { etiqueta: `Nota de ${mesTxt(mesNota)}`, valor: `${conNota.length}/${activas.length}`, estado: conNota.length < activas.length && new Date().getDate() > 5 ? 'rojo' : '', alPulsar: ir('notas'), titulo: `100 % el día 5 · 1:1 del ${trimTxt(trimestre)}: ${con1a1.length} de ${activas.length}` },
+      { etiqueta: 'Carteras sobre la referencia', valor: sobre.length, estado: sobre.length > 1 ? 'rojo' : '', alPulsar: ir('carga'), titulo: 'Referencia de cartera: accounts > 12 proyectos · trafficker y CRM > 16. No acredita capacidad horaria ni sobrecarga individual.' },
+      { etiqueta: 'Con 0 h en el registro', valor: ceroAyer.length, estado: '', alPulsar: ir('imputa'), titulo: `${noAyer.length} con registro menor de 8 h (filtro de revisión, no jornada exigible). Ver fecha y corte; calendario y ausencias sin conciliar.` },
+      { etiqueta: 'Registro de ausencias (14 días)', valor: ausProx.length ? ausProx.length : 'Sin registros', alPulsar: ir('ausencias'), titulo: `${ausProx.filter(a => !a.suplente).length} sin suplente en los registros disponibles. Cobertura no acreditada: no confirma disponibilidad ni ausencia de vacaciones o permisos.` },
+      { etiqueta: `Nota de ${mesTxt(mesNota)}`, valor: `${conNota.length}/${activas.length}`, estado: conNota.length < activas.length && diaMes > 5 ? 'rojo' : '', alPulsar: ir('notas'), titulo: `100 % el día 5 · 1:1 del ${trimTxt(trimestre)}: ${con1a1.length} de ${activas.length}` },
     ], { etiqueta: 'Cifras del equipo (abren su pestaña)' });
     cont.append(franja);
     void tiles; void tile;
@@ -168,7 +169,7 @@ export default {
     // ---- 2 · pestañas por frecuencia: diario → semanal → mensual ----
     const lista = [
       { id: 'alerta', texto: 'En alerta sin plan', icono: 'alert', cuenta: sinPlan.length, cuentaEstado: 'rojo' },
-      { id: 'imputa', texto: 'Quién no imputa', icono: 'clock', cuenta: ceroAyer.length, cuentaEstado: 'rojo' },
+      { id: 'imputa', texto: 'Revisar registros de horas', icono: 'clock', cuenta: ceroAyer.length, cuentaEstado: 'gris' },
       { id: 'ausencias', texto: 'Ausencias', icono: 'cal', cuenta: ausProx.length },
       { id: 'carga', texto: 'Carga', icono: 'capas', cuenta: sobre.length, cuentaEstado: 'rojo' },
       { id: '1a1', texto: '1:1 y ronda', icono: 'users' },
@@ -179,7 +180,11 @@ export default {
     ];
     tabs = pestanas({ pestanas: lista, clave: 'personas', etiqueta: 'Secciones de Personas', unaFila: true, pintar: (id, z) => {
       if (id === 'alerta') z.append(...vistaAlerta(ctx, enAlerta, plan, fr));
-      if (id === 'imputa') z.append(...vistaImputa(ctx, imputan, P, fr));
+      if (id === 'imputa') {
+        if (horasDoc) z.append(panoramaHoras(ctx, P, horasDoc.mes, horasDoc, { alAbrir: pid => { if (vigente()) ctx.navegar(`horas/${pid}`); } }));
+        else z.append(vacioLinea('No hay una copia de horas autorizada para completar la tabla día/semana/mes. Consulta fecha y cobertura en Horas; no equivale a ausencia de trabajo.', { icono: 'clock' }));
+        z.append(...vistaImputa(ctx, imputan, P, fr));
+      }
       if (id === 'ausencias') z.append(...vistaAusencias(ctx, P, ausencias, nombre));
       if (id === 'carga') z.append(...vistaCarga(ctx, P, fr));
       if (id === '1a1') z.append(...vista1a1(ctx, P, E, trimestre));
@@ -203,13 +208,13 @@ export default {
 function panelCelebraciones(ctx) {
   const l = typeof ctx.celebraciones === 'function' ? ctx.celebraciones({ dias: 14 }) : [];
   const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-  const cuando = c => (c.en_dias === 0 ? 'hoy' : c.en_dias === 1 ? 'mañana' : (() => { const d = new Date(`${c.fecha}T12:00`); return `el ${DIAS[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; })());
+  const cuando = c => { const dia = FECHAS_RO.fechaCivil(c.fecha); if (!dia) return 'en una fecha por contrastar'; return c.en_dias === 0 ? 'hoy' : c.en_dias === 1 ? 'mañana' : `el ${FECHAS_RO.diaSemana(dia, true)} ${Number(dia.slice(8))} de ${FECHAS_RO.nombreMes(dia)}`; };
   const cuerpo = !l.length ? vacioLinea('Ningún cumpleaños ni aniversario en las próximas dos semanas.', { icono: 'heart' })
     : h('ul', { class: 'lista-i' }, l.slice(0, 8).map(c => h('li', {},
-      h('span', { class: `ico-c s ${c.en_dias === 0 ? 'verde' : 'gris'}` }, icono(c.tipo === 'cumple' ? 'heart' : 'crown')),
+      h('span', { class: `ico-c s ${FECHAS_RO.fechaCivil(c.fecha) && c.en_dias === 0 ? 'verde' : 'gris'}` }, icono(c.tipo === 'cumple' ? 'heart' : 'crown')),
       h('span', { class: 't', style: { whiteSpace: 'normal', minWidth: '0' } }, h('b', {}, c.alias), c.tipo === 'cumple'
         ? ` cumple años ${cuando(c)}` : ` cumple ${c.anios} año${c.anios === 1 ? '' : 's'} en RO ${cuando(c)}`),
-      c.en_dias === 0 ? chipEstado('verde', 'Hoy') : null)));
+      FECHAS_RO.fechaCivil(c.fecha) && c.en_dias === 0 ? chipEstado('verde', 'Hoy') : null)));
   return panel({ titulo: 'Cumpleaños y aniversarios', icono: 'heart', sub: 'Del equipo, en las próximas dos semanas' },
     h('div', { class: 'cuerpo' }, cuerpo, l.length > 8 ? h('p', { class: 'sub' }, `y ${l.length - 8} más`) : null));
 }
@@ -218,9 +223,18 @@ function panelCelebraciones(ctx) {
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const mesTxt = m => m ? `${MESES[Number(m.slice(5, 7)) - 1]} ${m.slice(0, 4)}` : '—';
 const trimTxt = tr => (/T(\d)$/.test(tr || '') ? `${tr.slice(-1)}.º trimestre` : tr);
-function addDias(iso, n) { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+function addDias(iso, n) { return sumarDiasRO(iso, n); }
 function minFecha(l) { return l.filter(Boolean).sort()[0] || hoyISO(); }
 const motivoTxt = m => limpiaTexto(String(m).replace(/(\d)\.(\d)/g, '$1,$2'));
+/** No repetir diagnósticos antiguos de horas: sus porcentajes no acreditan jornada ni cobertura. */
+function avisosPersona(p) {
+  const otros = [], horas = (p.avisos || []).some(m => /imput|registros? de horas|horas?[^.]*normal|\bh la semana|\d\s*%\s*de\s*\d/i.test(String(m)));
+  for (const m of p.avisos || []) {
+    if (!/imput|registros? de horas|horas?[^.]*normal|\bh la semana|\d\s*%\s*de\s*\d/i.test(String(m))) otros.push(motivoTxt(m));
+  }
+  if (horas) otros.push('Hay avisos heredados de registros de horas. Consulta la fecha y el corte en «Revisar registros de horas»; calendario, ausencias y cobertura sin conciliar. No acreditan incumplimiento ni registros anómalos');
+  return otros;
+}
 const puestosTxt = p => (p.puestos || []).map(x => PUESTO[x]?.nombre || x).join(' · ');
 
 async function apuntar(ctx, tipo, persona_id, texto, datos) {
@@ -252,7 +266,7 @@ function vistaAlerta(ctx, enAlerta, plan, fr) {
   filtro = chips.valor();
   pintar();
   return [
-    avisoParcial('Protocolo del 13-ago: aviso claro, plazo de reacción y solo después la decisión. A los 7 días sin conversación ni plan, sube a Tomás. Las horas imputadas no ponen a nadie en alerta (regla de Tomás): salen como aviso en «Quién no imputa».', { tipo: 'info', titulo: 'Qué se hace' }),
+    avisoParcial('Protocolo del 13-ago: aviso claro, plazo de reacción y solo después la decisión. A los 7 días sin conversación ni plan, sube a Tomás. Las horas imputadas no ponen a nadie en alerta (regla de Tomás): salen como aviso en «Revisar registros de horas».', { tipo: 'info', titulo: 'Qué se hace' }),
     panel({ titulo: 'Personas en alerta', icono: 'alert', sub: 'Más grave arriba; sin plan primero. Desde = primera foto en la que aparece (hay fotos desde el 2-oct).' }, h('div', { class: 'pm-pad' }, chips), caja, mas),
   ];
 }
@@ -270,7 +284,7 @@ function tarjetaAlerta(ctx, p, pl) {
   return h('article', { class: `pm-tarjeta ${estado}` },
     cabPersona(p.nombre, puestosTxt(p), chipEstado(estado, pl ? 'con plan' : d >= 7 ? `${d} días sin plan` : `Plan pendiente · quedan ${7 - d} días`)),
     h('ul', { class: 'pm-motivos' }, p.alerta.motivos.map(m => h('li', {}, icono('alert'), motivoTxt(m)))),
-    (p.avisos || []).length ? h('p', { class: 'sub' }, icono('clock', { clase: 's' }), ` Aviso, no alerta: ${p.avisos.map(motivoTxt).join(' · ')}`) : null,
+    (p.avisos || []).length ? h('p', { class: 'sub' }, icono('clock', { clase: 's' }), ` Información por verificar: ${avisosPersona(p).join(' · ')}`) : null,
     h('div', { class: 'meta-linea' }, h('span', {}, icono('cal'), `En alerta desde el ${fmt.fecha(p.alerta.desde)}`),
       h('span', {}, icono('flag'), `${p.alerta.peso} ${p.alerta.peso === 1 ? 'motivo' : 'motivos'}`), p.jefe ? h('span', {}, icono('persona'), `Responde ante: ${ctx.nombre(p.jefe)}`) : null),
     pl ? h('div', { class: 'pm-dec' }, h('p', { class: 'rec' }, h('b', {}, 'Plan: '), pl.texto), h('span', { class: 'sub' }, `Anotado por ${pl.quien} · ${fmt.fecha(pl.creada)} · revisar el ${fmt.fecha(pl.datos.revision)}${pl.estado === 'simulada' ? ' · simulado' : ''}`)) : null,
@@ -281,48 +295,63 @@ function tarjetaAlerta(ctx, p, pl) {
     form);
 }
 
-// ======================================================================== Quién no imputa
+// ======================================================================== Revisión de registros (no jornada ni rendimiento)
+/** El generador puede rellenar huecos con 0. Incluso un cero numérico es solo el valor de la foto. */
+function horasRegistradas(valor) {
+  return typeof valor === 'number' && Number.isFinite(valor) && valor >= 0 ? valor : null;
+}
+function diasSinRegistro(p) {
+  const ds = p.horas?.dias_sin_imputar_5;
+  return Array.isArray(ds) ? [...new Set(ds.filter(d => typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(`${d}T12:00:00Z`)) && new Date(`${d}T12:00:00Z`).toISOString().slice(0, 10) === d))].length : null;
+}
+function enFiltroHoras(p, filtro) {
+  const horas = horasRegistradas(p.horas?.ayer), n = diasSinRegistro(p);
+  return filtro === 'todos' || (filtro === 'cero' ? horas === 0 : filtro === 'ayer' ? horas !== null && horas < 8 : filtro === 'sin_dato' ? horas === null : filtro === '3dias' ? n !== null && n >= 3 : false);
+}
+function textoHoras(valor, decimales = 1) {
+  const n = horasRegistradas(valor);
+  return n === null ? 'Sin dato' : `${fmt.num(n, decimales)} h registradas`;
+}
 function vistaImputa(ctx, imputan, P, fr) {
   const noImputan = P.filter(p => !p.imputa);
   let filtro = 'ayer';
   const zona = h('div');
   const pintar = () => {
-    const filas = imputan.filter(p => filtro === 'todos' || (filtro === 'cero' ? !p.horas.ayer : filtro === 'ayer' ? (p.horas.ayer ?? 0) < 8 : (p.horas.dias_sin_imputar_5 || []).length >= 3))
-      .sort((a, b) => (a.horas.ayer ?? 0) - (b.horas.ayer ?? 0) || b.horas.dias_sin_imputar_5.length - a.horas.dias_sin_imputar_5.length);
+    const filas = imputan.filter(p => enFiltroHoras(p, filtro))
+      .sort((a, b) => (horasRegistradas(a.horas?.ayer) ?? Infinity) - (horasRegistradas(b.horas?.ayer) ?? Infinity));
     zona.replaceChildren(tablaApilable({
       filas,
-      vacio: { icono: 'ok', titulo: 'Todos imputaron', texto: 'Nadie en este filtro.' },
+      vacio: { icono: 'clock', titulo: 'Sin registros en este filtro', texto: 'Esto no acredita que todas las jornadas estén registradas.' },
       columnas: [
         { clave: 'alias', titulo: 'Persona', principal: true, celda: p => celdaPersona(ctx, p) },
-        { clave: 'ayer', titulo: `Ayer (${fmt.fecha(P[0]?.horas?.ayer_fecha)})`, num: true, celda: p => chipEstado(!p.horas.ayer ? 'rojo' : p.horas.ayer < 8 ? 'ambar' : 'verde', `${fmt.num(p.horas.ayer, 1)} h`) },
-        { clave: 'semana', titulo: 'Esta semana', num: true, celda: p => `${fmt.num(p.horas.semana, 1)} h de ${p.horas.semana_dias * 8}` },
-        { clave: 'sin', titulo: 'Días sin imputar (últimos 5)', num: true, celda: p => chipEstado(p.horas.dias_sin_imputar_5.length >= 3 ? 'rojo' : p.horas.dias_sin_imputar_5.length ? 'ambar' : 'verde', String(p.horas.dias_sin_imputar_5.length)) },
-        { clave: 'ult', titulo: 'Último día con horas', celda: p => p.horas.ultimo_dia_con_horas ? fmt.hace(p.horas.ultimo_dia_con_horas) : chipEstado('rojo', 'nunca (desde ago)') },
-        { clave: 'acc', titulo: '', celda: p => h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(recordatorio(p), 'Recordatorio copiado') } }, icono('copy'), 'Copiar recordatorio') },
+        { clave: 'ayer', titulo: 'Registro del último laborable', num: true, celda: p => h('span', {}, chipEstado('gris', textoHoras(p.horas?.ayer)), h('span', { class: 'sub' }, ` · ${p.horas?.ayer_fecha ? fmt.fecha(p.horas.ayer_fecha) : 'Fecha sin dato'}`)) },
+        { clave: 'semana', titulo: 'Semana de la fuente', num: true, celda: p => textoHoras(p.horas?.semana) },
+        { clave: 'sin', titulo: 'Días con 0 en la foto (últimos 5)', num: true, celda: p => chipEstado('gris', diasSinRegistro(p) === null ? 'Sin dato' : String(diasSinRegistro(p))) },
+        { clave: 'ult', titulo: 'Último registro encontrado', celda: p => p.horas?.ultimo_dia_con_horas ? fmt.fecha(p.horas.ultimo_dia_con_horas) : chipEstado('gris', 'No consta en la fuente') },
+        { clave: 'acc', titulo: '', celda: p => h('button', { type: 'button', class: 'bt mini', 'aria-label': `Copiar consulta de registros de ${p.alias}`, on: { click: () => copiar(recordatorio(p), 'Consulta copiada') } }, icono('copy'), 'Copiar consulta') },
       ],
     }));
   };
   const chips = chipsFiltro({ clave: 'personas.imputa', etiqueta: 'Ver', opciones: [
-    { valor: 'cero', texto: 'Ayer sin horas', icono: 'alert', cuenta: imputan.filter(p => !p.horas.ayer).length, cuentaEstado: 'rojo' },
-    { valor: 'ayer', texto: 'Ayer < 8 h', icono: 'clock', cuenta: imputan.filter(p => (p.horas.ayer ?? 0) < 8).length, cuentaEstado: 'rojo' },
-    { valor: '3dias', texto: '3+ días sin imputar', icono: 'alert', cuenta: imputan.filter(p => p.horas.dias_sin_imputar_5.length >= 3).length, cuentaEstado: 'rojo' },
+    { valor: 'cero', texto: 'Registro 0 h', icono: 'clock', cuenta: imputan.filter(p => enFiltroHoras(p, 'cero')).length, cuentaEstado: 'gris' },
+    { valor: 'ayer', texto: 'Registro < 8 h', icono: 'clock', cuenta: imputan.filter(p => enFiltroHoras(p, 'ayer')).length, cuentaEstado: 'gris' },
+    { valor: '3dias', texto: '3+ días con 0 en la foto', icono: 'clock', cuenta: imputan.filter(p => enFiltroHoras(p, '3dias')).length, cuentaEstado: 'gris' },
+    { valor: 'sin_dato', texto: 'Sin dato', cuenta: imputan.filter(p => enFiltroHoras(p, 'sin_dato')).length },
     { valor: 'todos', texto: 'Todos', cuenta: imputan.length }], alCambiar: v => { filtro = v; pintar(); } });
   filtro = chips.valor();
   pintar();
   return [
-    avisoParcial('Las horas son solo un aviso de disciplina: con el 52 % imputado no miden rendimiento. Copia el recordatorio y mándaselo solo a quien no imputó. Pronto se enviará desde aquí.', { tipo: 'parcial', titulo: 'Horas incompletas.' }),
-    panel({ titulo: 'Quién no imputa', icono: 'clock', sub: 'Ayer y esta semana, frente a 8 h al día', acciones: frescura(fr) }, h('div', { class: 'pm-pad' }, chips), zona,
+    avisoParcial('La fuente puede rellenar días sin registros con 0. No acredita la cobertura completa ni concilia calendario laboral, jornada pactada, vacaciones, permisos o registros tardíos. 8 h es solo un filtro de revisión: no prueba ausencia, incumplimiento ni rendimiento. Contrasta primero la fecha y el corte en ClickUp; consulta a la persona si procede.', { tipo: 'parcial', titulo: 'Registros por verificar' }),
+    panel({ titulo: 'Revisar registros de horas', icono: 'clock', sub: 'Valores de la última lectura; no horas trabajadas acreditadas', acciones: frescura(fr) }, h('div', { class: 'pm-pad' }, chips), zona,
       h('div', { class: 'fila', style: { marginTop: 'var(--s-3)' } },
-        // Ronda U (50 tarea 34): un solo clic para el recordatorio de todos los de la lista (uno por línea, con su nombre)
-        h('button', { type: 'button', class: 'bt pri', on: { click: () => { const l = imputan.filter(p => (p.horas.ayer ?? 0) < 8); copiar(l.map(recordatorio).join('\n\n'), `${l.length} recordatorios copiados`); } } }, icono('copy'), 'Copiar el recordatorio a todos'),
-        h('button', { type: 'button', class: 'bt', disabled: true, title: 'Pronto: envío de recordatorios por ClickUp o correo' }, icono('send'), 'Enviar a todos (pronto)'),
+        h('button', { type: 'button', class: 'bt pri', on: { click: () => { const l = imputan.filter(p => enFiltroHoras(p, filtro)); if (!l.length) { avisoFlotante('No hay consultas en este filtro'); return; } copiar(l.map(recordatorio).join('\n\n'), `${l.length} consultas copiadas`); } } }, icono('copy'), 'Copiar consultas de este filtro'),
         noImputan.length ? h('span', { class: 'sub' }, `No imputan por puesto: ${noImputan.map(p => p.alias).join(', ')}.`) : null)),
   ];
 }
 
 function recordatorio(p) {
-  const n = p.horas.dias_sin_imputar_5.length;
-  return `Hola ${p.alias.split(' ')[0]}, ayer imputaste ${fmt.num(p.horas.ayer, 1)} h en ClickUp${n ? ` y llevas ${n} de los últimos 5 días laborables sin horas` : ''}. ¿Puedes dejarlas apuntadas hoy antes de las 15:00? Gracias.`;
+  const fecha = p.horas?.ayer_fecha ? fmt.fecha(p.horas.ayer_fecha) : 'fecha no disponible';
+  return `Hola ${p.alias.split(' ')[0]}, la última lectura muestra ${textoHoras(p.horas?.ayer)} en ClickUp para ${fecha}. La cobertura, el calendario y las ausencias no están conciliados. ¿Puedes confirmar si el registro está completo o si hay un dato pendiente de actualizar? Gracias.`;
 }
 
 // ======================================================================== Ausencias
@@ -357,32 +386,29 @@ function vistaAusencias(ctx, P, ausencias, nombre) {
     { clave: 'hasta', titulo: 'Hasta', celda: a => fmt.fecha(a.hasta) },
     { clave: 'suplente', titulo: 'Suplente', celda: a => a.suplente ? (nombre[a.suplente] || a.suplente) : chipEstado('ambar', 'sin suplente') },
     { clave: 'estado', titulo: 'Estado', celda: a => chipEstado(a.desde <= hoy ? 'azul' : 'gris', a.desde <= hoy ? 'hoy fuera' : 'prevista') },
-  ] }) : vacio({ icono: 'cal', titulo: 'No hay ausencias registradas', texto: 'Hasta ahora las vacaciones no estaban en ninguna herramienta. Regístralas aquí y restan capacidad en la carga que ve Mili.', quien: 'Cecilia' });
-  return [panel({ titulo: 'Hoy y próximas semanas', icono: 'cal', sub: `${filas.length} vigentes o previstas · ${pasadas.length} pasadas` }, tabla), form];
+  ] }) : vacio({ icono: 'cal', titulo: 'No hay ausencias registradas', texto: 'La lista vacía no confirma que no haya vacaciones o permisos. Puedes anotarlas aquí como registro simulado; aún no se descuentan automáticamente de las horas de esta pantalla.', quien: 'Cecilia' });
+  return [avisoParcial('Estos son los registros disponibles, incluidos los simulados de la app. La cobertura de ausencias no está acreditada ni conciliada con el calendario o las horas. Una lista vacía no confirma que nadie esté ausente ni que toda la capacidad esté disponible.', { tipo: 'parcial', titulo: 'Ausencias por confirmar' }), panel({ titulo: 'Registros vigentes o previstos', icono: 'cal', sub: `${filas.length} vigentes o previstas · ${pasadas.length} pasadas` }, tabla), form];
 }
 
 // ======================================================================== Carga
 function vistaCarga(ctx, P, fr) {
   const filas = P.filter(p => p.estado !== 'baja').map(p => {
     const silla = Object.keys(p.cartera).sort((a, b) => (CAP[b] ? 1 : 0) - (CAP[a] ? 1 : 0) || p.cartera[b] - p.cartera[a])[0];
-    return { ...p, silla, n: silla ? p.cartera[silla] : 0, cap: CAP[silla] || null, h: p.imputa ? p.horas.mes_anterior : null, pct: p.imputa ? p.horas.pct_128 : null };
+    return { ...p, silla, n: silla ? p.cartera[silla] : 0, cap: CAP[silla] || null, h: p.imputa ? horasRegistradas(p.horas?.mes_anterior) : null, pct: p.imputa ? horasRegistradas(p.horas?.pct_128) : null };
   }).sort((a, b) => (b.sobre_capacidad.length - a.sobre_capacidad.length) || ((b.cap ? b.n / b.cap : 0) - (a.cap ? a.n / a.cap : 0)) || (b.pct ?? -1) - (a.pct ?? -1));
   const mes = mesTxt(P.find(p => p.imputa)?.horas?.mes_anterior_txt);
-  return [panel({ titulo: 'Carga frente a capacidad', icono: 'capas', sub: `Proyectos frente a 12 (account) y 16 (trafficker y CRM) · horas de ${mes} frente a 128 h`, acciones: frescura(fr) },
+  return [panel({ titulo: 'Carga frente a capacidad', icono: 'capas', sub: `Proyectos frente a 12 (account) y 16 (trafficker y CRM) · registros de horas de ${mes}; jornada y disponibilidad sin conciliar`, acciones: frescura(fr) },
     tablaApilable({ filas, etiquetaFila: p => p.alias, columnas: [
       { clave: 'alias', titulo: 'Persona', principal: true, celda: p => celdaPersona(ctx, p) },
       { clave: 'n', titulo: 'Cartera', celda: p => !p.silla ? h('span', { class: 'sub' }, 'sin cartera asignada') : h('div', { class: 'pm-barra' },
         p.cap ? barraProgreso({ valor: p.n, max: Math.max(p.cap, p.n), marca: p.cap, estado: p.n > p.cap ? 'rojo' : p.n >= (p.cap === 12 ? 7 : 14) ? 'ambar' : 'verde', etiqueta: `${p.n} de ${p.cap}` }) : h('span', {}),
         h('span', {}, `${p.n}${p.cap ? ` / ${p.cap}` : ''} clientes${repartoTxt(p.persona_id, p.silla) ? ` (${repartoTxt(p.persona_id, p.silla)})` : ''} · ${p.silla === 'trafficker' && p.publicidad ? `${p.publicidad.con_meta ?? '—'} con Meta${p.publicidad.encendida != null ? `, ${p.publicidad.encendida} encendidas` : ''} (como Captación)` : SILLA_TXT[p.silla] || p.silla}`)) },
-      { clave: 'pct', titulo: 'Horas del mes', celda: p => p.h === null ? h('span', { class: 'sub' }, 'no imputa') : h('div', { class: 'pm-barra' },
-        barraProgreso({ valor: p.h, max: Math.max(128, p.h), marca: 128, estado: p.pct > 100 ? 'rojo' : p.pct >= 70 ? 'verde' : 'ambar', etiqueta: `${fmt.num(p.h, 1)} h de 128` }),
-        h('span', {}, `${fmt.num(p.h, 0)} h · ${fmt.pct(p.pct)}`)) },
+      { clave: 'pct', titulo: 'Registro del mes', celda: p => h('span', { class: 'sub' }, p.imputa ? textoHoras(p.h) : 'no imputa') },
       { clave: 'abrir', titulo: 'Abrir en', celda: p => atajosPersona(p, true) },
-      // V2 (B-M12): la MISMA banda para todos. Cartera por encima del tope → rojo con su cifra; horas > 100 % del mes → rojo
-      // (la banda de la barra: > 100 % rojo), aunque la cartera esté bien. Emanuel con 136 % ya no sale «bien».
-      { clave: 'aviso', titulo: 'Aviso', celda: p => p.sobre_capacidad.length || (p.cap && p.n > p.cap) ? chipEstado('rojo', `por encima · ${p.n} de ${p.cap}`) : p.pct !== null && p.pct > 100 ? chipEstado('rojo', `horas por encima · ${fmt.pct(p.pct)}`) : p.cerca_capacidad.length ? chipEstado('ambar', 'cerca del tope') : p.pct !== null && p.pct < 60 ? chipEstado('gris', 'horas bajas o sin imputar') : chipEstado('verde', 'bien') },
+      // La señal de cartera se mantiene separada del registro de horas.
+      { clave: 'aviso', titulo: 'Revisión de cartera', celda: p => p.sobre_capacidad.length || (p.cap && p.n > p.cap) ? chipEstado('rojo', `por encima · ${p.n} de ${p.cap}`) : p.cerca_capacidad.length ? chipEstado('ambar', 'cerca del tope') : chipEstado('gris', 'sin señal de cartera') },
     ] }),
-    h('p', { class: 'sub' }, 'Banda de carga: del 70 al 90 % de las horas, verde; más del 100 %, rojo (en la cartera y en las horas, la misma regla para todos). Solo 1 de cada 10 tareas tiene estimación: la carga planificada todavía no se puede medir; aquí va la imputada.'))];
+    h('p', { class: 'sub' }, 'Los topes de cartera son referencias operativas distintas del registro de horas. Sin cobertura completa, calendario y ausencias conciliados, las horas registradas no acreditan capacidad disponible, sobrecarga ni rendimiento. La referencia histórica de 128 h no se usa para evaluar jornadas.'))];
 }
 
 // ======================================================================== 1:1 y ronda
@@ -505,15 +531,16 @@ function pintarMiFicha(cont, ctx, p, ausencias, fr, mesNota, trimestre, otra = n
   cont.append(h('div', { class: 'detalle-cab panel', style: { padding: 'var(--s-4) var(--relleno)' } }, cabPersona(p.nombre, puestosTxt(p), p.alerta ? chipEstado('rojo', 'en alerta') : chipEstado('verde', 'sin alertas')),
     h('p', { style: { margin: 'var(--s-2) 0 0' } }, lineaZona(ctx, p.persona_id), h('a', { class: 'bt mini', href: otra ? `#/mi-perfil/${p.persona_id}` : '#/mi-perfil', style: { marginLeft: 'var(--s-2)' } }, otra ? 'Ver su zona' : 'Cambiar mi zona'))));
   cont.append(tiles([
-    p.imputa ? tile({ icono: 'clock', etiqueta: 'Horas ayer', valor: fmt.num(p.horas.ayer, 1), unidad: 'h de 8', estado: !p.horas.ayer ? 'rojo' : p.horas.ayer < 8 ? 'ambar' : 'verde', contexto: `Esta semana ${fmt.num(p.horas.semana, 1)} h`, medible: 'medias', medibleDetalle: 'Solo aviso', frescura: fr })
+    p.imputa ? tile({ icono: 'clock', etiqueta: 'Registro del último laborable', valor: horasRegistradas(p.horas?.ayer), unidad: 'h registradas', estado: '', contexto: `${p.horas?.ayer_fecha ? fmt.fecha(p.horas.ayer_fecha) : 'Fecha sin dato'} · semana de la fuente: ${textoHoras(p.horas?.semana)}`, medible: 'medias', medibleDetalle: 'Cobertura no acreditada; no mide jornada ni rendimiento', frescura: fr })
       : tile({ icono: 'clock', etiqueta: 'Horas', valor: 'no imputa', contexto: `${T.tu} puesto no imputa horas` }),
-    p.imputa ? tile({ icono: 'capas', etiqueta: `Horas de ${mesTxt(p.horas.mes_anterior_txt)}`, valor: fmt.num(p.horas.mes_anterior, 0), unidad: 'de 128 h', estado: p.horas.pct_128 > 100 ? 'rojo' : p.horas.pct_128 >= 70 ? 'verde' : 'ambar', contexto: `${fmt.pct(p.horas.pct_128)} de ${T.tu.toLowerCase()} capacidad` }) : null,
+    p.imputa ? tile({ icono: 'capas', etiqueta: `Registro de ${mesTxt(p.horas?.mes_anterior_txt)}`, valor: horasRegistradas(p.horas?.mes_anterior), unidad: 'h registradas', estado: '', contexto: 'Calendario y ausencias sin conciliar; no acredita capacidad disponible' }) : null,
     silla ? tile({ icono: 'cartera', etiqueta: `${T.tu} cartera`, valor: p.cartera[silla], unidad: CAP[silla] ? `clientes · tope ${CAP[silla]}` : 'clientes', estado: p.sobre_capacidad.length ? 'rojo' : p.cerca_capacidad.length ? 'ambar' : 'verde',
       contexto: [repartoTxt(p.persona_id, silla), carteraV(p.persona_id, silla)?.universo?.texto].filter(Boolean).join(' · ') || SILLA_TXT[silla] || silla }) : null,
     tile({ icono: 'star', etiqueta: `${T.tu} nota de ${mesTxt(mesNota)}`, valor: notas.filter(n => (n.datos.mes || '').startsWith(mesNota)).slice(-1)[0]?.datos?.nota ?? null, unidad: '/ 10', contexto: `La ponen Mili o ${T.tu.toLowerCase()} jefa con un hecho`, estado: '' }),
     tile({ icono: 'users', etiqueta: `1:1 del ${trimTxt(trimestre)}`, valor: unos.some(u => u.datos.trimestre === trimestre) ? 'Hecho' : 'Falta', estado: unos.some(u => u.datos.trimestre === trimestre) ? 'verde' : 'ambar', contexto: 'Mínimo uno al trimestre' }),
   ].filter(Boolean)));
-  if ((p.avisos || []).length) cont.append(avisoParcial(`${p.avisos.map(motivoTxt).join(' · ')}. Las horas son solo un aviso: no ponen a nadie en alerta.`, { tipo: 'info', titulo: 'Aviso de horas.' }));
+  if (p.imputa) cont.append(avisoParcial('Un 0 puede ser un hueco rellenado por el generador. Contrasta la fecha y el corte con ClickUp, la jornada y las ausencias antes de consultar el registro; no prueba incumplimiento ni rendimiento.', { tipo: 'parcial', titulo: 'Registro de horas por verificar' }));
+  if ((p.avisos || []).length) cont.append(avisoParcial(`${avisosPersona(p).join(' · ')}. Las horas son solo un aviso: no ponen a nadie en alerta.`, { tipo: 'info', titulo: 'Aviso de horas.' }));
   if (p.alerta && otra) cont.append(h('div', { class: 'pm-tarjetas' }, tarjetaAlerta(ctx, p, otra.plan)));
   else if (p.alerta) cont.append(panel({ titulo: 'Por qué estás en alerta', icono: 'alert', sub: `Desde el ${fmt.fecha(p.alerta.desde)} · lo hablarás con tu jefa o con Cecilia` }, h('ul', { class: 'pm-motivos' }, p.alerta.motivos.map(m => h('li', {}, icono('alert'), motivoTxt(m))))));
   const desde = h('input', { type: 'date', value: hoyISO() }), hasta = h('input', { type: 'date', value: addDias(hoyISO(), 4) });
@@ -521,7 +548,7 @@ function pintarMiFicha(cont, ctx, p, ausencias, fr, mesNota, trimestre, otra = n
   cont.append(h('div', { class: 'dos' },
     panel({ titulo: `${T.tus} ausencias`, icono: 'cal' },
       mias.length ? tablaApilable({ filas: mias, columnas: [{ clave: 'tipo', titulo: 'Tipo', principal: true }, { clave: 'desde', titulo: 'Desde', celda: a => fmt.fecha(a.desde) }, { clave: 'hasta', titulo: 'Hasta', celda: a => fmt.fecha(a.hasta) }] })
-        : vacio({ icono: 'cal', titulo: 'Sin ausencias registradas', texto: otra ? `${p.alias} las pide desde su ficha; las aprueba Cecilia y, si lleva clientes, Mili pone suplente.` : 'Pide aquí tus vacaciones; las aprueba Cecilia y, si llevas clientes, Mili pone suplente.' }),
+        : vacio({ icono: 'cal', titulo: 'Sin ausencias registradas', texto: otra ? `Cobertura no acreditada; no confirma disponibilidad. ${p.alias} las pide desde su ficha; las aprueba Cecilia y, si lleva clientes, Mili pone suplente.` : 'Cobertura no acreditada; no confirma disponibilidad. Pide aquí tus vacaciones; las aprueba Cecilia y, si llevas clientes, Mili pone suplente.' }),
       otra ? null : h('div', { class: 'pm-form', style: { marginTop: 'var(--s-3)' } }, campo('Tipo', tipo), campo('Desde', desde), campo('Hasta', hasta),
         guardarU({ ctx, texto: 'Pedir ausencia', hecho: 'Petición enviada a Cecilia', validar: () => (hasta.value < desde.value ? 'La fecha de fin es anterior al inicio' : null),
           hacer: () => apuntar(ctx, 'ausencia', p.persona_id, `${tipo.value} del ${desde.value} al ${hasta.value} (petición)`, { tipo: tipo.value, desde: desde.value, hasta: hasta.value, suplente: null, peticion: true }) }))),
@@ -667,4 +694,11 @@ function vistaSueldos(ctx, P, z) {
           tile({ icono: 'sube', etiqueta: 'Proyección 2026 al mes', valor: usd(proyTot), contexto: `${conProy} personas con propuesta · sueldo base, sin bonos`, estado: '' })]),
         graficoSerie({ titulo: 'Sueldos del equipo por mes (dólares)', puntos: ms.map(([m, v]) => ({ x: m + '-01', y: v })), formato: n => usd(n) }));
     } } }, icono('ojo'), 'Calcular la evolución')), zonaT));
+}
+
+// Ventanas civiles de gestión: la regla original resta cinco DÍAS de calendario, no 120 horas.
+function periodosPersonasRO(hoy = hoyISO()) {
+  if (!FECHAS_RO.fechaCivil(hoy)) return { hoy:null,en14:null,mesNota:null,trimestre:null,diaMes:null };
+  return { hoy, en14:sumarDiasRO(hoy,14), mesNota:FECHAS_RO.mes(sumarDiasRO(hoy,-5)),
+    trimestre:`${hoy.slice(0,4)}-T${Math.floor((Number(hoy.slice(5,7))-1)/3)+1}`, diaMes:Number(hoy.slice(8)) };
 }

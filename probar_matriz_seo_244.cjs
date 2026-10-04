@@ -1,0 +1,24 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+class N{constructor(tag,attrs={},...kids){this.tag=tag;this.attrs=attrs;this.children=kids.flat(Infinity).filter(x=>x!=null);this.isConnected=true;}append(...xs){this.children.push(...xs.flat(Infinity).filter(x=>x!=null));}replaceChildren(...xs){this.children=xs.flat(Infinity);}querySelectorAll(){return [];}closest(){return null;}setAttribute(k,v){this.attrs[k]=v;}}
+const h=(...xs)=>new N(...xs),all=n=>n&&typeof n==='object'?[n,...(n.children||[]).flatMap(all)]:[],text=n=>typeof n==='string'?n:typeof n==='number'?String(n):(n?.children||[]).map(text).join(' ');
+let tables=[],actions=[],confirmations=[],nav=[],live=true;
+const c={Intl,Date,Number,URL,encodeURIComponent,h,document:{},fmt:{num:v=>String(v)},icono:()=>'',logoCliente:()=>'',panel:(o,...xs)=>h('panel',{},o.titulo,o.sub,...xs),listaLoPrimero:rows=>h('list',{},rows.map(r=>h('li',{},r.motivo,r.detalle,r.botones))),
+ tablaDensa:o=>{tables.push(o);return h('table',{},o.filas.map(row=>h('row',{},o.columnas.map(col=>col.celda?col.celda(row):row[col.clave]))));},chipsFiltro:()=>({valor:()=>'',querySelectorAll:()=>[]}),botonConfirmar:o=>{confirmations.push(o);return h('confirm',{},o.texto);},botonDeshacer:o=>h('action',{},o.texto),chipEstado:(e,t)=>t,
+ vacio:o=>h('empty',{},o.titulo),avisoParcial:t=>h('note',{},t),vacioLinea:t=>h('empty',{},t),semaforo:()=> 'gris',frescura:()=>h('source'),MODULAR_PASO:'Sin conexión',llevarA(){},filaConTexto(){},
+};
+vm.createContext(c);vm.runInContext(fs.readFileSync('modulos/_panel_especialista.js','utf8').replace(/export /g,''),c);
+Object.assign(c,vm.runInContext('(()=>{'+fs.readFileSync(__dirname+'/modulos/_objetivos_seo_374.js','utf8').replace(/export /g,'')+';return {cargarObjetivos374,celdaObjetivo374,renderObjetivos374};})()',c));
+const src=fs.readFileSync('modulos/seo.js','utf8').replace(/^import[\s\S]*?from ['"][^'"]+['"];[^\n]*\n/gm,'').replace('export default {','const modulo = {');vm.runInContext(src,c);
+const ctx={persona:{id:'seo',puestos:['seo']},clientes:[],vigente:()=>live,nombre:()=>null,soloLectura:true,accion:async x=>actions.push(x),navegar:x=>nav.push(x)};
+const rows=Array.from({length:8},(_,i)=>({cliente_id:'c'+i,cliente:'Client '+i,seo_id:'seo',estado:i===0?'gris':i===1?'verde':'rojo',motivo:'Long review explanation '.repeat(8),_medicionSEO:{historicas:i===0?1:0,clics:{mes:true}},alertas:[{tipo:'clics',texto:'Historical signal',acreditada:false}],n_alertas:{rojo:1,ambar:0},informe15:[{hoy:3,mapa:4}],seranking:{ultima:'2026-10-02'},clics:{mes:i===0?0:10,mes_ant:20,hasta:'2026-09-30'},gsc:{paginas:[]}}));
+const root=h('root');c.pintarSeo(root,ctx,{seo:{_meta:{}}},rows,'seo');
+assert.equal(root.children[0].tag,'panel');assert.equal(root.children[1].tag,'section');assert.equal(root.children[1].attrs['data-objetivos-seo-374'],'');assert.equal(root.children[2].tag,'details');assert(!root.children[2].attrs.open);assert.equal(tables[0].filas.length,8);assert.equal(tables[0].columnas.length,6);assert.equal(actions.length,0);assert(confirmations.length>0);assert(confirmations.every(x=>x.soloLectura===true));
+assert(text(root).includes('Historical signal'));assert(text(root).includes('Schema: no medido'));assert(text(root).includes('Objetivo por confirmar'));assert(text(root).includes('Org: 1 · Maps: 1'));assert(text(root).includes('0 clics'));
+assert(tables[0].filas[1].panelEspecialista.accion.includes('28 días'));
+const review=all(root).find(n=>n.tag==='a'&&n.attrs['aria-label']?.startsWith('Revisar Client 0'));assert(review?.attrs.title);assert(!review.attrs.title.includes('undefined'));
+tables[0].alPulsar(tables[0].filas[0]);assert.equal(nav[0],'seo-web/c0');live=false;tables[0].alPulsar(tables[0].filas[1]);assert.equal(nav.length,1);
+const stale=h('root');c.pintarSeo(stale,ctx,{seo:{_meta:{}}},rows,'seo');assert.equal(stale.children.length,0);live=true;
+const denied=h('root');c.pintarSeo(denied,ctx,{seo:{_meta:{}}},[],'seo');assert(text(denied).includes('No tienes clientes'));live=true;
+tables=[];const w={nombre:'Web fixture',url:'https://example.invalid',estado:'rojo',motivo:'Detailed monitor issue '.repeat(8),comprobacion:{estado:500,ms:2000,cert_dias:null,hora:'2026-10-03 02:56'},avisos:[],modular:null};
+const web=h('root');c.pintarWebs(web,ctx,{webs:{webs:[w],_meta:{}},modular:{}},'web');assert.equal(web.children[0].tag,'panel');assert.equal(text(web.children[0]).includes('Todas las webs'),true);assert.equal(web.children[1].tag,'details');assert(!web.children[1].attrs.open);assert(text(web.children[1]).includes('Detailed monitor issue'));assert(text(web).includes('PageSpeed: sin medición'));assert.equal(actions.length,0);
+console.log('244 PASS: render SEO8filas/tablefirst, recomendaciones plegadas/gates, métricas/source unknown preservados, acción detalle vigente y Webtablefirst sin POST.');

@@ -320,6 +320,34 @@
    ]
   },
   {
+   "id": "seranking",
+   "fuente": "SE Ranking · posiciones (API de proyectos, sin créditos)",
+   "ligero": [
+    "{PY}",
+    "fuentes_seo/sr_leer.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_seo/sr_leer.py"
+   ],
+   "crudo": null,
+   "cada_min": 1380,
+   "salidas": [
+    "fuentes_seo/_cache/seranking.json"
+   ],
+   "timeout": 300,
+   "depende": [],
+   "aunque_falle": true,
+   "claves_minimas": {
+    "fuentes_seo/_cache/seranking.json": [
+     "generado",
+     "dia_dato",
+     "clientes"
+    ]
+   },
+   "nota": "3-oct: lectura DIARIA (cada_min 1380: la vuelta completa de las 6:00; si falla, la reintenta la siguiente vuelta de cada hora). Leer posiciones por la API de proyectos NO gasta créditos (https://seranking.com/api/api-credits-system/: «The Project API instead consumes the limits of your SE Ranking subscription»; medido: 0 créditos en 41 llamadas). Si falla, deja el dato anterior, apunta el motivo en fuentes_seo/_cache/seranking_estado.json y avisa (E0). Nunca lanza comprobaciones (esas sí gastan)."
+  },
+  {
    "id": "capa_e1",
    "modulo": "comun (E1)",
    "ligero": [
@@ -349,7 +377,8 @@
     "base",
     "lector_externos",
     "lector_snov",
-    "lector_captacion"
+    "lector_captacion",
+    "seranking"
    ],
    "nota": "Orden de E1 (5): --en-vivo meta (en la completa, también Zoom, SE Ranking y Windsor, que gastan créditos).",
    "claves_minimas": {
@@ -586,7 +615,8 @@
    ],
    "timeout": 600,
    "depende": [
-    "capa_e1"
+    "capa_e1",
+    "seranking"
    ]
   },
   {

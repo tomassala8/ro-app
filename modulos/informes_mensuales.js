@@ -10,6 +10,7 @@ import {
   logoCliente, iniciales, tablaDensa, tablaApilable, avisoFlotante, campoTexto,
 } from '../componentes.js';
 import { panelRevisar, accionesInforme, estadoInforme } from './informe_revisar.js';
+import { filaConEstadoInforme, textoEstadoInforme } from './_estado_informe.js';
 import { plegarConsejo } from './_plegar_consejo.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -72,12 +73,12 @@ const listaFilas = items => h('ul', { style: { listStyle: 'none', margin: '0', p
 const listaMeses = ms => ms.length <= 1 ? nombreMes(ms[0] || '') : `${nombreMes(ms[0])} a ${nombreMes(ms[ms.length - 1])}`;
 
 // ===================================================================== datos
-function preparar(D, cola, ctx) {
+function preparar(D, cola, ctx, accInf = []) {
   const cli = new Map(ctx.clientes.map(c => [c.id, c]));
   return (D.filas || []).map(f => {
     const otra = cola.get(f.id);
     const estado = f.estado !== 'enviado' && otra ? 'otra_via' : f.estado;
-    return { ...f, estado, otra, cli: cli.get(f.cliente_id) || { id: f.cliente_id, nombre: f.cliente } };
+    return filaConEstadoInforme({ ...f, estado, otra, cli: cli.get(f.cliente_id) || { id: f.cliente_id, nombre: f.cliente } }, estadoInforme(accInf, f.cliente_id, f.mes));
   });
 }
 
@@ -124,13 +125,13 @@ export default {
         for (const a of (r.acciones || []).slice().reverse()) if (a.tipo === 'enviado_otra_via') cola.set(String(a.objeto), a);
       } catch { /* sin cola: no pasa nada */ }
     }
-    // Ronda U (#8): revisado y enviado desde «Revisar y enviar» (guardados a nombre de Informe del cliente).
+    // Ronda U (#8): revisado y enviado desde «Revisar y preparar» (guardados a nombre de Informe del cliente).
     const accInf = ctx.veModulo?.('informe-cliente') === false ? [] : await accionesInforme(ctx);
     const raiz = h('div', { class: 'pila', style: { gap: 'var(--s-4)', minWidth: '0' } });
     cont.append(raiz);
     plegarConsejo(cont);   // molde común (#1): el consejo de la carcasa, en una línea
-    const S = { D, cola, accInf, filas: preparar(D, cola, ctx), hoy: ctx.hoy,   /* V2-E: hoy en Madrid (no el día en que se leyó la fuente ni UTC) */ filtroAccount: '', periodo: ctx.periodo };
-    S.rehacer = () => { S.filas = preparar(D, S.cola, ctx); raiz.replaceChildren(); pintar(raiz, ctx, S); };
+    const S = { D, cola, accInf, filas: preparar(D, cola, ctx, accInf), hoy: ctx.hoy,   /* V2-E: hoy en Madrid (no el día en que se leyó la fuente ni UTC) */ filtroAccount: '', periodo: ctx.periodo };
+    S.rehacer = () => { S.filas = preparar(D, S.cola, ctx, S.accInf); raiz.replaceChildren(); pintar(raiz, ctx, S); };
     ctx.alCambiarPeriodo?.(p => { if (!raiz.isConnected) return; S.periodo = p; S.filtroAccount = ''; raiz.replaceChildren(); pintar(raiz, ctx, S); });
     pintar(raiz, ctx, S);
   },
@@ -254,13 +255,13 @@ function pintarMes(cont, ctx, S, sel, compMeses, fresco) {
         contexto: `${varios ? 'Cada informe sale como muy tarde el día 5' : `Límite: ${diaSemana(limite)}`}${r.exentos ? ` · ${fmt.num(r.exentos)} exentos (mantenimiento)` : ''}`, medible: 'hoy' }),
   ]);
   // Ronda U (#1, molde común): las cifras SON los filtros de la tabla (los chips de estado, con su contador); las tarjetas
-  // grandes pasan a «Contexto y cifras» (plegado, debajo). La tabla con «Revisar y enviar» queda en la primera pantalla.
+  // grandes pasan a «Contexto y cifras» (plegado, debajo). La tabla con «Revisar y preparar» queda en la primera pantalla.
   S.tarjetasContexto = tarjetas;
 
   // ---- por account (Mili y dirección): quién va retrasado, de un vistazo ----
   if (todo) cont.append(pintarPorAccount(delMes, S, cont, enPlazo));
 
-  // ---- la tabla del periodo (con el panel «Revisar y enviar» encima cuando se abre) ----
+  // ---- la tabla del periodo (con el panel «Revisar y preparar» encima cuando se abre) ----
   S.zonaPanel = h('div', { 'data-zona-revisar': '' });
   cont.append(S.zonaPanel, pintarTabla(delMes, ctx, S, sel, enPlazoDe, fresco));
   if (S.tarjetasContexto) cont.append(h('details', { class: 'que-es panel', style: { padding: 'var(--s-3) var(--relleno)' } },
@@ -343,7 +344,7 @@ function celdaEnviado(f, enPlazo) {
   if (f.enviado) {
     const tarde = f.plazo === 'ambar';
     return celda(
-      chipEstado(tarde ? 'ambar' : 'verde', `${tarde ? 'Tarde · ' : ''}${fDiaRO(f.enviado.fecha)}`),
+      chipEstado(f.enviado.fecha_pendiente ? 'gris' : tarde ? 'ambar' : 'verde', f.enviado.fecha_pendiente ? 'Confirmado · fecha por comprobar' : `${tarde ? 'Tarde · ' : ''}${fDiaRO(f.enviado.fecha)}`),
       f.enviado.url ? enlaceBt(f.enviado.url, 'mail', 'Abrir en Desk', f.enviado.asunto || '') : sub(f.enviado.metodo));
   }
   return celda(chipEstado(enPlazo ? 'ambar' : 'rojo', enPlazo ? 'Sin enviar' : 'Sin enviar · aviso a Mili'),
@@ -394,15 +395,16 @@ function botonOtraVia(f, ctx, S) {
   return caja;
 }
 
-/** Ronda U (#8): «Revisar y enviar» (abre el panel de una pantalla) + lo que ya se hizo + «Enviado por otra vía». */
+/** Ronda U (#8): «Revisar y preparar» (abre el panel de una pantalla) + lo que ya se hizo + «Enviado por otra vía». */
 function accionesFila(f, ctx, S) {
   if (!ctx.nivel) return null;
   const e = S.accInf ? estadoInforme(S.accInf, f.cliente_id, f.mes) : {};
-  const hecho = e.enviado ? chipEstado('azul', 'Enviado desde la app (simulado)') : e.revisado ? chipEstado('verde', `Revisado · ${ctx.nombre(e.revisado.quien)}`) : null;
+  const estadoTexto = textoEstadoInforme(e);
+  const hecho = estadoTexto ? chipEstado(e.enviado ? 'verde' : e.fallido ? 'rojo' : 'ambar', estadoTexto) : e.revisado ? chipEstado('verde', `Revisado · ${ctx.nombre(e.revisado.quien)}`) : null;
   const pendiente = PENDIENTES.has(f.estado) && !e.enviado;
   const puedeAbrir = f.cli?.detalle && ctx.veModulo?.('informe-cliente') !== false;
   const b = pendiente && puedeAbrir ? h('button', { type: 'button', class: 'bt mini pri', style: { minHeight: ALTO_CLIC() }, 'data-revisar': f.id,
-    on: { click: ev => { ev.stopPropagation(); abrirRevisar(f, ctx, S); } } }, icono('send'), 'Revisar y enviar') : null;
+    on: { click: ev => { ev.stopPropagation(); abrirRevisar(f, ctx, S); } } }, icono('doc'), 'Revisar y preparar') : null;
   return celda(h('span', { class: 'fila', style: { gap: 'var(--s-1)' } }, b, hecho), pendiente ? botonOtraVia(f, ctx, S) : null);
 }
 
@@ -454,12 +456,12 @@ function pintarTabla(filas, ctx, S, sel, enPlazoDe, fresco) {
     if (S.filtroAccount) base = base.filter(f => (f.account || 'sin account') === S.filtroAccount);
     quitarAcc.hidden = !S.filtroAccount;
     quitarAcc.replaceChildren(icono('cerrar'), `Quitar «${S.filtroAccount}»`);
-    const yaApp = f => (S.accInf && estadoInforme(S.accInf, f.cliente_id, f.mes).enviado ? 1 : 0);   // ronda U: lo enviado desde la app baja
+    const yaApp = f => (S.accInf && estadoInforme(S.accInf, f.cliente_id, f.mes).enviado ? 1 : 0);   // solo los envíos confirmados desde la app bajan
     base.sort((a, b) => yaApp(a) - yaApp(b) || EST[a.estado].orden - EST[b.estado].orden || (b.dias_retraso || 0) - (a.dias_retraso || 0) || a.cliente.localeCompare(b.cliente, 'es') || b.mes.localeCompare(a.mes));
     caja.replaceChildren(tablaDensa({
       filas: base, porPagina: MOVIL() ? 10 : 25,
       buscar: { campos: ['cliente', 'account'], placeholder: 'Buscar cliente o account' },
-      // Ronda U (#5): la fila es un INFORME → lleva al informe (pendiente: el panel «Revisar y enviar»; si no, el informe del cliente).
+      // Ronda U (#5): la fila es un INFORME → lleva al informe (pendiente: el panel «Revisar y preparar»; si no, el informe del cliente).
       alPulsar: f => (PENDIENTES.has(f.estado) && !(S.accInf && estadoInforme(S.accInf, f.cliente_id, f.mes).enviado) ? abrirRevisar(f, ctx, S) : ctx.navegar(`informe-cliente/${f.cliente_id}`)), puedePulsar: f => !!f.cli.detalle,
       columnas: [
         { clave: 'cliente', titulo: 'Cliente', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente(f.cli),
@@ -469,7 +471,7 @@ function pintarTabla(filas, ctx, S, sel, enPlazoDe, fresco) {
         { clave: 'hecho', titulo: 'Hecho (ClickUp)', valor: f => (f.hecho ? 1 : f.tarea ? 0.5 : 0), celda: celdaHecho },
         { clave: 'estado', titulo: 'Enviado (Desk)', valor: f => EST[f.estado].orden, celda: f => celdaEnviado(f, enPlazoDe(f)) },
         S.D.historico?.estado === 'importado' ? { clave: 'hoja', titulo: 'Hoja de Zoho', valor: f => (f.diferencia ? 0 : 1), celda: f => celdaHoja(f) } : null,
-        { clave: 'dias_retraso', titulo: 'Retraso', num: true, celda: f => (f.estado === 'exento' || f.estado === 'no_aplica') ? sub('no aplica') : f.dias_retraso ? h('b', { style: { color: f.plazo === 'rojo' ? 'var(--bad-ink)' : 'var(--warn-ink)' } }, fmt.plural(f.dias_retraso, 'día', 'días')) : (PENDIENTES.has(f.estado) ? 'en plazo' : 'a tiempo') },
+        { clave: 'dias_retraso', titulo: 'Retraso', num: true, celda: f => (f.estado === 'exento' || f.estado === 'no_aplica') ? sub('no aplica') : f.dias_retraso ? h('b', { style: { color: f.plazo === 'rojo' ? 'var(--bad-ink)' : 'var(--warn-ink)' } }, fmt.plural(f.dias_retraso, 'día', 'días')) : (PENDIENTES.has(f.estado) ? 'en plazo' : f.plazo === 'gris' ? 'fecha por comprobar' : 'a tiempo') },
       ].filter(Boolean),
       etiquetaFila: f => `${f.cliente}: ${EST[f.estado].texto}. Abrir el informe`,
       vacio: { titulo: 'Nada con este filtro', porque: 'Cambia el estado o quita el filtro de account.', celebrar: chips.valor() === 'pendientes' },
@@ -478,7 +480,7 @@ function pintarTabla(filas, ctx, S, sel, enPlazoDe, fresco) {
   S.repintarTabla = repintar;
   repintar();
   return h('div', { id: 'inf-tabla' }, panel({ titulo: varios ? `Informes de ${listaMeses(sel)}` : `Informes de ${nombreMes(sel[0])}`, icono: 'doc',
-    sub: MOVIL() ? 'Lo pendiente, arriba: «Revisar y enviar» en cada fila.' : 'Lo pendiente, arriba: «Revisar y enviar» abre el informe, el análisis y el correo en un panel. «Enviado por otra vía» cuenta como enviado, con motivo.',
+    sub: MOVIL() ? 'Lo pendiente, arriba: «Revisar y preparar» en cada fila.' : 'Lo pendiente, arriba: «Revisar y preparar» guarda un borrador. El PDF se envía desde Desk; después marca «Enviado por otra vía», con motivo.',
     acciones: h('div', { class: 'fila' }, frescura(fresco), comoSeCuenta, quitarAcc) },
   h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja));
 }

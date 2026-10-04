@@ -1030,10 +1030,16 @@ async function pintarOriginal(zona, ctx, ind) {
 }
 
 // ===================================================================== pantalla
+function panelNominal249(ctx) {
+  if (ctx.real?.id !== 'tomas' || ctx.persona?.id !== 'tomas') return false;
+  const activo = p => p?.estado === 'activo' && p.activo !== false && Array.isArray(p.puestos) && p.puestos.includes('direccion');
+  if (!activo(ctx.real) || !activo(ctx.persona) || !Array.isArray(ctx.datos?.personas)) return false;
+  const actuales = ctx.datos.personas.filter(p => p?.id === 'tomas');
+  return actuales.length === 1 && activo(actuales[0]);
+}
 async function pintar(cont, ctx) {
   cont.classList.add('pila');
-  const esDir = p => (p?.puestos || []).includes('direccion');
-  if (!esDir(ctx.real) || !esDir(ctx.persona)) {
+  if (!panelNominal249(ctx)) {
     cont.append(vacio({ icono: 'candado', titulo: 'Solo Tomás', texto: 'El panel de dirección solo lo ve Tomás, y no se abre con «ver como».' }));
     return;
   }
@@ -1044,16 +1050,19 @@ async function pintar(cont, ctx) {
     cont.append(vacio({ icono: 'alert', tono: 'aviso', titulo: 'Sin datos del panel de dirección', texto: `${e.message}. Hay que volver a generar el panel y recargar.`, quien: 'el equipo técnico' }));
     return;
   }
+  if (!panelNominal249(ctx) || (ctx.vigente && !ctx.vigente())) return;
   const zona = h('div', { class: 'pila' });
   let actual = null;
+  let generacion = 0;
   const mundo = chipsFiltro({ opciones: MUNDOS, valor: 'resumen', clave: 'panel-direccion-mundo-v4', etiqueta: 'Qué quieres ver', alCambiar: v => cambiar(v) });
   async function cambiar(v) {
+    const turno = ++generacion;
     actual = v;
     zona.replaceChildren();
     if (v === 'empresa') await pintarEmpresa(zona, ctx, ind);
     else if (v === 'original') await pintarOriginal(zona, ctx, ind);
     else if (v === 'captacion') await pintarCaptacion(zona, ctx, ind);
-    else await pintarResumenV4(zona, ctx, { irA: x => { mundo.querySelectorAll('button').forEach(b => { if (b.textContent.startsWith(MUNDOS.find(m => m.valor === x)?.texto || '¿')) b.click(); }); } });
+    else await pintarResumenV4(zona, { ...ctx, vigente: () => turno === generacion && (!ctx.vigente || ctx.vigente()) }, { irA: x => { mundo.querySelectorAll('button').forEach(b => { if (b.textContent.startsWith(MUNDOS.find(m => m.valor === x)?.texto || '¿')) b.click(); }); } });
   }
   const mas = menuMas({ texto: 'Panel original', etiqueta: 'Panel original y descarga', items: [
     { texto: 'Panel original y descarga', icono: 'capas', alPulsar: () => cambiar('original') },
@@ -1072,10 +1081,34 @@ const pctV = (v, d = 1) => (v === null || v === undefined || Number.isNaN(v) ? '
 const eurV = v => (v === null || v === undefined ? '—' : `${v < 0 ? '−' : ''}${fmt.eur(Math.abs(v))}`);
 const planDeV = t => { const m = /([\d.]+)\s*→\s*([\d.]+)\s*→\s*([\d.]+)/.exec(t || ''); return m ? m.slice(1, 4).map(x => Number(x.replace(/\./g, ''))) : []; };
 
+// 246: conserva los mismos nodos y cálculos de tarjetaKpi, distribuidos en una
+// fila comparable. Tendencia, umbral, contexto y fuente quedan en su detalle.
+function indicadorDireccion246(opciones) {
+  const tarjeta = tarjetaKpi(opciones);
+  const titulo = tarjeta.querySelector(':scope > .tt');
+  const valor = tarjeta.querySelector(':scope > .tv');
+  const comparacion = tarjeta.querySelector(':scope > .tc');
+  const detalle = [...tarjeta.children].filter(n => n !== titulo && n !== valor && n !== comparacion);
+  if (valor) { valor.style.fontSize = '14px'; valor.style.lineHeight = '1.3'; }
+  if (comparacion) { comparacion.style.fontSize = '12px'; comparacion.style.lineHeight = '1.3'; }
+  const estilo = { padding: '7px 9px', verticalAlign: 'middle', whiteSpace: 'normal', fontSize: '13px', lineHeight: '1.3', overflowWrap: 'anywhere', textTransform: 'none', letterSpacing: 'normal' };
+  return h('tr', {},
+    h('th', { scope: 'row', style: { ...estilo, fontWeight: 'normal', width: '35%' } }, titulo),
+    h('td', { style: { ...estilo, width: '22%' } }, valor),
+    h('td', { style: { ...estilo, width: '31%' } }, comparacion),
+    h('td', { style: { ...estilo, width: '12%' } }, h('details', {},
+      h('summary', { 'aria-label': `Tendencia, fuente y límites de ${opciones.etiqueta}`, class: 'sub', style: { minHeight: '44px', display: 'flex', alignItems: 'center', cursor: 'pointer' } }, 'Detalle'),
+      h('div', { class: 'pila', style: { minWidth: '0' } }, detalle))));
+}
+
 async function pintarResumenV4(zona, ctx, { irA } = {}) {
+  const identidad = JSON.stringify([ctx.real?.id, ctx.persona?.id]);
+  const vigente = () => zona.isConnected && panelNominal249(ctx) && (!ctx.vigente || ctx.vigente()) && identidad === JSON.stringify([ctx.real?.id, ctx.persona?.id]) && (!ctx.veModulo || ctx.veModulo('panel-direccion'));
+  if (!vigente()) return;
   zona.append(esqueleto({ lineas: 2, tarjetas: 4 }));
   const leer = n => ctx.datosModulo(n).catch(() => null);
   const [f, cu, im, fin, vro] = await Promise.all([leerFinanzas(ctx), leer('finanzas/cuadre'), leer('finanzas/impagos'), leer('finanzas/finanzas'), ctx.veModulo('ventas-ro') ? leer('ventas_ro/ventas_ro') : null]);
+  if (!vigente()) return;
   const dir = Array.isArray(f?.direccion) ? f.direccion[0] : null;
   if (!dir) { zona.replaceChildren(vacioLinea('Sin Finanzas de dirección: las cifras del resumen salen solo de allí y no se han podido leer.', { icono: 'alert', quien: 'Agus' })); return; }
   const n = dir.numero || {}, cr = dir.cuota_recurrente || {}, cj = dir.caja || {}, eq = dir.equipo || {}, kpi = dir.kpi || {};
@@ -1127,34 +1160,38 @@ async function pintarResumenV4(zona, ctx, { irA } = {}) {
     const mesesCuo = Array.from({ length: 12 }, (_, i) => mesMas(ultM, i - 11));
     const mV = Object.keys(mesesV).sort().filter(m => m <= mVro).slice(-12);
     const cpc = cpcDe(mVro);
-    return h('div', { class: 'tiles', 'data-pd-tarjetas': '' },
-      tarjetaKpi({ icono: 'escudo', etiqueta: 'Caja y meses de caja', valor: fmt.num(cj.meses, 1), unidad: `meses · ${fmt.eur(cj.total)}`, num: cj.meses, estado: ESTADO.meses_caja(cj.meses), mejorSi: 'alto', comparar: c,
+    return h('div', { class: 'tabla-scroll', 'data-pd-tarjetas': '', style: { maxWidth: '100%', overflowX: 'auto' }, tabIndex: 0, 'aria-label': 'Indicadores de dirección comparables' },
+      h('table', { class: 'densa', style: { width: '100%', minWidth: '580px', tableLayout: 'fixed' } },
+      h('caption', { style: { textAlign: 'left', fontSize: '12px' } }, 'Indicadores · mismas fuentes y comparación seleccionada'),
+      h('thead', {}, h('tr', {}, ['Indicador','Valor','Comparación','Fuente / detalle'].map(t => h('th', { scope: 'col', style: { fontSize: '12px', textTransform: 'none', letterSpacing: 'normal' } }, t)))),
+      h('tbody', {},
+      indicadorDireccion246({ icono: 'escudo', etiqueta: 'Caja y meses de caja', valor: fmt.num(cj.meses, 1), unidad: `meses · ${fmt.eur(cj.total)}`, num: cj.meses, estado: ESTADO.meses_caja(cj.meses), mejorSi: 'alto', comparar: c,
         comparaciones: { mes_ant: { ref: cj.meses_31ago, texto: 'frente al 31-ago', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` }, anio_ant: { sinDato: 'Sin saldo de bancos de hace un año en la app' }, objetivo: { ref: 2, texto: 'frente al mínimo de 2 meses', modo: 'abs', formato: v => `${fmt.num(v, 1)} meses` } },
         contexto: `Caja de hoy ÷ gasto medio ${fmt.eur(cj.gasto_medio)} al mes, si no entrara nada`, umbral: UMBRALES.meses_caja, fuente: { texto: 'Holded en vivo', href: '#/finanzas/cobros' }, alPulsar: () => { location.hash = '#/finanzas'; }, ir: 'Ver la caja a 90 días' }),
-      tarjetaKpi({ icono: 'euro', etiqueta: `Ingresos de ${nomMesV(ultM)}`, valor: fmt.eur(n.ingresos), num: n.ingresos, estado: '', mejorSi: 'alto', comparar: c,
+      indicadorDireccion246({ icono: 'euro', etiqueta: `Ingresos de ${nomMesV(ultM)}`, valor: fmt.eur(n.ingresos), num: n.ingresos, estado: '', mejorSi: 'alto', comparar: c,
         serie: m12.map(m => porMes.get(m)?.ing ?? null), serieX: m12, formatoSerie: v => fmt.eur(v),
         comparaciones: { mes_ant: { ref: porMes.get(prevM)?.ing, texto: `frente a ${nomMesV(prevM)}` }, anio_ant: { ref: porMes.get(anioM)?.ing, texto: `frente a ${nomMesV(anioM)} de ${anioM.slice(0, 4)}` }, objetivo: { ref: pygDe.get(ultM)?.plan_ing, texto: 'frente al plan del mes' } },
         contexto: `Enero-agosto: ${fmt.eur(dir.anio?.ing)} · sin IVA`, umbral: { texto: 'Sin umbral propio: se lee contra el plan del mes', colorea: false }, fuente: { texto: 'Holded', href: '#/finanzas' } }),
-      tarjetaKpi({ icono: 'sube', etiqueta: 'Margen bruto · media de 3 meses', valor: pctV(mbU), num: mbU, estado: ESTADO.margen_bruto(mbU), mejorSi: 'alto', comparar: c,
+      indicadorDireccion246({ icono: 'sube', etiqueta: 'Margen bruto · media de 3 meses', valor: pctV(mbU), num: mbU, estado: ESTADO.margen_bruto(mbU), mejorSi: 'alto', comparar: c,
         serie: m12.map(mb3), serieX: m12, formatoSerie: v => pctV(v), umbralSerie: 35,
         comparaciones: { mes_ant: { ref: mb3(prevM), texto: `frente a la media hasta ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025 no tiene el coste de entrega fiable' }, objetivo: { ref: 35, texto: 'frente al 35 %', modo: 'puntos' } },
         contexto: `Ingresos menos el equipo de entrega · enero-agosto: ${pctV(kpi.mb)}`, umbral: UMBRALES.margen_bruto, fuente: { texto: 'cierre de Sofía', href: '#/finanzas/cuadre' } }),
-      tarjetaKpi({ icono: 'eq', etiqueta: 'Peso del equipo sobre ingresos', valor: pctV(pesoU), num: pesoU, estado: ESTADO.peso_equipo(pesoU), mejorSi: 'bajo', comparar: c,
+      indicadorDireccion246({ icono: 'eq', etiqueta: 'Peso del equipo sobre ingresos', valor: pctV(pesoU), num: pesoU, estado: ESTADO.peso_equipo(pesoU), mejorSi: 'bajo', comparar: c,
         serie: m12.map(m => (m >= '2026-01' ? pesoDe(m) : null)), serieX: m12, formatoSerie: v => pctV(v), umbralSerie: 55,
         comparaciones: { mes_ant: { ref: pesoDe(prevM), texto: `frente a ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: '2025: el equipo va repartido por ingresos' }, objetivo: { ref: 55, texto: 'frente al 55 %', modo: 'puntos' } },
         contexto: `Año: ${pctV(kpi.peso_equipo_anio)} · solo agregado, nunca sueldos de una persona`, umbral: UMBRALES.peso_equipo, fuente: { texto: 'cierre de Sofía, solo totales', href: '#/finanzas/cuadre' } }),
-      tarjetaKpi({ icono: 'baja', etiqueta: 'Pérdida de cuota al mes', valor: pctV(P.perdida_pct), num: P.perdida_pct, estado: '', mejorSi: 'bajo', comparar: c,
+      indicadorDireccion246({ icono: 'baja', etiqueta: 'Pérdida de cuota al mes', valor: pctV(P.perdida_pct), num: P.perdida_pct, estado: '', mejorSi: 'bajo', comparar: c,
         serie: mesesCuo.map(perdidaDe), serieX: mesesCuo, formatoSerie: v => pctV(v),
         comparaciones: { mes_ant: { num: perdidaDe(ultM), ref: perdidaDe(prevM), texto: `${nomMesV(ultM)} frente a ${nomMesV(prevM)}`, modo: 'puntos' }, anio_ant: { sinDato: 'Sin la media de hace un año' }, objetivo: { sinDato: 'Sin objetivo firmado de pérdida de cuota' } },
         contexto: `Media de 6 meses: rebajas ${pctV(P.rebajas_pct)} + bajas ${pctV(P.bajas_pct)} · subidas +${pctV(P.subidas_pct)} · 12 meses: −${fmt.eur(P.rebajas_12)} en rebajas, −${fmt.eur(P.bajas_12)} en bajas`,
         umbral: UMBRALES.perdida_cuota, fuente: { texto: 'puente de Holded', href: '#/finanzas/ingresos' } }),
-      tarjetaKpi({ icono: 'target', etiqueta: `Coste de captar · ${nomMesV(mVro)}`, valor: cpc === null ? null : fmt.eur(cpc), num: cpc, sinDato: 'sin firmados en el mes', unidad: cpc === null ? '' : `${fmt.eur(mesesV[mVro]?.inversion)} ÷ ${mesesV[mVro]?.firmados}`,
+      indicadorDireccion246({ icono: 'target', etiqueta: `Coste de captar · ${nomMesV(mVro)}`, valor: cpc === null ? null : fmt.eur(cpc), num: cpc, sinDato: 'sin firmados en el mes', unidad: cpc === null ? '' : `${fmt.eur(mesesV[mVro]?.inversion)} ÷ ${mesesV[mVro]?.firmados}`,
         estado: cpc === null ? '' : colorCifra('coste_cliente', cpc), mejorSi: 'bajo', comparar: c, serie: mV.map(cpcDe), serieX: mV, formatoSerie: v => fmt.eur(v), umbralSerie: 700,
         comparaciones: { mes_ant: { ref: cpcDe(mesMas(mVro, -1)), texto: `frente a ${nomMesV(mesMas(mVro, -1))}`, formato: v => fmt.eur(v) }, anio_ant: { sinDato: 'El embudo de RO empieza en 2026' }, objetivo: { ref: 700, texto: 'frente a los 700 € de la regla', modo: 'abs', formato: v => fmt.eur(v) } },
         contexto: 'Solo publicidad de Meta ÷ firmados (el coste completo de ventas aún no está separado)', umbral: { texto: 'RO: verde ≤ 700 € · ámbar hasta 840 € · rojo por encima · parar por encima de 2.500 €' },
-        fuente: { texto: 'Meta y GHL', href: '#/ventas-ro' }, alPulsar: () => { location.hash = '#/ventas-ro'; }, ir: 'Abrir Ventas de RO' }));
+        fuente: { texto: 'Meta y GHL', href: '#/ventas-ro' }, alPulsar: () => { location.hash = '#/ventas-ro'; }, ir: 'Abrir Ventas de RO' }))));
   };
-  const pintarCifras = c => zonaCifras.replaceChildren(h('div', { class: 'dos iguales' }, cifraQueManda(c), panelCuota), tarjetas(c));
+  const pintarCifras = c => { if (vigente()) zonaCifras.replaceChildren(h('div', { class: 'dos iguales' }, cifraQueManda(c), panelCuota), tarjetas(c)); };
 
   // ---- 5 · lo que pide tu decisión (máximo 5, con su botón al lado)
   const vencidos60 = imp.mas_60 ?? a.impagos?.mas_60 ?? 0;
@@ -1186,6 +1223,7 @@ async function pintarResumenV4(zona, ctx, { irA } = {}) {
   // ---- 7 · clientes: altas y bajas de 12 meses y cohortes
   const AB = (dir.altas_bajas || []).filter(x => !x.curso).slice(-12);
   const coh = await leer('dinero_cliente/cohortes');
+  if (!vigente()) return;
   const filasDe = blk => (blk?.filas || []).map(x => ({ etiqueta: `${nomMesV(x.m).slice(0, 3)} ${x.m.slice(2, 4)}`, n: x.n, valores: x.pct }));
   const panelClientes = panel({ titulo: 'Clientes: altas, bajas y cuánto se quedan', icono: 'users', sub: 'Cada mes, los que entran sobre cero y los que se van debajo · y, por mes de alta, el % que sigue (un solo color: más oscuro = más se queda)' },
     h('div', { class: 'cuerpo pila' },
