@@ -30,7 +30,7 @@ HORAS="${RO_HORAS:-72}"
 # Grok Fast el volumen. En F5.10 manda la gravedad de cada fallo en PENDIENTES_LOGICA.md: seguridad → Opus, datos y
 # funcional → Sonnet, presentación → Grok. Si un modelo de pago se queda sin saldo, ese paso baja un escalón
 # (Opus → Sonnet → Grok; Fable → Opus → Sonnet) y la noche sigue: nunca se para por saldo.
-MODELO="${RO_MODELO:-grok-code-fast-1}"                  # el volumen
+MODELO="${RO_MODELO:-grok-4.7-high}"                     # el volumen (nombre que da el Cursor de Tomás, 4-oct; sin «-fast»)
 MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"        # planea y diagnostica
 MODELO_OPUS="${RO_MODELO_OPUS:-claude-opus-5-5}"         # lo crítico (sin «fast»)
 MODELO_SONNET="${RO_MODELO_SONNET:-claude-sonnet-5-5}"   # lo que pide pensar

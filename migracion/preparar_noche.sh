@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 INSTALAR=0; PROBAR=0
 for a in "$@"; do [ "$a" = "--instalar" ] && INSTALAR=1; [ "$a" = "--probar-cursor" ] && PROBAR=1; done
-MODELO="${RO_MODELO:-grok-code-fast-1}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"; MODELO_OPUS="${RO_MODELO_OPUS:-claude-opus-5-5}"; MODELO_SONNET="${RO_MODELO_SONNET:-claude-sonnet-5-5}"
+MODELO="${RO_MODELO:-grok-4.7-high}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"; MODELO_OPUS="${RO_MODELO_OPUS:-claude-opus-5-5}"; MODELO_SONNET="${RO_MODELO_SONNET:-claude-sonnet-5-5}"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"
 fallos=0; avisos=0
 ok()   { printf "  ✔ %s\n" "$1"; }
@@ -70,8 +70,12 @@ if command -v pnpm >/dev/null; then ok "pnpm $(pnpm --version)"
 elif [ $INSTALAR = 1 ] && corepack enable 2>/dev/null && corepack prepare pnpm@10.28.0 --activate >/dev/null 2>&1; then ok "pnpm instalado con corepack"
 else mal "pnpm" "corepack enable && corepack prepare pnpm@10.28.0 --activate  (o: bash migracion/preparar_noche.sh --instalar)"; fi
 P=$(python3 -c 'import sys;print(sys.version_info[1])' 2>/dev/null); [ -n "$P" ] && [ "$P" -ge 11 ] && ok "Python 3.$P" || mal "Python 3.11 o superior" "brew install python@3.12"
-python3 -c "import psycopg" 2>/dev/null && ok "psycopg (Python ↔ Postgres)" || {
-  [ $INSTALAR = 1 ] && python3 -m pip install -q "psycopg[binary]" && ok "psycopg instalado" || mal "falta psycopg" "python3 -m pip install 'psycopg[binary]'"; }
+# Python de Homebrew no deja instalar con pip a secas (PEP 668): se reintenta para el usuario. Van las del servidor
+# (psycopg, Pillow, playwright…): la noche las usa en las baterías y en el ensayo.
+pip_instalar() { python3 -m pip install -q "$@" 2>/dev/null || python3 -m pip install -q --user --break-system-packages "$@"; }
+if python3 -c "import psycopg, PIL" 2>/dev/null; then ok "psycopg y Pillow (Python ↔ Postgres, imágenes)"
+elif [ $INSTALAR = 1 ] && pip_instalar -r despliegue/requirements.txt; then ok "dependencias de Python instaladas (despliegue/requirements.txt)"
+else mal "faltan dependencias de Python" "python3 -m pip install --user --break-system-packages -r despliegue/requirements.txt"; fi
 if docker info >/dev/null 2>&1; then ok "Docker en marcha"
 else mal "Docker no responde" "abre Docker Desktop (u OrbStack) y espera a que diga «running»"; fi
 command -v psql >/dev/null && ok "psql $(psql --version | grep -oE '[0-9]+\.[0-9]+' | head -1)" || ojo "falta psql" "brew install libpq && brew link --force libpq  (lo usa v2/packages/db/scripts/rehacer_base.sh)"
@@ -111,8 +115,8 @@ for puerto in 3000 4000 5432 8771 8780 8781 4001; do
   if lsof -nP -iTCP:$puerto -sTCP:LISTEN >/dev/null 2>&1; then
     quien=$(lsof -nP -iTCP:$puerto -sTCP:LISTEN | awk 'NR==2{print $1}')
     [ "$puerto" = 5432 ] && [ "$quien" != "postgres" ] && [ "$quien" != "com.docke" ] && [ "$quien" != "docker" ] \
-      && ojo "el puerto 5432 lo usa «$quien»" "si es otro Postgres, páralo o cambia el puerto en v2/docker-compose.yml" \
-      || { [ "$puerto" != 5432 ] && ojo "el puerto $puerto está ocupado por «$quien»" "ciérralo antes de empezar"; }
+      && ojo "el puerto 5432 lo usa «${quien}»" "si es otro Postgres, páralo o cambia el puerto en v2/docker-compose.yml" \
+      || { [ "$puerto" != 5432 ] && ojo "el puerto $puerto está ocupado por «${quien}»" "ciérralo antes de empezar"; }
   else ok "puerto $puerto libre"; fi
 done
 
