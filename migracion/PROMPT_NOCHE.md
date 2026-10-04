@@ -14,6 +14,8 @@ c. Ciérralo con su comprobación (casi siempre `bash migracion/puerta.sh <fase>
 d. Si sale bien: commit pequeño con el código del paso en el mensaje, márcalo ✅ con la hora y una línea de resultado (con el informe de la puerta), y sigue con el siguiente paso SIN PARAR.
 e. Si falla: sube el «intento N/3» de su línea, apunta en «Intentos y notas» «intento N: hipótesis → resultado», cambia de enfoque y vuelve a probar. Tras 3 intentos fallidos, aplica el PLAN B que está escrito en ese paso, márcalo ⚠ con el motivo, y sigue con el siguiente paso.
 
+PLAN DE LA VUELTA: si `migracion/PLAN_VUELTA.md` empieza por «PLAN: VIGENTE» y nombra el paso en curso, síguelo (lo ha escrito el planificador para ti). Cuando cierres ese paso (✅ o ⚠), o si el plan no funciona tras 2 intentos, cambia su primera línea a `PLAN: GASTADO · <motivo en una línea>` y termina la vuelta: el planificador escribirá el siguiente. Si no hay plan o es de otro paso, trabaja con PROMPTS_CURSOR.md como siempre.
+
 REGLAS QUE NO SE NEGOCIAN:
 - No te pares, no pidas permiso y no hagas preguntas: no hay nadie hasta mañana. Si dudas, elige la opción más conservadora (la que no cambia nada que se vea y se deshace fácil), apúntala en «Preguntas para Tomás» de `migracion/NOTAS_NOCHE.md` y sigue.
 - No digas «hecho» sin la salida de la orden que lo demuestra. Nunca relajes, saltes ni borres una prueba o una comprobación para que pase.

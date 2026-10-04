@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 INSTALAR=0; PROBAR=0
 for a in "$@"; do [ "$a" = "--instalar" ] && INSTALAR=1; [ "$a" = "--probar-cursor" ] && PROBAR=1; done
-MODELO="${RO_MODELO:-claude-fable-5-1}"
+MODELO="${RO_MODELO:-claude-sonnet-5-5}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"
 fallos=0; avisos=0
 ok()   { printf "  ✔ %s\n" "$1"; }
@@ -77,9 +77,13 @@ if command -v cursor-agent >/dev/null; then
     ojo "cursor-agent no anuncia -p / --force / --model" "mira «cursor-agent --help» y lánzalo con RO_AGENTE=\"cursor-agent <opciones> {MODELO}\" bash migracion/noche.sh"
   fi
   if [ $PROBAR = 1 ]; then
-    r="$(cursor-agent -p --force --output-format text --model "$MODELO" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
-    echo "$r" | grep -q "OK" && ok "Cursor responde con el modelo $MODELO" \
-      || mal "Cursor no responde con el modelo $MODELO: $r" "elige el nombre exacto del modelo y pásalo: RO_MODELO=<nombre> (cursor-agent --help o la lista de modelos de Cursor)"
+    for par in "RO_MODELO:$MODELO" "RO_MODELO_PLAN:$MODELO_PLAN"; do
+      var="${par%%:*}"; m="${par#*:}"
+      r="$(cursor-agent -p --force --output-format text --model "$m" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
+      echo "$r" | grep -q "OK" && ok "Cursor responde con el modelo $m ($var)" \
+        || mal "Cursor no responde con el modelo $m: $r" "elige el nombre exacto y pásalo: $var=<nombre> (cursor-agent --help o la lista de modelos de Cursor)"
+    done
+    echo "$ayuda" | grep -q -- "--mode" && ok "cursor-agent tiene --mode: si admite «plan», RO_AGENTE_PLAN=\"cursor-agent -p --mode plan --output-format text --model {MODELO}\" deja al planificador en solo lectura"
   fi
 else
   ojo "no encuentro la orden «cursor-agent»" "para 8 horas sin nadie hace falta: curl https://cursor.com/install -fsS | bash && cursor-agent login. Sin ella, se lanza desde la ventana de Cursor (PLAN_MAESTRO §6)"

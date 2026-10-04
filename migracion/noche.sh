@@ -2,9 +2,15 @@
 # migracion/noche.sh · lanza a Cursor (orden de terminal «cursor-agent») con el prompt de la noche y lo VUELVE A LANZAR
 # cada vez que termina una vuelta, hasta que migracion/PROGRESO.md diga «ESTADO: TERMINADO» o llegue la hora.
 #
-#   bash migracion/noche.sh                    # 8 horas desde ahora, modelo por defecto
-#   RO_HORAS=7 RO_MODELO=<modelo> bash migracion/noche.sh
+#   bash migracion/noche.sh                    # 8 horas desde ahora, modelos por defecto
+#   RO_HORAS=7 RO_MODELO=<ejecuta> RO_MODELO_PLAN=<planea> bash migracion/noche.sh
 #   RO_AGENTE="cursor-agent -p --force --model {MODELO}" bash migracion/noche.sh   # si tu versión usa otras opciones
+#   RO_AGENTE_PLAN="cursor-agent -p --mode plan --model {MODELO}"                 # si tu versión tiene modo plan
+#
+# Dos modelos, como trabaja Tomás (4-oct): Fable 5.1 PLANEA cada paso (vuelta corta, solo escribe
+# migracion/PLAN_VUELTA.md) y Sonnet 5.5 lo EJECUTA en las vueltas siguientes. Se vuelve a planear al cambiar de paso,
+# cuando el plan no funciona (el ejecutor escribe «PLAN: GASTADO») o tras dos vueltas sin avance. Si la vuelta de plan
+# falla dos veces seguidas (límite de uso), se sigue solo con el ejecutor: la noche no se para por el planificador.
 #
 # Mantiene el Mac despierto (caffeinate) mientras dura. Registros: ~/RO_MIGRACION/logs/vuelta_NNN.log.
 # Para pararlo: Ctrl+C (Cursor termina la vuelta en curso; el cuaderno queda como esté y se puede seguir mañana).
@@ -13,13 +19,17 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"; LOGS="$FUERA/logs"; mkdir -p "$LOGS"
 HORAS="${RO_HORAS:-8}"
-MODELO="${RO_MODELO:-claude-fable-5-1}"
+MODELO="${RO_MODELO:-claude-sonnet-5-5}"            # ejecuta
+MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"   # planea
 PROMPT="$RAIZ/migracion/PROMPT_NOCHE.md"
 CUADERNO="$RAIZ/migracion/PROGRESO.md"
+PROMPT_PLAN="$RAIZ/migracion/PROMPT_PLAN.md"
+PLAN="$RAIZ/migracion/PLAN_VUELTA.md"
 
 # --- la orden de Cursor ----------------------------------------------------------------------------------------
-if [ -n "${RO_AGENTE:-}" ]; then AGENTE="${RO_AGENTE//\{MODELO\}/$MODELO}"
+if [ -n "${RO_AGENTE:-}" ]; then AGENTE="${RO_AGENTE//\{MODELO\}/$MODELO}"; PLANTILLA="$RO_AGENTE"
 elif command -v cursor-agent >/dev/null; then AGENTE="cursor-agent -p --force --output-format text --model $MODELO"
+  PLANTILLA="cursor-agent -p --force --output-format text --model {MODELO}"
 else
   echo "✘ No encuentro la orden «cursor-agent» (la terminal de Cursor)."
   echo "  Instálala: curl https://cursor.com/install -fsS | bash   y entra con: cursor-agent login"
@@ -78,19 +88,36 @@ fi
 # --- el Mac despierto --------------------------------------------------------------------------------------------
 if command -v caffeinate >/dev/null; then caffeinate -dimsu -w $$ & fi
 
-echo "Noche de migración · hasta $RO_FIN_NOCHE · modelo $MODELO"
-echo "Orden: $AGENTE \"<PROMPT_NOCHE.md>\""
+PLANTILLA_PLAN="${RO_AGENTE_PLAN:-$PLANTILLA}"; AGENTE_PLAN="${PLANTILLA_PLAN//\{MODELO\}/$MODELO_PLAN}"
+
+echo "Noche de migración · hasta $RO_FIN_NOCHE · planea $MODELO_PLAN · ejecuta $MODELO"
+echo "Orden: $AGENTE \"<PROMPT_NOCHE.md>\" · plan: $AGENTE_PLAN \"<PROMPT_PLAN.md>\""
 echo "Cuaderno: $CUADERNO · registros: $LOGS"
 
 terminado() { grep -q "^ESTADO: TERMINADO" "$CUADERNO" 2>/dev/null; }
-huella() { (git rev-parse HEAD; md5 -q "$CUADERNO" 2>/dev/null || md5sum "$CUADERNO" | cut -d' ' -f1) | tr '\n' ' '; }
+suma() { md5 -q "$1" 2>/dev/null || md5sum "$1" 2>/dev/null | cut -d' ' -f1; }
+huella() { (git rev-parse HEAD; suma "$CUADERNO") | tr '\n' ' '; }
+toca_planear() {
+  [ $fallos_plan -ge 2 ] && return 1                     # el planificador no responde: sigue solo el ejecutor
+  [ ! -s "$PLAN" ] || head -1 "$PLAN" | grep -q "PLAN: GASTADO" || [ $sin_avance -eq 2 ]   # una sola vez por atasco
+}
 
-vuelta=0; fallos_seguidos=0; sin_avance=0
+vuelta=0; fallos_seguidos=0; sin_avance=0; fallos_plan=0; planes=0
 while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
+  if toca_planear; then
+    planes=$((planes + 1))
+    log="$LOGS/plan_$(printf %03d $planes).log"; antes_plan="$(suma "$PLAN")"
+    echo "[$(date '+%H:%M')] plan $planes ($MODELO_PLAN) → $log"
+    # shellcheck disable=SC2086
+    $AGENTE_PLAN "$(cat "$PROMPT_PLAN")" > "$log" 2>&1 < /dev/null
+    if [ $? -ne 0 ] || [ "$(suma "$PLAN")" = "$antes_plan" ]; then
+      fallos_plan=$((fallos_plan + 1)); echo "  ⚠ el plan no se escribió ($(tail -1 "$log" | cut -c1-120))"
+    else fallos_plan=0; fi
+  fi
   vuelta=$((vuelta + 1))
   log="$LOGS/vuelta_$(printf %03d $vuelta).log"
   antes="$(huella)"
-  echo "[$(date '+%H:%M')] vuelta $vuelta → $log"
+  echo "[$(date '+%H:%M')] vuelta $vuelta ($MODELO) → $log"
   mensaje="$(cat "$PROMPT")"
   if [ $sin_avance -ge 2 ]; then
     mensaje="$mensaje

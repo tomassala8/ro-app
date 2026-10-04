@@ -97,14 +97,26 @@ N-01 a N-12 salen de la revisión del 4-oct (Claude, hilo de la migración) de c
 
 | Id | Pregunta | Recomendación | Respuesta de Tomás (4-oct) |
 |---|---|---|---|
-| D1 | ¿La persona de proyectos ve la cuota y la rentabilidad por cliente? Hoy ve la pantalla «todo» pero sin cifras | Que la vea, o quitarle la pantalla; la pantalla vacía no vale | Sí: proyectos lo ve todo (cuota, inversión y rentabilidad por cliente). Pendiente: si también ve el dinero de la agencia |
+| D1 | ¿La persona de proyectos ve la cuota y la rentabilidad por cliente? Hoy ve la pantalla «todo» pero sin cifras | Que la vea, o quitarle la pantalla; la pantalla vacía no vale | Sí: proyectos ve la cuota y la inversión de cada cliente y, cuando exista, el beneficio por cliente. El dinero de la agencia lo ven Tomás y administración |
 | D2 | ¿Operaciones puede dar jefaturas, `proyectos` o `tecnico_altas` (acceso a todos los clientes) sin dirección? Hoy sí | Añadirlos a `puestos_solo_tomas` | Sí: los da solo Tomás |
 | D3 | ¿La jefatura de SEO ve todos los correos de clientes en Bandeja? Hoy «todo» | Bajarla a «suyo» o a solo SEO y web | Ni Bandeja entera ni nada: solo las quejas de clientes por SEO o web. Si no se pueden clasificar, por En rojo e Incidencias |
-| D4 | ¿Producción ve Captación? Hoy le llegan filas sin cliente y el detalle de sus clientes (sin dinero) | Proyectar con «resumen» | Producción creativa no ve Captación. Traffickers sí (pendiente: todos los clientes o los suyos) |
+| D4 | ¿Producción ve Captación? Hoy le llegan filas sin cliente y el detalle de sus clientes (sin dinero) | Proyectar con «resumen» | Producción creativa no ve Captación. Los traffickers ven la Captación de todos los clientes |
 | D5 | Menús: ¿8-12 entradas por puesto y el resto en «Más»? | Sí | Sí, a criterio de Claude |
 | D6 | ¿Quitar los ficheros de L-16 también del historial de GitHub? Obliga a reescribir todas las ramas | Sí, mañana, después de la noche | No reescribir el historial; basta con L-16 (los ficheros siguen en disco y la app funciona igual) |
 | D7 | ¿Renombrar la clave de la IA a `RO_ANTHROPIC_API_KEY`? Hay que cambiarla también en Render | Sí, junto con el despliegue | Sí, el día del despliegue |
 | D8 | ¿Copiar las anclas diarias del rastro fuera del Mac? | Sí, cuando se active la copia en R2 | Sí, cuando se active la copia en R2 |
+
+**Cambios de matriz decididos por Tomás (4-oct, 09:42 y 09:45)**. Si Astra no los cierra hoy (fila L-25 sin `arreglado hoy`), van en el motor de la app nueva y en `reglas_permisos.json` y en `modulos/indice.js`, con un caso por línea en `pruebas_seguridad.py`. Compara `modulos_puestos` y `/api/sesion` de los puestos afectados antes y después.
+- `tipos.cuota.si`: añadir `proyectos`.
+- `tipos.rentabilidad_cliente.si`: añadir `proyectos` (el beneficio por cliente aún no existe; queda listo).
+- `tipos.inversion.si`: añadir `proyectos`; `trafficker` pasa a todos los clientes (quitar `cartera: "trafficker"`).
+- `tipos.dinero_empresa.si`: añadir `administracion`, que ve también los totales de la agencia. `caja` y `cobros` se quedan como están (dirección, finanzas de dirección y administración). Finanzas de dirección no se asigna a nadie más que a Tomás; ya está en `puestos_solo_tomas`.
+- `puestos_solo_tomas`: añadir `proyectos`, `tecnico_altas`, `jefa_publicidad`, `jefa_crm` y `jefa_seo` (D2).
+- `indice.js`, Captación: `produccion` no la ve (D4); `trafficker` pasa a `todo`.
+- `indice.js`, Bandeja: `jefa_seo` solo ve las quejas de SEO y web (D3). Si la Bandeja no sabe clasificar por tema, quítasela (`null`) y que las quejas le lleguen por En rojo e Incidencias; no la dejes en `todo`.
+- Técnico de altas: la silla `altas` de L-25.
+- Toca solo esos valores de `indice.js`, nunca el formato: `permisos.py` lo lee con expresiones regulares.
+- Con esos cambios, las respuestas de los puestos afectados cambian a propósito: después de regenerar los vectores, cada ruta que cambie va a `~/RO_MIGRACION/excepciones.txt` con `# L-25 matriz decidida por Tomás el 4-oct`.
 
 ---
 
