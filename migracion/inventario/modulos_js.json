@@ -1939,7 +1939,7 @@
   },
   {
     "fichero": "modulos/_paid_mediciones.js",
-    "lineas": 62,
+    "lineas": 84,
     "es_pantalla": false,
     "pieza_comun": true,
     "imports": [],
@@ -2159,13 +2159,14 @@
   },
   {
     "fichero": "modulos/_prioridades_contexto_337.js",
-    "lineas": 48,
+    "lineas": 84,
     "es_pantalla": false,
     "pieza_comun": true,
     "imports": [
       "./_tarea_ia.js"
     ],
     "ctx_usa": [
+      "clientes",
       "clientesVisibles",
       "datos",
       "hoy",
@@ -2174,7 +2175,8 @@
       "servidor",
       "soloLectura",
       "veModulo",
-      "ver"
+      "ver",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [],
@@ -2388,10 +2390,12 @@
   },
   {
     "fichero": "modulos/_seguimiento_accounts_404.js",
-    "lineas": 55,
+    "lineas": 57,
     "es_pantalla": false,
     "pieza_comun": true,
-    "imports": [],
+    "imports": [
+      "./_metodo_cohorte_305.js"
+    ],
     "ctx_usa": [
       "carteraPorSilla",
       "clientes",
@@ -3030,7 +3034,7 @@
   },
   {
     "fichero": "modulos/captacion.js",
-    "lineas": 1600,
+    "lineas": 1601,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -3174,7 +3178,7 @@
   },
   {
     "fichero": "modulos/crm.js",
-    "lineas": 835,
+    "lineas": 841,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -4494,6 +4498,7 @@
     ],
     "ctx_usa": [
       "api",
+      "hoy",
       "nombre",
       "servidor",
       "titulo",

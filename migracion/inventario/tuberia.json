@@ -386,6 +386,7 @@
     "fuentes_crm/mediciones_cobertura.py",
     "fuentes_crm/oportunidades_cerradas.py",
     "fuentes_crm/pipeline_ultima_valida_496.py",
+    "fuentes_crm/preparar_embudo_offline_669.py",
     "fuentes_crm/probar_adaptadores_ultima_valida_493.py",
     "fuentes_crm/probar_autoridad_ultima_valida_499.py",
     "fuentes_crm/probar_colector_lecturas_504.py",

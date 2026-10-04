@@ -6,7 +6,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 |---|---|
 | Pantallas en el menú (`modulos/indice.js`) | 42 (42 hechas) |
 | Ficheros en `modulos/` | 193 (44 pantallas, 134 piezas comunes) |
-| Líneas de front (módulos + carcasa + estilos) | 48388 |
+| Líneas de front (módulos + carcasa + estilos) | 48455 |
 | Rutas de API en `servir.py` | 37 (22 GET, 15 POST) |
 | Ficheros que enchufan rutas a servir.py | 49 (125 rutas más; 5 con bucle propio) |
 | Rutas distintas que llama el front (`ctx.api`) | 86 |
@@ -19,7 +19,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 | Componentes exportados (`componentes.js`) | 107 |
 | Campos de `ctx` | 43 |
 | Pasos de la tubería | 52 |
-| Generadores `fuentes_*/` | 175 |
+| Generadores `fuentes_*/` | 176 |
 | Baterías de prueba | 66 |
 
 ## Pantallas

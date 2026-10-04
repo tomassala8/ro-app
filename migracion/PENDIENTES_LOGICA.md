@@ -9,7 +9,7 @@ Cómo se usa:
 - **Si existe `~/RO_MIGRACION/PENDIENTES_LOGICA.md`** (Tomás lo deja en el Mac; Astra solo cambia su columna Estado a las 19:00): se juntan las dos por id. Para un id que está en las dos, **manda la Estado del Mac**; las filas que solo están en una, se suman. Nunca se cuenta dos veces.
 - Estados: `abierto` · `arreglado hoy (<commit>)` y `ya estaba` (Cursor no lo rehace; comprueba que su prueba existe en la app nueva) · `decide Tomás (Dn)` (no se toca hasta que esté la decisión, abajo) · `arreglado en v2 (<commit>)` · `pendiente: <motivo>`.
 - **Ficheros que juzgan:** esta noche no se toca ningún `pruebas_*.py` que ya exista ni `despliegue/pruebas_noche.py` (tienen huella y por la mañana se restauran). Una prueba nueva o cambiada de F5.10 va en un fichero NUEVO: `migracion/pruebas_L-<n>.py` o `despliegue/pruebas_solidez_N-<n>.py`. Un fallo que solo se arregla cambiando uno que juzga queda `pendiente: toca un fichero que juzga (lo cambia Tomás de día)`.
-- **Entrega del Mac (4-oct, corte 650):** su tabla de 49 filas (`entrega/PENDIENTES_LOGICA_ORIGEN_LOCAL.md`) está juntada aquí. Solo L-16 tiene cierre formal. Donde la entrega documenta trabajo a medias, el estado dice `abierto · parcial en la entrega (ver entrega/<fichero>)`: **sigue abierto**. En F5.10 se lee ese fichero, se pasan las pruebas que trae y se completa lo que falte; nunca se da por cerrado por asociación.
+- **Entrega del Mac (4-oct, corte 675; antes 650):** su tabla de 49 filas (`entrega/PENDIENTES_LOGICA_ORIGEN_LOCAL.md`) está juntada aquí. Solo L-16 tiene cierre formal. Donde la entrega documenta trabajo a medias, el estado dice `abierto · parcial en la entrega (ver entrega/<fichero>)`: **sigue abierto**. En F5.10 se lee ese fichero, se pasan las pruebas que trae y se completa lo que falte; nunca se da por cerrado por asociación.
 - Sin datos reales: ni nombres de clientes, ni correos, ni importes. «Persona con puesto X» o «cliente de prueba».
 
 Gravedad: **seguridad** (alguien ve o cambia lo que no debe) · **datos** (un número o estado sale mal) · **funcional** (algo no hace lo que debe) · **presentación**.
@@ -104,6 +104,9 @@ Del párrafo «Pendientes» de `ENTREGA_CURSOR_CODEX.md` (4-oct). No son fallos 
 - Consumidores de fecha y mes restantes (`entrega/fechas/consumidores_pendientes.csv`); los que coinciden con L-18 a L-20 y L-22 sí se tocan en F5.10.
 - Baterías globales verdes y restauración operativa.
 - ClickUp y GoHighLevel siguen siendo los sistemas de trabajo. Nada los sustituye esta noche.
+- Del corte 675 (`entrega/675_TRASPASO_PLAN_D_CODEX.md`): agregados antiguos de Paid y CRM sin recalcular; el productor de CRM aún no tiene fuente de cierres históricos (las oportunidades abiertas no la recuperan); las cachés antiguas de intentos CRM (672) no se recalculan porque faltan los mensajes originales. No ampliar etapas del CRM ni «rejuvenecer» fotos viejas como si fueran datos nuevos.
+
+**Reglas del corte 675 que la migración conserva tal cual:** prioridades Operaciones → Accounts → Paid; lo que falta no es 0; fuente histórica ≠ dato actual; reserva ≠ asistencia; stock ganado ≠ venta ni cobro; referencia ≠ objetivo del contrato; fuego ≠ cliente rojo. ClickUp y GoHighLevel operativos y todas las salidas apagadas. 652 y 653 ya están integrados (670) y 658 resuelto (662/663): no son pendientes.
 
 **Ya resuelto en la rama de la migración, no repetir:** `despliegue/base.py` ya traduce a Postgres `BEGIN IMMEDIATE`, `INSERT OR REPLACE` y los disparadores con `WHEN`.
 
