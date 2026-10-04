@@ -1,5 +1,5 @@
 {
-  "name": "@ro/permisos",
+  "name": "@ro/compat",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -19,8 +19,5 @@
   "devDependencies": {
     "@types/node": "^26.6.4",
     "vitest": "^4.1.11"
-  },
-  "dependencies": {
-    "@ro/compat": "workspace:*"
   }
 }

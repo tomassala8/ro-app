@@ -59,6 +59,7 @@ v2/
 ├── apps/api          Nest 12. src/legado/: proxy + RUTAS_EN_NEST (la lista de lo que ya es de Nest).
 ├── packages/db       Prisma 7: 40 modelos + migración 0_base (CHECK, vista, disparadores). Sacado de la base real.
 ├── packages/permisos (fase 4) el motor de permisos en TypeScript. La matriz sigue en reglas_permisos.json.
+├── packages/compat   lo que Python hace distinto de JS (round, json.dumps, huella del rastro, textos, orden, reloj), probado contra Python
 ├── tools/capturas    fotos de cada pantalla, vieja y nueva, y comparación píxel a píxel.
 └── docker-compose.yml Postgres local en 127.0.0.1:5432 (y, con --profile completo, api + web).
 ```

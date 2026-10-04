@@ -26,6 +26,7 @@ Solo hace GET. No escribe nada en la app.
 import argparse
 import hashlib
 import json
+import math
 import re
 import sys
 import urllib.error
@@ -142,16 +143,23 @@ def grabar(a):
     print(f"Grabadas {total} respuestas en {salida} (datos reales: no lo subas a git).")
 
 
+def _numero(o):
+    return isinstance(o, (int, float)) and not isinstance(o, bool)
+
+
 def forma(o):
     if isinstance(o, dict):
         return {k: forma(v) for k, v in o.items()}
     if isinstance(o, list):
         return "lista"
-    return type(o).__name__
+    return "numero" if _numero(o) else type(o).__name__
 
 
 def diferencias(a, b, ruta="", max_n=20):
     out = []
+    # Python escribe 12.0 y JavaScript 12: en el navegador son el mismo número. Se comparan por valor, no por tipo.
+    if _numero(a) and _numero(b):
+        return [] if math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-9) else [f"{ruta or '/'}: {a!r} → {b!r}"]
     if type(a) is not type(b):
         return [f"{ruta or '/'}: tipo {type(a).__name__} → {type(b).__name__}"]
     if isinstance(a, dict):

@@ -7,6 +7,7 @@ Convenciones para todos los pasos:
 - Arrancar y parar: `bash migracion/servicios.sh arrancar|parar|estado [viejo|legado|api|web|todo]`.
 - Cerrar: `bash migracion/puerta.sh <fase>` en VERDE (el informe queda en `FUERA/puertas/<fase>.md`). `--rapido` sirve para iterar, no para cerrar.
 - Commits pequeños, mensaje que empieza por el código del paso: «F2.4 · base.py: …».
+- **Antes de traducir una sola línea de Python o del JS de hoy (F4, F5, F6), lee la «Guía de traducción» del final de este fichero.**
 
 ---
 
@@ -192,3 +193,57 @@ Después, `bash migracion/puerta.sh f7`.
 ## F7.4 · Cierre
 
 Commit, `git push origin migracion/v2`, `ESTADO: TERMINADO` en PROGRESO.md, commit y push.
+
+---
+
+## Guía de traducción (Python → TypeScript, JS de hoy → React)
+
+Una traducción que «funciona» pero redondea, ordena o cuenta distinto no da error: da una diferencia en la puerta a las 4 de la mañana y tres intentos perdidos. Estas son las trampas conocidas. Lo que se puede resolver con código ya está en **`@ro/compat`** (`v2/packages/compat`), probado contra Python de verdad (`pnpm --filter @ro/compat test`). **Úsalo; no lo reescribas.**
+
+**Números**
+- `round(x, n)` redondea al par: `round(2.5) = 2` y `round(0.125, 2) = 0.12`. → `redondear(x, n)`.
+- `f"{x:.2f}"` y `f"{x:,.0f}"` → `formatoFijo(x, 2)` y `formatoFijo(x, 0, true)`. Nunca `toFixed` directo.
+- `/` siempre da float. `//` y `%` redondean hacia abajo → `divEntera`, `modulo`. `int(x)` trunca → `Math.trunc`.
+- En las respuestas, 12.0 y 12 valen lo mismo: el contrato los compara por valor. Dentro de una huella o de un texto, no: `flotante(12)` sale como «12.0».
+
+**Textos**
+- `texto[:140]` y `len(texto)` cuentan caracteres. JS cuenta unidades UTF-16 y parte los emojis. → `cortar`, `longitud`.
+- `sorted()` ordena por punto de código. → `ordenarComoPython` (estable, con tuplas y `reverse` igual que Python). **Nunca `localeCompare`.**
+- `.split()` sin argumento corta por grupos de espacios y quita los vacíos → `s.trim().split(/\s+/).filter(Boolean)`. `.strip()` → `.trim()`.
+- Expresiones regulares: en Python `\w`, `\d` y `\b` entienden acentos y la ñ; en JS no.
+  - Usa la bandera `u` y `[\p{L}\p{N}_]` donde Python ponía `\w`.
+  - `re.match` solo mira el principio del texto.
+  - En `re.sub`, el `\1` de Python es `$1` en JS.
+
+**Verdad y ausencia**
+- `[]`, `{}` y `""` son falsos en Python. En JS, `[]` y `{}` son verdaderos.
+  - `if lista:` → `if (lista.length)`.
+  - `x or y` con listas o diccionarios necesita la comprobación explícita.
+- `d.get(k, defecto)` devuelve `None` si la clave existe con `None`. → `k in d ? d[k] : defecto`, no `d[k] ?? defecto`.
+- `None` es `null`, nunca `undefined`: `JSON.stringify` borra las claves `undefined`, y el contrato dice «falta en la nueva».
+- Comparar `None` con un número da `TypeError` en Python. Si el código de hoy no lo hace, el tuyo tampoco.
+
+**Fechas y horas**
+- La hora de negocio es la de Madrid y respeta `RO_RELOJ`: `horaMadrid()`, `hoyMadrid()`.
+- Las horas de la base son texto UTC «AAAA-MM-DD HH:MM:SS»: `ahoraBaseUtc()`.
+- Nunca `new Date().toISOString()` en una respuesta (milisegundos y «Z»). Nunca un `Date` en una respuesta.
+- `weekday()` empieza el lunes en 0. `getDay()` empieza el domingo en 0.
+
+**JSON, base y respuestas**
+- Las claves salen tal cual, en `snake_case`. Ni camelCase ni claves nuevas.
+- Prisma devuelve `BigInt` y `Decimal`: conviértelos antes de responder (`JSON.stringify` revienta con `BigInt`).
+- 0/1 se quedan como números, no `true`/`false`.
+- Las respuestas se comparan ya leídas, así que los espacios del JSON dan igual. **Las huellas no:**
+  - el rastro encadena `sha256(previa + json.dumps(campos, ensure_ascii=False, sort_keys=True))` → `huellaRastro(previa, campos)`, idéntica byte a byte;
+  - además, Nest y el legado escriben en la MISMA tabla a la vez, así que todo alta en el rastro va dentro de una transacción con el MISMO candado que `base.py`: `SELECT pg_advisory_xact_lock(7262)`. Si no, dos escritores rompen la cadena.
+  - Después de portar el rastro, `/api/rastro/verificar` tiene que seguir diciendo «ok» con filas escritas por los dos.
+- Los mensajes de error y los códigos se copian tal cual, también el 500 genérico «Error interno (el detalle queda en el registro del servidor).».
+
+**Del JS de hoy a React (fase 6)**
+- Mismo DOM y mismas clases (`estilos.css`); shadcn solo donde la pieza es equivalente.
+- Si hoy se pinta HTML desde un texto, en React también, con el mismo saneado: nada nuevo sin sanear.
+- «Hoy», mes y trimestre salen de `ctx` (`ctx.hoy`, `ctx.fechas`), nunca de `new Date()` en el navegador (L-19).
+- Ningún `?? 0` / `|| 0` sobre una cifra que se pinta (§2.5 del plan).
+
+**Si una diferencia no se explica con esta lista,** antes de cambiar el código nuevo léete el viejo línea a línea buscando la regla que falta, y añádela aquí («Guía de traducción», con la fecha) para la vuelta siguiente.
+
