@@ -58,8 +58,12 @@ fi
 # --- guardia: el planificador solo escribe el plan ---------------------------------------------------------------
 estado_repo() { echo "$(git symbolic-ref -q HEAD) $(git rev-parse HEAD) $(arbol)"; }
 vigilar() {   # vigilar <estado de antes> <registro>
-  if [ "$(estado_repo)" != "$1" ]; then
+  local ahora; ahora="$(estado_repo)"
+  if [ "$ahora" != "$1" ]; then
     echo "✘ La vuelta del planificador ha cambiado algo más que el plan (rama, commit o ficheros). Paro."
+    # qué cambió exactamente (se guarda para Claude y para la mañana)
+    { echo "[$(date '+%Y-%m-%d %H:%M')] antes: $1"; echo "  ahora: $ahora"
+      git diff --stat=200 --summary "${1##* }" "${ahora##* }" 2>/dev/null | tail -60; } | tee -a "$FUERA/plan_cambios_fuera.txt" | sed 's/^/  /'
     echo "  Mira «git status» y «git log -3»; el registro es $2. Deshaz lo que no sea PLAN_NOCHE.md y vuelve a lanzar."
     exit 1
   fi

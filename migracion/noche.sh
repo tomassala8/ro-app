@@ -106,8 +106,14 @@ if [ -n "$nueva" ]; then
   # 2. el plan de la noche, escrito y auditado (si ya lo está y nada cambió, esto tarda un segundo)
   #    Con tope: si el plan no estaba hecho de antes, como mucho RO_HORAS_PLAN horas (8); después la noche empieza con lo que haya.
   if [ "${RO_SIN_PLAN:-}" != "1" ]; then
-    RO_PLAN_FIN=$(( $(date +%s) + ${RO_HORAS_PLAN:-8} * 3600 )) bash migracion/planear.sh \
-      || echo "⚠ planear.sh no terminó: la noche sigue con el plan que haya y con PROMPTS_CURSOR.md"
+    # Sin plazo (Tomás, 4-oct 13:39): sin plan completo no se empieza; mejor parar que ejecutar a ciegas.
+    if ! RO_PLAN_FIN=$(( $(date +%s) + ${RO_HORAS_PLAN:-8} * 3600 )) bash migracion/planear.sh \
+       || ! python3 migracion/revisar_plan.py >/dev/null 2>&1; then
+      echo "✘ El plan de la noche no está completo: la noche NO empieza sin plan."
+      echo "  Mira el aviso de arriba (y $FUERA/plan_cambios_fuera.txt si lo hay), arréglalo y vuelve a lanzar: bash migracion/noche.sh"
+      echo "  (planear.sh sigue donde lo dejó). Para empezar igualmente sin plan: RO_SIN_PLAN=1 bash migracion/noche.sh"
+      exit 1
+    fi
   fi
   # 3. sin restos de otra noche o del ensayo
   rm -f "$PLAN" "$FUERA/replan_claves.txt"
