@@ -1,0 +1,9 @@
+#671 · Comparación Paid por nicho sobre un universo compatible
+
+Aplicado en helper real _paid_mediciones.js y tabla por nicho de captacion.js. Se elimina dividir gasto sólo de algunas cuentas entre todos los resultados del nicho; se elimina ausencia=>0. Leads observados muestra— cuando no hay descriptor válido o las unidades son distintas. Datos muestra N/K en una columna compacta. CPL exige todas las filas autorizadas, identidades distintas, Meta activa, misma moneda EUR, misma unidad lead, descriptor íntegro y semana de siete días cerrada ayer. Tiendas no aportan compras al denominador lead; cero explícito permanece observación y no genera tasa con denominador0. La comparación no acredita calidad, conversión, ventas ni objetivo contractual.
+
+15 grupos con helper real PASS, positivos y negativos; baseline congelado de las expresiones del corte670 demuestra falso CPL por ámbito monetario desigual y ausencia convertida en0. Auditoría671B independiente encontró períodos1/23d y día abierto admitidos: corregidos y cuatro contraejemplos pasan; semana válida conserva CPL. Sus14 iniciales eran evidencia anterior a esta corrección, no estado vigente.
+
+Regresiones:285semántica,285auditoría,416(8) y648(29) PASS. Los fixtures416/648 ahora cargan la dependencia ESM real, sin simular el resultado. Se corrigió además una extracción preexistente de prueba285: la asignación calc quedaba comentada por concatenarse al final de una línea comentario; añade salto, sin relajar asserts. La tabla renderizada confirma— cuando no hay descriptor.
+
+Sólo el agregado por nicho cambia. Otros agregados de cifras/equipo conservan límites históricos pendientes. El helper recibe filas previamente autorizadas/ACT del flujo; no demuestra por sí solo autorización API ni unicidad global de una cuenta presente en varios nichos. No lectura externa, datos ni base modificados.

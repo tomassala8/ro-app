@@ -1,3 +1,6 @@
+## Estado actual674 · Paid y seguimiento CRM
+Leer entrega/674_PAID_Y_SEGUIMIENTO_CRM_LOCAL_CODEX.md.671/672/673 integrados; pruebas y checkpoint1050/4335366B verificados. No snapshots regenerados ni nueva publicaciónGitHub.650sigue remoto; cerrar/ventas/cobros y otros agregados pendientes.
+
 ## Estado actual670 · integración CRM local
 Leer entrega/670_INTEGRACION_CRM_LOCAL_VERIFICADA_CODEX.md.667/668/669/670 integrados y probados;652/653 ya no son candidatos pendientes de integración. La fuente de cierres todavía no está conectada al productor. GitHub conserva650; este corte sigue local, sin fuentes privadas. No ampliar etapas ni actualizar fechas como si fueran datos recién recibidos.
 

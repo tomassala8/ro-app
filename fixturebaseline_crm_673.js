@@ -631,17 +631,11 @@ function pintarFlujos(zona, ctx, d, vis) {
       vacio: { titulo: 'Sin subcuentas con señales en este filtro', porque: 'La copia parcial no acredita ausencia de leads ni mensajes; revisa el filtro y la fecha.' },
     })));
   zona.append(limites);
-  const ro = d.correo_ro && typeof d.correo_ro==='object' && !Array.isArray(d.correo_ro) ? d.correo_ro : {};
-  const fechaRO=typeof ro.fecha==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(ro.fecha)&&Number.isFinite(Date.parse(ro.fecha+'T00:00:00Z'))&&new Date(ro.fecha+'T00:00:00Z').toISOString().slice(0,10)===ro.fecha?ro.fecha:null;
-  const hoyRO=typeof ctx.hoy==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(ctx.hoy)&&Number.isFinite(Date.parse(ctx.hoy+'T00:00:00Z'))&&new Date(ctx.hoy+'T00:00:00Z').toISOString().slice(0,10)===ctx.hoy?ctx.hoy:null;
-  const reboteRO=typeof ro.rebote_pct==='number'&&Number.isFinite(ro.rebote_pct)&&ro.rebote_pct>=0&&ro.rebote_pct<=100&&fechaRO&&hoyRO&&fechaRO<=hoyRO?ro.rebote_pct:null;
-  const textoRO=reboteRO===null?'Subcuenta de RO: —':`Subcuenta de RO: ${fmt.num(reboteRO, 1)} % de rebote`;
-  zona.append(panel({ titulo: 'Entregabilidad del correo', icono: 'mail', sub: 'Auditoría anterior de RO · referencia, no medición actual de los clientes' },
+  const ro = d.correo_ro || {};
+  zona.append(panel({ titulo: 'Entregabilidad del correo', icono: 'mail', sub: 'Rebote y quejas: verde rebote < 2 % · ámbar 2-5 % · rojo quejas ≥ 0,3 %' },
     h('div', { class: 'cuerpo pila' },
-      h('div', { class: 'fila' }, chipEstado('gris', textoRO), h('span', { class: 'sub' }, `${typeof ro.fuente==='string'?ro.fuente:''} · ${fechaRO?fDiaRO(fechaRO):'Fecha por confirmar'}`)),
-      notaCompacta336(h,'Fuente y límites',
-        h('p',{},'Referencia de auditoría: rebote < 2 %, 2–5 % y quejas ≥ 0,3 %. No acredita entregabilidad actual ni ausencia de quejas; las subcuentas cliente sólo aportan mensajes fallidos observados.'),
-        h('p',{},typeof ro.nota==='string'?ro.nota:'')))));
+      h('div', { class: 'fila' }, chipEstado(semaforo(ro.rebote_pct, { verde: 2, ambar: 5, mejorSi: 'bajo' }), `Subcuenta de RO: ${fmt.num(ro.rebote_pct, 1)} % de rebote`), h('span', { class: 'sub' }, `${ro.fuente || ''} · ${fDiaRO(ro.fecha)}`)),
+      h('p', { class: 'sub', style: { margin: 0 } }, ro.nota || ''))));
 }
 
 // ------------------------------------------------------------------ pestaña: montajes de altas

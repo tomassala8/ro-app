@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+(async()=>{
+ const p=path.join(__dirname,'modulos/_paid_mediciones.js');const {resumenNichoPaid671:run}=await import('data:text/javascript;base64,'+fs.readFileSync(p).toString('base64'));
+ const d={ventanas:{'7d':['2026-09-27','2026-10-03']}},hoy='2026-10-04';
+ const row=(id='cA')=>({cliente_id:id,meta_activa:true,dinero:true,cuenta_meta:{moneda:'EUR'},gasto:{'7d':100},leads:{'7d':10},cpl_resumen:{ref_base:'7d',medicion:{version:'220.1',fuente:'meta_insights',nivel:'account',periodo_valido:true,desde:d.ventanas['7d'][0],hasta:d.ventanas['7d'][1],fecha_lectura:hoy,cohorte:'resultados_meta_sin_union_crm_ni_cualificacion_ro',tipo_lead:'lead',campos_observados:['gasto','leads']}}});
+ const original=require('./fixtures/nicho_paid_671_baseline.cjs');const baseline=cs=>original(cs,'Fixture');
+ const execute=cs=>run(cs,d,hoy);let tests=0;const test=(name,f)=>{f();tests++;};
+ test('positivo mismo universo',()=>{assert.equal(execute([row(),row('cB')]).cpl,10);assert.equal(execute([row(),row('cB')]).leads,20);});
+ test('baseline mezcla gasto visible y denominador oculto',()=>{const b={...row('cB'),dinero:false};assert.equal(baseline([row(),b]).cpl,5);assert.equal(execute([row(),b]).cpl,null);});
+ test('sin fuentes baseline cero',()=>{const b={...row(),leads:{},cpl_resumen:{}};assert.equal(baseline([b]).leads,0);assert.equal(execute([b]).leads,null);});
+ test('parcial suma observada cobertura',()=>{const b={...row('cB'),leads:{'7d':null}};const x=execute([row(),b]);assert.equal(x.leads,10);assert.equal(x.conDato,1);assert.equal(x.completa,false);assert.equal(x.cpl,null);});
+ test('cero explícito conserva gasto del universo',()=>{const b={...row('cB'),leads:{'7d':0}};assert.equal(execute([row(),b]).cpl,20);assert.equal(execute([{...row(),leads:{'7d':0}}]).cpl,null);});
+ test('tipo diferente no suma unidades',()=>{const b=row('cB');b.cpl_resumen.medicion.tipo_lead='onsite_web_lead';assert.equal(execute([row(),b]).leads,null);assert.equal(execute([row(),b]).cpl,null);});
+ test('tiendas no suman compras a leads',()=>{const b={...row('cB'),tienda_online:true};assert.equal(execute([row(),b]).leads,10);assert.equal(execute([row(),b]).cpl,null);});
+ test('monedas distintas o ausentes',()=>{for(const moneda of ['USD',null,undefined])assert.equal(execute([{...row(),cuenta_meta:{moneda}}]).cpl,null);});
+ test('errores de fuente',()=>{assert.equal(execute([{...row(),cuenta_meta:{moneda:'EUR',error:'ficticio'}}]).leads,null);});
+ test('números inválidos',()=>{for(const n of [true,'10',NaN,Infinity,-1,1.1])assert.equal(execute([{...row(),leads:{'7d':n}}]).leads,null);for(const n of [true,'100',NaN,Infinity,-1])assert.equal(execute([{...row(),gasto:{'7d':n}}]).cpl,null);});
+ test('overflow conteos y gasto',()=>{assert.equal(execute([{...row(),leads:{'7d':Number.MAX_SAFE_INTEGER}},{...row('cB'),leads:{'7d':1}}]).leads,null);assert.equal(execute([{...row(),gasto:{'7d':Number.MAX_VALUE}},{...row('cB'),gasto:{'7d':Number.MAX_VALUE}}]).cpl,null);});
+ test('descriptor otra ventana o viejo',()=>{for(const changes of [{desde:'2026-09-01'},{fecha_lectura:'2026-10-01'},{fecha_lectura:'2026-10-05'},{version:'otra'}]){const b=row();Object.assign(b.cpl_resumen.medicion,changes);assert.equal(execute([b]).leads,null);}});
+ test('identidades duplicadas y filas inválidas',()=>{for(const rows of [[row(),row()],[row(),null],[{...row(),cliente_id:null}],[{...row(),meta_activa:'true'}]])assert.equal(execute(rows).leads,null);});
+ test('semana exactamente7d cerrada ayer',()=>{for(const w of [['2026-09-11','2026-10-03'],['2026-10-03','2026-10-03'],['2026-09-28','2026-10-04'],['2026-09-26','2026-10-02']]){const b=row();b.cpl_resumen.medicion.desde=w[0];b.cpl_resumen.medicion.hasta=w[1];const x=run([b],{ventanas:{'7d':w}},hoy);assert.equal(x.leads,null);assert.equal(x.cpl,null);}});
+ test('sin mutación vacíos y callsite real',()=>{const cs=[row()],before=JSON.stringify(cs);execute(cs);assert.equal(JSON.stringify(cs),before);assert.equal(execute([]).leads,null);const src=fs.readFileSync(path.join(__dirname,'modulos/captacion.js'),'utf8');assert(src.includes('resumenNichoPaid671(cs,d,ctx.hoy||hoyMadrid())'));assert(!src.includes("cpl: cs.some(c => c.dinero) && l ? g / l : null"));});
+ console.log(tests+' grupos671 PASS: baseline falso CPL/cero reproducido, universos autorizados/ventana/unidad/moneda protegidos.');
+})().catch(e=>{console.error(e);process.exit(1);});

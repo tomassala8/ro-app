@@ -59,3 +59,25 @@ export function normalizarPaid(c,d,hoy) {
  return {...c,motivos,avisos,_cplMedicion:medicion,severidad_original:c.severidad,
   severidad:medicion.evaluable?({verde:'ok',ambar:'atencion',rojo:'critico'})[medicion.estado]:'dato'};
 }
+
+// Un nicho sólo admite CPL agregado sobre el mismo universo autorizado y unidad.
+export function resumenNichoPaid671(filas,d,hoy) {
+ const cuentas=Array.isArray(filas)?filas:[];
+ const ventana=d?.ventanas?.['7d'],desde=dia(ventana?.[0]),hasta=dia(ventana?.[1]),actual=dia(hoy);
+ const semana=!!desde&&!!hasta&&!!actual&&(Date.parse(hasta)-Date.parse(desde))/864e5===6&&(Date.parse(actual)-Date.parse(hasta))/864e5===1;
+ const identidad=c=>typeof c?.cliente_id==='string'&&/^[A-Za-z0-9_-]{1,128}$/.test(c.cliente_id);
+ const unicas=cuentas.every(identidad)&&new Set(cuentas.map(c=>c.cliente_id)).size===cuentas.length;
+ const universo=cuentas.filter(c=>!tienda285(c));
+ const validas=universo.filter(c=>unicas&&c?.meta_activa===true&&semana&&!error285(c)&&
+  c.cpl_resumen?.ref_base==='7d'&&descriptor285(c.cpl_resumen.medicion,desde,hasta,hoy)&&
+  Number.isSafeInteger(c.leads?.['7d'])&&c.leads['7d']>=0);
+ const tipos=new Set(validas.map(c=>c.cpl_resumen.medicion.tipo_lead));
+ const sumaLeads=validas.reduce((s,c)=>s+c.leads['7d'],0);
+ const leads=validas.length&&tipos.size===1&&Number.isSafeInteger(sumaLeads)?sumaLeads:null;
+ const completa=cuentas.length>0&&universo.length===cuentas.length&&validas.length===cuentas.length;
+ const dinero=completa&&cuentas.every(c=>c.dinero===true&&c.cuenta_meta?.moneda==='EUR'&&numero(c.gasto?.['7d'])!==null);
+ const gasto=dinero?cuentas.reduce((s,c)=>s+c.gasto['7d'],0):null;
+ const ratio=dinero&&Number.isFinite(gasto)&&leads>0?gasto/leads:null;
+ return {cuentas:cuentas.length,conDato:validas.length,leads,cpl:Number.isFinite(ratio)?ratio:null,
+  dinero,completa,tipoEvento:tipos.size===1?[...tipos][0]:null};
+}

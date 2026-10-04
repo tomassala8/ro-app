@@ -8,6 +8,9 @@ const env={h,S:{1:'4px',2:'8px',3:'12px',4:'16px'},NOWRAP:{whiteSpace:'nowrap'},
  tablaApilable:o=>{tables.push(o);return h('table',{},h('thead',{},o.columnas.map(c=>h('th',{},c.titulo))),h('tbody',{},o.filas.map(x=>h('tr',{},o.columnas.map(c=>h('td',{},c.celda?c.celda(x):x[c.clave]))))))},
  pAuditoria:()=>{audits++;return h('section',{'data-auditoria':''},'Auditoría existente')},sessionStorage:{setItem:(k,v)=>storage.push([k,v])}};
 vm.createContext(env);
+//671: resolver la dependencia ESM real del renderer, sin simular su resultado.
+vm.runInContext(fs.readFileSync(__dirname+'/modulos/_paid_mediciones.js','utf8').replace(/\bexport\s+/g,''),env);
+env.hoyMadrid=()=> '2026-10-04';
 vm.runInContext(s.slice(s.indexOf('function plegablePaid411('),s.indexOf('function cabeceraPaid411(')),env);
 vm.runInContext(s.slice(s.indexOf('function cifras('),s.indexOf('// ================================================================== LISTA')),env);
 vm.runInContext(s.slice(s.indexOf('function pEquipo('),s.indexOf('/** Auditoría semanal:')),env);
@@ -18,6 +21,7 @@ assert.equal(tables[0].columnas.length,8);assert.deepEqual(Array.from(tables[0].
 const primary=out.children[0];assert.equal(primary.attrs['data-paid-equipo'],'416');assert(primary.desc().some(n=>n.tag==='table'));assert(!primary.desc().some(n=>Object.hasOwn(n.attrs,'data-tiles')));
 const folds=out.desc().filter(n=>n.tag==='details');assert.equal(folds.length,3);assert(folds.every(n=>!n.attrs.open));assert(folds.every(n=>n.children[0].style.minHeight==='44px'));assert(folds[0].textContent.includes('Cifras'));assert(folds[1].textContent.includes('Comparativa'));assert(folds[2].textContent.includes('Auditoría'));
 assert.equal(tiles.length,4);assert.equal(tiles[0].estado,'rojo');assert.equal(tiles[0].valor,1);assert.equal(tiles[1].valor,'120€');assert.equal(tiles[1].comparacion.texto,'60€ en los últimos 7 días');assert.equal(audits,1);
+assert.equal(tables[1].columnas.find(c=>c.clave==='leads').celda(tables[1].filas[0]),'—');assert.equal(tables[1].filas[0].conDato,0);assert.equal(tables[1].filas[0].cpl,null);
 const reserved=tables[0].columnas.find(x=>x.clave==='gasto7').celda(tables[0].filas[1]);assert.equal(reserved.textContent,'—');assert(!reserved.textContent.includes('€'));assert(out.textContent.includes('no objetivo'));assert(out.textContent.includes('min-width:940px'));assert(out.textContent.includes('font-size:13px'));assert(out.textContent.includes('5px 6px'));
 tables[0].alPulsar(tables[0].filas[0]);assert.deepEqual(navigated,['captacion/~trafficker/persona-a']);assert.deepEqual(JSON.parse(storage[0][1]),{trafficker:'persona-a'});
 const fresh=JSON.stringify(rows);tables=[];tiles=[];const none=h('main',{});env.pEquipo(none,ctx,d,[]);assert.equal(tables[0].filas.length,0);assert.equal(JSON.stringify(rows),fresh);
