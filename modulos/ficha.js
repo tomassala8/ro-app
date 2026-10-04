@@ -28,7 +28,7 @@ import { botonAvisar, compositorAviso, pintarReunion } from './ficha_equipo.js';
 import { botonDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_plegar_consejo.js';
 import { cargarObjetivos, puedeEditar, lunesDeHoy, RE_IMPORTE, TIPO_OBJETIVO, TIPO_SEMAFORO } from './objetivos_comun.js';
-import { botonIA, panelCopiloto, estilos as estilosIA } from './ia_componentes.js';
+import { botonIA, panelCopiloto, fichaCompleta, estilos as estilosIA } from './ia_componentes.js';
 import { conTickets } from './_legible.js';
 import { panelBitacora } from './_bitacora.js';
 import { bloqueEstadoWeb } from './_modular.js';
@@ -562,6 +562,11 @@ function zonaA4(ctx, F, previo) {
   const caja = h('div', { class: 'pila', style: { flexBasis: '100%', minWidth: '0' } });
   F.pintarA4 = () => pintarA4(caja, ctx, F, previo);
   F.pintarA4();
+  // 4-oct · riesgo de baja en tres ejes (data/riesgo/riesgo_baja.json, fuentes_riesgo/). Llega después: no frena la ficha.
+  if (perfil(ctx) !== 'admin') cargarModulo(ctx, 'riesgo/riesgo_baja').then(d => {
+    F.riesgo = (d?.clientes || []).find(x => x.cliente_id === F.c.id) || null;
+    if (F.riesgo) F.pintarA4();
+  });
   return caja;
 }
 
@@ -600,9 +605,40 @@ function pintarA4(caja, ctx, F, previo) {
     o?.cargado ? `Cargado por ${quienCuando(ctx, o)} ${DESDE_TXT[o.desde] || ''}. Lo leen Captación, Mi día y Clientes nuevos.` : 'Sin objetivo, Captación y Mi día juzgan con el techo general. Pulsa para cargarlo.', editaObj);
 
   const partes = [h('div', { class: 'fila', style: { minWidth: '0' } }, bSem, bObj)];
+  if (F.riesgo) partes.push(filaRiesgo(ctx, F));
   if (F.a4 === 'semaforo') partes.push(editorSemaforo(ctx, F, edita, s, s_hoy, lunes));
   if (F.a4 === 'objetivo') partes.push(editorObjetivo(ctx, F, editaObj, o));
   caja.replaceChildren(...partes);
+}
+
+// 4-oct · Tomás: el semáforo distingue resultados, silencio y quejas; su combinación da el riesgo de baja y su ficha.
+const NIVEL_COLOR = { bajo: 'verde', vigilar: 'ambar', alto: 'rojo', critico: 'rojo' };
+const EJES = [['resultados', 'Resultados'], ['silencio', 'Respuesta'], ['quejas', 'Quejas']];
+function filaRiesgo(ctx, F) {
+  const r = F.riesgo;
+  const zona = h('div', { class: 'pila', style: { minWidth: '0' } });
+  const chipEje = ([k, et]) => {
+    const e = r.ejes?.[k] || {};
+    const t = e.color === 'gris' ? `${et}: sin dato` : `${et}: ${COLOR_TXT[e.color] || e.color}`;
+    const chip = chipEstado(e.color || 'gris', t);
+    chip.title = (e.motivos || []).join(' · ') || (e.color === 'verde' ? 'Sin señales' : 'Sin dato');
+    return chip;
+  };
+  const ver = h('button', { type: 'button', class: 'bt', on: { click: async e => {
+    e.currentTarget.disabled = true;
+    try { const f = await ctx.api(`ia/cerebro?id=${encodeURIComponent(r.ficha)}`); zona.replaceChildren(fichaCompleta(ctx.api, f.ficha, { clienteId: F.c.id })); }
+    catch (err) { zona.replaceChildren(lineaMeta(`No he podido abrir la ficha: ${err?.message || err}`)); e.currentTarget.disabled = false; }
+  } } }, icono('ojo'), 'Qué significa y qué hago');
+  const motivos = EJES.flatMap(([k]) => r.ejes?.[k]?.motivos || []).slice(0, 4);
+  return h('div', { class: 'pila', 'data-riesgo-baja': r.nivel, style: { gap: '8px', minWidth: '0' } },
+    h('div', { class: 'fila', style: { minWidth: '0', flexWrap: 'wrap' } },
+      h('span', { class: 'titulo-seccion' }, 'Riesgo de baja'), chipEstado(NIVEL_COLOR[r.nivel] || 'gris', r.nivel_txt), EJES.map(chipEje),
+      ctx.servidor ? ver : null),
+    h('p', { style: { margin: '0', overflowWrap: 'anywhere' } }, r.lectura),
+    motivos.length ? lineaMeta(motivos.join(' · ')) : null,
+    r.discrepancia ? lineaMeta(`Ojo: ${r.discrepancia}.`) : null,
+    r.confianza !== 'alta' ? lineaMeta(r.confianza === 'baja' ? 'Faltan datos: léelo como pista, no como veredicto.' : 'Dato parcial: de Desk aún no llega la última respuesta del cliente en correos cerrados.') : null,
+    zona);
 }
 
 function cajaEditor(...hijos) {
@@ -622,6 +658,8 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
     const campo = h('div', { class: 'fila', style: { gap: 'var(--s-2)', alignItems: 'flex-end', minWidth: '0' } }, tres);
     const input = { get value() { return tres.map((c, i) => { const v = c.querySelector('input').value.trim(); return v ? `${ET[i][0]}: ${v}` : ''; }).filter(Boolean).join(' · '); } };
     const estado = h('span', { class: 'sub', role: 'status' }, F.a4msg || '');
+    // 4-oct · eje de quejas: hoy la app solo ve el asunto de los correos; lo que el account oye en llamadas y reuniones, lo marca aquí.
+    const casillaQueja = h('input', { type: 'checkbox', checked: sHoy?.queja || null, style: { width: '20px', height: '20px', accentColor: 'var(--accent)' } });
     const elegir = color => h('button', { type: 'button', class: `bt${sHoy?.color === color ? ' pri' : ''}`, title: `Guardar el semáforo en ${COLOR_TXT[color].toLowerCase()} con la nota`,
       on: { click: async e => {
         const nota = input.value.trim();
@@ -629,11 +667,14 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
         RE_IMPORTE.lastIndex = 0;
         e.currentTarget.disabled = true;
         try {
-          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota } },
+          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota, queja: casillaQueja.checked } },
             `Semáforo en ${COLOR_TXT[color].toLowerCase()}`);
         } catch (err) { estado.textContent = `No se ha guardado: ${err?.message || err}`; e.currentTarget.disabled = false; }
       } } }, chipEstado(color, COLOR_TXT[color]));
-    hijos.push(campo, h('div', { class: 'fila' }, h('span', { class: 'titulo-seccion' }, 'Ponlo en'), ['verde', 'ambar', 'rojo'].map(elegir)), estado);
+    hijos.push(campo,
+      h('label', { class: 'fila', style: { gap: '8px', minWidth: '0', cursor: 'pointer' } }, casillaQueja,
+        h('span', {}, 'Se ha quejado esta semana (correo, llamada, reunión o WhatsApp)')),
+      h('div', { class: 'fila' }, h('span', { class: 'titulo-seccion' }, 'Ponlo en'), ['verde', 'ambar', 'rojo'].map(elegir)), estado);
   } else {
     hijos.push(vacioLinea('Lo ponen su account, operaciones y dirección. Tú lo ves, sin editar.', { icono: 'ojo' }));
   }
@@ -649,6 +690,7 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
       return h('div', { class: 'fila', style: { minWidth: '0', flexWrap: 'wrap' } },
         h('span', { class: 'sub', style: { minWidth: '112px' } }, `Lunes ${fDiaRO(sem)}`),
         x ? chipEstado(x.color, COLOR_TXT[x.color]) : chipEstado('gris', 'Sin poner'),
+        x?.queja ? chipEstado('rojo', 'Queja') : null,
         x?.nota ? h('span', { style: { minWidth: '0', overflowWrap: 'anywhere' } }, x.nota) : null,
         x ? h('span', { class: 'sub' }, quienCuando(ctx, x)) : null);
     })));

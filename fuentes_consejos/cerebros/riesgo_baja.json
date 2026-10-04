@@ -1,0 +1,1534 @@
+{
+ "_meta": {
+  "area": "riesgo_baja",
+  "titulo": "Riesgo de baja: semáforo del cliente en tres ejes",
+  "puestos": [
+   "account",
+   "operaciones",
+   "proyectos",
+   "direccion"
+  ],
+  "version": "1.0",
+  "fecha": "2026-10-04",
+  "fuentes_principales": [
+   "central:skills/criterio-tomas-ro/LEYES.md (C-D3-06 a C-D3-14)",
+   "ro-equipo:30_SKILLS/consejero-account-ro/referencia/codigo_semaforico.md",
+   "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+   "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+   "ro-app:fuentes_riesgo/riesgo_baja.py"
+  ],
+  "nota": "Interpreta la combinación de los tres ejes del semáforo del cliente (resultados, silencio, quejas) que calcula fuentes_riesgo/riesgo_baja.py. Cada patrón apunta a una ficha. Las fichas sobre una sola señal (queja, silencio, señales de baja) siguen en account y comunicacion: aquí está la lectura combinada.",
+  "pendientes_tomas": [
+   "Umbrales de silencio: 7 días ámbar y 14 rojo desde nuestro último correo sin respuesta por ningún canal; 30 días sin ninguna respuesta, rojo. Aplicado como propuesta.",
+   "Resultados: verde con 90 % del objetivo, ámbar 60-90 %, rojo por debajo; coste por lead hasta 1,3 veces el objetivo en ámbar. En los primeros 60 días no pone rojo.",
+   "Quejas: rojo si hay una abierta o habla de baja; ámbar los 30 días siguientes. Hoy solo se detecta por el asunto del correo y la marca del account.",
+   "Cartera de un account: misma escala que la D-41 (≤ 2 / 3-4 / ≥ 5 clientes en riesgo alto o crítico)."
+  ]
+ },
+ "principios": [
+  {
+   "id": "rb_p_tres_ejes",
+   "texto": "Un solo color no basta para ver una baja. Mira tres cosas por separado: si le damos resultados, si nos contesta y si se queja. La combinación dice qué pasa.",
+   "fuente": "ro-app:fuentes_riesgo/riesgo_baja.py",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_silencio",
+   "texto": "El silencio del cliente es alarma, no tranquilidad. Siete días sin contestar a nuestro último correo ya es ámbar: se llama, no se escribe otra vez.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:250",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_queja_p0",
+   "texto": "Una queja de un cliente activo es P0 aunque los números vayan bien: llamada el mismo día, dirección informada ese día y plan validado en 48 h.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:278",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_no_salta",
+   "texto": "El semáforo no salta escalones. Si un cliente pasa de verde a rojo, no leímos las señales. Y después de un rojo siempre hay semanas de amarillo.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:257",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_antes_que_el",
+   "texto": "Si el cliente ve el problema de resultados antes que nosotros, ya perdimos la autoridad. Los malos números se cuentan antes de que pregunte.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:264",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_paradita",
+   "texto": "«A lo mejor hacemos una paradita» significa que ya está fuera. La respuesta es una propuesta distinta, no bajar la cuota.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:298",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_hechos",
+   "texto": "Una cuenta en riesgo se recupera con hechos semanales, pequeños y visibles, no con reuniones ni promesas.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:291",
+   "autor": "Tomás"
+  },
+  {
+   "id": "rb_p_datos_no_todo",
+   "texto": "Los ejes salen de los datos y los datos no lo saben todo. Lo que oyes en una llamada manda: márcalo en el semáforo del lunes.",
+   "fuente": "ro-app:fuentes_riesgo/riesgo_baja.py",
+   "autor": "RO"
+  }
+ ],
+ "situaciones": [
+  {
+   "id": "rb_los_tres_ejes_mal",
+   "titulo": "El cliente va mal en los tres ejes: sin resultados, se queja y no contesta",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "todo en rojo",
+     "los tres ejes mal",
+     "se va a ir",
+     "baja inminente",
+     "riesgo crítico",
+     "sin resultados queja y silencio"
+    ]
+   },
+   "sintoma": "Resultados por debajo del objetivo, una queja abierta o reciente y días sin respuesta a nuestro último correo. Es la combinación con más riesgo: el cliente probablemente ya está decidiendo irse.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Hay algo activo haciendo daño ahora (campaña que gasta sin leads, web caída, formulario roto)?",
+     "donde": "Ficha: Meta, web, alertas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Qué dijo exactamente en la queja y cuándo dejó de contestar? Pon las dos fechas juntas.",
+     "donde": "Bandeja, semáforo del lunes, hilos de Desk",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El objetivo que usamos para juzgar los resultados es el que firmó, o uno que nunca le contamos?",
+     "donde": "Objetivo de la ficha, acuerdo firmado",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Alguien de RO habló con él por teléfono después de la queja?",
+     "donde": "Llamadas (Zadarma), reuniones",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Ha mencionado baja, pausa, contrato u otra agencia?",
+     "donde": "Asuntos de correo, nota del semáforo",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La queja no se cerró con una llamada: se contestó por correo o no se contestó, y el cliente se ha callado.",
+     "como_confirmar": "No hay llamada contestada después de la fecha de la queja.",
+     "solucion": [
+      "Llama hoy tú o un senior. Escucha entero antes de explicar.",
+      "Informa hoy a operaciones (Coti) y a Tomás con las tres señales y sus fechas.",
+      "No comuniques plan al cliente hasta validarlo con ellos."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Expectativa mal calibrada: espera unos resultados que nadie le dijo por escrito.",
+     "como_confirmar": "Su número literal no coincide con el objetivo del día 0.",
+     "solucion": [
+      "Prepara con paid la lectura contra el objetivo del día 0.",
+      "Lleva logros desde el inicio y el plan de las próximas seis semanas."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Hay un fallo nuestro haciendo daño ahora mismo.",
+     "como_confirmar": "Campaña gastando sin leads, web o formulario caído.",
+     "solucion": [
+      "Para el daño antes de hablar de planes.",
+      "Si toca su dinero, admite sin matices y deja la compensación a dirección."
+     ],
+     "quien": "account con publicidad o web",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Ya está mentalmente fuera: habla de baja, pausa o alternativas.",
+     "como_confirmar": "Lo dice en un correo, una llamada o una reunión.",
+     "solucion": [
+      "Propuesta concreta y distinta, no bajar la cuota.",
+      "Visita o llamada de un senior en la ventana de 2-4 semanas."
+     ],
+     "quien": "dirección",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Para lo que esté haciendo daño.",
+    "Llama hoy. No mandes otro correo.",
+    "Avisa hoy a Coti y a Tomás con las tres señales."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Primera llamada",
+     "texto": "Hola, {nombre}. Te llamo yo porque no quiero que esto se quede en un correo. Sé que no estás contento con {tema} y quiero escucharte entero. ¿Me cuentas cómo lo estás viendo?"
+    }
+   ],
+   "que_no_hacer": [
+    "Mandar otro correo esperando respuesta.",
+    "Llegar con el plan antes de escuchar.",
+    "Ofrecer descuento sin dirección."
+   ],
+   "escalar": {
+    "cuando": "Siempre, hoy.",
+    "a": "operaciones y dirección"
+   },
+   "exito": "Ha habido llamada con el cliente, hay plan validado en 48 h y el cliente vuelve a contestar en menos de una semana.",
+   "relacionadas": [
+    "account_queja_o_amenaza_baja",
+    "account_senales_de_baja",
+    "operaciones_critico_sin_plan"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: queja = P0, llamada, dirección, plan en 48 h"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "C-D3-13: paradita = ya está fuera"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/codigo_semaforico.md",
+     "linea": 23,
+     "autor": "RO",
+     "nota": "El plan de rojo se valida con operaciones y Tomás"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón los_tres_mal"
+    }
+   ]
+  },
+  {
+   "id": "rb_queja_y_silencio",
+   "titulo": "El cliente se quejó y después dejó de contestar",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "se quejó y no contesta",
+     "queja y silencio",
+     "no responde después de la queja",
+     "se ha enfriado",
+     "desde la queja no dice nada"
+    ]
+   },
+   "sintoma": "Hubo una queja (abierta o en los últimos 30 días) y desde entonces no responde a nuestros correos. El silencio después de una queja no es calma: está decidiendo sin nosotros.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cómo se respondió a la queja: llamada o correo? ¿Quién y cuándo?",
+     "donde": "Hilos de Desk, llamadas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Se le prometió algo con fecha y se cumplió?",
+     "donde": "Nota del semáforo, ClickUp",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El correo que no contesta le pide algo a él (validar, accesos) o le informa?",
+     "donde": "Último correo nuestro",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Ha cambiado quién decide en el despacho?",
+     "donde": "Contactos de la ficha, última reunión",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La queja se contestó por correo y no se escuchó.",
+     "como_confirmar": "No hay llamada después de la queja.",
+     "solucion": [
+      "Llama hoy para escuchar, no para defenderte.",
+      "Deja por escrito lo hablado ese mismo día."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Se prometió algo y no llegó, o llegó tarde sin aviso.",
+     "como_confirmar": "Compromiso vencido en ClickUp o en la nota.",
+     "solucion": [
+      "Admite el retraso en la llamada y da una fecha que dependa solo de RO.",
+      "Entrega algo pequeño y visible esta semana."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Le pedimos trabajo a un cliente enfadado.",
+     "como_confirmar": "El último correo le pide validar, mandar accesos o datos.",
+     "solucion": [
+      "Propón que lo dejamos andando nosotros y él lo revisa cuando pueda."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Cambió el interlocutor y la persona nueva no nos conoce.",
+     "como_confirmar": "Contesta otra persona o nadie.",
+     "solucion": [
+      "Pide 15 minutos con la persona que decide ahora y preséntate."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama hoy. Si no coge, WhatsApp corto y vuelve a llamar en 24 h.",
+    "Avisa hoy a Coti: es rojo aunque los números vayan bien."
+   ],
+   "guiones": [
+    {
+     "canal": "whatsapp",
+     "para": "cliente",
+     "cuando": "Si no coge",
+     "texto": "Hola, {nombre}. Te he llamado por lo que me comentaste de {tema}. Quiero cerrarlo bien contigo, no por correo. ¿Te llamo hoy a las {hora} o mañana a primera hora?"
+    }
+   ],
+   "que_no_hacer": [
+    "Interpretar el silencio como que ya se le ha pasado.",
+    "Mandar el informe del mes como si nada.",
+    "Pedirle tareas antes de cerrar la queja."
+   ],
+   "escalar": {
+    "cuando": "Hoy, siempre.",
+    "a": "operaciones"
+   },
+   "exito": "Llamada hecha, queja cerrada con algo entregado y respuesta del cliente en menos de 48 h.",
+   "relacionadas": [
+    "account_queja_o_amenaza_baja",
+    "comunicacion_queja_confirmar_por_escrito",
+    "comunicacion_esperando_al_cliente"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: llamada el mismo día, nunca correo como primer gesto"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 250,
+     "autor": "Tomás",
+     "nota": "C-D3-06: el silencio es alarma"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/codigo_semaforico.md",
+     "linea": 35,
+     "autor": "RO",
+     "nota": "Después de rojo siempre hay periodo amarillo"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón queja_y_silencio"
+    }
+   ]
+  },
+  {
+   "id": "rb_sin_resultados_y_queja",
+   "titulo": "No llegan los resultados y el cliente se queja",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin resultados y se queja",
+     "no veo resultados",
+     "esto no funciona",
+     "pocos leads y queja",
+     "insatisfecho",
+     "se queja de los leads"
+    ]
+   },
+   "sintoma": "Los leads, el coste o las citas están por debajo del objetivo y el cliente lo dice. La queja tiene base en los datos: no basta con calmarle.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué número falla: volumen de leads, coste por lead o citas?",
+     "donde": "Ficha: Captación y GoHighLevel",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El objetivo con el que le juzgamos es el que pactamos con él?",
+     "donde": "Objetivo de la ficha, acuerdo",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Los leads llegan pero el despacho no los llama o no los cierra?",
+     "donde": "Salud del CRM, citas sin estado",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Se lo contamos nosotros antes de que se quejara?",
+     "donde": "Correos salientes del mes",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo de captación: la campaña no da el volumen o el coste.",
+     "como_confirmar": "Leads o CPL fuera del objetivo en Captación.",
+     "solucion": [
+      "Paid prepara diagnóstico y ajuste antes de la llamada.",
+      "Llama con el dato y la propuesta, no solo con disculpas."
+     ],
+     "quien": "account con paid",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Objetivo mal calibrado desde la venta.",
+     "como_confirmar": "Su expectativa no coincide con el objetivo del día 0.",
+     "solucion": [
+      "Recalibra con él el horizonte real por escrito.",
+      "Si hace falta, Tomás confirma el criterio."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El fallo está en el despacho: no llama o no cierra los leads.",
+     "como_confirmar": "Leads sin tocar o citas sin venta en GoHighLevel.",
+     "solucion": [
+      "Enséñale el embudo con datos, sin culpar.",
+      "Propón la cadencia de dato a decisión (viernes, lunes, martes)."
+     ],
+     "quien": "account con CRM",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Se enteró él antes que nosotros.",
+     "como_confirmar": "No hay correo nuestro avisando de la caída.",
+     "solucion": [
+      "Reconócelo en la llamada.",
+      "Desde hoy, aviso proactivo cada vez que un número caiga."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama hoy con el diagnóstico de paid en la mano.",
+    "Avisa hoy a Coti."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Llamada con datos",
+     "texto": "{nombre}, tienes razón en que {numero} no está donde queríamos. Esto es lo que vemos y esto es lo que cambiamos esta semana: {cambio}. El {dia} te enseño cómo ha ido."
+    }
+   ],
+   "que_no_hacer": [
+    "Discutir si la queja es justa.",
+    "Prometer resultados con fecha.",
+    "Bajar la cuota para que se calme."
+   ],
+   "escalar": {
+    "cuando": "Hoy; a dirección si habla de baja o hay dinero suyo en juego.",
+    "a": "operaciones"
+   },
+   "exito": "El número que fallaba mejora dos semanas seguidas y el cliente deja de quejarse.",
+   "relacionadas": [
+    "account_expectativas_desalineadas",
+    "account_caida_de_leads_contar_antes",
+    "account_despacho_no_llama_leads"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 264,
+     "autor": "Tomás",
+     "nota": "C-D3-08: si lo detecta él, se perdió la autoridad"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 11,
+     "autor": "RO",
+     "nota": "Causa 1: expectativas mal calibradas"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 14,
+     "autor": "RO",
+     "nota": "Causa 2: leads malos sin comunicación proactiva"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón insatisfecho_declarado"
+    }
+   ]
+  },
+  {
+   "id": "rb_sin_resultados_y_silencio",
+   "titulo": "No llegan los resultados y el cliente ha dejado de contestar",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin resultados y no contesta",
+     "desenganchado",
+     "se está desenganchando",
+     "pocos leads y silencio",
+     "no responde y no hay leads"
+    ]
+   },
+   "sintoma": "Los resultados están por debajo del objetivo y no responde a nuestro último correo desde hace una semana o más. No se queja: se está desenganchando en silencio, que es como se van los más peligrosos.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Sabe el cliente que los números van mal? ¿Se lo dijimos nosotros?",
+     "donde": "Correos salientes, último informe",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Sigue usando lo que le damos (llama los leads, abre el CRM)?",
+     "donde": "Salud del CRM, GoHighLevel",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Está desbordado (campaña de renta, cierre, baja de alguien)?",
+     "donde": "Calendario fiscal, última reunión",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay reunión agendada?",
+     "donde": "Reuniones de la ficha",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Ha perdido la fe en el servicio y no ve para qué contestar.",
+     "como_confirmar": "Varios correos sin respuesta y números flojos varios meses.",
+     "solucion": [
+      "Llama y reconoce el desencuentro antes de explicar nada.",
+      "Lleva logros y un plan de seis semanas con algo visible cada semana."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Ha dejado de usar el sistema.",
+     "como_confirmar": "Leads sin tocar, CRM parado.",
+     "solucion": [
+      "Es señal de baja: sigue la ficha de señales de baja."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Está desbordado y lo nuestro baja en su lista.",
+     "como_confirmar": "Pico de trabajo en el despacho.",
+     "solucion": [
+      "Propón tú reducir lo que le pedimos antes de que lo pida él."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "No hay ninguna cita en el calendario que obligue a hablar.",
+     "como_confirmar": "Sin próxima reunión.",
+     "solucion": [
+      "Agenda tú la reunión con un plan: «te queremos enseñar el plan del trimestre»."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama hoy. No mandes otro correo.",
+    "Avisa a Coti esta semana: es ámbar o rojo."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Check-in",
+     "texto": "Hola, {nombre}. Creo que nos hemos desencontrado un poco desde {mes}. Siéntete libre de decirme si algo no va: estamos para escuchar y reconsiderar. Tengo un plan que te quiero enseñar, ¿lo vemos el {dia}?"
+    }
+   ],
+   "que_no_hacer": [
+    "Seguir mandando informes al vacío.",
+    "Esperar a la reunión mensual.",
+    "Culparle por no acompañar."
+   ],
+   "escalar": {
+    "cuando": "Si en 48 h no hay respuesta, o si los dos ejes están en rojo.",
+    "a": "operaciones"
+   },
+   "exito": "Vuelve a contestar en menos de 48 h, hay reunión agendada y los números mejoran en las siguientes semanas.",
+   "relacionadas": [
+    "account_cliente_silencioso",
+    "account_senales_de_baja",
+    "account_despacho_saturado"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 250,
+     "autor": "Tomás",
+     "nota": "C-D3-06: insatisfacción silenciosa, la más peligrosa"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+     "linea": 78,
+     "autor": "RO",
+     "nota": "Cuenta plana 2 meses: agendas tú la reunión con un plan"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 305,
+     "autor": "Tomás",
+     "nota": "C-D3-14: la reducción la proponemos nosotros"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón desenganche"
+    }
+   ]
+  },
+  {
+   "id": "rb_queja_con_resultados",
+   "titulo": "Los resultados van bien pero el cliente se queja",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "buenos resultados pero se queja",
+     "se queja aunque va bien",
+     "queja con resultados",
+     "no valora los resultados",
+     "se queja del trato",
+     "queja de servicio"
+    ]
+   },
+   "sintoma": "Los números están en objetivo, pero hay una queja abierta o reciente. El problema no es la captación: es el servicio, el trato, la comunicación o una expectativa distinta de la que medimos.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿De qué se queja exactamente? Copia la frase. ¿Es de resultados, de trato, de tiempos o de dinero?",
+     "donde": "Bandeja, nota del semáforo",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Medimos lo que a él le importa? Quizá quiere ventas o un tipo de cliente, no leads.",
+     "donde": "Objetivo de la ficha, última reunión",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Le hemos contado los buenos números o los ve solo en el informe?",
+     "donde": "Correos salientes, informe del mes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hubo un error nuestro (retraso, pieza mal, un correo con tono malo)?",
+     "donde": "ClickUp, hilos de Desk",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Queja de servicio o de trato, no de resultados.",
+     "como_confirmar": "La frase habla de tiempos, respuestas o personas.",
+     "solucion": [
+      "Llama hoy para escuchar.",
+      "Arregla el proceso que falló y díselo con fecha."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Medimos algo distinto de lo que le importa.",
+     "como_confirmar": "Quiere ventas o otro perfil; los leads le dan igual.",
+     "solucion": [
+      "Recalibra el objetivo con él y cárgalo en la ficha.",
+      "Pide los cierres del despacho para medir lo suyo."
+     ],
+     "quien": "account con paid",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "No percibe el valor: nadie le traduce los números a negocio.",
+     "como_confirmar": "Los buenos números solo aparecen en el informe.",
+     "solucion": [
+      "Tradúcelo: «si cierras 1 de cada 10, cada cliente te cuesta X de publicidad».",
+      "Alterna performance con algo visible para él."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Hubo un error nuestro que pesa más que los números.",
+     "como_confirmar": "Retraso, pieza con error o correo mal recibido.",
+     "solucion": [
+      "Admite sin matices.",
+      "Si toca su dinero, la compensación la decide dirección."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama hoy: es P0 aunque los números vayan bien.",
+    "Avisa hoy a Coti."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Escuchar",
+     "texto": "Hola, {nombre}. He visto lo que nos dices de {tema} y prefiero hablarlo contigo. Los números van bien, pero si tú no estás a gusto, algo estamos haciendo mal. Cuéntame."
+    }
+   ],
+   "que_no_hacer": [
+    "Contestar a la queja con los números.",
+    "Darle la razón en todo sin arreglar nada.",
+    "Esperar a la reunión del ciclo."
+   ],
+   "escalar": {
+    "cuando": "Hoy, como toda queja de un cliente activo.",
+    "a": "operaciones"
+   },
+   "exito": "La queja se cierra con algo arreglado y en las cuatro semanas siguientes no hay otra.",
+   "relacionadas": [
+    "account_queja_o_amenaza_baja",
+    "comunicacion_correo_queja",
+    "account_error_nuestro"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: queja = P0 siempre"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+     "linea": 56,
+     "autor": "RO",
+     "nota": "Renueva el valor percibido: causa silenciosa nº 1 de que un cliente que va bien se enfríe"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+     "linea": 209,
+     "autor": "RO",
+     "nota": "S4: tono alto no es crisis, pero la queja de un activo se escala el mismo día"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón queja_con_resultados y solo_queja"
+    }
+   ]
+  },
+  {
+   "id": "rb_silencio_con_resultados",
+   "titulo": "Los resultados van bien pero el cliente no contesta",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "buenos resultados y no contesta",
+     "no responde al correo",
+     "siete días sin responder",
+     "una semana sin contestar",
+     "va bien pero no dice nada",
+     "silencio con resultados"
+    ]
+   },
+   "sintoma": "Los números están en objetivo pero no responde a nuestro último correo desde hace 7 días o más. Puede estar contento y ocupado, o desconectado. No lo sabes hasta que hablas con él.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Contesta por otro canal (WhatsApp, llamadas, reuniones) aunque no a los correos?",
+     "donde": "Llamadas, reuniones, grupo de WhatsApp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El correo que no contesta le pedía algo o solo informaba?",
+     "donde": "Último correo nuestro",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Sabe el cliente que los números van bien?",
+     "donde": "Informe, correos del mes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Cuánto hace que no hay ninguna respuesta suya por ningún canal?",
+     "donde": "Ficha: eje de respuesta",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Contesta por otro canal: no es silencio de verdad.",
+     "como_confirmar": "Hay llamadas o mensajes recientes.",
+     "solucion": [
+      "Usa su canal. Apunta en la nota del lunes por dónde habla."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El correo no pedía respuesta o pedía algo pesado.",
+     "como_confirmar": "Informativo, o le pide validar o mandar datos.",
+     "solucion": [
+      "Llama y resuélvelo en 5 minutos.",
+      "Propón que lo dejamos andando nosotros."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "No percibe el valor aunque exista.",
+     "como_confirmar": "Nadie le ha contado los buenos números.",
+     "solucion": [
+      "Llámale para contarle lo que va bien. Es el momento de pedir referidos o un testimonio."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Se está enfriando: más de dos semanas sin ninguna respuesta.",
+     "como_confirmar": "Ningún canal en 14 días o más.",
+     "solucion": [
+      "Trátalo como amarillo: aviso a Coti, check-in en 48 h, contacto dos veces por semana."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama en 48 h como mucho. No mandes otro correo.",
+    "Si coge, cuéntale lo que va bien."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Check-in",
+     "texto": "Hola, {nombre}. Te llamo porque te escribí el {dia} y no quería que se quedara colgado. Además, te quería contar que {logro}. ¿Cómo lo veis vosotros?"
+    }
+   ],
+   "que_no_hacer": [
+    "Dar por hecho que está contento porque los números van bien.",
+    "Reenviar el mismo correo.",
+    "Esperar a la reunión mensual."
+   ],
+   "escalar": {
+    "cuando": "Si pasan 14 días sin respuesta por ningún canal.",
+    "a": "operaciones"
+   },
+   "exito": "Responde en menos de 48 h tras la llamada y vuelve el ritmo normal de respuesta.",
+   "relacionadas": [
+    "account_cliente_silencioso",
+    "comunicacion_esperando_al_cliente",
+    "account_salud_alta_ampliar"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 53,
+     "autor": "RO",
+     "nota": "No contesta emails en más de una semana: llamada directa"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 250,
+     "autor": "Tomás",
+     "nota": "C-D3-06: el silencio es alarma"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+     "linea": 186,
+     "autor": "RO",
+     "nota": "S2: deja de escribir y llama"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón silencio_con_resultados y solo_silencio"
+    }
+   ]
+  },
+  {
+   "id": "rb_sin_resultados_pero_contento",
+   "titulo": "No llegan los resultados pero el cliente responde y está contento",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin resultados pero contento",
+     "pocos leads pero feliz",
+     "malos resultados y responde",
+     "está contento aunque no hay leads",
+     "paciente sin resultados"
+    ]
+   },
+   "sintoma": "Los números están por debajo del objetivo pero el cliente contesta y no se queja. Hay crédito, pero tiene fecha de caducidad: si se entera él de que va mal, se pierde la autoridad.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Le hemos contado nosotros que los números van por debajo?",
+     "donde": "Correos salientes, último informe",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Está en arranque o en un canal lento (orgánico)?",
+     "donde": "Fecha de alta, servicio contratado",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El objetivo cargado es el suyo o uno genérico?",
+     "donde": "Objetivo de la ficha",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Cuántos meses lleva el canal sin resultados claros?",
+     "donde": "Captación, informes",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No lo sabe todavía.",
+     "como_confirmar": "Ningún correo nuestro le ha contado la caída.",
+     "solucion": [
+      "Cuéntaselo esta semana con hipótesis y propuesta, antes de que pregunte."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Es pronto: en arranque o en un canal que tarda.",
+     "como_confirmar": "Alta reciente o orgánico puro.",
+     "solucion": [
+      "Recuérdale el horizonte pactado y enséñale las métricas intermedias."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El objetivo no es el suyo y le juzgamos con otro.",
+     "como_confirmar": "Objetivo sin cargar o genérico.",
+     "solucion": [
+      "Carga su objetivo en la ficha."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Retención frágil: se queda por simpatía o precio, no por resultados.",
+     "como_confirmar": "4-6 semanas sin resultados y nadie ha propuesto pivotar.",
+     "solucion": [
+      "Reunión interna para decidir ajuste, pivote o pausa antes de que lo pida él."
+     ],
+     "quien": "account con paid y operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Cuéntale esta semana cómo van los números, con propuesta.",
+    "Revisa con paid el ajuste."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso proactivo",
+     "texto": "Hola, {nombre}. Te escribo antes de la reunión porque {numero} va por debajo de lo que queremos. Esto es lo que vemos y esto es lo que cambiamos: {cambio}. El {dia} lo vemos juntos."
+    }
+   ],
+   "que_no_hacer": [
+    "Callarlo porque está contento.",
+    "Prometer que el mes que viene se arregla.",
+    "Dejarlo meses en el limbo."
+   ],
+   "escalar": {
+    "cuando": "Si lleva 4-6 semanas sin resultados y no hay plan de ajuste.",
+    "a": "operaciones"
+   },
+   "exito": "El cliente sabe cómo van los números por nosotros, hay ajuste en marcha y los resultados vuelven a objetivo.",
+   "relacionadas": [
+    "account_caida_de_leads_contar_antes",
+    "account_expectativas_desalineadas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 264,
+     "autor": "Tomás",
+     "nota": "C-D3-08: contarlo antes de que lo vea él"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 38,
+     "autor": "RO",
+     "nota": "Causa 10: retención frágil por precio"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/errores_y_churn.md",
+     "linea": 11,
+     "autor": "RO",
+     "nota": "Horizonte real del orgánico: mes 6-9"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón paciente_sin_resultados"
+    }
+   ]
+  },
+  {
+   "id": "rb_sano_mantener",
+   "titulo": "El cliente va bien en los tres ejes",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "todo en verde",
+     "cliente sano",
+     "va bien en todo",
+     "sin riesgo de baja",
+     "mantener el verde"
+    ]
+   },
+   "sintoma": "Resultados en objetivo, responde y no se queja. El riesgo es dormirse: el verde se mantiene con contacto, no solo con números.",
+   "gravedad": "baja",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Tiene la siguiente reunión agendada?",
+     "donde": "Reuniones de la ficha",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Le hemos contado lo que va bien este mes?",
+     "donde": "Correos salientes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Lleva tiempo sin pedirle referidos o testimonio?",
+     "donde": "Notas de la ficha",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Sin próxima cita, el verde se enfría.",
+     "como_confirmar": "No hay reunión agendada.",
+     "solucion": [
+      "Agéndala en la siguiente llamada."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Nadie le traduce los resultados a negocio.",
+     "como_confirmar": "Solo ve el informe.",
+     "solucion": [
+      "Contacto semanal con un dato traducido a su negocio."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Momento de ampliar.",
+     "como_confirmar": "Va bien varias semanas seguidas.",
+     "solucion": [
+      "Pide referidos o testimonio (ficha de cliente que va muy bien)."
+     ],
+     "quien": "account",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Contacto semanal con un dato bueno.",
+    "Siguiente reunión agendada."
+   ],
+   "que_no_hacer": [
+    "Dejar de escribirle porque va bien."
+   ],
+   "escalar": {
+    "cuando": "No hace falta.",
+    "a": "nadie"
+   },
+   "exito": "Sigue en verde en los tres ejes cuatro semanas seguidas.",
+   "relacionadas": [
+    "account_salud_alta_ampliar",
+    "account_sin_contacto_semanal"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/PLAYBOOK.md",
+     "linea": 50,
+     "autor": "RO",
+     "nota": "Contacto semanal proactivo"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón sano"
+    }
+   ]
+  },
+  {
+   "id": "rb_sin_datos_para_juzgar",
+   "titulo": "Faltan datos para juzgar el riesgo de baja del cliente",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin dato",
+     "ejes en gris",
+     "no hay objetivo",
+     "no puedo juzgar",
+     "faltan datos del cliente"
+    ]
+   },
+   "sintoma": "Dos o más ejes salen en gris: sin objetivo ni salud para los resultados, sin fechas de correo o llamada, o sin Desk. Que no se vea riesgo no quiere decir que no lo haya.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Tiene objetivo cargado en la ficha?",
+     "donde": "Ficha: Objetivo",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene cuenta en Desk y sus correos llegan ahí?",
+     "donde": "Ficha: Desk",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Has puesto el semáforo del lunes esta semana?",
+     "donde": "Ficha: Semáforo del lunes",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Sin objetivo cargado.",
+     "como_confirmar": "El botón Objetivo dice «Sin cargar».",
+     "solucion": [
+      "Carga el objetivo con lo que pactasteis."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El cliente no tiene Desk o escribe a correos personales.",
+     "como_confirmar": "Desk «sin conectar».",
+     "solucion": [
+      "Pide a Agus que lo conecte o que redirija sus correos."
+     ],
+     "quien": "account con Agus",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Semáforo del lunes sin poner.",
+     "como_confirmar": "Sin color esta semana.",
+     "solucion": [
+      "Ponlo y marca si se ha quejado."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Carga el objetivo y pon el semáforo del lunes."
+   ],
+   "que_no_hacer": [
+    "Leer el gris como verde."
+   ],
+   "escalar": {
+    "cuando": "Si falta la conexión de Desk.",
+    "a": "operaciones"
+   },
+   "exito": "Ningún eje en gris la semana siguiente.",
+   "relacionadas": [
+    "account_semaforo_lunes_sin_poner"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "patrón sin_datos; confianza baja"
+    }
+   ]
+  },
+  {
+   "id": "rb_semaforo_lunes_contradice",
+   "titulo": "El semáforo del lunes dice verde y los tres ejes dicen riesgo",
+   "puestos": [
+    "account",
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "semáforo en verde pero riesgo",
+     "discrepancia",
+     "el account dice verde",
+     "los datos dicen rojo",
+     "semáforo no cuadra"
+    ]
+   },
+   "sintoma": "El account puso verde el lunes y los datos dan riesgo alto o crítico. O al revés: rojo a mano con los datos en verde. Una de las dos lecturas se está perdiendo algo.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué eje está en rojo y desde cuándo?",
+     "donde": "Ficha: Riesgo de baja",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El dato es bueno (fuente al día, cliente bien emparejado)?",
+     "donde": "Salud de las fuentes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Sabe el account algo que los datos no ven (llamada, reunión, WhatsApp)?",
+     "donde": "Nota del semáforo",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El account no ha leído las señales: verde por costumbre.",
+     "como_confirmar": "El eje lleva semanas en rojo.",
+     "solucion": [
+      "Revisa el eje y ajusta el semáforo con su motivo."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El dato está mal: fuente vieja o cliente mal emparejado.",
+     "como_confirmar": "La fuente sale vieja o rota.",
+     "solucion": [
+      "Avisa a quien mantiene la app; no cambies el semáforo por un dato roto."
+     ],
+     "quien": "account con Agus",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El account sabe algo que la app no ve.",
+     "como_confirmar": "Lo habló por teléfono o en reunión.",
+     "solucion": [
+      "Escríbelo en la nota del lunes y marca la queja si la hubo."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Mira qué eje contradice tu color y escribe el motivo en la nota del lunes."
+   ],
+   "que_no_hacer": [
+    "Poner verde para que no salte el aviso.",
+    "Cambiar el color sin escribir por qué."
+   ],
+   "escalar": {
+    "cuando": "Si la contradicción dura dos semanas.",
+    "a": "operaciones"
+   },
+   "exito": "El semáforo del lunes y los ejes coinciden, o la nota explica por qué no.",
+   "relacionadas": [
+    "account_semaforo_lunes_sin_poner",
+    "account_cliente_critico"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 257,
+     "autor": "Tomás",
+     "nota": "C-D3-07: el código se actualiza todas las semanas; no salta escalones"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "discrepancia"
+    }
+   ]
+  },
+  {
+   "id": "rb_cartera_en_riesgo_de_baja",
+   "titulo": "Varios clientes de una cartera están en riesgo de baja alto o crítico",
+   "puestos": [
+    "account",
+    "operaciones",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "cartera en riesgo de baja",
+     "muchos clientes en rojo",
+     "varios clientes pueden irse",
+     "cartera roja",
+     "D-41"
+    ]
+   },
+   "sintoma": "Un account tiene 3 o más clientes en riesgo alto o crítico. Misma escala que la D-41 para las cuentas en crítico de un trafficker: hasta 2 bien, 3-4 vigilar, 5 o más crítico.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Se repite el mismo patrón en varios clientes (todos silencio, todos queja)?",
+     "donde": "Riesgo de baja por cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene el account más clientes de los que puede atender?",
+     "donde": "Carteras (Ajustes)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Comparten trafficker o canal los clientes sin resultados?",
+     "donde": "Captación por trafficker",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Falta de contacto: la cadencia semanal no se cumple.",
+     "como_confirmar": "Varios en silencio.",
+     "solucion": [
+      "Plan de llamadas esta semana, una por cliente en riesgo."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Cartera sobrecargada.",
+     "como_confirmar": "Más de 12 proyectos.",
+     "solucion": [
+      "Operaciones reparte clientes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El fallo es de captación, no de relación.",
+     "como_confirmar": "Mismo trafficker o canal.",
+     "solucion": [
+      "Revisión con la jefa de publicidad."
+     ],
+     "quien": "operaciones con publicidad",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Ordena sus clientes en riesgo por nivel y revisa con el account los dos primeros hoy."
+   ],
+   "que_no_hacer": [
+    "Tratar cada cliente aislado si el patrón se repite."
+   ],
+   "escalar": {
+    "cuando": "Con 5 o más clientes en riesgo alto o crítico.",
+    "a": "dirección"
+   },
+   "exito": "La cartera baja a 2 o menos clientes en riesgo alto o crítico.",
+   "relacionadas": [
+    "account_cartera_en_riesgo",
+    "operaciones_account_sobrecargado"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_captacion/generar_captacion.py",
+     "linea": 51,
+     "autor": "RO",
+     "nota": "D-41: ≤ 2 verde · 3-4 ámbar · ≥ 5 rojo (cuentas por trafficker)"
+    },
+    {
+     "fichero": "ro-app:fuentes_riesgo/riesgo_baja.py",
+     "autor": "RO",
+     "nota": "resumen_cartera, misma escala; pendiente de Tomás"
+    }
+   ]
+  }
+ ]
+}

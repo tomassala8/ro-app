@@ -28,7 +28,7 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 AREAS = ["direccion", "operaciones", "account", "comunicacion", "altas", "publicidad", "crm", "setters", "seo_web",
-         "redes_produccion", "ventas_ro", "personas_admin"]
+         "redes_produccion", "ventas_ro", "personas_admin", "riesgo_baja"]
 
 VACIAS = set("""a al algo ante antes con como cual cuando de del desde donde el ella ellos en entre es esa ese eso esta
 este esto estan esta fue ha han hay la las le les lo los mas me mi mis muy no nos o para pero por que se sea ser si sin
