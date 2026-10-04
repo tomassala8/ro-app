@@ -18,7 +18,7 @@
 //
 // Enganche en 1 línea (dueños de Bandeja, Ficha y Mi día): ver _ESTADO_ia.md.
 
-import { h, icono, chipEstado, vacio, avisoFlotante, copiar, iniciales, fechaCorta as diaMes } from '../componentes.js';
+import { h, icono, chipEstado, vacio, avisoFlotante, copiar, iniciales, panel, fechaCorta as diaMes } from '../componentes.js';
 import { conTickets } from './_legible.js';   // R15a: los RO-xxxx de Desk dentro de un consejo, como enlace a ese correo
 
 // Ronda 10 (E0): la hoja de este fichero vive en estilos.css («IA · ia_componentes.js»). estilos() se queda vacía para no
@@ -37,6 +37,10 @@ export function iaDe(ctx) {
     lista: () => ctx.api('ia/lista'),
     borrador: (ticket, nuevo = false) => ctx.api('ia/borrador', { metodo: 'POST', cuerpo: { ticket, nuevo } }),
     copiloto: (cliente_id, nuevo = false) => ctx.api('ia/copiloto', { metodo: 'POST', cuerpo: { cliente_id, nuevo } }),
+    // 4-oct · cerebros de área: buscar y leer una ficha va SIN IA; adaptarla a un cliente, con IA (si hay clave)
+    cerebroBuscar: q => ctx.api(`ia/cerebro?q=${encodeURIComponent(q)}`),
+    cerebroFicha: id => ctx.api(`ia/cerebro?id=${encodeURIComponent(id)}`),
+    cerebroAdaptar: (id, cliente = null, pregunta = '') => ctx.api('ia/cerebro', { metodo: 'POST', cuerpo: { id, cliente, pregunta } }),
   };
 }
 
@@ -325,7 +329,121 @@ function consejoEl(c, i, { soloLectura, alAccion, aqui, pantalla }) {
       dato ? h('div', { class: 'dato' }, icono('grafico'), h('span', {}, conTickets(dato))) : null,
       c.dato_en_duda && !String(c.porque || '').includes(c.dato_en_duda) ? h('div', { class: 'dato' }, icono('alert'), h('span', {}, `Dato en duda: ${c.dato_en_duda}`)) : null,
       h('div', { class: 'pie' }, pie.filter(Boolean)),
+      fichaConsejo(c.ficha),
       filaValoracion(c, { soloLectura, pantalla, i }))));
+}
+
+// ------------------------------------------------------------------ 4-oct · cerebros de área
+// Cada consejo trae su ficha de situación (servidor, sin IA): qué hacer hoy, qué comprobar primero y cuándo escalar.
+// Plegada por defecto para no alargar la lista; «Ver la ficha entera» abre el Asistente en «Qué hago si…».
+function fichaConsejo(f) {
+  if (!f?.id) return null;
+  const lista = (titulo, xs) => xs?.length ? h('div', {}, h('b', {}, titulo), h('ul', { style: { margin: '4px 0 8px 18px' } }, xs.filter(Boolean).map(x => h('li', {}, x)))) : null;
+  return h('details', { class: 'ia-ficha', 'data-ficha': f.id, style: { marginTop: '6px' } },
+    h('summary', {}, icono('libro', { clase: 's' }), ' Cómo se resuelve'),
+    lista('Hoy', f.hoy), lista('Comprueba primero', f.comprueba),
+    f.escalar?.a ? h('p', { class: 'ia-sub' }, `Escala a ${quien(f.escalar.a)}: ${f.escalar.cuando || ''}`) : null,
+    f.exito ? h('p', { class: 'ia-sub' }, `Resuelto cuando: ${f.exito}`) : null,
+    botonFichaEntera(f.id));
+}
+/** Los cerebros guardan a quién escalar como id de puesto o área («jefa_crm», «ventas_ro»): en pantalla, con nombre legible. */
+const QUIEN = { direccion: 'Dirección', operaciones: 'Operaciones', jefa_publicidad: 'jefa de publicidad', jefa_seo: 'jefa de SEO',
+  jefa_crm: 'jefa de CRM', ventas_ro: 'Ventas de RO', tecnico_altas: 'técnico de altas', administracion: 'Administración', rrhh: 'RRHH',
+  especialista_ghl: 'especialista de GoHighLevel', finanzas_direccion: 'Finanzas (Dirección)', personas_admin: 'Personas y administración',
+  seo_web: 'SEO y web', redes_produccion: 'Redes y producción', proyectos: 'Proyectos', crm: 'CRM', publicidad: 'Publicidad', altas: 'Altas' };
+const quien = a => String(a || '').replace(/[a-z_]+/g, w => QUIEN[w] || w);
+/** «Ver la ficha entera» dentro del propio consejo (sirve en cualquier pantalla, sin depender del Asistente). */
+function botonFichaEntera(id) {
+  const zona = h('div');
+  const b = h('button', { type: 'button', class: 'bt mini' }, icono('derecha', { clase: 's' }), 'Ver la ficha entera');
+  b.addEventListener('click', async () => {
+    if (!window.RO?.api) return;
+    b.disabled = true; zona.replaceChildren(cargando('Abriendo la ficha…'));
+    try { const r = await window.RO.api(`ia/cerebro?id=${encodeURIComponent(id)}`); b.hidden = true; zona.replaceChildren(fichaCompleta(window.RO.api, r.ficha)); }
+    catch (e) { b.disabled = false; zona.replaceChildren(error(e)); }
+  });
+  return h('div', {}, b, zona);
+}
+
+/** La ficha entera: síntoma, hoy, diagnóstico, causas, mensajes listos, qué no hacer, escalar y fuentes. */
+export function fichaCompleta(api, f, { clienteId = null, pregunta = () => '' } = {}) {
+  const sec = (titulo, ...hijos) => hijos.some(Boolean) ? h('div', { style: { marginTop: 'var(--s-3)' } }, h('h4', { style: { font: 'var(--t-h3)' } }, titulo), ...hijos) : null;
+  const ul = xs => xs?.length ? h('ul', { style: { margin: '4px 0 0 18px' } }, xs.map(x => h('li', {}, x))) : null;
+  const zonaIA = h('div', { 'aria-live': 'polite' });
+  const adaptar = h('button', { type: 'button', class: 'bt mini', on: { click: async () => {
+    adaptar.disabled = true; zonaIA.replaceChildren(cargando('Adaptando la ficha…'));
+    try {
+      const r = await api('ia/cerebro', { metodo: 'POST', cuerpo: { id: f.id, cliente: clienteId, pregunta: pregunta() } });
+      if (r.origen !== 'vivo') { zonaIA.replaceChildren(avisoIA(r.motivo || 'Sin IA: usa la ficha tal cual, ya está completa.')); return; }
+      zonaIA.replaceChildren(h('div', { class: 'ia-caja' }, h('div', { class: 'ia-cab' }, h('b', {}, icono('spark'), 'Para tu caso'), selloOrigen(r)),
+        h('p', {}, r.resumen || ''), ul((r.pasos || []).map(p => `${p.que} — ${p.porque}`)),
+        r.mensaje ? h('div', {}, h('pre', { style: { whiteSpace: 'pre-wrap', font: 'inherit' } }, r.mensaje),
+          h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(r.mensaje, 'Mensaje copiado') } }, 'Copiar el mensaje')) : null,
+        r.escalar ? h('p', { class: 'ia-sub' }, `Escalar: ${r.escalar}`) : null));
+    } catch (e) { zonaIA.replaceChildren(error(e)); }
+    finally { adaptar.disabled = false; }
+  } } }, icono('spark', { clase: 's' }), clienteId ? 'Adaptar a este cliente' : 'Adaptar a mi caso');
+  return h('article', { class: 'ia-caja', 'data-ficha': f.id },
+    h('div', { class: 'ia-cab' }, h('b', {}, f.titulo), h('span', { class: 'ia-acc' },
+      chipEstado(f.gravedad === 'alta' ? 'rojo' : f.gravedad === 'media' ? 'ambar' : 'gris', f.plazo || f.gravedad || ''), adaptar)),
+    h('p', {}, f.sintoma || ''),
+    sec('Hoy, aunque no sepas la causa', ul(f.acciones_inmediatas)),
+    sec('Diagnóstico, en orden', h('ol', { style: { margin: '4px 0 0 18px' } }, (f.diagnostico || []).map(d => h('li', {}, `${d.comprueba}`, d.donde ? h('span', { class: 'ia-sub' }, ` · ${d.donde}`) : null)))),
+    sec('Causas y solución', ...(f.causas || []).map(c => h('details', {}, h('summary', {}, c.causa),
+      c.como_confirmar ? h('p', { class: 'ia-sub' }, `Cómo confirmarlo: ${c.como_confirmar}`) : null, ul(c.solucion),
+      c.quien ? h('p', { class: 'ia-sub' }, `Quién: ${c.quien}${c.plazo ? ` · ${c.plazo}` : ''}`) : null))),
+    sec('Mensajes listos', ...(f.guiones || []).map(g => h('details', {}, h('summary', {}, `${g.canal} · para ${g.para} · ${g.cuando || ''}`),
+      h('pre', { style: { whiteSpace: 'pre-wrap', font: 'inherit' } }, g.texto),
+      h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(g.texto, 'Mensaje copiado') } }, 'Copiar')))),
+    sec('Qué no hacer', ul(f.que_no_hacer)),
+    f.escalar?.a ? sec('Cuándo escalar', h('p', {}, `A ${quien(f.escalar.a)}: ${f.escalar.cuando || ''}`)) : null,
+    f.exito ? sec('Resuelto cuando', h('p', {}, f.exito)) : null,
+    zonaIA,
+    f.fuentes?.length ? h('details', { style: { marginTop: 'var(--s-3)' } }, h('summary', { class: 'ia-sub' }, `De dónde sale (${f.fuentes.length} fuentes)`),
+      ul(f.fuentes.map(x => `${x.autor ? x.autor + ' · ' : ''}${x.fichero}${x.linea ? ':' + x.linea : ''}${x.nota ? ' — ' + x.nota : ''}`))) : null);
+}
+
+/**
+ * panelCerebro(ctx, { fichaInicial, clienteId })
+ * «Qué hago si…»: la persona escribe lo que le pasa y la app le enseña la ficha de situación de los cerebros de área
+ * (diagnóstico, causas, guiones, qué no hacer, cuándo escalar). Buscar y leer no gastan IA. Con clave, «Adaptar a este
+ * cliente» pide a la IA que ajuste ESA ficha (modelo barato); sin clave, la ficha ya sirve tal cual.
+ */
+export function panelCerebro(ctx, { fichaInicial = null, clienteId = null, compacto = false } = {}) {
+  const ia = iaDe(ctx);
+  const entrada = h('input', { type: 'search', placeholder: 'Ej.: los leads no vienen a las citas · el cliente pide la baja · la campaña no gasta',
+    'aria-label': 'Qué te pasa', style: { flex: '1 1 260px', minWidth: 0 } });
+  const resultados = h('div', { 'aria-live': 'polite' });
+  const detalle = h('div', { 'aria-live': 'polite' });
+  let t = 0;
+  async function buscar() {
+    const q = entrada.value.trim();
+    if (q.length < 3) { resultados.replaceChildren(); return; }
+    resultados.replaceChildren(cargando('Buscando la ficha…'));
+    try {
+      const r = await ia.cerebroBuscar(q);
+      if (!r.fichas?.length) { resultados.replaceChildren(h('p', { class: 'ia-sub' }, 'Sin ficha para eso. Prueba con otras palabras o pregunta a tu responsable.')); return; }
+      resultados.replaceChildren(h('ol', { class: 'ia-acciones', style: { listStyle: 'none', margin: 0, padding: 0 } }, r.fichas.map((f, i) =>
+        h('li', { class: 'ia-accion' }, h('span', { class: 'n', 'aria-hidden': 'true' }, String(i + 1)),
+          h('div', {}, h('button', { type: 'button', style: { font: 'inherit', fontWeight: 600, textAlign: 'left', background: 'none', border: 0, padding: 0, color: 'var(--accent)', cursor: 'pointer' }, on: { click: () => abrir(f.id) } }, f.titulo),
+            h('p', { class: 'ia-sub' }, (f.hoy || [])[0] || ''))))));
+    } catch (e) { resultados.replaceChildren(error(e)); }
+  }
+  entrada.addEventListener('input', () => { clearTimeout(t); t = setTimeout(buscar, 350); });
+  entrada.addEventListener('keydown', e => { if (e.key === 'Enter') { clearTimeout(t); buscar(); } });
+
+  async function abrir(id) {
+    detalle.replaceChildren(cargando('Abriendo la ficha…'));
+    try { pintarFicha((await ia.cerebroFicha(id)).ficha); }
+    catch (e) { detalle.replaceChildren(error(e)); }
+  }
+  function pintarFicha(f) { detalle.replaceChildren(f ? fichaCompleta(ctx.api, f, { clienteId, pregunta: () => entrada.value.trim() }) : ''); }
+  if (fichaInicial) abrir(fichaInicial);
+  const cuerpo = h('div', { class: 'cuerpo' },
+    h('div', { style: { display: 'flex', gap: 'var(--s-2)', flexWrap: 'wrap' } }, entrada),
+    h('p', { class: 'ia-sub' }, 'Busca en los cerebros de RO (criterio interno, con su fuente). Buscar no gasta IA.'),
+    resultados, detalle);
+  return compacto ? cuerpo : panel({ titulo: 'Qué hago si…', icono: 'libro', sub: 'Escribe lo que te pasa como se lo dirías a tu responsable' }, cuerpo);
 }
 
 // ------------------------------------------------------------------ 3-oct · cerebro de decisiones v2: valoración

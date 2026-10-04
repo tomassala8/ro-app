@@ -5,7 +5,7 @@
 // Los mismos componentes (modulos/ia_componentes.js) son los que usan la Bandeja, la ficha y Mi día.
 
 import { h, fmt, icono, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, panel, logoCliente, iniciales, esqueleto } from '../componentes.js';
-import { iaDe, botonIA, panelCopiloto, estilos as estilosIA } from './ia_componentes.js';
+import { iaDe, botonIA, panelCopiloto, panelCerebro, estilos as estilosIA } from './ia_componentes.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -75,15 +75,21 @@ export default {
     ]);
 
     const elegido = ctx.params[0] ? decodeURIComponent(ctx.params[0]) : null;
+    // 4-oct · #/asistente-ia?ficha=<id> abre «Qué hago si…» con esa ficha de los cerebros de área
+    const fichaPedida = new URLSearchParams((location.hash.split('?')[1] || '')).get('ficha');
     const tabs = pestanas({
-      clave: 'asistente-ia', activa: elegido ? 'copiloto' : (L.copiloto.length ? 'copiloto' : 'borradores'),
+      clave: 'asistente-ia', activa: fichaPedida ? 'que-hago' : elegido ? 'copiloto' : (L.copiloto.length ? 'copiloto' : 'borradores'),
       pestanas: [
         { id: 'copiloto', texto: 'Qué haría hoy', icono: 'medidor', cuenta: rojos, cuentaEstado: 'rojo' },
         { id: 'borradores', texto: 'Borradores de correo', icono: 'mail', cuenta: quejas, cuentaEstado: 'rojo' },
+        { id: 'que-hago', texto: 'Qué hago si…', icono: 'libro' },
       ],
-      pintar: (id, z) => id === 'copiloto' ? pintarCopiloto(z, ctx, L, elegido) : pintarBorradores(z, ctx, L),
+      pintar: (id, z) => id === 'copiloto' ? pintarCopiloto(z, ctx, L, elegido)
+        : id === 'que-hago' ? z.append(panelCerebro(ctx, { fichaInicial: fichaPedida, clienteId: elegido }))
+        : pintarBorradores(z, ctx, L),
     });
-    if (elegido) tabs.elegir('copiloto');
+    if (fichaPedida) tabs.elegir('que-hago');
+    else if (elegido) tabs.elegir('copiloto');
     raiz.replaceChildren(cab, tabs,
       h('p', { class: 'sub', style: { marginTop: 'var(--s-4)' } }, icono('info', { clase: 's' }),
         ` ${L.generado ? `Propuestas generadas el ${fDiaHoraRO(String(L.generado).slice(0, 16))}. ` : ''}Cada propuesta y cada borrador quedan en el rastro. Solo ves los clientes que puedes abrir.`));
