@@ -19,10 +19,15 @@ Sale 1 si hay algún ✘.
 import argparse
 import json
 import os
+import re
 import sqlite3
 import sys
 
 NUMERICOS = {"integer", "bigint", "smallint", "numeric", "double precision", "real"}
+# Enteros de Postgres: int2, int4, int8. Un entero se mira con su patrón y su rango, no con float() (que deja pasar
+# «1.5», «1e3» o «nan», y pierde precisión pasado 2^53).
+ENTEROS = {"smallint": 2 ** 15, "integer": 2 ** 31, "bigint": 2 ** 63}
+ENTERO = re.compile(r"[+-]?[0-9]+")
 
 
 def tipos_pg(url):
@@ -36,6 +41,18 @@ def tipos_pg(url):
 def no_cabe(valor, tipo_pg):
     if valor is None or tipo_pg is None:
         return False
+    if tipo_pg in ENTEROS:
+        tope = ENTEROS[tipo_pg]
+        if isinstance(valor, float):
+            if not valor.is_integer():
+                return True
+            valor = int(valor)
+        if isinstance(valor, int):
+            return not -tope <= valor < tope
+        texto = str(valor).strip()
+        if not ENTERO.fullmatch(texto):
+            return True
+        return not -tope <= int(texto) < tope
     if tipo_pg in NUMERICOS:
         if isinstance(valor, (int, float)):
             return False

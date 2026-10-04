@@ -29,10 +29,19 @@ solo sus clientes.
 
 - Se quita `quien_esta_detras` entero (personas del despacho) y el nombre del account de RO.
 - En las citas, el nombre de quien habla se cambia por su papel («socio», «gerente»…).
-- Los nombres completos de esas personas, en cualquier texto, se cambian por su papel.
-- Correos y teléfonos, en cualquier texto: «[dato quitado]».
-- No pasan `nombre`, `carpeta`, `bloque` ni `fuentes`.
-- No se puede garantizar: un nombre de pila suelto dentro de una cita. Lo revisa quien prepara las fichas.
+- Un solo mapa con las personas de TODAS las fichas: el nombre de una persona puede salir en la ficha de otro cliente.
+  Se busca sin importar tildes, mayúsculas ni espacios («José García» = «JOSE  garcia»): nombre completo (también lo
+  del paréntesis y cada uno de «A y B»), y nombre de pila o apellido sueltos (≥3 letras, con mayúscula, palabra
+  entera). Se cambian por su papel en ese cliente; si es de otro cliente o hay varios papeles, por «[persona]».
+- Se dejan a propósito, sueltos: los que forman el nombre del propio cliente («García Abogados»), los que son un sitio
+  de `donde`, y los que también son palabra corriente («Rosa», «Paz», «Claro»…) a principio de frase.
+- El papel también se limpia (a veces nombra a otra persona).
+- Correos y teléfonos, en cualquier texto: «[dato quitado]». Teléfonos con espacios dobles, barras, rayas, paréntesis,
+  prefijo (+34, 0034, (+34)) o pegados a letras («tlf600…»). No se tocan años, dinero, fechas ni porcentajes.
+- No pasan `nombre`, `carpeta`, `bloque` ni `fuentes`. El `cliente_id` pasa tal cual (es la clave de la app).
+- No se puede garantizar: un nombre que no esté en `quien_esta_detras`, un mote, o los casos de arriba. Lo revisa
+  quien prepara las fichas.
+- La salida se escribe de forma atómica (temporal único, fsync, `os.replace`).
 
 ## Cómo se corre
 

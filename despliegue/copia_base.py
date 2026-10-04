@@ -116,13 +116,37 @@ def contar(con):
     return {t: con.execute(f'SELECT count(*) FROM "{t}"').fetchone()[0] for t in tablas}
 
 
+def _es_dia(d):
+    """Solo las carpetas con nombre de fecha (AAAA-MM-DD). «horas/» y cualquier otra no son una copia del día."""
+    try:
+        date.fromisoformat(d.name)
+        return d.is_dir()
+    except ValueError:
+        return False
+
+
+def imborrables_pg(url):
+    import psycopg
+    with psycopg.connect(url) as c:
+        return {t for (t,) in c.execute(
+            "SELECT c.relname FROM pg_trigger t JOIN pg_class c ON c.oid = t.tgrelid "
+            "JOIN pg_namespace n ON n.oid = c.relnamespace "
+            "WHERE n.nspname = 'public' AND NOT t.tgisinternal AND t.tgname LIKE '%\\_sin\\_delete'")}
+
+
+def menos_en_la_viva(copia, vivas, imborrables):
+    """Lo imborrable nunca puede tener MENOS filas en la viva que en la copia (nada se borra). Si las tiene, o la
+    copia no se restaura bien o alguien ha borrado: en los dos casos, mal."""
+    return {t: (copia[t], vivas.get(t)) for t in sorted(imborrables) if t in copia and vivas.get(t, 0) < copia[t]}
+
+
 def probar():
-    dias = sorted((d for d in CARPETA.iterdir() if d.is_dir()), reverse=True) if CARPETA.exists() else []
+    dias = sorted((d for d in CARPETA.iterdir() if _es_dia(d)), reverse=True) if CARPETA.exists() else []
     if not dias:
-        sys.exit("No hay ninguna copia todavía.")
+        sys.exit("✘ No hay ninguna copia del día (carpetas AAAA-MM-DD) todavía.")
     ultima = dias[0]
     tmp = Path(tempfile.mkdtemp(prefix="ro_restaura_"))
-    ok = True
+    ok, comprobadas = True, 0
     for gz in ultima.glob("*.db.gz"):
         restaurada = tmp / gz.name[:-3]
         with gzip.open(gz, "rb") as fi, open(restaurada, "wb") as fo:
@@ -137,13 +161,29 @@ def probar():
         menos = {t: (n, actual.get(t)) for t, n in filas.items() if actual and actual.get(t, 0) < n}
         bien = integridad == "ok" and not menos
         ok &= bien
+        comprobadas += 1
         print(f"{'✔' if bien else '✘'} {gz.name}: integridad {integridad} · {len(filas)} tablas · {sum(filas.values())} filas"
               + (f" · tablas con MENOS filas en la viva: {menos}" if menos else ""))
     if (ultima / "postgres.dump").exists():
-        r = subprocess.run(["pg_restore", "--list", str(ultima / "postgres.dump")], capture_output=True, text=True)
-        print(f"{'✔' if r.returncode == 0 else '✘'} postgres.dump legible ({len(r.stdout.splitlines())} objetos)")
-        ok &= r.returncode == 0
+        comprobadas += 1
+        try:
+            copia = filas_del_volcado(ultima / "postgres.dump")
+            url = os.environ.get("DATABASE_URL", "")
+            menos = {}
+            if url.startswith(("postgres://", "postgresql://")):
+                menos = menos_en_la_viva(copia, filas_vivas(url), imborrables_pg(url))
+            bien = not menos
+            print(f"{'✔' if bien else '✘'} postgres.dump leído entero: {len(copia)} tablas · {sum(copia.values())} filas"
+                  + (f" · imborrables con MENOS filas en la viva: {menos}" if menos else "")
+                  + ("" if url else " · sin DATABASE_URL: no se compara con la viva"))
+        except RuntimeError as e:
+            bien = False
+            print(f"✘ postgres.dump: {e}")
+        ok &= bien
     shutil.rmtree(tmp, ignore_errors=True)
+    if not comprobadas:
+        print(f"✘ En {ultima.name} no hay ninguna copia que probar (ni *.db.gz ni postgres.dump).")
+        ok = False
     print(f"Prueba de restauración de {ultima.name}: {'BIEN' if ok else 'MAL'} · {datetime.now():%H:%M}")
     return ok
 
@@ -151,20 +191,25 @@ def probar():
 def filas_del_volcado(dump):
     """Abre el volcado ENTERO (pg_restore a texto, sin base) y cuenta las filas de cada tabla. Si pg_restore no puede
     leerlo, la copia no vale. Así cada copia de cada hora queda probada, no solo hecha."""
-    r = subprocess.run(["pg_restore", "--data-only", "-f", "-", str(dump)], capture_output=True, text=True)
-    if r.returncode != 0:
-        raise RuntimeError(f"pg_restore no puede leer la copia: {r.stderr[-300:]}")
-    filas, tabla = {}, None
-    for linea in r.stdout.splitlines():
-        if tabla is None:
-            m = re.match(r'COPY (?:"?[\w]+"?\.)?"?([\w]+)"? .*FROM stdin;$', linea)
-            if m:
-                tabla = m.group(1)
-                filas[tabla] = 0
-        elif linea == "\\.":
-            tabla = None
-        else:
-            filas[tabla] += 1
+    # Se lee línea a línea según sale (el volcado entero en memoria no cabe en un servidor pequeño).
+    err = tempfile.TemporaryFile()
+    with subprocess.Popen(["pg_restore", "--data-only", "-f", "-", str(dump)], stdout=subprocess.PIPE, stderr=err,
+                          text=True, errors="replace") as p:
+        filas, tabla = {}, None
+        for linea in p.stdout:
+            linea = linea.rstrip("\n")
+            if tabla is None:
+                m = re.match(r'COPY (?:"?[\w]+"?\.)?"?([\w]+)"? .*FROM stdin;$', linea)
+                if m:
+                    tabla = m.group(1)
+                    filas[tabla] = 0
+            elif linea == "\\.":
+                tabla = None
+            else:
+                filas[tabla] += 1
+    if p.returncode != 0:
+        err.seek(0)
+        raise RuntimeError(f"pg_restore no puede leer la copia: {err.read().decode(errors='replace')[-300:]}")
     return filas
 
 
@@ -249,14 +294,25 @@ def copia_hora():
     if faltan:
         shutil.rmtree(carpeta, ignore_errors=True)
         sys.exit(f"La copia no trae estas tablas de la base: {', '.join(faltan)}")
-    sha = hashlib.sha256(dump.read_bytes()).hexdigest()
-    (carpeta / "manifiesto.json").write_text(json.dumps({
-        "hora_utc": ahora.isoformat(), "bytes": dump.stat().st_size, "sha256": sha,
+    menos = menos_en_la_viva(copia, vivas, imborrables_pg(url))
+    if menos:
+        shutil.rmtree(carpeta, ignore_errors=True)
+        sys.exit(f"✘ Tablas imborrables con MENOS filas en la viva que en la copia: {menos}")
+    h = hashlib.sha256()
+    with open(dump, "rb") as f:
+        for trozo in iter(lambda: f.read(1 << 20), b""):
+            h.update(trozo)
+    # El manifiesto es la marca de «copia hecha» (arriba se mira si existe): se escribe aparte y solo se le da su
+    # nombre cuando las subidas han ido bien. Si una falla, la próxima vez se repite la copia entera.
+    manifiesto, provisional = carpeta / "manifiesto.json", carpeta / "manifiesto.json.parcial"
+    provisional.write_text(json.dumps({
+        "hora_utc": ahora.isoformat(), "bytes": dump.stat().st_size, "sha256": h.hexdigest(),
         "tablas": len(copia), "filas": sum(copia.values()), "por_tabla": copia}, ensure_ascii=False, indent=1))
     s3, bucket = r2(), os.environ.get("RO_R2_BUCKET")
     if s3:
-        for f in (dump, carpeta / "manifiesto.json"):
-            s3.upload_file(str(f), bucket, f"copias/horas/{carpeta.name}/{f.name}")
+        s3.upload_file(str(dump), bucket, f"copias/horas/{carpeta.name}/{dump.name}")
+        s3.upload_file(str(provisional), bucket, f"copias/horas/{carpeta.name}/{manifiesto.name}")
+    provisional.replace(manifiesto)
     # Copia inmutable en B2 a sus horas. Solo sube: la llave no puede ni listar ni borrar, y el bloqueo «compliance»
     # del bucket guarda cada versión 30 días. Si falla, lo dice pero no tira la copia de la hora (ya está en R2).
     b2, en_b2 = (almacen("B2") if ahora.hour in horas_b2() else None), False

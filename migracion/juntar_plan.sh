@@ -22,12 +22,15 @@ CHOQUES="$FUERA/choques_plan.txt"
 
 git fetch -q origin "${RAMA#origin/}" main 2>/dev/null || echo "⚠ sin red: uso lo que ya hay de $RAMA"
 git rev-parse -q --verify "$RAMA" >/dev/null || { echo "✘ No encuentro $RAMA"; exit 1; }
-BASE="$(git merge-base origin/main "$RAMA")"
+BASE="$(git merge-base origin/main "$RAMA" 2>/dev/null)"
+# Sin base común (falta origin/main o historias sin relación) el diff saldría contra nada: se para aquí.
+[ -n "$BASE" ] || { echo "✘ No hay base común entre origin/main y $RAMA (git merge-base vacío). No junto nada."; exit 1; }
 
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT
 copiados=0; mezclados=0; iguales=0; choques=()
 : > "$tmp/lista"
-git diff --name-only "$BASE" "$RAMA" -- . ':!migracion' ':!v2' ':!.cursor' ':!AGENTS.md' > "$tmp/lista"
+# core.quotePath=false: los nombres con tildes salen tal cual, no entre comillas con \303\263…
+git -c core.quotePath=false diff --name-only "$BASE" "$RAMA" -- . ':!migracion' ':!v2' ':!.cursor' ':!AGENTS.md' > "$tmp/lista"
 while IFS= read -r f; do
   [ -n "$f" ] || continue
   if ! git cat-file -e "$RAMA:$f" 2>/dev/null; then echo "  · $f: la rama lo borra; se deja como está"; continue; fi

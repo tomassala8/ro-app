@@ -21,14 +21,16 @@ function legadoFalso() {
 }
 
 describe('proxy de legado', () => {
-  it('en la nube (access) quita X-RO-Yo, ?yo= y la galleta ro_yo; lo demás queda igual', () => {
+  it('en la nube (access) quita X-RO-Yo, ?yo=, la galleta ro_yo y el correo de Access; lo demás queda igual', () => {
     const r = sinIdentidadLocal('/api/clientes?yo=tomas&x=1', {
       'x-ro-yo': 'tomas',
+      'cf-access-authenticated-user-email': 'falso@example.com',
       cookie: 'a=1; ro_yo=tomas; b=2',
       'cf-access-jwt-assertion': 'j',
     });
     expect(r.path).toBe('/api/clientes?x=1');
     expect(r.headers['x-ro-yo']).toBeUndefined();
+    expect(r.headers['cf-access-authenticated-user-email']).toBeUndefined();
     expect(r.headers.cookie).toBe('a=1; b=2');
     expect(r.headers['cf-access-jwt-assertion']).toBe('j');
     expect(sinIdentidadLocal('/x', { cookie: 'ro_yo=tomas' }).headers.cookie).toBeUndefined();

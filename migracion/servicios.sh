@@ -22,6 +22,8 @@ mkdir -p "$LOGS" "$PIDS"
 PG_URL="${DATABASE_URL:-postgresql://ro:ro@127.0.0.1:5432/ro_app}"
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
 export RO_AVISOS_SIN_BUCLE=1
+# La noche va sin llaves (ni ~/RO_BANDEJA_GHL ni el llavero del Mac), y la comprobación de la mañana también.
+export RO_SIN_LLAVES=1
 # Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
 # no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
 # que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
@@ -65,13 +67,14 @@ arrancar_uno() {
       # Compilada y arrancada EXACTAMENTE como en la nube (v2/apps/web/Dockerfile): `output: "standalone"` no copia
       # public/ (donde vive public/legacy, el front de hoy) ni .next/static, y no se arranca con «next start». Se copian
       # y se arranca su server.js. Las puertas miden velocidad, y «next dev» compila cada página la primera vez.
+      # «pnpm run build» y no «next build» a secas: así corre antes prebuild (copia public/legacy al día).
       # RO_WEB_DEV=1 para trabajar con recarga en caliente (no vale para cerrar puertas).
       if [ -n "${RO_WEB_DEV:-}" ]; then
         (cd v2/apps/web || exit 1
          RO_API_URL="http://127.0.0.1:4000" nohup pnpm exec next dev -H 127.0.0.1 -p 3000 > "$LOGS/web.log" 2>&1 < /dev/null &
          echo $! > "$PIDS/web.pid")
       else
-        (cd v2/apps/web && RO_API_URL="http://127.0.0.1:4000" pnpm exec next build > "$LOGS/web_build.log" 2>&1 \
+        (cd v2/apps/web && RO_API_URL="http://127.0.0.1:4000" pnpm run build > "$LOGS/web_build.log" 2>&1 \
            && rm -rf .next/standalone/apps/web/public .next/standalone/apps/web/.next/static \
            && cp -R public .next/standalone/apps/web/public \
            && cp -R .next/static .next/standalone/apps/web/.next/static) \

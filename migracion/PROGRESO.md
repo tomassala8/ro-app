@@ -3,16 +3,17 @@
 ESTADO: SIN EMPEZAR
 
 Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho (puerta verde) · ⚠ plan B aplicado (ver motivo).
-Cada paso: detalle en `migracion/PROMPTS_CURSOR.md` (mismo código). Hasta 3 intentos con enfoques distintos; luego, su plan B.
+Cada paso: su sección en `migracion/PLAN_NOCHE.md` (el plan de la noche, escrito y revisado antes) y el detalle en `migracion/PROMPTS_CURSOR.md` (mismo código). Hasta 3 intentos con enfoques distintos; luego, su plan B.
 Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/RO_MIGRACION/puertas/f1.md`
 Mientras dura: `🔄 F2.4 · 01:10 · intento 2/3 · <qué estás probando>` (el número de intento va en la línea del paso: si te relanzan, sigues por ahí).
+Al retomar, arranca solo lo de fases cerradas: `viejo` tras F1.4, `legado` tras F2.3, `api` y `web` tras F3.1. Nunca un `servicios.sh arrancar` a secas antes de F2.3: crearía tablas en `ro_app` vacía.
 
 Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 8 h en la primera vuelta y úsala como fin)
 
 Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al principio):
 - F5.1–F5.9: hasta **4 h** antes del fin. Lo que quede → ⚠ «sin tiempo».
-- F5.10: hasta **1 h 45** antes del fin; los de seguridad, hasta **75 min** antes (corte duro).
-- F5.11: hasta **1 h 15** antes del fin.
+- F5.10: hasta **3 h** antes del fin, todos (los de seguridad van primero en el orden; no tienen prórroga).
+- F5.11: hasta **2 h** antes del fin.
 - Fase 6: hasta **1 h** antes del fin.
 - Fase 7: la última hora, pase lo que pase.
 
@@ -32,14 +33,14 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
-- ⬜ F2.1 Tabla `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py` (commit propio). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
+- ⬜ F2.1 Tabla `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py` (commit propio; `despliegue/pruebas_noche.py` ya lee los dos nombres: no lo toques). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
 - ⬜ F2.2 Si el inventario trae tablas o columnas nuevas: `rehacer_base.sh` y revisar el diff de `schema.prisma`. Plan B: ninguno; sin esto se pierden columnas.
 - ⬜ F2.3 Postgres arriba, `pnpm db:deploy`, copia «cuadrada» de `local.db.antes` (y `tuberia.db.antes`), `publicacion.py publicar data`.
 - ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
 
 ## Fase 3 · La app nueva entera (por el proxy)
 
-- ⬜ F3.1 `servicios.sh arrancar` (api y web) y `bash migracion/puerta.sh f3` en VERDE. Push. Plan B: arreglar fontanería del proxy; si no, apuntar y seguir con la fase 4.
+- ⬜ F3.1 `servicios.sh arrancar` (api y web) y `bash migracion/puerta.sh f3` en VERDE. Push. Plan B: arreglar fontanería del proxy; si no, apuntar y seguir con la fase 4. **Si F3.1 queda ⚠: F5.1–F5.9 y F6.x → ⚠ sin intentarlo; F5.10 se cierra con su prueba + `puerta.sh f2`.**
 
 ## Fase 4 · Motor de permisos en TypeScript
 
@@ -58,14 +59,14 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 - ⬜ F5.8 ajustes y ver_dato
 - ⬜ F5.9 acciones, avisos y canales
 Detalle de los nueve: sección «F5.x» de `PROMPTS_CURSOR.md`.
-Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>` (cómo, en «F5.x»), ⚠ y siguiente grupo.
+Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>` (cómo, en «F5.x»; también si ya hiciste commit), ⚠ y siguiente grupo.
 Reloj: ver «Cortes del reloj» arriba (grupos hasta 4 h antes del fin).
-- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Reloj: hasta 1 h 45 antes del fin; los de seguridad, hasta 75 min antes. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
+- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 3 h antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
 - ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Plan B: apuntar qué no escala como bloqueo para el piloto.
 
 ## Fase 6 · Front en React + shadcn
 
-- ⬜ F6.1 shadcn init (sin tocar el tema ni el CSS sin preflight), `src/lib/ctx.ts` (40 campos) y `PantallaPuente`.
+- ⬜ F6.1 shadcn init con versión fijada (sin tocar el tema ni el CSS sin preflight; tokens nuevos a `ro-tema.css`), `src/lib/ctx.ts` (40 campos) y `PantallaPuente`.
 - ⬜ F6.2 Carcasa en React en `src/app/carcasa/`, con el puente para las 37 pantallas; con `RO_CARCASA=1` «/» la enseña sin cambiar la dirección (sin la variable, «/» sigue siendo el front de hoy); fotos con la variable iguales que las de hoy.
 - ⬜ F6.3 La carcasa encendida por defecto y `bash migracion/puerta.sh f6` en VERDE. Plan B: la carcasa se queda apagada (solo con `RO_CARCASA=1`) y «/» sigue siendo el front de hoy.
 - ⬜ F6.4 Pantallas en React, una cada vez, de menos a más riesgo (lista en PROMPTS_CURSOR.md). Plan B por pantalla: se queda con el puente.
@@ -73,7 +74,7 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 
 ## Fase 7 · Cierre (la última hora, pase lo que pase)
 
-- ⬜ F7.1 `docker compose --profile completo up --build`: que los contenedores arranquen y respondan (`/vivo`, `/api/elegir`). Después, `docker compose --profile completo stop api web` (ocupan el 3000): la puerta f7 se pasa siempre contra los servicios locales. Plan B: apuntar qué falla en el contenedor (p. ej. `RO_LEGADO_URL`, «Host no permitido») como bloqueo para el piloto.
+- ⬜ F7.1 `bash migracion/servicios.sh parar web api` y `docker compose --profile completo up --build`: que los contenedores arranquen y respondan (la web del contenedor, en 127.0.0.1:3100: `/vivo`, `/api/elegir`). Después, `docker compose --profile completo stop api web`: la puerta f7 se pasa siempre contra los servicios locales (los vuelve a arrancar ella). Plan B: apuntar qué falla en el contenedor (p. ej. `RO_LEGADO_URL`, «Host no permitido») como bloqueo para el piloto.
 - ⬜ F7.2 `v2/render.yaml` (ro-web, ro-api, ro-legado una sola copia con los bucles y el vigía, ro-base), sin llaves, con el grupo `ro-llaves` completo (`llaves_nube.py` sale con 0), sin `RO_AVISOS_SIN_BUCLE` y con el cron de copias cada hora (§2.10). Plan B: ninguno; es solo escribir.
 - ⬜ F7.3 `migracion/INFORME_NOCHE.md` para Tomás (con el estado de cada fallo de `PENDIENTES_LOGICA.md`) y `bash migracion/puerta.sh f7` (incluye el ensayo de restauración).
 - ⬜ F7.4 Commit, `git push origin migracion/v2` y `ESTADO: TERMINADO`.

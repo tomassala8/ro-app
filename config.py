@@ -202,7 +202,10 @@ def secreto(nombre, obligatorio=False):
 
 
 def de_donde(nombre):
-    """De dónde saldría cada secreto (para la salud y DESPLIEGUE.md). Nunca el valor."""
+    """De dónde saldría cada secreto (para la salud y DESPLIEGUE.md). Nunca el valor.
+    Con RO_SIN_LLAVES=1, como secreto(): de ningún sitio, y sin abrir ficheros .env ni el llavero."""
+    if os.environ.get("RO_SIN_LLAVES") == "1":
+        return None
     d = os.environ.get("RO_SECRETOS_DIR")
     if d and (Path(d) / nombre).is_file():
         return "carpeta_privada"

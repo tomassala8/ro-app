@@ -42,7 +42,9 @@ import contrato as C  # noqa: E402
 
 RAIZ = Path(__file__).resolve().parent.parent
 ADMIN_URL = os.environ.get("ADMIN_URL", "postgresql://127.0.0.1:5432/postgres?user=ro&password=ro")
-COPIA = Path(os.environ.get("RO_MIGRACION", "~/RO_MIGRACION")).expanduser() / "local.db.antes"
+_FUERA = Path(os.environ.get("RO_MIGRACION", "~/RO_MIGRACION")).expanduser()
+# La copia limpia (arreglada para Postgres en F2.3) si existe; si no, la de seguridad tal cual.
+COPIA = next((c for c in (_FUERA / "local.db.limpia", _FUERA / "local.db.antes") if c.exists()), _FUERA / "local.db.antes")
 FECHA = re.compile(r"^\d{4}-\d{2}-\d{2}([ T]\d{2}:\d{2}(:\d{2})?)?")
 COLUMNAS_RELOJ = re.compile(r"^(huella|huella_previa)$")
 

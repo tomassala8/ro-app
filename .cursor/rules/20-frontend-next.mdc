@@ -10,7 +10,7 @@ alwaysApply: false
 
 - Esta versión de Next (16) trae cambios: antes de tocar rutas, layouts o configuración, lee la guía en `v2/apps/web/node_modules/next/dist/docs/` (ver `v2/apps/web/AGENTS.md`).
 - **El aspecto lo manda `estilos.css`** (se carga tal cual desde `/legacy/estilos.css`). Usa sus clases y tokens. Tailwind va sin preflight; sus utilidades solo con los colores del tema de RO (`bg-card`, `text-ink`, `border-line`, `text-good-ink`…: `src/styles/ro-tema.css`). Nada de colores, sombras ni píxeles sueltos.
-- shadcn: sus piezas con el tema de RO. Úsalas donde la pieza sea equivalente a la de hoy (diálogo, menú, pestañas, ⌘K, tooltip, hoja lateral). Si cambia el aspecto, gana `estilos.css`.
+- shadcn: con versión fijada (`shadcn@<versión>`: la de `PLAN_NOCHE.md` o la apuntada en F6.1; nunca `@latest`). Los cambios de `package.json` y `pnpm-lock.yaml` que haga `shadcn add` se aceptan; nada más cambia de versión. `globals.css` no se reescribe: los tokens nuevos van a `src/styles/ro-tema.css`. Sus piezas con el tema de RO. Úsalas donde la pieza sea equivalente a la de hoy (diálogo, menú, pestañas, ⌘K, tooltip, hoja lateral). Si cambia el aspecto, gana `estilos.css`.
 - `ctx` (`src/lib/ctx.ts`) es el mismo de `app.js`. Una pantalla no hace `fetch` por su cuenta: `ctx.api`, `ctx.datosModulo`, `ctx.accion`, `ctx.verDato`.
 - Reglas de pantalla de hoy (LEEME «Reglas del módulo»): cliente primero; cada cifra con su sello y frescura; nada de `alert/confirm/prompt`; todo lo que se pulsa es `<button>` o `<a>`; en «ver como», nunca escribir (`ctx.soloLectura`).
 - Textos idénticos a los de hoy, en castellano. Nada de códigos de obra (D-xx, G2…) en pantalla.

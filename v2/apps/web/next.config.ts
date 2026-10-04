@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const API = process.env.RO_API_URL ?? "http://127.0.0.1:4000";
@@ -25,6 +26,9 @@ const nextConfig: NextConfig = {
     };
   },
   output: "standalone",
+  // Monorepo pnpm: el trazado de ficheros del standalone parte de la raíz de v2 (donde están node_modules/.pnpm y
+  // los paquetes del espacio de trabajo). Así server.js queda en .next/standalone/apps/web, como espera el Dockerfile.
+  outputFileTracingRoot: path.join(__dirname, "../.."),
 };
 
 export default nextConfig;

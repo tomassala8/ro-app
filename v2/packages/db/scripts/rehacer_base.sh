@@ -27,4 +27,5 @@ pg_dump "$TMP_URL" --schema-only --no-owner --no-privileges --no-comments \
   | grep -v '^\\\(un\)\?restrict\|^SET \|^SELECT pg_catalog.set_config\|^--' | cat -s > prisma/migrations/0_base/migration.sql
 psql "$ADMIN_URL" -qc "DROP DATABASE ro_introspeccion"
 echo "✔ schema.prisma ($(grep -c '^model' prisma/schema.prisma) modelos) y prisma/migrations/0_base/migration.sql rehechos."
-echo "  Si la base de la app ya tenía 0_base aplicada y ha cambiado, NO la edites: crea una migración nueva con «pnpm db:migrate»."
+echo "  Si la base de la app ya tenía 0_base aplicada y ha cambiado, NO la edites: escribe a mano una migración nueva"
+echo "  (prisma/migrations/<n>_<nombre>/migration.sql) y aplícala con «pnpm db:deploy». «pnpm db:migrate» no se usa esta noche."

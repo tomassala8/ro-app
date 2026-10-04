@@ -116,10 +116,11 @@ dentro de la consulta, pruebas Python de hoy en `baterias.sh` y su pantalla con 
     - `marcar(lectura)` añade `_viejo`/`_desde` a un diccionario.
   - `fuentes/probar_lectura.py`: 28 casos en SQLite y 26 en Postgres (`--pg`), en verde. Va a `baterias.sh`.
 - **Falta (F5.10, en este orden):**
-  1. N-01: que cada lector pase su llamada por `leer()`. Empieza por el `con_cache` de Holded (`fuentes_dinero/`), que es lo
-     mismo en pequeño.
+  1. N-01: la tabla ya entró en F2.2; aquí solo se conecta `fuentes/lectura.py`: que cada lector pase su llamada por
+     `leer()`. Empieza por el `con_cache` de Holded (`fuentes_dinero/`), que es lo mismo en pequeño.
   2. N-02 a N-06: SEO, Redes, CRM por subcuenta (total «parcial», nunca la suma con un 0), Hostinger y Paneles. Cada uno
-     con su prueba «API falsa caída → último bueno + aviso, ningún 0» en `despliegue/pruebas_noche.py --solo-solidez`.
+     con su prueba «API falsa caída → último bueno + aviso, ningún 0» en un fichero NUEVO, `despliegue/pruebas_solidez_N-<n>.py`
+     (a `baterias.sh`). `despliegue/pruebas_noche.py` no se toca esta noche: juzga y por la mañana se restaura.
   3. N-07 a N-09 en la tubería: copiar y restaurar cachés; no publicar si no se bajó la versión anterior o la nueva es
      mucho más pequeña; claves mínimas y recuento por paso.
   4. N-10 a N-12 en pantalla: «—» en vez de 0, el aviso común «Sin datos en tiempo real: lo último es de las HH:MM»

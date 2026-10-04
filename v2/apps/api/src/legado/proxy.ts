@@ -18,12 +18,14 @@ function json(res: ServerResponse, estado: number, error: string) {
 
 // En la nube (RO_IDENTIDAD=access) la persona sale solo del sello de Access. servir.py ya ignora ahí X-RO-Yo, ?yo= y
 // la galleta ro_yo; aquí además se quitan antes de reenviar (defensa en dos capas: si un día alguien arranca servir.py
-// sin el modo Access, no le llega nada con que hacerse pasar por otro).
+// sin el modo Access, no le llega nada con que hacerse pasar por otro). Lo mismo con la cabecera de correo de Access:
+// sin el modo Access, servir.py se la cree tal cual; la identidad buena es el sello firmado (cf-access-jwt-assertion).
 export function sinIdentidadLocal(url: string, cabeceras: IncomingMessage['headers']) {
   const u = new URL(url, 'http://x');
   u.searchParams.delete('yo');
   const headers = { ...cabeceras };
   delete headers['x-ro-yo'];
+  delete headers['cf-access-authenticated-user-email'];
   if (typeof headers.cookie === 'string') {
     const resto = headers.cookie.split(';').filter((g) => g.split('=')[0].trim() !== 'ro_yo').join(';').trim();
     if (resto) headers.cookie = resto;

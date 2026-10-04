@@ -96,6 +96,9 @@ def traducir(sql, claves=None, auto=None):
     if m and claves:
         # INSERT OR REPLACE = si choca la clave primaria, la fila nueva sustituye a la vieja
         pk = claves(m.group(1))
+        if not pk:   # sin clave primaria saldría «ON CONFLICT ()», que Postgres no entiende: mejor un error claro
+            raise ValueError(f"INSERT OR REPLACE en «{m.group(1)}», que no tiene clave primaria en Postgres: "
+                             "no se sabe qué fila sustituir. Ponle clave primaria o cambia la consulta.")
         cols = [c.strip() for c in m.group(2).split(",")]
         resto = [c for c in cols if c not in pk] or cols[:1]
         s = (re.sub(r"(?i)^INSERT\s+OR\s+REPLACE\s+INTO", "INSERT INTO", s) + f" ON CONFLICT ({', '.join(pk)}) DO UPDATE SET "
@@ -249,13 +252,18 @@ class ConexionPG:
         return _CLAVES[tabla]
 
     def _auto(self, tabla):
-        if tabla not in _AUTO:
+        # Por (base, tabla): un proceso puede hablar con dos bases. El «no tiene» no se guarda: la tabla puede no
+        # existir aún (la crea un executescript después) y entonces lastrowid se quedaría a None para siempre.
+        clave = (self._url, tabla)
+        if clave not in _AUTO:
             cur = self._con.cursor()
             cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = %s "
                         "AND column_default LIKE 'nextval(%%' ORDER BY ordinal_position LIMIT 1", (tabla,))
             r = cur.fetchone()
-            _AUTO[tabla] = r[0] if r else None
-        return _AUTO[tabla]
+            if not r:
+                return None
+            _AUTO[clave] = r[0]
+        return _AUTO[clave]
 
     def execute(self, sql, args=()):
         q, extra = traducir(sql, self._claves, self._auto)

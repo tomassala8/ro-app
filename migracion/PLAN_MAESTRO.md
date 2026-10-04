@@ -146,7 +146,7 @@ Cómo queda (paso F5.10, fallos N-01 a N-12):
   - el sello del menú sale de la tubería;
   - «—» en vez de 0, y los totales dicen cuántos faltan.
   - En React (fase 6) está prohibido `?? 0` / `|| 0` sobre una cifra que se pinta.
-- **Puerta:** las pruebas de solidez de `despliegue/pruebas_noche.py --solo-solidez`, más una por fuente (API falsa caída → último dato bueno + aviso, ningún 0), dentro de `baterias.sh`. Además, `nunca_ceros.mjs` cuenta los `?? 0` del front, y ese número solo puede bajar.
+- **Puerta:** las pruebas de solidez de `despliegue/pruebas_noche.py --solo-solidez`, más una por fuente en un fichero NUEVO (`despliegue/pruebas_solidez_N-<n>.py`; `pruebas_noche.py` juzga y no se toca) (API falsa caída → último dato bueno + aviso, ningún 0), dentro de `baterias.sh`. Además, `nunca_ceros.mjs` cuenta los `?? 0` del front, y ese número solo puede bajar.
 
 En la nube, `ro-legado` (una sola copia) sigue siendo quien lee las APIs. La tabla vive en la misma Postgres, así que la copia de seguridad y la restauración de la fase 7 la cubren.
 
@@ -289,9 +289,9 @@ La orden `security` falsa es una barrera de PATH: quien llame a `/usr/bin/securi
 **Antes de lanzar (Tomás, 10 minutos):**
 1. GitHub › ro-app › Settings › Branches: regla de protección en `main` (sin push directo, sin force-push, sin borrar).
 2. Una copia de Time Machine del Mac justo antes de lanzar.
-3. Cursor › Settings › Agents › Auto-Run: «File-Deletion Protection» y «Dotfile Protection» activadas. En el ensayo de 1 hora, prueba `migracion/cursor_cli_permisos.json` como `.cursor/cli.json` (sin probar aquí: si `cursor-agent` se queja, se quita).
+3. Cursor › Settings › Agents › Auto-Run: «File-Deletion Protection» y «Dotfile Protection» activadas. En el ensayo de 1 hora (`bash migracion/ensayo.sh`, en una copia de la app), prueba `migracion/cursor_cli_permisos.json` como `.cursor/cli.json` (sin probar aquí: si `cursor-agent` se queja, se quita).
 4. Opcional, lo más seguro: lanzar la noche desde otro usuario de macOS sin tus llaves (con su propio `cursor-agent login`), o bloquear el llavero antes de irte (Acceso a Llaveros › Archivo › Bloquear llavero «inicio de sesión»).
-5. Por la mañana, antes de creerte PROGRESO.md: `bash migracion/comprobar_manana.sh`.
+5. Por la mañana, antes de creerte PROGRESO.md: `bash ~/RO_MIGRACION/comprobar_manana.sh` (la copia de fuera: la del repo la podría haber tocado el agente).
 
 **Next en modo autónomo:** `next.config.ts` usa `output: "standalone"`, así que se sirve con `node .next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado), no con `next start`. Lo hace `servicios.sh` y lo hace la imagen de Docker: lo que pasa las puertas es lo mismo que irá a la nube.
 
@@ -348,14 +348,15 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 
 | Fase | Qué | Tiempo orientativo | Puerta |
 |---|---|---|---|
-| **0 · tarde (Tomás)** | traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, lanzar `noche.sh` | — | LISTO |
+| **0 · tarde (Tomás)** | traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, `planear.sh` (Fable escribe y audita `PLAN_NOCHE.md`), `ensayo.sh` (1 hora en una copia), lanzar `noche.sh` | varias horas | LISTO y «PLAN: AUDITADO» |
 | **1 · referencia** | inventario del Mac, escáner, instantánea del código + los PR #2, #3 y #4 (`RAMAS_A_JUNTAR.txt`), copia de la base y de la app de hoy (`~/RO_MIGRACION/ref`), servicios, grabar contrato, vectores, fotos, casos de escritura, `baterias.sh` | 60 min | `puerta.sh f1` |
 | **2 · base** | arreglo `avisos`→`tuberia_avisos`, `rehacer_base.sh` si cambiaron tablas, Postgres, copia, publicar `data`, la app de hoy sobre Postgres; arreglar `base.py` hasta que lea y escriba igual | 60–90 min | `puerta.sh f2` |
 | **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
 | **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), como e2e que lanzan todas las puertas siguientes | 30–45 min | e2e en `puerta.sh` f3/f5/f6/f7 |
 | **5 · API a Nest** | grupos de §2.2, uno a uno, empezando por identidad + rastro de «ver como» (sin ellos, ninguna ruta de Nest puede pasar): se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | hasta 4 h antes del final | `puerta.sh f5` por grupo |
-| **5.10 · fallos pendientes** | los 71 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-22 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 1 h 45 antes del final; los de seguridad, hasta 75 min antes | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
+| **5.10 · fallos pendientes** | los 71 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-22 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 3 h antes del final (los de seguridad van primero) | la prueba de cada fallo + `puerta.sh f5 --rapido`; la completa por bloque |
+| **5.11 · escalados** | ensayo de escalados sobre Postgres | hasta 2 h antes del final | `escalados.py` |
 | **6 · front en React** | carcasa en `/carcasa` (y en «/» con `RO_CARCASA=1`), `ctx.ts`, puente; carcasa por defecto con fotos iguales; pantallas una a una | hasta 1 h antes del final | `puerta.sh f6` por pieza |
 | **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 
@@ -391,7 +392,17 @@ Líneas rojas que **ni el plan B cruza**: tocar `local.db` o `data/` reales, enc
 
 ## 6. Con qué modelo y cómo lanzarlo
 
-**Dos modelos, como trabaja Tomás (4-oct, plan de 200 € de Cursor): Claude Fable 5.1 planea y Claude Sonnet 5.5 ejecuta.** `noche.sh` lanza una vuelta corta de Fable con `migracion/PROMPT_PLAN.md`: lee el paso, el código y las notas, y solo escribe `migracion/PLAN_VUELTA.md` (ficheros, órdenes, trampas de la guía, cómo comprobarlo). Después Sonnet ejecuta ese plan vuelta tras vuelta. Fable vuelve a planear solo al cambiar de paso, cuando el ejecutor marca «PLAN: GASTADO» (el plan no funcionó tras 2 intentos) o tras dos vueltas sin avance. Así lo caro (Fable) son unas 30-40 vueltas cortas de lectura en toda la noche, y el grueso de tokens lo pone Sonnet. Si Fable falla dos veces seguidas (límite de uso), la noche sigue solo con Sonnet; si es Sonnet el que falla, `noche.sh` espera y reintenta. Se cambian con `RO_MODELO` (ejecuta) y `RO_MODELO_PLAN` (planea); `preparar_noche.sh --probar` comprueba que Cursor responde con los dos nombres. Para vigilar el gasto: Cursor › Settings › Usage, al acabar el ensayo de 1 hora (multiplicado por 8 da la noche). No uses modelos «rápidos» ni el modo automático: en la fase 4 un detalle mal traducido abre un agujero de permisos.
+**Fable planea y audita; Grok Fast construye (Tomás, 4-oct 10:09).** Tres piezas:
+
+1. **`bash migracion/planear.sh`, por la tarde** (en cuanto Astra deje de tocar el código). Fable 5.1 escribe `migracion/PLAN_NOCHE.md`: el plan COMPLETO de la noche, paso a paso y con detalle extremo (órdenes exactas, qué tiene que salir, qué hacer si sale otra cosa, intentos 2 y 3, plan B, y una sección por cada fallo abierto de F5.10). Lo escribe en varias vueltas (`migracion/PROMPT_PLAN.md`) hasta que `revisar_plan.py` confirma que cubre los 33 pasos y los fallos abiertos. Después lo **audita** (`migracion/PROMPT_AUDITA.md`) con cuatro enfoques, uno por vuelta: A ¿existe lo que nombra?, B ¿encaja la noche de principio a fin?, C ¿lo puede hacer un modelo rápido sin equivocarse?, D ¿respeta las líneas rojas? Cada auditor corrige en el propio plan y apunta qué cambió. Sigue auditando hasta que una sale «SIN CAMBIOS» (mínimo 4, máximo 8: `RO_AUDITORIAS_MIN`, `RO_AUDITORIAS`). El planificador solo puede tocar el plan: si cambia otro fichero, `planear.sh` para. Se puede cortar y relanzar: sigue donde lo dejó. Si el código cambia después (Astra, `juntar_plan.sh`), la siguiente vez hace solo una auditoría de puesta al día sobre lo que cambió.
+2. **`bash migracion/noche.sh`.** Junta el plan con el código del Mac, comprueba que el plan está auditado y al día (si no, llama a `planear.sh`; las 8 horas cuentan desde que el plan está listo), guarda huellas y copia de los jueces, y lanza al ejecutor vuelta tras vuelta. **El ejecutor es Grok Fast** (`RO_MODELO`, por defecto `grok-code-fast-1`): cada vuelta lee la sección de su paso (`revisar_plan.py --seccion F2.3`) y la sigue al pie de la letra. Si el ejecutor cambia `PLAN_NOCHE.md`, `noche.sh` lo devuelve al auditado.
+3. **Fable de guardia durante la noche** (`migracion/PROMPT_REPLAN.md`): cuando un paso falla una vez, cuando el ejecutor marca su plan como gastado o cuando dos vueltas no avanzan, Fable diagnostica y escribe `migracion/PLAN_VUELTA.md` para ese paso. Si Fable no responde dos veces, la noche sigue sin él y se le vuelve a probar a la media hora.
+
+**El riesgo de un modelo rápido, dicho claro.** Un modelo rápido sigue bien un plan detallado y se equivoca más cuando tiene que decidir. Las decisiones están en el plan y las puertas no dejan pasar nada que no cuadre, así que el riesgo principal es perder tiempo (más intentos, más planes B). Las puertas paran casi todo lo demás, pero no todo: solo comprueban lo que se grabó y los vectores que hay. Donde un detalle mal hecho abre un agujero (motor de permisos, identidad y rastro, fallos de seguridad), se puede poner un modelo más fuerte solo para esos pasos: `RO_PASOS_FUERTES="F4.1 F4.2 F5.1 F5.10"` con `RO_MODELO_FUERTE` (por defecto `claude-sonnet-5-5`). Por defecto, todo con Grok Fast, como decidió Tomás.
+
+**Nombres de los modelos.** Son los que muestra tu Cursor: `bash migracion/preparar_noche.sh --probar-cursor` prueba los tres y, si uno no responde, lista los que tu Cursor conoce. Cada vuelta tiene tope de tiempo (90 min la del ejecutor, 30 la de guardia, 60 la del planificador): una vuelta colgada se corta y se sigue. Para vigilar el gasto: Cursor › Settings › Usage, al acabar el ensayo de 1 hora.
+
+**El ensayo de 1 hora: `bash migracion/ensayo.sh`.** Copia la app a `~/RO_ENSAYO/app` (en el disco del Mac es un clon instantáneo), con su propia carpeta de trabajo, su propio Postgres y sin push, y lanza ahí una hora de noche con el plan que haya. La app de verdad queda intacta. Se puede lanzar mientras `planear.sh` sigue. Al acabar: `bash migracion/ensayo.sh --borrar`.
 
 **Cómo se lanza (dos maneras, la primera es la buena para 8 horas sin nadie):**
 

@@ -16,7 +16,7 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 INSTALAR=0; PROBAR=0
 for a in "$@"; do [ "$a" = "--instalar" ] && INSTALAR=1; [ "$a" = "--probar-cursor" ] && PROBAR=1; done
-MODELO="${RO_MODELO:-claude-sonnet-5-5}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"
+MODELO="${RO_MODELO:-grok-code-fast-1}"; MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"; MODELO_FUERTE="${RO_MODELO_FUERTE:-claude-sonnet-5-5}"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"
 fallos=0; avisos=0
 ok()   { printf "  ✔ %s\n" "$1"; }
@@ -37,9 +37,9 @@ if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   if git cat-file -e origin/claude/project-thread-rjes21:despliegue/base.py 2>/dev/null; then
     if ! git diff --quiet origin/claude/project-thread-rjes21 -- despliegue/base.py; then
       if git diff --quiet HEAD -- despliegue/base.py; then
-        ojo "despliegue/base.py no tiene los 8 arreglos de Postgres del plan (§7)" "git checkout origin/claude/project-thread-rjes21 -- despliegue/base.py"
+        ok "despliegue/base.py aún sin los arreglos de Postgres del plan: noche.sh los trae al empezar (juntar_plan.sh)"
       else
-        ojo "despliegue/base.py tiene cambios tuyos sin commit y no lleva los arreglos del plan" "Cursor los junta en F2.4 (los arreglos están en la rama claude/project-thread-rjes21)"
+        ojo "despliegue/base.py tiene cambios tuyos sin commit y no lleva los arreglos del plan" "noche.sh los junta a tres bandas (juntar_plan.sh); si chocan, Cursor lo resuelve en F1.3. Para verlo antes: bash migracion/juntar_plan.sh --ver"
       fi
     else ok "despliegue/base.py con los arreglos de Postgres"; fi
   fi
@@ -84,11 +84,12 @@ if command -v cursor-agent >/dev/null; then
     ojo "cursor-agent no anuncia -p / --force / --model" "mira «cursor-agent --help» y lánzalo con RO_AGENTE=\"cursor-agent <opciones> {MODELO}\" bash migracion/noche.sh"
   fi
   if [ $PROBAR = 1 ]; then
-    for par in "RO_MODELO:$MODELO" "RO_MODELO_PLAN:$MODELO_PLAN"; do
+    pares="RO_MODELO:$MODELO RO_MODELO_PLAN:$MODELO_PLAN"; [ -n "${RO_PASOS_FUERTES:-}" ] && pares="$pares RO_MODELO_FUERTE:$MODELO_FUERTE"
+    for par in $pares; do
       var="${par%%:*}"; m="${par#*:}"
       r="$(cursor-agent -p --force --output-format text --model "$m" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
       echo "$r" | grep -q "OK" && ok "Cursor responde con el modelo $m ($var)" \
-        || mal "Cursor no responde con el modelo $m: $r" "elige el nombre exacto y pásalo: $var=<nombre> (cursor-agent --help o la lista de modelos de Cursor)"
+        || mal "Cursor no responde con el modelo $m: $r" "elige el nombre exacto y pásalo: $var=<nombre>. Nombres que conoce tu Cursor: $( (cursor-agent models 2>/dev/null || cursor-agent --list-models 2>/dev/null) | grep -ioE '[a-z0-9.-]*(grok|fable|sonnet)[a-z0-9.-]*' | sort -u | tr '\n' ' ')"
     done
     echo "$ayuda" | grep -q -- "--mode" && ok "cursor-agent tiene --mode: si admite «plan», RO_AGENTE_PLAN=\"cursor-agent -p --mode plan --output-format text --model {MODELO}\" deja al planificador en solo lectura"
   fi
@@ -128,7 +129,16 @@ ABIERTOS=$(cat migracion/PENDIENTES_LOGICA.md "$FUERA/PENDIENTES_LOGICA.md" 2>/d
 if [ "$ABIERTOS" -gt 0 ]; then ok "$ABIERTOS fallos de lógica abiertos para arreglar en la noche ($LISTA)"
 else ojo "la lista de fallos de lógica está vacía ($LISTA)" "si hay fallos sin arreglar en la app de hoy, apúntalos ahí antes de lanzar (o pide a Claude que la copie del hilo de feedback)"; fi
 
-echo "6 · Proyecto nuevo (v2)"
+echo "6 · El plan de la noche (Fable lo escribe y lo audita: migracion/planear.sh)"
+if [ -f migracion/PLAN_NOCHE.md ]; then
+  primera="$(head -1 migracion/PLAN_NOCHE.md)"
+  case "$primera" in
+    "PLAN: AUDITADO"*) python3 migracion/revisar_plan.py >/dev/null && ok "$primera" || mal "el plan auditado no pasa revisar_plan.py" "bash migracion/planear.sh (lo completa)";;
+    *) ojo "plan sin terminar: $primera" "bash migracion/planear.sh (sigue donde lo dejó; si no, noche.sh lo hace antes de empezar y la noche empieza más tarde)";;
+  esac
+else ojo "aún no hay plan de la noche" "lánzalo en cuanto Astra deje de tocar el código: bash migracion/planear.sh (varias horas; noche.sh lo haría antes de empezar)"; fi
+
+echo "7 · Proyecto nuevo (v2)"
 if [ -d v2 ] && command -v pnpm >/dev/null; then
   if [ $INSTALAR = 1 ]; then (cd v2 && pnpm install --frozen-lockfile >/dev/null 2>&1) && ok "dependencias instaladas" || mal "pnpm install falló" "cd v2 && pnpm install  y mira el error"; fi
   if [ -d v2/node_modules ]; then
@@ -146,5 +156,5 @@ if [ -d v2 ] && command -v pnpm >/dev/null; then
 else mal "no está la carpeta v2/" "trae el plan (ver la cabecera de este script)"; fi
 
 echo
-if [ $fallos = 0 ]; then echo "LISTO para la noche ($avisos avisos que conviene mirar). Para lanzarla: git switch -c migracion/v2 && bash migracion/noche.sh"; else echo "NO LISTO: $fallos cosas que arreglar y $avisos avisos."; fi
+if [ $fallos = 0 ]; then echo "LISTO para la noche ($avisos avisos que conviene mirar). Para lanzarla: bash migracion/noche.sh"; else echo "NO LISTO: $fallos cosas que arreglar y $avisos avisos."; fi
 exit $fallos

@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# migracion/planear.sh · Fable escribe el plan COMPLETO de la noche (migracion/PLAN_NOCHE.md) y lo audita hasta que sale limpio.
+# Después, noche.sh lo da a ejecutar al modelo rápido, paso a paso.
+#
+#   bash migracion/planear.sh                 # escribe lo que falte, audita, y deja «PLAN: AUDITADO»
+#   bash migracion/planear.sh --ver           # solo dice en qué estado está el plan
+#   RO_AUDITORIAS_MIN=4 RO_AUDITORIAS=8 RO_MODELO_PLAN=<nombre> bash migracion/planear.sh
+#
+# Se puede cortar (Ctrl+C) y volver a lanzar: sigue donde lo dejó. Si el plan ya está auditado y el código del Mac
+# ha cambiado desde entonces (Astra, juntar_plan.sh), hace solo una auditoría de puesta al día sobre lo que cambió.
+# Cada vuelta tiene tope de tiempo; antes de cada una se guarda copia en ~/RO_MIGRACION/plan_copias/.
+# El planificador solo puede tocar PLAN_NOCHE.md: si cambia cualquier otro fichero, esto para y lo dice.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"; LOGS="$FUERA/logs"; COPIAS="$FUERA/plan_copias"; mkdir -p "$LOGS" "$COPIAS"
+MODELO_PLAN="${RO_MODELO_PLAN:-claude-fable-5-1}"
+RONDAS="${RO_RONDAS_PLAN:-25}"            # vueltas de escritura como mucho
+TOPE="${RO_TOPE_PLAN:-3600}"              # segundos por vuelta
+AUD_MIN="${RO_AUDITORIAS_MIN:-4}"         # al menos una por enfoque (A, B, C, D)
+AUD_MAX="${RO_AUDITORIAS:-8}"
+PLAN="migracion/PLAN_NOCHE.md"
+ARBOL_PLAN="$FUERA/plan_arbol.txt"        # huella del código contra el que se auditó
+. migracion/_agente.sh
+PLANTILLA_PLAN="${RO_AGENTE_PLAN:-$PLANTILLA}"
+sin_llaves
+
+primera() { head -1 "$PLAN" 2>/dev/null; }
+revisar() { python3 migracion/revisar_plan.py "$@"; }
+cuenta() { local c; c="$(grep -c "$1" "$PLAN" 2>/dev/null)"; echo "${c:-0}"; }
+auditorias() { cuenta '^## Auditoría '; }
+pon_primera() {   # cambia la primera línea del plan
+  local tmp; tmp="$(mktemp)"; { echo "$1"; tail -n +2 "$PLAN"; } > "$tmp" && cat "$tmp" > "$PLAN"; rm -f "$tmp"
+}
+
+if [ "${1:-}" = "--ver" ]; then
+  echo "Primera línea: $(primera || echo '(no hay plan)')"; revisar; echo "Auditorías: $(auditorias)"; exit 0
+fi
+
+# --- guardia: el planificador solo escribe el plan ---------------------------------------------------------------
+estado_repo() { echo "$(git symbolic-ref -q HEAD) $(git rev-parse HEAD) $(arbol)"; }
+vigilar() {   # vigilar <estado de antes> <registro>
+  if [ "$(estado_repo)" != "$1" ]; then
+    echo "✘ La vuelta del planificador ha cambiado algo más que el plan (rama, commit o ficheros). Paro."
+    echo "  Mira «git status» y «git log -3»; el registro es $2. Deshaz lo que no sea PLAN_NOCHE.md y vuelve a lanzar."
+    exit 1
+  fi
+}
+copia() { [ -f "$PLAN" ] && cp "$PLAN" "$COPIAS/PLAN_NOCHE.$(date '+%m%d_%H%M%S').md"; }
+cabeceras() { cuenta '^## F'; }
+tamano() { if [ -f "$PLAN" ]; then wc -c < "$PLAN" | tr -d ' '; else echo 0; fi; }
+# Una vuelta que deja el plan más corto de lo que estaba (se comió secciones) se deshace.
+encogido() { [ "$(cabeceras)" -lt "$1" ] || [ "$(tamano)" -lt $(( $2 * 7 / 10 )) ]; }
+ultima_copia() { ls -t "$COPIAS"/PLAN_NOCHE.*.md 2>/dev/null | head -1; }
+
+vuelta() {   # vuelta <mensaje> <registro>: lanza al planificador con guardia, copia y deshacer
+  local antes cab tam codigo
+  antes="$(estado_repo)"; copia; cab="$(cabeceras)"; tam="$(tamano)"
+  lanzar "$MODELO_PLAN" "$1" "$2" "$TOPE" "$PLANTILLA_PLAN"; codigo=$?
+  vigilar "$antes" "$2"
+  if [ -f "$PLAN" ] && [ "$cab" -gt 0 ] && encogido "$cab" "$tam"; then
+    echo "  ⚠ la vuelta dejó el plan más corto ($cab → $(cabeceras) pasos): se deshace"; cp "$(ultima_copia)" "$PLAN"; return 9
+  fi
+  return $codigo
+}
+
+esperar_fallo() {   # límite de uso o red: espera creciente, máximo 10 min
+  local s=$(( $1 * 120 )); [ $s -gt 600 ] && s=600; echo "  … espero $s s"; sleep $s
+}
+
+# --- ¿ya está auditado? ------------------------------------------------------------------------------------------
+if primera | grep -q '^PLAN: AUDITADO' && revisar >/dev/null; then
+  ahora="$(arbol)"; antes="$(cat "$ARBOL_PLAN" 2>/dev/null)"
+  if [ "$ahora" = "$antes" ]; then echo "✔ El plan está auditado y el código no ha cambiado desde entonces."; exit 0; fi
+  echo "El código ha cambiado desde la auditoría: auditoría de puesta al día."
+  n=$(( $(auditorias) + 1 ))
+  cambios="$( [ -n "$antes" ] && git diff --stat=200 "$antes" "$ahora" 2>/dev/null | tail -40 )"
+  msg="$(cat migracion/PROMPT_AUDITA.md)
+
+MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: A, pero SOLO sobre lo que nombra a estos ficheros, que han cambiado desde la última auditoría (rutas, funciones, números de línea, opciones). El resto ya está auditado: no lo toques.
+${cambios:-(no tengo la lista: compara el plan con «git status» y «git diff»)}"
+  for i in 1 2 3; do
+    vuelta "$msg" "$LOGS/plan_auditoria_$(printf %02d $n).log" && break; esperar_fallo $i
+  done
+  revisar || { echo "✘ Tras la puesta al día, el plan no pasa revisar_plan.py: vuelve a lanzar planear.sh."; exit 1; }
+  pon_primera "PLAN: AUDITADO · $n auditorías · puesta al día · $(date '+%Y-%m-%d %H:%M')"
+  arbol > "$ARBOL_PLAN"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"
+  echo "✔ Plan al día."; exit 0
+fi
+
+echo "Plan de la noche con $MODELO_PLAN · registros en $LOGS/plan_*.log · copias en $COPIAS"
+
+# --- 1. escribir hasta tener todos los pasos -----------------------------------------------------------------------
+fallos=0; quieto=0; r=0
+while :; do
+  faltan="$(revisar --faltan)"
+  if [ -z "$faltan" ]; then
+    if revisar >/dev/null; then break; fi
+    detalle="$(revisar | head -30)"
+  else detalle="$(revisar | grep -v '^✘ faltan' | head -30)"; fi
+  r=$((r + 1))
+  [ $r -gt "$RONDAS" ] && { echo "✘ $RONDAS vueltas y el plan sigue sin estar completo. Vuelve a lanzar planear.sh (sigue donde lo dejó)."; exit 1; }
+  log="$LOGS/plan_escribe_$(printf %02d $r).log"
+  echo "[$(date '+%H:%M')] vuelta $r de escritura → $log · faltan: $(echo "$faltan" | wc -w | tr -d ' ')"
+  msg="$(cat migracion/PROMPT_PLAN.md)
+
+MENSAJE DEL SUPERVISOR: vuelta $r de escritura. Faltan, en este orden: ${faltan:-ninguno}.
+${detalle:+Además, revisar_plan.py dice:
+$detalle}"
+  antes="$(md5sum "$PLAN" 2>/dev/null || md5 -q "$PLAN" 2>/dev/null)"
+  vuelta "$msg" "$log"; codigo=$?
+  if [ $codigo -ne 0 ] && [ $codigo -ne 9 ]; then
+    fallos=$((fallos + 1)); echo "  ⚠ Cursor salió con código $codigo ($(tail -1 "$log" | cut -c1-120))"
+    [ $fallos -ge 6 ] && { echo "✘ 6 fallos seguidos de Cursor: mira $log"; exit 1; }
+    esperar_fallo $fallos; continue
+  fi
+  fallos=0
+  if [ "$(md5sum "$PLAN" 2>/dev/null || md5 -q "$PLAN" 2>/dev/null)" = "$antes" ]; then
+    quieto=$((quieto + 1)); [ $quieto -ge 3 ] && { echo "✘ 3 vueltas sin escribir nada: mira $log"; exit 1; }
+  else quieto=0; fi
+done
+primera | grep -q '^PLAN: \(COMPLETO\|AUDITADO\)' || pon_primera "PLAN: COMPLETO · $(date '+%Y-%m-%d %H:%M')"
+echo "✔ Plan completo: $(cabeceras) pasos."
+
+# --- 2. auditorías hasta que una salga limpia ----------------------------------------------------------------------
+ENFOQUES=("A · ¿existe lo que nombra?" "B · ¿encaja la noche de principio a fin?" "C · ¿lo puede hacer un modelo rápido sin equivocarse?" "D · ¿respeta las líneas rojas?")
+limpia=""; fallos=0
+n=$(( $(auditorias) + 1 ))
+while [ $n -le "$AUD_MAX" ]; do
+  if [ $n -le 4 ]; then enfoque="${ENFOQUES[$((n - 1))]}"; else enfoque="todos (A, B, C y D), con lo que las anteriores no miraron"; fi
+  log="$LOGS/plan_auditoria_$(printf %02d $n).log"
+  echo "[$(date '+%H:%M')] auditoría $n ($enfoque) → $log"
+  msg="$(cat migracion/PROMPT_AUDITA.md)
+
+MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: $enfoque."
+  vuelta "$msg" "$log"; codigo=$?
+  if [ $codigo -ne 0 ]; then
+    fallos=$((fallos + 1)); echo "  ⚠ la auditoría no terminó (código $codigo)"
+    [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log y vuelve a lanzar planear.sh"; exit 1; }
+    [ $codigo -ne 9 ] && esperar_fallo $fallos
+    continue
+  fi
+  if ! revisar >/dev/null; then
+    echo "  ⚠ tras la auditoría el plan no pasa revisar_plan.py: se deshace y se repite"; cp "$(ultima_copia)" "$PLAN"
+    fallos=$((fallos + 1)); [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log"; exit 1; }; continue
+  fi
+  if ! grep -q "^## Auditoría $n " "$PLAN"; then
+    echo "  ⚠ la auditoría no dejó su sección: se repite"
+    fallos=$((fallos + 1)); [ $fallos -ge 4 ] && { echo "✘ 4 auditorías fallidas seguidas: mira $log"; exit 1; }; continue
+  fi
+  fallos=0
+  # ¿limpia? la primera línea con texto tras su cabecera es exactamente «SIN CAMBIOS»
+  if awk -v n="$n" '$0 ~ "^## Auditoría " n " " {f=1; next} f && NF {print; exit}' "$PLAN" | grep -qx 'SIN CAMBIOS'; then
+    echo "  ✔ auditoría $n: SIN CAMBIOS"; [ $n -ge "$AUD_MIN" ] && { limpia=1; break; }
+  else echo "  · auditoría $n: con correcciones"; fi
+  n=$((n + 1))
+done
+[ $n -gt "$AUD_MAX" ] && n=$AUD_MAX
+
+if [ -n "$limpia" ]; then pon_primera "PLAN: AUDITADO · $n auditorías · la última sin cambios · $(date '+%Y-%m-%d %H:%M')"
+else pon_primera "PLAN: AUDITADO · $n auditorías · la última aún corrigió algo · $(date '+%Y-%m-%d %H:%M')"
+  echo "⚠ Tras $AUD_MAX auditorías la última aún corrigió algo. El plan vale; si hay tiempo: RO_AUDITORIAS=$((AUD_MAX + 2)) bash migracion/planear.sh"
+fi
+arbol > "$ARBOL_PLAN"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"; chmod 644 "$FUERA/PLAN_NOCHE.auditado.md"
+echo "✔ $(primera)"
+if grep -q '^## Dudas para Tomás' "$PLAN"; then
+  echo; echo "Dudas que el planificador deja para Tomás (la noche usa la opción conservadora si no contestas):"
+  awk '/^## Dudas para Tomás/{f=1; next} /^## /{f=0} f' "$PLAN" | sed '/^$/d' | head -40
+fi

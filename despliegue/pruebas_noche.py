@@ -406,9 +406,13 @@ def _sol_tuberia(tmp, caso):
          and x1.get("fuentes", {}).get("meta", {}).get("datos", {}).get("gasto") == 354 and x1.get("estado_fuentes", {}).get("meta") == "dato_viejo")
     caso("Meta caído · sus dependientes sí corren (dato coherente)", (d / "dep_e1.txt").exists())
     import sqlite3
+
+    def tabla_avisos(con):   # F2.1 renombra «avisos» de tuberia.db a «tuberia_avisos»; antes de eso sigue siendo «avisos»
+        nueva = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='tuberia_avisos'").fetchone()
+        return "tuberia_avisos" if nueva else "avisos"
     try:
         con = sqlite3.connect(est / "tuberia.db")
-        avisos = [r_[0] for r_ in con.execute("SELECT clave FROM avisos WHERE tipo='fuente_caida'")]
+        avisos = [r_[0] for r_ in con.execute(f"SELECT clave FROM {tabla_avisos(con)} WHERE tipo='fuente_caida'")]
         con.close()
     except Exception:
         avisos = []
@@ -418,7 +422,7 @@ def _sol_tuberia(tmp, caso):
     con_motivo = []
     try:
         con = sqlite3.connect(est / "tuberia.db")
-        con_motivo = [r_[0] for r_ in con.execute("SELECT texto FROM avisos WHERE tipo='fuente_caida' AND clave LIKE 'e1:%'")]
+        con_motivo = [r_[0] for r_ in con.execute(f"SELECT texto FROM {tabla_avisos(con)} WHERE tipo='fuente_caida' AND clave LIKE 'e1:%'")]
         con.close()
     except Exception:
         pass

@@ -24,6 +24,8 @@ mkdir -p "$FUERA/puertas" "$FUERA/logs"
 INFORME="$FUERA/puertas/$FASE.md"
 unset RO_ENVIOS_REALES RO_CLICKUP_REAL
 export RO_AVISOS_SIN_BUCLE=1
+# La noche va sin llaves (ni ~/RO_BANDEJA_GHL ni el llavero del Mac), y la comprobación de la mañana también.
+export RO_SIN_LLAVES=1
 # Reloj de negocio FIJO toda la noche (la misma hora que las fotos de capturar.mjs). Si no, lo grabado a las 23:00
 # no se parece a lo de las 3:00: cambia «hoy», salen los resúmenes del día de las 8:30… y las puertas dan diferencias
 # que no son fallos. permisos.py, avisos.py, envios.py y sincronia.py ya lo respetan; lo que se porte a Nest, también.
@@ -49,7 +51,9 @@ parar_puerto() { local p; p=$(lsof -nP -iTCP@127.0.0.1:"$1" -sTCP:LISTEN -t 2>/d
 # --- escrituras: los mismos casos contra una copia limpia en cada lado ------------------------------------------
 escritura_ref() {   # la app de hoy sobre SQLite (la referencia)
   parar_puerto 8780
-  cp "$FUERA/local.db.antes" "$FUERA/esc_viejo.db"
+  # La copia limpia (arreglada para Postgres en F2.3) si existe; si no, la de seguridad tal cual.
+  local origen="$FUERA/local.db.antes"; [ -f "$FUERA/local.db.limpia" ] && origen="$FUERA/local.db.limpia"
+  cp "$origen" "$FUERA/esc_viejo.db"
   local ref="$RAIZ"; [ -f "$FUERA/ref/servir.py" ] && ref="$FUERA/ref"   # la copia congelada de F1, como en servicios.sh
   RO_DB="$FUERA/esc_viejo.db" nohup python3 "$ref/servir.py" --bind 127.0.0.1 --puerto 8780 > "$FUERA/logs/esc_viejo.log" 2>&1 < /dev/null &
   esperar_puerto 8780 api/elegir || return 1

@@ -41,3 +41,7 @@ despliegue/lista_access.txt
 **/llavero*
 **/secretos*
 !escaner_secretos.py
+
+# Migración: notas y plan de vuelta de cada noche, solo en el Mac (PLAN_NOCHE.md sí va al repositorio)
+migracion/PLAN_VUELTA.md
+migracion/NOTAS_NOCHE.md
