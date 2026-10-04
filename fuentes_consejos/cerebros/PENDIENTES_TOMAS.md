@@ -54,18 +54,16 @@ Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y 
 8. Definir qué cuenta como «reunión válida» para la garantía (04_LO_PROMETIDO_EN_SALA.md:173-178). La app cuenta las citas marcadas «showed».
 9. Traer al repo 11_DECISIONES_PARA_TOMAS.md (D-28, D-30, D-48, conexiones, objetivo de coste por cita), 06_KPIS_INTERNOS_RO_POR_PUESTO.md y 02_SOP_ONBOARDING_UNICO.md: varias reglas del área solo se pueden citar a través de reglas.json e indicadores.json.
 
-## Publicidad de pago (Meta y, en la cartera heredada, Google Ads) (10)
+## Publicidad de pago (Meta y, en la cartera heredada, Google Ads) (8)
 
 1. Cuenta publicitaria nueva: calentamiento de 5-10 €/día 3-5 días (doctrina §6.4) frente a 50 €/día desde el día 1 (D1 del 28-sep). Prudente mientras tanto: subir por escalones hasta 50 €/día.
 2. Método de escalado: vertical +20 % sin duplicar (copiloto y doctrina) frente al duplicado del conjunto «casi» del cuadro del 29-sep para los 300 €.
 3. Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos?
 4. Criterio de ganador y pausa por conjunto (cuadro del 29-sep): pendiente de que lo confirme la jefa de publicidad.
-5. El nodo de fatiga de la app (cd_diagnostico.py) dispara con una sola señal; D-39 pide dos. Corregir la app.
-6. Marcar rendimiento.md §4 (CPL de Meta 2,31-5,79 €) como histórico.
-7. Denominador del 45 €: por cita (ARRANQUE_CITA, D-03) frente a por lead (protocolo v3). Fijar cuál manda en cada pantalla.
-8. Google Ads: sin SOP vigente ni conexión viva (muestra manual). Decidir qué cuentas heredadas se mantienen.
-9. Cartera roja por trafficker: el consejo de la app (cerebro_decisiones.py) salta con 2 y reparte con 4; D-41 firmado dice 3-4 ámbar y 5 o más rojo. Alinear la app con D-41.
-10. Firmar la regla propuesta de que todo conjunto nuevo nace con exclusiones de leads ya captados.
+5. Marcar rendimiento.md §4 (CPL de Meta 2,31-5,79 €) como histórico.
+6. Denominador del 45 €: por cita (ARRANQUE_CITA, D-03) frente a por lead (protocolo v3). Fijar cuál manda en cada pantalla.
+7. Google Ads: sin SOP vigente ni conexión viva (muestra manual). Decidir qué cuentas heredadas se mantienen.
+8. Firmar la regla propuesta de que todo conjunto nuevo nace con exclusiones de leads ya captados.
 
 ## CRM y embudo (GoHighLevel) (7)
 

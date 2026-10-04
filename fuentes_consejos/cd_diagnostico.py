@@ -89,8 +89,11 @@ def _pocos_leads(k, fecha):
     nodos.append(_nodo("¿El formulario o la página recogen los datos?", "ok" if clics else "sin_dato",
                        f"{_ent(clics)} clics en 7 días" if clics else "Sin clics por anuncio en el dato", "diag_formulario_roto",
                        "trafficker", fecha=fecha, fuente=fte, url=url_meta))
-    # 3 · ¿creatividades cansadas? (frecuencia > 3, caída de CTR ≥ 40 % o marcada «cansada» por la Torre)
-    cans = [a for a in an if a.get("cansada") or _n(a.get("frecuencia_7d")) > 3 or _n(a.get("caida_ctr_pct")) >= 40]
+    # 3 · ¿creatividades cansadas? D-39 (firmada): SOLO con dos señales a la vez entre frecuencia > 3, caída de CTR ≥ 40 % y
+    # «cansada» de la Torre. Con una sola señal no se cambia la creatividad (antes bastaba una: falsos «cansada»).
+    def _senales(a):
+        return sum([bool(a.get("cansada")), _n(a.get("frecuencia_7d")) > 3, _n(a.get("caida_ctr_pct")) >= 40])
+    cans = [a for a in an if _senales(a) >= 2]
     if cans:
         a = max(cans, key=lambda x: _n(x.get("gasto_7d")))
         nodos.append(_nodo("¿Las creatividades están cansadas?", "roto",
@@ -101,7 +104,7 @@ def _pocos_leads(k, fecha):
                            fecha, fte, a.get("enlace") or url_meta))
         return {"sintoma": "pocos_leads", "texto": sintoma, "nodos": nodos}
     nodos.append(_nodo("¿Las creatividades están cansadas?", "ok" if an else "sin_dato",
-                       "Ningún anuncio con frecuencia > 3 ni caída de clics ≥ 40 %" if an else "Sin dato por anuncio", "diag_fatiga",
+                       "Ningún anuncio con dos señales de cansancio a la vez (frecuencia > 3, clics −40 %)" if an else "Sin dato por anuncio", "diag_fatiga",
                        "trafficker", fecha=fecha, fuente=fte, url=url_meta))
     # 4 · ¿coste por lead disparado? (segmentación u oferta del anuncio)
     cr = k.get("cpl_resumen") or {}

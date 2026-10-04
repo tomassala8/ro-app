@@ -183,14 +183,14 @@ def _de_jefas(persona, ctx, nombre):
             if t and t != persona["id"] and k.get("severidad") == "critico":
                 rojos.setdefault(t, []).append(k.get("nombre") or cid)
         for t, xs in sorted(rojos.items(), key=lambda x: -len(x[1])):
-            if len(xs) >= 2:                                          # parámetros de Captación: rojos_trafficker [2, 4]
+            if len(xs) >= 3:                                          # D-41 (firmada): ≤ 2 bien · 3-4 vigilar · ≥ 5 crítico
                 out.append({"id": f"jf:pub:{t}", "tipo": "jefa_cartera_roja", "pantallas": ["captacion", "mi-dia"], "cliente_id": None,
                             "cliente": None, "etiqueta": nombre(t), "que": f"Revisa hoy con {nombre(t) or t} sus {len(xs)} cuentas en crítico",
-                            "porque": f"{', '.join(xs[:4])}{' y más' if len(xs) > 4 else ''}: con 2 o más cuentas en crítico la cartera de un trafficker necesita a su jefa (con 4, se reparte).",
-                            "cifra": f"{len(xs)} cuentas en crítico", "umbral": "Vigilar con 2 cuentas en crítico · crítico con 4",
+                            "porque": f"{', '.join(xs[:4])}{' y más' if len(xs) > 4 else ''}: con 3 o más cuentas en crítico la cartera de un trafficker necesita a su jefa (con 5, se reparte).",
+                            "cifra": f"{len(xs)} cuentas en crítico", "umbral": "Vigilar con 3 cuentas en crítico · crítico con 5",
                             "fuente": {"texto": "Captación (Mis cuentas por trafficker)", "url": None}, "ir": "#/captacion", "ir_texto": "Ver Captación",
-                            "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "alta" if len(xs) >= 4 else "media",
-                            "orden": 240 if len(xs) >= 4 else 190, "personal": False, "requiere": ["captacion"], "accion": None, "origen": "reglas"})
+                            "quien": "Tú", "dueno": persona["id"], "cuando": "Hoy", "gravedad": "alta" if len(xs) >= 5 else "media",
+                            "orden": 240 if len(xs) >= 5 else 190, "personal": False, "requiere": ["captacion"], "accion": None, "origen": "reglas"})
     if "jefa_crm" in ps:
         lentas = []
         for cid, s in (ctx.get("crm_idx") or {}).items():

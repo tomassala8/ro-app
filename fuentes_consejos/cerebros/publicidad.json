@@ -31,11 +31,9 @@
    "Método de escalado: vertical +20 % sin duplicar (copiloto y doctrina) frente al duplicado del conjunto «casi» del cuadro del 29-sep para los 300 €.",
    "Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos?",
    "Criterio de ganador y pausa por conjunto (cuadro del 29-sep): pendiente de que lo confirme la jefa de publicidad.",
-   "El nodo de fatiga de la app (cd_diagnostico.py) dispara con una sola señal; D-39 pide dos. Corregir la app.",
    "Marcar rendimiento.md §4 (CPL de Meta 2,31-5,79 €) como histórico.",
    "Denominador del 45 €: por cita (ARRANQUE_CITA, D-03) frente a por lead (protocolo v3). Fijar cuál manda en cada pantalla.",
    "Google Ads: sin SOP vigente ni conexión viva (muestra manual). Decidir qué cuentas heredadas se mantienen.",
-   "Cartera roja por trafficker: el consejo de la app (cerebro_decisiones.py) salta con 2 y reparte con 4; D-41 firmado dice 3-4 ámbar y 5 o más rojo. Alinear la app con D-41.",
    "Firmar la regla propuesta de que todo conjunto nuevo nace con exclusiones de leads ya captados."
   ]
  },
@@ -5437,7 +5435,7 @@
      "fichero": "ro-app:fuentes_consejos/cerebro_decisiones.py",
      "linea": 186,
      "autor": "RO",
-     "nota": "el consejo jefa_cartera_roja salta con 2 cuentas en crítico (y habla de repartir con 4): manda D-41"
+     "nota": "el consejo jefa_cartera_roja sigue D-41 desde el 4-oct (vigilar con 3, crítico con 5)"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
