@@ -28,7 +28,7 @@ sys.path.insert(0, str(AQUI))
 import buscar as B  # noqa: E402
 
 PREFIJO = {"direccion": "dir_", "operaciones": "ope_", "account": "acc_", "comunicacion": "com_", "altas": "alt_",
-           "publicidad": "pub_", "crm": "crm_", "setters": "set_", "seo_web": "seo_", "redes_produccion": "red_",
+           "publicidad": "pub_", "crm": "crm_", "setters": "set_", "seo_web": "seo_", "redes_produccion": "rp_",
            "ventas_ro": "ven_", "personas_admin": "per_"}
 CAMPOS = ["id", "titulo", "puestos", "disparadores", "sintoma", "gravedad", "plazo", "diagnostico", "causas",
           "acciones_inmediatas", "que_no_hacer", "escalar", "exito", "fuentes"]
