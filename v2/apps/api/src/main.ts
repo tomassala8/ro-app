@@ -14,7 +14,14 @@ async function bootstrap() {
   // Sin «X-Powered-By: Express»: servir.py no lo manda y no hay por qué anunciar el servidor.
   app.getHttpAdapter().getInstance().disable('x-powered-by');
   app.use(proxyLegado());
-  app.use(leerJson('2mb'), urlencoded({ extended: false }));
+  // El mismo tope que servir.py y el proxy (200 KB): una ruta no acepta más por haberse mudado a Nest.
+  app.use(leerJson(Number(process.env.RO_CUERPO_MAX ?? 200_000)), urlencoded({ extended: false, limit: 200_000 }));
+  // Como servir.py: las respuestas de /api son de una persona concreta, ni el navegador ni nadie en medio las guarda.
+  // Una ruta que necesite otra cosa (ETag de un fichero) la pone ella y manda sobre esta.
+  app.use('/api', (_req: unknown, res: { setHeader(n: string, v: string): void }, next: () => void) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
   // Al parar (despliegue, reinicio) termina lo que está en marcha y cierra las conexiones a Postgres.
   app.enableShutdownHooks();
   // Mismas rutas que servir.py: todo bajo /api, salvo /vivo.

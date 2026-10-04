@@ -44,8 +44,13 @@ def esquema_postgres(sql):
 
     def disparador(m):
         nombre, cuando, tabla, msg = m.group(1), m.group(2), m.group(3), m.group(4)
-        return (f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
-                f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION ro_prohibido('{msg}');")
+        sql = (f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
+               f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION ro_prohibido('{msg}');")
+        if cuando == "DELETE":   # un TRUNCATE no dispara los de fila: sin esto, lo imborrable se vaciaba de golpe
+            sql += (f"\nDROP TRIGGER IF EXISTS {nombre}_truncate ON {tabla};\n"
+                    f"CREATE TRIGGER {nombre}_truncate BEFORE TRUNCATE ON {tabla} FOR EACH STATEMENT "
+                    f"EXECUTE FUNCTION ro_prohibido('{msg}');")
+        return sql
     def con_condicion(m):   # «BEFORE … WHEN cond BEGIN RAISE … END» (p. ej. «de una acción solo avanza el estado»)
         nombre, cuando, tabla, cond, msg = m.groups()
         cond = re.sub(r"\bIS NOT ((?:OLD|NEW)\.)", r"IS DISTINCT FROM \1", cond)

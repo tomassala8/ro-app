@@ -38,7 +38,7 @@ export class ErroresFilter implements ExceptionFilter {
 
 /** Lector de JSON para las rutas de Nest con respuestas limpias (N-13): JSON roto → 400, demasiado grande → 413, en la
  *  forma de servir.py. Sin esto, Express devuelve el texto del analizador de JSON en inglés. */
-export function leerJson(limite = '2mb') {
+export function leerJson(limite: string | number = 200_000) {
   const leer = json({ limit: limite });
   type Res = { status(c: number): { json(c: unknown): void } };
   return (req: unknown, res: Res, next: (e?: unknown) => void) =>

@@ -226,7 +226,7 @@ Para que funcionen de verdad en la nube:
 - **Cuánto se guarda:** 7 días de copias de cada hora (168). Las más viejas se borran solas, en disco y en R2; la última nunca. **Se cambia con `RO_COPIAS_DIAS`** en `render.yaml` (por ejemplo 14 o 30); el coste en R2 es pequeño (la base de prueba ocupa 0,4 MB por copia).
 - **Dónde corre:** cron `ro-copias` cada hora en `despliegue/render.yaml` (y en `v2/render.yaml`, F7.2). Sin las llaves de R2 sale **en rojo**: en Render el disco de un cron se borra al terminar y la copia no sobreviviría. Las llaves de R2 (`RO_R2_*`) las crea Tomás en Cloudflare; hoy no existen.
 - **Restaurar:** `pg_restore --no-owner -d <base nueva> postgres.dump` de la hora que se quiera. Lo ensaya entero la puerta 7 (volcar, restaurar en otra base, misma API) y `copia_base.py --probar` el día 1 de cada mes.
-- **Además:** Render guarda sus propias copias de la base; su plazo depende del plan (no lo he podido comprobar desde aquí). La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
+- **Además:** según el hilo «Buenas prácticas», la Postgres gratis de Render no tiene copias y las de pago traen recuperación a un momento dado de 3 o 7 días, que restaura en una base NUEVA (hay que cambiar `DATABASE_URL`). Es un plan B, no el principal. No lo he comprobado yo. **Antes del piloto, ensayo de restauración en Render de verdad.** La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
 - **Antes de cada despliegue que cambie la base**, una copia a mano (botón «Trigger Run» del cron `ro-copias` en Render) y después `prisma migrate deploy` como paso que **bloquea el despliegue** si falla (`preDeployCommand` de `ro-api`).
 - **Ensayado el 4-oct** sobre la Postgres de prueba: 41 tablas y 4.742 filas, iguales que la base viva; borra las de más de 7 días y no toca lo que no es una copia. Arreglado de paso: la imagen instalaba `pg_dump` 15, que no puede volcar una Postgres 16 (N-22). La imagen no la he podido construir aquí.
 
@@ -235,9 +235,13 @@ Para que funcionen de verdad en la nube:
 Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado y leído el 4-oct), Teable, cal.com, Ghostfolio, Hoppscotch y Documenso (estudio del hilo «Repos de referencia del stack»). El zip del otro CRM que tiene Tomás va a `~/RO_MIGRACION/referencias/` (fuera del repo); Cursor lo puede leer para inspirarse, nunca copiar código tal cual.
 
 **Ya en la rama (4-oct, con pruebas):**
+- Lo imborrable tampoco se vacía de golpe: los disparadores de fila no paran un `TRUNCATE`; ahora cada tabla con «sin_delete» lleva su `BEFORE TRUNCATE` (migración `1_sin_truncate` y `base.py`). Probado: `TRUNCATE registro` → «El rastro no se borra».
+- El mismo tope de cuerpo en todas partes: 200 KB en `servir.py`, el proxy y las rutas de Nest (antes Nest aceptaba 2 MB).
+- `/api` con `Cache-Control: no-store` también en las rutas de Nest.
 - Filtro global de errores con la forma de `servir.py` (`{"error": …}`): Prisma P2002 → 409, P2025 → 404, P2003 → 400; JSON roto → 400 y cuerpo grande → 413 (N-13 en las rutas de Nest); nunca la pila ni el SQL; solo los 5xx van al registro como error.
 - El entorno se comprueba al arrancar (`src/entorno.ts`): sin base o sin identidad no arranca; en producción, ni `RO_IDENTIDAD=local` (cualquiera podría hacerse pasar por otro) ni `RO_RELOJ` (el reloj fijo de la noche).
 - Cierre ordenado al parar (`enableShutdownHooks`), tope de conexiones de la API a Postgres (`RO_PG_POOL_MAX`, 10) y la imagen de la API sin root (`USER node`).
+- **Cuenta de conexiones a Postgres en la nube:** API ≤ 10 + legado (medido: 15-17 en el pico de 30 personas, Nest incluido) + tubería (crons ligera, completa y noche, uno a la vez por el bloqueo) + copias (1). Tiene que quedar por debajo del 70 % del `max_connections` del plan de Render (mirarlo en el panel antes del piloto: no lo he podido comprobar). La puerta de carga falla si se pasa de 60.
 - La lista de rutas con su permiso guardada en el repositorio (`src/permisos/rutas-permisos.txt`, idea de Twenty): una ruta nueva o un permiso cambiado se ve en el diff.
 
 **En la fase 5 (reglas de cada ruta nueva):**
@@ -246,7 +250,7 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 - La escritura y su anotación en el rastro, en la misma transacción.
 - Cambios de base solo hacia delante y en dos pasos (columna opcional → rellenar → obligatoria); una migración aplicada no se edita nunca.
 
-**Después del piloto:** colas de trabajos en Postgres (pg-boss) con reintentos e idempotencia, logs estructurados con id de petición (nestjs-pino), contrato zod compartido front/back, `/listo` que compruebe base y cadena del rastro, dinero en `Decimal`, fechas `timestamptz`, permisos por campo en la capa de datos.
+**Después del piloto:** que la app no sea dueña de las tablas (un usuario de base sin `TRUNCATE`, `UPDATE` ni `DELETE` sobre el rastro; hoy en Render hay un solo usuario), colas de trabajos en Postgres (pg-boss) con reintentos e idempotencia, logs estructurados con id de petición (nestjs-pino), contrato zod compartido front/back, `/listo` que compruebe base y cadena del rastro, dinero en `Decimal`, fechas `timestamptz`, permisos por campo en la capa de datos.
 
 **No encaja (para 30 personas):** un esquema de base por cliente, GraphQL, Redis para caché o permisos, réplicas de lectura, tokens en `localStorage`, CORS abierto.
 

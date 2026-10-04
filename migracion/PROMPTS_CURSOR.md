@@ -129,7 +129,7 @@ Para el grupo del paso (tabla §2.2 del plan):
 2. Añade sus rutas a `v2/apps/api/src/legado/rutas-en-nest.ts`.
 3. `bash migracion/puerta.sh f5 --rapido` para iterar; `bash migracion/puerta.sh f5` para cerrar.
 4. VERDE → commit «F5.x · <grupo> en Nest». ROJO tras 3 intentos → plan B, en este orden: (a) `git switch -C intento/<grupo>` (los cambios sin commit viajan contigo), `git add v2/ && git commit -m "intento <grupo>"` (solo `v2/`, nunca `PROGRESO.md`); (b) `git switch migracion/v2` (vuelve sin el módulo y con `rutas-en-nest.ts` como estaba; `PROGRESO.md` sigue con tus notas); (c) `git status` limpio salvo el cuaderno; ⚠ y siguiente.
-F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|access` como `despliegue/acceso_cf.py`; las rutas que siguen en el proxy las sigue comprobando servir.py. Vive en `src/permisos/` (ahí sí se leen puestos; `rutas-declaradas.spec.ts` lo prohíbe fuera). Si F5.1 sale ⚠, F5.2–F5.9 van a ⚠ sin intentarlo.
+F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|access` como `despliegue/acceso_cf.py`. En `access`, la persona sale SOLO del JWT `Cf-Access-Jwt-Assertion` con su firma (claves del equipo), `aud` = `RO_CF_AUD`, emisor y caducidad comprobados, igual que `acceso_cf.py`; nunca de la cabecera del correo, ni de `X-RO-Yo`, `?yo=`, la galleta `ro_yo` o `X-Forwarded-*` (detrás de Next todo llega desde 127.0.0.1: la IP no prueba nada). Prueba e2e con curl: JWT falso, sin firma, con otro `aud` y caducado → 403; `X-RO-Yo: tomas` sin JWT → 403; las rutas que siguen en el proxy las sigue comprobando servir.py. Vive en `src/permisos/` (ahí sí se leen puestos; `rutas-declaradas.spec.ts` lo prohíbe fuera). Si F5.1 sale ⚠, F5.2–F5.9 van a ⚠ sin intentarlo.
 
 ## F5.10 · Fallos pendientes de lógica
 
@@ -237,11 +237,11 @@ Una traducción que «funciona» pero redondea, ordena o cuenta distinto no da e
 
 **JSON, base y respuestas**
 - Las claves salen tal cual, en `snake_case`. Ni camelCase ni claves nuevas.
-- Prisma devuelve `BigInt` y `Decimal`: conviértelos antes de responder (`JSON.stringify` revienta con `BigInt`).
+- Prisma devuelve `BigInt` y `Decimal`: conviértelos antes de responder (`JSON.stringify` revienta con `BigInt`, y `Decimal` sale como texto `"12.50"` donde `servir.py` da el número `12.5`): rompe el contrato.
 - 0/1 se quedan como números, no `true`/`false`.
 - Las respuestas se comparan ya leídas, así que los espacios del JSON dan igual. **Las huellas no:**
   - el rastro encadena `sha256(previa + json.dumps(campos, ensure_ascii=False, sort_keys=True))` → `huellaRastro(previa, campos)`, idéntica byte a byte;
-  - además, Nest y el legado escriben en la MISMA tabla a la vez, así que todo alta en el rastro va dentro de una transacción con el MISMO candado que `base.py`: `SELECT pg_advisory_xact_lock(7262)`. Si no, dos escritores rompen la cadena.
+  - además, Nest y el legado escriben en la MISMA tabla a la vez, así que todo alta en el rastro va dentro de una transacción con el MISMO candado que `base.py`: `SELECT pg_advisory_xact_lock(7262)` como primera orden DENTRO de `prisma.$transaction(async (tx) => …)` (el de transacción, `xact`; nunca `pg_advisory_lock` de sesión, que con el pool se queda cogido en otra petición). Si no, dos escritores rompen la cadena.
   - Después de portar el rastro, `/api/rastro/verificar` tiene que seguir diciendo «ok» con filas escritas por los dos.
 - Los mensajes de error y los códigos se copian tal cual, también el 500 genérico «Error interno (el detalle queda en el registro del servidor).».
 
