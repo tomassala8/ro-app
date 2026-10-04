@@ -1266,6 +1266,31 @@
    "aunque_falle": true
   },
   {
+   "id": "riesgo_baja",
+   "modulo": "ficha (semáforo en tres ejes y riesgo de baja, 4-oct)",
+   "ligero": [
+    "{PY}",
+    "fuentes_riesgo/riesgo_baja.py"
+   ],
+   "completo": [
+    "{PY}",
+    "fuentes_riesgo/riesgo_baja.py"
+   ],
+   "crudo": [
+    "{PY}",
+    "fuentes_riesgo/riesgo_baja.py"
+   ],
+   "salidas": [
+    "data/riesgo"
+   ],
+   "timeout": 60,
+   "depende": [
+    "verdad"
+   ],
+   "aunque_falle": true,
+   "nota": "Sin red: lee clientes, objetivos, bandeja, incidencias y la verdad (account de cada cliente). Va tras la verdad."
+  },
+  {
    "id": "catalogo",
    "modulo": "indicadores",
    "ligero": [

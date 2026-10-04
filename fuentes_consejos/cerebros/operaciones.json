@@ -1,0 +1,6174 @@
+{
+ "_meta": {
+  "area": "operaciones",
+  "titulo": "Operaciones y proyectos (control de cartera, ritmo y coordinación)",
+  "puestos": [
+   "operaciones",
+   "proyectos"
+  ],
+  "version": "1.0",
+  "fecha": "2026-10-04",
+  "fuentes_principales": [
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/09_CHARTER_DE_MILI.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+   "ro-equipo:00_TABLERO/02_RITUAL_SEMANAL.md",
+   "ro-equipo:00_TABLERO/00_PLAN_COTI.md",
+   "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+   "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/00_MAPA_RACI_GLOBAL.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/09_LIBERACION_EQUIPO/04_A_QUIEN_PREGUNTO.md",
+   "central:skills/criterio-tomas-ro/LEYES.md",
+   "ro-app:indicadores.json",
+   "ro-app:fuentes_alertas/generar_alertas.py",
+   "ro-app:modulos/incidencias.js"
+  ],
+  "nota": "Cubre el control de la cartera (semáforo, críticos y rojos, visto de Coti), el ritmo semanal (lectura del lunes, semanal de operaciones, viernes a cero), la escalera de consecuencias del account, bloqueos y compromisos vencidos, incidencias y su escalado, carga por puesto, traspasos y suplencias, higiene de ClickUp y la parte de proyectos (taller de la oferta, criterio del día 0, garantía, coste por nicho, newsletter, auditoría). Puestos: «operaciones» es la dirección de operaciones (Mili); «proyectos» es la dueña de producto y de la cartera (Coti). No cubre: la redacción del correo al cliente (cerebro comunicacion), la conversación de retención cliente a cliente (account), el arreglo técnico de campañas (publicidad) ni del CRM (crm), sueldos, salidas y nóminas (personas_admin; la salida de una persona la decide solo Tomás). Fuentes que faltan y que varias reglas citan: 11_DECISIONES_PARA_TOMAS.md (2-oct) y 06_KPIS_INTERNOS_RO_POR_PUESTO.md; por eso varias cifras se citan desde el catálogo de la app (indicadores.json), que las transcribe.",
+  "pendientes_tomas": [
+   "Rol del account en la cartera antigua: el 29-sep el account pasa a soporte y paid lleva la estrategia, pero solo para clientes del Método. El antifallo sigue tratando al account como dueño. Aquí se aplica el antifallo a la cartera antigua y el 29-sep a la nueva hasta que decidas.",
+   "Precio: el RACI y A_QUIEN_PREGUNTO dicen «solo Tomás»; el plan de Coti (4-sep) dice «los precios los decides tú, Coti»; la oferta del 1-sep fija precio único. Operaciones no toca precio en ningún caso: eleva a Coti, que consulta contigo. Falta confirmar quién firma excepciones.",
+   "Dos rituales semanales conviven: el Semanal de operaciones del lunes (SOP-TR-20, Mili) y el barrido del lunes + comité del martes (02_RITUAL_SEMANAL, Coti). La ley C-D4-12 pide que no entre una cadencia sin que salga otra. ¿Siguen vivos los dos?",
+   "Umbrales ámbar y rojo de «compromisos vencidos sin aviso» (1-2 / 3 o más) y ámbar de «viernes a cero» (1-5) constan como propuesta sin firmar en indicadores.json.",
+   "No hay SOP de capacidad y reparto de cuentas posterior al 2-oct (la regla de 12 y 16 proyectos vive en 11_DECISIONES, que no está en ningún repo).",
+   "Mapa de compañeros de suplencia (SOP-TR-06 rama B) y dueño de vacaciones y ausencias (hueco 3 del charter): no consta que existan hoy.",
+   "El número de causas raíz baila (12 en PLAYBOOK §6, 13 en barrido_cartera.md). Las autopsias de baja necesitan una lista cerrada."
+  ]
+ },
+ "principios": [
+  {
+   "id": "operaciones_p_senal_24h",
+   "texto": "Toda señal escrita genera una acción con dueño y fecha en 24 h. Escribirla sin actuar es incubarla.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md:37",
+   "autor": "RO"
+  },
+  {
+   "id": "operaciones_p_sin_saltos",
+   "texto": "El semáforo no salta escalones: verde, amarillo, rojo. Si una cuenta salta de verde a rojo, falló la lectura. Tras un rojo siempre hay amarillo.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:257",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_sistemas",
+   "texto": "Los sistemas fallan, no las personas. Antes de cualquier aviso pregunta si el sistema le dio lo que necesitaba; si falló el sistema, se arregla el sistema.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md:37",
+   "autor": "RO"
+  },
+  {
+   "id": "operaciones_p_conseguido",
+   "texto": "Conseguido, no solicitado. «Ya se lo pedí» no cierra nada: o se consigue, o queda por escrito la negativa del cliente. Check sin evidencia no vale.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md:12",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_hueco",
+   "texto": "Un hueco no es un cero. Lo que no se ha podido mirar queda en n/d, nunca en verde.",
+   "fuente": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md:57",
+   "autor": "RO"
+  },
+  {
+   "id": "operaciones_p_prueba",
+   "texto": "Abre la evidencia antes de acusar. Acusar en falso cuesta la autoridad.",
+   "fuente": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md:61",
+   "autor": "RO"
+  },
+  {
+   "id": "operaciones_p_mismo_dia",
+   "texto": "Incidencia urgente: tarea en ClickUp y aviso al cliente el mismo día, aunque no haya solución. Acusar recibo no cierra el ciclo.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:271",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_escalar_filtrado",
+   "texto": "Nada sube en crudo: qué pasa en una línea, contexto, 2-3 opciones con la recomendada, riesgo y reloj. A Tomás solo lo irreversible, lo que pasa un umbral de dinero o sienta precedente, o la anomalía que su dueño no sabe explicar.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:857",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_muro",
+   "texto": "Precio, alcance, altas y bajas y gesto económico no se deciden en la cuenta ni en operaciones: se diagnostican y se elevan con propuesta.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/00_MAPA_RACI_GLOBAL.md:7",
+   "autor": "RO"
+  },
+  {
+   "id": "operaciones_p_quitar_produccion",
+   "texto": "La sobrecarga de un account se resuelve quitándole producción, no repartiendo sus cuentas. La métrica es que bajen los escalados a dirección.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:382",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_avisa_no_dueno",
+   "texto": "Quien avisa de un hito no puede ser su dueño. Si coinciden, el hito no tiene vigilante.",
+   "fuente": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md:6",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_restriccion",
+   "texto": "Ataca una sola restricción cada vez: la que hoy más limita la cartera. Un área adelantada no es la restricción.",
+   "fuente": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md:2310",
+   "autor": "Hormozi"
+  }
+ ],
+ "situaciones": [
+  {
+   "id": "operaciones_critico_sin_plan",
+   "titulo": "Hay clientes en crítico (o en rojo) sin plan escrito",
+   "puestos": [
+    "operaciones",
+    "proyectos",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "ops_cartera_riesgo",
+     "acc_critico",
+     "critico_cliente"
+    ],
+    "alertas": [
+     "acc_critico"
+    ],
+    "indicadores": [
+     "operaciones.clientes_en_rojo_con_plan"
+    ],
+    "palabras_clave": [
+     "crítico sin plan",
+     "rojo sin plan",
+     "cliente en rojo",
+     "cartera en riesgo",
+     "clientes críticos",
+     "plan de rescate",
+     "salud por debajo de 40",
+     "se nos va",
+     "riesgo de baja",
+     "en rojo sin hacer nada"
+    ]
+   },
+   "sintoma": "La verdad única marca clientes en crítico (fuga de leads, alta sin encender pasado el día 12, correos de más de 10 días con riesgo o 100 € en Meta sin leads) y la card no tiene plan escrito. El indicador de rojos con plan pasa a rojo con un solo rojo sin plan.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista los críticos de hoy ordenados por cuota y mira el motivo de cada uno",
+     "donde": "App › En rojo (chip Crítico)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El motivo es técnico (fuga de integración, campaña sin encender, gasto sin leads) o de relación (correos viejos, sin reunión, lo marca el account)?",
+     "donde": "App › En rojo › detalle (tiles de la verdad)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay señal P0 (queja escrita, amenaza de baja, error con dinero, carta formal, «una paradita», salto a dirección)?",
+     "donde": "Bandeja (Desk), Fathom, card",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El account sabe que su cliente está en crítico y lo ha dicho en su EOD?",
+     "donde": "Canal del pod (EOD), card",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿La cuenta está en un traspaso o en suplencia?",
+     "donde": "Incidencias › Traspasos",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Nadie ha cogido el crítico: el account no lo ha visto o cree que lo lleva otro.",
+     "como_confirmar": "La alerta acc_critico sigue sin «Lo tengo» o la card no cambia desde que entró en crítico.",
+     "solucion": [
+      "Asigna el crítico a su account por nombre, hoy, con plazo de 24 h para el plan.",
+      "Pide un plan de máximo tres acciones con dueño y fecha en la card."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El crítico es técnico y el plan depende de otra área (publicidad, CRM, altas).",
+     "como_confirmar": "El motivo dice fuga de integración, alta sin encender o gasto sin leads.",
+     "solucion": [
+      "Abre tarea en ClickUp al dueño técnico con fecha (integración y CRM: especialista GHL o técnico de altas; campaña: trafficker).",
+      "El account sigue siendo quien avisa al cliente el mismo día de lo que se está arreglando."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Hay señal P0 y la cuenta debería estar en protocolo de rojo con custodia de operaciones.",
+     "como_confirmar": "Correo de queja, frase de baja o carta formal en Desk o en Fathom.",
+     "solucion": [
+      "Toma la custodia hoy: el account no envía nada de fondo sin pasar por ti.",
+      "Acuse corto al cliente como muy tarde a primera hora del día siguiente, con día de llamada.",
+      "Expediente en 24-48 h: cronología, causa con nombre, horas de la cuenta y estado de cobros."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "El account está desbordado y el crítico se ha quedado sin dueño real.",
+     "como_confirmar": "Su cartera pasa de 12 proyectos o acumula EODs sin publicar.",
+     "solucion": [
+      "Quítale producción esta semana para que tenga tiempo para el plan; no le quites la cuenta.",
+      "Si no llega, plan a cuatro manos con proyectos."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "La cuenta está en traspaso o en suplencia y el semáforo se reseteó.",
+     "como_confirmar": "La card cambió de account hace poco y el histórico de señales está vacío.",
+     "solucion": [
+      "Recupera la pestaña 7 de historial y las señales activas.",
+      "El entrante redacta el plan con el saliente delante, hoy."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Abre En rojo, filtra por Crítico y nombra un dueño por cliente antes de las 12:00.",
+    "A cada account con un crítico sin plan, mensaje directo con plazo de 24 h.",
+    "Si hay señal P0, llama tú hoy (no correo) y pasa la cuenta a protocolo de rojo."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al asignar un crítico sin plan",
+     "texto": "{nombre}, {cliente} está en crítico desde el {fecha}: {motivo}. Necesito el plan en la card antes de mañana a las {hora}: tres acciones como mucho, cada una con dueño y fecha. Antes de que hables con el cliente, Coti le da el visto. ¿Te falta algo del sistema para hacerlo?"
+    },
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Primera llamada en un rojo con señal P0",
+     "texto": "{nombre}, te llamo yo porque he visto lo que nos escribiste y quiero entenderlo bien. Cuéntame todo y no te interrumpo. Luego te digo qué hemos parado ya y cuándo te enseño el plan."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Acuse tras una queja, a primera hora del día siguiente como muy tarde",
+     "texto": "Hola {nombre}: lo estamos revisando a fondo. Te llamo el {fecha} a las {hora} para contarte qué ha pasado y qué hacemos. Un abrazo."
+    }
+   ],
+   "que_no_hacer": [
+    "Pedir una reunión por correo como primera respuesta a un rojo.",
+    "Mandar un plan al cliente sin el visto de Coti.",
+    "Repartir las cuentas del account desbordado en vez de quitarle producción.",
+    "Dejar un rojo más de 7 días sin siguiente acción fechada.",
+    "Prometer resultados, plazos o descuentos para retener."
+   ],
+   "escalar": {
+    "cuando": "El crítico sigue sin plan 24 h después de asignarlo, o hay gesto económico encima de la mesa",
+    "a": "direccion"
+   },
+   "exito": "Clientes en rojo con plan escrito y visto de Coti = 100 % en la lectura semanal, y ningún crítico más de 24 h sin dueño.",
+   "reglas_relacionadas": [
+    "salud_umbrales_accion",
+    "queja_p0",
+    "rojo_revisado_por_coti",
+    "muro_direccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_verdad/generar_verdad.py",
+     "linea": 151,
+     "autor": "RO",
+     "nota": "reglas de crítico de la verdad única: fuga grave, alta sin encender > día 12, correos > 10 días con riesgo, ≥ 100 € en Meta sin leads"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/cerebro_decisiones.py",
+     "linea": 214,
+     "autor": "RO",
+     "nota": "consejo ops_cartera_riesgo: un crítico sin plan escrito es una baja en camino"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 983,
+     "autor": "RO",
+     "nota": "indicador clientes en rojo con plan: 100 % / plan sin visto / rojo sin plan"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 90,
+     "autor": "RO",
+     "nota": "salud 0-39: llamada personal hoy y aviso a dirección"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 56,
+     "autor": "RO",
+     "nota": "custodia de operaciones desde el minuto uno; el account no negocia solo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 57,
+     "autor": "RO",
+     "nota": "acuse al cliente a primera hora del día siguiente como máximo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 59,
+     "autor": "RO",
+     "nota": "expediente en 24-48 h con horas y cobros antes de negociar"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 86,
+     "autor": "RO",
+     "nota": "plan amarillo: máximo 3 acciones con dueño y fecha"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "queja = P0: llamar el mismo día, nunca correo primero; plan en 48 h validado arriba"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "sobrecarga: quitar producción, no repartir cuentas"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_plan_rojo_sin_visto",
+   "titulo": "Un plan de rojo o de crítico no tiene el visto de Coti antes de hablar con el cliente",
+   "puestos": [
+    "proyectos",
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "visto_critico"
+    ],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.clientes_en_rojo_con_plan",
+     "proyectos.visto_bueno_a_clientes_en_rojo"
+    ],
+    "palabras_clave": [
+     "visto de Coti",
+     "sin visto",
+     "plan sin revisar",
+     "revisar plan de rojo",
+     "visto bueno",
+     "aprobar plan",
+     "el account va a llamar",
+     "plan del crítico"
+    ]
+   },
+   "sintoma": "Un cliente crítico tiene plan en la card pero sin «Visto» en En rojo, o el account va a hablar con el cliente antes de que proyectos lo revise. El indicador queda en ámbar (plan sin visto).",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿El plan está escrito en la card con acciones, dueño y fecha?",
+     "donde": "Card del cliente / En rojo › detalle",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Coti tiene el aviso visto_critico en su Mi día y desde cuándo?",
+     "donde": "App › Mi día de proyectos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El account ya ha hablado con el cliente o tiene reunión fijada antes del visto?",
+     "donde": "Calendario, Fathom, Desk",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Los números del plan cuadran con el dato (leads, citas, horas)?",
+     "donde": "Captación, Salud del CRM, Horas",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No hay plan, solo un comentario suelto: no hay nada que revisar.",
+     "como_confirmar": "La card tiene texto sin acciones con dueño y fecha.",
+     "solucion": [
+      "Devuelve al account con la plantilla: tres acciones como mucho, dueño y fecha."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Proyectos no ha visto el aviso o lo tiene enterrado entre otras tareas.",
+     "como_confirmar": "El aviso visto_critico lleva más de 24 h abierto.",
+     "solucion": [
+      "Revisa los críticos primero, ordenados por cuota; el resto de tu cola espera.",
+      "Marca «Visto» con números y plan, o devuelve con lo que falta."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El account se adelanta por presión del cliente.",
+     "como_confirmar": "Hay reunión en calendario antes del visto.",
+     "solucion": [
+      "Si la reunión es hoy, revisa el plan en los 30 minutos previos y entra si hace falta como refuerzo.",
+      "Si no da tiempo, el account escucha y no compromete nada: solo fija la siguiente fecha."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "El plan promete cosas que el dato no sostiene.",
+     "como_confirmar": "Las cifras del plan no coinciden con Captación o con el CRM del cliente.",
+     "solucion": [
+      "Corrige las cifras antes de dar el visto: toda cifra con fuente y fecha.",
+      "Nada de promesas de resultado ni de plazos que no dependan de RO."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Abre En rojo y marca el visto o devuelve el plan de cada crítico pendiente, hoy.",
+    "Avisa al account de que no hable del plan hasta tener el visto."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al devolver un plan sin visto",
+     "texto": "{nombre}, he mirado el plan de {cliente}. Le falta {que_falta}. Ajústalo y me avisas; lo reviso en el día. Hasta entonces, si te llama, escucha y fija fecha, pero no comprometas nada del plan."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al dar el visto",
+     "texto": "Visto al plan de {cliente}. Adelante con la llamada. Bloquea la siguiente fecha antes de colgar y deja el acta en el día."
+    }
+   ],
+   "que_no_hacer": [
+    "Dar el visto sin abrir los números.",
+    "Dejar que el account negocie dinero o alcance en la llamada.",
+    "Esperar a la reunión semanal para revisar un crítico."
+   ],
+   "escalar": {
+    "cuando": "Un crítico lleva más de 24 h sin visto o el plan incluye dinero o alcance",
+    "a": "direccion"
+   },
+   "exito": "Planes de rojos revisados por Coti antes de hablar con el cliente = 100 % cada semana.",
+   "reglas_relacionadas": [
+    "rojo_revisado_por_coti",
+    "proyectos_visto",
+    "muro_direccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/motor_consejos.py",
+     "linea": 637,
+     "autor": "RO",
+     "nota": "consejo visto_critico: antes de que su account hable con el cliente, el visto de Coti con números y plan"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1338,
+     "autor": "RO",
+     "nota": "indicador visto bueno a clientes en rojo: 100 % / revisado tarde / sin revisar"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 983,
+     "autor": "RO",
+     "nota": "rojo con plan sin visto = ámbar"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 2294,
+     "autor": "RO",
+     "nota": "ningún plan de un cliente en rojo llega al cliente sin que Coti lo revise"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/02_RITUAL_SEMANAL.md",
+     "linea": 93,
+     "autor": "RO",
+     "nota": "el plan de un rojo se valida con dirección antes de activar al equipo"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 325,
+     "autor": "RO",
+     "nota": "Coti puede entrar en una llamada roja como refuerzo, sin quitar autoridad al account"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/00_MAPA_RACI_GLOBAL.md",
+     "linea": 8,
+     "autor": "RO",
+     "nota": "cuentas en rojo: custodia de operaciones; gesto económico solo Tomás"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_rojo_estancado",
+   "titulo": "Un rojo lleva días sin siguiente paso o semanas sin salir",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "ops_cartera_riesgo"
+    ],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.clientes_en_rojo_con_plan"
+    ],
+    "palabras_clave": [
+     "rojo atascado",
+     "rojo eterno",
+     "no contesta al rescate",
+     "sin siguiente paso",
+     "rojo hace semanas",
+     "rescate parado",
+     "no quiere reunión",
+     "mándame la baja"
+    ]
+   },
+   "sintoma": "Un cliente en rojo no tiene acción fechada en más de 7 días, no responde a la convocatoria, o lleva más de 8 semanas en rojo.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuál fue la última acción con el cliente y cuál es la siguiente con fecha?",
+     "donde": "Card / pestaña 7 de historial",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Cuántos intentos de convocatoria y por qué canales en los últimos 5 días hábiles?",
+     "donde": "Desk, Zadarma, card",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El plan se está cumpliendo con algo visible cada semana?",
+     "donde": "Card, dashboard, ClickUp",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Cuántas semanas lleva en rojo desde la señal?",
+     "donde": "Pestaña 7 / histórico de colores",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se perdió el hilo: nadie fijó la siguiente fecha.",
+     "como_confirmar": "La card no tiene fecha futura.",
+     "solucion": [
+      "Fija hoy la siguiente acción con fecha y dueño.",
+      "Una llamada de operaciones, no un correo del account."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El cliente no responde o dice «no hace falta reunión».",
+     "como_confirmar": "Tres intentos en 5 días hábiles por dos canales sin respuesta.",
+     "solucion": [
+      "Al día 7 sin reunión, pasa a modo unilateral: envía por escrito el plan ya en marcha con fecha de revisión y un default («si no me dices lo contrario, te llamo el {fecha}»)."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "El plan existe pero no se ve nada cada semana.",
+     "como_confirmar": "No hay entregable o dato visible nuevo desde la última revisión.",
+     "solucion": [
+      "Entrega algo pequeño y visible cada semana durante seis semanas, encajado en lo acordado.",
+      "Si un hito se retrasa, avísalo antes del plazo con nueva fecha."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "El rojo ha caducado: más de 8 semanas.",
+     "como_confirmar": "La fecha de la señal es de hace más de 8 semanas.",
+     "solucion": [
+      "O baja a amarillo con evidencia, o se activa una salida ordenada con fecha (aterrizaje, pausa con fecha o baja).",
+      "Llévalo al mensual de gobierno."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pon fecha a la siguiente acción de cada rojo hoy.",
+    "Si el cliente no responde, cuenta intentos y canales y aplica el modo unilateral al día 7."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Día 7 sin respuesta a la convocatoria (modo unilateral)",
+     "texto": "Hola {nombre}: como no hemos podido hablar, te cuento por aquí lo que ya está en marcha: {acciones}. Lo revisamos el {fecha}. Si no me dices lo contrario, te llamo ese día a las {hora}. Un abrazo."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Seguimiento semanal en el daily",
+     "texto": "{cliente} sigue en rojo. Esta semana entregamos {hito}. Siguiente revisión el {fecha}. Dueño: {nombre}."
+    }
+   ],
+   "que_no_hacer": [
+    "Dejar un rojo más de 7 días sin acción fechada.",
+    "Bajar de rojo a verde de golpe.",
+    "Responder al silencio con descuentos.",
+    "Mantener una pausa sin fecha de vuelta."
+   ],
+   "escalar": {
+    "cuando": "Rojo de más de 8 semanas, o el cliente pide la baja",
+    "a": "direccion"
+   },
+   "exito": "Ningún rojo sin siguiente acción fechada; ningún rojo por encima de 8 semanas sin decisión.",
+   "reglas_relacionadas": [
+    "paradita_ya_esta_fuera",
+    "queja_p0"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "máximo 3 intentos en 5 días hábiles por 2 canales; al día 7, modo unilateral por escrito; ningún rojo > 7 días sin acción fechada"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 82,
+     "autor": "RO",
+     "nota": "caducidad del rojo: máximo 8 semanas; rojo > 8 semanas sube al mensual de gobierno"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-03_protocolo-rojo-rescate.md",
+     "linea": 81,
+     "autor": "RO",
+     "nota": "cada semana un entregable o dato visible"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 291,
+     "autor": "Tomás",
+     "nota": "cuenta en riesgo: algo tangible cada semana durante seis semanas"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "una paradita = ya está fuera; el limbo no es opción"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 89,
+     "autor": "RO",
+     "nota": "el color baja solo con OK de operaciones; un rojo nunca vuelve directo a verde"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_cliente_sin_account",
+   "titulo": "Un cliente no tiene account asignado",
+   "puestos": [
+    "operaciones",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "dir_sin_account"
+    ],
+    "alertas": [
+     "dir_sin_account"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin account",
+     "cliente huérfano",
+     "nadie lleva",
+     "quién lleva este cliente",
+     "asignar account",
+     "cliente sin responsable",
+     "sin dueño",
+     "account principal"
+    ]
+   },
+   "sintoma": "Un cliente activo no tiene account principal vigente en Asignaciones. La alerta tiene 48 h de plazo.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿El cliente está activo de verdad (factura) o es una baja que nadie movió?",
+     "donde": "Facturación / libro de clientes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene account en ClickUp o en Desk pero no en la app?",
+     "donde": "Ajustes › Asignaciones, ClickUp, Desk",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Su account se fue, está de baja o se ha traspasado sin registrar?",
+     "donde": "Incidencias › Traspasos y Accesos de quien ya no está",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Es un mantenimiento que va sin account por diseño?",
+     "donde": "Ficha del cliente",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Qué account tiene hueco sin pasar de 12 proyectos?",
+     "donde": "Huecos en accounts / Personas",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Es una baja que sigue en el censo.",
+     "como_confirmar": "No factura desde hace un mes o más.",
+     "solucion": [
+      "Confirma con administración y saca al cliente del censo.",
+      "Revisa que no queden accesos ni tareas vivas."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Incongruencia entre herramientas: el account existe en una y no en otra.",
+     "como_confirmar": "ClickUp o Desk tienen nombre, la app no.",
+     "solucion": [
+      "Empareja en Ajustes › Asignaciones con la fuente que manda («quién lo lleva» lo decide operaciones)."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Salida o ausencia sin traspaso ni suplencia.",
+     "como_confirmar": "El account anterior está inactivo o fuera.",
+     "solucion": [
+      "Activa el compañero de suplencia hoy y avisa al cliente desde el buzón único.",
+      "Planifica el traspaso formal si la ausencia se alarga."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Mantenimiento sin account por diseño.",
+     "como_confirmar": "La ficha dice «mantenimiento sin account».",
+     "solucion": [
+      "Márcalo así en Asignaciones para que la alerta no salte."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "Nadie tiene hueco.",
+     "como_confirmar": "Todos los accounts en 12 o más proyectos.",
+     "solucion": [
+      "No lo asignes por encima de la carga: avisa a dirección (huecos ≤ 5)."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pon nombre al cliente hoy, aunque sea provisional, y regístralo en Asignaciones.",
+    "Si el cliente llevaba días sin interlocutor, que alguien le escriba hoy."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Si el cliente ha estado sin interlocutor",
+     "texto": "Hola {nombre}: a partir de hoy te atiende {account}. Todo sigue igual: mismas fechas y mismo buzón, {buzon}. Escríbenos siempre ahí y así nunca dependes de una persona. Un abrazo."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al asignar",
+     "texto": "{account}, desde hoy llevas {cliente}. Tienes la card, la master sheet y la guía de trato. En 48 h deberías poder operar solo con eso; lo que no esté escrito, me lo dices y lo escribimos."
+    }
+   ],
+   "que_no_hacer": [
+    "Asignar por encima de 12 proyectos sin avisar.",
+    "Comunicar el cambio por correo sin presentación cuando es un traspaso planificado.",
+    "Dejar al cliente un solo día sin interlocutor."
+   ],
+   "escalar": {
+    "cuando": "Ningún account tiene hueco para recibir el cliente",
+    "a": "direccion"
+   },
+   "exito": "La alerta dir_sin_account desaparece y el cliente tiene account en Asignaciones, ClickUp y Desk.",
+   "reglas_relacionadas": [
+    "carga_por_puesto"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 227,
+     "autor": "RO",
+     "nota": "alerta dir_sin_account: plazo 48 h; se cierra con account en Ajustes › Asignaciones"
+    },
+    {
+     "fichero": "ro-app:fuentes_verdad/generar_verdad.py",
+     "linea": 168,
+     "autor": "RO",
+     "nota": "«sin account» salvo mantenimiento sin account"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 100,
+     "autor": "RO",
+     "nota": "en el censo, operaciones manda en «¿quién lo lleva?» y facturación en «¿está activo?»"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 15,
+     "autor": "RO",
+     "nota": "cero días de cuenta sin interlocutor"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "aviso al cliente desde el buzón único: todo sigue igual"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 50,
+     "autor": "RO",
+     "nota": "umbral firmado D-07: 12 por account, aviso con ≤ 5 huecos"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_pocos_huecos_accounts",
+   "titulo": "Quedan 5 huecos o menos en las carteras de los accounts",
+   "puestos": [
+    "operaciones",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.huecos_en_accounts"
+    ],
+    "palabras_clave": [
+     "huecos",
+     "capacidad de accounts",
+     "no caben más clientes",
+     "cartera llena",
+     "nuevas altas sin account",
+     "carga del equipo",
+     "contratar account",
+     "techo de altas"
+    ]
+   },
+   "sintoma": "12 × accounts − proyectos ≤ 5. Con 5 huecos o menos se avisa a Tomás.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuenta huecos reales: proyectos activos por account frente a 12",
+     "donde": "Huecos en accounts (ClickUp Cartera)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Cuántas altas firmadas entran en las próximas 4 semanas?",
+     "donde": "Clientes nuevos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay proyectos de baja o terminados que siguen contando?",
+     "donde": "ClickUp Cartera frente a facturación",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Qué producción hacen hoy los accounts que podría salir de su mesa?",
+     "donde": "Horas y Producción por persona",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La capacidad se agota de verdad por crecimiento.",
+     "como_confirmar": "Huecos ≤ 5 con censo limpio.",
+     "solucion": [
+      "Avisa a Tomás con el dato, las altas previstas y 2-3 opciones (frenar ritmo de altas, quitar producción, contratar)."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Pico de altas concentrado.",
+     "como_confirmar": "Más altas en 4 semanas que huecos.",
+     "solucion": [
+      "Escalona encendidos dentro del plazo del día 10 con altas y dirección."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El censo está sucio y la capacidad es falsa.",
+     "como_confirmar": "Proyectos de clientes de baja aún en Cartera.",
+     "solucion": [
+      "Limpia la Cartera con administración antes de dar la alarma."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Los accounts gastan tiempo en producción y compilación.",
+     "como_confirmar": "Horas de producción en accounts.",
+     "solucion": [
+      "Saca producción del account antes de pedir más gente."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Limpia el censo y recalcula huecos.",
+    "Si siguen ≤ 5, aviso escrito a Tomás con opciones."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso a Tomás",
+     "texto": "Huecos en accounts: {huecos} (12 × {n_accounts} − {proyectos}). Entran {altas} altas antes del {fecha}. Opciones: 1) escalonar encendidos dentro del día 10; 2) quitar producción a los accounts ({horas} h/semana); 3) abrir proceso de account. Me inclino por {opcion} porque {motivo}. Si no llega decisión antes del {fecha}, la alta de {cliente} se queda sin account."
+    }
+   ],
+   "que_no_hacer": [
+    "Meter un proyecto 13 a un account sin avisar.",
+    "Proponer contratar sin haber quitado producción ni limpiado el censo.",
+    "Decidir contrataciones desde operaciones: las decide dirección."
+   ],
+   "escalar": {
+    "cuando": "Huecos ≤ 5 tras limpiar el censo",
+    "a": "direccion"
+   },
+   "exito": "Huecos > 5, o decisión de dirección registrada con fecha.",
+   "reglas_relacionadas": [
+    "carga_por_puesto",
+    "sobrecarga_account",
+    "contratar_por_restriccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1160,
+     "autor": "RO",
+     "nota": "huecos = 12 × accounts − proyectos; ≤ 5 = aviso a Tomás"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 50,
+     "autor": "RO",
+     "nota": "umbral firmado D-07: 12 por account, aviso con ≤ 5 huecos"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "quitar producción antes que repartir"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 375,
+     "autor": "Tomás",
+     "nota": "contratar va por detrás del margen y tras agotar proceso e IA"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 857,
+     "autor": "Tomás",
+     "nota": "escalada con opciones, riesgo y reloj"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_account_sobrecargado",
+   "titulo": "Un account pasa de 12 proyectos (o un trafficker o CRM de 16)",
+   "puestos": [
+    "operaciones",
+    "rrhh"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.carteras_por_encima_de_capacidad"
+    ],
+    "palabras_clave": [
+     "sobrecargado",
+     "no llega",
+     "demasiadas cuentas",
+     "por encima de su capacidad",
+     "saturado",
+     "quemado",
+     "carga de trabajo",
+     "más de 12 proyectos",
+     "más de 16"
+    ]
+   },
+   "sintoma": "Un account con más de 12 proyectos, o un trafficker o especialista de CRM con más de 16 (aviso desde 14).",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Mira la carga por persona y quién pasa del tope",
+     "donde": "Personas › Por encima de su capacidad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Qué producción o compilación hace esa persona que no es juicio ni relación?",
+     "donde": "Horas y Producción",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay señales de que está dejando de aparecer (EODs sin publicar, correos > 48 h, cuentas sin contacto)?",
+     "donde": "Canal del pod, Bandeja",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Ha recibido cuentas por traspaso o suplencia sin devolver?",
+     "donde": "Incidencias › Traspasos",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se asignaron altas sin mirar la carga.",
+     "como_confirmar": "Las últimas altas fueron a quien ya estaba en 12.",
+     "solucion": [
+      "Para las asignaciones nuevas a esa persona hasta que baje."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Hace producción que debería hacer la célula.",
+     "como_confirmar": "Horas de piezas, informes o compilaciones a su nombre.",
+     "solucion": [
+      "Saca producción de su mesa esta semana (informes, piezas, compilaciones)."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Ya está dejando de aparecer.",
+     "como_confirmar": "EODs sin publicar o correos de clientes > 48 h.",
+     "solucion": [
+      "Conversación esta semana: qué necesita y qué le quitamos.",
+      "Prioriza sus críticos con proyectos."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Suplencia que se quedó para siempre.",
+     "como_confirmar": "Cuentas de suplencia de hace más de dos semanas.",
+     "solucion": [
+      "Convierte la suplencia en traspaso formal a quien tenga hueco, o devuélvela."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Para nuevas asignaciones a esa persona.",
+    "Lista esta semana la producción que le quitas."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Conversación con el account",
+     "texto": "{nombre}, llevas {n} proyectos y el tope es 12. No es un reproche: es el sistema. Esta semana te quito {tareas}. ¿Qué más te está comiendo tiempo que no sea hablar con tus clientes?"
+    }
+   ],
+   "que_no_hacer": [
+    "Resolver repartiendo sus cuentas entre otros.",
+    "Leerlo como falta de rendimiento: el dato es de carga.",
+    "Hablar de sueldos o de salidas: eso no es de operaciones."
+   ],
+   "escalar": {
+    "cuando": "Dos o más personas por encima de capacidad a la vez",
+    "a": "direccion"
+   },
+   "exito": "Carteras por encima de capacidad = 0 en la lectura semanal.",
+   "reglas_relacionadas": [
+    "carga_por_puesto",
+    "sobrecarga_account"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1492,
+     "autor": "RO",
+     "nota": "accounts > 12, traffickers y CRM > 16; 0 / 1 / 2 o más"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 50,
+     "autor": "RO",
+     "nota": "umbral firmado: 16 trafficker y CRM, aviso desde 14"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 2604,
+     "autor": "RO",
+     "nota": "la sobrecarga se resuelve quitando producción"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 424,
+     "autor": "Tomás",
+     "nota": "un AM sobrecargado produce el mismo efecto que uno que se va"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "la métrica es que bajen los escalados al CEO"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_bloqueo_callado",
+   "titulo": "Una tarea del cliente lleva más de 5 días bloqueada sin avisar",
+   "puestos": [
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "bloqueo_callado"
+    ],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.bloqueos_del_cliente"
+    ],
+    "palabras_clave": [
+     "bloqueado",
+     "bloqueo callado",
+     "tarea parada",
+     "esperando al cliente",
+     "no avanza",
+     "atascado",
+     "dependencia vencida",
+     "nadie ha avisado"
+    ]
+   },
+   "sintoma": "Tarea en estado bloqueado con más de 5 días (rojo); entre 2 y 5 días es ámbar.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Abre la tarea y lee el título y los comentarios: ¿quién bloquea, nosotros o el cliente?",
+     "donde": "ClickUp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene fecha y persona asignada?",
+     "donde": "ClickUp (due_date, assignees)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se avisó al cliente antes de que venciera?",
+     "donde": "Desk, card",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay varias cuentas con la misma tarea bloqueada el mismo día?",
+     "donde": "ClickUp filtrado por estado bloqueado y título",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El bloqueo es por un acceso o material del cliente?",
+     "donde": "Tablero de dependencias / card",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El bloqueo es interno y nadie lo ha dicho.",
+     "como_confirmar": "Espera a una persona o a otra área de RO.",
+     "solucion": [
+      "Nombra al dueño interno y fecha hoy; si es una cola de otra persona, reasigna."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La tarea no tiene fecha ni dueño: es invisible.",
+     "como_confirmar": "due_date vacío o sin asignado.",
+     "solucion": [
+      "Pon fecha y dueño hoy. Ninguna tarea vive sin fecha."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Depende del cliente y no se le ha pedido bien.",
+     "como_confirmar": "No hay correo ni llamada pidiendo lo que falta.",
+     "solucion": [
+      "Pide lo que falta por llamada y deja constancia escrita; nueva fecha propuesta."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Es una iniciativa transversal parada en bloque.",
+     "como_confirmar": "La misma tarea bloqueada en varias cuentas con la misma fecha.",
+     "solucion": [
+      "No lo arregla ningún account: va a quien lanzó la iniciativa, con una sola fecha para todas."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "Acceso o material del cliente que no llega.",
+     "como_confirmar": "Dependencia vencida en el tablero.",
+     "solucion": [
+      "Llama, no escribas otra vez; si sigue sin llegar, decide con el account una salida con default."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Abre cada bloqueo de más de 5 días y escribe en la tarea quién bloquea y qué falta.",
+    "Si el cliente no sabe que su tarea está parada, que el account le avise hoy."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Bloqueo por algo del cliente",
+     "texto": "{nombre}, te llamo porque tenemos parado {tarea} desde el {fecha} a falta de {que_falta}. Si me lo pasas antes del {fecha_nueva}, lo tienes el {fecha_entrega}. ¿Te viene bien?"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account",
+     "texto": "{nombre}, {tarea} de {cliente} lleva {dias} días bloqueada y no consta aviso. ¿Quién bloquea y qué falta? Déjalo escrito en la tarea hoy y avisa al cliente si depende de él."
+    }
+   ],
+   "que_no_hacer": [
+    "Contar un bloqueo sin abrir la tarea: el estado no dice quién bloquea.",
+    "Escribir un tercer correo cuando la solución es llamar.",
+    "Repartir la culpa entre accounts cuando es una iniciativa parada en bloque."
+   ],
+   "escalar": {
+    "cuando": "Más de una cuenta afectada por el mismo bloqueo, o bloqueo de más de 10 días",
+    "a": "proyectos"
+   },
+   "exito": "Ninguna tarea bloqueada más de 2 días sin causa escrita, y bloqueos > 5 días = 0.",
+   "reglas_relacionadas": [
+    "rel_bloqueo_callado",
+    "problema_lo_contamos_nosotros"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_verdad/generar_verdad.py",
+     "linea": 140,
+     "autor": "RO",
+     "nota": "bloqueo callado = tarea bloqueada > 5 días"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1116,
+     "autor": "RO",
+     "nota": "bloqueos del cliente: ninguna > 2 días / 2-5 / > 5"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 194,
+     "autor": "RO",
+     "nota": "bloqueado = está parado"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 396,
+     "autor": "RO",
+     "nota": "bloqueado no dice por qué ni quién: hay que leer el título y preguntar"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 208,
+     "autor": "RO",
+     "nota": "misma tarea bloqueada el mismo día en varias cuentas = iniciativa parada en bloque"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 113,
+     "autor": "RO",
+     "nota": "ninguna tarea sin fecha"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 264,
+     "autor": "Tomás",
+     "nota": "si el cliente descubre el problema antes, se pierde autoridad"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_clickup_tablero_miente",
+   "titulo": "ClickUp no es fiable: tareas sin fecha, sin dueño o de clientes que ya se fueron",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "ClickUp",
+     "tareas sin fecha",
+     "sin asignar",
+     "backlog",
+     "tablero desordenado",
+     "tareas viejas",
+     "cliente de baja con tareas",
+     "revocar accesos",
+     "estados de ClickUp",
+     "tablero miente"
+    ]
+   },
+   "sintoma": "El filtro por estado bloqueado devuelve tareas sin fecha o sin asignado, contenedores de backlog que nadie cierra o tareas vivas de clientes de baja.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Filtra el espacio de clientes mensuales por estado bloqueado",
+     "donde": "ClickUp: clickup_filter_tasks, estado bloqueado, con subtareas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Mira primero las sin fecha, luego las sin asignado, luego agrupa por cliente",
+     "donde": "Campos due_date, assignees, list.name",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay tareas de clientes que ya son baja?",
+     "donde": "Cruce con el censo de facturación",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Los estados se están leyendo bien (completado = hecho; revisión cliente = entregado)?",
+     "donde": "Lectura de estados",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Las tareas nuevas siguen el estándar (subtarea del mes, Objetivo → Pasos → Pruebas, asignada por rol)?",
+     "donde": "Muestra de 5 tareas de la semana",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Tareas sin fecha: ninguna auditoría las ve.",
+     "como_confirmar": "due_date vacío.",
+     "solucion": [
+      "Pon fecha a todas en el comité o en la reunión de la semana; la regla es que ninguna tarea existe sin fecha."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Tareas sin dueño: nadie las va a mover.",
+     "como_confirmar": "assignees vacío.",
+     "solucion": [
+      "Asigna por rol, deduciendo de las tareas hermanas."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Clientes de baja con tareas vivas, a veces de seguridad.",
+     "como_confirmar": "Tareas de revocar accesos sin cerrar.",
+     "solucion": [
+      "Cierra esta semana las de accesos (son higiene de seguridad, no deuda).",
+      "Cierra o archiva los contenedores obsoletos."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Se cuentan como pendientes cosas ya entregadas.",
+     "como_confirmar": "Tareas en revisión cliente contadas como no entregadas.",
+     "solucion": [
+      "Aplica la tabla de estados antes de citar una cifra."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Tareas mal creadas (sueltas, sin pruebas, ilegibles).",
+     "como_confirmar": "Tareas fuera del padre del mes o sin sección de Pruebas.",
+     "solucion": [
+      "Reescríbelas con el estándar y enseña el ejemplo en la píldora del mes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pasa el filtro de bloqueadas y ordena por sin fecha.",
+    "Cierra hoy cualquier tarea de accesos de un cliente de baja."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Mensaje al equipo",
+     "texto": "Esta semana dejamos ClickUp limpio con dos reglas: ninguna tarea sin fecha y ninguna sin dueño. Hoy hay {n_sin_fecha} sin fecha y {n_sin_dueno} sin dueño. Las vemos en la reunión del {dia}. No es buscar culpables: si una tarea no tiene fecha, no la ve nadie."
+    }
+   ],
+   "que_no_hacer": [
+    "Citar una cifra de backlog sin comprobar tarea a tarea.",
+    "Usar el estado bloqueado como prueba de culpa de un account.",
+    "Crear tareas sueltas o sin sección de pruebas."
+   ],
+   "escalar": {
+    "cuando": "Tareas de accesos de clientes de baja sin cerrar al final de la semana",
+    "a": "direccion"
+   },
+   "exito": "Bloqueadas sin fecha = 0 y sin asignado = 0 en el filtro del lunes; cero tareas vivas de clientes de baja.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 12,
+     "autor": "RO",
+     "nota": "bloqueado no admite interpretación"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 113,
+     "autor": "RO",
+     "nota": "ninguna tarea sin fecha; cerrar contenedores obsoletos"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 121,
+     "autor": "RO",
+     "nota": "bloqueada sin fecha y sin asignado = la señal más fuerte del tablero"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 103,
+     "autor": "RO",
+     "nota": "tareas de revocar accesos de una baja: higiene de seguridad; se cierran esta semana"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 199,
+     "autor": "RO",
+     "nota": "orden de lectura: due_date null, assignees vacío, list.name"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 72,
+     "autor": "RO",
+     "nota": "cómo se leen los estados de ClickUp"
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_protocolo_clickup_tareas.md",
+     "linea": 13,
+     "autor": "Tomás",
+     "nota": "estándar de tareas: subtarea del mes, Objetivo → Pasos → Pruebas, asignación por rol"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3234,
+     "autor": "Hormozi",
+     "nota": "la convención de nombres: coste local, beneficio global"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_compromisos_vencidos_sin_aviso",
+   "titulo": "Hay compromisos con el cliente vencidos sin haberle avisado",
+   "puestos": [
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_correos"
+    ],
+    "alertas": [
+     "acc_correos"
+    ],
+    "indicadores": [
+     "operaciones.compromisos_vencidos_sin_aviso_no_3_del_viernes"
+    ],
+    "palabras_clave": [
+     "vencido",
+     "se nos pasó la fecha",
+     "compromiso incumplido",
+     "prometimos",
+     "fecha pasada",
+     "retraso sin avisar",
+     "no le dijimos nada",
+     "correo sin contestar"
+    ]
+   },
+   "sintoma": "Tareas en revisión o bloqueadas con fecha pasada y 48 h sin movimiento, más correos del cliente de más de 48 h. 0 verde, 1-2 ámbar, 3 o más rojo (ámbar y rojo, propuesta sin firmar).",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista los vencidos por cliente y mira si hubo aviso antes del plazo",
+     "donde": "Mi día › nº 3 del viernes, ClickUp, Desk",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿La fecha la pusimos nosotros o la prometimos al cliente?",
+     "donde": "Acta, correo, card",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El trabajo está hecho pero sin entregar (en revisión interna)?",
+     "donde": "ClickUp: revisión técnica / revisión project manager",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay correos del cliente de más de 48 h sin respuesta?",
+     "donde": "Bandeja (Desk)",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El retraso se repite en la misma persona o en la misma cola?",
+     "donde": "Producción por persona",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se dejó vencer en silencio.",
+     "como_confirmar": "No hay correo de aviso antes de la fecha.",
+     "solucion": [
+      "Avisa hoy con motivo y nueva fecha.",
+      "Regístralo como incidencia «retraso mal gestionado»."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Fecha interna que nunca se comunicó: no es un incumplimiento al cliente.",
+     "como_confirmar": "La fecha no aparece en ningún correo ni acta.",
+     "solucion": [
+      "Corrige la fecha en ClickUp y no la cuentes como compromiso."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Hecho y atascado en revisión interna.",
+     "como_confirmar": "Estado de revisión interna con fecha pasada.",
+     "solucion": [
+      "Quien revisa, revisa hoy; si no puede, otro con criterio."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Correos sin contestar.",
+     "como_confirmar": "Correos de más de 48 h en la Bandeja.",
+     "solucion": [
+      "Contesta hoy, aunque sea con plazo: amarillo a las 24 h, rojo a las 48 h."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Una cola saturada.",
+     "como_confirmar": "Varios vencidos en la misma persona.",
+     "solucion": [
+      "Reasigna por fecha de compromiso, primero lo más antiguo."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Que cada compromiso vencido tenga hoy un aviso al cliente con nueva fecha.",
+    "Anota en el EOD cada incidencia abierta hasta que se cierre."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso de retraso (idealmente antes del plazo)",
+     "texto": "Hola {nombre}: {entregable} no va a estar el {fecha_prevista}. El motivo: {motivo}. Te lo entrego el {fecha_nueva} y te escribo ese día para confirmártelo. Un abrazo."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account",
+     "texto": "{nombre}, {entregable} de {cliente} venció el {fecha} y no veo aviso. Escríbele hoy con motivo y nueva fecha y lo apuntas como incidencia. ¿Te faltó algo del sistema para verlo a tiempo?"
+    }
+   ],
+   "que_no_hacer": [
+    "Avisar después del plazo como si fuera normal.",
+    "Dar una nueva fecha que dependa de otra persona sin confirmarla.",
+    "Contar como incumplida una fecha interna que nunca se prometió."
+   ],
+   "escalar": {
+    "cuando": "Tres o más compromisos vencidos sin aviso en la misma cuenta",
+    "a": "proyectos"
+   },
+   "exito": "Compromisos vencidos sin aviso = 0 el viernes.",
+   "reglas_relacionadas": [
+    "prod_plazo_avisar",
+    "respuesta_24_48"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1094,
+     "autor": "RO",
+     "nota": "compromisos vencidos sin aviso: 0 / 1-2 / 3 o más; ámbar y rojo, propuesta sin firmar"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
+     "linea": 58,
+     "autor": "RO",
+     "nota": "retraso previsible: avisar antes del plazo con motivo y nueva fecha; aviso posterior = incidencia"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 90,
+     "autor": "RO",
+     "nota": "nunca dejar vencer la fecha en silencio"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 190,
+     "autor": "RO",
+     "nota": "correos de cliente > 48 h laborables (D-29)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 42,
+     "autor": "RO",
+     "nota": "umbral firmado D-29: < 24 h / 24-48 h / > 48 h"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 385,
+     "autor": "RO",
+     "nota": "los días de retraso de ClickUp no son la fecha prometida al cliente"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_viernes_sin_cero",
+   "titulo": "El viernes quedan revisiones y tickets abiertos que debían cerrarse esa semana",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.viernes_a_cero"
+    ],
+    "palabras_clave": [
+     "viernes a cero",
+     "cierre de semana",
+     "retro del viernes",
+     "quedan tareas",
+     "revisiones pendientes",
+     "tickets sin contestar",
+     "semana sin cerrar"
+    ]
+   },
+   "sintoma": "El viernes hay tareas en revisión (account, técnica u operaciones) y tickets sin contestar. 0 verde, 1-5 ámbar (propuesta sin firmar), más de 5 rojo.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuenta lo abierto por tipo: revisión del account, revisión técnica, revisión de operaciones, tickets",
+     "donde": "Mi día › viernes a cero; ClickUp; Desk",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Lo abierto se concentra en una persona?",
+     "donde": "Producción por persona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay revisiones a tu nombre (operaciones)?",
+     "donde": "ClickUp, cola de operaciones",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Los tickets abiertos tienen agente?",
+     "donde": "Incidencias (Desk)",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La semana se planificó por encima de la capacidad.",
+     "como_confirmar": "Muchas piezas con fecha de viernes.",
+     "solucion": [
+      "Cierra lo que se pueda antes de las 16:30; lo demás pasa al lunes con fecha y aviso si estaba prometido."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Un cuello de botella en una persona.",
+     "como_confirmar": "La mayoría de lo abierto es de una sola persona.",
+     "solucion": [
+      "Reasigna hoy por fecha de compromiso; llévalo al semanal como balanceo."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El cuello es operaciones.",
+     "como_confirmar": "Revisiones a tu nombre.",
+     "solucion": [
+      "Despacha tus revisiones antes que nada; tú también estás en pantalla."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Tickets sin agente.",
+     "como_confirmar": "Tickets sin agente más de 4 h.",
+     "solucion": [
+      "Asigna agente; si el agente ya no está, corrige la configuración de Desk."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Antes de las 16:30, cierra o reprograma con aviso todo lo abierto.",
+    "En la retro, cuenta los hechos sin señalar a nadie."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Retro de cierre del viernes",
+     "texto": "Esta semana cerramos {cerradas} de {total}. Quedan {abiertas}: {lista}. Cada una sale de aquí con dueño y fecha. Y un reconocimiento: {comportamiento} de {nombre} está impecable, así se trabaja."
+    }
+   ],
+   "que_no_hacer": [
+    "Ejecutar consecuencias en la retro: en la retro se ven hechos, los avisos van en privado.",
+    "Dejar revisiones abiertas a tu nombre."
+   ],
+   "escalar": {
+    "cuando": "Más de 5 abiertas dos viernes seguidos",
+    "a": "direccion"
+   },
+   "exito": "Viernes a cero = 0 abiertas a las 17:00.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1138,
+     "autor": "RO",
+     "nota": "viernes a cero: 0 / 1-5 / > 5; ámbar propuesta sin firmar"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 22,
+     "autor": "RO",
+     "nota": "retro del viernes 17:00, 15 min; tablero cerrado a las 16:30"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "los peldaños son siempre en privado; en la retro se ven los hechos"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 81,
+     "autor": "RO",
+     "nota": "un refuerzo específico por retro como mínimo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 9,
+     "autor": "RO",
+     "nota": "operaciones también está en pantalla"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 198,
+     "autor": "RO",
+     "nota": "ticket sin agente > 4 h"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_cuenta_nueva_consume_horas",
+   "titulo": "Una cuenta nueva se come más de 45 h al mes",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_no_imputa"
+    ],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.horas_por_cuenta_nueva_no_2_del_viernes",
+     "operaciones.imputacion_del_equipo_aviso_de_disciplina"
+    ],
+    "palabras_clave": [
+     "horas de más",
+     "cuenta nueva muchas horas",
+     "se come las horas",
+     "desfase de horas",
+     "sobre-servida",
+     "más de 45 horas",
+     "imputación",
+     "horas por cuenta"
+    ]
+   },
+   "sintoma": "Horas imputadas desde el alta ÷ meses > 45 h (41-45 ámbar). Es solo aviso: no cuenta en la salud del cliente ni en el número de nadie.",
+   "gravedad": "baja",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Las horas están bien imputadas (a esa cuenta y no a otra)?",
+     "donde": "Horas (ClickUp)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿En qué se van: setup, retrabajo, peticiones fuera de ficha?",
+     "donde": "Horas por tarea",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay rondas de revisión repetidas en las piezas?",
+     "donde": "Producción (rondas)",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El cliente pide cosas que no están en la ficha?",
+     "donde": "Card, correos",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Imputación errónea.",
+     "como_confirmar": "Horas de otra cuenta cargadas a esta.",
+     "solucion": [
+      "Corrige la imputación con la persona."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Setup que se alarga por accesos o integraciones.",
+     "como_confirmar": "Horas concentradas en tareas de alta.",
+     "solucion": [
+      "Revisa con altas qué bloquea el setup y ponle fecha."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Retrabajo por rondas de revisión.",
+     "como_confirmar": "Piezas con 2 o más rondas.",
+     "solucion": [
+      "Lleva el patrón a proyectos: el problema es la plantilla o el brief."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Alcance fuera de ficha regalado.",
+     "como_confirmar": "Peticiones fuera de ficha atendidas sin clasificar.",
+     "solucion": [
+      "Clasifica: ficha, bolsa de detalles o añadido. El account responde «eso es el añadido X», sin tocar precio."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Mira dónde se van las horas antes de hablar con nadie."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account o a la célula",
+     "texto": "{cliente} lleva {horas} h al mes desde el alta. No es un reproche, es un aviso: ¿dónde se están yendo? Si es algo fuera de ficha, lo clasificamos con Coti."
+    }
+   ],
+   "que_no_hacer": [
+    "Usar las horas para juzgar a una persona o la salud del cliente: son solo aviso.",
+    "Capar sin saber de dónde viene el exceso.",
+    "Negociar alcance o precio con el cliente desde operaciones."
+   ],
+   "escalar": {
+    "cuando": "Exceso por alcance fuera de ficha que el cliente reclama como incluido",
+    "a": "proyectos"
+   },
+   "exito": "La cuenta baja a ≤ 40 h/mes, o el exceso tiene causa escrita y decisión de proyectos.",
+   "reglas_relacionadas": [
+    "horas_solo_aviso"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1182,
+     "autor": "RO",
+     "nota": "horas por cuenta nueva: ≤ 40 / 41-45 / > 45 h; D-23 y D-27"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 54,
+     "autor": "RO",
+     "nota": "umbral firmado: horas por cuenta nueva, solo aviso"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1361,
+     "autor": "RO",
+     "nota": "horas solo como aviso: no cuentan en la salud ni en el número de nadie; manda el 2-oct sobre las alertas del 60 % y 33 % del consejero"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 217,
+     "autor": "RO",
+     "nota": "horas imputadas = aviso, sin plazo, sin rojo y sin escalado"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 345,
+     "autor": "Tomás",
+     "nota": "ficha, bolsa o añadido; prohibido estirar la bolsa en silencio"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 92,
+     "autor": "RO",
+     "nota": "pedido fuera de ficha: el AM no negocia alcance ni toca precio"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_alerta_escalada_a_mili",
+   "titulo": "Una alerta pasó su plazo sin «Lo tengo» y ha subido a operaciones",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_critico",
+     "acc_correos",
+     "acc_informe",
+     "acc_sin_agente",
+     "acc_llamadas"
+    ],
+    "alertas": [
+     "acc_critico",
+     "acc_correos",
+     "acc_informe",
+     "acc_sin_agente",
+     "acc_llamadas"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "escalada a Mili",
+     "me ha llegado escalada",
+     "nadie la cogió",
+     "sin lo tengo",
+     "alerta vencida",
+     "sube a operaciones",
+     "plazo pasado"
+    ]
+   },
+   "sintoma": "La alerta venció sin «Lo tengo» del dueño, subió a su jefe, y tras otro plazo igual llega a operaciones.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué alerta es, de qué cliente y cuánto lleva vencida?",
+     "donde": "App › Alertas (Escaladas a mí)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El dueño está activo hoy o ausente?",
+     "donde": "Personas / calendario",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El problema sigue en el dato de hoy?",
+     "donde": "Pantalla de la alerta (Ir)",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿La regla de la alerta encaja con este cliente (exento, mal emparejado)?",
+     "donde": "Ajustes › Asignaciones",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El dueño no la vio o no sabía que era suya.",
+     "como_confirmar": "Sin «Lo tengo» ni comentario.",
+     "solucion": [
+      "Escríbele hoy, nombra la alerta y pide «Lo tengo» con hora."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Dueño ausente sin suplencia.",
+     "como_confirmar": "Persona de baja o vacaciones.",
+     "solucion": [
+      "Activa al compañero de suplencia y reasigna la alerta."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Ya está resuelta y nadie la cerró.",
+     "como_confirmar": "El dato de hoy ya no la marca.",
+     "solucion": [
+      "Ciérrala con prueba; si mañana reaparece, se reabre sola."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Falso positivo por configuración.",
+     "como_confirmar": "Cliente exento o mal emparejado.",
+     "solucion": [
+      "Corrige la configuración; si la regla está mal, va al buzón de mejoras."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Mira las escaladas a ti antes que nada y asigna cada una con hora."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al dueño de la alerta",
+     "texto": "{nombre}, la alerta «{alerta}» de {cliente} venció el {fecha} sin «Lo tengo» y me ha llegado a mí. ¿La coges tú hoy antes de las {hora}? Si te falta algo, dímelo."
+    }
+   ],
+   "que_no_hacer": [
+    "Resolverla tú en silencio: el dueño no aprende y vuelve a pasar.",
+    "Posponerla sin fecha."
+   ],
+   "escalar": {
+    "cuando": "Pasa otro plazo igual sin respuesta (sube a Tomás)",
+    "a": "direccion"
+   },
+   "exito": "Escaladas a operaciones = 0 al final del día.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 1090,
+     "autor": "RO",
+     "nota": "escalado: pasado el plazo sin «Lo tengo» → jefe; otro plazo igual → Mili (o Tomás)"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 295,
+     "autor": "RO",
+     "nota": "cadena de escalado: dueño, jefe del departamento, Mili, Tomás"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 188,
+     "autor": "RO",
+     "nota": "plazos: crítico 24 h, correos 24 h, informe 24 h, ticket sin agente 4 h"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 37,
+     "autor": "RO",
+     "nota": "primero preguntar si falló el sistema"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_incidencia_toca_escalar",
+   "titulo": "Una incidencia avisada hace más de 48 h sigue sin cambio, o lleva 48 h sin avisar",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "toca escalar",
+     "incidencia sin respuesta",
+     "sin avisar 48 h",
+     "reiterar",
+     "no contesta el responsable",
+     "incidencia parada",
+     "avisé y nada"
+    ]
+   },
+   "sintoma": "En Incidencias aparece «Toca escalarlo» (avisada hace más de 48 h sin cambio) o «Sin avisar > 48 h» (detectada y nadie ha avisado).",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Se avisó al responsable por escrito y por qué canal?",
+     "donde": "Incidencias › ficha (etapas)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Se reiteró antes de escalar?",
+     "donde": "Incidencias › ficha",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El responsable sigue en el equipo y con acceso?",
+     "donde": "Accesos de quien ya no está",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿La causa es de sistema o configuración más que de ejecución?",
+     "donde": "Campos dónde y por qué",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Nadie avisó: la incidencia se quedó en detectada.",
+     "como_confirmar": "Estado «Sin avisar > 48 h».",
+     "solucion": [
+      "Avisa hoy desde la ficha con «Avisar», con el mensaje listo y la prueba."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Se avisó una vez y no se reiteró.",
+     "como_confirmar": "Etapa avisada sin reiteración.",
+     "solucion": [
+      "Reitera una vez por otro canal; si a las 24 h sigue igual, escala."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El responsable ya no está.",
+     "como_confirmar": "Tickets o extensión a nombre de alguien que se fue.",
+     "solucion": [
+      "Reasigna y corrige la herramienta."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "No es de una persona: es del sistema.",
+     "como_confirmar": "Causa marcada como sistema o configuración.",
+     "solucion": [
+      "Escala al dueño del sistema con fecha, no a la persona."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Avisa o reitera hoy cada incidencia en rojo; si ya se reiteró, escala a Coti con recomendación."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Reiteración al responsable",
+     "texto": "{nombre}, te escribí el {fecha} por {incidencia} de {cliente} y sigue igual. ¿Me dices hoy qué falta? Si mañana sigue así, lo subo a Coti con lo que sepamos."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Escalado a Coti (24 h)",
+     "texto": "Coti: {incidencia} de {cliente}. Avisado el {fecha}, reiterado el {fecha2}, sin cambio. Causa probable: {causa}. Propongo {recomendacion}. Necesito tu decisión antes de {hora}."
+    }
+   ],
+   "que_no_hacer": [
+    "Escalar sin haber avisado por escrito.",
+    "Saltar a Tomás sin pasar por Coti.",
+    "Avisar solo por WhatsApp o en persona sin registrar."
+   ],
+   "escalar": {
+    "cuando": "Reiterada y 24 h más sin cambio",
+    "a": "proyectos"
+   },
+   "exito": "Incidencias en «Toca escalarlo» o «Sin avisar» = 0.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/incidencias.js",
+     "linea": 84,
+     "autor": "RO",
+     "nota": "estados: sin avisar > 48 h y toca escalarlo, en rojo"
+    },
+    {
+     "fichero": "ro-app:_ESTADO_incidencias.md",
+     "linea": 8,
+     "autor": "RO",
+     "nota": "avisada > 48 h sin cambio → toca escalarlo; sin aviso en 48 h → sin avisar"
+    },
+    {
+     "fichero": "ro-app:modulos/incidencias.js",
+     "linea": 456,
+     "autor": "RO",
+     "nota": "Coti 24 h y Tomás 48 h desde que se escala"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 857,
+     "autor": "Tomás",
+     "nota": "escalada con opción recomendada y reloj"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_incidencia_escalada_vencida",
+   "titulo": "Una incidencia escalada a Coti (24 h) o a Tomás (48 h) no tiene respuesta",
+   "puestos": [
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "dir_decision"
+    ],
+    "alertas": [
+     "dir_decision"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "escalado sin respuesta",
+     "decisión pendiente",
+     "Coti no contesta",
+     "Tomás no contesta",
+     "esperando decisión",
+     "reloj de 48 h",
+     "reloj de 24 h"
+    ]
+   },
+   "sintoma": "En Incidencias, «Escalado sin respuesta»: pasaron 24 h desde que se escaló a Coti o 48 h desde que se escaló a Tomás.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La escalada llevaba problema, recomendación y causa?",
+     "donde": "Incidencias › ficha",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Quien decide estaba disponible?",
+     "donde": "Calendario",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay una regla escrita que ya responde la duda?",
+     "donde": "SOP o A quién pregunto",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay un default aplicable si no llega respuesta?",
+     "donde": "SOP-TR-02 y SOP-TR-03",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La escalada llegó en crudo y no se pudo decidir rápido.",
+     "como_confirmar": "Falta recomendación o reloj.",
+     "solucion": [
+      "Reescríbela: qué pasa, contexto, 2-3 opciones, cuál recomiendas, riesgo y qué se bloquea."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Quien decide está fuera.",
+     "como_confirmar": "Ausencia en calendario.",
+     "solucion": [
+      "Aplica la suplencia: si falta operaciones, decide Coti; si falta Coti, sube a Tomás."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "No hacía falta escalar: la respuesta estaba escrita.",
+     "como_confirmar": "El SOP cubre el caso.",
+     "solucion": [
+      "Ejecuta lo escrito y deja constancia."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Hay default anti-limbo.",
+     "como_confirmar": "Plan amarillo sin respuesta en 24 h.",
+     "solucion": [
+      "Aplica el default: el plan amarillo sin respuesta en 24 h queda aprobado provisional. Bajar un color sí espera OK explícito."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reenvía la escalada con formato de decisión y hora límite.",
+    "Si hay default escrito, aplícalo y avisa."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Recordatorio a quien decide",
+     "texto": "{nombre}: sigo sin respuesta a {incidencia} de {cliente} (escalada el {fecha}). Opciones: 1) {opcion1}; 2) {opcion2}. Recomiendo {recomendada}. Si no me dices nada antes de las {hora}, aplico {default}."
+    }
+   ],
+   "que_no_hacer": [
+    "Aplicar por default una decisión que solo puede tomar Tomás (gesto económico, precio, altas o bajas, personas).",
+    "Dejarlo en el aire sin hora límite."
+   ],
+   "escalar": {
+    "cuando": "Escalada a Coti sin respuesta en 24 h",
+    "a": "direccion"
+   },
+   "exito": "Escaladas vencidas = 0.",
+   "reglas_relacionadas": [
+    "dir_decision_reloj",
+    "muro_direccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/incidencias.js",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "estado escalado sin respuesta"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 225,
+     "autor": "RO",
+     "nota": "decisión pendiente: 48 h para Tomás, 24 h para Coti"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 857,
+     "autor": "Tomás",
+     "nota": "el trabajo llega filtrado, con propuesta y con reloj"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 864,
+     "autor": "Tomás",
+     "nota": "las tres puertas de escalado a Tomás"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 95,
+     "autor": "RO",
+     "nota": "plan amarillo sin respuesta en 24 h = aprobado provisional; bajar color espera OK"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/09_CHARTER_DE_MILI.md",
+     "linea": 122,
+     "autor": "RO",
+     "nota": "lista cerrada de lo que va a Tomás sí o sí"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_incidencia_reabierta",
+   "titulo": "Se marcó resuelta una incidencia y el dato del día siguiente dice que sigue",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "reabierta",
+     "dijeron que estaba resuelto",
+     "sigue pasando",
+     "vuelve a salir",
+     "resuelta y no",
+     "el dato dice que sigue",
+     "falso resuelto"
+    ]
+   },
+   "sintoma": "En Incidencias, «Reabierta: el dato dice que sigue»: se cerró como resuelta y la detección vuelve a aparecer en un día posterior.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué prueba se adjuntó al marcarla resuelta?",
+     "donde": "Incidencias › ficha (prueba obligatoria)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El arreglo atacaba la causa o solo el síntoma?",
+     "donde": "Comentarios y causa",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿La fuente de datos tarda en reflejar el cambio?",
+     "donde": "Fecha de la última lectura del dato",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Es la segunda vez del mismo tipo en la misma cuenta?",
+     "donde": "Log de errores / pestaña 7",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se cerró sin comprobar.",
+     "como_confirmar": "La prueba no demuestra que el dato cambió.",
+     "solucion": [
+      "Reabre con el responsable y pide prueba que el dato de mañana pueda confirmar."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Se arregló el síntoma.",
+     "como_confirmar": "La misma detección vuelve con otro detalle.",
+     "solucion": [
+      "Busca la causa con quien ejecutó; escribe el mecanismo, no «se produjo un error»."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "El dato va con retraso.",
+     "como_confirmar": "La lectura es anterior al arreglo.",
+     "solucion": [
+      "Espera a la siguiente lectura antes de reabrir conversaciones."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Reincidencia: dos del mismo tipo.",
+     "como_confirmar": "Segundo error del mismo tipo en la cuenta.",
+     "solucion": [
+      "Escalada automática: llamada o visita en 2-4 semanas; entra al semáforo."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Comprueba la fecha del dato y la prueba antes de hablar con nadie."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al responsable",
+     "texto": "{nombre}, {incidencia} de {cliente} se cerró el {fecha} pero el dato de hoy dice que sigue. ¿Lo miramos juntos? Necesito saber el mecanismo para que no vuelva."
+    }
+   ],
+   "que_no_hacer": [
+    "Volver a cerrarla sin prueba nueva.",
+    "Avisar al cliente de que está resuelto antes de que el dato lo confirme."
+   ],
+   "escalar": {
+    "cuando": "Segunda reapertura de la misma incidencia",
+    "a": "proyectos"
+   },
+   "exito": "La incidencia queda «Resuelta y comprobada» con el dato del día siguiente.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/incidencias.js",
+     "linea": 86,
+     "autor": "RO",
+     "nota": "reabierta: el dato dice que sigue"
+    },
+    {
+     "fichero": "ro-app:_ESTADO_incidencias.md",
+     "linea": 8,
+     "autor": "RO",
+     "nota": "resuelto comprobado con el dato de un día posterior"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
+     "linea": 60,
+     "autor": "RO",
+     "nota": "nombrar el mecanismo, no «se produjo un error»"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "2º error del mismo tipo = escalada automática, llamada o visita en 2-4 semanas"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_incongruencia_herramientas",
+   "titulo": "ClickUp, Desk y el CRM no cuadran (tickets a quien se fue, cliente sin pareja, accesos vivos)",
+   "puestos": [
+    "operaciones",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_config",
+     "acc_sin_agente"
+    ],
+    "alertas": [
+     "acc_config",
+     "acc_sin_agente"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "incongruencia",
+     "no cuadra",
+     "ticket a alguien que se fue",
+     "extensión",
+     "Zadarma",
+     "Desk",
+     "falta emparejar",
+     "accesos de quien ya no está",
+     "cuenta compartida",
+     "llamadas que no llegan"
+    ]
+   },
+   "sintoma": "Tickets a nombre de alguien que ya no está, llamadas que no llegan a nadie, account distinto en Desk y en la app, clientes sin pareja en alguna herramienta, o accesos de personas que ya no están.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Abre Incidencias › Incongruencias y ordena por las que afectan a clientes",
+     "donde": "App › Incidencias",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Hay tickets sin agente o con agente desactivado?",
+     "donde": "Desk",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay llamadas entrantes sin destino o extensiones caídas?",
+     "donde": "Zadarma",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay accesos o cuentas compartidas de personas que ya no están?",
+     "donde": "Incidencias › Accesos de quien ya no está",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Faltan atajos (Desk, ClickUp, GHL) por emparejar en la ficha del cliente?",
+     "donde": "En rojo › detalle (atajos en gris)",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Traspaso hecho en una herramienta y no en las otras.",
+     "como_confirmar": "Account distinto en Desk y en Asignaciones.",
+     "solucion": [
+      "Iguala las tres herramientas con la fuente que manda (Asignaciones)."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Tickets de cliente que nadie ve.",
+     "como_confirmar": "Agente desactivado o sin agente.",
+     "solucion": [
+      "Reasigna los tickets abiertos hoy; corrige la regla de reparto de Desk."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Centralita mal configurada.",
+     "como_confirmar": "Entrantes sin extensión o a extensiones inexistentes.",
+     "solucion": [
+      "Corrige desvíos con sistemas y devuelve las perdidas de clientes hoy."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Accesos vivos de quien ya no está (riesgo de seguridad).",
+     "como_confirmar": "Usuario activo de una persona fuera.",
+     "solucion": [
+      "Pide la baja del acceso a sistemas hoy; es seguridad, no deuda."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Cliente sin emparejar en alguna herramienta.",
+     "como_confirmar": "Atajo en gris.",
+     "solucion": [
+      "Empareja; operaciones es quien empareja."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reasigna hoy los tickets de clientes sin agente.",
+    "Pide hoy la baja de accesos de quien ya no está."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A sistemas",
+     "texto": "{nombre}: en Desk hay {n} tickets a nombre de {persona_fuera} y la extensión {ext} no recibe llamadas. ¿Lo corregimos antes del {fecha}? Mientras, reasigno los tickets abiertos a mano."
+    }
+   ],
+   "que_no_hacer": [
+    "Pedir o pegar contraseñas por chat para arreglarlo.",
+    "Arreglar solo la herramienta que ves y dejar las otras distintas."
+   ],
+   "escalar": {
+    "cuando": "Accesos de personas que ya no están sin revocar en 48 h",
+    "a": "direccion"
+   },
+   "exito": "Incongruencias que afectan a clientes = 0 y ningún acceso vivo de quien ya no está.",
+   "reglas_relacionadas": [
+    "acceso_delegado_minimo"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 200,
+     "autor": "RO",
+     "nota": "alerta acc_config: tickets a quien ya no está, llamadas que no llegan, desvíos a extensiones inexistentes; 48 h"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 198,
+     "autor": "RO",
+     "nota": "ticket sin agente > 4 h"
+    },
+    {
+     "fichero": "ro-app:_ESTADO_incidencias.md",
+     "linea": 10,
+     "autor": "RO",
+     "nota": "pestañas de incongruencias y accesos de quien ya no está"
+    },
+    {
+     "fichero": "ro-app:modulos/indice.js",
+     "linea": 74,
+     "autor": "RO",
+     "nota": "incongruencias ClickUp ↔ Desk ↔ CRM en Incidencias"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 103,
+     "autor": "RO",
+     "nota": "accesos sin revocar de una baja: higiene de seguridad"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/09_CHARTER_DE_MILI.md",
+     "linea": 137,
+     "autor": "RO",
+     "nota": "seguridad y accesos internos son de sistemas; operaciones los detecta y los empuja"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_aviso_sin_prueba",
+   "titulo": "Operaciones avisó por WhatsApp o en persona y no queda prueba",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin prueba",
+     "se lo dije",
+     "avisé por WhatsApp",
+     "lo hablamos",
+     "no consta",
+     "registrar aviso",
+     "gestión de operaciones"
+    ]
+   },
+   "sintoma": "En Incidencias, la causa «Gestión de Operaciones»: incidencias sin prueba de aviso escrito de operaciones.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿El aviso existió y por qué canal?",
+     "donde": "Tu WhatsApp, notas, chat de ClickUp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Se puede registrar ahora con fecha y canal?",
+     "donde": "Incidencias › Avisar",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El responsable confirmó que lo recibió?",
+     "donde": "Respuesta en el canal",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Aviso hecho fuera de la app.",
+     "como_confirmar": "Mensaje en WhatsApp o conversación.",
+     "solucion": [
+      "Regístralo hoy con «Avisar»: canal, fecha y copia o captura."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "No se avisó.",
+     "como_confirmar": "No hay mensaje en ningún canal.",
+     "solucion": [
+      "Avisa ahora desde la ficha."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Aviso sin acuse.",
+     "como_confirmar": "Sin respuesta del responsable.",
+     "solucion": [
+      "Reitera por escrito y pide confirmación."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Registra hoy los avisos verbales pendientes con su fecha real."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso escrito tras hablarlo",
+     "texto": "{nombre}, te lo dejo por escrito para que conste: {incidencia} de {cliente}, lo hablamos el {fecha}. Quedamos en {accion} para el {fecha_limite}."
+    }
+   ],
+   "que_no_hacer": [
+    "Contar un aviso verbal como hecho.",
+    "Inventar la fecha del aviso al registrarlo."
+   ],
+   "escalar": {
+    "cuando": "Sin escalado: es higiene propia",
+    "a": "operaciones"
+   },
+   "exito": "Incidencias con causa «Gestión de Operaciones» = 0.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/incidencias.js",
+     "linea": 460,
+     "autor": "RO",
+     "nota": "sin prueba de aviso escrito de Operaciones; regístralos con «Avisar»"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 18,
+     "autor": "Tomás",
+     "nota": "evidencia o no ocurrió"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 9,
+     "autor": "RO",
+     "nota": "operaciones también está en pantalla"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_reunion_mas_35_dias",
+   "titulo": "Algún cliente lleva más de 35 días sin reunión",
+   "puestos": [
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_sin_reunion"
+    ],
+    "alertas": [
+     "acc_sin_reunion"
+    ],
+    "indicadores": [
+     "operaciones.reunion_con_cada_cliente"
+    ],
+    "palabras_clave": [
+     "sin reunión",
+     "no nos vemos",
+     "reunión mensual",
+     "reunión quincenal",
+     "cancela la reunión",
+     "más de 35 días",
+     "más de 45 días",
+     "no quiere reunión"
+    ]
+   },
+   "sintoma": "Reunión con cada cliente: 100 % verde; alguno con más de 35 días ámbar; alguno con más de 45 días rojo. La alerta salta si no hubo reunión el mes pasado.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Hubo reunión y no está registrada (Fathom sin API)?",
+     "donde": "Reuniones, Zoom, CRM",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El cliente canceló sin reagendar en la misma semana?",
+     "donde": "Calendario, Desk",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay negativa escrita del cliente a la reunión?",
+     "donde": "Card, correo",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Qué cadencia tiene pactada (mensual o quincenal en el acuerdo del Método)?",
+     "donde": "Acuerdo / ficha",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El account tiene más de 12 proyectos?",
+     "donde": "Personas",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Reunión hecha y no registrada.",
+     "como_confirmar": "Hay grabación o acta fuera de la app.",
+     "solucion": [
+      "Regístrala con enlace."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cancelación sin reagendar: es señal de alerta.",
+     "como_confirmar": "Cancelada y sin nueva fecha.",
+     "solucion": [
+      "Llama y reagenda en la llamada, hoy."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El cliente no quiere reunión.",
+     "como_confirmar": "Negativa por escrito.",
+     "solucion": [
+      "Registra la negativa en la card; cuenta como señal en el semáforo; el account queda cubierto."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Cadencia mal pactada.",
+     "como_confirmar": "Cliente del Método con reunión quincenal en el acuerdo.",
+     "solucion": [
+      "Aplica la cadencia del contrato: la del acuerdo manda."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Account desbordado.",
+     "como_confirmar": "Más de 12 proyectos.",
+     "solucion": [
+      "Quítale producción para liberar las reuniones."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Que el account llame hoy a los de más de 45 días y salga con fecha."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Reagendar",
+     "texto": "{nombre}, te llamo para buscar hueco para nuestra reunión. Quiero enseñarte {dato_concreto} y pensar contigo el siguiente paso. ¿Te va mejor el {opcion1} o el {opcion2}?"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account",
+     "texto": "{nombre}, {cliente} lleva {dias} días sin reunión. Llámale hoy y no cuelgues sin fecha. Si te dice que no quiere, que quede por escrito en la card."
+    }
+   ],
+   "que_no_hacer": [
+    "Pedir la reunión por correo a un cliente que ya ha cancelado.",
+    "Colgar con «te digo algo la semana que viene»: eso no es una fecha."
+   ],
+   "escalar": {
+    "cuando": "Más de 45 días y el cliente no responde a dos intentos",
+    "a": "operaciones"
+   },
+   "exito": "Reunión con cada cliente = 100 % en el periodo pactado; ninguno por encima de 35 días.",
+   "reglas_relacionadas": [
+    "reunion_mensual",
+    "rel_silencio_30d",
+    "silencio_es_alarma"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1072,
+     "autor": "RO",
+     "nota": "reunión con cada cliente: 100 % / > 35 días / > 45 días; medible a medias (Fathom sin API)"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 194,
+     "autor": "RO",
+     "nota": "alerta sin reunión el mes pasado, plazo 120 h"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "señal 2: cancela y no propone otra en la semana → llamar y reagendar en la llamada"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 21,
+     "autor": "Tomás",
+     "nota": "negativa escrita del cliente: el account queda cubierto; es señal al semáforo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 77,
+     "autor": "RO",
+     "nota": "siguiente fecha antes de colgar; «te digo algo» no es una fecha"
+    },
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_comun/INTERLOCUTOR_2026-09-29/01_DONDE_SE_PROMETE.md",
+     "linea": 3,
+     "autor": "RO",
+     "nota": "acuerdo MCR: reunión quincenal de seguimiento; manda el contrato en el Método"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_leads_sin_llamar_cartera",
+   "titulo": "En la cartera hay leads que ningún despacho ha llamado",
+   "puestos": [
+    "operaciones",
+    "account",
+    "especialista_ghl"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "crm_sin_tocar"
+    ],
+    "alertas": [
+     "crm_sin_tocar"
+    ],
+    "indicadores": [
+     "operaciones.leads_sin_llamar_en_la_cartera"
+    ],
+    "palabras_clave": [
+     "leads sin llamar",
+     "no llaman a los leads",
+     "cero intentos",
+     "el despacho no llama",
+     "leads abandonados",
+     "nadie contacta",
+     "leads sin tocar"
+    ]
+   },
+   "sintoma": "Clientes con leads con 0 intentos tras 24 h. Verde solo con cero; cualquiera es rojo.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué clientes y cuántos leads, y desde cuándo?",
+     "donde": "Salud del CRM / GoHighLevel",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Los leads llegan bien al CRM (fuga de integración)?",
+     "donde": "En rojo › leads de Meta que llegan al CRM",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El despacho tiene una persona nombrada para llamar?",
+     "donde": "Ficha del alta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El despacho llama pero no registra en el CRM?",
+     "donde": "Conversación con el despacho",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El account habló con el despacho en 24 h?",
+     "donde": "Card / EOD (línea de leads sin atender)",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El despacho no llama.",
+     "como_confirmar": "Leads con 0 intentos en GHL.",
+     "solucion": [
+      "Conversación de protocolo con el despacho en 24 h: llamada, no correo."
+     ],
+     "quien": "account",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Los leads no llegan al CRM.",
+     "como_confirmar": "Meta registra leads que GHL no tiene.",
+     "solucion": [
+      "Es fuga de integración: abre tarea al especialista GHL hoy."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "No hay llamador nombrado.",
+     "como_confirmar": "Ficha sin persona con disponibilidad.",
+     "solucion": [
+      "Pide nombre y horario de quien llama. Sin llamador no se debió encender."
+     ],
+     "quien": "account",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Llaman y no lo registran.",
+     "como_confirmar": "El despacho dice que llama pero el CRM no lo muestra.",
+     "solucion": [
+      "Enséñales a registrar el intento; sin registro no hay seguimiento ni garantía."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "El account no lo vio.",
+     "como_confirmar": "No aparece en su EOD.",
+     "solucion": [
+      "Recuérdale que la línea de leads sin atender va el día que se detecta."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lista hoy los clientes con leads sin llamar y avisa a cada account."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Conversación de protocolo con el despacho",
+     "texto": "{nombre}, te llamo por los {n} contactos que entraron desde el {fecha} y que aún no tienen ninguna llamada. Cuanto antes se les llama, más reuniones salen. ¿Quién de tu equipo los puede llamar hoy? Te dejo la lista ordenada."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account",
+     "texto": "{nombre}, {cliente} tiene {n} leads sin ninguna llamada desde el {fecha}. Llama hoy al despacho (no correo) y apúntalo en tu EOD."
+    }
+   ],
+   "que_no_hacer": [
+    "Escribir un correo en vez de llamar.",
+    "Encender más publicidad mientras los leads se quedan sin llamar.",
+    "Dar leads por perdidos sin un solo intento."
+   ],
+   "escalar": {
+    "cuando": "Dos semanas seguidas con leads sin llamar en el mismo cliente",
+    "a": "proyectos"
+   },
+   "exito": "Leads con 0 intentos tras 24 h = 0 en toda la cartera.",
+   "reglas_relacionadas": [
+    "sin_llamador_no_se_enciende",
+    "garantia_velocidad_despacho"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1005,
+     "autor": "RO",
+     "nota": "leads sin llamar en la cartera: 0 / cualquiera"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+     "linea": 33,
+     "autor": "RO",
+     "nota": "leads con 0 intentos: objetivo 0; AM en ≤ 24 h"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "leads sin llamar → conversación de protocolo en ≤ 24 h, llamada o directo, no correo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 43,
+     "autor": "RO",
+     "nota": "línea 4 del EOD: leads sin atender el día que se detectan"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 237,
+     "autor": "Tomás",
+     "nota": "sin nadie asignado a llamar al lead, no se enciende nada"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/09_CHARTER_DE_MILI.md",
+     "linea": 110,
+     "autor": "RO",
+     "nota": "cliente que no cumple su parte: re-encuadre; dos semanas → conversación formal"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_informes_dia_6",
+   "titulo": "El día 6 hay informes mensuales sin enviar",
+   "puestos": [
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_informe"
+    ],
+    "alertas": [
+     "acc_informe"
+    ],
+    "indicadores": [
+     "operaciones.informes_mensuales_antes_del_dia_5"
+    ],
+    "palabras_clave": [
+     "informe mensual",
+     "día 5",
+     "día 6",
+     "informe sin enviar",
+     "informes tarde",
+     "informe del mes",
+     "no ha salido el informe"
+    ]
+   },
+   "sintoma": "El informe del mes no ha salido desde Desk el día 5 incluido. El día 6 es rojo con aviso a Mili.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué clientes faltan y de qué account?",
+     "donde": "App › Informes mensuales",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Está hecho en ClickUp pero sin enviar desde Desk?",
+     "donde": "Informes mensuales (hecho / enviado)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se envió por otra vía y no consta?",
+     "donde": "Correo del account",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Falta un dato que bloquea el informe?",
+     "donde": "Tarea del informe",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Es el mismo account que el mes pasado?",
+     "donde": "Histórico de informes",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se le pasó al account.",
+     "como_confirmar": "Ni hecho ni enviado.",
+     "solucion": [
+      "Que lo envíe hoy; aviso de peldaño si es la primera vez."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Hecho y sin enviar.",
+     "como_confirmar": "Hecho en ClickUp, sin correo en Desk.",
+     "solucion": [
+      "Enviar hoy desde Desk."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Enviado por otra vía.",
+     "como_confirmar": "Hay correo fuera de Desk.",
+     "solucion": [
+      "Márcalo como «enviado por otra vía» y que el próximo salga desde Desk."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Falta un dato.",
+     "como_confirmar": "Tarea bloqueada por un dato.",
+     "solucion": [
+      "Envía con «n/d (en revisión)» en ese dato; nunca un dato sin comprobar."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Reincidencia.",
+     "como_confirmar": "Segundo mes seguido.",
+     "solucion": [
+      "Peldaño 2 de la escalera: 1:1 esta semana con expectativas por escrito."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lista los informes pendientes y que cada account envíe hoy."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso de peldaño 1 (plantilla A)",
+     "texto": "{nombre}, el día 5 quedó sin enviar el informe de {cliente} (lo tienes en tu tablero). Igual no quedó claro, así que lo fijamos: sale hoy desde Desk antes de las {hora}. Si se repite el mes que viene lo hablamos en un 1:1. ¿Hay algo que te lo esté impidiendo, te falló algo del sistema?"
+    }
+   ],
+   "que_no_hacer": [
+    "Enviar un informe con un dato sin comprobar para llegar a tiempo.",
+    "Hacer el informe tú para tapar al account."
+   ],
+   "escalar": {
+    "cuando": "Segundo mes seguido con el mismo account fuera de plazo",
+    "a": "operaciones"
+   },
+   "exito": "Informes enviados desde Desk el día 5 incluido = 100 %.",
+   "reglas_relacionadas": [
+    "informe_dia_5",
+    "rel_informe_mensual"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1049,
+     "autor": "RO",
+     "nota": "informes mensuales: enviado el día 5 incluido / día 6 con aviso a Mili (D-09, firmada el 2-oct)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 38,
+     "autor": "RO",
+     "nota": "umbral firmado D-09"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 196,
+     "autor": "RO",
+     "nota": "alerta acc_informe el día 6, plazo 24 h"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1394,
+     "autor": "RO",
+     "nota": "el informe sale desde Desk el día 5 como muy tarde"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "plantilla A del peldaño 1"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "dato anómalo: no se envía; sale «n/d (en revisión)»"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_mes_3_sin_venta",
+   "titulo": "Una cuenta llega al mes 2 o 3 sin que el despacho cierre ninguna venta",
+   "puestos": [
+    "proyectos",
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "diag_citas_sin_ventas"
+    ],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.cuentas_sin_venta_del_despacho",
+     "direccion.cuentas_del_metodo_sin_venta_del_despacho"
+    ],
+    "palabras_clave": [
+     "sin ventas",
+     "no cierra",
+     "el despacho no vende",
+     "mes 3",
+     "mes 2 sin venta",
+     "reuniones sin cierre",
+     "no convierte",
+     "cero clientes nuevos"
+    ]
+   },
+   "sintoma": "Mes 2 sin ninguna venta o con menos de 3 reuniones de venta: amarillo automático. Mes 3 sin venta: rojo automático, escalado a operaciones con el diagnóstico completo delante.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La venta no existe o no está marcada en el CRM del despacho?",
+     "donde": "GoHighLevel del cliente + reporte del account",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Cuántas reuniones de venta celebró el despacho en el periodo?",
+     "donde": "GHL (citas celebradas)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Los leads se llaman a tiempo y con intentos suficientes?",
+     "donde": "Salud del CRM",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Tenemos grabación o asistencia a sus reuniones de venta?",
+     "donde": "Card / reporte",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El perfil de lead es el pactado?",
+     "donde": "Feedback del cliente, auditoría de leads",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Hay ventas y no se marcan.",
+     "como_confirmar": "El despacho dice que ha cerrado y el CRM no lo refleja.",
+     "solucion": [
+      "Pide el dato por escrito y márcalo; enséñale a marcarlo."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "El despacho casi no hace reuniones de venta.",
+     "como_confirmar": "Menos de 3 reuniones en el mes 2.",
+     "solucion": [
+      "Re-encuadre contra el criterio del día 0: el cuello es su actividad comercial."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Los leads se enfrían antes de llegar a reunión.",
+     "como_confirmar": "Velocidad de contacto lenta o pocos intentos.",
+     "solucion": [
+      "Conversación de protocolo con el despacho; revisa recordatorios con CRM."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Vienen a la reunión y no compran: es oferta o venta, no tráfico.",
+     "como_confirmar": "Reuniones celebradas sin cierre.",
+     "solucion": [
+      "Pide grabación o asistencia a sus reuniones de venta, diagnostica y propone ayuda al cierre.",
+      "Si el despacho no comparte, regístralo como su parte en rojo."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "El lead no es el pactado.",
+     "como_confirmar": "Feedback de mala calidad.",
+     "solucion": [
+      "Ajuste de segmentación con publicidad, con hipótesis y propuesta al cliente."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Mes 2: plan amarillo en 24 h centrado en el cierre.",
+    "Mes 3: rojo, custodia de operaciones y diagnóstico completo delante."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Plan centrado en el cierre",
+     "texto": "{nombre}, en {mes} meses han entrado {leads} contactos y {reuniones} reuniones, pero no hay ninguna venta marcada. Quiero ayudarte en el último paso. ¿Me dejas escuchar o ver una de tus próximas reuniones con un contacto? Con eso te propongo cambios concretos."
+    }
+   ],
+   "que_no_hacer": [
+    "Subir presupuesto o cambiar de canal cuando el problema es el cierre.",
+    "Prometer clientes o resultados.",
+    "Opinar sobre su negocio fiscal o legal."
+   ],
+   "escalar": {
+    "cuando": "Mes 3 sin venta",
+    "a": "operaciones"
+   },
+   "exito": "La cuenta registra al menos una venta del despacho antes del fin del mes 3, o tiene plan aprobado y seguimiento quincenal.",
+   "reglas_relacionadas": [
+    "gatillos_mes_2_3",
+    "cierre_bajo_no_es_trafico"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1293,
+     "autor": "RO",
+     "nota": "cuentas sin venta: ninguna / mes 2 sin venta o < 3 reuniones / mes 3 sin venta"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 78,
+     "autor": "RO",
+     "nota": "gatillos del Motor (11-jul): mes 2 sin venta y mes 2 con < 3 reuniones = amarillo; mes 3 = rojo"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+     "linea": 93,
+     "autor": "RO",
+     "nota": "mes 3 sin cerrar: rojo, escalado a Mili con el diagnóstico completo"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 68,
+     "autor": "RO",
+     "nota": "pedir grabación o asistencia; si no comparte, parte del despacho en rojo"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1329,
+     "autor": "RO",
+     "nota": "regla gatillos mes 2 y 3"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_taller_oferta_tarde",
+   "titulo": "El taller de la oferta del cliente nuevo pasa del día 5",
+   "puestos": [
+    "proyectos",
+    "tecnico_altas"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.taller_de_la_oferta_en_plazo"
+    ],
+    "palabras_clave": [
+     "taller de la oferta",
+     "taller tarde",
+     "oferta sin definir",
+     "copys del despacho",
+     "preguntas de calificación",
+     "arranque lento"
+    ]
+   },
+   "sintoma": "Taller hecho tras la firma: día 1-3 verde, día 4-5 ámbar, más del día 5 rojo.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿En qué día del alta está y si el taller tiene fecha?",
+     "donde": "Clientes nuevos / calendario",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El cliente no encuentra hueco o nadie se lo propuso?",
+     "donde": "Correo de bienvenida y enlace del taller",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Proyectos tiene la agenda llena de talleres?",
+     "donde": "Calendario de proyectos",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El retraso pone en riesgo el encendido del día 10?",
+     "donde": "Hoja de ruta del alta",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No se agendó.",
+     "como_confirmar": "Sin cita en calendario.",
+     "solucion": [
+      "Proponle dos huecos hoy por llamada."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El cliente no responde.",
+     "como_confirmar": "Enlace enviado sin reserva.",
+     "solucion": [
+      "Llama; el correo solo no basta."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Cuello en proyectos.",
+     "como_confirmar": "Varios talleres en cola.",
+     "solucion": [
+      "Prioriza por fecha de firma; avisa a dirección si no caben."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "El encendido peligra.",
+     "como_confirmar": "Día 6 o más sin taller.",
+     "solucion": [
+      "Avisa a altas y publicidad para preparar todo lo que no dependa de la oferta."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Agenda el taller hoy y avisa a altas de la fecha."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Agendar el taller",
+     "texto": "{nombre}, para encender tu publicidad a tiempo necesitamos una hora contigo para cerrar la oferta. ¿Te va el {opcion1} o el {opcion2}?"
+    }
+   ],
+   "que_no_hacer": [
+    "Escribir los copys del despacho sin taller.",
+    "Dejar que el retraso empuje el encendido sin avisar."
+   ],
+   "escalar": {
+    "cuando": "Taller sin fecha el día 5",
+    "a": "direccion"
+   },
+   "exito": "Talleres hechos entre el día 1 y el 3 = 100 %.",
+   "reglas_relacionadas": [
+    "encendido_dia_10"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1360,
+     "autor": "RO",
+     "nota": "taller de la oferta: día 1-3 / 4-5 / > 5; la fuente original (ORGANIGRAMA/01_LA_CELULA.md §4) no está en ningún repo"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 46,
+     "autor": "RO",
+     "nota": "umbral firmado D-28: encendido día 10, límite 12"
+    },
+    {
+     "fichero": "ro-equipo:70_ENTREGAS_EQUIPO/2026-09-29_ARTEFACTOS_Y_AGUS/01_PARA_AGUS/GHL_EMBUDO_TOMAS_PARA_AGUS/GHL_EMBUDO_TOMAS_PARA_AGUS_2026-09-29/03_MVP_SNAPSHOT_DESPACHO.md",
+     "linea": 13,
+     "autor": "RO",
+     "nota": "Coti escribe los textos del despacho después del taller de la oferta"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_criterio_d0_sin_firmar",
+   "titulo": "Un cliente arranca sin la métrica, el umbral y la fecha por la que nos juzgará",
+   "puestos": [
+    "proyectos",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.criterio_de_juicio_firmado_en_el_dia_0"
+    ],
+    "palabras_clave": [
+     "criterio del día 0",
+     "criterio de juicio",
+     "objetivo pactado",
+     "qué espera el cliente",
+     "expectativas",
+     "kickoff",
+     "objetivo de coste por cita",
+     "sin objetivo"
+    ]
+   },
+   "sintoma": "Alta sin una métrica, un umbral y una fecha pactados con el cliente. Hoy no se mide en ninguna herramienta.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Hay criterio escrito en la ficha del alta?",
+     "donde": "Ficha del cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Lo prometido en la venta cuadra con la ficha del producto?",
+     "donde": "Grabación de la venta",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay objetivo de coste por cita?",
+     "donde": "Ficha del alta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El cliente dio el OK de forma explícita y grabada?",
+     "donde": "Fathom del día 0",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No se pactó.",
+     "como_confirmar": "Ficha sin criterio.",
+     "solucion": [
+      "Agenda 20 minutos con el cliente y pacta una métrica, un umbral y una fecha."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "La venta prometió más que la ficha.",
+     "como_confirmar": "Cifras de la venta por encima de la ficha.",
+     "solucion": [
+      "Proyectos resuelve el choque antes de la reunión; nada de promesas de resultado."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Falta objetivo de coste por cita.",
+     "como_confirmar": "Campo vacío.",
+     "solucion": [
+      "Fíjalo; sin él la alarma salta por encima de 100 € (45 € solo en el arranque)."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Sin OK explícito.",
+     "como_confirmar": "No hay grabación del acuerdo.",
+     "solucion": [
+      "Confírmalo por escrito tras la reunión."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lista las altas sin criterio y agenda la conversación esta semana."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "cliente",
+     "cuando": "Pacto del criterio",
+     "texto": "Para que sepas en todo momento si vamos bien, te propongo que nos midas por {metrica}: {umbral} antes del {fecha}. ¿Te parece justo? Si lo ves bien, lo dejamos así por escrito."
+    }
+   ],
+   "que_no_hacer": [
+    "Pactar más de una métrica.",
+    "Sacar el umbral del entusiasmo de la venta y no de la ficha.",
+    "Prometer resultados de negocio."
+   ],
+   "escalar": {
+    "cuando": "La venta prometió algo que la ficha no puede cumplir",
+    "a": "direccion"
+   },
+   "exito": "Criterio de juicio firmado en el día 0 = 100 % de las altas.",
+   "reglas_relacionadas": [
+    "criterio_d0",
+    "objetivo_coste_cita_d0"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1448,
+     "autor": "RO",
+     "nota": "criterio firmado en el día 0: 100 % / alguna sin él; no se mide aún"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/preparador-kickoff-d0/SKILL.md",
+     "linea": 23,
+     "autor": "RO",
+     "nota": "una métrica, un umbral, una fecha; el umbral sale de la ficha"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "coste por cita: contra el objetivo del alta; sin objetivo, alarma > 100 €; 45 € solo en el arranque"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_coste_nicho_fuera",
+   "titulo": "El coste por lead o por cita de un nicho se sale del objetivo pactado",
+   "puestos": [
+    "proyectos",
+    "jefa_publicidad"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "pub_critico",
+     "pub_atencion"
+    ],
+    "alertas": [
+     "pub_critico"
+    ],
+    "indicadores": [
+     "proyectos.coste_por_lead_y_por_cita_por_nicho"
+    ],
+    "palabras_clave": [
+     "coste por cita",
+     "coste por lead",
+     "CPL alto",
+     "cita cara",
+     "nicho caro",
+     "fuera de objetivo",
+     "publicidad cara"
+    ]
+   },
+   "sintoma": "Inversión ÷ leads y ÷ citas por nicho, frente al objetivo pactado con cada cliente en el día 0.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuántos clientes del nicho están fuera y desde cuándo?",
+     "donde": "Captación por nicho",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El problema es el coste por lead o la conversión de lead a cita?",
+     "donde": "Captación + Salud del CRM",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El objetivo del día 0 existe y es realista?",
+     "donde": "Ficha del alta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El dato está completo (Windsor no da ceros por error)?",
+     "donde": "Conexiones",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Todo el nicho se encarece: es mercado o creatividad.",
+     "como_confirmar": "Varios clientes del nicho fuera.",
+     "solucion": [
+      "Revisión de creatividades del nicho con publicidad."
+     ],
+     "quien": "jefa_publicidad",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Los leads llegan pero no agendan.",
+     "como_confirmar": "Coste por lead en objetivo y por cita fuera.",
+     "solucion": [
+      "El problema es de seguimiento, no de publicidad: va a CRM y al despacho."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Objetivo mal fijado.",
+     "como_confirmar": "Sin objetivo o fuera de la ficha.",
+     "solucion": [
+      "Revisa el objetivo con el cliente; sin objetivo rige la alarma de 100 €."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Dato incompleto.",
+     "como_confirmar": "Cuenta mal enganchada.",
+     "solucion": [
+      "Comprueba la conexión antes de concluir."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Separa coste por lead de coste por cita antes de hablar con publicidad."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A publicidad",
+     "texto": "En {nicho}, {n} clientes están por encima de su objetivo de coste por cita desde el {fecha}. El coste por lead {estado_cpl}. ¿Revisamos creatividades del nicho esta semana?"
+    }
+   ],
+   "que_no_hacer": [
+    "Tocar presupuesto sin permiso escrito del cliente.",
+    "Cambiar de canal: el canal es Meta."
+   ],
+   "escalar": {
+    "cuando": "Más de la mitad de los clientes de un nicho fuera dos semanas",
+    "a": "direccion"
+   },
+   "exito": "Clientes del nicho dentro de su objetivo de coste por cita en la lectura semanal.",
+   "reglas_relacionadas": [
+    "objetivo_coste_cita_d0",
+    "criterio_ganador_arranque"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1271,
+     "autor": "RO",
+     "nota": "coste por lead y por cita por nicho frente al objetivo del día 0"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "sin objetivo, alarma > 100 €; 45 € solo en el arranque (D-03, D-38)"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/03_HUECOS_Y_VERIFICAR.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Windsor: cuenta mal nombrada devuelve vacío sin error"
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 29,
+     "autor": "RO",
+     "nota": "aviso del 1-sep: canal Meta único (manda sobre LEYES C-D2-02)"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_garantia_en_riesgo",
+   "titulo": "Un cliente va camino de no cumplir la garantía de dos reuniones válidas en 30 días",
+   "puestos": [
+    "proyectos",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.garantia_cumplida"
+    ],
+    "palabras_clave": [
+     "garantía",
+     "dos reuniones",
+     "30 días",
+     "día 25",
+     "no paga los honorarios",
+     "reuniones válidas",
+     "garantía en riesgo"
+    ]
+   },
+   "sintoma": "Con la garantía, el reloj de 30 días empieza al encender la publicidad. Proyectos avisa el día 25 si no hay dos reuniones válidas.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿El acuerdo de este cliente lleva garantía? (no todos)",
+     "donde": "Acuerdo firmado",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Qué día del reloj es y cuántas reuniones válidas hay marcadas?",
+     "donde": "GHL del cliente + fecha de encendido",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El despacho cumple sus cuatro deberes (≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h, registro)?",
+     "donde": "Salud del CRM",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay citas celebradas que el despacho no ha marcado?",
+     "donde": "Calendario del despacho",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El acuerdo no lleva garantía.",
+     "como_confirmar": "Cláusula sin garantía.",
+     "solucion": [
+      "No apliques el reloj; sigue el criterio del día 0."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Faltan reuniones.",
+     "como_confirmar": "Menos de dos válidas el día 25.",
+     "solucion": [
+      "Plan con publicidad y CRM para los 5 días que quedan."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El despacho no cumple sus deberes.",
+     "como_confirmar": "Contacto lento o pocos intentos.",
+     "solucion": [
+      "Díselo hoy por llamada con el dato; sus deberes rigen la garantía."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Reuniones sin marcar.",
+     "como_confirmar": "Celebradas sin estado.",
+     "solucion": [
+      "Pide que las marque hoy."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "El día 25, aviso de proyectos con el recuento real."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Día 25",
+     "texto": "{nombre}, llevamos {dias} días con la publicidad encendida y hay {n} reuniones válidas marcadas. Para llegar a dos necesitamos que {deber}. ¿Lo vemos juntos hoy?"
+    }
+   ],
+   "que_no_hacer": [
+    "Hablar de la garantía fuera del documento de oferta.",
+    "Prometer el reembolso sin dirección.",
+    "Contar reuniones no válidas."
+   ],
+   "escalar": {
+    "cuando": "Día 30 sin dos reuniones válidas",
+    "a": "direccion"
+   },
+   "exito": "Dos reuniones válidas antes del día 30, o decisión de dirección registrada.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "reloj de la garantía desde el encendido: 30 días, dos reuniones válidas; avisa Coti el día 25"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1249,
+     "autor": "RO",
+     "nota": "garantía cumplida; medible a medias"
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 18,
+     "autor": "Tomás",
+     "nota": "garantía del 1-sep: mínimo 2 reuniones válidas en 30 días o no paga los honorarios; manda sobre LEYES C-D2-05"
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 21,
+     "autor": "RO",
+     "nota": "cuatro deberes del despacho que rigen la garantía"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_newsletter_sin_aprobar",
+   "titulo": "Una newsletter lleva más de 48 h esperando aprobación de proyectos",
+   "puestos": [
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.aprobacion_de_newsletter"
+    ],
+    "palabras_clave": [
+     "newsletter",
+     "aprobar newsletter",
+     "pieza esperando",
+     "aprobación de Coti",
+     "revisión de contenido",
+     "boletín",
+     "newsletter parada"
+    ]
+   },
+   "sintoma": "Pieza aprobada por Coti: ≤ 24 h verde, 24-48 h ámbar, más de 48 h rojo.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuántas piezas esperan y cuál es la más antigua?",
+     "donde": "ClickUp (revisión)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿La pieza trae cifras con fuente y pasó el humanizador?",
+     "donde": "Cabecera de producción",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Tiene fecha de envío cercana?",
+     "donde": "Calendario de envíos",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cola de revisiones de proyectos.",
+     "como_confirmar": "Varias piezas > 24 h.",
+     "solucion": [
+      "Bloque fijo diario de revisión."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La pieza llega incompleta.",
+     "como_confirmar": "Cifras sin fuente.",
+     "solucion": [
+      "Devuelve con el error claro (no preferencias de estilo)."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Riesgo de envío tarde.",
+     "como_confirmar": "Envío en 48 h.",
+     "solucion": [
+      "Revisa esa primero."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Revisa hoy la pieza más antigua."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Devolución",
+     "texto": "{nombre}, la newsletter de {cliente} vuelve por {error}. Lo demás está bien. Con eso corregido sale."
+    }
+   ],
+   "que_no_hacer": [
+    "Pedir cambios de estilo: solo errores claros.",
+    "Aprobar una cifra sin fuente."
+   ],
+   "escalar": {
+    "cuando": "Más de 48 h y envío en riesgo",
+    "a": "operaciones"
+   },
+   "exito": "Newsletters aprobadas en ≤ 24 h.",
+   "reglas_relacionadas": [
+    "correcciones_errores_claros"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1426,
+     "autor": "RO",
+     "nota": "aprobación de newsletter: ≤ 24 h / 24-48 h / > 48 h"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/newsletter-alto-valor-ro/SKILL.md",
+     "linea": 91,
+     "autor": "RO",
+     "nota": "entrega para aprobación de Coti (≤ 24 h)"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_auditoria_calidad_pendiente",
+   "titulo": "No se han hecho las 3 auditorías de calidad del mes",
+   "puestos": [
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "proyectos.auditoria_de_calidad_mensual"
+    ],
+    "palabras_clave": [
+     "auditoría de calidad",
+     "3 cuentas al azar",
+     "QC mensual",
+     "control de calidad",
+     "auditoría pendiente",
+     "las 5 lupas",
+     "revisión de calidad"
+    ]
+   },
+   "sintoma": "3 cuentas al azar auditadas contra ficha, calidad, cadencia y trazabilidad: 3 verde, 1-2 ámbar, 0 rojo. Hoy no se registra.",
+   "gravedad": "baja",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Se eligieron las 3 cuentas al azar sin sustituir ninguna?",
+     "donde": "Tarea del mes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Se revisaron las 5 lupas?",
+     "donde": "Informe de 10 líneas",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se entregó el informe a operaciones y el hallazgo sistémico?",
+     "donde": "Mensual de gobierno",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No se empezó.",
+     "como_confirmar": "Sin cuentas elegidas.",
+     "solucion": [
+      "Elige hoy 3 al azar; las delicadas no se sustituyen."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "A medias.",
+     "como_confirmar": "Faltan lupas.",
+     "solucion": [
+      "Termina antes del mensual de gobierno."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Sin entregar.",
+     "como_confirmar": "Sin informe en el gobierno.",
+     "solucion": [
+      "Entrega los 3 informes y propone la corrección de SOP."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Elige hoy las 3 cuentas."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "Cambiar una cuenta «porque está delicada».",
+    "Corregir a la persona cuando el fallo aparece en 2 o más cuentas: se corrige el SOP."
+   ],
+   "escalar": {
+    "cuando": "Dos meses sin auditoría",
+    "a": "operaciones"
+   },
+   "exito": "3 auditorías hechas antes del mensual de gobierno.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1404,
+     "autor": "RO",
+     "nota": "auditoría de calidad mensual: 3 / 1-2 / 0; no se mide aún"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-11_qc-auditoria-mensual.md",
+     "linea": 54,
+     "autor": "RO",
+     "nota": "3 cuentas al azar, sin sustituir"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-11_qc-auditoria-mensual.md",
+     "linea": 7,
+     "autor": "RO",
+     "nota": "fallo en 2 o más cuentas: se corrige el SOP, no a la persona"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_semaforos_sin_poner",
+   "titulo": "El lunes por la tarde aún faltan semáforos por poner",
+   "puestos": [
+    "operaciones",
+    "proyectos",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "semáforo",
+     "semáforos pendientes",
+     "color heredado",
+     "cómo va el semáforo",
+     "faltan semáforos",
+     "repaso del viernes",
+     "semáforo sin fecha"
+    ]
+   },
+   "sintoma": "El aviso del lunes por la tarde en #avisos-accounts dice cuántos semáforos de la semana faltan por account.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué accounts tienen semáforos sin poner y cuántos?",
+     "donde": "Aviso «cómo va el semáforo» (#avisos-accounts)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Los puestos tienen fecha de esta semana o son colores heredados?",
+     "donde": "Lista de semáforos / Mis clientes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El color coincide con lo que dice el correo del cliente esta semana?",
+     "donde": "Bandeja",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El account tenía la tarea recurrente y el recordatorio?",
+     "donde": "ClickUp",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "El account no hizo el repaso del viernes.",
+     "como_confirmar": "Faltan todos los de su libro.",
+     "solucion": [
+      "Que los ponga hoy antes del cierre; peldaño 1 si es la primera vez."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Colores heredados sin repasar.",
+     "como_confirmar": "Fecha vieja.",
+     "solucion": [
+      "Repaso real contra las 7 señales; prohibido heredar."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El color no dice la verdad.",
+     "como_confirmar": "Verde con correo de alerta.",
+     "solucion": [
+      "Proyectos corrige el color con su criterio y lo habla con el account."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Falló el sistema.",
+     "como_confirmar": "No había tarea ni recordatorio.",
+     "solucion": [
+      "Retira el aviso, crea la tarea recurrente; el contador no avanza."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Menciona a cada account con semáforos pendientes y pide cierre hoy."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Recordatorio en el canal",
+     "texto": "Semáforos de esta semana: {hechos} de {total}. Faltan {lista}. Antes de cerrar hoy, todos puestos y con fecha. Un semáforo sin fecha es una cuenta sin vigilar."
+    }
+   ],
+   "que_no_hacer": [
+    "Aceptar un verde sin fecha prometida.",
+    "Poner el color por el account."
+   ],
+   "escalar": {
+    "cuando": "Un account sin semáforos dos semanas seguidas",
+    "a": "operaciones"
+   },
+   "exito": "Semáforos de la semana puestos al 100 % el lunes al cierre, con fecha.",
+   "reglas_relacionadas": [
+    "silencio_es_alarma"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos_programados.py",
+     "linea": 608,
+     "autor": "RO",
+     "nota": "aviso del lunes por la tarde: cómo va el semáforo, por account"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 51,
+     "autor": "RO",
+     "nota": "liturgia del viernes: repaso cuenta a cuenta; semáforo sin fecha = cuenta sin vigilar"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 54,
+     "autor": "RO",
+     "nota": "prohibido heredar el color"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 251,
+     "autor": "RO",
+     "nota": "ningún verde sin fecha prometida"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 37,
+     "autor": "RO",
+     "nota": "doble puerta: ¿falló el sistema?"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_verde_que_se_cae",
+   "titulo": "Un cliente en verde se da de baja o salta a rojo (el semáforo no avisó)",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "baja en verde",
+     "salto de verde a rojo",
+     "no lo vimos venir",
+     "estaba en verde",
+     "divergencia",
+     "cliente silencioso",
+     "el semáforo no avisa",
+     "se fue sin avisar"
+    ]
+   },
+   "sintoma": "Una cuenta pasa de verde a rojo o a baja sin amarillo previo, o el color que declara el account no coincide con lo que dicen el correo y los datos.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Reconstruye las 8 semanas previas: correos, reuniones, señales registradas",
+     "donde": "Pestaña 7, Desk, Fathom",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El color se repasaba o se heredaba?",
+     "donde": "Fechas de semáforo",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Era un cliente silencioso (ni quejas ni celebraciones)?",
+     "donde": "Bandeja, reuniones",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hubo cambio en el organigrama del cliente?",
+     "donde": "Card, correo",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Apareció alguna de las 3 señales previas (participación a la mitad, deja de usar, pide sus cosas)?",
+     "donde": "Card, correos",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Señal escrita incubada.",
+     "como_confirmar": "Hay una señal registrada sin acción.",
+     "solucion": [
+      "Nombra el eslabón y corrige el sistema; lleva la causa al gobierno."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Color por inercia.",
+     "como_confirmar": "Fechas viejas.",
+     "solucion": [
+      "Repaso real cada viernes; operaciones verifica los lunes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Silencioso tratado como sano.",
+     "como_confirmar": "Cero señales duras y latencia creciente.",
+     "solucion": [
+      "Trátalo como señal 6: provoca la conversación de avance."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Cambió el decisor.",
+     "como_confirmar": "Nuevo socio o salida del interlocutor.",
+     "solucion": [
+      "Re-onboarding del decisor el mismo día."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Señales previas ignoradas.",
+     "como_confirmar": "Pidió accesos o materiales.",
+     "solucion": [
+      "Cualquiera de las 3 = rojo aunque los números vayan bien."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Busca hoy en la cartera otros verdes con el mismo perfil.",
+    "Si es baja, autopsia esa misma semana."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account (sin culpa)",
+     "texto": "{nombre}, {cliente} pasó de verde a {estado}. No busco culpables: quiero encontrar qué señal no vimos para que no vuelva a pasar. ¿Lo repasamos 20 minutos mañana con su historial delante?"
+    }
+   ],
+   "que_no_hacer": [
+    "Culpar al account antes de mirar si el sistema le avisó.",
+    "Concluir que «el cliente era raro»."
+   ],
+   "escalar": {
+    "cuando": "Dos saltos de verde a rojo en el mismo mes",
+    "a": "direccion"
+   },
+   "exito": "Cero saltos de verde a rojo; columna de divergencia vacía en el barrido.",
+   "reglas_relacionadas": [
+    "tres_senales_baja",
+    "silencio_es_alarma",
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 7,
+     "autor": "RO",
+     "nota": "cero saltos verde→rojo; si salta, el AM no supo leer las señales"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 72,
+     "autor": "RO",
+     "nota": "firma numérica del silencioso"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 70,
+     "autor": "RO",
+     "nota": "pregunta de organigrama: re-onboarding el mismo día"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 104,
+     "autor": "RO",
+     "nota": "cualquiera de las 3 señales = rojo aunque los KPIs estén bien"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 224,
+     "autor": "RO",
+     "nota": "la columna de divergencia es donde se escapan los verdes"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 250,
+     "autor": "Tomás",
+     "nota": "el silencio del cliente es alarma"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 257,
+     "autor": "Tomás",
+     "nota": "el semáforo no salta escalones"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_culpa_a_persona",
+   "titulo": "Un fallo se está atribuyendo a una persona en vez de a un eslabón del sistema",
+   "puestos": [
+    "operaciones",
+    "account",
+    "jefa_publicidad"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "culpa de",
+     "la culpa es",
+     "ha fallado X",
+     "quién ha sido",
+     "error de una persona",
+     "señalar",
+     "reproche"
+    ]
+   },
+   "sintoma": "En una incidencia, un diagnóstico o una retro, el fallo se cuenta con nombre propio y sin eslabón ni dueño del proceso.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué eslabón del proceso falló y quién es su dueño por rol?",
+     "donde": "Mapa del proceso / SOP",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El sistema le dio a esa persona lo que necesitaba (tarea, recordatorio, evidencia en < 30 s)?",
+     "donde": "ClickUp, recordatorios",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se abrió la evidencia antes de concluir?",
+     "donde": "Tarea, correo, dato",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Es reincidencia del mismo tipo en la misma persona?",
+     "donde": "Contador de la escalera",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Diagnóstico mal formulado.",
+     "como_confirmar": "Sin eslabón nombrado.",
+     "solucion": [
+      "Reescríbelo: eslabón, dueño por rol, corrección."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Falló el sistema.",
+     "como_confirmar": "No había tarea o recordatorio.",
+     "solucion": [
+      "Corrige el sistema; el contador de la persona no avanza."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Acusación sin prueba.",
+     "como_confirmar": "Nadie abrió la tarea.",
+     "solucion": [
+      "Abre la evidencia antes de decir nada."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Reincidencia real.",
+     "como_confirmar": "Mismo tipo, varias semanas.",
+     "solucion": [
+      "Aplica la escalera en privado, con su peldaño."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reformula el diagnóstico con eslabón y dueño por rol antes de compartirlo."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Reformular en la retro",
+     "texto": "Lo que falló es {eslabon}: {hecho}. El dueño de ese paso es {rol}. Lo corregimos así: {correccion}."
+    }
+   ],
+   "que_no_hacer": [
+    "Señalar a alguien en público.",
+    "Mezclar lo que se ocultó con lo que el sistema no dejaba ver."
+   ],
+   "escalar": {
+    "cuando": "Sin escalado; si hay reincidencia, se aplica la escalera",
+    "a": "operaciones"
+   },
+   "exito": "Todo diagnóstico compartido nombra un eslabón con dueño por rol.",
+   "reglas_relacionadas": [
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 2571,
+     "autor": "RO",
+     "nota": "los sistemas fallan, no las personas: eslabón con dueño, nunca culpable con nombre"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 37,
+     "autor": "RO",
+     "nota": "doble puerta antes de cualquier peldaño"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 63,
+     "autor": "RO",
+     "nota": "separar lo que se ocultó de lo que el sistema no dejaba ver"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "prueba de entrega antes de acusar"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_traspaso_cliente",
+   "titulo": "Un cliente cambia de account y hay que hacer el traspaso",
+   "puestos": [
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "traspaso",
+     "cambio de account",
+     "pasar la cuenta",
+     "nuevo account",
+     "handoff",
+     "relevo",
+     "cambio de interlocutor"
+    ]
+   },
+   "sintoma": "Cambio planificado de account (recomposición de cartera, salida o reconversión).",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La fecha cae fuera del pico fiscal del despacho (días 1-20 de ene, abr, jul, oct)?",
+     "donde": "Calendario de la cuenta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿La cuenta está en verde? Si está en amarillo o rojo, ¿hay plan de operaciones?",
+     "donde": "Semáforo / card",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿La pestaña 7 y el log de errores están al día?",
+     "donde": "Master sheet",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El libro saliente tiene más de 2-3 traspasos este mes?",
+     "donde": "Calendario de traspasos",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿El entrante tiene hueco (≤ 12 proyectos)?",
+     "donde": "Huecos en accounts",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fecha en pico fiscal.",
+     "como_confirmar": "Días 1-20 de un mes de pico.",
+     "solucion": [
+      "Muévela fuera del pico."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cuenta frágil.",
+     "como_confirmar": "Amarillo o rojo.",
+     "solucion": [
+      "Solo con plan escrito de operaciones; si hay señal P0, manda el protocolo de rojo."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Memoria vacía.",
+     "como_confirmar": "Pestaña 7 sin entradas.",
+     "solucion": [
+      "El saliente la reconstruye antes de traspasar."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Demasiados traspasos juntos.",
+     "como_confirmar": "Más de 2-3 en el mismo libro o mes.",
+     "solucion": [
+      "Escalona."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Entrante sin hueco.",
+     "como_confirmar": "Más de 12 proyectos.",
+     "solucion": [
+      "Elige otro entrante o quítale producción."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Fija fecha de traspaso y de presentación al cliente.",
+    "Pide al saliente los tres documentos: brief, log de errores y mapa de interlocutores."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "cliente",
+     "cuando": "Presentación formal, por el saliente, dentro de una reunión",
+     "texto": "Yo genero la estrategia; {entrante} es vuestra mano del día a día. Escribidnos siempre a {buzon}: así nunca dependéis de una persona."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Reunión interna saliente y entrante (5 puntos)",
+     "texto": "Repasamos: personalidad y comunicación de los socios; errores y cómo se gestionaron; lo que está en curso; lo pendiente de aprobar; sensibilidades. Lo que cuentes de palabra y no esté escrito, lo escribimos ahora."
+    }
+   ],
+   "que_no_hacer": [
+    "Comunicar el traspaso por correo sin reunión.",
+    "Resetear el semáforo o el contador de errores.",
+    "Traspasar en pico fiscal.",
+    "Dejar que el cliente aproveche para pedir alcance nuevo o descuento de bienvenida."
+   ],
+   "escalar": {
+    "cuando": "Cuenta en amarillo o rojo que necesita traspaso",
+    "a": "operaciones"
+   },
+   "exito": "Checklist firmado por saliente, entrante y operaciones; entrante operativo en 48 h; revisión a 30 días hecha; cero quejas atribuibles al traspaso.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 10,
+     "autor": "RO",
+     "nota": "prohibido traspasar en pico fiscal y en cuentas amarillas o rojas sin plan"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 37,
+     "autor": "RO",
+     "nota": "gate: cuenta verde o plan escrito; pestaña 7 viva"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 59,
+     "autor": "RO",
+     "nota": "nunca más de 2-3 traspasos simultáneos del mismo libro"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "reunión interna de 5 puntos"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 62,
+     "autor": "RO",
+     "nota": "prueba de las 48 h"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 63,
+     "autor": "RO",
+     "nota": "presentación formal en reunión; frase canónica"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 64,
+     "autor": "RO",
+     "nota": "el semáforo no se resetea"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "revisión D+30"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 396,
+     "autor": "Tomás",
+     "nota": "un traspaso son tres documentos firmados, no una reunión"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_suplencia_ausencia",
+   "titulo": "Una persona clave se ausenta más de 2 días (account u operaciones)",
+   "puestos": [
+    "operaciones",
+    "proyectos",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "suplencia",
+     "baja médica",
+     "vacaciones",
+     "ausencia",
+     "quién cubre",
+     "compañero de suplencia",
+     "buddy",
+     "no está",
+     "cubrir cuentas"
+    ]
+   },
+   "sintoma": "Baja o ausencia de más de 2 días, o imprevista sin fecha de vuelta. Si quien falta es operaciones, Coti asume.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Quién se ausenta y hasta cuándo?",
+     "donde": "Personas / calendario",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene compañero de suplencia designado?",
+     "donde": "Mapa de suplencias",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay urgencias abiertas en sus cuentas (correos, incidencias, críticos)?",
+     "donde": "Bandeja, Incidencias, En rojo",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si falta operaciones: ¿Coti sabe que preside foros y asume planes amarillos, bajadas de color y custodia de rojos?",
+     "donde": "Mensaje de activación",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Ausencia sin aviso.",
+     "como_confirmar": "No consta en calendario.",
+     "solucion": [
+      "Activa hoy la suplencia igualmente."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "No hay compañero designado.",
+     "como_confirmar": "Mapa vacío o desactualizado.",
+     "solucion": [
+      "Designa hoy uno del mismo libro o adyacente."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Urgencias sin dueño.",
+     "como_confirmar": "Correos > 24 h o incidencias abiertas.",
+     "solucion": [
+      "El suplente da plazo el mismo día a cada urgencia."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Falta operaciones.",
+     "como_confirmar": "Ausencia de Mili > 2 días.",
+     "solucion": [
+      "Coti preside el semanal y el gobierno; sistemas compone el panel; las excepciones de ficha quedan congeladas."
+     ],
+     "quien": "proyectos",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Activa la suplencia hoy y avisa a los clientes tocados desde el buzón único."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso de suplencia, mismo día, desde el buzón único",
+     "texto": "Hola {nombre}: estos días te atiendo yo, {suplente}. Todo sigue igual: mismas fechas y mismo buzón. Cualquier cosa urgente, te respondo hoy mismo. Un abrazo."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Activación",
+     "texto": "{suplente}, desde hoy cubres las cuentas de {ausente} hasta el {fecha}. Tienes card, master sheet y guía de trato. Lo urgente recibe plazo hoy aunque se resuelva después."
+    }
+   ],
+   "que_no_hacer": [
+    "Esperar «a ver si vuelve mañana».",
+    "Firmar excepciones de ficha en suplencia.",
+    "Contar el motivo de la ausencia a los clientes."
+   ],
+   "escalar": {
+    "cuando": "La ausencia se alarga o se convierte en salida",
+    "a": "operaciones"
+   },
+   "exito": "Cero días de cuenta sin interlocutor y toda urgencia con plazo en < 24 h durante la ausencia.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 8,
+     "autor": "RO",
+     "nota": "rama B: ausencia > 2 días, se activa el mismo día; se extiende a operaciones"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 68,
+     "autor": "RO",
+     "nota": "el compañero asume el mismo día"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "aviso a los clientes tocados desde el buzón único"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 70,
+     "autor": "RO",
+     "nota": "urgencias con plazo < 24 h siguen vigentes"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 71,
+     "autor": "RO",
+     "nota": "salida de la suplencia o conversión en traspaso"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "ausencia de operaciones > 2 días: Coti preside; excepciones congeladas"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 94,
+     "autor": "RO",
+     "nota": "Mili ausente > 2 días: Coti asume lectura del lunes, retro y planes amarillos"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 389,
+     "autor": "Tomás",
+     "nota": "nadie es punto único de fallo"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_lectura_del_lunes",
+   "titulo": "Toca la lectura del lunes y el semanal de operaciones",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "lectura del lunes",
+     "semanal de operaciones",
+     "panel del lunes",
+     "reunión del lunes",
+     "barrido",
+     "comité de cartera",
+     "qué miro el lunes",
+     "flota"
+    ]
+   },
+   "sintoma": "Lunes 9:00: lectura de 10 minutos con tres preguntas; 10:00 semanal de 30-45 minutos con tres decisiones.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Pregunta 1: ¿qué marcas dejó el viernes? Primera vez = peldaño 1; reincidencia = peldaño 2",
+     "donde": "Vista de flota / tablero de cumplimiento",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Pregunta 2: ¿qué está en «solicitado» más de 7 días? Si el account no escaló el día 4, es marca suya",
+     "donde": "Vista de flota",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Pregunta 3: ¿qué cuenta lleva 2 semanas sin aparecer en ningún EOD?",
+     "donde": "Canal del pod",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Muestreo: abre 2 evidencias al azar",
+     "donde": "Vista de flota",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Semanal: solo foco, balanceo de carga y cruces entre áreas",
+     "donde": "Panel del lunes",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Marcas del viernes sin peldaño.",
+     "como_confirmar": "Marcas sin aviso.",
+     "solucion": [
+      "Mensaje de plantilla A hoy; 1:1 esta semana si es reincidencia."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La trampa del «ya lo pedí».",
+     "como_confirmar": "Solicitado > 7 días.",
+     "solucion": [
+      "Pregunta al account y aplica el peldaño que toque."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Trabajo invisible o abandono silencioso.",
+     "como_confirmar": "Cuenta sin EOD en 2 semanas.",
+     "solucion": [
+      "Pregunta directa al account hoy."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Evidencia de teatro.",
+     "como_confirmar": "Check sin sustancia.",
+     "solucion": [
+      "Peldaño 2 directo."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "El semanal degenera en «cada uno cuenta su semana».",
+     "como_confirmar": "Puntos de estado en la agenda.",
+     "solucion": [
+      "Corta: el estado está en el panel. Registro de ≤ 3 decisiones con dueño y fecha el mismo lunes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lee la vista de flota antes de las 9:15 y publica el panel.",
+    "Publica el registro del semanal el mismo lunes."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Registro del semanal",
+     "texto": "Semanal del {fecha}. Decisiones: 1) {decision1} — {dueno1}, {fecha1}. 2) {decision2} — {dueno2}, {fecha2}. 3) {decision3} — {dueno3}, {fecha3}."
+    }
+   ],
+   "que_no_hacer": [
+    "Pasar de 15 minutos en la lectura: si pasa, es un fallo de diseño.",
+    "Convertir el semanal en una ronda de estado.",
+    "Salir sin fecha ni dueño."
+   ],
+   "escalar": {
+    "cuando": "Cuatro lunes seguidos sin panel automático (modo puente)",
+    "a": "direccion"
+   },
+   "exito": "Lectura hecha y panel publicado antes de las 9:30; registro del semanal publicado el mismo lunes.",
+   "reglas_relacionadas": [
+    "una_restriccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 17,
+     "autor": "RO",
+     "nota": "lunes 9:00, lectura de flota de 10 minutos"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 31,
+     "autor": "RO",
+     "nota": "pregunta 1: marcas del viernes, primera vez o reincidencia"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 32,
+     "autor": "RO",
+     "nota": "pregunta 2: solicitado > 7 días"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 33,
+     "autor": "RO",
+     "nota": "pregunta 3: cuenta 2 semanas sin EOD"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 35,
+     "autor": "RO",
+     "nota": "muestreo de 2 evidencias; teatro = peldaño 2"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 25,
+     "autor": "RO",
+     "nota": "si la lectura pasa de 15 min o la retro de 20, es un fallo de diseño"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 58,
+     "autor": "RO",
+     "nota": "agenda cerrada: foco, balanceo, cruces"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 36,
+     "autor": "RO",
+     "nota": "4 lunes en modo puente → dirección"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/02_RITUAL_SEMANAL.md",
+     "linea": 47,
+     "autor": "RO",
+     "nota": "comité: cuenta sin nada que contar = señal y se habla primero"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_escalera_consecuencias",
+   "titulo": "Un account repite la misma marca de incumplimiento",
+   "puestos": [
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "escalera de consecuencias",
+     "reincide",
+     "otra vez lo mismo",
+     "1:1 formal",
+     "llamada de atención",
+     "peldaño",
+     "incumple",
+     "aviso por escrito"
+    ]
+   },
+   "sintoma": "Segunda semana seguida con marca en el mismo tipo de obligación, 3 marcas en 4 semanas, o evidencia de teatro.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Falló el sistema (tarea cableada, recordatorio, evidencia en < 30 s)?",
+     "donde": "ClickUp, motor de recordatorios",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Qué peldaño toca según la tabla, no según la impresión?",
+     "donde": "Contador por tipo de obligación",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Son 3 o más tipos distintos la misma semana?",
+     "donde": "Vista de flota",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay un plazo pactado en un 1:1 anterior que se ha incumplido?",
+     "donde": "Registro confidencial",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Falló el sistema.",
+     "como_confirmar": "Sin tarea o sin recordatorio.",
+     "solucion": [
+      "Retira la marca, arregla el sistema; el contador no avanza."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Primera vez en ese tipo.",
+     "como_confirmar": "Contador en 1.",
+     "solucion": [
+      "Peldaño 1: aviso con la plantilla A, el mismo lunes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Problema de rol, no de tarea.",
+     "como_confirmar": "3 o más tipos la misma semana.",
+     "solucion": [
+      "Un solo peldaño 2: 1:1 con expectativas por escrito."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Incumple lo pactado en el 1:1.",
+     "como_confirmar": "Marca del mismo tipo dentro del plazo.",
+     "solucion": [
+      "Peldaño 3: escrito formal en 48 h y aviso a Tomás.",
+      "Si persiste, peldaño 4: one-pager a Tomás. La salida la decide solo Tomás."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Antes de nada, pregunta si falló el sistema."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "1:1 del peldaño 2 (plantilla B)",
+     "texto": "Igual no lo dejé claro yo, así que lo fijamos: cuando digo {x}, entiendo {y}. Lo que necesito es {estandar}, porque si no {consecuencia}. Si se repite, {siguiente_paso}. ¿Lo ves? ¿Hay algo que te lo esté impidiendo?"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso del peldaño 1 (plantilla A)",
+     "texto": "{nombre}, el viernes quedó sin cerrar {obligacion} de {cuenta}. Se cierra con {evidencia} antes de {plazo}. Si se repite la semana que viene lo hablamos en un 1:1. ¿Te falló algo del sistema?"
+    }
+   ],
+   "que_no_hacer": [
+    "Ejecutar peldaños en público o en la retro.",
+    "Decidir sueldos, bonus o salidas: es solo de Tomás.",
+    "Saltarse peldaños o valorar sin dato objetivo delante."
+   ],
+   "escalar": {
+    "cuando": "Persistencia tras el peldaño 3",
+    "a": "direccion"
+   },
+   "exito": "La marca no se repite en el plazo pactado, o el expediente llega completo a Tomás.",
+   "reglas_relacionadas": [
+    "revision_personas_escalera"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 59,
+     "autor": "RO",
+     "nota": "peldaño 1: aviso registrado el mismo lunes"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 60,
+     "autor": "RO",
+     "nota": "peldaño 2: 2ª semana seguida, 3 en 4 semanas o teatro"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "peldaño 3: escrito formal ≤ 48 h y aviso a Tomás"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 62,
+     "autor": "RO",
+     "nota": "peldaño 4: la salida la decide solo Tomás"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "contador por tipo; 3+ tipos = un peldaño 2; siempre en privado"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 68,
+     "autor": "RO",
+     "nota": "plantilla B"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 410,
+     "autor": "Tomás",
+     "nota": "primero el dato objetivo; ninguna salida sin la escalera completa"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3183,
+     "autor": "Hormozi",
+     "nota": "los procesos nos protegen de nuestras emociones"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_cola_atascada_entre_areas",
+   "titulo": "La cola de una persona o de otra área frena a varios clientes",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "cola",
+     "esperando a otra área",
+     "cuello de botella",
+     "coordinación",
+     "entre áreas",
+     "no me pasan",
+     "dependo de",
+     "reasignar",
+     "balanceo"
+    ]
+   },
+   "sintoma": "Varias cuentas esperan a la misma persona o área más de 3 días laborables, o una iniciativa transversal está parada en bloque.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuántas tareas y cuentas esperan a esa persona y desde cuándo?",
+     "donde": "Producción por persona / panel de carga",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Es una persona o una iniciativa lanzada a varias cuentas a la vez?",
+     "donde": "ClickUp por título y fecha",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay alguien con criterio que pueda hacer parte de la cola?",
+     "donde": "Personas por puesto",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay compromisos con clientes afectados?",
+     "donde": "Card / correos",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cola de una persona > 3 días.",
+     "como_confirmar": "Tareas con fecha vencida en su nombre.",
+     "solucion": [
+      "Su jefe reasigna por fecha de compromiso sin esperar al lunes y deja una línea en el canal."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Iniciativa parada en bloque.",
+     "como_confirmar": "Misma tarea, misma fecha, varias cuentas.",
+     "solucion": [
+      "Va a quien la lanzó: una sola decisión y una sola fecha."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Nadie más sabe hacerlo.",
+     "como_confirmar": "Punto único de fallo.",
+     "solucion": [
+      "Documenta y forma a un segundo."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Clientes esperando.",
+     "como_confirmar": "Fechas prometidas en riesgo.",
+     "solucion": [
+      "Aviso antes del plazo con nueva fecha."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reasigna hoy por fecha de compromiso y deja registro de una línea."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Registro de reasignación",
+     "texto": "Reasigno {n} tareas de {persona} a {otra} por fecha de compromiso: {lista}. Motivo: cola de más de 3 días."
+    }
+   ],
+   "que_no_hacer": [
+    "Acumular reasignaciones para el lunes.",
+    "Saltarse al jefe del área y hablar directo con la persona saturada."
+   ],
+   "escalar": {
+    "cuando": "La cola sigue más de una semana",
+    "a": "direccion"
+   },
+   "exito": "Ninguna cola de más de 3 días laborables; toda reasignación registrada.",
+   "reglas_relacionadas": [
+    "una_restriccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "cola > 3 días laborables: el jefe reasigna por fecha de compromiso sin esperar al lunes; registro de 1 línea"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 58,
+     "autor": "RO",
+     "nota": "balanceo de carga por persona y cruce entre cintas en el semanal"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 208,
+     "autor": "RO",
+     "nota": "iniciativa parada en bloque: lo arregla quien la lanzó"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 389,
+     "autor": "Tomás",
+     "nota": "nadie es punto único de fallo"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 431,
+     "autor": "Tomás",
+     "nota": "las fricciones de proceso y carga van a operaciones"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_cliente_salta_a_direccion",
+   "titulo": "Un cliente escribe a Tomás o a operaciones saltándose a su account",
+   "puestos": [
+    "operaciones",
+    "proyectos",
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "critico_cliente"
+    ],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "escribe a Tomás",
+     "se salta al account",
+     "carta formal",
+     "una paradita",
+     "amenaza de baja",
+     "quiero hablar con el jefe",
+     "queja a dirección"
+    ]
+   },
+   "sintoma": "La señal entra por el canal de dirección (WhatsApp o correo a Tomás, a Mili o a Coti), o el cliente pasa de la voz a la carta formal, o dice «una paradita».",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué dice literalmente y por qué canal?",
+     "donde": "Correo o WhatsApp recibido",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El account lo sabe?",
+     "donde": "Card / canal del pod",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay queja, amenaza de baja o error con dinero?",
+     "donde": "Texto literal",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Había señales previas sin acción?",
+     "donde": "Pestaña 7",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La señal se quedó en dirección.",
+     "como_confirmar": "No consta en la card.",
+     "solucion": [
+      "Reenvíala a la card y al account hoy; el reloj de 24 h empezó cuando la recibió dirección."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El cliente no confía en su account.",
+     "como_confirmar": "Repite que el account no le rinde.",
+     "solucion": [
+      "Proyectos entra en la llamada como refuerzo, sin quitar autoridad al account."
+     ],
+     "quien": "proyectos",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Es señal P0.",
+     "como_confirmar": "Queja, baja o dinero.",
+     "solucion": [
+      "Rojo directo; custodia de operaciones; llamada el mismo día."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Señales incubadas.",
+     "como_confirmar": "Señales registradas sin acción.",
+     "solucion": [
+      "Anótalo para la autopsia del salto."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reenvía hoy a la card y al account.",
+    "Si es P0, llamada el mismo día."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Entrada de proyectos como refuerzo",
+     "texto": "{nombre}, soy {rol}, directora de estrategia. He visto la situación y vamos a darle una vuelta: he pensado que podemos hacer {propuesta}. Solo necesito {dos_datos} y arrancamos. {account} sigue contigo en el día a día."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account",
+     "texto": "{nombre}, {cliente} me ha escrito directamente: «{cita}». Te lo dejo en la card. Hablamos hoy a las {hora} y decidimos quién llama."
+    }
+   ],
+   "que_no_hacer": [
+    "Contestar la carta formal como un correo más.",
+    "Leer «una paradita» como pausa amistosa.",
+    "Entrar a la llamada a corregir al account delante del cliente.",
+    "Responder con un descuento."
+   ],
+   "escalar": {
+    "cuando": "Gesto económico o amenaza de baja firme",
+    "a": "direccion"
+   },
+   "exito": "Toda señal que entra por dirección está en la card el mismo día y con acción en 24 h.",
+   "reglas_relacionadas": [
+    "queja_p0",
+    "paradita_ya_esta_fuera"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "señal por canal de dirección: se reenvía a card y AM el mismo día; el reloj empieza al recibirla dirección"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-02_semaforo-gatillos.md",
+     "linea": 84,
+     "autor": "RO",
+     "nota": "termómetros de rojo: carta formal, escalada a Tomás, «una paradita»"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/04_SUPERPROMPT_RADAR_DE_CARTERA.md",
+     "linea": 325,
+     "autor": "RO",
+     "nota": "Coti entra como directora de estrategia, con dirección y sin quitar autoridad al account"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "una paradita = ya está fuera"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "queja = P0, llamada el mismo día"
+    }
+   ]
+  },
+  {
+   "id": "operaciones_baja_sin_autopsia",
+   "titulo": "Hay bajas del mes sin motivo ni autopsia",
+   "puestos": [
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "operaciones.bajas_del_mes_con_motivo"
+    ],
+    "palabras_clave": [
+     "baja",
+     "autopsia",
+     "por qué se fue",
+     "motivo de baja",
+     "offboarding",
+     "cliente perdido",
+     "churn"
+    ]
+   },
+   "sintoma": "Bajas del mes sin causa ni autopsia la misma semana.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La baja está confirmada por facturación?",
+     "donde": "Libro de clientes / administración",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Se entregó el pack de cierre y se devolvieron los activos?",
+     "donde": "Card",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay autopsia contra las causas raíz firmada por operaciones?",
+     "donde": "Registro de autopsias de proyectos",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Es baja por liquidez o por insatisfacción?",
+     "donde": "Motivo literal del cliente",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Quedan accesos, tareas o cuentas vivas del cliente?",
+     "donde": "ClickUp, herramientas",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Baja no confirmada.",
+     "como_confirmar": "Sigue facturando.",
+     "solucion": [
+      "Confirma con administración."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Offboarding a medias.",
+     "como_confirmar": "Sin pack ni activos devueltos.",
+     "solucion": [
+      "El account entrega el pack antes del último día."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Autopsia sin hacer.",
+     "como_confirmar": "Sin registro.",
+     "solucion": [
+      "Autopsia de 30-45 minutos esa semana; si era evitable, nombra el hueco del sistema."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Baja por liquidez.",
+     "como_confirmar": "Motivo económico.",
+     "solucion": [
+      "Fecha de reactivación y dueño en el CRM."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Restos vivos.",
+     "como_confirmar": "Tareas o accesos abiertos.",
+     "solucion": [
+      "Cierra tareas y pide la revocación de accesos."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Agenda la autopsia esta semana."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "Escribir un motivo de baja sin evidencia.",
+    "Dejar que la autopsia manche al account que cumplió: su registro le cubre."
+   ],
+   "escalar": {
+    "cuando": "Baja de cliente en verde, o dos bajas con la misma causa en el mes",
+    "a": "direccion"
+   },
+   "exito": "100 % de bajas del mes con motivo y autopsia la misma semana.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1027,
+     "autor": "RO",
+     "nota": "bajas del mes con motivo: autopsia la misma semana (SOP-TR-09)"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-09_offboarding-impecable.md",
+     "linea": 9,
+     "autor": "RO",
+     "nota": "operaciones valida el pack y firma la autopsia"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-09_offboarding-impecable.md",
+     "linea": 26,
+     "autor": "RO",
+     "nota": "autopsia esa misma semana contra las causas raíz"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
+     "linea": 22,
+     "autor": "RO",
+     "nota": "el registro del account que cumple es su descargo ante una baja"
+    },
+    {
+     "fichero": "ro-equipo:00_TABLERO/05_HALLAZGOS_CLICKUP.md",
+     "linea": 103,
+     "autor": "RO",
+     "nota": "accesos de clientes de baja: se cierran esa semana"
+    }
+   ]
+  }
+ ]
+}

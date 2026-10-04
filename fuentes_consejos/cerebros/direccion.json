@@ -1,0 +1,6018 @@
+{
+ "_meta": {
+  "area": "direccion",
+  "titulo": "Dirección y finanzas",
+  "puestos": [
+   "direccion",
+   "finanzas_direccion"
+  ],
+  "version": "1.0",
+  "fecha": "2026-10-04",
+  "fuentes_principales": [
+   "central:skills/criterio-tomas-ro/LEYES.md",
+   "central:skills/criterio-tomas-ro/PRECEDENCIA.md",
+   "central:skills/criterio-tomas-ro/NORTE.md",
+   "central:skills/criterio-tomas-ro/CASOS.md",
+   "central:memoria/project_decisiones_organizativas_tomas.md",
+   "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+   "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+   "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
+   "ro-equipo:40_MEMORIA/project_plan_paid_100k_31oct.md",
+   "ro-equipo:40_MEMORIA/project_transicion_cartera_dos_productos.md",
+   "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+   "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+   "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+   "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+   "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+   "hormozi-cole-gordon:ACCESO/CONTRADICCIONES.md",
+   "ro-app:indicadores.json",
+   "ro-app:fuentes_alertas/generar_alertas.py",
+   "ro-app:fuentes_consejos/motor_consejos.py",
+   "ro-app:fuentes_consejos/cerebro_decisiones.py"
+  ],
+  "nota": "Cubre decidir con datos (restricción única, coste por cliente, margen, caja), cartera en riesgo, impagos que decide Tomás, decisiones con reloj, precio y cómo actuar como dirección ante un cliente enfadado. No trae sueldos ni datos de personas: el coste del equipo se lee agregado. Deriva a: account (relación diaria y planes de cuenta), personas_admin (cobro operativo y RRHH), ventas_ro (venta y captación propia en detalle), publicidad y crm (diagnóstico técnico de campañas y embudo), altas (arranques). Muchas bandas de finanzas están «propuesta sin firmar» en indicadores.json: se aplican como dirección, no como ley.",
+  "pendientes_tomas": [
+   "Norte: NORTE.md (beneficio de 30k a cierre de 2027, escalera 65-70k) convive con el 100k de MRR firmado el 30-ago y adelantado a 31-oct el 2-sep. Falta la enmienda; las fichas ponderan contra beneficio y usan el 100k solo para captación.",
+   "Precio: C-D2-04 (catálogo Coti, excepción Tomás) choca con la decisión del 12-jul (todo lo económico, Tomás). Las fichas suben todo precio a Tomás. Aclarar si Coti fija algo hoy.",
+   "Garantía: la regla sin_garantia_resultado y la ley C-D2-05 están superadas por la oferta del 1-sep (2 reuniones válidas en 30 días). Enmendar ley y regla.",
+   "Umbral escrito de compensación: C-D8-02 habla de «umbral escrito de dinero» y no existe. ¿Hasta qué importe puede ofrecer el account una compensación sin Tomás?",
+   "Impago: D-21 dice nunca más de 2 cuotas. ¿Se pausa el servicio automáticamente al llegar a 2 cuotas o siempre lo decide Tomás caso a caso?",
+   "Coste por cliente captado: D-13 mide solo inversión en Meta ÷ firmados (CAC de medios). ¿Se queda así o se añade el coste de venta (CAC completo) para el ratio de 3 a 1?",
+   "Bandas sin firmar en finanzas: margen bruto, peso y presupuesto del equipo, rentabilidad por cliente, clientes en pérdida, reserva de impuestos, concentración, tope de arranques y bajas. Firmar o corregir.",
+   "Satisfacción: el indicador (referencia de Cole, > 9) choca con C-D3-06 (las encuestas no sirven de alarma). ¿Se mide o se retira?",
+   "Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas."
+  ]
+ },
+ "principios": [
+  {
+   "id": "dir_p_beneficio",
+   "texto": "El norte es el beneficio, no la facturación: toda propuesta se pondera contra beneficio, retención neta e ingresos por persona.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:13",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_una_restriccion",
+   "texto": "En cada momento hay una sola restricción: nómbrala con dato y no gastes fuera de ella.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:34",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_no_escalar_sin_retener",
+   "texto": "No se escala lo que no retiene, y el margen tiene que financiar la captación antes de invertir en ella.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:62",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_dato",
+   "texto": "El dato destruye el relato: ninguna cifra sin fuente y fecha, y lo que falta se marca, nunca se rellena.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:76",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_escalada_filtrada",
+   "texto": "Nada sube en crudo: el qué, el contexto en euros, opciones, recomendación, riesgo y reloj. Y solo sube lo irreversible, lo que supera umbral o lo que su dueño no sabe explicar.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:857",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_economico_tomas",
+   "texto": "Todo lo económico, precio incluido, lo decide hoy Tomás: un precio, 1.470 € + IVA, y nadie improvisa cifras.",
+   "fuente": "central:memoria/project_decisiones_organizativas_tomas.md:14",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_cac_tercio",
+   "texto": "Lo máximo que se paga por captar un cliente es un tercio de su beneficio bruto de vida; la captación de RO para por encima de 2.500 €.",
+   "fuente": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md:528",
+   "autor": "Hormozi"
+  },
+  {
+   "id": "dir_p_caja",
+   "texto": "La caja dice si sobrevives; el P&L, cómo vas. Nunca menos de 2 meses de caja neta de impuestos; objetivo 3.",
+   "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:1509",
+   "autor": "RO"
+  },
+  {
+   "id": "dir_p_precio_no_retiene",
+   "texto": "Retener por precio no es retener: ante una amenaza de baja, propuesta distinta, nunca descuento.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:298",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_queja_senior",
+   "texto": "Queja, amenaza de baja o error con dinero: se llama el mismo día para escuchar, se admite sin matices y hay plan en 48 h.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:278",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_gate_con_fecha",
+   "texto": "Ningún gate ni «lo vigilamos» sin fecha, criterio binario, las dos ramas y un dueño.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:177",
+   "autor": "Tomás"
+  },
+  {
+   "id": "dir_p_contratar_tras_margen",
+   "texto": "Contratar va por detrás del margen y solo tras descartar por escrito proceso e IA.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:375",
+   "autor": "Tomás"
+  }
+ ],
+ "situaciones": [
+  {
+   "id": "dir_decision_con_reloj",
+   "titulo": "Hay una decisión subida a Tomás o a Coti y el reloj corre",
+   "puestos": [
+    "direccion",
+    "proyectos",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "dir_decision"
+    ],
+    "alertas": [
+     "dir_decision"
+    ],
+    "indicadores": [
+     "direccion.decisiones_contestadas_en_48_h"
+    ],
+    "palabras_clave": [
+     "decisión pendiente",
+     "decisión con reloj",
+     "me falta tu ok",
+     "esperando respuesta de Tomás",
+     "esperando a Coti",
+     "se caduca la decisión",
+     "lleva días sin contestar",
+     "bloqueado por dirección"
+    ]
+   },
+   "sintoma": "Una decisión lleva más de 48 h sin respuesta si es de Tomás o más de 24 h si es de Coti. Ámbar: alguna entre 48 y 96 h. Rojo: alguna de más de 96 h.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si la tarjeta trae problema, recomendación y opciones. Sin recomendación no es una decisión: es un problema subido en crudo.",
+     "donde": "Pantalla Decisiones de la app",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si cumple una de las tres puertas: irreversible, supera un umbral de dinero o sienta precedente, o es una anomalía que su dueño no sabe explicar.",
+     "donde": "Texto de la decisión",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué se bloquea si no se contesta hoy y desde cuándo (cliente, campaña, cobro).",
+     "donde": "Campo «timing» de la tarjeta y la ficha del cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si falta un dato para decidir y quién lo tiene.",
+     "donde": "Prueba enlazada en la tarjeta",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si la decisión ya está tomada en otro sitio (registro de decisiones, regla firmada).",
+     "donde": "Reglas de la app y registro de decisiones",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Tomás no ha visto la tarjeta: se acumula con otras y nadie le ha dicho qué se bloquea.",
+     "como_confirmar": "La tarjeta está en «por caducar» y no tiene línea de qué se bloquea.",
+     "solucion": [
+      "Ordena las pendientes por lo que bloquean, no por antigüedad.",
+      "Contesta primero las tácticas: el reloj de una táctica es de 5 minutos.",
+      "Si no puedes contestar hoy, delega con motivo y nombre."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Llega sin recomendación ni opciones, y decidir exige rehacer el trabajo de pensar.",
+     "como_confirmar": "Falta el campo «Recomendación» o solo hay una opción.",
+     "solucion": [
+      "Devuélvela pidiendo 2-3 opciones, cuál recomienda y por qué, el riesgo de cada una y el timing.",
+      "No la contestes tú rehaciéndola."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "No debía subir: no es irreversible, no supera umbral y su dueño sabe explicarla. Es una petición de confirmación.",
+     "como_confirmar": "Ninguna de las tres puertas aplica.",
+     "solucion": [
+      "Delégala de vuelta: «esto lo decides tú; si sale mal, lo vemos».",
+      "Anota el criterio para que la próxima no suba."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Falta un dato que no tiene quien decide (cifra de caja, contrato, histórico del cliente).",
+     "como_confirmar": "La tarjeta cita una cifra sin fuente o de memoria.",
+     "solucion": [
+      "Pide el dato con fuente y fecha a su dueño, con hora límite.",
+      "Marca la decisión como «falta dato» para que el reloj no mienta."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c5",
+     "causa": "Es una decisión ya tomada que se vuelve a abrir (precio, canal, garantía).",
+     "como_confirmar": "Existe regla firmada o decisión registrada que la cubre.",
+     "solucion": [
+      "Contesta citando la regla vigente con su fecha.",
+      "Si la regla está desfasada, abre una enmienda aparte; no la cambies en la tarjeta."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Abre Decisiones y contesta hoy las que bloquean un cliente o un cobro.",
+    "Las que no puedas decidir hoy, delégalas con motivo escrito: el silencio también es una decisión."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al devolver una decisión subida sin recomendación",
+     "texto": "Hola {nombre}. Te la devuelvo para que la subas completa: el qué en una línea, contexto en euros, 2-3 opciones, cuál recomiendas y por qué, el riesgo de cada una y qué se bloquea si no llega antes del {fecha}. Con eso la contesto en el día."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al delegar una que no debía subir",
+     "texto": "{nombre}, esta la decides tú: no es irreversible ni pasa de umbral. Mi criterio, por si te sirve: {criterio}. Si sale mal, lo vemos juntos."
+    }
+   ],
+   "que_no_hacer": [
+    "No dejes caducar una decisión sin contestar: rechaza o delega con motivo.",
+    "No contestes «lo vemos»: eso no es una decisión.",
+    "No reabras en la tarjeta una regla firmada; la enmienda va aparte y la valida Tomás."
+   ],
+   "escalar": {
+    "cuando": "Una decisión para Coti pasa de 24 h o mezcla precio de un cliente concreto: sube a Tomás.",
+    "a": "direccion"
+   },
+   "exito": "100 % de las decisiones de la semana contestadas en 48 h (Tomás) o 24 h (Coti), y ninguna de más de 96 h.",
+   "reglas_relacionadas": [
+    "dir_decision_reloj",
+    "una_restriccion",
+    "dir_muro"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 225,
+     "autor": "RO",
+     "nota": "Alerta dir_decision: 48 h para Tomás, 24 h para Coti."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 344,
+     "autor": "RO",
+     "nota": "Indicador de decisiones contestadas: 100 % / entre 48 y 96 h / más de 96 h."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 857,
+     "autor": "Tomás",
+     "nota": "C-D8-01: toda escalada llega con el qué, contexto, 2-3 opciones, recomendación, riesgo y timing."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 864,
+     "autor": "Tomás",
+     "nota": "C-D8-02: tres puertas de escalado; reloj de 5 min táctico y 20 min estratégico."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 97,
+     "autor": "Tomás",
+     "nota": "C-D1-13: lo que solo cierra Tomás se nombra como abierto y se pregunta."
+    }
+   ]
+  },
+  {
+   "id": "dir_decision_sin_recomendacion",
+   "titulo": "Llega a dirección un problema sin propuesta ni recomendación",
+   "puestos": [
+    "direccion",
+    "operaciones",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sin recomendación",
+     "qué hago con esto",
+     "decide tú",
+     "te lo subo",
+     "no sé qué hacer",
+     "te paso el problema",
+     "necesito que lo veas",
+     "dime cómo lo hago"
+    ]
+   },
+   "sintoma": "Una decisión o un mensaje a Tomás trae el problema entero, sin opciones, sin recomendación o sin reloj.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si tiene las cinco piezas: qué, contexto en euros, opciones, recomendación con riesgo y timing.",
+     "donde": "Tarjeta de Decisiones o mensaje",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si quien lo sube podía decidirlo (no es precio, baja, compensación ni precedente).",
+     "donde": "Muro de dirección",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si la persona sabe cuál es el criterio que aplicaría Tomás.",
+     "donde": "Reglas de su puesto en la app",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si es la segunda vez en el mes que esa persona sube algo así.",
+     "donde": "Historial de Decisiones",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Costumbre: el problema sube en crudo y el trabajo de pensar se le pasa a Tomás.",
+     "como_confirmar": "Faltan opciones o recomendación.",
+     "solucion": [
+      "Devuélvelo pidiendo la recomendación.",
+      "Explica que la letra que hay que quitarle a Tomás es la R de recomendar, no la D de decidir."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La persona podía decidir y sube por miedo a equivocarse.",
+     "como_confirmar": "No cumple ninguna de las tres puertas de escalado.",
+     "solucion": [
+      "Devuélvelo con «esto es tuyo».",
+      "Refuerza en el uno a uno que equivocarse en algo reversible es aceptable."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "No conoce el criterio: nadie le ha dicho qué regla aplica.",
+     "como_confirmar": "Pregunta algo que ya está en reglas o leyes.",
+     "solucion": [
+      "Señala la regla concreta y su fuente.",
+      "Pide a operaciones que la incluya en la formación del puesto."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Patrón repetido: infradelegación del puesto.",
+     "como_confirmar": "Dos o más en el mes de la misma persona.",
+     "solucion": [
+      "Trátalo con su responsable como tema de puesto, con el dato delante.",
+      "Mide si bajan los escalados en el mes siguiente."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Devuelve la decisión pidiendo una recomendación; no la resuelvas tú."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al devolver",
+     "texto": "Hola {nombre}. Antes de decidir necesito tu recomendación: ¿qué opciones ves, por cuál te inclinas y por qué, qué riesgo tiene cada una y para cuándo tiene que estar? Si me la mandas hoy, la contesto hoy."
+    }
+   ],
+   "que_no_hacer": [
+    "No decidas sobre un problema en crudo: enseña que subir sin propuesta funciona.",
+    "No lo conviertas en reproche personal: el fallo es del sistema de escalado."
+   ],
+   "escalar": {
+    "cuando": "Hay un cliente o un cobro bloqueado mientras se rehace: decide la opción más reversible y pide la recomendación después.",
+    "a": "direccion"
+   },
+   "exito": "Cero decisiones sin recomendación en las cuatro semanas siguientes y menos escalados de esa persona.",
+   "reglas_relacionadas": [
+    "dir_decision_reloj",
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/decisiones.js",
+     "linea": 221,
+     "autor": "RO",
+     "nota": "La pantalla Decisiones: «Sin recomendación: devuélvela pidiendo una»."
+    },
+    {
+     "fichero": "ro-app:modulos/decisiones.js",
+     "linea": 269,
+     "autor": "RO",
+     "nota": "Subir una decisión: filtrado y con recomendación; sin recomendación no se sube."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 857,
+     "autor": "Tomás",
+     "nota": "C-D8-01: nada sube en crudo; la letra que hay que quitarle es la R de recomendar."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "C-D4-05: la métrica de éxito es que bajen los escalados al CEO."
+    }
+   ]
+  },
+  {
+   "id": "dir_impago_mas_60_dias",
+   "titulo": "Un cliente debe una factura de más de 60 días: toca decidir",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "administracion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_impago"
+    ],
+    "alertas": [
+     "adm_impago",
+     "adm_sepa"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "impago",
+     "no paga",
+     "factura vencida",
+     "moroso",
+     "debe dos cuotas",
+     "recibo devuelto",
+     "deuda del cliente",
+     "cortar el servicio",
+     "burofax",
+     "rectificativa"
+    ]
+   },
+   "sintoma": "Factura vencida en Holded con más de 60 días. Desde ese día no se reclama: decide Tomás. Nunca se acumulan más de dos cuotas.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el impago es real o es un desfase de conciliación SEPA (cobrado en banco y sin casar en Holded).",
+     "donde": "Holded y extracto bancario",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si se avisó al cliente a los 30 días y qué contestó.",
+     "donde": "Historial de cobros y Desk",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Cuántas cuotas debe y si sigue recibiendo servicio con campaña encendida.",
+     "donde": "Holded y ficha del cliente",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay una queja o un error nuestro abierto que explique el no pago.",
+     "donde": "Ficha del cliente, Bandeja y En rojo",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Salud del cliente: si es caja (problema suyo de liquidez) o decisión de irse.",
+     "donde": "Verdad única y última reunión",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No es impago: es un recibo cobrado que no se ha conciliado.",
+     "como_confirmar": "El banco muestra el cobro y Holded no lo casa.",
+     "solucion": [
+      "Pide a administración que concilie y cierre la alerta.",
+      "No escribas al cliente hasta confirmarlo."
+     ],
+     "quien": "administracion",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Recibo SEPA devuelto por cambio de cuenta o fondos, sin intención de no pagar.",
+     "como_confirmar": "Devolución bancaria con motivo técnico; el cliente responde y colabora.",
+     "solucion": [
+      "Pide nuevo mandato SEPA y reintenta en la remesa siguiente.",
+      "Escala a Tomás si propone otra vía de pago."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "El cliente usa el no pago como protesta por el servicio.",
+     "como_confirmar": "Hay queja abierta, error nuestro o informe con números flojos en los últimos 60 días.",
+     "solucion": [
+      "Separa las dos cosas: primero llamada de dirección para escuchar la queja.",
+      "Decide el cobro después, con la queja tratada."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Tensión de caja del despacho.",
+     "como_confirmar": "Lo dice el cliente o hay recibos devueltos repetidos.",
+     "solucion": [
+      "Valora un plan de pago con fecha y cuotas, por escrito.",
+      "Si es baja por liquidez con la relación intacta, deja tarea de reactivación con fecha."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Ya ha decidido irse y deja de pagar.",
+     "como_confirmar": "Tres señales de baja activas o silencio total.",
+     "solucion": [
+      "Decide entre rectificativa, burofax o seguir esperando.",
+      "Para el trabajo que genera coste mientras se decide.",
+      "Prepara salida ordenada y por escrito."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Confirma con administración que el impago es real antes de tocar nada.",
+    "Comprueba si hay queja o error nuestro abierto con ese cliente.",
+    "Decide en 48 h: plan de pago, rectificativa, burofax o seguir esperando, y apunta el plan en la app."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Primera llamada de dirección, impago con queja de fondo",
+     "texto": "Hola {nombre}, soy Tomás. Te llamo porque tenemos {cifra} € pendientes desde el {fecha} y prefiero hablarlo contigo antes que por correo. Antes de nada: ¿hay algo del servicio que no te esté encajando? Si lo hay, quiero saberlo hoy."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Plan de pago acordado",
+     "texto": "Hola {nombre}:\n\nComo hemos hablado, el importe pendiente de {cifra} € se cobra así: {plan}. Lo domiciliamos por SEPA en esas fechas.\n\nSi algo cambia, avísame antes de la fecha y lo vemos.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No dejes que se acumulen más de dos cuotas.",
+    "No reclames por correo un impago que es protesta: primero se escucha la queja.",
+    "No pactes formas de pago fuera de SEPA sin Tomás.",
+    "No juntes en el mismo mes el cobro duro con otra mala noticia para esa cuenta."
+   ],
+   "escalar": {
+    "cuando": "Siempre desde el día 60, o antes si el cliente pide otra vía de pago o amenaza con la baja.",
+    "a": "direccion"
+   },
+   "exito": "Cero impagos de más de 60 días sin plan anotado y ningún cliente con más de dos cuotas debidas.",
+   "reglas_relacionadas": [
+    "adm_cobro",
+    "impago_corte",
+    "cobro_sepa",
+    "rel_queja_llamada"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 114,
+     "autor": "RO",
+     "nota": "Umbral firmado D-21: aviso a 30 días, decisión de Tomás a 60, nunca más de 2 cuotas."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 52,
+     "autor": "RO",
+     "nota": "Regla adm_cobro (de 11_DECISIONES_PARA_TOMAS.md:64, fichero ausente del repo)."
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 208,
+     "autor": "RO",
+     "nota": "Alerta adm_impago: alta si pasa de 30 días; a los 60 decide Tomás."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/motor_consejos.py",
+     "linea": 352,
+     "autor": "RO",
+     "nota": "Opciones que la app propone a dirección: rectificativa, burofax o seguir esperando."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 33,
+     "autor": "RO",
+     "nota": "La deuda real del histórico era pequeña: el resto eran desfases de conciliación SEPA."
+    },
+    {
+     "fichero": "central:memoria/project_master_financiero_ro.md",
+     "linea": 26,
+     "autor": "RO",
+     "nota": "Separar el ciclo normal de cobro del riesgo real de impago."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 325,
+     "autor": "Tomás",
+     "nota": "C-D3-17: cobro siempre por SEPA; otra vía, se escala a Tomás."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 339,
+     "autor": "Tomás",
+     "nota": "C-D3-19: dos malas noticias no comparten mes."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 332,
+     "autor": "Tomás",
+     "nota": "C-D3-18: baja por liquidez ≠ insatisfacción; tarea de reactivación con fecha."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3608,
+     "autor": "Cole Gordon",
+     "nota": "El cobro lo firma finanzas, con fecha de reintento y congelación del servicio si no contesta."
+    }
+   ]
+  },
+  {
+   "id": "dir_coste_cliente_ro_disparado",
+   "titulo": "Lo que le cuesta a RO captar un cliente se ha disparado",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "ventas_ro"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.coste_por_cliente_captado_por_ro",
+     "finanzas_direccion.retorno_del_cliente_captado"
+    ],
+    "palabras_clave": [
+     "CAC",
+     "coste por cliente",
+     "cuánto nos cuesta un cliente",
+     "captación cara",
+     "gastamos mucho en Meta",
+     "no cerramos",
+     "parar la captación",
+     "coste de adquisición"
+    ]
+   },
+   "sintoma": "Inversión en Meta ÷ clientes firmados: verde ≤ 700 €, ámbar 701-1.500 €, rojo > 1.500 €. Por encima de 2.500 € se para la captación.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "La ventana: con pocos cierres un solo cliente mueve el número. Mira 7, 30 y 90 días.",
+     "donde": "Indicador en Panel de dirección",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Coste por cita y por reunión celebrada frente a sus topes (≤ 40 €/cita, ≤ 90 €/reunión).",
+     "donde": "Captación de RO (Meta + GoHighLevel de RO)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Asistencia a las citas de RO (≥ 80 %).",
+     "donde": "GoHighLevel de RO",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Cierre sobre reuniones celebradas (verde ≥ 33 %).",
+     "donde": "Ventas de RO",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si las reuniones son con quien decide y cumplen el criterio de entrada.",
+     "donde": "Notas de las reuniones de venta",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Ventana demasiado corta o pocos cierres: ruido, no tendencia.",
+     "como_confirmar": "Menos de 3 cierres en la ventana o el número salta de una semana a otra.",
+     "solucion": [
+      "Juzga con la ventana de 30 y 90 días.",
+      "No cambies nada por una semana mala."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "La publicidad trae citas caras: anuncio, oferta o público.",
+     "como_confirmar": "Coste por cita > 40 € o por reunión > 90 € con asistencia y cierre en verde.",
+     "solucion": [
+      "Pide a la jefa de publicidad un diagnóstico por ángulo, no por anuncio.",
+      "Rota creativo antes de tocar presupuesto."
+     ],
+     "quien": "jefa_publicidad",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se agendan citas que no se celebran.",
+     "como_confirmar": "Asistencia < 80 %.",
+     "solucion": [
+      "Revisa confirmaciones y recordatorios del setter.",
+      "Mide el coste por reunión celebrada, no por cita."
+     ],
+     "quien": "ventas_ro",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Se celebran reuniones que no cierran: venta, oferta o precio.",
+     "como_confirmar": "Cierre < 20 % sobre celebradas con volumen suficiente.",
+     "solucion": [
+      "Revisa grabaciones de venta de la semana.",
+      "No toques el canal ni subas inversión: el tráfico ya hizo su parte."
+     ],
+     "quien": "ventas_ro",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Se cierra a quien no cumple el criterio de entrada para sostener el número.",
+     "como_confirmar": "Altas que no pasan los gates o con ticket bajo.",
+     "solucion": [
+      "Retira el número antes que el filtro.",
+      "Revisa el criterio de entrada con quien vende."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Si pasa de 2.500 € con ventana de 30 días, para la captación pagada y diagnostica.",
+    "Entre 1.500 y 2.500 €, congela subidas de presupuesto hasta saber en qué eslabón está el fallo."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al pedir el diagnóstico a publicidad y ventas",
+     "texto": "Hola {nombre}. El coste por cliente captado está en {cifra} € a 30 días. Antes de tocar nada necesito saber dónde se rompe: coste por cita, asistencia o cierre sobre celebradas. Mándame los tres números con fecha y tu hipótesis antes del {fecha}."
+    }
+   ],
+   "que_no_hacer": [
+    "No bajes el criterio de entrada para abaratar el cliente: fabrica bajas.",
+    "No subas la inversión para compensar un cierre bajo.",
+    "No juzgues por el coste por lead: un lead barato no es un cliente barato."
+   ],
+   "escalar": {
+    "cuando": "Rojo dos semanas seguidas con ventana de 30 días, o cualquier lectura por encima de 2.500 €.",
+    "a": "direccion"
+   },
+   "exito": "Coste por cliente captado ≤ 1.500 € a 30 días y vuelta a ≤ 700 € a 90 días, sin bajar el criterio de entrada.",
+   "reglas_relacionadas": [
+    "coste_cliente_ro_bandas",
+    "umbrales_captacion_ro",
+    "cierre_ro_bandas",
+    "cierre_bajo_no_es_trafico",
+    "cac_tercio_bb"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 86,
+     "autor": "RO",
+     "nota": "Umbral firmado D-13: ≤ 700 / 701-1.500 / > 1.500 €; parar > 2.500 €."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 255,
+     "autor": "RO",
+     "nota": "Fórmula: inversión en Meta ÷ clientes firmados; ventanas 7/30/90."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 2635,
+     "autor": "RO",
+     "nota": "Topes de captación de RO: ≤ 40 €/cita, ≤ 90 €/reunión, asistencia ≥ 80 %."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 360,
+     "autor": "RO",
+     "nota": "Cierre de RO sobre reuniones celebradas: verde ≥ 33 %, rojo < 20 %."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 20,
+     "autor": "Tomás",
+     "nota": "C-D1-02: si la cifra exige bajar el filtro de entrada, se retira la cifra."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 510,
+     "autor": "Tomás",
+     "nota": "C-D5-11: un CPL bajo no es un ROI bueno."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 117,
+     "autor": "Tomás",
+     "nota": "CAC de referencia 700 € frente a 1.200-1.500 €: estaba abierto; lo cierra D-13 del 2-oct (manda D-13, más reciente)."
+    }
+   ]
+  },
+  {
+   "id": "dir_retencion_neta_baja",
+   "titulo": "La retención neta de ingresos baja del 85 %",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.retencion_neta_de_ingresos"
+    ],
+    "palabras_clave": [
+     "retención neta",
+     "NRR",
+     "se nos van clientes",
+     "churn",
+     "la cartera encoge",
+     "bajas",
+     "perdemos cuota",
+     "retención"
+    ]
+   },
+   "sintoma": "Cuota de hoy de los clientes de hace un año ÷ su cuota de entonces: verde ≥ 90 %, ámbar 85-90 %, rojo < 85 % (lectura trimestral).",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el dato es limpio: bajas, downsells y altas bien fechadas en el libro de clientes.",
+     "donde": "Libro de clientes y Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Qué parte es baja y qué parte es bajada de cuota.",
+     "donde": "Libro de clientes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "De qué tramo y tipología salen las bajas (ticket, nicho o generalista).",
+     "donde": "Libro de clientes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "En qué mes de vida se van: antes del sexto mes apunta a promesa y arranque.",
+     "donde": "Libro de clientes",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si hubo señales previas en En rojo antes de cada baja.",
+     "donde": "Historial de En rojo",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Dato sucio: bajas mal fechadas o cuotas contadas dos veces.",
+     "como_confirmar": "Las cifras del libro, Holded y Airtable no cuadran.",
+     "solucion": [
+      "Pide la reconciliación antes de sacar conclusiones.",
+      "Marca la lectura como estimación hasta cuadrar."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Downsells concedidos para retener por precio.",
+     "como_confirmar": "La caída viene de bajadas de cuota, no de bajas.",
+     "solucion": [
+      "Revisa cada bajada: ¿se cambió el marco o solo se bajó el precio?",
+      "Deja de conceder la excepción hacia delante."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se firma a quien no se queda: tramo barato o generalista.",
+     "como_confirmar": "Las bajas se concentran en tramos de entrada o sin nicho.",
+     "solucion": [
+      "Endurece el criterio de entrada antes de firmar.",
+      "Revisa con ventas los gates de las últimas altas."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "La promesa vendida no coincide con el reloj real de ejecución.",
+     "como_confirmar": "Bajas antes del sexto mes, con el entregable clave sin cerrar o la pregunta de resultados sin contestar.",
+     "solucion": [
+      "Revisa el arranque y la promesa del contrato vigente.",
+      "Asegura una respuesta con dato a «¿esto funciona?» antes del mes 3."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c5",
+     "causa": "El semáforo no avisó: cuentas que pasaron de verde a rojo.",
+     "como_confirmar": "Bajas sin rojo previo en En rojo.",
+     "solucion": [
+      "Trátalo como fallo nuestro de lectura.",
+      "Revisa con operaciones qué señales se ignoraron."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Separa bajas y bajadas de cuota en la lectura del trimestre.",
+    "No abras más captación hasta saber de dónde sale la fuga."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Revisión trimestral con operaciones",
+     "texto": "La retención neta está en {cifra} %. Quiero ver cada baja y cada bajada del trimestre con su causa comprobada, el mes de vida y si estuvo en rojo antes. Sin culpables: buscamos el eslabón que falló."
+    }
+   ],
+   "que_no_hacer": [
+    "No lo arregles con más captación: es comprar el mismo cliente dos veces.",
+    "No lo arregles solo con más contacto del account.",
+    "No te creas los motivos declarados de baja sin contrastarlos.",
+    "No metas permanencia como respuesta."
+   ],
+   "escalar": {
+    "cuando": "Rojo en la lectura trimestral o dos ámbar seguidos.",
+    "a": "direccion"
+   },
+   "exito": "Retención neta ≥ 90 % en la siguiente lectura trimestral, con bajas fechadas y con causa comprobada.",
+   "reglas_relacionadas": [
+    "tres_senales_baja",
+    "silencio_es_alarma",
+    "paradita_ya_esta_fuera",
+    "salud_umbrales_accion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 110,
+     "autor": "RO",
+     "nota": "Umbral firmado D-15: ≥ 90 / 85-90 / < 85 %, trimestral."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 70,
+     "autor": "Tomás",
+     "nota": "Cada punto de NRR vale unos 525 €/mes (27-jul)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 75,
+     "autor": "Tomás",
+     "nota": "Retención por tramo: el de 150-600 € retiene mucho menos."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 27,
+     "autor": "Tomás",
+     "nota": "C-D1-03: captación sin retención es comprar el mismo cliente dos veces."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 41,
+     "autor": "Tomás",
+     "nota": "C-D1-05: errores 2, 11 y 12 (retención como atención, permanencia, motivos declarados)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 223,
+     "autor": "Tomás",
+     "nota": "C-D3-02: el problema es a quién se firma."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 27,
+     "autor": "RO",
+     "nota": "Causa dominante de baja: el reloj vendido no es el de ejecución."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 30,
+     "autor": "RO",
+     "nota": "Vida mediana de una baja: 6,5 meses."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 257,
+     "autor": "Tomás",
+     "nota": "C-D3-07: ninguna cuenta pasa de verde a rojo; si pasa, el fallo es nuestro."
+    }
+   ]
+  },
+  {
+   "id": "dir_baja_sin_motivo",
+   "titulo": "Se va un cliente sin motivo apuntado ni autopsia, o hay más de dos bajas en el mes",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.bajas_del_mes_con_motivo",
+     "operaciones.bajas_del_mes_con_motivo"
+    ],
+    "palabras_clave": [
+     "baja sin motivo",
+     "autopsia de la baja",
+     "por qué se fue",
+     "motivo de baja",
+     "bajas del mes",
+     "se nos han ido",
+     "offboarding",
+     "cliente perdido"
+    ]
+   },
+   "sintoma": "Verde: 0 bajas. Ámbar: 1 con motivo y autopsia. Rojo: una sin motivo o más de 2 en el mes.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si la baja tiene causa escrita y si esa causa está contrastada con evidencia (correos, reuniones, tickets).",
+     "donde": "Libro de clientes (bajas)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si es baja por caja con la relación intacta o por insatisfacción.",
+     "donde": "Última reunión y correos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué señales hubo antes y quién las vio.",
+     "donde": "En rojo e historial del cliente",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si quedó entregable prometido sin cerrar el día de la salida.",
+     "donde": "Producción y ClickUp",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si hay tarea de reactivación con fecha cuando procede.",
+     "donde": "Tareas del cliente",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Nadie hizo la autopsia: se apuntó el motivo que dijo el cliente.",
+     "como_confirmar": "Motivo de una línea sin evidencia.",
+     "solucion": [
+      "Pide al account la autopsia: causa, señales ignoradas y aprendizaje.",
+      "Contrasta el motivo con correos y grabaciones."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Se mezclan bajas por caja y por insatisfacción.",
+     "como_confirmar": "El cliente habló de dinero y la relación estaba bien.",
+     "solucion": [
+      "Clasifícala como liquidez y crea tarea de reactivación con fecha concreta."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Las señales estaban y no se leyeron.",
+     "como_confirmar": "Silencio, caída de participación o petición de accesos antes de la baja.",
+     "solucion": [
+      "Anótalo como fallo de lectura.",
+      "Revisa con operaciones el semáforo de la semana en que apareció la primera señal."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Se fue con algo prometido sin entregar (a menudo la web).",
+     "como_confirmar": "Tareas abiertas a fecha de salida.",
+     "solucion": [
+      "Cierra o retira por escrito lo prometido.",
+      "Revisa por qué el entregable clave se alargó."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Racha de bajas por una causa común (oferta, entrega o perfil de cliente).",
+     "como_confirmar": "Más de 2 en el mes con la misma familia de causa.",
+     "solucion": [
+      "Sube a dirección el patrón con dato.",
+      "Trátalo como restricción del producto, no como mala suerte."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide la autopsia de cada baja del mes antes del viernes, con evidencia y sin nombres de culpables."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Cierre elegante de una baja confirmada",
+     "texto": "Hola {nombre}:\n\nGracias por estos meses. Te confirmo que el servicio termina el {fecha}. Te dejamos exportados tus contactos, conversaciones y los archivos de tus landings para que no pierdas nada.\n\nSi en algún momento quieres retomarlo, aquí estamos.\n\nUn saludo,"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Petición de autopsia",
+     "texto": "Hola {nombre}. Para cerrar la baja de {cliente} necesito tres cosas: la causa con evidencia (correo, reunión o ticket con fecha), las señales que hubo antes y qué cambiaríamos. Sin culpables; antes del {fecha}."
+    }
+   ],
+   "que_no_hacer": [
+    "No cierres una baja sin causa contrastada ni tarea de reactivación cuando toca.",
+    "No uses el motivo dictado para formar al equipo sin contrastarlo.",
+    "No nombres a una persona como causa: señala el eslabón."
+   ],
+   "escalar": {
+    "cuando": "Más de dos bajas en el mes o una baja de un cliente que estaba en verde.",
+    "a": "direccion"
+   },
+   "exito": "100 % de las bajas del mes con causa contrastada y autopsia en 7 días; las de caja, con tarea de reactivación fechada.",
+   "reglas_relacionadas": [
+    "tres_senales_baja",
+    "silencio_es_alarma",
+    "sistemas_no_personas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 233,
+     "autor": "RO",
+     "nota": "Bandas del indicador de bajas con motivo (propuesta sin firmar)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 332,
+     "autor": "Tomás",
+     "nota": "C-D3-18: clasificar por causa; log con causa, señales y aprendizaje; no existe el «ya llamará»."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 16,
+     "autor": "RO",
+     "nota": "6 de 19 motivos de baja contradichos por la evidencia."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 29,
+     "autor": "RO",
+     "nota": "Entregable clave sin cerrar el día de la salida en 6 cuentas."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 34,
+     "autor": "RO",
+     "nota": "Portabilidad: si se va, se lleva sus datos y archivos."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 257,
+     "autor": "Tomás",
+     "nota": "C-D3-07: el semáforo no salta escalones."
+    }
+   ]
+  },
+  {
+   "id": "dir_cliente_pide_baja",
+   "titulo": "Un cliente pide la baja, una pausa o rescindir",
+   "puestos": [
+    "direccion",
+    "account",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_critico",
+     "critico_cliente"
+    ],
+    "alertas": [
+     "acc_critico"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "quiere darse de baja",
+     "cancelar el servicio",
+     "rescindir",
+     "no renovar",
+     "hacemos una paradita",
+     "pausar la campaña",
+     "dejar el servicio",
+     "finalizar la colaboración",
+     "nos vamos",
+     "parar un tiempo"
+    ]
+   },
+   "sintoma": "Correo, llamada o mensaje del cliente pidiendo baja, pausa o cambio de contrato. Lo decide dirección y se le escala a Tomás el mismo día.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué pide exactamente y con qué palabras: baja, pausa o bajar cuota.",
+     "donde": "Correo o nota de la llamada",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si hubo un fallo grave reciente o una queja sin cerrar.",
+     "donde": "Ficha, Bandeja y En rojo",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si el despacho está llamando a los leads y cerrando ventas.",
+     "donde": "GoHighLevel del cliente",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si es caja (lo dice o hay recibos devueltos).",
+     "donde": "Holded y conversación",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si sigue solo porque somos baratos o lleva más de seis meses sin resultado claro.",
+     "donde": "Libro de clientes e informes",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "«Hacemos una paradita»: ya está mentalmente fuera.",
+     "como_confirmar": "Habla de parar, de alternativas o de hacerlo en casa.",
+     "solucion": [
+      "Responde con una propuesta concreta y distinta, no con descuento.",
+      "Llamada de dirección en la ventana de 2-4 semanas."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Fallo grave nuestro sin reparar.",
+     "como_confirmar": "Error, incidencia o queja abierta en los últimos 30 días.",
+     "solucion": [
+      "Llamada de un senior para escuchar.",
+      "Admite el error sin matices y ofrece dos compensaciones."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El despacho no llama o no vende y concluye que no funciona.",
+     "como_confirmar": "Leads sin intentos o cero ventas en el mes 2-3.",
+     "solucion": [
+      "Pon el dato encima de la mesa con tacto.",
+      "Propón el cambio que dependa de su lado (quién llama y cuándo)."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Liquidez del despacho.",
+     "como_confirmar": "Lo dice o hay devoluciones.",
+     "solucion": [
+      "Si se va por caja, despídete bien y deja tarea de vuelta con fecha.",
+      "Si la reducción encaja, que la propongamos nosotros."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Retención frágil: seguía por precio, no por resultados.",
+     "como_confirmar": "Ticket por debajo de tarifa y sin resultado claro en seis meses.",
+     "solucion": [
+      "Toma la decisión explícita antes de que la tome él.",
+      "No compres meses con descuentos."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Acusa recibo hoy sin aceptar ni negar, y propone llamada con dirección.",
+    "Avisa a Tomás el mismo día con el contexto: qué pide, desde cuándo hay señales, cuota y estado de la campaña.",
+    "Si hay campaña encendida con gasto, pregunta a Tomás si se pausa mientras se habla."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Acuse de una petición de baja o pausa (lo envía el account tras verlo dirección)",
+     "texto": "Hola {nombre}:\n\nRecibido. Lo veo con dirección y te llamamos el {fecha} a las {hora}, si te va bien.\n\nMientras tanto, la campaña sigue {estado_campaña}; si prefieres que la paremos hasta hablar, dímelo y lo hacemos hoy.\n\nUn saludo,"
+    },
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Llamada de dirección",
+     "texto": "Hola {nombre}, soy Tomás. Gracias por cogerlo. Antes de hablar de la baja quiero entender qué ha pasado: ¿qué esperabas a estas alturas y qué te has encontrado? [escuchar sin defender] Te propongo una cosa distinta: {propuesta}. Si no te encaja, lo cerramos bien y sin fricción."
+    }
+   ],
+   "que_no_hacer": [
+    "No aceptes ni niegues la baja por correo.",
+    "No hables de penalizaciones ni permanencia: no existe.",
+    "No ofrezcas descuento como primera respuesta.",
+    "No amplíes servicios para salvar la cuenta.",
+    "No dejes que el primer gesto sea un correo del account."
+   ],
+   "escalar": {
+    "cuando": "Siempre, el mismo día.",
+    "a": "direccion"
+   },
+   "exito": "Llamada de dirección hecha en 48 h y decisión explícita en una semana: se queda con un plan distinto o sale ordenada, por escrito y con tarea de reactivación si procede.",
+   "reglas_relacionadas": [
+    "muro_direccion",
+    "dir_muro",
+    "paradita_ya_esta_fuera",
+    "rel_queja_llamada",
+    "tres_senales_baja"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
+     "linea": 64,
+     "autor": "RO",
+     "nota": "Guía de correo tipo «baja»: acuse sin discutir, llamada con dirección, no aceptar ni negar."
+    },
+    {
+     "fichero": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
+     "linea": 79,
+     "autor": "RO",
+     "nota": "Escalar siempre a Tomás el mismo día; el borrador no sale sin dirección."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "C-D3-13: «paradita» = ya está fuera; propuesta distinta, no rebaja."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: llamada de un senior; ventana de 2-4 semanas tras un fallo grave."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 305,
+     "autor": "Tomás",
+     "nota": "C-D3-14: la reducción la proponemos nosotros si el despacho está desbordado."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 184,
+     "autor": "Tomás",
+     "nota": "C-D2-11: ampliar servicios para salvar una cuenta es lo que la evidencia castiga."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 33,
+     "autor": "RO",
+     "nota": "Sin permanencia; 30 días de aviso."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "Muro: altas, bajas y cuotas las decide dirección."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/CASOS.md",
+     "linea": 130,
+     "autor": "Tomás",
+     "nota": "Caso 25: la ventana de rescate que se dejó pasar con un correo del PM."
+    }
+   ]
+  },
+  {
+   "id": "dir_peticion_descuento_cuota",
+   "titulo": "Un cliente pide descuento o bajar la cuota",
+   "puestos": [
+    "direccion",
+    "account",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "descuento",
+     "rebaja",
+     "bajar la cuota",
+     "me sale caro",
+     "precio más bajo",
+     "cambiar de plan",
+     "pagar menos",
+     "ajustar la cuota",
+     "otra agencia es más barata"
+    ]
+   },
+   "sintoma": "El cliente pide pagar menos o cambiar su cuota. Solo lo decide dirección; el account diagnostica y eleva con propuesta.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué hay detrás: precio, valor percibido, caja o comparación con otra agencia.",
+     "donde": "Conversación con el cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Resultados de los últimos 90 días frente al objetivo pactado.",
+     "donde": "Informe y ficha del cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si su cuota ya está por debajo de tarifa (excepción de ticket).",
+     "donde": "Libro de clientes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el despacho está desbordado y le sobra servicio.",
+     "donde": "Reuniones y uso del entregable",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No ve valor: el precio es el síntoma.",
+     "como_confirmar": "Pregunta de resultados sin contestar con dato.",
+     "solucion": [
+      "Ancla el retorno en euros sobre su caso.",
+      "Propón un cambio de marco o de foco, no de número."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Resultados flojos reales.",
+     "como_confirmar": "Indicadores del cliente en ámbar o rojo.",
+     "solucion": [
+      "Plan de seis semanas con algo visible cada semana.",
+      "Revisa la garantía vigente si aplica."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Ya es una excepción de ticket y pide otra.",
+     "como_confirmar": "Cuota por debajo de lista con excepción registrada.",
+     "solucion": [
+      "No concedas una segunda excepción.",
+      "Si se queda solo por precio, decide antes que él."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Pico de carga del despacho: el servicio le viene grande.",
+     "como_confirmar": "Valida tarde, no publica, cierre fiscal en curso.",
+     "solucion": [
+      "Propón reducir ritmo antes de que pida el downgrade, sin tocar precio salvo decisión de Tomás."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "No contestes el número en la llamada: «lo veo con dirección y te digo».",
+    "Sube la decisión a Tomás con diagnóstico, opciones y recomendación."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Account, cuando lo plantea en una reunión",
+     "texto": "Entiendo, {nombre}. No te puedo dar una cifra ahora porque eso lo decide dirección. Lo que sí quiero entender es qué esperabas a estas alturas y qué te está faltando. Con eso te traigo una propuesta antes del {fecha}."
+    }
+   ],
+   "que_no_hacer": [
+    "No improvises un precio ni des dos versiones de una cifra.",
+    "No bajes el precio porque el cliente calla o amenaza.",
+    "No subas el precio a nadie en la transición de cartera.",
+    "No trocees el servicio para que cuadre el número."
+   ],
+   "escalar": {
+    "cuando": "Siempre: cualquier cifra, descuento o condición de un cliente concreto.",
+    "a": "direccion"
+   },
+   "exito": "Respuesta de dirección en 48 h con una propuesta distinta del descuento, y el cliente sigue a los 60 días sin excepción nueva.",
+   "reglas_relacionadas": [
+    "dir_muro",
+    "muro_direccion",
+    "no_bajar_precio_por_silencio",
+    "paradita_ya_esta_fuera",
+    "precio_coti_tomas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "Muro T2: precio, cuota y descuentos los decide dirección; el account eleva con diagnóstico y propuesta."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 94,
+     "autor": "RO",
+     "nota": "Nunca descuento como primera respuesta; primero revisión de valor."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 191,
+     "autor": "Tomás",
+     "nota": "C-D2-12: el precio no se baja, se cambia el marco; el servicio no se trocea."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 129,
+     "autor": "Tomás",
+     "nota": "C-D2-03 (R2): sin subidas de precio en la transición."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 300,
+     "autor": "RO",
+     "nota": "Regla de oro 12: nunca improvisar un precio ni dos versiones de una cifra."
+    },
+    {
+     "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
+     "linea": 14,
+     "autor": "Tomás",
+     "nota": "Todo lo económico, precio incluido, lo decide Tomás (12-jul)."
+    }
+   ]
+  },
+  {
+   "id": "dir_excepcion_de_precio",
+   "titulo": "Hay que aprobar un precio fuera de tarifa o una condición especial",
+   "puestos": [
+    "direccion",
+    "proyectos",
+    "ventas_ro"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "excepción de precio",
+     "precio especial",
+     "fuera de tarifa",
+     "condición especial",
+     "le hacemos precio",
+     "cuánto le cobramos",
+     "presupuesto a medida",
+     "precio para un amigo",
+     "tarifa"
+    ]
+   },
+   "sintoma": "Alguien propone cobrar distinto de la tarifa vigente: 1.470 € + IVA al mes, publicidad aparte desde 600 €.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si la venta cumple el criterio de entrada (los seis gates).",
+     "donde": "Notas de la reunión de venta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si es venta nueva o cuenta viva de cartera en transición.",
+     "donde": "Libro de clientes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué se cambia: precio, alcance, forma de pago o garantía.",
+     "donde": "Propuesta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si ya hay precedente con ese cliente o perfil.",
+     "donde": "Excepciones registradas",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se quiere cerrar a quien no cualifica y el precio es la palanca.",
+     "como_confirmar": "Falla algún gate (inversión mínima, alguien que llama, capacidad).",
+     "solucion": [
+      "No hay excepción: un no honesto, sin propuesta y sin precio."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cuenta de cartera en transición.",
+     "como_confirmar": "Cliente vivo antes del 1-sep.",
+     "solucion": [
+      "No se toca su ticket ni al alza ni a la baja.",
+      "Las excepciones se documentan con nombre y motivo, sin corregirlas."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Se cambia algo que no es precio (forma de pago, garantía, alcance).",
+     "como_confirmar": "Pide transferencia, permanencia, exclusividad o un segundo canal.",
+     "solucion": [
+      "Aplica la regla de oro correspondiente: SEPA único, sin permanencia, sin exclusividad, Meta único."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Precedente: concederlo abre la subasta en los siguientes.",
+     "como_confirmar": "Otro cliente comparable paga tarifa.",
+     "solucion": [
+      "Si se aprueba, que sea excepción presupuestada con nombre y fecha de revisión."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Sube la excepción a Tomás con el motivo, el coste anual y la fecha de revisión propuesta."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al subir una excepción",
+     "texto": "Excepción de precio para {cliente}: propone {cifra} € frente a 1.470 €. Coste anual {cifra_anual} €. Motivo: {motivo}. Cumple gates: {si_no}. Opciones: tarifa, excepción con revisión el {fecha} o no firmar. Recomiendo {opcion} porque {porque}."
+    }
+   ],
+   "que_no_hacer": [
+    "No digas un precio en una llamada sin aprobación.",
+    "No conviertas una excepción en tarifa por repetición.",
+    "No uses la garantía como moneda de negociación."
+   ],
+   "escalar": {
+    "cuando": "Siempre. Hoy el precio y sus excepciones los decide Tomás.",
+    "a": "direccion"
+   },
+   "exito": "Cada excepción vigente tiene nombre, motivo, coste y fecha de revisión, y no hay precios dichos sin aprobar.",
+   "reglas_relacionadas": [
+    "precio_coti_tomas",
+    "dir_muro",
+    "no_bajar_precio_por_silencio"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 25,
+     "autor": "Tomás",
+     "nota": "Un precio: 1.470 € + IVA; publicidad aparte, desde 600 € (oferta del 1-sep)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 136,
+     "autor": "Tomás",
+     "nota": "C-D2-04: precio de catálogo Coti, excepción Tomás. Choca con DEC:14; manda en la práctica la decisión de Tomás y el precio único del 1-sep (§13 n.º 17)."
+    },
+    {
+     "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
+     "linea": 14,
+     "autor": "Tomás",
+     "nota": "Todo lo económico, precio incluido, lo decide Tomás."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 267,
+     "autor": "RO",
+     "nota": "Excepción de ticket: presupuestada, con nombre y fecha de revisión."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 57,
+     "autor": "RO",
+     "nota": "Quien no cualifica: no honesto, sin propuesta y sin precio."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_transicion_cartera_dos_productos.md",
+     "linea": 14,
+     "autor": "Tomás",
+     "nota": "R2: sin subidas de precio en la transición."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 271,
+     "autor": "RO",
+     "nota": "Precio con % de publicidad: solo por decisión expresa de Tomás."
+    }
+   ]
+  },
+  {
+   "id": "dir_error_nuestro_dinero_cliente",
+   "titulo": "Un error de RO ha costado dinero al cliente y hay que compensar",
+   "puestos": [
+    "direccion",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "error nuestro",
+     "nos hemos equivocado",
+     "compensación",
+     "me ha costado dinero",
+     "gasto sin leads por error",
+     "campaña mal configurada",
+     "devolución",
+     "abono",
+     "me afecta a la pasta"
+    ]
+   },
+   "sintoma": "Un fallo nuestro (configuración, retraso, pieza publicada mal) ha tenido impacto económico o de imagen en el cliente.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué pasó exactamente, desde cuándo y cuánto ha costado, con dato.",
+     "donde": "Meta, GoHighLevel, ClickUp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si el daño sigue activo.",
+     "donde": "Estado actual de la campaña o la pieza",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué protocolo lo permitió.",
+     "donde": "SOP del paso que falló",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el cliente ya lo sabe o lo va a descubrir.",
+     "donde": "Bandeja y conversación",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Gravedad: si la compensación supera lo que el account puede ofrecer.",
+     "donde": "Importe estimado",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo de configuración o de ejecución con daño medible.",
+     "como_confirmar": "Gasto sin entrega, leads perdidos o pieza errónea publicada.",
+     "solucion": [
+      "Para el daño hoy.",
+      "Cuantifica con dato y fecha.",
+      "Admite sin matices."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "El protocolo no tenía control en ese paso.",
+     "como_confirmar": "No existe comprobación previa en el SOP.",
+     "solucion": [
+      "Arregla primero el protocolo; la compensación es el último recurso."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El cliente lo descubre antes que nosotros.",
+     "como_confirmar": "El aviso llega del cliente.",
+     "solucion": [
+      "Llama hoy, reconoce y explica qué haces.",
+      "Revisa por qué no lo detectamos antes."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Error grave: compensación económica.",
+     "como_confirmar": "Importe relevante o daño de imagen.",
+     "solucion": [
+      "Dos opciones de compensación concretas, decididas por dirección.",
+      "El gesto económico lo hace dirección."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Para lo que está causando daño.",
+    "Llama al cliente hoy: admite el error y di qué estás haciendo.",
+    "Sube a Tomás las dos compensaciones propuestas con su coste."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Primera llamada, el mismo día",
+     "texto": "Hola {nombre}. Te llamo porque nos hemos equivocado: {error_exacto}, desde el {fecha}. Lo hemos parado hoy. Esto te ha supuesto {impacto}. Quiero compensarlo y te propongo dos opciones: {opcion_1} o {opcion_2}. Elige tú la que te encaje."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Confirmación por escrito tras la llamada",
+     "texto": "Hola {nombre}:\n\nComo te he contado, el {fecha} cometimos un error: {error_exacto}. Ya está corregido y hemos añadido {control} para que no se repita.\n\nHas elegido {opcion}; queda aplicada el {fecha_aplicacion}.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No expliques por qué pasó antes de admitir que pasó.",
+    "No culpes a una persona del equipo ni al cliente.",
+    "No ofrezcas compensación económica sin dirección.",
+    "No esperes a que el cliente reclame la compensación."
+   ],
+   "escalar": {
+    "cuando": "Siempre que haya compensación económica o daño de imagen.",
+    "a": "direccion"
+   },
+   "exito": "Cliente informado el mismo día, compensación elegida en 48 h y protocolo corregido en una semana.",
+   "reglas_relacionadas": [
+    "error_dinero_cliente",
+    "queja_p0",
+    "sistemas_no_personas",
+    "problema_lo_contamos_nosotros"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 284,
+     "autor": "Tomás",
+     "nota": "C-D3-11: admitir sin matices, dos compensaciones antes de que las pida; la grave, dirección; primero el protocolo."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 264,
+     "autor": "Tomás",
+     "nota": "C-D3-08: si el cliente lo detecta antes, se pierde la autoridad."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 271,
+     "autor": "Tomás",
+     "nota": "C-D3-09: aviso al cliente el mismo día."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 877,
+     "autor": "Tomás",
+     "nota": "C-D8-04 (d): implicación de compensación sube siempre."
+    },
+    {
+     "fichero": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "Las compensaciones las decide dirección; no culpar a nadie."
+    }
+   ]
+  },
+  {
+   "id": "dir_concentracion_cliente_alta",
+   "titulo": "Un solo cliente pesa más del 25 % de la cuota",
+   "puestos": [
+    "direccion",
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.concentracion_de_clientes",
+     "administracion.concentracion_de_clientes"
+    ],
+    "palabras_clave": [
+     "concentración",
+     "dependemos de un cliente",
+     "cliente muy grande",
+     "peso de un cliente",
+     "top 1",
+     "si se va nos hunde"
+    ]
+   },
+   "sintoma": "Peso del cliente más grande sobre la cuota: verde < 20 %, ámbar 20-25 %, rojo > 25 %.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el cálculo es correcto: un cliente que factura con varias sociedades o con cuotas duplicadas infla el dato.",
+     "donde": "Holded y libro de clientes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si incluye ingresos puntuales (consultoría, alta) en vez de solo recurrente.",
+     "donde": "Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Salud de ese cliente: participación, resultados y riesgo.",
+     "donde": "Verdad única del cliente",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el resto de la cartera ha bajado (la concentración sube porque encoge lo demás).",
+     "donde": "Cuota total mes a mes",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo de datos: ya ha pasado que una alarma de concentración era un bug.",
+     "como_confirmar": "El peso no cuadra con la cuota real.",
+     "solucion": [
+      "Pide a administración que lo recalcule con la cuota recurrente.",
+      "No decidas nada sobre un dato sin verificar."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Se mezclan ingresos puntuales con recurrentes.",
+     "como_confirmar": "Hay consultoría o cuotas de alta en el mes.",
+     "solucion": [
+      "Calcula solo con recurrente."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Cliente grande real con riesgo.",
+     "como_confirmar": "Peso > 25 % y salud por debajo de 60.",
+     "solucion": [
+      "Plan de cuenta con dirección presente.",
+      "Segundo responsable asignado.",
+      "Prepara el escenario de caja si se va."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "La cartera encoge y el grande pesa más.",
+     "como_confirmar": "La cuota total cae mes a mes.",
+     "solucion": [
+      "Trátalo como problema de retención, no de concentración."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Verifica el cálculo antes de actuar.",
+    "Si es real, calcula cuántos meses de caja quedan si ese cliente se va."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No des trato especial fuera de la ficha al cliente grande: crea dependencia y bifurca el producto.",
+    "No confundas la concentración por cliente con la sectorial: la de RO es sectorial y no se resuelve aquí."
+   ],
+   "escalar": {
+    "cuando": "Rojo confirmado con el dato verificado.",
+    "a": "direccion"
+   },
+   "exito": "Concentración < 25 % con dato verificado, o plan de cuenta y escenario de caja escritos si sigue por encima.",
+   "reglas_relacionadas": [
+    "meses_de_caja"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 366,
+     "autor": "RO",
+     "nota": "Bandas < 20 / 20-25 / > 25 % (referencia de mercado, sin firmar)."
+    },
+    {
+     "fichero": "central:memoria/project_master_financiero_ro.md",
+     "linea": 20,
+     "autor": "RO",
+     "nota": "Bug documentado: una concentración top-1 del 49 % era un error de la fuente."
+    },
+    {
+     "fichero": "central:memoria/project_diagnostico_financiero_2026.md",
+     "linea": 12,
+     "autor": "RO",
+     "nota": "Sin concentración real; la alarma del modelo era un bug."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 125,
+     "autor": "Tomás",
+     "nota": "La concentración de RO es sectorial, no de cliente."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 389,
+     "autor": "Tomás",
+     "nota": "C-D4-06: segundo responsable desde el día 1."
+    }
+   ]
+  },
+  {
+   "id": "dir_cobro_bajo_dia_10",
+   "titulo": "El día 10 se ha cobrado menos de lo facturado",
+   "puestos": [
+    "direccion",
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_impago",
+     "adm_sin_alta"
+    ],
+    "alertas": [
+     "adm_sepa",
+     "adm_impago",
+     "adm_sin_alta"
+    ],
+    "indicadores": [
+     "direccion.cuota_firmada_facturada_y_cobrada"
+    ],
+    "palabras_clave": [
+     "cobro bajo",
+     "no ha entrado la remesa",
+     "recibos devueltos",
+     "cobrado del mes",
+     "facturado y no cobrado",
+     "remesa SEPA",
+     "falta cobrar",
+     "día 10"
+    ]
+   },
+   "sintoma": "Cobrada ≥ 95 % de la facturada el día 10: verde. 85-95 %: ámbar. < 85 %: rojo.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si la remesa SEPA salió en fecha.",
+     "donde": "Holded y banco",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Cuántos recibos se devolvieron y por qué motivo.",
+     "donde": "Banco (devoluciones)",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si hay contratos firmados sin alta en facturación.",
+     "donde": "Zoho Sign y Airtable de facturación",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si las devoluciones se concentran en clientes con queja o en riesgo.",
+     "donde": "En rojo",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La remesa salió tarde o incompleta.",
+     "como_confirmar": "Fecha de emisión posterior a la prevista.",
+     "solucion": [
+      "Emite hoy lo pendiente.",
+      "Fija en calendario la fecha de remesa del mes siguiente."
+     ],
+     "quien": "administracion",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Devoluciones técnicas (cambio de cuenta, mandato).",
+     "como_confirmar": "Motivo bancario técnico.",
+     "solucion": [
+      "Pide nuevo mandato y reintenta en la remesa siguiente."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Firmado sin alta en facturación: cuota firmada que no se factura.",
+     "como_confirmar": "Contrato en Sign sin línea en Airtable.",
+     "solucion": [
+      "Da de alta hoy y factura."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Clientes que retienen el pago por descontento.",
+     "como_confirmar": "Devoluciones en clientes con queja abierta.",
+     "solucion": [
+      "Trata la queja primero con llamada de dirección."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide a administración las tres cifras del mes: firmada, facturada y cobrada, con la lista de devoluciones."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Recibo devuelto por motivo técnico (lo firma administración)",
+     "texto": "Hola {nombre}:\n\nEl banco nos ha devuelto el recibo de {mes} ({cifra} €). Suele ser un cambio de cuenta o del mandato. ¿Nos confirmas la cuenta? Lo volvemos a pasar el {fecha}.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No ofrezcas pago por transferencia o tarjeta como solución.",
+    "No dejes que el comercial o el account reclame el cobro: lo firma administración."
+   ],
+   "escalar": {
+    "cuando": "Rojo, o un cliente pide otra vía de pago, o hay devolución en un cliente con queja.",
+    "a": "direccion"
+   },
+   "exito": "≥ 95 % de lo facturado cobrado el día 10 del mes siguiente y cero firmados sin alta.",
+   "reglas_relacionadas": [
+    "cobro_sepa",
+    "adm_alta_facturacion",
+    "adm_cobro",
+    "airtable_solo_lectura"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 278,
+     "autor": "RO",
+     "nota": "Bandas: ≥ 95 % / 85-95 % / < 85 % el día 10 (regla de RO con bandas de Cole)."
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 210,
+     "autor": "RO",
+     "nota": "Alerta de recibo SEPA devuelto."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 325,
+     "autor": "Tomás",
+     "nota": "C-D3-17: SEPA como método único; otra vía, a Tomás."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3608,
+     "autor": "Cole Gordon",
+     "nota": "El cobro lo firma finanzas, con fecha de reintento."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 8160,
+     "autor": "Hormozi",
+     "nota": "Cobros rechazados: reintentar y no perder caja por churn involuntario."
+    }
+   ]
+  },
+  {
+   "id": "dir_demasiados_arranques",
+   "titulo": "Hay demasiados arranques a la vez, o ninguno con firmas esperando",
+   "puestos": [
+    "direccion",
+    "operaciones",
+    "tecnico_altas"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "alta_fuera_plazo",
+     "alta_sin_lista"
+    ],
+    "alertas": [
+     "alta_fuera_plazo",
+     "alta_sin_lista"
+    ],
+    "indicadores": [
+     "direccion.tope_de_arranques",
+     "direccion.altas_encendidas_en_plazo"
+    ],
+    "palabras_clave": [
+     "muchos arranques",
+     "altas a la vez",
+     "no damos abasto con las altas",
+     "cola de altas",
+     "onboarding saturado",
+     "firmados sin arrancar",
+     "encendido tarde",
+     "tope de altas"
+    ]
+   },
+   "sintoma": "Clientes que arrancan en la semana: 3-4 verde, 5 ámbar, 6 o más rojo. También rojo si hay 0 con firmas esperando.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuántas altas hay en curso y en qué día desde la firma está cada una.",
+     "donde": "Clientes nuevos",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si alguna pasa del día 10 sin encender (límite, día 12).",
+     "donde": "Clientes nuevos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Carga de las personas que montan (técnico de altas, CRM, trafficker).",
+     "donde": "Personas y carga por puesto",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay firmas paradas por falta de accesos o de material del cliente.",
+     "donde": "Lista de arranque en ClickUp",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se firmaron muchas altas juntas sin escalonar.",
+     "como_confirmar": "6 o más en la misma semana.",
+     "solucion": [
+      "Reordena el calendario de altas contra el techo de despliegue.",
+      "Avisa a cada cliente nuevo de su fecha real de encendido."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Altas atascadas que se acumulan con las nuevas.",
+     "como_confirmar": "Altas pasado el día 10.",
+     "solucion": [
+      "Desatasca primero las vencidas.",
+      "Escala hoy el motivo de cada una fuera de plazo."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "El equipo que monta está al tope.",
+     "como_confirmar": "Carga por encima del máximo por puesto.",
+     "solucion": [
+      "Quita trabajo no esencial del puesto antes de apretar a nadie."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Cero arranques con firmas: bloqueo en accesos o material.",
+     "como_confirmar": "Firmas sin lista de arranque o sin accesos.",
+     "solucion": [
+      "Pide todos los accesos en un solo correo.",
+      "Fecha límite al cliente."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Ordena las altas por día desde la firma y desatasca primero las que pasan del día 10."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso de fecha de encendido reordenada",
+     "texto": "Hola {nombre}:\n\nPara que tu arranque salga bien, lo encendemos el {fecha}. Hasta entonces dejamos montado {lo_que_se_hace}. Si necesitas algo antes, dímelo.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No aprietes al rol para meter más arranques: degrada todos a la vez.",
+    "No frenes las firmas sin decirlo: avisa a ventas de la capacidad real."
+   ],
+   "escalar": {
+    "cuando": "Alguna alta pasa del día 12 o hay 6 o más arranques en la semana.",
+    "a": "direccion"
+   },
+   "exito": "3-4 arranques por semana y 100 % de las altas encendidas el día 10.",
+   "reglas_relacionadas": [
+    "arranque_dia_10",
+    "encendido_dia_10",
+    "carga_por_puesto",
+    "accesos_un_correo"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 322,
+     "autor": "RO",
+     "nota": "Bandas del tope de arranques (orden Hormozi asumida el 29-sep, sin firmar)."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 187,
+     "autor": "RO",
+     "nota": "Altas encendidas en plazo: día 10, límite 12 (D-28)."
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P2_MOTOR_CAPTACION/SOP-P2-03_sistema-comercial-ghl-protocolo.md",
+     "linea": 105,
+     "autor": "RO",
+     "nota": "Más de 5-6 montajes por semana degrada todos los arranques: se reordena el calendario, no se aprieta al rol."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 117,
+     "autor": "RO",
+     "nota": "Regla arranque_dia_10."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 311,
+     "autor": "RO",
+     "nota": "Carga máxima por puesto: 12 por account, 16 por trafficker y por CRM."
+    }
+   ]
+  },
+  {
+   "id": "dir_clientes_sin_leads",
+   "titulo": "Tres o más clientes con campaña encendida llevan 3 días sin un lead",
+   "puestos": [
+    "direccion",
+    "operaciones",
+    "jefa_publicidad"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "diag_pocos_leads",
+     "pub_critico",
+     "fuga_integracion"
+    ],
+    "alertas": [
+     "pub_critico",
+     "pub_cuenta"
+    ],
+    "indicadores": [
+     "direccion.clientes_sin_leads"
+    ],
+    "palabras_clave": [
+     "sin leads",
+     "cero leads",
+     "no entran leads",
+     "campañas paradas",
+     "no llega nada",
+     "varios clientes sin leads"
+    ]
+   },
+   "sintoma": "Clientes con campaña encendida y 0 leads en los últimos 3 días: 0 verde, 1-2 ámbar, 3 o más rojo.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el fallo es común: cuenta publicitaria, método de pago, píxel o conexión de Meta caída.",
+     "donde": "Ajustes › Conexiones y Meta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si los leads entran en Meta y no llegan a GoHighLevel.",
+     "donde": "Meta frente a GoHighLevel",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si las campañas gastan lo presupuestado.",
+     "donde": "Captación",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si son cuentas del mismo trafficker.",
+     "donde": "Asignaciones",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo común: conexión, pago o cuenta publicitaria.",
+     "como_confirmar": "Todos los afectados comparten conexión o forma de pago.",
+     "solucion": [
+      "Arregla la conexión o el pago hoy.",
+      "Avisa a los clientes afectados el mismo día."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Fuga de integración: entran en Meta y no en el CRM.",
+     "como_confirmar": "Meta cuenta leads y GoHighLevel no.",
+     "solucion": [
+      "Repara la integración y recupera los leads perdidos."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Entrega ahogada: no gastan.",
+     "como_confirmar": "Gasto de 7 días < 60 % del presupuesto.",
+     "solucion": [
+      "Revisa puja, público y aprobación de anuncios."
+     ],
+     "quien": "trafficker",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Sobrecarga de un trafficker.",
+     "como_confirmar": "Las cuentas afectadas son de la misma persona.",
+     "solucion": [
+      "Reparte el diagnóstico con la jefa de publicidad hoy."
+     ],
+     "quien": "jefa_publicidad",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Mira primero si hay una causa común (conexión o pago): arregla una vez, no tres.",
+    "Avisa hoy a los clientes afectados con hipótesis y plan."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso proactivo de caída de leads",
+     "texto": "Hola {nombre}:\n\nDesde el {fecha} no están entrando leads en tu campaña. Lo hemos detectado y la causa probable es {hipotesis}. Hoy hacemos {accion} y mañana te confirmo cómo va.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No esperes a que el cliente lo vea.",
+    "No subas presupuesto para compensar sin saber la causa."
+   ],
+   "escalar": {
+    "cuando": "Causa común no resuelta en 4 h o 3 o más clientes un segundo día.",
+    "a": "direccion"
+   },
+   "exito": "0 clientes con campaña encendida y 3 días sin leads, y cada afectado avisado el mismo día.",
+   "reglas_relacionadas": [
+    "problema_lo_contamos_nosotros",
+    "diag_fuga",
+    "entrega_ahogada_pacing",
+    "conexion_clave"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 121,
+     "autor": "RO",
+     "nota": "Bandas 0 / 1-2 / 3 o más (bandas sin firmar)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 264,
+     "autor": "Tomás",
+     "nota": "C-D3-08: se comunica proactivamente con hipótesis y propuesta."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 271,
+     "autor": "Tomás",
+     "nota": "C-D3-09: aviso al cliente el mismo día."
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 234,
+     "autor": "RO",
+     "nota": "Conexión caída: plazo de 4 h."
+    }
+   ]
+  },
+  {
+   "id": "dir_meses_de_caja_bajos",
+   "titulo": "La caja cubre menos de 2 meses de gasto",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.meses_de_caja"
+    ],
+    "palabras_clave": [
+     "meses de caja",
+     "colchón",
+     "nos quedamos sin caja",
+     "tesorería",
+     "liquidez",
+     "pagar nóminas",
+     "runway"
+    ]
+   },
+   "sintoma": "Caja de hoy ÷ gasto medio de los tres últimos meses cerrados: verde ≥ 2, ámbar 1-2, rojo < 1. Mínimo 2 meses; objetivo 3.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si la caja de hoy descuenta lo que no es nuestro: IVA e impuestos por pagar.",
+     "donde": "Holded (tesorería) y subcuenta de reservas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Cobros pendientes: ciclo normal frente a impago real.",
+     "donde": "Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Pagos grandes próximos (impuestos trimestrales, anuales).",
+     "donde": "Calendario fiscal y Holded",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el gasto medio ha subido (equipo, herramientas, publicidad propia).",
+     "donde": "P&L de los tres últimos meses",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si los ingresos han caído (bajas, downsells).",
+     "donde": "Cuota mes a mes",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Caja inflada: incluye impuestos que hay que pagar.",
+     "como_confirmar": "La reserva no está separada.",
+     "solucion": [
+      "Recalcula con caja neta de impuestos.",
+      "Separa la reserva en su subcuenta."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cobros retrasados o impagos.",
+     "como_confirmar": "Cobrado el día 10 por debajo del 95 %.",
+     "solucion": [
+      "Acelera cobro e impagos de más de 60 días."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Pago puntual grande previsto.",
+     "como_confirmar": "Vencimiento fiscal en los próximos 30 días.",
+     "solucion": [
+      "Proyecta la caja semana a semana hasta el pago."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "El gasto creció por delante del margen.",
+     "como_confirmar": "Gasto medio al alza sin subida de ingresos.",
+     "solucion": [
+      "Congela gasto nuevo.",
+      "Revisa herramientas y gasto en captación propia."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Caen los ingresos.",
+     "como_confirmar": "Bajas o bajadas de cuota recientes.",
+     "solucion": [
+      "Trátalo con la ficha de retención neta."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide la proyección de caja semanal a 90 días con cobros, pagos e impuestos.",
+    "Por debajo de 1 mes, congela todo gasto no imprescindible y la inversión en captación propia hasta decidir."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No mires el beneficio del P&L como si fuera caja.",
+    "No contrates ni subas la captación con menos de 2 meses de caja.",
+    "No tapes un agujero con dinero de los impuestos."
+   ],
+   "escalar": {
+    "cuando": "Menos de 2 meses de caja neta de impuestos.",
+    "a": "direccion"
+   },
+   "exito": "≥ 2 meses de caja neta de impuestos en la lectura diaria durante 30 días; objetivo 3.",
+   "reglas_relacionadas": [
+    "meses_de_caja"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 851,
+     "autor": "RO",
+     "nota": "Fórmula y bandas ≥ 2 / 1-2 / < 1 (mercado)."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1509,
+     "autor": "RO",
+     "nota": "Regla meses_de_caja: gasto medio de 3 meses cerrados; mínimo 2, objetivo 3 (11_DECISIONES:60, ausente)."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 8017,
+     "autor": "Hormozi",
+     "nota": "P&L y flujo de caja: hacen falta los dos; la caja dice si sobrevives."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 7973,
+     "autor": "Cole Gordon",
+     "nota": "Unos tres meses de pista, construidos apartando impuestos primero."
+    },
+    {
+     "fichero": "central:memoria/project_master_financiero_ro.md",
+     "linea": 26,
+     "autor": "RO",
+     "nota": "Caja neta: descontar cobros de ciclo normal, pagos vencidos e impuestos."
+    }
+   ]
+  },
+  {
+   "id": "dir_margen_bruto_bajo",
+   "titulo": "El margen bruto cae por debajo del 25 %",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.margen_bruto",
+     "finanzas_direccion.exposicion_al_dolar"
+    ],
+    "palabras_clave": [
+     "margen bruto",
+     "margen bajo",
+     "nos cuesta mucho entregar",
+     "coste directo",
+     "no ganamos dinero",
+     "rentabilidad"
+    ]
+   },
+   "sintoma": "(Ingresos − coste directo) ÷ ingresos: verde ≥ 35 %, ámbar 25-35 %, rojo < 25 %.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el mes está bien cerrado: facturas atrasadas cargadas en otro mes distorsionan el margen.",
+     "donde": "Cierre de administración y Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Qué clientes concentran el coste (rentabilidad por cliente).",
+     "donde": "Dinero por cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si hay servicios fuera de ficha o bolsas estiradas.",
+     "donde": "Horas y producción",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si han subido costes en dólares o herramientas.",
+     "donde": "Holded y Wise",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si hay precios por debajo de tarifa sin revisar.",
+     "donde": "Libro de clientes",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Desfase contable: el mes carga costes de otro.",
+     "como_confirmar": "Facturas con fecha distinta del periodo real.",
+     "solucion": [
+      "Reexpresa el mes antes de concluir."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Pocos clientes a pérdida arrastran la media.",
+     "como_confirmar": "Dos o tres clientes con rentabilidad negativa.",
+     "solucion": [
+      "Revisión de esos clientes con Coti."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se entrega más de lo vendido.",
+     "como_confirmar": "Horas por encima del cap o trabajo fuera de ficha.",
+     "solucion": [
+      "Clasifica por horas: ficha, bolsa del 5 % o add-on.",
+      "Retira lo que no convierte."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Tipo de cambio o herramientas.",
+     "como_confirmar": "Pagos en dólares o suscripciones al alza.",
+     "solucion": [
+      "Revisa la exposición al dólar y poda herramientas sin uso."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c5",
+     "causa": "Precio real medio por debajo de lista.",
+     "como_confirmar": "Excepciones de ticket acumuladas.",
+     "solucion": [
+      "No las corrijas en la transición; deja de concederlas hacia delante."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide el margen por cliente del mes cerrado y la lista de los cinco que más coste consumen."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No subas precios sobre una entrega en duda.",
+    "No amplíes servicios para retener.",
+    "No metas más captación con el margen en rojo: el margen tiene que financiarla."
+   ],
+   "escalar": {
+    "cuando": "Rojo en un mes cerrado y reexpresado.",
+    "a": "direccion"
+   },
+   "exito": "Margen bruto ≥ 35 % en dos meses cerrados seguidos.",
+   "reglas_relacionadas": [
+    "rojo_revisado_por_coti"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 785,
+     "autor": "RO",
+     "nota": "Bandas ≥ 35 / 25-35 / < 25 % (mercado, sin firmar). Hormozi pide 80 % como techo teórico: manda la banda de RO."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3504,
+     "autor": "Hormozi",
+     "nota": "Referencia: 80 % de margen bruto en servicio; sin saber el margen, no anuncios."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 62,
+     "autor": "Tomás",
+     "nota": "C-D1-08: el margen manda sobre el crecimiento."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 345,
+     "autor": "Tomás",
+     "nota": "C-D3-20: se resuelve por horas; prohibido estirar la bolsa en silencio."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 41,
+     "autor": "Tomás",
+     "nota": "C-D1-05: error 7, subir precios sobre una entrega en duda."
+    },
+    {
+     "fichero": "central:memoria/project_master_financiero_ro.md",
+     "linea": 12,
+     "autor": "RO",
+     "nota": "Desfase contable de enero por facturas atrasadas."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 939,
+     "autor": "RO",
+     "nota": "Exposición al dólar (no se mide aún)."
+    }
+   ]
+  },
+  {
+   "id": "dir_coste_equipo_alto",
+   "titulo": "El coste del equipo pesa demasiado o supera el presupuesto",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.peso_del_equipo_sobre_los_ingresos",
+     "finanzas_direccion.coste_del_equipo_frente_a_presupuesto"
+    ],
+    "palabras_clave": [
+     "coste del equipo",
+     "peso del equipo",
+     "masa salarial",
+     "presupuesto de equipo",
+     "nos sobra gente",
+     "equipo caro"
+    ]
+   },
+   "sintoma": "Peso del equipo sobre ingresos: verde ≤ 55 %, ámbar 55-65 %, rojo > 65 %. Coste mensual frente a presupuesto: rojo por encima de 42.000 €.",
+   "gravedad": "alta",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el dato es agregado y respeta el mínimo de 3 personas por grupo.",
+     "donde": "Coste agregado",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si han caído los ingresos (el peso sube sin que suba el coste).",
+     "donde": "Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si ha habido altas de personas o refuerzos recientes.",
+     "donde": "Personas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Ingresos por persona frente a la escalera del norte.",
+     "donde": "Indicador de ingresos por persona",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Lectura mal agrupada o con tipo de cambio desfasado.",
+     "como_confirmar": "Grupos de menos de 3 personas o cambio de divisa sin actualizar.",
+     "solucion": [
+      "Agrupa y recalcula antes de leer."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Caen los ingresos.",
+     "como_confirmar": "Cuota a la baja.",
+     "solucion": [
+      "Trátalo como retención; no recortes a ciegas."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c3",
+     "causa": "Se contrató por delante del margen.",
+     "como_confirmar": "Altas recientes sin carga que las justifique.",
+     "solucion": [
+      "Revisa si la carga se cubre con proceso o IA antes de seguir."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "Productividad baja por persona.",
+     "como_confirmar": "Ingresos por persona por debajo de la escalera.",
+     "solucion": [
+      "Saca producción del puesto que decide y relaciona.",
+      "Aplica IA a lo repetible, no al juicio."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Congela contrataciones nuevas hasta tener la lectura agregada del mes cerrado."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No muestres ni deduzcas sueldos individuales: el coste se lee agregado.",
+    "No recortes personas como primera respuesta: rotar personas es rotar clientes.",
+    "No exprimas la utilización por encima del 85 %."
+   ],
+   "escalar": {
+    "cuando": "Rojo en peso o en presupuesto en un mes cerrado.",
+    "a": "direccion"
+   },
+   "exito": "Peso del equipo ≤ 65 % y coste ≤ 42.000 € en el siguiente cierre, sin bajas de clientes por recorte.",
+   "reglas_relacionadas": [
+    "coste_agregado_minimo_3",
+    "contratar_por_restriccion",
+    "sobrecarga_account"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 807,
+     "autor": "RO",
+     "nota": "Peso del equipo: ≤ 55 / 55-65 / > 65 % (mercado AMI; Cole pide 25-30 %, manda la banda de RO, sin firmar)."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 829,
+     "autor": "RO",
+     "nota": "Coste frente a presupuesto: ≤ 40.000 / 40.001-42.000 / > 42.000 € (sin firmar)."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 522,
+     "autor": "RO",
+     "nota": "Coste agregado: grupos de menos de 3 se juntan para no deducir sueldos."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 375,
+     "autor": "Tomás",
+     "nota": "C-D4-04: contratar va por detrás del margen y tras agotar proceso e IA."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 424,
+     "autor": "Tomás",
+     "nota": "C-D4-11: en servicios, rotar personas es rotar clientes."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 41,
+     "autor": "Tomás",
+     "nota": "C-D1-05: error 10, utilización por encima del 85 %."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 2434,
+     "autor": "Cole Gordon",
+     "nota": "La mano de obra como techo de la rentabilidad."
+    }
+   ]
+  },
+  {
+   "id": "dir_rentabilidad_cliente_baja",
+   "titulo": "Un cliente deja menos del 10 % de rentabilidad",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.rentabilidad_por_cliente"
+    ],
+    "palabras_clave": [
+     "cliente no rentable",
+     "rentabilidad por cliente",
+     "perdemos dinero con",
+     "cliente a pérdida",
+     "muchas horas para lo que paga",
+     "cliente caro de servir"
+    ]
+   },
+   "sintoma": "(Cuota − horas × coste medio por hora − herramientas) ÷ cuota: verde ≥ 30 %, ámbar 10-30 %, rojo < 10 %.",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si las horas imputadas son fiables ese mes.",
+     "donde": "Horas de ClickUp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si su cuota está por debajo de tarifa.",
+     "donde": "Libro de clientes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si recibe trabajo fuera de ficha.",
+     "donde": "Producción y ClickUp",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si es arranque (meses 1-2 cuestan más) o es estructural.",
+     "donde": "Fecha de alta",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Horas mal imputadas.",
+     "como_confirmar": "Picos raros o imputaciones a cliente equivocado.",
+     "solucion": [
+      "Corrige la imputación antes de decidir."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Ticket por debajo de tarifa.",
+     "como_confirmar": "Excepción de ticket o precio heredado.",
+     "solucion": [
+      "No se sube en la transición; sí se deja de conceder la excepción hacia delante."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c3",
+     "causa": "Trabajo fuera de ficha regalado.",
+     "como_confirmar": "Horas por encima del cap sin causa escrita.",
+     "solucion": [
+      "Clasifica: ficha, bolsa o add-on con precio."
+     ],
+     "quien": "proyectos",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Coste normal del arranque.",
+     "como_confirmar": "Cliente en meses 1-2.",
+     "solucion": [
+      "Vuelve a medir en el mes 3."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide a Coti la revisión del cliente desde Dinero por cliente."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No recortes servicio en silencio si se va a notar en su informe.",
+    "No uses el dato de horas para juzgar a una persona: las horas son solo aviso."
+   ],
+   "escalar": {
+    "cuando": "Rojo dos meses seguidos fuera del arranque.",
+    "a": "direccion"
+   },
+   "exito": "Rentabilidad del cliente ≥ 10 % en el mes siguiente a la revisión, sin recorte que el cliente descubra.",
+   "reglas_relacionadas": [
+    "rojo_revisado_por_coti",
+    "horas_solo_aviso"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 675,
+     "autor": "RO",
+     "nota": "Fórmula y bandas (AMI ≥ 10 % por cliente; verde sin firmar)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 345,
+     "autor": "Tomás",
+     "nota": "C-D3-20: ficha, bolsa del 5 % o add-on; el cap de horas."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 312,
+     "autor": "Tomás",
+     "nota": "C-D3-15: un servicio que desaparece del informe se sustituye o se cuenta."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 129,
+     "autor": "Tomás",
+     "nota": "C-D2-03: sin subidas de precio en la transición."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1361,
+     "autor": "RO",
+     "nota": "Las horas son solo aviso: no cuentan en el número de nadie."
+    }
+   ]
+  },
+  {
+   "id": "dir_clientes_en_perdida",
+   "titulo": "Tres o más clientes dejan pérdidas dos meses seguidos",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "proyectos"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.clientes_en_perdida"
+    ],
+    "palabras_clave": [
+     "clientes en pérdida",
+     "varios clientes no rentables",
+     "perdemos dinero con varios",
+     "cartera a pérdida",
+     "recortar cartera",
+     "clientes que no son rentables",
+     "margen negativo por cliente"
+    ]
+   },
+   "sintoma": "Clientes con rentabilidad negativa dos meses seguidos: 0 verde, 1-2 ámbar, 3 o más rojo.",
+   "gravedad": "alta",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si comparten patrón: tramo de precio, producto heredado o servicio concreto.",
+     "donde": "Dinero por cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si comparten responsable o equipo.",
+     "donde": "Asignaciones",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si la pérdida viene de un servicio que no convierte.",
+     "donde": "Producción por servicio",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si son cuentas pequeñas de la cola.",
+     "donde": "Libro de clientes",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Tramo de entrada barato: retiene poco y cuesta igual.",
+     "como_confirmar": "Pérdidas en cuotas bajas.",
+     "solucion": [
+      "Lleva el caso a Tomás con números: es la decisión abierta de la cola de cuentas pequeñas."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c2",
+     "causa": "Un equipo entrega por encima de ficha.",
+     "como_confirmar": "Mismo responsable en varios.",
+     "solucion": [
+      "Revisa con operaciones el alcance real que se entrega."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Un servicio caro que no produce negocio.",
+     "como_confirmar": "El coste se va a una línea concreta.",
+     "solucion": [
+      "Retira lo que no convierte y redirige el esfuerzo."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "Herencia de la transición: tickets bajo el suelo de la ficha.",
+     "como_confirmar": "Cuentas con alcance nominal por escrito.",
+     "solucion": [
+      "Mantén lo pactado; no subas ni recortes sin decisión de Tomás."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Prepara la lista de clientes en pérdida con causa probable y una propuesta por cliente para Tomás."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No decidas un recorte de cartera: es una decisión abierta que solo cierra Tomás.",
+    "No subas el precio a cuentas en transición."
+   ],
+   "escalar": {
+    "cuando": "3 o más clientes en pérdida dos meses seguidos.",
+    "a": "direccion"
+   },
+   "exito": "Menos de 3 clientes en pérdida en el siguiente cierre, o decisión de Tomás registrada para cada uno.",
+   "reglas_relacionadas": [
+    "rojo_revisado_por_coti"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 697,
+     "autor": "RO",
+     "nota": "Bandas 0 / 1-2 / 3 o más (sin firmar)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 101,
+     "autor": "Tomás",
+     "nota": "Decisión abierta: si la cartera se recorta (de estómago, no de datos)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 98,
+     "autor": "Tomás",
+     "nota": "Decisión abierta: qué hacer con la cola de cuentas pequeñas."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 75,
+     "autor": "Tomás",
+     "nota": "Retención por tramo: el de 150-600 € retiene menos."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 184,
+     "autor": "Tomás",
+     "nota": "C-D2-11: lo que no convierte se retira."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_transicion_cartera_dos_productos.md",
+     "linea": 15,
+     "autor": "Tomás",
+     "nota": "R3: cuentas bajo el suelo con alcance nominal por escrito."
+    }
+   ]
+  },
+  {
+   "id": "dir_cac_por_encima_de_un_tercio",
+   "titulo": "Captar un cliente cuesta más de un tercio de lo que deja en su vida",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.retorno_del_cliente_captado"
+    ],
+    "palabras_clave": [
+     "LTV CAC",
+     "retorno del cliente",
+     "valor de vida",
+     "LTGP",
+     "cuánto podemos pagar por cliente",
+     "ratio 3 a 1"
+    ]
+   },
+   "sintoma": "Valor de vida ÷ coste de captarlo: verde ≥ 3, ámbar 2-3, rojo < 2.",
+   "gravedad": "alta",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el valor de vida se calcula con beneficio bruto, no con ingresos.",
+     "donde": "Libro de clientes y coste agregado",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Qué vida se usa: la de la cartera activa, no la de las bajas.",
+     "donde": "Libro de clientes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué coste de captación se usa: solo medios o completo.",
+     "donde": "Meta + coste de ventas",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si ha caído la vida del cliente (más bajas tempranas).",
+     "donde": "Retención neta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si ha subido el coste por cliente captado.",
+     "donde": "Indicador de coste por cliente",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cálculo mal hecho: ingresos en vez de beneficio bruto o vida equivocada.",
+     "como_confirmar": "La fórmula usa cuota bruta o la vida mediana de las bajas.",
+     "solucion": [
+      "Recalcula con beneficio bruto y vida de la cartera activa."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Se mezcla CAC de medios con CAC completo.",
+     "como_confirmar": "El denominador cambia según quién lo calcula.",
+     "solucion": [
+      "Declara el denominador en cada lectura."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "La vida del cliente se acorta.",
+     "como_confirmar": "Más bajas antes del sexto mes.",
+     "solucion": [
+      "Ataca retención antes que captación."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "La captación se encarece.",
+     "como_confirmar": "Coste por cliente en ámbar o rojo.",
+     "solucion": [
+      "Usa la ficha de coste por cliente disparado."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Con ratio < 2, no subas la inversión en captación hasta recalcular y saber si falla la vida o el coste."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No escales la captación con el ratio por debajo de 3.",
+    "No calcules el valor de vida con ingresos."
+   ],
+   "escalar": {
+    "cuando": "Ratio < 2 recalculado con beneficio bruto.",
+    "a": "direccion"
+   },
+   "exito": "Ratio ≥ 3 con el cálculo declarado (beneficio bruto, vida activa, denominador explícito).",
+   "reglas_relacionadas": [
+    "cac_tercio_bb",
+    "coste_cliente_ro_bandas"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 719,
+     "autor": "RO",
+     "nota": "Bandas ≥ 3 / 2-3 / < 2 (Hormozi, mínimo 3 a 1)."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 528,
+     "autor": "Hormozi",
+     "nota": "CAC máximo = un tercio del beneficio bruto de vida."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 991,
+     "autor": "Hormozi",
+     "nota": "LTGP:CAC mínimo 3 a 1."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 72,
+     "autor": "Tomás",
+     "nota": "La vida mediana de las bajas no es la vida de la cartera."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 62,
+     "autor": "Tomás",
+     "nota": "C-D1-08: no se escala lo que no retiene."
+    }
+   ]
+  },
+  {
+   "id": "dir_payback_largo",
+   "titulo": "Se tarda más de 2 meses en recuperar lo que cuesta captar un cliente",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.meses_para_recuperar_lo_que_cuesta_captar_un_cli"
+    ],
+    "palabras_clave": [
+     "payback",
+     "recuperar la inversión",
+     "cuándo recuperamos",
+     "periodo de recuperación",
+     "caja de la captación",
+     "coste de captación tarda en recuperarse",
+     "cuánto tardamos en recuperar un cliente"
+    ]
+   },
+   "sintoma": "Coste por cliente ÷ beneficio bruto mensual del cliente: verde ≤ 1 mes, ámbar 1-2, rojo > 2.",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si se calcula con beneficio bruto y no con la cuota.",
+     "donde": "Fórmula del indicador",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si el mes 1 se cobra por adelantado al firmar.",
+     "donde": "Contrato y Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si ha subido el coste por cliente captado.",
+     "donde": "Indicador de coste por cliente",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si los clientes nuevos entran con ticket bajo.",
+     "donde": "Libro de clientes",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cálculo con ingresos: da un periodo engañosamente corto o largo.",
+     "como_confirmar": "La fórmula usa cuota.",
+     "solucion": [
+      "Recalcula acumulando beneficio bruto mes a mes."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "No se cobra el primer mes al firmar.",
+     "como_confirmar": "Facturas del mes 1 emitidas tarde.",
+     "solucion": [
+      "Cobra el mes 1 por adelantado, como dice la ficha."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Captación más cara.",
+     "como_confirmar": "Coste por cliente en ámbar o rojo.",
+     "solucion": [
+      "Ver ficha de coste por cliente."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Ticket bajo en altas nuevas.",
+     "como_confirmar": "Excepciones de precio en altas recientes.",
+     "solucion": [
+      "Sin excepciones nuevas sin Tomás."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Comprueba que el mes 1 se cobra al firmar en todas las altas del trimestre."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No aceleres la inversión en captación si no recuperas el coste en el primer mes de caja."
+   ],
+   "escalar": {
+    "cuando": "Rojo con el cálculo correcto.",
+    "a": "direccion"
+   },
+   "exito": "Recuperación ≤ 1 mes en las altas del trimestre.",
+   "reglas_relacionadas": [
+    "cac_tercio_bb"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 741,
+     "autor": "RO",
+     "nota": "Bandas ≤ 1 / 1-2 / > 2 (Hormozi: empatar en 30 días)."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 1671,
+     "autor": "Hormozi",
+     "nota": "Cálculo de la recuperación con beneficio bruto, no con ingresos."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 31,
+     "autor": "RO",
+     "nota": "El mes 1 se cobra por adelantado al firmar."
+    }
+   ]
+  },
+  {
+   "id": "dir_reserva_impuestos_corta",
+   "titulo": "La reserva para impuestos no llega a lo que tocará pagar",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.reserva_para_impuestos"
+    ],
+    "palabras_clave": [
+     "reserva de impuestos",
+     "IVA trimestral",
+     "impuesto de sociedades",
+     "provisión fiscal",
+     "subcuenta de reservas",
+     "pago a Hacienda"
+    ]
+   },
+   "sintoma": "Saldo de la subcuenta de reservas ÷ IVA e impuesto de sociedades que vienen: verde ≥ 100 %, ámbar 75-100 %, rojo < 75 %.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Importe estimado de los próximos pagos y su fecha, confirmado con la gestoría.",
+     "donde": "Calendario fiscal y gestoría",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si se aparta un porcentaje de cada cobro a la subcuenta.",
+     "donde": "Movimientos de la subcuenta",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si se ha usado la reserva para otro pago.",
+     "donde": "Movimientos de la subcuenta",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Estimación desactualizada del pago.",
+     "como_confirmar": "La previsión no incluye el último trimestre.",
+     "solucion": [
+      "Pide la cifra a la gestoría y recalcula."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "No hay traspaso automático a la reserva.",
+     "como_confirmar": "Traspasos irregulares.",
+     "solucion": [
+      "Fija un traspaso con cada remesa de cobro."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "La reserva se usó para tapar caja.",
+     "como_confirmar": "Salidas de la subcuenta sin pago fiscal.",
+     "solucion": [
+      "Repón el saldo con calendario.",
+      "Trátalo como señal de caja baja."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Repón la diferencia antes del siguiente vencimiento o proyecta cómo se cubre."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No cuentes la reserva como caja disponible.",
+    "No tomes decisiones fiscales sin la gestoría."
+   ],
+   "escalar": {
+    "cuando": "Rojo a menos de 30 días de un vencimiento.",
+    "a": "direccion"
+   },
+   "exito": "Reserva ≥ 100 % de lo previsto antes de cada vencimiento.",
+   "reglas_relacionadas": [
+    "meses_de_caja"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 873,
+     "autor": "RO",
+     "nota": "Bandas ≥ 100 / 75-100 / < 75 % (propuesta sin firmar; subcuenta de reservas)."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 7973,
+     "autor": "Cole Gordon",
+     "nota": "Al entrar el dinero, primero se aparta para impuestos."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 3734,
+     "autor": "Cole Gordon",
+     "nota": "La factura más grande del empresario son los impuestos."
+    }
+   ]
+  },
+  {
+   "id": "dir_beneficio_del_mes_bajo",
+   "titulo": "El beneficio del mes queda por debajo de lo previsto",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.beneficio_del_mes",
+     "finanzas_direccion.beneficio_del_mes_sobre_ingresos"
+    ],
+    "palabras_clave": [
+     "beneficio del mes",
+     "cierre del mes",
+     "P&L",
+     "cuenta de resultados",
+     "perdimos dinero este mes",
+     "resultado mensual"
+    ]
+   },
+   "sintoma": "Ingresos − todos los gastos del mes cerrado, por debajo de la previsión. El norte se mide en beneficio, no en facturación.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el cierre está completo y conciliado (Holded, Airtable y modelo cuadran).",
+     "donde": "Cierre de administración",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si hay gastos de otros meses cargados en este.",
+     "donde": "Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Desglose: mano de obra, publicidad propia y generales frente al mes anterior.",
+     "donde": "P&L",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si han caído ingresos recurrentes o faltan puntuales previstos.",
+     "donde": "Holded",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si un % alto apunta a un eslabón concreto (asistencia, cierre).",
+     "donde": "Captación de RO",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cierre incompleto o desfasado.",
+     "como_confirmar": "Fuentes que no cuadran o facturas fuera de periodo.",
+     "solucion": [
+      "No leas el mes hasta conciliarlo.",
+      "Marca la cifra como estimación."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Sube un bloque de gasto.",
+     "como_confirmar": "Una línea del P&L crece más que los ingresos.",
+     "solucion": [
+      "Investiga esa línea; un % alto dice dónde mirar, no qué recortar."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Caen los ingresos.",
+     "como_confirmar": "Bajas o bajadas de cuota.",
+     "solucion": [
+      "Ver retención neta."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "La publicidad propia rinde peor por un eslabón del embudo.",
+     "como_confirmar": "Gasto en captación alto con asistencia o cierre en rojo.",
+     "solucion": [
+      "Ver coste por cliente captado."
+     ],
+     "quien": "ventas_ro",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lee el P&L del mes cerrado partida a partida con notas, en una sesión fija."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No justifiques un plan solo por el MRR que suma.",
+    "No decidas sobre un mes sin conciliar."
+   ],
+   "escalar": {
+    "cuando": "Dos meses cerrados seguidos por debajo de la previsión.",
+    "a": "direccion"
+   },
+   "exito": "Beneficio del mes en línea con la previsión en el siguiente cierre conciliado.",
+   "reglas_relacionadas": [
+    "meses_de_caja"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 300,
+     "autor": "RO",
+     "nota": "Beneficio del mes: «ver el número que manda» (bandas sin firmar)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 13,
+     "autor": "Tomás",
+     "nota": "C-D1-01: el norte es el beneficio, no el MRR."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 4470,
+     "autor": "Hormozi",
+     "nota": "El fundador lee el P&L cada mes, partida a partida."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 7723,
+     "autor": "Cole Gordon",
+     "nota": "Un % alto en el P&L dice dónde investigar, no qué recortar."
+    },
+    {
+     "fichero": "central:memoria/project_diagnostico_financiero_2026.md",
+     "linea": 26,
+     "autor": "RO",
+     "nota": "Holded, Airtable y modelo no cuadraban: una sola fuente de verdad pendiente."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
+     "linea": 11,
+     "autor": "Tomás",
+     "nota": "Norte firmado el 30-ago: 100k de MRR recurrente; NORTE.md pendiente de enmienda (ver pendientes)."
+    }
+   ]
+  },
+  {
+   "id": "dir_clave_conexion_caduca",
+   "titulo": "Una llave de conexión se cae o caduca en 21 días o menos",
+   "puestos": [
+    "direccion",
+    "tecnico_altas"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "conexion"
+    ],
+    "alertas": [
+     "conexion_caida"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "conexión caída",
+     "token caducado",
+     "clave de Meta",
+     "llave de GoHighLevel",
+     "Holded no conecta",
+     "renovar la clave",
+     "API caída",
+     "reconectar"
+    ]
+   },
+   "sintoma": "Una conexión que usa la app está en rojo o su llave caduca en 21 días o menos. Si la llave es de Tomás, la alerta va a dirección.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué conexión es y quién es su dueño.",
+     "donde": "Ajustes › Conexiones",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si está caída ya o solo a punto de caducar.",
+     "donde": "Salud de conexiones",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué datos o automatismos dependen de ella (leads, cobros, informes).",
+     "donde": "Ajustes › Conexiones",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La llave es de Tomás y solo él puede renovarla.",
+     "como_confirmar": "Dueño = Tomás en Ajustes.",
+     "solucion": [
+      "Renueva hoy desde Ajustes.",
+      "Apunta la próxima caducidad en el calendario."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Caducidad prevista sin renovar.",
+     "como_confirmar": "Quedan 21 días o menos.",
+     "solucion": [
+      "Renueva esta semana, antes del fin de semana."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Caída por cambio de permisos o contraseña.",
+     "como_confirmar": "La prueba falla sin caducidad.",
+     "solucion": [
+      "Reconecta con el permiso mínimo.",
+      "Comprueba que vuelven los datos."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Si está caída, renuévala hoy: sin esa llave la app no tiene datos."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No compartas la clave por chat ni la pegues en ningún documento.",
+    "No des más permisos de los necesarios."
+   ],
+   "escalar": {
+    "cuando": "Llave de Tomás caída o a menos de 7 días.",
+    "a": "direccion"
+   },
+   "exito": "La siguiente prueba de la conexión sale en verde y la caducidad queda a más de 21 días.",
+   "reglas_relacionadas": [
+    "conexion_clave",
+    "conexiones_caidas_dueno",
+    "acceso_delegado_minimo"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 234,
+     "autor": "RO",
+     "nota": "Alerta conexion_caida: en rojo o caduca en 21 días o menos; plazo 4 h."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/motor_consejos.py",
+     "linea": 70,
+     "autor": "RO",
+     "nota": "El dueño de una conexión es el de Ajustes; la clave la pone Tomás."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 391,
+     "autor": "RO",
+     "nota": "Dueños de conexiones caídas por tipo."
+    }
+   ]
+  },
+  {
+   "id": "dir_fuente_de_datos_caida",
+   "titulo": "Una fuente de datos de la app no responde y los números se quedan viejos",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "fuente"
+    ],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "fuente caída",
+     "datos viejos",
+     "no se actualiza",
+     "el panel no cuadra",
+     "datos en duda",
+     "números raros",
+     "la app no refresca"
+    ]
+   },
+   "sintoma": "Aviso «Fuente caída» en #avisos-dirección: los datos que salen de esa fuente no se actualizan.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué fuente es y desde cuándo falla.",
+     "donde": "Aviso en #avisos-dirección y Ajustes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si la causa es una conexión caída.",
+     "donde": "Ajustes › Conexiones",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué indicadores y alertas dependen de ella.",
+     "donde": "Indicadores afectados",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay decisiones en curso que usan esos datos.",
+     "donde": "Decisiones",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Conexión o llave caída.",
+     "como_confirmar": "La conexión de la fuente está en rojo.",
+     "solucion": [
+      "Sigue la ficha de conexión caída."
+     ],
+     "quien": "tecnico_altas",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Fallo del proceso que lee la fuente.",
+     "como_confirmar": "La conexión está bien y la fuente sigue rota.",
+     "solucion": [
+      "Avisa al dueño técnico de la app."
+     ],
+     "quien": "operaciones",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Se están tomando decisiones con datos viejos.",
+     "como_confirmar": "Decisiones abiertas citan esa fuente.",
+     "solucion": [
+      "Marca esas cifras como «dato en duda».",
+      "Aplaza lo que no sea urgente hasta tener el dato."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Marca como «en duda» cualquier cifra de esa fuente hasta que vuelva."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No rellenes el hueco con una cifra plausible.",
+    "No decidas sobre un dato que no se actualiza."
+   ],
+   "escalar": {
+    "cuando": "Más de 24 h caída o afecta a cobros o leads.",
+    "a": "direccion"
+   },
+   "exito": "La fuente vuelve a responder y no se tomó ninguna decisión con dato viejo.",
+   "reglas_relacionadas": [
+    "datos_en_duda",
+    "diag_sin_dato"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos.py",
+     "linea": 691,
+     "autor": "RO",
+     "nota": "Aviso «Fuente caída» en #avisos-dirección."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 523,
+     "autor": "Tomás",
+     "nota": "C-D5-13: buscar, marcar, jamás rellenar."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 449,
+     "autor": "Tomás",
+     "nota": "C-D5-02: toda cifra lleva fuente y fecha."
+    }
+   ]
+  },
+  {
+   "id": "dir_hostinger_renovacion",
+   "titulo": "Una suscripción o un dominio de RO en Hostinger vence sin renovación automática",
+   "puestos": [
+    "direccion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [
+     "hosting_cuenta"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "Hostinger",
+     "dominio caduca",
+     "renovar dominio",
+     "hosting vence",
+     "renovación automática",
+     "web suspendida"
+    ]
+   },
+   "sintoma": "Suscripción que vence en 30 días sin renovación automática (7 días = alta), o dominio sin cliente caducado o suspendido.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué servicio vence y en cuántos días.",
+     "donde": "Ajustes › Conexiones › Hostinger",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si sigue en uso (web viva, landing de cliente, correo).",
+     "donde": "Hostinger",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si el medio de pago está vigente.",
+     "donde": "Hostinger",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Renovación automática apagada.",
+     "como_confirmar": "La suscripción no tiene renovación automática.",
+     "solucion": [
+      "Renuévala o activa la renovación automática."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Servicio que ya no se usa.",
+     "como_confirmar": "Dominio sin web ni cliente.",
+     "solucion": [
+      "Decide si se deja caducar y anótalo."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Tarjeta caducada.",
+     "como_confirmar": "Fallo de cobro en Hostinger.",
+     "solucion": [
+      "Actualiza el medio de pago."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Renueva o decide dejarlo caducar; la app no renueva nada."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No dejes caducar un dominio con web o correo en uso."
+   ],
+   "escalar": {
+    "cuando": "Quedan 7 días o menos.",
+    "a": "direccion"
+   },
+   "exito": "La siguiente lectura de Hostinger deja de avisarlo.",
+   "reglas_relacionadas": [],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 229,
+     "autor": "RO",
+     "nota": "Alerta hosting_cuenta: 30 días sin renovación automática (7 = alta)."
+    }
+   ]
+  },
+  {
+   "id": "dir_resumen_semanal_lunes",
+   "titulo": "Es lunes: repaso semanal de dirección",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "resumen semanal",
+     "repaso del lunes",
+     "qué toca esta semana",
+     "semáforos del lunes",
+     "alertas abiertas",
+     "revisión semanal"
+    ]
+   },
+   "sintoma": "Llega el resumen semanal: alertas abiertas, semáforos, horas, informes y firmas de la semana.",
+   "gravedad": "baja",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Alertas graves abiertas y de qué departamento.",
+     "donde": "Resumen semanal y Alertas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Cuántos clientes tienen semáforo puesto esta semana.",
+     "donde": "Resumen semanal",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Decisiones pendientes con reloj.",
+     "donde": "Decisiones",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Caja, cobro y coste por cliente captado de la semana.",
+     "donde": "Panel de dirección",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Qué restricción se está atacando y si algo nuevo ha entrado sin que salga nada.",
+     "donde": "Hoja de ruta",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Alertas graves acumuladas en un departamento.",
+     "como_confirmar": "Un departamento concentra la mitad.",
+     "solucion": [
+      "Pregunta a su jefa por el plan, no por el detalle."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Semáforo sin actualizar.",
+     "como_confirmar": "Clientes sin semáforo esta semana.",
+     "solucion": [
+      "Pide a operaciones que se pongan antes del martes."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Decisiones atascadas.",
+     "como_confirmar": "Pendientes por caducar.",
+     "solucion": [
+      "Contéstalas hoy."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Números de dinero fuera de banda.",
+     "como_confirmar": "Algún indicador de dirección en rojo.",
+     "solucion": [
+      "Abre su ficha."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c5",
+     "causa": "Frentes abiertos de más.",
+     "como_confirmar": "Entró algo nuevo sin retirar nada.",
+     "solucion": [
+      "Decide qué sale o aplaza lo nuevo."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Contesta las decisiones con reloj y nombra la restricción de la semana en una frase."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Mensaje del lunes al equipo de dirección",
+     "texto": "Buenos días. Esta semana la prioridad es {restriccion}. Lo demás puede esperar. Tres cosas que quiero ver el viernes: {1}, {2}, {3}."
+    }
+   ],
+   "que_no_hacer": [
+    "No metas una cadencia nueva sin quitar otra.",
+    "No conviertas el repaso en revisar horas de personas."
+   ],
+   "escalar": {
+    "cuando": "Hay alertas graves sin dueño o decisiones caducadas.",
+    "a": "direccion"
+   },
+   "exito": "Lunes cerrado con decisiones contestadas, restricción nombrada y cero alertas graves sin dueño.",
+   "reglas_relacionadas": [
+    "una_restriccion",
+    "horas_solo_aviso"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos_programados.py",
+     "linea": 548,
+     "autor": "RO",
+     "nota": "Resumen semanal a dirección: alertas, semáforos, horas, informes y firmas."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 431,
+     "autor": "Tomás",
+     "nota": "C-D4-12: ninguna cadencia nueva entra sin que salga otra."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 2360,
+     "autor": "Hormozi",
+     "nota": "Secuencia, no paralelo: un problema, un objetivo medible."
+    }
+   ]
+  },
+  {
+   "id": "dir_cliente_pide_cobro_sin_sepa",
+   "titulo": "Un cliente quiere pagar por otra vía que no sea SEPA",
+   "puestos": [
+    "direccion",
+    "administracion"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "transferencia",
+     "pagar con tarjeta",
+     "no quiero domiciliar",
+     "sin SEPA",
+     "pago aplazado",
+     "forma de pago",
+     "mandato SEPA",
+     "pagar trimestral"
+    ]
+   },
+   "sintoma": "El cliente pide transferencia, tarjeta, plazo largo u otra forma de pago distinta de la domiciliación SEPA.",
+   "gravedad": "baja",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Por qué lo pide: política interna del despacho, desconfianza o caja.",
+     "donde": "Conversación",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si es alta nueva o cliente con historial de devoluciones.",
+     "donde": "Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si propone pagar varios meses por adelantado en lugar de domiciliar.",
+     "donde": "Conversación y Holded",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Política interna del despacho o desconfianza inicial.",
+     "como_confirmar": "Lo plantea al firmar.",
+     "solucion": [
+      "Explica que es el estándar y que puede anular el mandato con 30 días de aviso.",
+      "Si insiste, sube a Tomás."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Problema de caja del despacho.",
+     "como_confirmar": "Devoluciones previas o pide aplazar.",
+     "solucion": [
+      "Sube a Tomás con el historial de cobro."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Pide pagar por adelantado varios meses.",
+     "como_confirmar": "Propone prepago.",
+     "solucion": [
+      "Sube a Tomás: es condición económica."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "No ofrezcas alternativas; sube la petición a Tomás con el motivo."
+   ],
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Respuesta inicial de administración",
+     "texto": "Hola {nombre}:\n\nTodas nuestras colaboraciones se cobran por domiciliación SEPA: así no tienes que acordarte de pagar y puedes darte de baja con 30 días de aviso. Te adjunto el mandato. Si tienes algún motivo para necesitar otra vía, cuéntamelo y lo veo con dirección.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No aceptes transferencia o tarjeta sin Tomás.",
+    "No metas formas de pago distintas en el contrato."
+   ],
+   "escalar": {
+    "cuando": "El cliente insiste tras la primera respuesta.",
+    "a": "direccion"
+   },
+   "exito": "Mandato SEPA firmado o excepción decidida por Tomás y registrada.",
+   "reglas_relacionadas": [
+    "cobro_sepa",
+    "adm_alta_facturacion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 325,
+     "autor": "Tomás",
+     "nota": "C-D3-17: SEPA único; otra vía, a Tomás."
+    },
+    {
+     "fichero": "central:memoria/feedback_cobros_sepa.md",
+     "linea": 17,
+     "autor": "Tomás",
+     "nota": "No ofrecer alternativas (transferencia, tarjeta, plazo largo)."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/00_PRODUCTO.md",
+     "linea": 33,
+     "autor": "RO",
+     "nota": "Sin permanencia; 30 días de aviso."
+    }
+   ]
+  },
+  {
+   "id": "dir_contratar_o_no",
+   "titulo": "Alguien pide contratar porque va cargado",
+   "puestos": [
+    "direccion",
+    "rrhh",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.ingresos_por_persona"
+    ],
+    "palabras_clave": [
+     "contratar",
+     "necesitamos a alguien",
+     "vamos cargados",
+     "no llegamos",
+     "refuerzo",
+     "otra persona",
+     "nueva incorporación",
+     "estamos saturados"
+    ]
+   },
+   "sintoma": "Una persona o un área pide sumar gente por sensación de carga.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuál es la restricción activa del negocio y si esta carga la toca.",
+     "donde": "Hoja de ruta y Panel de dirección",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Carga real frente al máximo por puesto.",
+     "donde": "Personas y carga por puesto",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se cubre con proceso? ¿Se cubre con IA en producción? Por escrito.",
+     "donde": "Propuesta del área",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El margen aguanta el coste aunque la persona no rinda el primer mes?",
+     "donde": "Margen y meses de caja",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si la carga es producción en un puesto de juicio y relación.",
+     "donde": "Tareas del puesto",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La carga no está en la restricción.",
+     "como_confirmar": "El área no es el cuello de botella.",
+     "solucion": [
+      "No se contrata; se reprioriza."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Carga real por encima del máximo.",
+     "como_confirmar": "Proyectos por persona por encima del tope.",
+     "solucion": [
+      "Avisa antes de llenar y reordena entradas."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se cubre con proceso o IA.",
+     "como_confirmar": "Tareas repetibles o mal diseñadas.",
+     "solucion": [
+      "Arregla el proceso o automatiza antes de contratar."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "El margen no aguanta.",
+     "como_confirmar": "Margen o caja en ámbar o rojo.",
+     "solucion": [
+      "Aplaza la contratación hasta que el margen la soporte."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Infradelegación: el puesto hace producción que no le toca.",
+     "como_confirmar": "Account con producción y compilación.",
+     "solucion": [
+      "Saca la producción del puesto, no repartas sus cuentas."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide por escrito las dos respuestas (proceso e IA) y el dato de carga antes de valorar."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Respuesta a la petición",
+     "texto": "Gracias, {nombre}. Antes de decidir necesito tres cosas: el dato de carga frente al tope, si se puede cubrir mejorando el proceso y si se puede cubrir con IA. Si las dos últimas son «no», lo valoramos con el margen delante."
+    }
+   ],
+   "que_no_hacer": [
+    "No contrates como primera respuesta a la saturación.",
+    "No contrates por optimismo de ventas futuras.",
+    "No promociones al mejor ejecutor a líder por defecto."
+   ],
+   "escalar": {
+    "cuando": "Proceso e IA descartados por escrito y el margen aguanta.",
+    "a": "direccion"
+   },
+   "exito": "Decisión documentada: contratación justificada por restricción y margen, o carga resuelta sin contratar en 30 días.",
+   "reglas_relacionadas": [
+    "contratar_por_restriccion",
+    "carga_por_puesto",
+    "sobrecarga_account"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 375,
+     "autor": "Tomás",
+     "nota": "C-D4-04: contratar va por detrás del margen; antes, proceso e IA por escrito."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 69,
+     "autor": "Tomás",
+     "nota": "C-D1-09: «contratamos a alguien más» no es primera respuesta."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "C-D4-05: la sobrecarga se resuelve quitando producción."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 2449,
+     "autor": "Cole Gordon",
+     "nota": "Se contrata para aliviar una restricción o recuperar tiempo."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 2616,
+     "autor": "Cole Gordon",
+     "nota": "Contratar antes de tiempo quema dinero y talento."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 28,
+     "autor": "Tomás",
+     "nota": "Ingresos por persona: la sensibilidad n.º 1."
+    }
+   ]
+  },
+  {
+   "id": "dir_restriccion_de_la_etapa",
+   "titulo": "Hay muchos frentes abiertos y hay que elegir el cuello de botella",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "prioridades",
+     "cuello de botella",
+     "restricción",
+     "demasiados frentes",
+     "qué hacemos primero",
+     "idea nueva",
+     "nuevo proyecto",
+     "foco",
+     "hoja de ruta"
+    ]
+   },
+   "sintoma": "Varios frentes en paralelo, o llega una idea nueva que rompe lo comprometido.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuál es la restricción declarada hoy y qué dato la sostiene.",
+     "donde": "Panel de dirección y hoja de ruta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si cada frente abierto mueve beneficio, retención neta o ingresos por persona.",
+     "donde": "Hoja de ruta",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si la idea nueva desplaza algo ya comprometido.",
+     "donde": "Hoja de ruta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay un sistema nuevo que no se podrá sostener doce meses.",
+     "donde": "Propuesta",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Restricción mal diagnosticada: se ataca un síntoma.",
+     "como_confirmar": "El plan mueve contacto, reporting o gente, no el producto.",
+     "solucion": [
+      "Nombra la restricción con dato antes de elegir acciones.",
+      "Mira la cadena: captación, asistencia, cierre, entrega, retención, margen."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Frentes que no mueven ninguna máquina del norte.",
+     "como_confirmar": "Trabajo bueno sin impacto en las métricas madre.",
+     "solucion": [
+      "Dilo: «esto está bien hecho, pero no es lo importante ahora».",
+      "Para o aplaza esos frentes."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Entra algo nuevo sin que salga nada.",
+     "como_confirmar": "Encargo nuevo sin decir qué desplaza.",
+     "solucion": [
+      "Aplica la fórmula: «hace una semana dijiste X; si meto esto, X se para. ¿Cambiamos?»."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Más superficie de la que se puede sostener.",
+     "como_confirmar": "Sistema nuevo sin dueño ni retirada de otro.",
+     "solucion": [
+      "Exige qué se retira a cambio."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Escribe en una frase la restricción de este mes y la métrica que dirá si se ha movido."
+   ],
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Para frenar una idea nueva que rompe lo comprometido (cualquiera puede usarla con Tomás)",
+     "texto": "Tomás, hace {dias} días acordamos {compromiso}. Si metemos {idea_nueva}, eso se para. ¿De verdad quieres cambiarlo? Si sí, dime qué dejamos."
+    }
+   ],
+   "que_no_hacer": [
+    "No ataques cinco cosas a la vez.",
+    "No metas comercial antes de tapar la fuga.",
+    "No implantes un sistema que luego se abandone."
+   ],
+   "escalar": {
+    "cuando": "Dos frentes se disputan el mismo equipo y nadie puede elegir.",
+    "a": "direccion"
+   },
+   "exito": "Una restricción escrita con su métrica, frentes ajenos aparcados con fecha y nada nuevo entra sin que salga algo.",
+   "reglas_relacionadas": [
+    "una_restriccion",
+    "dir_decision_reloj"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 34,
+     "autor": "Tomás",
+     "nota": "C-D1-04: la restricción es el producto; no se toca nada fuera de ella."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 55,
+     "autor": "Tomás",
+     "nota": "C-D1-07: nada nuevo entra sin vaciar la hoja de ruta; se puede frenar a Tomás."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 48,
+     "autor": "Tomás",
+     "nota": "C-D1-06: toda propuesta declara qué se retira."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 104,
+     "autor": "Tomás",
+     "nota": "C-D1-14: trabajo impecable que no mueve nada también se señala."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 2310,
+     "autor": "Hormozi",
+     "nota": "Cada etapa tiene una restricción global."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 2556,
+     "autor": "Cole Gordon",
+     "nota": "El fallo habitual es diagnosticar mal la restricción."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 36,
+     "autor": "Tomás",
+     "nota": "La restricción declarada: el producto."
+    }
+   ]
+  },
+  {
+   "id": "dir_satisfaccion_clientes_baja",
+   "titulo": "La satisfacción media de los clientes baja de 7",
+   "puestos": [
+    "direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.satisfaccion_de_los_clientes"
+    ],
+    "palabras_clave": [
+     "satisfacción",
+     "NPS",
+     "encuesta",
+     "nos recomendarías",
+     "clientes descontentos",
+     "nota de los clientes"
+    ]
+   },
+   "sintoma": "Nota de 0 a 10 a «¿nos recomendarías?»: > 9 verde, 7-9 ámbar, < 7 rojo. Hoy no se mide.",
+   "gravedad": "baja",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuántos han contestado y quiénes faltan.",
+     "donde": "Encuesta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si los que no contestan coinciden con clientes en silencio o en rojo.",
+     "donde": "En rojo",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Qué notas bajas comparten (resultados, trato, entrega).",
+     "donde": "Comentarios de la encuesta",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Muestra pequeña o sesgada.",
+     "como_confirmar": "Pocas respuestas.",
+     "solucion": [
+      "Lee la nota como señal, no como dato."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c2",
+     "causa": "Los que se van no contestan.",
+     "como_confirmar": "Los silenciosos no aparecen en la encuesta.",
+     "solucion": [
+      "Usa el silencio y las tres señales como alarma; la encuesta no avisa."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Expectativa vendida distinta de la entregada.",
+     "como_confirmar": "Comentarios sobre resultados.",
+     "solucion": [
+      "Revisa grabaciones de venta y promesa del contrato."
+     ],
+     "quien": "direccion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Llama a cada cliente que puntúe por debajo de 7 esta semana."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Tras una nota baja",
+     "texto": "Hola {nombre}. Vi tu nota y te llamo para entenderla, no para discutirla. ¿Qué es lo que más te ha faltado? Con lo que me digas te vuelvo con un plan el {fecha}."
+    }
+   ],
+   "que_no_hacer": [
+    "No uses la encuesta como alarma principal de baja.",
+    "No contestes una nota baja con un correo."
+   ],
+   "escalar": {
+    "cuando": "Nota < 5 de un cliente o media < 7.",
+    "a": "direccion"
+   },
+   "exito": "Todos los clientes con nota < 7 llamados en la semana y plan escrito para cada uno.",
+   "reglas_relacionadas": [
+    "silencio_es_alarma",
+    "tres_senales_baja",
+    "game_tape_semanal"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 388,
+     "autor": "RO",
+     "nota": "Bandas > 9 / 7-9 / < 7; no se mide aún (referencia de Cole)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 250,
+     "autor": "Tomás",
+     "nota": "C-D3-06: el NPS y las encuestas no sirven de alarma; el cliente que se va no contesta. Manda Tomás sobre la referencia de Cole."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 98,
+     "autor": "RO",
+     "nota": "Las tres señales que preceden a una baja."
+    }
+   ]
+  },
+  {
+   "id": "dir_cartera_en_riesgo",
+   "titulo": "Hay clientes críticos en la cartera y hay que repasarlos con dirección",
+   "puestos": [
+    "direccion",
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "ops_cartera_riesgo",
+     "acc_critico",
+     "critico_cliente"
+    ],
+    "alertas": [
+     "acc_critico"
+    ],
+    "indicadores": [
+     "direccion.cuentas_del_metodo_sin_venta_del_despacho"
+    ],
+    "palabras_clave": [
+     "cartera en riesgo",
+     "clientes críticos",
+     "en rojo",
+     "cuentas en peligro",
+     "riesgo de baja",
+     "plan de rescate",
+     "cuota en riesgo",
+     "clientes a punto de irse"
+    ]
+   },
+   "sintoma": "La verdad única marca clientes en crítico (fuga, alta sin encender, correos muy viejos o gasto sin leads). Un crítico sin plan escrito es una baja en camino.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista de críticos ordenada por cuota y desde cuándo está cada uno.",
+     "donde": "En rojo",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si cada uno tiene plan escrito con fecha y lo ha revisado Coti.",
+     "donde": "Ficha del cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Salud (0-100) y su pendiente en tres lecturas.",
+     "donde": "Verdad única",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el despacho llama a sus leads y si vende (mes 2-3 sin venta).",
+     "donde": "GoHighLevel del cliente",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si ha cambiado alguien en el lado del cliente.",
+     "donde": "Ficha y correos",
+     "si_falla": "c5"
+    },
+    {
+     "paso": 6,
+     "comprueba": "Si hubo un fallo grave nuestro en las últimas 4 semanas.",
+     "donde": "Incidencias y Bandeja",
+     "si_falla": "c6"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Críticos acumulados sin dueño claro.",
+     "como_confirmar": "Clientes en crítico sin account o sin tarea.",
+     "solucion": [
+      "Asigna dueño hoy a cada uno."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Plan sin escribir o sin revisar.",
+     "como_confirmar": "Ficha sin plan o sin revisión de Coti.",
+     "solucion": [
+      "Plan de seis semanas con algo tangible cada semana, revisado por Coti antes de enseñarlo."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Deterioro silencioso.",
+     "como_confirmar": "Salud en caída aunque esté en verde.",
+     "solucion": [
+      "Check-in proactivo y contacto al doble."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "El despacho no llama o no cierra.",
+     "como_confirmar": "Leads sin intento o mes 3 sin venta.",
+     "solucion": [
+      "Ese es el único tema de la reunión: quién llama y cuántas reuniones de venta hacen."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Cambio de interlocutor en el cliente.",
+     "como_confirmar": "Persona nueva en el despacho.",
+     "solucion": [
+      "Reunión de presentación el mismo día, con lo logrado desde el inicio."
+     ],
+     "quien": "account",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c6",
+     "causa": "Fallo grave reciente.",
+     "como_confirmar": "Incidencia con impacto en las últimas 4 semanas.",
+     "solucion": [
+      "Llamada o visita de un senior dentro de la ventana de 2-4 semanas."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Repasa con cada account sus críticos empezando por el de más cuota.",
+    "Los de salud por debajo de 40: llamada personal hoy y aviso a dirección."
+   ],
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Repaso de críticos con un account",
+     "texto": "Vamos cliente a cliente: ¿qué ha pasado, desde cuándo, qué le vas a proponer y qué entregamos esta semana que se vea? Si no hay plan escrito, lo escribimos ahora y se lo pasas a Coti antes del {fecha}."
+    },
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Dirección en una cuenta crítica tras fallo grave",
+     "texto": "Hola {nombre}, soy Tomás. Te llamo porque sé que estas semanas no han ido como esperabas, y quiero oírlo de ti. [escuchar] Esto es lo que vamos a hacer: {plan}. Cada semana vas a ver algo concreto; el {fecha} lo repasamos juntos."
+    }
+   ],
+   "que_no_hacer": [
+    "No resuelvas el riesgo con una reunión de reconducción y un plan a tres meses.",
+    "No mandes un correo del account cuando el cliente está a punto de irse.",
+    "No ofrezcas descuento como primera respuesta.",
+    "No saques una cuenta de rojo directamente a verde: pasa por amarillo."
+   ],
+   "escalar": {
+    "cuando": "Salud por debajo de 40, mes 3 sin venta o 30 días en rojo sin mejora medible.",
+    "a": "direccion"
+   },
+   "exito": "Cada crítico con plan escrito revisado por Coti en 48 h, entrega visible semanal y ninguna baja de un crítico sin llamada de dirección.",
+   "reglas_relacionadas": [
+    "ops_cartera_riesgo",
+    "salud_umbrales_accion",
+    "rojo_revisado_por_coti",
+    "tres_senales_baja",
+    "silencio_es_alarma",
+    "gatillos_mes_2_3",
+    "queja_p0"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/cerebro_decisiones.py",
+     "linea": 216,
+     "autor": "RO",
+     "nota": "Consejo ops_cartera_riesgo: repasar con cada account sus críticos; un crítico sin plan escrito es una baja en camino."
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 188,
+     "autor": "RO",
+     "nota": "Alerta acc_critico: definición de crítico en la verdad única."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 90,
+     "autor": "RO",
+     "nota": "Umbrales de salud: 0-39 llamada hoy y aviso a dirección; 40-59 plan con fecha."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 94,
+     "autor": "RO",
+     "nota": "Ventana de rescate de 30-60 días; sin mejora a los 30, presencia de dirección."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/SKILL.md",
+     "linea": 95,
+     "autor": "RO",
+     "nota": "Cambio de interlocutor: actuar el mismo día."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 291,
+     "autor": "Tomás",
+     "nota": "C-D3-12: algo tangible cada semana durante seis semanas."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: ventana de 2-4 semanas; llamada o visita de un senior."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 244,
+     "autor": "Tomás",
+     "nota": "C-D3-05: si el fundador del cliente no vende, ese es el único tema."
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 2294,
+     "autor": "RO",
+     "nota": "Ningún plan de un cliente en rojo llega sin revisión de Coti."
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/CUADRO_MANDO.md",
+     "linea": 93,
+     "autor": "RO",
+     "nota": "Mes 3 sin cerrar: rojo, escalado con diagnóstico completo."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 257,
+     "autor": "Tomás",
+     "nota": "C-D3-07: tras un rojo siempre hay amarillo."
+    }
+   ]
+  },
+  {
+   "id": "dir_cliente_enfadado_direccion",
+   "titulo": "Un cliente enfadado pide hablar con dirección",
+   "puestos": [
+    "direccion",
+    "account",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "acc_critico",
+     "critico_cliente"
+    ],
+    "alertas": [
+     "acc_critico"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "cliente enfadado",
+     "quiere hablar con Tomás",
+     "queja fuerte",
+     "nos ha gritado",
+     "está muy molesto",
+     "amenaza con irse",
+     "falta de respeto",
+     "cliente tóxico",
+     "pide hablar con el jefe"
+    ]
+   },
+   "sintoma": "Queja seria, amenaza de baja o tono hostil, y el cliente pide a dirección. Es P0: se llama el mismo día.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Qué ha pasado con hechos y fechas antes de llamar: campaña, leads, tareas, última reunión.",
+     "donde": "Ficha del cliente, Captación y Producción",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si hay un error nuestro con impacto económico.",
+     "donde": "Incidencias y ficha",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Si la expectativa del cliente coincide con lo firmado (garantía, objetivo pactado, plazos).",
+     "donde": "Contrato y D0",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si el despacho ha hecho su parte (llamar en 1 h, 4 intentos, registro en CRM).",
+     "donde": "GoHighLevel del cliente",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si es feedback duro o falta de respeto personal al equipo.",
+     "donde": "Correos y nota del account",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Problema real que detectó él antes que nosotros.",
+     "como_confirmar": "La queja es el primer aviso.",
+     "solucion": [
+      "Escucha sin defenderte.",
+      "Reconoce el problema con sus palabras.",
+      "Plan en 48 h validado arriba."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Error nuestro que le cuesta dinero.",
+     "como_confirmar": "Fallo comprobado.",
+     "solucion": [
+      "Admite sin matices y ofrece dos compensaciones decididas por dirección."
+     ],
+     "quien": "direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Expectativa distinta de lo vendido.",
+     "como_confirmar": "Espera resultados que el contrato no promete.",
+     "solucion": [
+      "Vuelve a lo pactado por escrito con tacto: objetivo, garantía vigente y relojes."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "El fallo está en su lado (no llama, no atiende leads).",
+     "como_confirmar": "Leads sin intentos o fuera de plazo.",
+     "solucion": [
+      "Enséñale el dato sin reproche y propón el cambio de su lado."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "Cliente que drena: falta de respeto al equipo.",
+     "como_confirmar": "Insultos o trato degradante a personas.",
+     "solucion": [
+      "Correo de límites con los cuatro elementos.",
+      "Si no se alinea, se termina la relación aunque pague."
+     ],
+     "quien": "direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Para hoy lo que esté causando daño.",
+    "Llama tú el mismo día; nunca un correo como primer gesto.",
+    "Antes de llamar, lee los hechos y ten dos o tres opciones de solución."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Llamada de dirección (escuchar, empatizar, disculpar, resolver)",
+     "texto": "Hola {nombre}, soy Tomás. Me han contado lo que ha pasado y quería llamarte yo. Cuéntame, que quiero entenderlo bien. [escuchar sin interrumpir] Tienes razón en que {problema_con_sus_palabras}; no es lo que esperabas y lo siento. Te propongo esto: {opcion_1} o {opcion_2}. ¿Cuál te encaja mejor, o se me escapa algo?"
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Resumen tras la llamada, el mismo día",
+     "texto": "Hola {nombre}:\n\nGracias por la llamada. Te resumo lo acordado: {acciones_con_fecha_y_dueño}. El {fecha} te escribo con cómo va.\n\nUn saludo,"
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Correo de límites a un cliente que falta al respeto al equipo",
+     "texto": "Hola {nombre}:\n\nQuiero que la colaboración funcione, y para eso necesito dejar claras cuatro cosas. Respondemos en horario laborable en menos de {plazo}. El trato al equipo tiene que ser respetuoso; la crítica al trabajo es bienvenida, el trato personal ofensivo no. Esto es lo que hemos entregado: {enlaces}. A partir de ahora nos vemos {cadencia}.\n\nSi te encaja, seguimos así. Si no, lo hablamos.\n\nUn saludo,"
+    }
+   ],
+   "que_no_hacer": [
+    "No te defiendas ni expliques antes de escuchar.",
+    "No culpes a una persona del equipo delante del cliente.",
+    "No prometas leads, resultados ni plazos que no estén en el contrato.",
+    "No ofrezcas descuento para calmarle.",
+    "No ignores una falta de respeto al equipo aunque pague."
+   ],
+   "escalar": {
+    "cuando": "Ya está en dirección. Si hay amenaza legal o reclamación de daños, implica a la gestoría o al abogado antes de responder por escrito.",
+    "a": "direccion"
+   },
+   "exito": "Llamada hecha el mismo día, plan comunicado en 48 h y el cliente sigue a los 30 días, o la relación se cierra por escrito y en orden.",
+   "reglas_relacionadas": [
+    "queja_p0",
+    "rel_queja_llamada",
+    "error_dinero_cliente",
+    "sistemas_no_personas",
+    "problema_lo_contamos_nosotros"
+   ],
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 278,
+     "autor": "Tomás",
+     "nota": "C-D3-10: queja = P0; llamada el mismo día para escuchar; plan en 48 h validado arriba."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 284,
+     "autor": "Tomás",
+     "nota": "C-D3-11: admitir sin matices y dos compensaciones."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 318,
+     "autor": "Tomás",
+     "nota": "C-D3-16: con el cliente que drena, límites por escrito (cuatro elementos); falta de respeto, a Tomás siempre."
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 614,
+     "autor": "Hormozi",
+     "nota": "Guion HEAR (escuchar, empatizar, disculpar, resolver con opciones). La parte de «enfadarse más que él» y ofrecer despedir a alguien no se usa: manda «los sistemas fallan, no las personas»."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 18,
+     "autor": "Tomás",
+     "nota": "Garantía vigente: 2 reuniones válidas en 30 días o no paga los honorarios del periodo."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 21,
+     "autor": "Tomás",
+     "nota": "Cuatro deberes del despacho: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h, registro en CRM."
+    },
+    {
+     "fichero": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
+     "linea": 61,
+     "autor": "RO",
+     "nota": "No prometer resultados, no compensar sin dirección, no culpar a nadie."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_dossier_bajas.md",
+     "linea": 34,
+     "autor": "RO",
+     "nota": "Un caso terminó en burofax reclamando daños: lo legal va con asesoría."
+    }
+   ]
+  },
+  {
+   "id": "dir_acelerar_inversion_captacion",
+   "titulo": "¿Subimos la inversión en captación de RO?",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "ventas_ro"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "direccion.coste_por_cliente_captado_por_ro",
+     "finanzas_direccion.meses_de_caja"
+    ],
+    "palabras_clave": [
+     "subir presupuesto",
+     "escalar la publicidad",
+     "meter más dinero en Meta",
+     "acelerar captación",
+     "duplicar campaña",
+     "pisar el acelerador",
+     "más inversión"
+    ]
+   },
+   "sintoma": "La captación propia funciona y se plantea subir inversión, o hay presión por llegar a un número de altas.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Coste por cliente captado a 30 y 90 días en verde.",
+     "donde": "Panel de dirección",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Retención neta y bajas tempranas: ¿retiene lo que entra?",
+     "donde": "Retención neta",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Margen y meses de caja: ¿el margen financia la captación?",
+     "donde": "Finanzas de dirección",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Capacidad: ¿alguien llama en menos de 1 h y hay hueco de arranques?",
+     "donde": "Agenda de ventas y tope de arranques",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si para llegar al número hay que bajar el criterio de entrada.",
+     "donde": "Plan de altas",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se quiere escalar con coste por cliente fuera de banda.",
+     "como_confirmar": "Ámbar o rojo.",
+     "solucion": [
+      "No subas: arregla el eslabón primero."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Entra más de lo que retiene.",
+     "como_confirmar": "Retención neta < 90 %.",
+     "solucion": [
+      "Primero retención; captar es comprar el mismo cliente dos veces."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "El margen o la caja no aguantan.",
+     "como_confirmar": "Margen < 25 % o caja < 2 meses.",
+     "solucion": [
+      "Rediseña coste antes de invertir en captar."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "No hay capacidad de llamar ni de arrancar.",
+     "como_confirmar": "Leads sin contacto en 1 h o 5 arranques en la semana.",
+     "solucion": [
+      "Si no se cubre la llamada, se pausa la entrega."
+     ],
+     "quien": "ventas_ro",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c5",
+     "causa": "La meta empuja a firmar a quien no cualifica.",
+     "como_confirmar": "Altas sin gates.",
+     "solucion": [
+      "Se retira la cifra, no el filtro."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Si todo está en verde, sube por escrito, en un duplicado, avisando, y mide a 7 y 30 días."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No subas el presupuesto de la campaña activa a lo grande: duplica.",
+    "No importes tácticas de volumen de mercados enormes: el mercado direccionable de RO es pequeño.",
+    "No escales lo que no retiene."
+   ],
+   "escalar": {
+    "cuando": "Cualquier subida de inversión propia: la decide Tomás.",
+    "a": "direccion"
+   },
+   "exito": "Subida aprobada con coste por cliente ≤ 1.500 € a 30 días tras la subida, retención neta ≥ 90 % y caja ≥ 2 meses.",
+   "reglas_relacionadas": [
+    "coste_cliente_ro_bandas",
+    "cac_tercio_bb",
+    "meses_de_caja",
+    "una_restriccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "hormozi-cole-gordon:ACCESO/CONTRADICCIONES.md",
+     "linea": 74,
+     "autor": "Hormozi",
+     "nota": "CX006: Hormozi acelera si la caja a 30 días empata con el CAC; el equipo de Cole exige ROAS de caja 2-3×."
+    },
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/ANALISIS_COLE_HORMOZI_2026-09-29/03_DEBATE_Y_CHOQUES.md",
+     "linea": 59,
+     "autor": "RO",
+     "nota": "Decisión de RO para el choque CX006: se propone por escrito y en un duplicado."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 62,
+     "autor": "Tomás",
+     "nota": "C-D1-08: no se escala lo que no retiene; el margen manda. Manda Tomás sobre Hormozi y Cole."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 90,
+     "autor": "Tomás",
+     "nota": "C-D1-12: el TAM manda sobre la táctica importada."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 237,
+     "autor": "Tomás",
+     "nota": "C-D3-04: sin nadie asignado a llamar, no se enciende nada."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_plan_paid_100k_31oct.md",
+     "linea": 11,
+     "autor": "Tomás",
+     "nota": "Norte a 31-oct con CAC límite de 700 € (2-sep)."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
+     "linea": 27,
+     "autor": "Tomás",
+     "nota": "Salvaguarda: captar sin rebajar el criterio de entrada; si la entrega se atasca, se frena la captación."
+    }
+   ]
+  },
+  {
+   "id": "dir_despachos_no_llaman_o_no_venden",
+   "titulo": "En la cartera hay despachos que no llaman a sus leads o no venden",
+   "puestos": [
+    "direccion",
+    "operaciones",
+    "account"
+   ],
+   "disparadores": {
+    "tipos_consejo": [
+     "crm_sin_tocar",
+     "diag_citas_sin_ventas",
+     "jefa_crm_velocidad"
+    ],
+    "alertas": [
+     "crm_sin_tocar"
+    ],
+    "indicadores": [
+     "direccion.leads_que_el_despacho_no_ha_llamado",
+     "direccion.cuentas_del_metodo_sin_venta_del_despacho"
+    ],
+    "palabras_clave": [
+     "el despacho no llama",
+     "leads sin llamar",
+     "no cierran",
+     "mes 3 sin venta",
+     "los leads son malos",
+     "no atienden los leads",
+     "cero ventas",
+     "garantía en riesgo"
+    ]
+   },
+   "sintoma": "Leads con 0 intentos tras 24 h en toda la cartera, o clientes del Método en mes 2 (amarillo) o mes 3 (rojo) sin ninguna venta.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el lead llega bien al CRM y el aviso al despacho sale.",
+     "donde": "GoHighLevel del cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si hay persona nombrada que llama y en qué horario.",
+     "donde": "Ficha del cliente y D0",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Cumplimiento de los cuatro deberes: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h, registro en CRM.",
+     "donde": "GoHighLevel",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si hay reuniones de venta y no cierran.",
+     "donde": "Pipeline del cliente",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si el despacho tiene capacidad para absorber clientes.",
+     "donde": "D0 y conversación",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo técnico: el aviso no llega.",
+     "como_confirmar": "Leads en CRM sin notificación enviada.",
+     "solucion": [
+      "Arregla el aviso hoy."
+     ],
+     "quien": "especialista_ghl",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Nadie asignado a llamar.",
+     "como_confirmar": "«Entre todos» o sin nombre.",
+     "solucion": [
+      "Que el despacho nombre una persona y un horario.",
+      "Sin eso no se sigue invirtiendo."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Llaman tarde o pocas veces.",
+     "como_confirmar": "Primer intento > 1 h o < 4 intentos.",
+     "solucion": [
+      "Enséñale el dato y la relación con la garantía."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Reuniones sin cierre: oferta o venta del despacho.",
+     "como_confirmar": "Reuniones sí, ventas no.",
+     "solucion": [
+      "Revisa su oferta y su venta; no toques la campaña."
+     ],
+     "quien": "account",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "El despacho no absorbe más clientes.",
+     "como_confirmar": "Lo dice o se ve en su agenda.",
+     "solucion": [
+      "Propón ajustar el ritmo antes de que lo pida."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lista los clientes con leads sin llamar o en mes 3 sin venta y pide al account el diagnóstico de cada uno esta semana."
+   ],
+   "guiones": [
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Account o dirección con el titular del despacho",
+     "texto": "{nombre}, te enseño un dato: de los {cifra} leads de este mes, {cifra_sin_llamar} no han recibido ninguna llamada en las primeras 24 h. Ahí se pierden. ¿Quién de tu equipo puede encargarse y en qué horario? Si lo cerramos hoy, la semana que viene lo vemos juntos."
+    }
+   ],
+   "que_no_hacer": [
+    "No subas la inversión para compensar que no llaman.",
+    "No aceptes «los leads son malos» si nadie ha llamado cuatro veces.",
+    "No culpes al despacho delante de su equipo."
+   ],
+   "escalar": {
+    "cuando": "Mes 3 sin venta o la garantía en riesgo por los deberes del despacho.",
+    "a": "direccion"
+   },
+   "exito": "0 leads sin intento tras 24 h y ningún cliente del Método en mes 3 sin venta sin diagnóstico escrito.",
+   "reglas_relacionadas": [
+    "no_compensar_con_pauta",
+    "gatillos_mes_2_3",
+    "garantia_velocidad_despacho",
+    "cierre_bajo_no_es_trafico",
+    "crm_leads_sin_tocar"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 143,
+     "autor": "RO",
+     "nota": "Leads con 0 intentos tras 24 h: cualquiera es rojo."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 165,
+     "autor": "RO",
+     "nota": "Mes 2 sin venta amarillo, mes 3 rojo."
+    },
+    {
+     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
+     "linea": 21,
+     "autor": "Tomás",
+     "nota": "Los cuatro deberes del despacho que rigen la garantía."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 237,
+     "autor": "Tomás",
+     "nota": "C-D3-04: sin nadie asignado a llamar no se enciende nada."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 244,
+     "autor": "Tomás",
+     "nota": "C-D3-05: si el fundador no vende, ese es el único tema."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_transicion_cartera_dos_productos.md",
+     "linea": 21,
+     "autor": "RO",
+     "nota": "Señal de dirección: una cuenta bajó porque el despacho no absorbía leads."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/CASOS.md",
+     "linea": 121,
+     "autor": "Tomás",
+     "nota": "Caso 22: «los leads son malos» y nadie había llamado cuatro veces."
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/project_objetivos_retencion_ro.md",
+     "linea": 16,
+     "autor": "Tomás",
+     "nota": "El objetivo es que el despacho cierre; si no cierra, no retiene."
+    }
+   ]
+  },
+  {
+   "id": "dir_ingresos_por_persona_bajos",
+   "titulo": "Los ingresos por persona no avanzan según la escalera",
+   "puestos": [
+    "direccion",
+    "finanzas_direccion",
+    "operaciones"
+   ],
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "finanzas_direccion.ingresos_por_persona",
+     "finanzas_direccion.cuota_gestionada_por_hora_por_puesto"
+    ],
+    "palabras_clave": [
+     "ingresos por persona",
+     "productividad",
+     "facturación por empleado",
+     "eficiencia del equipo",
+     "cuota por hora",
+     "rentabilidad del equipo"
+    ]
+   },
+   "sintoma": "Facturación ÷ personas por debajo de la escalera: ~1.700 €/mes (jun-26), ~2.400 (jun-27), 3.300-3.500 (dic-27).",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Si el denominador cuenta bien a las personas (altas y bajas del mes).",
+     "donde": "Tabla de personas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Cuota gestionada por hora, por puesto (nunca por persona).",
+     "donde": "Indicador por puesto",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Cuánto trabajo fuera de ficha y no planificado hay.",
+     "donde": "Producción y horas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si la IA está en producción en las tareas repetibles.",
+     "donde": "Método v2",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Denominador mal contado.",
+     "como_confirmar": "Personas que entraron o salieron a mitad de mes.",
+     "solucion": [
+      "Usa personas equivalentes del mes."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Un puesto con poca cuota por hora.",
+     "como_confirmar": "Un puesto destaca a la baja.",
+     "solucion": [
+      "Revisa qué hace ese puesto que no le toca."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c3",
+     "causa": "Se entrega más de la ficha.",
+     "como_confirmar": "Trabajo no planificado alto.",
+     "solucion": [
+      "Clasifica por horas y retira lo que no convierte."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c4",
+     "causa": "Trabajo repetible hecho a mano.",
+     "como_confirmar": "Tareas sin automatizar.",
+     "solucion": [
+      "Lleva IA a lo repetible, no al juicio."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lee la cuota por hora por puesto y elige un puesto para quitarle trabajo que no le toca este mes."
+   ],
+   "guiones": [],
+   "que_no_hacer": [
+    "No lo leas por persona ni lo cruces con sueldos.",
+    "No lo arregles contratando.",
+    "No exprimas la utilización por encima del 85 %."
+   ],
+   "escalar": {
+    "cuando": "Dos meses sin avanzar en la escalera.",
+    "a": "direccion"
+   },
+   "exito": "Ingresos por persona en la trayectoria de la escalera en el siguiente trimestre.",
+   "reglas_relacionadas": [
+    "coste_agregado_minimo_3",
+    "contratar_por_restriccion"
+   ],
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 895,
+     "autor": "RO",
+     "nota": "Ingresos por persona: escalera del NORTE."
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 917,
+     "autor": "RO",
+     "nota": "Cuota por hora por puesto, nunca por persona con su coste."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/NORTE.md",
+     "linea": 28,
+     "autor": "Tomás",
+     "nota": "Ingresos por persona: es LA apuesta."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 41,
+     "autor": "Tomás",
+     "nota": "C-D1-05: errores 4 (IA en juicio novedoso) y 10 (utilización > 85 %)."
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 69,
+     "autor": "Tomás",
+     "nota": "C-D1-09: lo mismo con menos personas y más IA."
+    }
+   ]
+  }
+ ]
+}

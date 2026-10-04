@@ -70,3 +70,4 @@ fuentes_dinero/*.json
 **/_cache_*.json
 fuentes/_muestras/
 fuentes_captacion/anuncios.json
+fuentes_consejos/cerebros/indice.json

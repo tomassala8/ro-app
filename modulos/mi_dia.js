@@ -29,7 +29,7 @@ import { prepararResumenEvidencias } from './_evidencias_resumen.js';
 import { panelHerramientas } from './_herramientas_perfil.js';
 import { puestoControl239, tituloControl239, renderControl239 } from './_control_cartera_ruta_239.js';
 import { colorCifra } from '../componentes.js';
-import { bloqueCopiloto } from './ia_componentes.js';
+import { bloqueCopiloto, panelCerebro } from './ia_componentes.js';
 // Ronda U (50 #3, #4): «Deshacer» en vez de «¿Seguro?» en lo interno, y el consejo de la IA plegado a una línea.
 import { botonDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_trabajo.js';
@@ -324,7 +324,9 @@ const MODULO = {
     const tableta = !movil && typeof matchMedia === 'function' && matchMedia('(max-width: 1180px)').matches;
     const nVista = (CONFIG.comun?.max_bloques_vista || {})[movil ? 'movil' : 'escritorio'] ?? (movil ? 3 : 4);
     const aLaVista = piezas.slice(0, nVista);
-    const plegadas = [...piezas.slice(nVista), pCopiloto, panelCelebraciones(ctx)].filter(Boolean);
+    // 4-oct · «Qué hago si…» (cerebros de área): buscar la ficha de una situación, sin IA. Primero del pliegue.
+    const pCerebro = ctx.persona?.puestos?.length ? panelCerebro(ctx) : null;
+    const plegadas = [pCerebro, ...piezas.slice(nVista), pCopiloto, panelCelebraciones(ctx)].filter(Boolean);
     const fila1 = tableta
       ? h('div', { class: 'pila', 'data-mid-arriba': '', style: { gap: 'var(--s-4)' } }, Object.assign(hero, { style: 'min-width: 0' }), Object.assign(loMio, { style: 'min-width: 0' }))
       : h('div', { class: 'fila', 'data-mid-arriba': '', style: { gap: 'var(--s-4)', alignItems: 'flex-start' } },

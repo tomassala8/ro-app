@@ -99,7 +99,10 @@ def leer_gsc(cls):
                                         'semana': tot(site, *s1), 'semana_ant': tot(site, *s0), 'mes': tot(site, *m1), 'mes_ant': tot(site, *m0),
                                         'serie': serie,
                                         'paginas': [[k, v[0], v[1], v[2], (pag0.get(k) or [None])[0]] for k, v in pag1.items()],
-                                        'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()]}
+                                        'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()],
+                                        # diagnósticos de calidad (fuentes_diagnosticos): reparto blog/servicio y marca/informativa/compra
+                                        'paginas_todas': [[k, *v] for k, v in dim(site, 'page', *m1, 250).items()],
+                                        'busquedas_todas': [[k, *v] for k, v in dim(site, 'query', *m1, 250).items()]}
             print(f"GSC {c['id'][:26]:26} hasta {L} {out['clientes'][c['id']]['semana']['clics']:>6} clics semana", flush=True)
         except Exception as e:
             out['clientes'][c['id']] = {'site': site, '_error': str(e)[:120]}

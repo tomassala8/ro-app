@@ -37,10 +37,14 @@ PRIV = os.path.join(SAL, '_privado')
 HOME = os.path.expanduser('~')
 MAD = ZoneInfo('Europe/Madrid')
 AHORA = dt.datetime.now(MAD)
-DESDE = (AHORA - dt.timedelta(days=14)).replace(hour=0, minute=0, second=0, microsecond=0)
+# 30 días atrás (antes 14): el riesgo de baja cuenta las reuniones de un mes (OK de Tomás, 4-oct-2026)
+DESDE = (AHORA - dt.timedelta(days=30)).replace(hour=0, minute=0, second=0, microsecond=0)
 HASTA = (AHORA + dt.timedelta(days=21)).replace(hour=23, minute=59, second=0, microsecond=0)
 
 fuentes = []
+# Reuniones con CLIENTES canceladas (4-oct): no salen en la agenda, pero el riesgo de baja mira si se reagendaron
+# (cancelar sin reagendar es la señal 2 del código semafórico). Solo cliente, fecha y persona: sin nombres.
+canceladas = []
 def fuente(id_, nombre, estado, detalle, n=0):
     fuentes.append({'id': id_, 'fuente': nombre, 'estado': estado, 'detalle': detalle, 'n': n, 'hora': AHORA.strftime('%Y-%m-%d %H:%M')})
 
@@ -251,11 +255,16 @@ try:
     from ghl_comun import LOC
     for cal, (nom, clase) in CALS.items():
         for e in R.eventos(cal, DESDE, HASTA):
-            if e.get('appointmentStatus') in ('cancelled', 'invalid'): continue
+            if e.get('appointmentStatus') == 'invalid': continue
             c = R.contacto(e.get('contactId')) if e.get('contactId') else {}
             nombre = ' '.join(x for x in [c.get('firstName'), c.get('lastName')] if x) or c.get('contactName') or ''
             empresa = c.get('companyName') or ''
             cref = cliente_de(empresa, nombre, e.get('title')) if clase == 'taller' or empresa else None
+            if e.get('appointmentStatus') == 'cancelled':
+                if cref:
+                    canceladas.append({'id': f"ghl-{e['id']}", 'persona_id': 'tomas', 'fuente': 'ghl', 'inicio': iso(ts(e.get('startTime'))),
+                                       'cliente_ref': cref, 'estado_cita': 'cancelled'})
+                continue
             tipo = 'cliente' if cref else 'prospecto'
             setters = [t.split(':', 1)[1] for t in (c.get('tags') or []) if t.startswith('setter:')]
             base = {'fuente': 'ghl', 'inicio': iso(ts(e.get('startTime'))), 'fin': iso(ts(e.get('endTime'))), 'tipo': tipo,
@@ -321,6 +330,11 @@ try:
             pid = persona_por_correo(c.get('staff_email'), c.get('staff_name'))
             if not pid or not c.get('inicio'): continue
             cref = cliente_de(c.get('customer_name'))
+            if str(c.get('status') or '').startswith('cancel'):     # por si el lector de Bookings deja pasar las canceladas
+                if cref:
+                    canceladas.append({'id': f"bk-{c['booking_id'].lstrip('#')}", 'persona_id': pid, 'fuente': 'bookings', 'inicio': c['inicio'],
+                                       'cliente_ref': cref, 'estado_cita': 'cancelled'})
+                continue
             tipo = 'cliente' if cref else 'prospecto'
             alta({'id': f"bk-{c['booking_id'].lstrip('#')}", 'persona_id': pid, 'fuente': 'bookings', 'inicio': c['inicio'], 'fin': c['fin'], 'tipo': tipo,
                   'titulo': f"{c.get('service_name') or 'Cita'} · " + (CLI[cref]['nombre'] if cref else mascara(c.get('customer_name'))),
@@ -384,6 +398,7 @@ salida = {
               'fuentes': fuentes, 'crosswalk': resumen_crosswalk,
               'nota': 'Fuentes parciales; pueden coexistir copias sin identidad compartida confirmada. Prospectos enmascarados; los nombres, sólo su dueño con «Ver nombres».'},
     'eventos': eventos,
+    'canceladas': sorted(canceladas, key=lambda e: (e['inicio'] or '', e['persona_id'])),
 }
 os.makedirs(PRIV, exist_ok=True)
 json.dump(salida, open(os.path.join(SAL, 'agenda.json'), 'w'), ensure_ascii=False, indent=1)
