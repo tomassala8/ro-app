@@ -34,7 +34,7 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
 # Claves que cambian en cada llamada y no son parte del contrato.
-VOLATILES = {"hora", "generado", "generado_en_peticion", "ms", "_ms", "etag", "duracion_ms"}
+VOLATILES = {"hora", "ahora", "generado", "generado_en_peticion", "ms", "_ms", "etag", "duracion_ms"}
 # Rutas que cambian por el simple hecho de grabar (cada lectura deja rastro): de ellas solo se compara la FORMA
 # (claves y tipos), no los valores. Graba siempre sobre una COPIA de la base recién restaurada.
 SOLO_FORMA = {"/api/rastro", "/api/rastro/verificar", "/api/salud"}
@@ -179,6 +179,13 @@ def diferencias(a, b, ruta="", max_n=20):
 def comparar(a):
     viejo, nuevo = Path(a.viejo).expanduser(), Path(a.nuevo).expanduser()
     informe, fallos, ok = ["# Contrato de la API: viejo frente a nuevo", ""], 0, 0
+    excepciones, aceptadas = {}, []
+    fe = Path(a.excepciones).expanduser() if getattr(a, "excepciones", None) else None
+    if fe and fe.exists():
+        for linea in fe.read_text(encoding="utf-8").splitlines():
+            ruta, _, motivo = linea.partition("#")
+            if ruta.strip():
+                excepciones[ruta.strip()] = motivo.strip()
     for cv in sorted(p for p in viejo.iterdir() if p.is_dir()):
         cn = nuevo / cv.name
         if not cn.exists():
@@ -188,6 +195,9 @@ def comparar(a):
         ev, en = json.loads((cv / "_estados.json").read_text()), json.loads((cn / "_estados.json").read_text())
         lineas = []
         for ruta, cod in sorted(ev.items()):
+            if ruta in excepciones and (en.get(ruta) != cod or cod == 200):
+                aceptadas.append(f"- `{ruta}` ({cv.name}): {cod} → {en.get(ruta)} · {excepciones[ruta]}")
+                continue
             if en.get(ruta) != cod:
                 lineas.append(f"- `{ruta}`: estado {cod} → {en.get(ruta)}")
                 continue
@@ -206,7 +216,10 @@ def comparar(a):
         if lineas:
             fallos += len(lineas)
             informe += [f"## {cv.name}", ""] + lineas + [""]
-    informe.insert(2, f"**{ok} respuestas iguales, {fallos} diferentes.**\n")
+    informe.insert(2, f"**{ok} respuestas iguales, {fallos} diferentes"
+                      + (f", {len(aceptadas)} en excepciones conocidas (no cuentan)" if aceptadas else "") + ".**\n")
+    if aceptadas:
+        informe += ["## Excepciones conocidas (aceptadas por ahora, van al informe de la noche)", ""] + aceptadas[:200] + [""]
     (nuevo / "informe.md").write_text("\n".join(informe), encoding="utf-8")
     print("\n".join(informe[:80]))
     print(f"\nInforme completo: {nuevo / 'informe.md'}")
@@ -225,6 +238,9 @@ def main():
     c = sub.add_parser("comparar")
     c.add_argument("viejo")
     c.add_argument("nuevo")
+    c.add_argument("--excepciones", default=None,
+                   help="fichero con una ruta por línea (y # motivo) cuya diferencia ya se conoce y se acepta por ahora "
+                        "(p. ej. una función que en Postgres responde 503 a propósito). Se listan aparte y no cuentan.")
     a = ap.parse_args()
     grabar(a) if a.orden == "grabar" else comparar(a)
 

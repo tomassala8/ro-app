@@ -638,6 +638,7 @@ CREATE TABLE public.registro (
     motivo text,
     anula_a bigint,
     origen text DEFAULT 'app'::text NOT NULL,
+    huella_previa text,
     CONSTRAINT registro_check CHECK (((accion IS NULL) OR (accion <> 'no_aplica'::text) OR ((motivo IS NOT NULL) AND (length(TRIM(BOTH FROM motivo)) > 0))))
 );
 

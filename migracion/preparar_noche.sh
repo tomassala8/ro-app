@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 # migracion/preparar_noche.sh · comprueba que el Mac está listo para la migración de esta noche, sin tocar nada de la app.
 #
-#   cd ~/Downloads/APP_RO_ROLES_Y_PERMISOS_2026-10-02/30_APP_PROTOTIPO
+#   cd <carpeta de la app>          # la que tiene servir.py
+#   # 1) traer el plan SIN cambiar de rama ni tocar lo que tienes sin commit:
+#   git fetch origin claude/project-thread-rjes21
+#   git checkout origin/claude/project-thread-rjes21 -- migracion v2 .cursor AGENTS.md
+#   # 2) comprobar:
 #   bash migracion/preparar_noche.sh            # solo mira y dice qué falta
 #   bash migracion/preparar_noche.sh --instalar # además instala lo que se puede instalar solo (pnpm, dependencias, Chromium)
+#   bash migracion/preparar_noche.sh --probar-cursor   # además hace una llamada mínima a Cursor con el modelo elegido
 #
 # Pásalo por la tarde: si algo sale en ✘, hay tiempo de arreglarlo antes de la noche. Al final, una línea: LISTO o NO LISTO.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
-INSTALAR=0; [ "${1:-}" = "--instalar" ] && INSTALAR=1
+INSTALAR=0; PROBAR=0
+for a in "$@"; do [ "$a" = "--instalar" ] && INSTALAR=1; [ "$a" = "--probar-cursor" ] && PROBAR=1; done
+MODELO="${RO_MODELO:-claude-fable-5-1}"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"
 fallos=0; avisos=0
 ok()   { printf "  ✔ %s\n" "$1"; }
@@ -20,10 +27,22 @@ version_mayor() { "$1" --version 2>/dev/null | grep -oE '[0-9]+' | head -1; }
 echo "1 · Repositorio"
 if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   ok "git en $(basename "$RAIZ") (rama $(git branch --show-current))"
-  [ -z "$(git status --porcelain --untracked-files=no)" ] && ok "sin cambios a medias en ficheros versionados" \
-    || ojo "hay cambios sin commit" "haz commit de lo de hoy antes de empezar: la migración parte de un commit concreto"
-  git fetch -q origin 2>/dev/null && { [ "$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)" = "0" ] && ok "al día con origin/main" \
-    || ojo "origin/main tiene commits que no tienes" "git pull"; } || ojo "no se pudo hacer git fetch" "revisa la conexión o la llave SSH de GitHub"
+  n=$(git status --porcelain | wc -l | tr -d ' ')
+  [ "$n" = 0 ] && ok "sin cambios a medias" \
+    || ok "$n ficheros con cambios sin commit (normal: el paso F1.3 los guarda en la rama migracion/v2 tras el escáner)"
+  git fetch -q origin 2>/dev/null && ok "GitHub responde (git fetch)" || ojo "no se pudo hacer git fetch" "revisa la conexión o la llave SSH de GitHub"
+  for f in migracion/PROMPT_NOCHE.md migracion/PROGRESO.md migracion/puerta.sh migracion/servicios.sh migracion/noche.sh v2/package.json despliegue/base.py; do
+    [ -f "$f" ] || mal "falta $f" "trae el plan: git fetch origin claude/project-thread-rjes21 && git checkout origin/claude/project-thread-rjes21 -- migracion v2 .cursor AGENTS.md"
+  done
+  if git cat-file -e origin/claude/project-thread-rjes21:despliegue/base.py 2>/dev/null; then
+    if ! git diff --quiet origin/claude/project-thread-rjes21 -- despliegue/base.py; then
+      if git diff --quiet HEAD -- despliegue/base.py; then
+        ojo "despliegue/base.py no tiene los 8 arreglos de Postgres del plan (§7)" "git checkout origin/claude/project-thread-rjes21 -- despliegue/base.py"
+      else
+        ojo "despliegue/base.py tiene cambios tuyos sin commit y no lleva los arreglos del plan" "Cursor los junta en F2.4 (los arreglos están en la rama claude/project-thread-rjes21)"
+      fi
+    else ok "despliegue/base.py con los arreglos de Postgres"; fi
+  fi
 else
   mal "esta carpeta no es un repositorio git" "ejecuta el script desde la carpeta de la app (la que tiene servir.py)"
 fi
@@ -40,7 +59,22 @@ python3 -c "import psycopg" 2>/dev/null && ok "psycopg (Python ↔ Postgres)" ||
 if docker info >/dev/null 2>&1; then ok "Docker en marcha"
 else mal "Docker no responde" "abre Docker Desktop (u OrbStack) y espera a que diga «running»"; fi
 command -v psql >/dev/null && ok "psql $(psql --version | grep -oE '[0-9]+\.[0-9]+' | head -1)" || ojo "falta psql" "brew install libpq && brew link --force libpq  (lo usa v2/packages/db/scripts/rehacer_base.sh)"
-command -v cursor >/dev/null && ok "Cursor (orden «cursor»)" || ojo "no encuentro la orden «cursor»" "no es imprescindible: basta con abrir esta carpeta en Cursor"
+command -v pg_dump >/dev/null && command -v pg_restore >/dev/null && ok "pg_dump y pg_restore" || ojo "faltan pg_dump/pg_restore" "brew install libpq && brew link --force libpq  (los usa el ensayo de restauración, F7.3)"
+if command -v cursor-agent >/dev/null; then
+  ayuda="$(cursor-agent --help 2>&1)"
+  if echo "$ayuda" | grep -q -- "--model" && echo "$ayuda" | grep -q -- "--force" && echo "$ayuda" | grep -qE -- "-p|--print"; then
+    ok "cursor-agent con -p, --force y --model (lo usa noche.sh)"
+  else
+    ojo "cursor-agent no anuncia -p / --force / --model" "mira «cursor-agent --help» y lánzalo con RO_AGENTE=\"cursor-agent <opciones> {MODELO}\" bash migracion/noche.sh"
+  fi
+  if [ $PROBAR = 1 ]; then
+    r="$(cursor-agent -p --force --output-format text --model "$MODELO" "Responde solo: OK" 2>&1 < /dev/null | tail -3)"
+    echo "$r" | grep -q "OK" && ok "Cursor responde con el modelo $MODELO" \
+      || mal "Cursor no responde con el modelo $MODELO: $r" "elige el nombre exacto del modelo y pásalo: RO_MODELO=<nombre> (cursor-agent --help o la lista de modelos de Cursor)"
+  fi
+else
+  ojo "no encuentro la orden «cursor-agent»" "para 8 horas sin nadie hace falta: curl https://cursor.com/install -fsS | bash && cursor-agent login. Sin ella, se lanza desde la ventana de Cursor (PLAN_MAESTRO §6)"
+fi
 
 echo "3 · Red (lo que se descarga esta noche)"
 for h in registry.npmjs.org ui.shadcn.com github.com binaries.prisma.sh; do
@@ -50,9 +84,9 @@ done
 echo "4 · Datos y app de hoy"
 [ -d data ] && ok "data/ ($(find data -name '*.json' | wc -l | tr -d ' ') ficheros)" || mal "no hay data/" "python3 build_data.py (o la tubería): sin datos no se puede grabar la referencia"
 [ -f local.db ] && ok "local.db ($(du -h local.db | cut -f1))" || mal "no hay local.db" "arranca una vez servir.py: la crea"
-if curl -s -m 3 http://127.0.0.1:8770/api/elegir >/dev/null 2>&1; then ok "servir.py responde en 127.0.0.1:8770"
-else ojo "servir.py no está en marcha" "python3 servir.py --bind 127.0.0.1 --puerto 8770  (hace falta para grabar la referencia)"; fi
-for puerto in 3000 4000 5432; do
+if curl -s -m 3 http://127.0.0.1:8770/api/elegir >/dev/null 2>&1; then ojo "algo responde ya en 127.0.0.1:8770" "para tu servir.py antes de lanzar la noche: servicios.sh arranca ahí la referencia sobre una COPIA de la base"
+else ok "8770 libre (servicios.sh arranca ahí la referencia esta noche)"; fi
+for puerto in 3000 4000 5432 8771 8780 8781 4001; do
   if lsof -nP -iTCP:$puerto -sTCP:LISTEN >/dev/null 2>&1; then
     quien=$(lsof -nP -iTCP:$puerto -sTCP:LISTEN | awk 'NR==2{print $1}')
     [ "$puerto" = 5432 ] && [ "$quien" != "postgres" ] && [ "$quien" != "com.docke" ] && [ "$quien" != "docker" ] \
@@ -81,8 +115,8 @@ if [ -d v2 ] && command -v pnpm >/dev/null; then
     (cd v2 && docker compose up -d postgres >/dev/null 2>&1) && sleep 3 && (cd v2 && docker compose exec -T postgres pg_isready -U ro -d ro_app >/dev/null 2>&1) \
       && ok "Postgres de v2 arriba (127.0.0.1:5432, base ro_app)" || mal "no arranca el Postgres de v2" "cd v2 && docker compose up postgres  y mira el error"
   fi
-else mal "no está la carpeta v2/" "git pull: llega con el PR «Plan maestro de migración»"; fi
+else mal "no está la carpeta v2/" "trae el plan (ver la cabecera de este script)"; fi
 
 echo
-if [ $fallos = 0 ]; then echo "LISTO para la noche ($avisos avisos que conviene mirar)."; else echo "NO LISTO: $fallos cosas que arreglar y $avisos avisos."; fi
+if [ $fallos = 0 ]; then echo "LISTO para la noche ($avisos avisos que conviene mirar). Para lanzarla: git switch -c migracion/v2 && bash migracion/noche.sh"; else echo "NO LISTO: $fallos cosas que arreglar y $avisos avisos."; fi
 exit $fallos

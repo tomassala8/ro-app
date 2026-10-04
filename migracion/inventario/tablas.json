@@ -1085,6 +1085,11 @@
         {
           "columna": "anula_a",
           "tipo": "INTEGER"
+        },
+        {
+          "columna": "huella_previa",
+          "tipo": "TEXT",
+          "añadida_con_alter": "servir.py"
         }
       ]
     }
@@ -1297,6 +1302,11 @@
         {
           "columna": "datos",
           "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT",
+          "añadida_con_alter": "servir.py"
         }
       ]
     }

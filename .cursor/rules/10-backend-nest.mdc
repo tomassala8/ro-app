@@ -5,13 +5,16 @@ alwaysApply: false
 ---
 # Backend
 
+- **Estrangulador**: lo que Nest no atiende lo pasa `src/legado/proxy.ts` tal cual a `servir.py` (8771). Una ruta pasa a Nest añadiéndola a `src/legado/rutas-en-nest.ts`, y solo se queda ahí si `bash migracion/puerta.sh f5` sale VERDE (contrato de lectura y de escritura). Si no, se quita y vuelve al proxy. No toques el proxy para «arreglar» una diferencia de una ruta de Nest.
+
 - Un módulo de Nest por dominio (tabla §2.2 del plan). Controlador fino; la lógica en el servicio; la base solo a través de `PrismaService` (`this.prisma.db`). Un módulo no lee tablas de otro: llama a su servicio.
 - **Mismo contrato que `servir.py`**: método, ruta, código, mensaje de error, claves JSON en `snake_case`, cabeceras (`ETag`, `Cache-Control`, `Vary`) y fechas en texto `AAAA-MM-DD HH:MM:SS` UTC. Antes de escribir una ruta, abre su código en Python (línea en `migracion/inventario/rutas_api.json` o el fichero en `enchufes.json`) y tradúcelo, no lo reinventes.
 - Permisos: siempre con `@ro/permisos` (el mismo motor que la web). Nunca un `if puesto === …` suelto en un controlador.
 - Identidad: guarda global. `RO_IDENTIDAD=local` (cabecera `X-RO-Yo`, `?yo=`, galleta `ro_yo`) o `access` (solo el JWT de Cloudflare Access). Inactivos fuera. «Ver como» = solo lectura y mínimo de las dos personas, con rastro.
 - POST: exige `X-RO-App: 1` y JSON, como hoy. DTOs con `class-validator` que acepten exactamente lo que acepta hoy.
 - Rastro, historial, acciones y recargas son imborrables: lo garantiza la base (disparadores de la migración `0_base`). No los «arregles» con UPDATE/DELETE: crea una anulación.
-- Nada de hilos ni `setInterval` de negocio dentro de la API: los bucles van al worker (Python esta noche).
+- Nada de hilos ni `setInterval` de negocio dentro de la API: los bucles siguen en el legado (Python, una sola copia).
 - `schema.prisma` sale de `packages/db/scripts/rehacer_base.sh`. No lo edites a mano esta noche; si hace falta un cambio de base, migración nueva con `pnpm db:migrate`.
-- Esta noche los tipos se quedan como hoy (texto en fechas, 0/1 en booleanos): el worker en Python escribe en las mismas tablas.
+- Esta noche los tipos se quedan como hoy (texto en fechas, 0/1 en booleanos): la app de hoy (legado) escribe en las mismas tablas.
+- Si `despliegue/base.py` no traduce algo (la app de hoy sobre Postgres falla), se arregla la traducción en `base.py`, de forma general, nunca la consulta en `servir.py`.
 - Tests: Vitest. Un e2e por ruta que compruebe 200 y 403 con dos personas distintas.

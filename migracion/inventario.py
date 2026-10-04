@@ -6,7 +6,7 @@ Lee SOLO el código (nunca data/, local.db ni llaves) y escribe en migracion/inv
   pantallas.json      las pantallas de modulos/indice.js (id, título, grupo, fichero, estado, quién las ve)
   modulos_js.json     cada fichero de modulos/ con líneas, imports y las llamadas a ctx que usa
   rutas_api.json      cada ruta GET/POST de servir.py con su línea
-  tablas.sql          todos los CREATE TABLE / INDEX / TRIGGER / VIEW (schema_v2.sql y los .py)
+  tablas.sql          todos los CREATE TABLE / INDEX / TRIGGER / VIEW y los ALTER TABLE … ADD COLUMN (schema_v2.sql y los .py)
   tablas.json         lo mismo, por tabla: columnas y de qué fichero sale
   permisos.json       resumen de reglas_permisos.json (puestos, sillas, tipos, datos_de_modulo, almacenes, acciones)
   componentes.json    exportaciones de componentes.js
@@ -155,6 +155,7 @@ def rutas_front(mj):
 
 # ------------------------------------------------------------------ tablas
 PATRON_SQL = re.compile(r"CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF\s+NOT\s+EXISTS\s+(\w+)", re.I)
+PATRON_ALTER = re.compile(r"ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(\{\w+\}|\w+)\s+(\w+)", re.I)
 
 
 def _bloque_sql(texto, ini):
@@ -202,6 +203,25 @@ def tablas(ficheros):
                     if c and c.group(1).upper() not in ("PRIMARY", "UNIQUE", "CHECK", "FOREIGN", "CONSTRAINT"):
                         cols.append({"columna": c.group(1), "tipo": c.group(2).upper()})
                 por_tabla.setdefault(m.group(2), []).append({"fichero": rel, "linea": t[:m.start()].count("\n") + 1, "columnas": cols})
+    # columnas añadidas al arrancar (ALTER TABLE … ADD COLUMN): CREATE IF NOT EXISTS no las trae y se perderían
+    for rel in ficheros:
+        if not rel.endswith((".sql", ".py")):
+            continue
+        t = leer(rel)
+        for m in PATRON_ALTER.finditer(t):
+            tabla, col, tipo = m.groups()
+            nombres = [col]
+            v = re.fullmatch(r"\{(\w+)\}", col)
+            if v:   # f"… ADD COLUMN {col} TEXT" dentro de «for col in (…)»: se buscan los valores del bucle
+                bucle = re.findall(rf"for\s+{v.group(1)}\s+in\s+\(([^)]*)\)", t[max(0, m.start() - 600):m.start()])
+                nombres = re.findall(r"[\"']([a-z_][a-z0-9_]*)[\"']", bucle[-1]) if bucle else []
+                if not nombres:
+                    sql_total.append(f"-- {rel}\n-- ⚠ ALTER TABLE {tabla} con columna dinámica {col}: revisar a mano\n")
+            for n in nombres:
+                sql_total.append(f"-- {rel}\nALTER TABLE {tabla} ADD COLUMN IF NOT EXISTS {n} {tipo.upper()};\n")
+                for d in por_tabla.get(tabla, []):
+                    if not any(c["columna"] == n for c in d["columnas"]):
+                        d["columnas"].append({"columna": n, "tipo": tipo.upper(), "añadida_con_alter": rel})
     return "\n".join(sql_total), por_tabla
 
 

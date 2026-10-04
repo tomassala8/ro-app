@@ -38,11 +38,12 @@ def bloques():
         trozo = trozo.strip()
         if not trozo:
             continue
-        if not trozo.upper().startswith("CREATE"):
+        if not trozo.upper().startswith(("CREATE", "ALTER")):
             actual = trozo
             continue
         lista.append((actual, trozo))
-    lista.sort(key=lambda x: (PRIMERO.index(x[0]) if x[0] in PRIMERO else len(PRIMERO)))
+    # primero todas las tablas, luego las columnas añadidas con ALTER, y por fichero según PRIMERO
+    lista.sort(key=lambda x: (x[1].upper().startswith("ALTER"), PRIMERO.index(x[0]) if x[0] in PRIMERO else len(PRIMERO)))
     yield from lista
 
 
@@ -75,8 +76,11 @@ def main():
             cur.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
         cur.execute(B.esquema_postgres("").strip())
         for origen, sql in bloques():
-            m = re.match(r"CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF\s+NOT\s+EXISTS\s+(\w+)", sql, re.I)
+            m = re.match(r"CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF\s+NOT\s+EXISTS\s+(\w+)", sql, re.I) \
+                or re.match(r"(ALTER)\s+TABLE\s+(\w+)", sql, re.I)
             tipo, nombre = m.group(1).upper(), m.group(2)
+            if tipo == "ALTER" and vistas.get(nombre) not in (None, origen) and origen not in PRIMERO:
+                continue      # columna de la otra tabla que se llama igual (ver «chocan»)
             if tipo == "TABLE":
                 if nombre in vistas and vistas[nombre] != origen:
                     chocan.append((nombre, vistas[nombre], origen))

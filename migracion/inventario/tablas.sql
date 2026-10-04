@@ -524,3 +524,15 @@ CREATE TRIGGER IF NOT EXISTS sinc_pasos_sin_update BEFORE UPDATE ON sinc_pasos B
 
 -- sincronia.py
 CREATE TRIGGER IF NOT EXISTS sinc_pasos_sin_delete BEFORE DELETE ON sinc_pasos BEGIN SELECT RAISE(ABORT, 'Un paso no se borra'); END;
+
+-- servir.py
+ALTER TABLE decisiones ADD COLUMN IF NOT EXISTS titulo TEXT;
+
+-- servir.py
+ALTER TABLE decisiones ADD COLUMN IF NOT EXISTS cliente_id TEXT;
+
+-- servir.py
+ALTER TABLE decisiones ADD COLUMN IF NOT EXISTS datos TEXT;
+
+-- servir.py
+ALTER TABLE registro ADD COLUMN IF NOT EXISTS huella_previa TEXT;

@@ -57,7 +57,8 @@ def main():
             comunes = [c for c in cols_sq if c in tipos_pg]
             sobran = [c for c in cols_sq if c not in tipos_pg]
             if sobran:
-                print(f"⚠ {t}: columnas que no existen en Postgres y NO se copian: {sobran}")
+                print(f"✘ {t}: columnas que no existen en Postgres y NO se copian: {sobran} (falta en 0_base: rehacer_base.sh)")
+                mal.append(t)
             cur.execute(f'SELECT count(*) FROM "{t}"')
             if cur.fetchone()[0]:
                 if not a.vaciar:
@@ -77,7 +78,8 @@ def main():
                     cur.execute("SELECT pg_get_serial_sequence(%s, %s)", (t, col))
                     seq = cur.fetchone()[0]
                     if seq:
-                        cur.execute(f'SELECT setval(%s, GREATEST((SELECT COALESCE(max("{col}"), 0) FROM "{t}"), 1))', (seq,))
+                        # el siguiente id = el más alto + 1 (como SQLite); con la tabla vacía, 1
+                        cur.execute(f'SELECT setval(%s, (SELECT COALESCE(max("{col}"), 0) + 1 FROM "{t}"), false)', (seq,))
             cur.execute(f'SELECT count(*) FROM "{t}"')
             n_pg = cur.fetchone()[0]
             ok = "✔" if n_pg == len(filas) else "✘"

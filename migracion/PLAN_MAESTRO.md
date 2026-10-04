@@ -1,245 +1,219 @@
 # Plan maestro · la app de RO a Next + Nest + Postgres
 
-**4-oct-2026.** Para ejecutar con Cursor la noche del 4 al 5 de octubre. Objetivo: que el 5 por la mañana la app se pueda desplegar en la nube con **la misma cara, las mismas funciones y los mismos permisos**, sobre una base que escale.
+**4-oct-2026 · versión 2.** Para que Cursor lo ejecute solo la noche del 4 al 5 de octubre, unas 8 horas, sin parar y sin nadie delante. Objetivo: que el 5 por la mañana la app nueva tenga **la misma cara, las mismas funciones y los mismos permisos**, sobre una base que escale, y un informe que diga con pruebas qué está listo para un piloto y qué no.
 
 Stack de destino: **Next.js 16** (web) · **NestJS 12** (API) · **PostgreSQL 16 + Prisma 7** (base) · **shadcn/ui + Tailwind 4** (interfaz). Monorepo con **pnpm** en `v2/`.
 
----
-
-## 0. Las cinco reglas que mandan sobre todo lo demás
-
-1. **Nada cambia para quien usa la app.** Mismas pantallas, mismos textos, mismos colores, mismas rutas de API, mismas respuestas, mismos 403. Si algo se ve o responde distinto, es un fallo, no una mejora.
-2. **Se demuestra, no se supone.** Cada fase acaba en una **puerta** con una orden que sale en verde. Sin verde no se pasa de fase.
-3. **La mañana nunca se rompe.** Toda pantalla tiene una red: si su versión en React no queda idéntica, se queda con su código de hoy dentro de la carcasa nueva («puente»). Así el 100 % de las funciones está disponible aunque no dé tiempo a rehacerlo todo.
-4. **Los datos reales no salen del Mac.** Grabaciones, vectores y fotos van a `~/RO_MIGRACION/`, nunca al repositorio ni a un chat.
-5. **Lo de hoy no se toca.** La app vieja (raíz del repo) sigue funcionando igual hasta que Tomás diga. Todo lo nuevo vive en `v2/` y en `migracion/`. Única excepción: los arreglos de la sección 7, y cada uno en su commit.
+> **Qué cambió respecto a la versión 1 (misma mañana del 4-oct).** La versión 1 pasaba todo de golpe y se paraba en cada puerta roja. La 2 sigue la técnica del «estrangulador»: **la app nueva está completa desde el minuto 0** porque, de entrada, Next y Nest pasan todo a la app de hoy, que ya corre sobre Postgres. Después, cada ruta y cada pantalla se muda a Nest y a React **solo cuando su puerta sale verde**. Si no sale, se queda como estaba y Cursor sigue con la siguiente. Nunca se para. Ensayado aquí con datos inventados: la app nueva entera responde **595 de 595** peticiones igual que la de hoy.
 
 ---
 
-## 1. Qué hay hoy (inventario a 3-oct)
+## 0. Las seis reglas que mandan sobre todo lo demás
 
-Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` (ver `RESUMEN.md`). Cifras de la versión del 3-oct:
+1. **Nada cambia para quien usa la app.** Mismas pantallas, textos, colores, direcciones (`/#/mi-dia`), rutas de API, respuestas y 403. Si algo se ve o responde distinto, es un fallo, no una mejora.
+2. **Se demuestra, no se supone.** Una pieza solo se da por hecha con `bash migracion/puerta.sh <fase>` en **VERDE**. La puerta guarda su informe en `~/RO_MIGRACION/puertas/`.
+3. **La app nueva siempre funciona entera.** Lo que no está migrado lo atiende la app de hoy a través del proxy. Una pieza migrada sustituye a la vieja solo con su puerta en verde; si no, se deshace y se queda la vieja.
+4. **Cursor nunca se para y nunca pregunta.** Si algo falla, lo intenta otra vez con otro enfoque (hasta 3). Si sigue sin salir, aplica el **plan B** de ese paso (§5), lo apunta y pasa al siguiente. Las dudas se resuelven con la opción más conservadora y se apuntan para Tomás.
+5. **Los datos reales no salen del Mac.** Grabaciones, vectores, fotos, casos y copias de la base van a `~/RO_MIGRACION/`. En el repositorio, solo datos inventados.
+6. **Nada sale fuera.** Sin envíos, sin ClickUp real, sin bucles de avisos (`servicios.sh` y `puerta.sh` lo fuerzan). Nada de desplegar, ni tocar proveedores, ni `git push` a `main`.
+
+---
+
+## 1. Qué hay hoy
+
+Lo genera `python3 migracion/inventario.py` en `migracion/inventario/` desde el código **del Mac** (incluidos los ficheros nuevos aún sin commit). Cifras a 4-oct en GitHub:
 
 | Pieza | Hoy | Cuánto |
 |---|---|---|
-| Pantallas | `modulos/*.js` (JS sin framework, `render(contenedor, ctx)`) | 37 en el menú, 61 ficheros, ~36.000 líneas de front |
-| Carcasa | `index.html`, `app.js`, `carcasa.js`, `ayudas.js` (⌘K) | menú por puesto, «ver como», buscador |
-| Sistema de diseño | `estilos.css` (tokens) + `componentes.js` | 107 componentes |
-| Servidor | `servir.py` (Python, sin framework) | 37 rutas propias + 62 de 11 ficheros «enchufados» (ia, avisos, envíos, sincronía, vigía, altas, GBP, Modular…) |
-| Permisos | `reglas_permisos.json` + `permisos.py` (servidor) + `permisos.js` (navegador) | 21 puestos, 39 tipos de dato, 92 ficheros de datos con permiso, 9 almacenes privados, 133 acciones |
-| Base | SQLite `local.db` (en la nube, Postgres vía `despliegue/base.py`) | 40 tablas, rastro imborrable con disparadores y huellas encadenadas |
-| Datos | `fuentes_*/generar_*.py` → `data/*.json` (la «tubería») | 50 pasos, 86 generadores, 27 lectores en `~/RO_HERRAMIENTAS` (fuera del repo) |
-| Pruebas | `pruebas_*.py`, `despliegue/pruebas_noche.py` | 16 baterías |
+| Pantallas | `modulos/*.js` (JS sin framework, `render(contenedor, ctx)`) | 37 en el menú, 61 ficheros, ~36.000 líneas |
+| Carcasa | `index.html` (con mapa de versiones, CSP y precarga), `app.js`, `carcasa.js`, `ayudas.js` | menú por puesto, «ver como», ⌘K |
+| Diseño | `estilos.css` + `componentes.js` | 107 componentes |
+| Servidor | `servir.py` + 11 ficheros «enchufados» | 37 + 62 rutas |
+| Permisos | `reglas_permisos.json` + `permisos.py` + `permisos.js` | 21 puestos, 39 tipos, 92 ficheros con permiso, 133 acciones |
+| Base | SQLite `local.db`; en la nube, Postgres vía `despliegue/base.py` | 40 tablas, rastro imborrable encadenado |
+| Datos | la «tubería» `fuentes_*/generar_*.py` → `data/*.json` | 50 pasos, 86 generadores |
+| Pruebas | `pruebas_*.py`, `despliegue/pruebas_noche.py` y las focalizadas de Astra | 16 baterías + las nuevas |
 
-**La app está viva y cambia hoy.** Por eso la fase 1 rehace el inventario y saca la lista de lo que ha cambiado (`--comparar`) antes de migrar nada.
+**La copia del Mac va por delante de GitHub** (nota de Astra, `migracion/NOTA_ASTRA.md`): triaje, horas, campañas, números semanales, método e histórico, reuniones, cabeceras. Por eso la noche parte del **código del Mac**, que la fase 1 guarda en una instantánea (commit en la rama `migracion/v2`, nunca en `main`) después de pasar el escáner de secretos.
 
 ---
 
 ## 2. La arquitectura nueva
 
 ```
-v2/
-├── apps/web          Next 16 (App Router) + Tailwind 4 + shadcn. La carcasa y las pantallas en React.
-│   ├── src/app/[pantalla]/…    una ruta por pantalla (/mi-dia, /en-rojo…); #/mi-dia redirige a /mi-dia
-│   ├── src/lib/ctx.ts          el MISMO ctx que hoy (40 campos), en TypeScript
-│   ├── src/components/ro/      componentes.js rehechos en React (mismas clases y tokens)
-│   ├── src/components/ui/      shadcn (con el tema de RO: src/styles/ro-tema.css)
-│   └── public/legacy/          copia automática del front de hoy (el puente). No se edita.
-├── apps/api          Nest 12. Un módulo por dominio. MISMAS rutas y respuestas que servir.py.
-├── packages/db       Prisma 7: schema.prisma (40 modelos) + migraciones. Sacado de la base real, no escrito a mano.
-├── packages/permisos El motor de permisos en TypeScript. Lo usan la API y la web. La matriz sigue en reglas_permisos.json.
-├── tools/capturas    Fotos de cada pantalla (vieja y nueva) y comparación píxel a píxel.
-└── docker-compose.yml  Postgres local (y, con --profile completo, api + web como en la nube).
+navegador ──► Next (3000) ──► Nest (4000) ──► Postgres
+                 │  páginas propias    │  rutas propias (RUTAS_EN_NEST)
+                 │  (cuando pasan      │
+                 │   sus fotos)        └──► proxy de legado ──► servir.py de hoy sobre Postgres (8771)
+                 └── lo demás (/, app.js, modulos/…) ──► Nest ──► proxy ──► servir.py
 ```
 
-**Cómo viaja una petición:** navegador → Next (`/api/*` reescrito) → Nest → Postgres. El navegador solo ve una dirección, como hoy.
+```
+v2/
+├── apps/web          Next 16. next.config.ts › fallback: lo que no es página propia va a Nest.
+│   ├── src/app/carcasa/        banco de trabajo de la carcasa en React; se muda a «/» al pasar sus fotos
+│   ├── src/lib/ctx.ts          (fase 6) el MISMO ctx de app.js, 40 campos, en TypeScript
+│   ├── src/components/ro/      (fase 6) componentes.js en React, mismas clases
+│   ├── src/components/ui/      shadcn con el tema de RO (src/styles/ro-tema.css)
+│   └── public/legacy/          copia automática del front de hoy (para el puente de pantallas)
+├── apps/api          Nest 12. src/legado/: proxy + RUTAS_EN_NEST (la lista de lo que ya es de Nest).
+├── packages/db       Prisma 7: 40 modelos + migración 0_base (CHECK, vista, disparadores). Sacado de la base real.
+├── packages/permisos (fase 4) el motor de permisos en TypeScript. La matriz sigue en reglas_permisos.json.
+├── tools/capturas    fotos de cada pantalla, vieja y nueva, y comparación píxel a píxel.
+└── docker-compose.yml Postgres local en 127.0.0.1:5432 (y, con --profile completo, api + web).
+```
 
-**Los datos de los módulos** (`data/*.json`) siguen saliendo de la tubería en Python. Ya hoy `despliegue/publicacion.py` los publica en Postgres por versiones (`datos_version`, `datos_fichero`, `datos_blob` con zlib). Nest los lee de ahí, los recorta por persona con `@ro/permisos` y los sirve en `/api/modulo/<carpeta>/<fichero>`. **La tubería no se reescribe esta noche** (ver 2.1).
+### 2.1 El estrangulador, en una frase por capa
 
-### 2.1 Una decisión tomada por defecto: la tubería se queda en Python esta noche
+- **Datos:** la base pasa a Postgres en la fase 2 (`0_base` + copia de `local.db`), y la app de hoy pasa a usarla. Comprobado: lee y escribe igual que sobre SQLite.
+- **API:** Nest atiende solo las rutas de `v2/apps/api/src/legado/rutas-en-nest.ts`. Lo demás va tal cual a `servir.py` (mismo método, ruta, cabeceras y cuerpo). Una ruta entra en la lista solo con su contrato de lectura **y** de escritura en verde.
+- **Front:** Next no tiene aún página en «/», así que enseña el `index.html` de hoy tal cual (con su CSP, mapa de versiones y precarga). La carcasa en React se construye en `/carcasa` y se muda a «/» solo cuando sus fotos salen iguales. Cada pantalla, igual.
+- **Segundo plano:** la tubería, los avisos, los envíos, la sincronía y el vigía se quedan en Python (el mismo `servir.py` de legado, una sola copia). Pasarlos a Nest es trabajo de después (§8).
 
-Los 86 generadores y 27 lectores hablan con ClickUp, GoHighLevel (con una llave que rota en cada uso), Meta, Zoho, Holded, Google… Reescribirlos en una noche arriesga romper integraciones reales, y no cambian nada de lo que se ve. Así que:
+### 2.2 Backend: módulos de Nest (orden de mudanza en la fase 5)
 
-- **Web, API, base, accesos y permisos:** al stack nuevo esta noche (100 %).
-- **Tubería, avisos, envíos, sincronía y vigía (lo que corre en segundo plano):** siguen en Python, en un contenedor «worker» aparte, contra la **misma** Postgres. Se pasan a Nest después, uno a uno, con la misma red de pruebas.
-
-### 2.2 Backend: módulos de Nest
-
-Cada módulo es dueño de sus rutas, su servicio y sus tablas. Nadie lee tablas de otro módulo: pide al servicio.
-
-| Módulo Nest | Rutas (idénticas a hoy) | Viene de |
+| Grupo | Rutas (idénticas a hoy) | Viene de |
 |---|---|---|
-| `identidad` (guarda global) | todas | `servir.py › _quien`, `despliegue/acceso_cf.py` |
-| `permisos` | — (servicio) | `@ro/permisos` |
-| `sesion` | `GET /api/sesion`, `GET /api/elegir` | `servir.py` |
-| `datos` | `GET /api/modulo/**`, `GET /data/<carpeta>/<fichero>.json` | `servir.py`, `despliegue/publicacion.py` |
+| `identidad` (guarda global) | todas las de Nest | `servir.py › _quien`, `despliegue/acceso_cf.py` |
+| `sesion` | `GET /api/sesion` | `servir.py` |
+| `datos` | `GET /api/modulo/**` | `servir.py`, `despliegue/publicacion.py` |
 | `clientes` | `GET /api/cliente/:id`, `GET /logos/:id` | `servir.py` |
-| `buscar` | `GET /api/buscar`, `/api/buscar/indice`, `/api/contadores` | `servir.py` |
-| `indicadores` | `GET /api/indicadores` | `servir.py` |
+| `buscar`, `indicadores` | `GET /api/buscar`, `/api/buscar/indice`, `/api/contadores`, `/api/indicadores` | `servir.py` |
+| `perfil`, `preferencias` | `GET /api/perfil`, `GET/POST /api/preferencias`, `POST /api/perfil/zona` | `servir.py`, `altas_personas.py` |
 | `rastro` | `GET/POST /api/rastro`, `GET /api/rastro/verificar` | `servir.py` (+ `registro_huellas`) |
-| `acciones` | `GET/POST /api/acciones` | `servir.py`, `envios.py`, `sincronia.py`, `fuentes_alertas/guardia_alertas.py` |
-| `ver-dato` | `POST /api/ver_dato` | `servir.py` |
-| `decisiones` | `GET/POST /api/decisiones`, `GET /api/respuestas_mili` | `servir.py` |
-| `ajustes` | `GET /api/ajustes`, `POST /api/ajustes/*` | `servir.py` |
-| `altas` | `/api/altas/*` | `altas_personas.py` |
-| `avisos` | `GET /api/avisos`, `POST /api/avisos/visto`, `/api/canales/*`, `/api/avisos_programados/*` | `servir.py`, `avisos.py`, `avisos_programados.py` |
-| `perfil` | `GET /api/perfil`, `POST /api/perfil/zona`, `GET/POST /api/preferencias` | `servir.py` |
-| `opiniones` | `GET /api/opiniones`, `/captura`, `POST /api/opinion`, `/api/opiniones/estado` | `servir.py` |
-| `recarga` | `GET/POST /api/recarga` | `servir.py` (lanza la tubería: en la nube, encola para el worker) |
-| `envios`, `sincronia` | `/api/envios/*`, `/api/sincronia/*` | `envios.py`, `sincronia.py` |
-| `ia` | `/api/ia/*` | `ia.py`, `ia_gasto.py` |
-| `gbp`, `modular`, `vigia` | `/api/gbp/*`, `/api/modular/acceso`, `/api/vigia/*` | `fuentes_gbp/servidor_gbp.py`, `fuentes_modular/acceso.py`, `despliegue/vigia.py` |
-| `salud` | `GET /vivo`, `GET /api/salud` | `servir.py` |
+| `decisiones`, `opiniones` | `/api/decisiones`, `/api/respuestas_mili`, `/api/opinion`, `/api/opiniones/*` | `servir.py` |
+| `ajustes`, `ver-dato` | `/api/ajustes/*`, `POST /api/ver_dato` | `servir.py` |
+| `acciones`, `avisos` | `/api/acciones`, `/api/avisos*`, `/api/canales/*` | `servir.py`, `avisos.py`, `avisos_programados.py` |
+| Se quedan en el legado esta noche | `/api/recarga`, `/api/envios/*`, `/api/sincronia/*`, `/api/ia/*`, `/api/gbp/*`, `/api/modular/*`, `/api/vigia/*`, `/api/altas/*`, triaje | hablan con proveedores o tienen transacciones verificadas solo en SQLite |
 
-Reglas del backend:
-- **Mismo contrato.** Mismo método, ruta, códigos (200/401/403/404/503), cabeceras que importan (`ETag`, `Cache-Control`, `X-RO-App` obligatoria en POST) y el **mismo JSON**, con las mismas claves en `snake_case`. Las fechas salen como hoy (texto `AAAA-MM-DD HH:MM:SS` en UTC).
-- **Identidad.** `RO_IDENTIDAD=local`: `X-RO-Yo` / `?yo=` / galleta `ro_yo`, solo escuchando en 127.0.0.1. `RO_IDENTIDAD=access`: solo el sello firmado de Cloudflare Access (`Cf-Access-Jwt-Assertion`, comprobado contra las llaves del equipo `RO_CF_EQUIPO` y la audiencia `RO_CF_AUD`), como `despliegue/acceso_cf.py`. Solo entra quien está `activo`.
-- **«Ver como»:** solo lectura, mínimo de las dos personas, y lo leído queda en el rastro (como `apuntar_lectura_ver_como`).
-- **Rastro imborrable:** lo hace la base (disparadores ya incluidos en la migración `0_base`) y la cadena de huellas (`registro_huellas`) se calcula igual que hoy.
-- **Puerta de secretos:** si `escaner_secretos.py` marca algo en los datos comunes, la API responde 503, como hoy.
-- **Validación** con DTOs (`class-validator`) de lo que hoy valida `servir.py`, sin aceptar más ni menos.
-- **Bucles en segundo plano:** nada de hilos dentro de la API (en la nube puede haber varias copias y se duplicarían). Los cinco bucles de hoy (avisos, avisos programados, envíos, sincronía, vigía) corren en el worker.
+Reglas del backend (para cada ruta que se muda):
+- **Mismo contrato:** método, ruta, códigos, mensajes de error, claves JSON en `snake_case`, fechas en texto UTC, cabeceras que importan (`ETag`, `Cache-Control`; `X-RO-App` obligatoria en POST).
+- **Identidad:** `RO_IDENTIDAD=local` (`X-RO-Yo` / `?yo=` / galleta `ro_yo`, solo en 127.0.0.1) o `access` (solo el sello firmado de Cloudflare Access). Solo entra quien está `activo`. Mientras una ruta va por el proxy, la identidad la sigue comprobando `servir.py`.
+- **«Ver como»:** solo lectura, la intersección de las dos personas, y lo leído queda en el rastro.
+- **Autoridad en el servidor y en cada lectura** (Astra): se revalida persona, puesto, cartera y ámbito en cada petición; nada se fía de ocultar en el navegador.
+- **Desconocido no es cero** (Astra): ausencia de dato, error de fuente, cobertura parcial y cero medido son estados distintos y se conservan tal cual.
+- **Rastro imborrable:** disparadores en la base (ya en `0_base`) y la cadena de huellas calculada igual, con un solo escritor a la vez (candado de transacción, como `BEGIN IMMEDIATE` hoy).
 
 ### 2.3 Base de datos
 
-- `packages/db/prisma/schema.prisma` **no se escribe a mano**: sale de crear en Postgres las tablas que usa hoy la app (`migracion/crear_base_pg.py`) y leerlas con `prisma db pull`. Lo hace `v2/packages/db/scripts/rehacer_base.sh`. Así no se escapa ninguna columna.
-- La migración `0_base` incluye lo que Prisma no sabe expresar: `CHECK`, la vista `v_cartera_hoy` y los disparadores (rastro, historial, acciones, recargas imborrables; «de una acción solo avanza el estado»; «una decisión se contesta una vez»…). Comprobado el 4-oct en un Postgres 16 real: 95 sentencias sin error y `prisma migrate diff` vacío.
-- Esta noche los tipos se quedan **como hoy** (fechas en texto, enteros 0/1) porque el worker en Python escribe en las mismas tablas. Pasar a `timestamptz`, `boolean` y `jsonb` es una migración posterior, cuando el worker esté en Nest.
-- Los datos se copian de `local.db` con `migracion/copiar_sqlite_a_pg.py` (cuadra filas tabla a tabla) y los ficheros de `data/` con `DATABASE_URL=… python3 despliegue/publicacion.py publicar data`.
+- `schema.prisma` **no se escribe a mano**: sale de crear en Postgres las tablas que usa hoy la app (incluidas las columnas que se añaden al arrancar con `ALTER TABLE`) y leerlas con `prisma db pull` (`v2/packages/db/scripts/rehacer_base.sh`).
+- `0_base` incluye lo que Prisma no expresa: `CHECK`, la vista `v_cartera_hoy` y los disparadores del rastro y de «solo avanza el estado».
+- Esta noche los tipos se quedan **como hoy** (texto para fechas, 0/1) porque la app de hoy escribe en las mismas tablas. Tipos de verdad: después (§8).
 
 ### 2.4 Frontend
 
-- **Carcasa en React + shadcn** (menú lateral marino, cabecera, buscador ⌘K, «ver como», menú móvil) con **las mismas clases de `estilos.css`**, que se sigue cargando tal cual (`/legacy/estilos.css`). Tailwind entra sin «preflight» para no cambiar la base. El tema de shadcn apunta a los tokens de RO (`src/styles/ro-tema.css`).
-- **`ctx` en TypeScript** (`src/lib/ctx.ts`): los 40 campos de `crearCtx` de `app.js`, con el mismo comportamiento (memoria por persona con ETag en `datosModulo`, fechas de Madrid, `api()` con `X-RO-App: 1`, `accion()`, `verDato()`, `rastro()`…). Es lo que reciben tanto las pantallas React (por contexto) como las del puente.
-- **El puente** (`<PantallaPuente fichero="mi_dia.js" />`): importa en el navegador el módulo de hoy desde `/legacy/modulos/` y llama a `render(contenedor, ctx)`. Con esto, la mañana del 5 todas las pantallas funcionan aunque no se haya rehecho ninguna.
-- **Pantallas en React:** se rehacen una a una con componentes de `src/components/ro/` (que son `componentes.js` en React, mismas clases) y piezas de shadcn donde encajen (diálogos, menús, pestañas, tablas, ⌘K). Una pantalla rehecha **solo** sustituye al puente si sus fotos salen iguales (≤ 0,5 % de píxeles distintos) para todas las personas, en escritorio y móvil, y sus pruebas siguen verdes.
-- Rutas: `/mi-dia`, `/en-rojo/gac`… (lo de después del id son los `params` de hoy). `/#/x` redirige a `/x` para que no se rompa ningún enlace guardado.
-- Sin Google Fonts (regla de la ronda 14): Montserrat y Geist Mono se sirven desde la app. Claro siempre, nunca modo oscuro.
+- **Direcciones iguales que hoy** (`/#/mi-dia`). Pasar a rutas de verdad (`/mi-dia`) es para otro día: el front de hoy hace `fetch` relativos (`api/…`, `data/…`) que dependen de estar en «/».
+- **Carcasa en React + shadcn** en `/carcasa` con **las mismas clases de `estilos.css`** (que se carga tal cual; Tailwind sin «preflight»; el tema de shadcn apunta a los tokens de RO). Se muda a «/» cuando `puerta.sh f6` sale verde con ella.
+- **Puente de pantallas** (`<PantallaPuente fichero="mi_dia.js" />`): importa el módulo de hoy desde `/legacy/modulos/` y llama a `render(contenedor, ctx)`. Así la carcasa nueva lleva las 37 pantallas desde el primer día.
+- **Pantallas en React:** una a una, de menos a más riesgo. Una pantalla sustituye al puente solo con sus fotos ≤ 0,5 % para todas las personas y tamaños, y el contrato y las baterías en verde.
+- Sin Google Fonts. Claro siempre, nunca modo oscuro.
 
 ---
 
-## 3. Las redes de seguridad (ya hechas y probadas el 4-oct)
+## 3. Las redes de seguridad (hechas y ensayadas el 4-oct)
 
-| Herramienta | Qué demuestra | Orden |
-|---|---|---|
-| `migracion/inventario.py` | que no se olvida ninguna pantalla, ruta, tabla, regla o componente, y qué ha cambiado hoy | `python3 migracion/inventario.py --comparar` |
-| `migracion/contrato.py` | que la API nueva responde **lo mismo** que la vieja a cada persona en cada ruta (incluidos los 403 y «ver como») | `grabar` en las dos y `comparar` |
-| `migracion/vectores_permisos.py` | que el motor de permisos nuevo da **las mismas** respuestas que `permisos.py` a cada pregunta | genera vectores; `RO_VECTORES=… pnpm --filter @ro/permisos test` |
-| `v2/tools/capturas` | que cada pantalla se **ve igual**, píxel a píxel, por persona, en escritorio y móvil | `capturar.mjs` en las dos y `comparar.mjs` |
-| Baterías de hoy (`pruebas_e0.py`, `pruebas_seguridad.py`, `pruebas_coherencia.py`…) | que la seguridad y la coherencia siguen | se lanzan contra la app nueva (`--puerto 3000`) |
-| `migracion/crear_base_pg.py` + `rehacer_base.sh` | que la base nueva tiene todas las tablas y protecciones | ver 2.3 |
-| `migracion/copiar_sqlite_a_pg.py` | que no se pierde ni una fila al pasar a Postgres | cuadra filas tabla a tabla |
+| Herramienta | Qué demuestra |
+|---|---|
+| `migracion/puerta.sh f1…f7` | junta todo lo de abajo en una orden por fase y dice VERDE o ROJO |
+| `migracion/servicios.sh` | arranca siempre igual la app de hoy (8770), el legado sobre Postgres (8771), Nest (4000) y Next (3000), todo en 127.0.0.1 y con las salidas externas apagadas |
+| `migracion/inventario.py --comparar` | que no se olvida ninguna pantalla, ruta, tabla, columna, regla o componente, y qué ha cambiado hoy |
+| `migracion/contrato.py` | que cada GET responde **lo mismo** a cada persona (y a Tomás «viendo como» cada una), incluidos los 403 |
+| `migracion/contrato_escritura.py` | que cada POST responde lo mismo **y deja la base igual**, partiendo de la misma copia |
+| `migracion/vectores_permisos.py` | que el motor de permisos en TypeScript da las mismas respuestas que `permisos.py` |
+| `v2/tools/capturas` | que cada pantalla **se ve igual** (≤ 0,5 % de píxeles) y no tiene errores de página nuevos |
+| `migracion/baterias.sh` (la monta Cursor en la fase 1) | que las baterías de hoy y las focalizadas de Astra siguen verdes contra la app nueva |
+| restauración (en `puerta.sh f7`) | que una copia de la base se restaura y responde igual (lo pide Astra antes de cualquier piloto) |
 
-Ensayo del 4-oct (en la nube de Claude, con datos inventados): grabar dos veces la misma app da 0 diferencias de contrato y 0,00 % de píxeles distintos. Es decir: lo que marquen esta noche es una diferencia de verdad, no ruido.
+**Ensayo del 4-oct** (en la nube de Claude, con datos inventados):
+- La app de hoy sobre Postgres frente a SQLite: **595/595** lecturas iguales y escrituras iguales (`puerta.sh f2` en VERDE), después de arreglar 8 fallos de Postgres que habrían roto el despliegue en Render (§7).
+- La app nueva entera (Next → Nest → legado): **595/595** lecturas iguales.
+- Grabar dos veces la misma app: 0 diferencias y 0,00 % de píxeles. Lo que marquen las puertas esta noche es real.
 
 ---
 
-## 4. Las fases de la noche
+## 4. La noche, paso a paso
 
-Cada fase: qué se hace, quién, y la **puerta** (la orden que tiene que salir en verde). Las órdenes, completas, en `migracion/PROMPTS_CURSOR.md`.
+Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuaderno de bitácora (`migracion/PROGRESO.md`). En cada vuelta lee el cuaderno, hace el siguiente paso pendiente, pasa su puerta, hace commit, apunta y sigue con el siguiente. `migracion/noche.sh` lo vuelve a lanzar si se le acaba el contexto o se cae, hasta que el cuaderno diga `ESTADO: TERMINADO` o se acabe el tiempo. Los pasos y sus planes B están en `PROGRESO.md`; aquí, el porqué.
 
-### Fase 0 · Por la tarde (Tomás) · Dejar el Mac listo
-1. Terminar lo de hoy y hacer commit y push en `main`.
-2. `bash migracion/preparar_noche.sh --instalar` hasta que diga **LISTO**.
-3. Abrir la carpeta de la app en Cursor y elegir el modelo (sección 6).
-4. `git switch -c migracion/v2` y pegar el prompt de la fase 1.
+| Fase | Qué | Tiempo orientativo | Puerta |
+|---|---|---|---|
+| **0 · tarde (Tomás)** | traer el plan al Mac, `preparar_noche.sh --instalar` hasta LISTO, lanzar `noche.sh` | — | LISTO |
+| **1 · referencia** | inventario del Mac, escáner, instantánea del código, copia de la base, servicios, grabar contrato, vectores, fotos, casos de escritura, `baterias.sh` | 60 min | `puerta.sh f1` |
+| **2 · base** | arreglo `avisos`→`tuberia_avisos`, `rehacer_base.sh` si cambiaron tablas, Postgres, copia, publicar `data`, la app de hoy sobre Postgres; arreglar `base.py` hasta que lea y escriba igual | 60–90 min | `puerta.sh f2` |
+| **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
+| **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
+| **5 · API a Nest** | grupos de §2.2, uno a uno: se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | lo que quede hasta 2 h antes del final | `puerta.sh f5` por grupo |
+| **6 · front en React** | carcasa en `/carcasa`, `ctx.ts`, puente; carcasa a «/» con fotos iguales; pantallas una a una | lo que quede hasta 1 h antes del final | `puerta.sh f6` por pieza |
+| **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 
-**Puerta:** `preparar_noche.sh` dice LISTO.
-
-### Fase 1 · Inventario y referencia (Cursor)
-1. `python3 migracion/inventario.py --comparar` → `migracion/inventario/CAMBIOS.md`. Todo lo nuevo de hoy entra en el plan (pantallas, rutas, tablas, reglas).
-2. Copia de seguridad: `cp local.db ~/RO_MIGRACION/local.db.antes` y etiqueta `git tag antes-de-migrar`.
-3. Con `servir.py` en 8770: `contrato.py grabar --ver-como` (→ `~/RO_MIGRACION/contrato/viejo`), `vectores_permisos.py`, y `capturar.mjs --modo viejo`.
-
-**Puerta:** existen las tres grabaciones y `CAMBIOS.md` está revisado.
-
-### Fase 2 · Base de datos
-1. Si `CAMBIOS.md` trae tablas nuevas o cambiadas: `bash v2/packages/db/scripts/rehacer_base.sh`.
-2. `pnpm db:up && pnpm db:deploy` (en `v2/`).
-3. `copiar_sqlite_a_pg.py --sqlite ~/RO_MIGRACION/local.db.antes` y la base del estado de la tubería.
-4. `DATABASE_URL=… python3 despliegue/publicacion.py publicar data`.
-
-**Puerta:** la copia sale «cuadrada», `pnpm --filter @ro/db exec prisma migrate status` dice que está al día y `publicacion.py versiones` enseña una versión vigente de `data`.
-
-### Fase 3 · Motor de permisos (`@ro/permisos`)
-Traducir `permisos.py` función a función (mismos nombres), con «ver como» incluido, `recortar`, `nivel_modulo`, `sin_importes`…
-
-**Puerta:** `RO_VECTORES=~/RO_MIGRACION/vectores pnpm --filter @ro/permisos test` con **100 %** de coincidencias (cada persona, tipo, cliente y persona objetivo; y los recortes).
-
-### Fase 4 · API (Nest)
-Módulos de la tabla 2.2, en este orden: identidad → sesion → datos → clientes → rastro → acciones → resto de lectura → resto de escritura → enchufes.
-
-**Puerta:**
-- `contrato.py grabar --base http://127.0.0.1:3000 … nuevo` + `comparar viejo nuevo` → **0 diferencias**.
-- `python3 pruebas_e0.py --puerto 3000` verde.
-- `pruebas_seguridad.py` contra la API nueva verde (adaptarla para que arranque `v2` en vez de `servir.py`, sin quitar ni una comprobación).
-
-### Fase 5 · Carcasa, ctx y puente
-Carcasa React + shadcn, `ctx.ts`, `PantallaPuente` para las 37 pantallas.
-
-**Puerta:** `capturar.mjs --modo nuevo` + `comparar.mjs` con todas las pantallas ≤ 0,5 % y sin errores de página. **En este punto la app nueva ya está completa** y se puede desplegar.
-
-### Fase 6 · Pantallas en React + shadcn (todo el tiempo que quede)
-Orden: piezas comunes (`componentes.js` → `src/components/ro/`), luego pantallas de menos a más riesgo: Mi perfil, Catálogo de indicadores, Decisiones y rastro, En rojo, Agenda… y al final Mi día, Ficha del cliente, Captación, Bandeja, Panel de dirección y Finanzas.
-
-**Puerta, por pantalla:** fotos ≤ 0,5 % para todas las personas y tamaños + contrato y pruebas verdes. Si no, se deja en el puente y se apunta en el informe. Una pantalla a medias **nunca** sustituye al puente.
-
-### Fase 7 · Listo para la nube
-1. `docker compose --profile completo up --build` en el Mac y repetir contrato y fotos contra esa versión.
-2. Worker: la imagen de hoy (`despliegue/Dockerfile`) con `DATABASE_URL` de la base nueva, para la tubería y los cinco bucles.
-3. Blueprint de la nube (`v2/render.yaml`, a partir de `despliegue/render.yaml`): `ro-web` (Next), `ro-api` (Nest), `ro-worker` (Python), `ro-base` (Postgres). Cloudflare Access delante, igual que en `despliegue/DESPLIEGUE.md`.
-4. Escribir `migracion/INFORME_NOCHE.md`: qué puertas pasaron, qué pantallas quedaron en el puente y por qué, y los pasos de la mañana.
-
-**Puerta:** todo lo anterior en verde contra los contenedores y el informe escrito. Commit y push de la rama `migracion/v2`, y PR a `main` para que lo revise Tomás.
+**Reloj:** `noche.sh` exporta `RO_FIN_NOCHE`. Si faltan menos de 60 minutos, Cursor deja lo que esté haciendo (con su puerta verde, o deshecho) y pasa a la fase 7. Lo que no dé tiempo sigue otro día con el mismo sistema.
 
 ### La mañana del 5 (Tomás)
-Leer `INFORME_NOCHE.md`, revisar el PR y seguir `despliegue/DESPLIEGUE.md` con los servicios nuevos. Hasta el «sí» de Tomás, la app vieja sigue siendo la buena.
+
+Leer `migracion/INFORME_NOCHE.md` y revisar la rama `migracion/v2`. Como dice Astra, **la noche no promete un despliegue**: un piloto necesita permisos verificados con datos reales (fases 2–4), la restauración ensayada (fase 7), las fuentes necesarias disponibles y las funciones críticas probadas. El informe dice cuáles de esas condiciones se cumplen, con el enlace a cada puerta. Hasta el «sí» de Tomás, la app de hoy sigue siendo la buena.
 
 ---
 
-## 5. Si algo se tuerce
+## 5. Si algo se tuerce: reintento y plan B (nunca «paro»)
 
-| Si… | Entonces |
+Regla general: **tres intentos con enfoques distintos** (cada uno apuntado en `PROGRESO.md` con la hipótesis y el resultado). Si el tercero falla, el plan B del paso y seguir.
+
+| Si… | Plan B |
 |---|---|
-| El motor de permisos no llega al 100 % | No se sigue con la API. Es la pieza que no admite «casi». |
-| Una ruta del contrato no cuadra y no se ve por qué | Se deja en el informe con la diferencia exacta y se sigue con las demás. La puerta de la fase 4 no se da por pasada. |
-| Una pantalla en React no queda igual | Se queda en el puente. No se insiste más de dos vueltas. |
-| No da tiempo a la fase 6 | No pasa nada: tras la fase 5 la app nueva ya tiene todo. La fase 6 sigue otro día. |
-| Algo rompe la app vieja | `git switch main` y `cp ~/RO_MIGRACION/local.db.antes local.db`. |
+| Una diferencia en la puerta 2 (la app de hoy sobre Postgres) no se arregla en `base.py` | Se apunta la ruta en `~/RO_MIGRACION/excepciones.txt` con el motivo («función bloqueada en Postgres») y se sigue. Va al informe como **bloqueo para el piloto**, no como migrada. Ejemplo ya conocido: el triaje responde 503 en Postgres a propósito (Astra). |
+| La puerta 3 no sale verde | Es fontanería (cabeceras, Host, compresión): arreglar en `src/legado/proxy.ts` o `next.config.ts`. Si tras 3 intentos sigue, apuntar y seguir con la fase 4 (que no depende de la 3). |
+| El motor de permisos no llega al 100 % en 90 minutos | Se guarda lo hecho, se apunta qué vectores fallan y **no se muda a Nest ninguna ruta que dependa de permisos** (casi todas): se salta la fase 5 y se pasa a la 6. La app sigue entera por el proxy. |
+| Un grupo de rutas no pasa su puerta | Se quitan de `RUTAS_EN_NEST` (vuelven al proxy), se deja el código del módulo en una rama `intento/<grupo>` y se sigue con el siguiente grupo. |
+| La carcasa o una pantalla en React no queda igual | Se queda la de hoy. Una pantalla a medias nunca sustituye a la vieja. |
+| Algo de Cursor se cuelga (servidor que no responde, orden que no vuelve) | `bash migracion/servicios.sh parar todo && bash migracion/servicios.sh arrancar` y repetir el paso. |
+| Se rompe algo de la app de hoy | `git restore` de lo tocado; la base real nunca se toca (todo va sobre copias en `~/RO_MIGRACION/`). |
+| Hace falta una decisión de Tomás | La opción más conservadora (la que no cambia nada visible y se deshace fácil), apuntada en «Preguntas para Tomás» de `NOTAS_NOCHE.md`. |
+| No da tiempo a todo | Normal. Lo que no pasó su puerta sigue por el proxy o el puente: la app está entera igual. |
+
+Líneas rojas que **ni el plan B cruza**: tocar `local.db` o `data/` reales, encender envíos o ClickUp real, `git push` a `main` o con `--force`, credenciales en ficheros, servidores fuera de 127.0.0.1, borrar pruebas o relajarlas para que pasen.
 
 ---
 
-## 6. Con qué modelo de Cursor
+## 6. Con qué modelo y cómo lanzarlo
 
-**Recomendado: Claude Fable 5.1**, si tu Cursor lo ofrece. Es el más capaz de Anthropic para trabajos largos y autónomos de programación, que es justo esto: muchas horas, mucho código y puertas que exigen exactitud. Úsalo con la ventana de contexto grande (modo «Max») y razonamiento alto.
+**Recomendado: Claude Fable 5.1**, si tu Cursor lo ofrece: es el más capaz de Anthropic para trabajos largos y autónomos de programación. **Alternativa: Claude Opus 5.5.** No uses modelos «rápidos» ni el modo automático: en la fase 4 un detalle mal traducido abre un agujero de permisos. No he podido comprobar desde aquí qué modelos tiene tu Cursor; si no ves ninguno de los dos, elige el Claude más reciente de la lista.
 
-**Alternativa: Claude Opus 5.5.** Muy fuerte y más barato. Buena opción si Fable 5.1 no aparece o si el gasto preocupa.
+**Cómo se lanza (dos maneras, la primera es la buena para 8 horas sin nadie):**
 
-No uses modelos «rápidos» ni el modo automático para las fases 3 y 4: ahí un detalle mal traducido abre un agujero de permisos.
+1. **`bash migracion/noche.sh`** (usa la orden de terminal de Cursor, `cursor-agent`). Mantiene el Mac despierto (`caffeinate`), vuelve a lanzar a Cursor cada vez que termina una vuelta, y para solo al acabar o al llegar la hora. Registros en `~/RO_MIGRACION/logs/`. `preparar_noche.sh` comprueba que la orden existe y acepta las opciones; si no, dice cómo instalarla.
+2. **Desde la ventana de Cursor** (si la orden de terminal no está): un chat de agente nuevo, el modelo elegido, «Auto-run» activado para la terminal, y pegar `migracion/PROMPT_NOCHE.md`. Funciona igual, pero si Cursor se detiene (límite de la conversación), nadie lo relanza hasta la mañana.
 
-No he podido comprobar desde aquí qué modelos tiene tu Cursor. Si no ves ninguno de los dos, elige el Claude más reciente de la lista.
-
-Cómo trabajar con él:
-- Un chat de agente por fase, empezando con el prompt de `PROMPTS_CURSOR.md`. Al acabar una fase, un chat nuevo: el contexto limpio trabaja mejor.
-- Las reglas de `.cursor/rules/` se cargan solas. `AGENTS.md` (raíz) le da el mapa.
-- Deja que ejecute las órdenes (terminal) sin pedir permiso para cada una, salvo `git push`.
+En los dos casos: el Mac **enchufado y con la tapa abierta**, Docker Desktop abierto y sin otras apps pesadas.
 
 ---
 
 ## 7. Cosas encontradas al preparar el plan (4-oct)
 
-1. **La tabla `avisos` está dos veces con columnas distintas:** `schema_v2.sql` (avisos a Tomás) y `despliegue/estado.py` (avisos de la tubería). En local viven en ficheros distintos; en una sola Postgres chocan. Arreglo propuesto: renombrar la de la tubería a `tuberia_avisos` en `despliegue/estado.py`.
-2. **`despliegue/base.py` no traduce 4 disparadores con condición** (`acciones_solo_estado`, `decisiones_una_respuesta`, `opiniones_solo_estado`, `altas_tareas_solo_estado`). En la Postgres de Render, esas protecciones faltarían. La base nueva ya las trae (migración `0_base`); conviene arreglar también `base.py` por si la app vieja se despliega antes.
-3. **Cinco ficheros arrancan un bucle propio dentro del servidor** (avisos, avisos programados, envíos, sincronía, vigía). Con más de una copia del servidor en la nube se duplicarían. En la arquitectura nueva van al worker.
-4. **Las rutas están repartidas en 12 ficheros** (`servir.py` y 11 «enchufes»). El inventario ya los recoge todos.
-5. **La tubería depende de `~/RO_HERRAMIENTAS`** (27 lectores fuera del repo). El worker los necesita en su imagen, como ya hace `despliegue/preparar_contexto.sh`.
-6. **El escáner de secretos (`escaner_secretos.py --proyecto`) recorre también lo que genera v2** (`.next`, `dist`, `src/generated`, `public/legacy`) y da falsos positivos. Arreglo: añadir esas carpetas a `CARPETAS_FUERA`, en su propio commit (fase 1).
+Arregladas ya en este PR (cada una en `despliegue/base.py` o en las herramientas de `migracion/`):
+
+1. **La app de hoy no arrancaba sobre Postgres**: `base.py` no traducía los 4 disparadores con condición (`CREATE TRIGGER IF NOT EXISTS … WHEN`). El despliegue en Render habría fallado al arrancar.
+2. **Ninguna anotación del rastro se podía escribir en Postgres**: `BEGIN IMMEDIATE` no existe ahí. Ahora es un candado de transacción (un solo escritor de la cadena de huellas a la vez, como hoy).
+3. **`INSERT OR REPLACE`**, **`datetime('now', '-1 hour')`** y **`sqlite_master`** no se traducían: fijar clientes, el límite de opiniones por hora, la IA y la sincronía fallaban en Postgres.
+4. **`lastrowid` solo funcionaba en 8 tablas**: el resto (p. ej. `opiniones`) devolvía `None` y rompía avisos y rastro. Ahora vale para cualquier tabla con contador. Y faltaba `rowcount`.
+5. **La columna `registro.huella_previa` se perdía al pasar a Postgres** (se añade con `ALTER TABLE` al arrancar): sin ella, la cadena del rastro no se puede verificar. El inventario ya recoge los `ALTER TABLE … ADD COLUMN`, `0_base` la incluye, y la copia ahora **falla** si alguna columna no se copia.
+6. **Los contadores quedaban uno por delante tras la copia** en tablas vacías (el primer id salía 2).
+7. **El proxy necesita** que `servir.py` reciba su propio `Host` y acepte el origen de Next (`RO_ORIGEN_APP`); ya lo hace `servicios.sh`.
+8. **Nest anunciaba `X-Powered-By: Express`**: quitado (paridad y seguridad).
+
+Pendientes para la noche (están en `PROGRESO.md`):
+
+9. **La tabla `avisos` está dos veces con columnas distintas** (`schema_v2.sql` y `despliegue/estado.py`). Se renombra la de la tubería a `tuberia_avisos`, en su commit (fase 2).
+10. **El escáner de secretos recorre lo que genera v2** (`.next`, `dist`, `generated`, `legacy`) y da falsos positivos. Se añaden a `CARPETAS_FUERA`, en su commit (fase 1).
+11. **Cinco bucles corren dentro del servidor** (avisos, avisos programados, envíos, sincronía, vigía). En la nube, el legado debe ser **una sola copia** hasta que pasen a un worker.
+12. **La tubería depende de `~/RO_HERRAMIENTAS`** (27 lectores fuera del repo). El contenedor del legado los necesita, como ya hace `despliegue/preparar_contexto.sh`.
+13. **Triaje** (Astra): su exclusión está verificada solo en SQLite y en Postgres responde 503 a propósito. Va a `excepciones.txt` y al informe como bloqueo conocido.
 
 ---
 
 ## 8. Después de la noche (para que escale)
 
-- Pasar la matriz de permisos de `reglas_permisos.json` a tablas (`puestos`, `reglas`, `permisos_por_puesto`) con pantalla de edición en Ajustes y su propio rastro. El motor ya estará en un solo sitio (`@ro/permisos`), así que es cambiar de dónde lee.
-- Tipos de verdad en la base (`timestamptz`, `boolean`, `jsonb`) cuando el worker deje de escribir en texto.
-- Pasar la tubería y los bucles a Nest (`@nestjs/schedule` y una cola), uno a uno, con el contrato como red.
-- Pruebas de extremo a extremo con Playwright por puesto, en cada PR.
+- Pasar a Nest lo que quedó en el legado (tubería y bucles con `@nestjs/schedule` y una cola; envíos, sincronía, IA, triaje con sus transacciones en Postgres), con las mismas puertas.
+- Pasar la matriz de permisos a tablas (`puestos`, `reglas`, `permisos_por_puesto`) con su pantalla en Ajustes y su rastro. El motor ya estará en un solo sitio (`@ro/permisos`).
+- Tipos de verdad en la base (`timestamptz`, `boolean`, `jsonb`) cuando nada escriba ya en texto.
+- Rutas de verdad (`/mi-dia`) en vez de `#/mi-dia`, con redirección de las viejas.
+- Las puertas en cada PR (GitHub Actions con datos inventados).

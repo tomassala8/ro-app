@@ -4,13 +4,16 @@ alwaysApply: true
 ---
 # Migración de la app de RO · reglas que mandan
 
-- El plan es `migracion/PLAN_MAESTRO.md`. Las órdenes de cada fase, `migracion/PROMPTS_CURSOR.md`. Lo hecho y lo pendiente de esta noche, `migracion/NOTAS_NOCHE.md` (léelo al empezar cada chat y apúntalo al acabar).
+- El plan es `migracion/PLAN_MAESTRO.md`. El cuaderno de la noche (qué está hecho y qué toca), `migracion/PROGRESO.md`: léelo al empezar y apúntalo al cerrar cada paso. El detalle de cada paso, `migracion/PROMPTS_CURSOR.md`. Notas, preguntas y bloqueos, `migracion/NOTAS_NOCHE.md`.
+- **Nunca te pares ni preguntes**: no hay nadie hasta mañana. Fallo → otro enfoque (hasta 3, apuntados) → plan B del paso → siguiente paso. Dudas → la opción más conservadora, apuntada en «Preguntas para Tomás».
+- **La app nueva siempre entera**: lo que no pasó su puerta sigue por el proxy de legado (`v2/apps/api/src/legado/`) o con el front de hoy. Una ruta entra en `rutas-en-nest.ts`, o una pantalla sustituye a la vieja, solo con su puerta en VERDE.
 - **Nada cambia para quien usa la app**: mismas pantallas, textos, colores, rutas de API, respuestas y 403. Una diferencia es un fallo, no una mejora. No "mejores" nada que no pida el plan.
-- **Se demuestra, no se supone**: cada fase acaba en una puerta (contrato, vectores de permisos, fotos, baterías). Sin verde no se pasa de fase. No digas «hecho» sin la salida de la orden.
-- **Lo de hoy no se toca**: la app vieja (raíz del repo) sigue funcionando. Lo nuevo vive en `v2/` y `migracion/`. Los únicos cambios en la raíz son los de §7 del plan, cada uno en su commit.
+- **Se demuestra, no se supone**: un paso se cierra con `bash migracion/puerta.sh <fase>` en VERDE (sin `--rapido`). No digas «hecho» sin la salida de la orden. Nunca relajes ni saltes una comprobación para que pase.
+- **Lo de hoy no se toca**: la app vieja (raíz del repo) sigue funcionando. Lo nuevo vive en `v2/` y `migracion/`. Los únicos cambios en la raíz son los de los pasos del cuaderno (escáner, `avisos`→`tuberia_avisos`, traducciones de `despliegue/base.py`, `.gitignore`), cada uno en su commit.
+- **Nada sale fuera**: servicios siempre con `migracion/servicios.sh` (sin envíos, sin ClickUp real, sin bucles). Nunca toques `local.db` ni `data/` reales: todo va sobre copias en `~/RO_MIGRACION/`.
 - **Datos reales nunca al repo ni al chat**: grabaciones, vectores, fotos y copias de la base van a `~/RO_MIGRACION/`. No pegues en el chat filas de clientes, correos ni teléfonos: resume.
 - **Nunca** credenciales, tokens ni claves en ficheros versionados (ni de ejemplo). Variables de entorno y `.env` (ignorado).
 - Servidores siempre en `127.0.0.1` en local, nunca en `0.0.0.0` (el 2-oct se expusieron datos por la wifi).
 - Si `migracion/inventario/CAMBIOS.md` trae algo que el plan no cubre, apúntalo en NOTAS_NOCHE.md y cúbrelo con la misma red (contrato/fotos/vectores) antes de seguir.
 - Castellano en textos, comentarios y commits. Frases cortas. Fechas absolutas (5-oct-2026).
-- Commits pequeños, uno por paso del plan. Nada de `git push --force` ni de reescribir `main`.
+- Commits pequeños, uno por paso, con el código del paso delante («F2.4 · …»). Solo `git push origin migracion/v2`. Nunca push a `main` ni `--force`.

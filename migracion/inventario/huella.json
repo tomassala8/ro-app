@@ -1,5 +1,5 @@
 {
-  "AGENTS.md": "560c59bc12630d81",
+  "AGENTS.md": "df9f47e83822985a",
   "LEEME.md": "7386cb5d9111ef14",
   "_ESTADO_C5.md": "27fd84628553f744",
   "_ESTADO_E0.md": "3821b816bce9f077",
@@ -46,7 +46,7 @@
   "despliegue/acceso_cf.py": "14c87348951b5175",
   "despliegue/avisos_tuberia.py": "b57115533da3fc6b",
   "despliegue/barrido_total.py": "ad17c8fdd42e5819",
-  "despliegue/base.py": "2d89c25a4a0bf246",
+  "despliegue/base.py": "d7642823d2ad7d9e",
   "despliegue/copia_base.py": "f6e5b1fa8469e383",
   "despliegue/copia_seguridad.py": "e88f19e59f90f720",
   "despliegue/docker-compose.yml": "5a9dbb2ebf2f5565",
