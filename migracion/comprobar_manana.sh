@@ -72,7 +72,7 @@ if [ -s "$FUERA/commit_f17.txt" ]; then
   [ -n "$piezas" ] && { echo; echo "⚠ Cambiaron desde el cierre de la fase 1 piezas que usan las puertas (míralas: ¿se ha relajado algo?):"; echo "$piezas" | sed 's/^/   /'; }
 fi
 # ficheros nuevos sin commit (un vitest.config nuevo que excluye pruebas no sale en el diff de arriba)
-sueltos="$(git -c core.quotePath=false ls-files --others --exclude-standard -- v2 migracion 2>/dev/null | head -25)"
+sueltos="$(git -c core.quotePath=false ls-files --others --exclude-standard -- v2 migracion 2>/dev/null | grep -vxE "migracion/(PLAN_NOCHE|PLAN_VUELTA|NOTAS_NOCHE|INFORME_NOCHE)\.md" | head -25)"
 if [ -n "$sueltos" ]; then
   echo; echo "⚠ Ficheros nuevos sin commit en v2/ o migracion/ (míralos):"; echo "$sueltos" | sed 's/^/   /'
 

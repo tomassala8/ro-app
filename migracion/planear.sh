@@ -38,6 +38,12 @@ tiene_auditoria() { grep -qE "^## Auditoría $1([ :·]|\$)" "$PLAN"; }
 limpia_n() {   # la primera línea con texto tras su cabecera es «SIN CAMBIOS» (con o sin negrita o punto)
   awk -v n="$1" '$0 ~ "^## Auditoría " n "([ :·]|$)" {f=1; next} f && NF {print; exit}' "$PLAN" | grep -qxE '[*_]*SIN CAMBIOS[*_]*\.?[[:space:]]*'
 }
+# ¿la auditoría N cambió algo más que su propia sección? (un «SIN CAMBIOS» que sí cambió no vale como limpio)
+cambio_fuera_de() {   # cambio_fuera_de <n> <copia de antes>   (las líneas en blanco no cuentan)
+  [ -f "$2" ] || return 1
+  [ "$(awk -v n="$1" '$0 ~ "^## Auditoría " n "([ :·]|$)" {f=1; next} f && /^## / {f=0} !f' "$PLAN" | grep -v '^[[:space:]]*$')" \
+    != "$(grep -v '^[[:space:]]*$' "$2")" ]
+}
 # Tope total (noche.sh lo pone si el plan no estaba hecho de antes): RO_PLAN_FIN, en segundos desde 1970.
 a_tiempo() { [ -z "${RO_PLAN_FIN:-}" ] || [ "$(date +%s)" -lt "$RO_PLAN_FIN" ]; }
 guardar_auditado() { arbol > "$ARBOL_PLAN"; rm -f "$FUERA/PLAN_NOCHE.auditado.md"; cp "$PLAN" "$FUERA/PLAN_NOCHE.auditado.md"; }
@@ -181,8 +187,10 @@ MENSAJE DEL SUPERVISOR: eres la auditoría $n. Tu enfoque: $enfoque."
   fi
   fallos=0
   # ¿limpia? la primera línea con texto tras su cabecera es exactamente «SIN CAMBIOS»
-  if limpia_n $n; then
+  if limpia_n $n && ! cambio_fuera_de $n "$(ultima_copia)"; then
     echo "  ✔ auditoría $n: SIN CAMBIOS"; [ $n -ge "$minimo" ] && { limpia=1; break; }
+  elif limpia_n $n; then
+    echo "  · auditoría $n: dice SIN CAMBIOS pero cambió el plan: cuenta como con correcciones"
   else echo "  · auditoría $n: con correcciones"; fi
   n=$((n + 1))
 done

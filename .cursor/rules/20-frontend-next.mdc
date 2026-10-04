@@ -22,7 +22,7 @@ alwaysApply: false
 - Producción y puertas: `next build` + `.next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado, lo hace `migracion/servicios.sh`). `next start` no vale con `output: "standalone"`.
 
 ## React y Next 16: reglas de oficio
-Guía completa: `v2/.agents/skills/vercel-react-best-practices/` (45 reglas de Vercel, con ejemplos). Léela antes de escribir la carcasa o una pantalla en React. Lo que aplica esta noche:
+Guía completa: `v2/.agents/skills/vercel-react-best-practices/` (52 reglas de Vercel, con ejemplos). Léela antes de escribir la carcasa o una pantalla en React. Lo que aplica esta noche:
 - `await` siempre en `cookies()`, `headers()`, `props.params` y `props.searchParams` (en Next 16 son asíncronos).
 - `useEffect` solo para sincronizar con algo de fuera (DOM, `localStorage`, el puente con `/legacy`, una suscripción). Nunca para pedir datos (eso es `ctx`) ni para copiar un estado en otro: lo derivado se calcula en el render (`const vacio = items.length === 0`).
 - `useState(() => calcular())` si el valor inicial es caro; `setX((antes) => …)` en los callbacks.
@@ -32,5 +32,4 @@ Guía completa: `v2/.agents/skills/vercel-react-best-practices/` (45 reglas de V
 - Piezas de shadcn siempre desde `src/components/ui`; nunca `@base-ui/react` directo.
 - Un `Button` que pinta otra cosa (`render={<a href="#/x" />}`) lleva `nativeButton={false}`.
 - Los menús y diálogos de Base UI necesitan un contexto de apilado propio: `isolation: isolate` y `position: relative` en el contenedor raíz de la carcasa, NO en `body` (`body` lo pinta `estilos.css` y cambiaría las fotos).
-- `<Toaster />` al lado de `{children}`, no envolviéndolo.
-Lo que NO aplica esta noche (las pantallas usan `ctx` y direcciones `#/`): TanStack Query, nuqs, Server Actions, `React.cache`, Prisma.
+Lo que NO aplica esta noche (las pantallas usan `ctx` y direcciones `#/`): TanStack Query, SWR, nuqs, Server Actions, `React.cache`, Prisma.

@@ -14,7 +14,7 @@ Monorepo con pnpm. Lo arma la migración descrita en `../migracion/PLAN_MAESTRO.
 
 ```bash
 corepack enable                 # pnpm 10
-pnpm install
+pnpm install --frozen-lockfile
 cp .env.example .env            # y apps/api/.env, packages/db/.env con la misma DATABASE_URL
 pnpm db:up                      # Postgres en Docker, solo 127.0.0.1
 pnpm db:deploy                  # crea las 40 tablas, con sus CHECK, vista y disparadores
@@ -25,6 +25,6 @@ Comprobado el 4-oct-2026 (en un Linux con Postgres 16, sin Docker): `pnpm instal
 
 ## Base de datos
 
-- `pnpm db:migrate` crea una migración nueva tras cambiar `schema.prisma`.
+- Nunca `pnpm db:migrate` esta noche: ver .cursor/rules/10-backend-nest.mdc.
 - Las tablas las comparte con el worker en Python (tubería, avisos, envíos, sincronía, vigía). Por eso esta noche los tipos se quedan como hoy (fechas en texto).
 - Copiar datos de la app de hoy: `python3 ../migracion/copiar_sqlite_a_pg.py --sqlite <local.db>`.

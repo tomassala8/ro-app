@@ -29,6 +29,8 @@ aparcada() { ls -d "$REAL".real_* 2>/dev/null | head -1; }
 
 cerrar() {   # ~/RO_MIGRACION y Postgres como estaban
   local a; a="$(aparcada)"
+  # los servicios de la copia (8770, 8771, 4000, 3000…), parados: si no, la noche de verdad los reutilizaría
+  [ -d "$ENSAYO/app" ] && (cd "$ENSAYO/app" && RO_MIGRACION="$ENSAYO/fuera" bash migracion/servicios.sh parar >/dev/null 2>&1)
   if [ -L "$REAL" ]; then rm -f "$REAL"; fi
   if [ -n "$a" ] && [ ! -e "$REAL" ]; then mv "$a" "$REAL" && echo "✔ $REAL vuelve a ser la de verdad."; fi
   pg_ensayo stop

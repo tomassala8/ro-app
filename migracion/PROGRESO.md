@@ -28,7 +28,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 - ⬜ F1.3 Instantánea del código del Mac en la rama `migracion/v2` (tras el escáner), las ramas de `migracion/RAMAS_A_JUNTAR.txt` juntadas (PR #2, #3 y #4 del 4-oct), copia de la base y copia congelada de la app de hoy en `~/RO_MIGRACION/ref`. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
 - ⬜ F1.4 Servicios de referencia y grabaciones: contrato, vectores, fotos (con sus tiempos), y `excepciones_solidez.txt` con los fallos heredados conocidos (N-13). Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
 - ⬜ F1.5 Casos de escritura (todos los POST de servir.py: uno que funciona y uno que se deniega). Plan B: ninguno; es imprescindible.
-- ⬜ F1.6 `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez` (último dato bueno de las fuentes), verde contra la app de hoy (8770). Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
+- ⬜ F1.6 `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes), verde contra la app de hoy (8770). Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
 - ⬜ F1.7 `bash migracion/puerta.sh f1` en VERDE. Push de la rama. Plan B: ninguno; repetir lo que falte.
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
@@ -45,13 +45,13 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 ## Fase 4 · Motor de permisos en TypeScript
 
 - ⬜ F4.1 `permisos.py` → `v2/packages/permisos` función a función, con «ver como» explícito, y enchufarlo como el motor de `v2/apps/api/src/permisos/` (sustituye a `MotorSinPortar`). `bash migracion/puerta.sh f4` al 100 %. Máximo 90 minutos. Plan B: apuntar los vectores que fallan y saltar los grupos de rutas (⚠ en F5.1–F5.9). F5.10 (arreglando solo en el legado: `servir.py`, `permisos.py`, `reglas_permisos.json`) y F5.11 siguen.
-- ⬜ F4.2 Pruebas de permisos que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), en `test/*.e2e-spec.ts` (las lanza `puerta.sh` f3/f5/f6/f7). Plan B: `it.todo` con su motivo.
+- ⬜ F4.2 Pruebas de permisos que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), en `test/*.e2e-spec.ts` (las lanza `puerta.sh` f3/f5/f6/f7). Si F4.1 queda ⚠, F4.2 se hace igual: lo que necesite el motor en TypeScript va a `it.todo('F4.1 ⚠')`. Se cierra con `bash migracion/puerta.sh f3` en VERDE. Plan B: `it.todo` con su motivo.
 
 ## Fase 5 · Rutas a Nest (un grupo cada vez; cada uno: módulo + RUTAS_EN_NEST + puerta f5)
 
 Primero los fallos y los escalados (Tomás, 4-oct: los fallos se arreglan sí o sí; mudar rutas a Nest no cambia nada de lo que ve el equipo). Mientras tanto todas las rutas siguen por el proxy, así que en F5.10 se arregla en `servir.py` (y en los dos motores si es de permisos).
 - ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-22; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 2 h 30 antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
-- ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Plan B: apuntar qué no escala como bloqueo para el piloto.
+- ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Se cierra con `python3 migracion/escalados.py` saliendo con 0. Plan B: apuntar qué no escala como bloqueo para el piloto.
 
 Después, las rutas a Nest:
 - ⬜ F5.1 identidad (guarda global) + escritor del rastro de «ver como» (`RASTRO_VER_COMO`) + sesion. **Si F5.1 queda ⚠, F5.2–F5.9 → ⚠ sin intentarlo** (sin identidad ni rastro, toda ruta de Nest falla) y a la fase 6.
@@ -78,7 +78,7 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 ## Fase 7 · Cierre (la última hora, pase lo que pase)
 
 - ⬜ F7.1 `bash migracion/servicios.sh parar web api` y `docker compose --profile completo up --build`: que los contenedores arranquen y respondan (la web del contenedor, en 127.0.0.1:3100: `/vivo`, `/api/elegir`). Después, `docker compose --profile completo stop api web`: la puerta f7 se pasa siempre contra los servicios locales (los vuelve a arrancar ella). Plan B: apuntar qué falla en el contenedor (p. ej. `RO_LEGADO_URL`, «Host no permitido») como bloqueo para el piloto.
-- ⬜ F7.2 `v2/render.yaml` (ro-web, ro-api, ro-legado una sola copia con los bucles y el vigía, ro-base), sin llaves, con el grupo `ro-llaves` completo (`llaves_nube.py` sale con 0), sin `RO_AVISOS_SIN_BUCLE` y con el cron de copias cada hora (§2.10). Plan B: ninguno; es solo escribir.
+- ⬜ F7.2 `v2/render.yaml` (ro-web, ro-api, ro-legado una sola copia con los bucles y el vigía; `ro-base` es el grupo de entorno con la `DATABASE_URL` de Supabase, Session pooler 5432, no una base de Render), sin llaves, con el grupo `ro-llaves` completo (se ejecuta `python3 migracion/llaves_nube.py`, nunca se edita, y sale con 0), sin `RO_AVISOS_SIN_BUCLE` y con el cron de copias cada hora (§2.10). Plan B: ninguno; es solo escribir.
 - ⬜ F7.3 `migracion/INFORME_NOCHE.md` para Tomás (con el estado de cada fallo de `PENDIENTES_LOGICA.md`) y `bash migracion/puerta.sh f7` (incluye el ensayo de restauración).
 - ⬜ F7.4 Commit, `git push origin migracion/v2` y `ESTADO: TERMINADO`.
 

@@ -71,7 +71,7 @@ v2/
 - **Front:** Next no tiene aún página en «/», así que enseña el `index.html` de hoy tal cual (con su CSP, mapa de versiones y precarga). La carcasa en React se construye en `/carcasa` y se muda a «/» solo cuando sus fotos salen iguales. Cada pantalla, igual.
 - **Segundo plano:** la tubería, los avisos, los envíos, la sincronía y el vigía se quedan en Python (el mismo `servir.py` de legado, una sola copia). Pasarlos a Nest es trabajo de después (§8).
 
-### 2.2 Backend: módulos de Nest (orden de mudanza en la fase 5)
+### 2.2 Backend: módulos de Nest (el orden lo manda PROGRESO.md, F5.1–F5.9)
 
 | Grupo | Rutas (idénticas a hoy) | Viene de |
 |---|---|---|
@@ -146,7 +146,7 @@ Cómo queda (paso F5.10, fallos N-01 a N-12):
   - el sello del menú sale de la tubería;
   - «—» en vez de 0, y los totales dicen cuántos faltan.
   - En React (fase 6) está prohibido `?? 0` / `|| 0` sobre una cifra que se pinta.
-- **Puerta:** las pruebas de solidez de `despliegue/pruebas_noche.py --solo-solidez`, más una por fuente en un fichero NUEVO (`despliegue/pruebas_solidez_N-<n>.py`; `pruebas_noche.py` juzga y no se toca) (API falsa caída → último dato bueno + aviso, ningún 0), dentro de `baterias.sh`. Además, `nunca_ceros.mjs` cuenta los `?? 0` del front, y ese número solo puede bajar.
+- **Puerta:** las pruebas de solidez de `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos`, más una por fuente en un fichero NUEVO (`despliegue/pruebas_solidez_N-<n>.py`; `pruebas_noche.py` juzga y no se toca) (API falsa caída → último dato bueno + aviso, ningún 0), dentro de `baterias.sh`. Además, `nunca_ceros.mjs` cuenta los `?? 0` del front, y ese número solo puede bajar.
 
 En la nube, `ro-legado` (una sola copia) sigue siendo quien lee las APIs. La tabla vive en la misma Postgres, así que la copia de seguridad y la restauración de la fase 7 la cubren.
 
@@ -166,7 +166,7 @@ Cada una con su puerta medible, en `puerta.sh` f3, f5, f6 y f7:
 - Nest sigue vivo aunque se caiga el legado;
 - `despliegue/base.py` reutiliza conexiones a Postgres y tira las rotas, así que un reinicio de Postgres no da errores;
 - la guarda de permisos deniega lo no declarado;
-- todo va compilado (`next build` + `next start`), como en la nube.
+- todo va compilado (`next build` + `.next/standalone/apps/web/server.js`), como en la nube.
 
 **Ensayado el 4-oct:**
 - caídas en verde, con un fallo heredado (JSON roto → 500, N-13);
@@ -207,9 +207,9 @@ Antes de encenderlo en la nube hay que arreglar:
 ### 2.9 Escalados («sube a X persona»)
 
 Hay tres mecanismos, y los tres publican **dentro de la app** (canal y campana; nada de correo, WhatsApp ni ClickUp):
-1. **Alertas:** dueño → jefe del departamento → Mili → Tomás, como mucho 3 niveles. Solo escala si pasa el plazo; lo marcado «Lo tengo» o pospuesto no escala. Se ve en Mi día («Escaladas a ti») y en la campana.
-2. **Avisos automáticos** (`avisos_programados.py`): si un aviso sigue sin hacerse pasadas sus horas, sube a la jefa, a Mili o a Tomás.
-3. **Vigía de conexiones:** si cae una conexión, avisa a Agus; si sigue en rojo más de 60 minutos, a Mili y Tomás.
+1. **Alertas:** dueño → jefe del departamento → dirección → Tomás, como mucho 3 niveles. Solo escala si pasa el plazo; lo marcado «Lo tengo» o pospuesto no escala. Se ve en Mi día («Escaladas a ti») y en la campana.
+2. **Avisos automáticos** (`avisos_programados.py`): si un aviso sigue sin hacerse pasadas sus horas, sube a la jefa, a dirección o a Tomás.
+3. **Vigía de conexiones:** si cae una conexión, avisa al responsable de conexiones; si sigue en rojo más de 60 minutos, a dirección y a Tomás.
 
 Los cerebros por área (PR #2) aún no escalan nada: su consejo «escalar» es una nota para la IA. Cuando se conecten, irán por el mismo `avisos.publicar`.
 
@@ -227,7 +227,7 @@ Para que funcionen de verdad en la nube:
 - **Copia inmutable diaria (4-oct, juntado con el hilo de buenas prácticas):** R2 cada hora durante 7 días para recuperar rápido (bloqueo de 7 días), **y** a las 3 y a las 15 UTC la misma copia a **Backblaze B2** en una cuenta aparte, con Object Lock «compliance» de 30 días. R2 protege de un error o de alguien con la llave de la app; B2, de alguien que se haga con Cloudflare o con todas nuestras llaves. Sustituye a la copia semanal en un disco desenchufado (si se quiere, una al mes sigue siendo buena idea). Sin `RO_B2_*` no sube y, en producción, la copia de esas horas sale en rojo.
 - **Dónde corre:** cron `ro-copias` cada hora en `despliegue/render.yaml` (y en `v2/render.yaml`, F7.2). Sin las llaves de R2 sale **en rojo**: en Render el disco de un cron se borra al terminar y la copia no sobreviviría. Las llaves de R2 (`RO_R2_*`) las crea Tomás en Cloudflare; hoy no existen.
 - **Restaurar:** `pg_restore --no-owner -d <base nueva> postgres.dump` de la hora que se quiera. Lo ensaya entero la puerta 7 (volcar, restaurar en otra base, misma API) y `copia_base.py --probar` el día 1 de cada mes.
-- **Además:** la base va en **Supabase** (Tomás, 4-oct). Sus copias diarias son un plan B; la vuelta a un minuto concreto (PITR) es un complemento de pago, y restaura en el mismo proyecto. Las nuestras (R2 cada hora, B2 inmutable) restauran en cualquier Postgres: por eso el volcado lleva solo el esquema `public` y sin permisos. El cliente `pg_dump` de la imagen es el 17 (vuelca 15, 16 y 17). **Antes del piloto, ensayo de restauración desde R2 en una base nueva.** La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
+- **Además:** la base va en **Supabase** (Tomás, 4-oct). Sus copias diarias son un plan B; la vuelta a un minuto concreto (PITR) es un complemento de pago, y restaura en el mismo proyecto. Las nuestras (R2 cada hora, B2 inmutable) restauran en cualquier Postgres: por eso el volcado lleva solo el esquema `public` y sin permisos. El cliente `pg_dump` de la imagen es el 17 (vuelca 15, 16 y 17). **Antes del piloto, ensayo de restauración desde R2 en una base nueva.** La app de hoy en SQLite sigue con su copia diaria verificada (`despliegue/copia_seguridad.py`).
 - **Antes de cada despliegue que cambie la base**, una copia a mano (botón «Trigger Run» del cron `ro-copias` en Render) y después `prisma migrate deploy` como paso que **bloquea el despliegue** si falla (`preDeployCommand` de `ro-api`).
 - **Ensayado el 4-oct** sobre la Postgres de prueba: 41 tablas y 4.742 filas, iguales que la base viva; borra las de más de 7 días y no toca lo que no es una copia. Arreglado de paso: la imagen instalaba `pg_dump` 15, que no puede volcar una Postgres 16 (N-22). La imagen no la he podido construir aquí.
 
