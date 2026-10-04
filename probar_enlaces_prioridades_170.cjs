@@ -1,0 +1,13 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const s=fs.readFileSync('modulos/prioridades_cliente.js','utf8'),inicio=s.indexOf('export function filtrosDesdeEnlace'),fin=s.indexOf('\nexport function instrucciones',inicio);
+const box={URLSearchParams,AREAS:{paid:1,crm:1,accounts:1,seo:1}};vm.createContext(box);vm.runInContext(s.slice(inicio,fin).replace('export ','')+';this.f=filtrosDesdeEnlace;',box);
+const clientes=[{id:'concilia'},{id:'gac'}];
+assert.equal(box.f('#/prioridades-cliente?cliente=gac',clientes).cliente,'gac');
+assert.equal(box.f('#/prioridades-cliente?cliente=gac&area=seo',clientes).area,'seo');
+assert.equal(box.f('#/prioridades-cliente',clientes).cliente,'');
+assert(box.f('#/prioridades-cliente?cliente=ajeno',clientes).error);
+assert(box.f('#/prioridades-cliente?cliente=gac&cliente=concilia',clientes).error);
+assert(box.f('#/prioridades-cliente?area=seo&area=seo',clientes).error);
+assert(box.f('#/prioridades-cliente?area=secreto',clientes).error);
+assert(box.f('#/prioridades-cliente?cliente=__proto__',clientes).error);
+console.log('170 PASS: filtro cliente/área desde enlace exacto, ajeno y ambigüedad bloqueados.');

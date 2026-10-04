@@ -90,7 +90,7 @@ function error(e) {
  * Devuelve un elemento con el botón «Sugerir respuesta» que, al pulsar, pinta el borrador editable.
  * abierto: true lo pide al pintar (pantalla Asistente IA).
  */
-export function botonIA(ctx, { ticket, destino = null, abierto = false } = {}) {
+export function botonIA(ctx, { ticket, destino = null, abierto = false, vigente = () => true } = {}) {
   estilos();
   const ia = iaDe(ctx);
   const raiz = h('div', { class: 'ia-boton', 'data-ia': 'borrador' });
@@ -99,12 +99,13 @@ export function botonIA(ctx, { ticket, destino = null, abierto = false } = {}) {
   raiz.append(h('div', { class: 'ia-acc' }, boton, h('span', { class: 'ia-sub' }, 'Borrador en la voz de RO con el hilo y el estado del cliente. Lo revisas tú; no se envía nada.')), zona);
 
   async function pedir(nuevo) {
+    if(!vigente()){zona.replaceChildren();return;}
     boton.disabled = true;
     zona.replaceChildren(cargando(nuevo ? 'Pidiendo otra versión…' : 'Preparando el borrador…'));
     try {
       const r = await ia.borrador(ticket, nuevo);
-      pintar(r);
-    } catch (e) { zona.replaceChildren(error(e)); }
+      if(vigente()&&raiz.isConnected)pintar(r);else zona.replaceChildren();
+    } catch (e) { if(vigente()&&raiz.isConnected)zona.replaceChildren(error(e));else zona.replaceChildren(); }
     finally { boton.disabled = false; }
   }
 
@@ -119,6 +120,7 @@ export function botonIA(ctx, { ticket, destino = null, abierto = false } = {}) {
     cuerpo.addEventListener('input', ajustar);
     requestAnimationFrame(ajustar);
     const usar = async () => {
+      if(!vigente()||!raiz.isConnected){zona.replaceChildren();return;}
       const texto = cuerpo.value.trim();
       if (!texto) { avisoFlotante('El borrador está vacío', { icono: 'alert' }); return; }
       if (destino) {
@@ -129,6 +131,7 @@ export function botonIA(ctx, { ticket, destino = null, abierto = false } = {}) {
       } else {
         await copiar(texto, 'Borrador copiado');
       }
+      if(!vigente()||!raiz.isConnected){zona.replaceChildren();return;}
       ctx.rastro?.({ accion: 'ia_usar', objeto: r.ticket, detalle: { origen: r.origen, editado: texto !== (r.cuerpo || '').trim() } });
     };
     const descartar = () => {
@@ -187,7 +190,7 @@ function accionEl(a, i) {
 const limpiaFuente = t => String(t || 'la fuente').replace(/\s*\(.*?\)\s*/g, ' ').trim().slice(0, 40);
 
 /** panelCopiloto(ctx, clienteId, { compacto }) · «Qué haría hoy» de un cliente (pestaña Resumen de la ficha). */
-export function panelCopiloto(ctx, clienteId, { compacto = false } = {}) {
+export function panelCopiloto(ctx, clienteId, { compacto = false, vigente = () => true } = {}) {
   estilos();
   const ia = iaDe(ctx);
   const cuerpo = h('div', { class: 'cuerpo ia-cop', 'aria-live': 'polite' }, cargando('Pensando qué haría hoy…'));
@@ -197,9 +200,10 @@ export function panelCopiloto(ctx, clienteId, { compacto = false } = {}) {
     cuerpo);
 
   async function pedir(nuevo) {
+    if(!vigente()){cuerpo.replaceChildren();acciones.replaceChildren();return;}
     cuerpo.replaceChildren(cargando(nuevo ? 'Pidiendo otra propuesta…' : 'Pensando qué haría hoy…'));
-    try { pintar(await ia.copiloto(clienteId, nuevo)); }
-    catch (e) { cuerpo.replaceChildren(error(e)); }
+    try { const r=await ia.copiloto(clienteId,nuevo);if(vigente()&&caja.isConnected)pintar(r);else {cuerpo.replaceChildren();acciones.replaceChildren();} }
+    catch (e) { if(vigente()&&caja.isConnected)cuerpo.replaceChildren(error(e));else {cuerpo.replaceChildren();acciones.replaceChildren();} }
   }
   function pintar(r) {
     acciones.replaceChildren();
@@ -215,6 +219,7 @@ export function panelCopiloto(ctx, clienteId, { compacto = false } = {}) {
     cuerpo.replaceChildren(...[
       h('div', { class: 'ia-cab' }, (c => { c.setAttribute('aria-label', `Estado del cliente: ${txt}`); return c; })(chipEstado(cls, txt)), h('span', { class: 'ia-sub' }, 'Estado del cliente en la verdad única: el mismo que En rojo y la ficha'),
         r.para && r.para !== ctx.persona?.id ? h('span', { class: 'ia-sub' }, `Pensado para ${ctx.nombre?.(r.para) || r.para}`) : null),
+      r.origen==='precalculado'?h('p',{class:'ia-sub',role:'note'},`Propuesta histórica del ${fechaCorta(r.generado)||'corte sin fecha'}. Comprueba los hechos y responsables actuales antes de actuar.`):null,
       h('ul', { class: 'ia-diag', 'aria-label': 'Diagnóstico' }, diag.map((d, i) => h('li', {}, icono(i === 0 ? 'medidor' : 'info'), h('span', {}, conTickets(d, { boton: true }))))),
       h('ol', { class: 'ia-acciones', style: { listStyle: 'none', margin: 0, padding: 0 }, 'aria-label': 'Tres acciones propuestas' },
         (compacto ? (r.acciones || []).slice(0, 1) : (r.acciones || [])).filter(Boolean).map(accionEl)),
@@ -323,7 +328,7 @@ function consejoEl(c, i, { soloLectura, alAccion, aqui, pantalla }) {
       h('b', {}, conTickets(c.que)),
       h('p', {}, conTickets(c.porque)),
       dato ? h('div', { class: 'dato' }, icono('grafico'), h('span', {}, conTickets(dato))) : null,
-      c.dato_en_duda && !String(c.porque || '').includes(c.dato_en_duda) ? h('div', { class: 'dato' }, icono('alert'), h('span', {}, `Dato en duda: ${c.dato_en_duda}`)) : null,
+      c.dato_en_duda && !String(c.porque || '').includes(c.dato_en_duda) ? h('div', { class: 'dato' }, icono('alert'), h('span', {}, c.dato_en_duda === true ? 'Fuente, periodo o definición pendientes de contraste.' : `Dato en duda: ${c.dato_en_duda}`)) : null,
       h('div', { class: 'pie' }, pie.filter(Boolean)),
       filaValoracion(c, { soloLectura, pantalla, i }))));
 }
@@ -408,9 +413,11 @@ export function bloqueConsejo(r, { soloLectura = false, plegado = false, alPlega
     boton.replaceChildren(...(p ? [icono('chev'), 'Ver los consejos'] : ['Plegar']));
   };
   boton.addEventListener('click', () => { const p = !lista.hidden; pintarEstado(p); alPlegar?.(p); });
-  const sello = vivo ? chipEstado('verde', `IA · ${String(r.generado || '').slice(11, 16)}`.trim())
-    : chipEstado('gris', `Reglas · datos ${horaDatos(r.generado)}`.trim());
-  if (!vivo) sello.title = r.ia?.conectada ? 'La IA lo está redactando' : (r.ia?.motivo || 'Sin clave de Anthropic: salen las reglas, que ya funcionan solas');
+  const soloReferencias = xs.every(c => c.verificacion_304?.version === '304.1' && c.verificacion_304?.estado === 'referencia_por_contrastar');
+  const sello = soloReferencias ? chipEstado('gris', `${vivo ? 'IA' : 'Reglas'} · referencias por contrastar`) : vivo ? chipEstado('verde', `IA · ${String(r.generado || '').slice(11, 16)}`.trim())
+    : chipEstado('gris', 'Reglas · propuestas por revisar');
+  if (soloReferencias) sello.title = 'La fecha de generación de esta copia no acredita una medición actual del cliente.';
+  else if (!vivo) sello.title = r.ia?.conectada ? 'La IA lo está redactando' : (r.ia?.motivo || 'Sin clave de Anthropic: salen las reglas, que ya funcionan solas');
   // M1: las fuentes con retraso ya no ocupan un consejo: van aquí, en una sola chapa con el detalle al pasar por encima
   const ret = (r.retrasos || []).filter(x => x?.nombre);
   const selloFuentes = ret.length ? chipEstado('ambar', ret.length === 1 ? `${ret[0].nombre} con retraso` : `${ret.length} fuentes con retraso`) : null;

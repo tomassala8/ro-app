@@ -1,0 +1,53 @@
+punto,ruta,funcion,linea,estado,pendiente
+L18,modulos/mi_dia.js,_fechaDe / fDiaRO / fDiaHoraRO,65,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/crm.js,_fechaDe / fDiaRO / fDiaHoraRO,72,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/en_rojo.js,_fechaDe / fDiaRO / fDiaHoraRO,36,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/ficha.js,_fechaDe / fDiaRO / fDiaHoraRO,58,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/captacion.js,_fechaDe / fDiaRO / fDiaHoraRO,59,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/seo.js,_fechaDe / fDiaRO / fDiaHoraRO,55,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/decisiones.js,_fechaDe / fDiaRO / fDiaHoraRO,52,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/primera_semana.js,_fechaDe / fDiaRO / fDiaHoraRO,27,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/asistente_ia.js,_fechaDe / fDiaRO / fDiaHoraRO,27,pendiente estático,"Parser/formatos heredados con Date y getters del host; comprobar uso efectivo. Captación pertenece a Paid, coordinar propietario."
+L18,modulos/mi_dia_bloques.js,fecha / edadH / diaCorto / horaCorta / cuandoTxt / fresco,43,pendiente estático,Sin zona usa host; futuro se clampa a0. Preservar civil frente a instante.
+L18,modulos/mi_dia_bloques.js,reuPasada,1600,pendiente estático,Fin de cita calculado desde parser heredado; no cambiar duración45min.
+L18,modulos/mi_dia_bloques.js,lmFecha / lmEstados,1933,pendiente estático,Lo mío aún interpreta instantes con Date local; separar cola UTC explícita de fuentes Madrid.
+L18,modulos/mi_dia.js,filasLoMio / plazoTxt / botonPosponer,824,pendiente estático,Plazos y fecha de posposición con parser/getters del host; preservar guards y Deshacer.
+L18,modulos/dinero_comun.js,fresco,85,pendiente estático,Edad parseada con Date local; ausente/futuro/NaN pueden parecerok. No tocar importes ni metodología.
+L18,modulos/evidencias_kpi.js,fechaHechoLocal / crearRegistroHechos,3,pendiente estático,datetime-local usa huso del ordenador al validar y serializar; definir contrato del hecho antes de cambiar.
+L18,modulos/nuevos.js,tablaTalleres (columna inicio),637,pendiente estático,"Date local del taller y hora por substring; revisar offset, DST y fecha inválida."
+L18,modulos/nuevos.js,fechaLarga / fechaHora,94,pendiente estático,Formato civil por prefijo; contrastar fuente con offset antes de migrar.
+L18,modulos/ia_componentes.js,horaDatos,390,pendiente estático,Parser y comparación hoy con Date del host.
+L18,modulos/_tarea_ia.js,fechaSegura,38,pendiente estático,Valida datetime sin zona con Date local; no inventar instante si fuente no declara zona.
+L18,modulos/informe_revisar.js,dia,33,pendiente estático,Formato de datetime por getters del host.
+L18,modulos/_gbp_bloques.js,fDia,24,pendiente estático,Formato heredado susceptible a offset/host.
+L18,modulos/ajustes.js,horaOp,107,pendiente estático,AñadeZ a texto sin comprobar offset y formatea en host; contrato de cola UTC debe conservarse.
+L18,modulos/informe.js,fHora / fLocal / fDia,166,pendiente estático,fHora ya Madrid pero detector de offset y civil/invalidación requieren revisión específica; no reemplazar UTC legítimo.
+L18,modulos/ficha.js,etapa / pintarChat (conDia),163,pendiente estático,Edad desde alta civil y agrupación de eventos con getters del host; calendario vs horas transcurridas.
+L18,modulos/en_rojo.js,etapa / pintarDetalle (Campaña encendida),287,pendiente estático,Edad desde fecha civil y suma de días sobre Date local; no transformar cadencia o metodología.
+L19,modulos/mi_dia_bloques.js,registro def/num('captacion_ro'),192,pendiente estático,Dato seleccionado con mesActual Madrid pero etiqueta del mes del host.
+L19,modulos/mi_dia_bloques.js,registro def/num('vro_embudo'),1633,pendiente estático,Número de días y día transcurrido del mes del host para ritmo.
+L19,modulos/mi_dia_bloques.js,registro def/num('vro_costes'),1645,pendiente estático,Mes leído Madrid y nombre del host mezclados.
+L19,modulos/mi_dia_bloques.js,registro def/num('cierre_celebradas'),1893,pendiente estático,Nombre del host para datos mensuales; conservar comparación histórica rotulada.
+L20,modulos/mi_dia_bloques.js,registro def('adm_bajas'),423,contrato de origen pendiente,"Doc de octubre rotulado como fuente vigente: confirmar periodo DTO, mantener corte si histórico."
+L20,modulos/mi_dia_bloques.js,registro num('setter_celebradas'),1889,contrato de origen pendiente,Empezamos lunes5oct: confirmar si hito histórico o explicación vigente.
+L20,modulos/dinero_cliente.js,pintar,87,"revisión de rótulo/corte, no migración automática","Cuota/línea octubre; horas septiembre. El módulo declara esas copias históricas: mostrar corte, nunca relabel a mesactual."
+L20,modulos/outreach.js,pintarFrente (Resultados por cliente septiembre),220,contrato de origen pendiente,Mes fijo: conservar histórico; origen DTO debe aportar otro periodo antes de dinamizar.
+L20,modulos/personas.js,vistaContratacion / vistaSueldos,495,histórico a conservar,Plan octubre/noviembre y proyección2026: mantener histórico; no inferir reclutamiento o proyección vigente.
+L20,modulos/dinero_m16_anuncios.js,pintarAnunciosYPrevision,84,referencia histórica a conservar,Tasas de septiembre usadas como referencia: no cambiar método ni dinero para corregir un título.
+L22,servir.py,ahora,255,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,servir.py,registrar_agrupado,437,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,servir.py,tope_rastro_navegador,459,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,servir.py,nombres_para_su_dueno,1280,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,servir.py,apuntar_lectura_ver_como,2063,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,cliente_para_borrador,310,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,contexto_borrador,350,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,contexto_copiloto,422,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,borrador,592,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,copiloto,636,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,copiloto_reglas,670,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,candidatos_vivos,806,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,candidatos_de,826,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,candidatos_al_momento,937,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,_con_ia,1066,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,_con_ia,1072,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."
+L22,ia.py,_con_ia,1095,pendiente estático,"datetime.now sin zona: reloj de negocio Madrid vs sello UTC de persistencia; no cambiar esquema, caches ni DB por sustitución global."

@@ -24,8 +24,19 @@ Qué hay:
      nada se escribe. Cada mensaje escrito deja su fila en el rastro.
 
 Rutas:  GET  /api/canales · /api/canales/canal?id=&antes= · /api/canales/campana · /api/canales/buscar?q= · /api/canales/clickup?canal=&antes=
+             /api/canales/escalado (tipos y a quién va cada uno para quien mira) · /api/canales/adjuntables?q= · /api/canales/llamadas
         POST /api/canales/mensaje · /api/canales/leido · /api/canales/estado · /api/canales/preferencias · /api/canales/grupo ·
-             /api/canales/miembro · /api/canales/campana_vista
+             /api/canales/miembro · /api/canales/campana_vista · /api/canales/escalar · /api/canales/videollamada · /api/canales/llamar
+
+3-oct (encargo de Tomás «chat usable de verdad para sustituir el de ClickUp» + «orden de escalado oficial»):
+  · MENSAJES DIRECTOS 1 a 1 (canal «dm-<a>--<b>», ids ordenados): solo esas dos personas; NUNCA en «ver como» (ni Mili ni
+    Tomás los leen, ni siendo una de las dos). Cuentan en la campana como «mensajes directos sin leer».
+  · ADJUNTOS: enlace a un cliente o a una tarea de Producción. Se guarda el id; cada persona ve el nombre solo si puede abrir
+    ese cliente (o es la dueña de la tarea); si no, «un cliente que no llevas».
+  · PEDIR AYUDA / ESCALAR: el tipo decide a quién (escalado.py → data/escalado.json) y le llega un mensaje directo con el
+    contexto (cliente, pantalla, qué pasa). «Nadie lo resuelve» va a Mili con el botón «No encuentro quién: pasar a Tomás».
+  · VIDEOLLAMADA en canales, grupos y directos (Jitsi, sala aleatoria) y LLAMAR con Zadarma («te llamo y te conecto»,
+    simulado): llamadas.py.
 Pruebas: RO_AVISOS_AHORA=«AAAA-MM-DD HH:MM» (hora de Madrid) simula el reloj para el resumen diario.
 """
 import json
@@ -44,6 +55,9 @@ AQUI = Path(__file__).resolve().parent
 DATA = AQUI / "data"
 sys.path.insert(0, str(AQUI / "fuentes_chat_equipo"))
 from tapado import limpiar, tapar  # noqa: E402
+sys.path.insert(0, str(AQUI))
+import escalado as ESC  # noqa: E402  (3-oct: orden de escalado oficial, data/escalado.json)
+import llamadas as LL  # noqa: E402   (3-oct: videollamadas y Zadarma, data/llamadas.json)
 
 S = P = None                     # servir y permisos, al enganchar
 MADRID = ZoneInfo("Europe/Madrid")
@@ -290,9 +304,24 @@ def grupos_propios(con):
     return {r["id"]: dict(r) for r in con.execute("SELECT * FROM canal_grupos ORDER BY creado")}
 
 
-def puede_abrir_cliente(p, cid):
-    cp = P.contexto(p, S.E.crudo)
-    return P.ver(p, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)["ok"]
+def puede_abrir_cliente(p, cid, real=None):
+    """Notificación operativa: cliente ACT y ambas identidades canónicas actuales."""
+    from fuentes_verdad import clientes_activos as ACT
+    raw = S.E.crudo
+    clientes = [c for c in raw.get("clientes") or [] if isinstance(c, dict) and c.get("id") == cid]
+    if not isinstance(cid, str) or len(clientes) != 1 or ACT.es_activo_id(cid) is not True or clientes[0].get("activo") is False:
+        return False
+    if real is None:
+        contexto_real = getattr(P._HILO, "real", None)
+        real = contexto_real[0] if contexto_real else p
+    for identidad in (p, real):
+        actuales = [a for a in raw.get("personas") or [] if isinstance(a, dict) and a.get("id") == identidad.get("id")]
+        if len(actuales) != 1 or actuales[0].get("estado") != "activo" or actuales[0].get("activo") is False:
+            return False
+        actual = actuales[0]
+        if not P.ver(actual, {"tipo": "cliente_detalle", "cliente_id": cid}, P.contexto(actual, raw))["ok"]:
+            return False
+    return True
 
 
 def canales_de(p, con, extra=None):
@@ -318,21 +347,57 @@ def canales_de(p, con, extra=None):
         cid = c["id"]
         gid = f"cliente-{cid}"
         dentro = cid in cartera or pid in ana.get(gid, ()) or todo
-        if dentro and P.ver(p, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)["ok"]:
+        if dentro and puede_abrir_cliente(p, cid):
             out[gid] = {"id": gid, "tipo": "cliente", "cliente_id": cid, "nombre": c["nombre"], "titulo": c["nombre"],
                         "por_que": "Llevas este cliente" if cid in cartera else ("Te han añadido" if pid in ana.get(gid, ()) else "Dirección"),
                         "con_mensajes": cid in con_msgs,
                         "descripcion": f"Grupo del cliente {c['nombre']}: solo quien lo lleva y quien puede abrir el cliente"}
     for gid, g in grupos.items():
         if pid in ana.get(gid, ()):
-            if g.get("cliente_id") and not P.ver(p, {"tipo": "cliente_detalle", "cliente_id": g["cliente_id"]}, cp)["ok"]:
+            if g.get("cliente_id") and not puede_abrir_cliente(p, g["cliente_id"]):
                 continue
             out[gid] = {"id": gid, "tipo": "propio", "cliente_id": g.get("cliente_id"), "nombre": g["nombre"], "titulo": g["nombre"],
                         "por_que": "Te han añadido" if g["creado_por"] != pid else "Lo creaste tú",
                         "descripcion": f"Grupo creado por {corto(g['creado_por'])}"}
+    for did in directos_con_mensajes(con):
+        meta = meta_directo(did, pid)
+        if meta:
+            out[did] = meta
     for c in out.values():
         c.setdefault("titulo", f"#{c['nombre']}")
     return out
+
+
+# =================================================================== mensajes directos 1 a 1 (3-oct)
+def id_directo(a, b):
+    """Canal de un mensaje directo: «dm-<a>--<b>» con los dos ids ordenados (los ids no llevan «--»)."""
+    x, y = sorted([str(a), str(b)])
+    return f"dm-{x}--{y}"
+
+
+def pareja_directo(cid):
+    """«dm-a--b» → (a, b) o None si no es un directo bien formado."""
+    m = re.fullmatch(r"dm-([a-z0-9_]+)--([a-z0-9_]+)", str(cid or ""))
+    if not m or m.group(1) == m.group(2) or [m.group(1), m.group(2)] != sorted([m.group(1), m.group(2)]):
+        return None
+    return m.group(1), m.group(2)
+
+
+def meta_directo(cid, pid):
+    """El directo visto por pid (que tiene que ser una de las dos personas, y la otra estar activa)."""
+    par = pareja_directo(cid)
+    if not par or pid not in par:
+        return None
+    otro = par[1] if par[0] == pid else par[0]
+    po = persona(otro)
+    if not po or not po.get("activo") or (po.get("estado") or "activo") != "activo":
+        return None
+    return {"id": cid, "tipo": "directo", "con": otro, "nombre": po.get("alias") or po.get("nombre"), "titulo": po.get("nombre") or po.get("alias"),
+            "por_que": "Mensaje directo", "descripcion": "Solo vosotros dos. No se ve en «ver como» (ni Mili ni Tomás)."}
+
+
+def directos_con_mensajes(con):
+    return [r["canal_id"] for r in con.execute("SELECT DISTINCT canal_id FROM canal_mensajes WHERE canal_id LIKE 'dm-%'")]
 
 
 def clientes_con_mensajes(con):
@@ -340,6 +405,9 @@ def clientes_con_mensajes(con):
 
 
 def miembros_de(canal_id, con):
+    par = pareja_directo(canal_id)
+    if par:
+        return [x for x in par if (persona(x) or {}).get("activo")]
     extra = (anadidos(con), grupos_propios(con), clientes_con_mensajes(con))
     return [p["id"] for p in activas() if canal_id in canales_de(p, con, extra)]
 
@@ -366,9 +434,9 @@ class Vista:
         extra = (anadidos(con), grupos_propios(con), clientes_con_mensajes(con))
         self.canales = canales_de(persona_, con, extra)
         self.alertas = ids_alertas(persona_["id"])
-        if self.como:   # lo que ven LAS DOS
+        if self.como:   # lo que ven LAS DOS; los mensajes directos, nunca (3-oct: chats privados fuera de «ver como»)
             suyos = canales_de(real, con, extra)
-            self.canales = {k: v for k, v in self.canales.items() if k in suyos}
+            self.canales = {k: v for k, v in self.canales.items() if k in suyos and v.get("tipo") != "directo"}
             self.alertas &= ids_alertas(real["id"])
         self._cli, self._quitar = {}, {}
         self.todas, self.generado = alertas_por_id()
@@ -376,9 +444,18 @@ class Vista:
         self.pref = preferencias(persona_["id"], con)
         self.sueldos = ve_sueldos(persona_) and (not self.como or ve_sueldos(real))
 
+    def abrir_directo(self, cid):
+        """Un directo todavía sin mensajes: entra en sus canales si es una de las dos personas (nunca en «ver como»)."""
+        if cid in self.canales or self.como:
+            return cid in self.canales
+        meta = meta_directo(cid, self.p["id"])
+        if meta:
+            self.canales[cid] = {**meta, "titulo": meta["titulo"]}
+        return bool(meta)
+
     def cliente(self, cid):
         if cid not in self._cli:
-            self._cli[cid] = P.ver(self.p, {"tipo": "cliente_detalle", "cliente_id": cid}, self.cp)["ok"]
+            self._cli[cid] = puede_abrir_cliente(self.p, cid, self.real)
         return self._cli[cid]
 
     def quitar(self, cid):
@@ -498,7 +575,95 @@ def fila_a_json(r, V, padres=None):
         out["pedido"] = {k: (str(pd.get(k))[:900] if isinstance(pd.get(k), str) else pd.get(k)) for k in ("id", "cliente_id", "cliente", "quien", "creada", "para", "formatos", "anuncio", "brief")}
     if r["tipo"] == "evento" and r["dueno_id"]:
         out["dueno_id"], out["vence"] = r["dueno_id"], r["vence"]
+    if isinstance(datos.get("adjuntos"), list):       # 3-oct: enlace a un cliente o a una tarea, según lo que pueda abrir quien mira
+        out["adjuntos"] = [adjunto_para(V, a) for a in datos["adjuntos"][:3] if isinstance(a, dict)]
+    if isinstance(datos.get("escalado"), dict):        # 3-oct: petición de ayuda (orden de escalado oficial)
+        e = datos["escalado"]
+        sub = getattr(V, "_subidos_c", None)
+        if sub is None:
+            sub = V._subidos_c = _subidos(V.con)
+        out["escalado"] = {"tipo": e.get("tipo"), "tipo_texto": e.get("tipo_texto"), "para": e.get("para"), "de": e.get("de"),
+                           "siguiente": e.get("siguiente"), "subido": r["id"] in sub, "ruta": e.get("ruta") if str(e.get("ruta") or "").startswith("#/") else None,
+                           "puede_subir": bool(not V.como and e.get("siguiente") and V.p["id"] == e.get("para") and r["id"] not in sub)}
+    if isinstance(datos.get("video"), dict):            # 3-oct: videollamada abierta en el canal
+        out["video"] = {"sala": datos["video"].get("sala"), "url": P.enlace_seguro(datos["video"].get("url")), "incrustado": bool(datos["video"].get("incrustado"))}
     return out
+
+
+def _subidos(con):
+    """Peticiones de ayuda que ya se han pasado al siguiente de la cadena (clave «subir:<id>»)."""
+    return {int(r["clave"].split(":")[1]) for r in con.execute("SELECT clave FROM canal_mensajes WHERE clave LIKE 'subir:%'") if r["clave"].split(":")[1].isdigit()}
+
+
+# =================================================================== adjuntos: cliente o tarea (3-oct)
+def _tareas():
+    doc = leer_json(DATA / "produccion" / "produccion.json", {}) or {}
+    return {str(t.get("id")): t for t in doc.get("cola") or [] if t.get("id")}
+
+
+def ve_tarea(V, t):
+    """Una tarea la ve su dueña, quien puede abrir su cliente, su jefe, operaciones y dirección."""
+    if not t:
+        return False
+    pid = V.p["id"]
+    if t.get("persona_id") == pid or (persona(t.get("persona_id")) or {}).get("jefe") == pid:
+        return not V.como or V.real["id"] in (t.get("persona_id"), (persona(t.get("persona_id")) or {}).get("jefe")) or bool(P.puestos_de(V.real) & TODOS_LOS_AVISOS)
+    if P.puestos_de(V.p) & TODOS_LOS_AVISOS:
+        return True
+    return bool(t.get("cli")) and V.cliente(t.get("cli"))
+
+
+def adjunto_para(V, a):
+    if a.get("tipo") == "cliente":
+        cid = a.get("id")
+        if cid and V.cliente(cid):
+            return {"tipo": "cliente", "id": cid, "nombre": nombre_cliente(cid), "ir": f"#/ficha/{cid}"}
+        return {"tipo": "cliente", "oculto": True, "nombre": "Un cliente que no llevas"}
+    if a.get("tipo") == "tarea":
+        t = _tareas().get(str(a.get("id")))
+        if t and ve_tarea(V, t):
+            return {"tipo": "tarea", "id": t["id"], "nombre": str(t.get("tarea") or "Tarea")[:120], "cliente": t.get("cliente"),
+                    "ir": f"#/produccion/tarea/{t['id']}"}
+        return {"tipo": "tarea", "oculto": True, "nombre": "Una tarea que no es de tu equipo" if t else "Tarea que ya no está en Producción"}
+    return {"tipo": "otro", "oculto": True, "nombre": "Adjunto"}
+
+
+def validar_adjuntos(V, lista):
+    """Lo que manda el navegador → lo que se guarda (solo ids que quien escribe puede abrir). Error en llano si no."""
+    out = []
+    for a in (lista or [])[:3]:
+        if not isinstance(a, dict):
+            continue
+        tipo, aid = a.get("tipo"), str(a.get("id") or "")
+        if tipo == "cliente":
+            if not any(c["id"] == aid for c in S.E.crudo["clientes"]) or not V.cliente(aid):
+                return None, "No puedes adjuntar un cliente que no abres."
+            out.append({"tipo": "cliente", "id": aid})
+        elif tipo == "tarea":
+            t = _tareas().get(aid)
+            if not t or not ve_tarea(V, t):
+                return None, "No puedes adjuntar una tarea que no ves."
+            out.append({"tipo": "tarea", "id": aid, "cliente_id": t.get("cli")})
+        else:
+            return None, "Solo se adjunta un cliente o una tarea."
+    return out, None
+
+
+def adjuntables(V, q):
+    """Clientes que puede abrir y tareas que ve, que encajan con lo buscado (para el selector «Adjuntar»)."""
+    qn = norm(q).strip()
+    cli = [{"tipo": "cliente", "id": c["id"], "nombre": c["nombre"]} for c in S.E.crudo["clientes"]
+           if (not qn or qn in norm(c["nombre"])) and V.cliente(c["id"])][:12]
+    mias = []
+    for t in _tareas().values():
+        if (not qn and t.get("persona_id") != V.p["id"]) or (qn and qn not in norm(t.get("tarea")) and qn not in norm(t.get("cliente"))):
+            continue
+        if ve_tarea(V, t):
+            mias.append({"tipo": "tarea", "id": t["id"], "nombre": str(t.get("tarea") or "")[:120], "cliente": t.get("cliente"),
+                         "de": t.get("persona_id"), "vence": t.get("vence")})
+        if len(mias) >= 12:
+            break
+    return cli + mias
 
 
 def visibles(V, canal_ids=None, desde_id=0):
@@ -559,12 +724,16 @@ def campana(V, filas=None, lista=None):
         if r["quien"] == V.p["id"] or r["canal_id"] not in lista:
             continue
         menc = V.p["id"] in json.loads(r["menciones"] or "[]")
-        if not menc:
+        directo = lista[r["canal_id"]].get("tipo") == "directo"
+        if not menc and not directo:
             continue
         sin_leer = r["id"] > lei.get(r["canal_id"], 0)
+        if directo and not menc and not sin_leer:
+            continue                        # un directo ya leído no se queda en la campana
         c = lista[r["canal_id"]]
         tipo = "aviso" if r["tipo"] == "aviso" else ("escalado" if str(r["clave"] or "").startswith("escalado:")
-                                                    else "evento" if r["tipo"] == "evento" else "mencion")
+                                                    else "ayuda" if r["datos"] and '"escalado"' in r["datos"] and directo
+                                                    else "directo" if directo else "evento" if r["tipo"] == "evento" else "mencion")
         if tipo == "aviso":
             av = aviso_de(r, V)
             if av["estado"] not in ESTADOS_ABIERTOS or av["responsable_id"] != V.p["id"]:
@@ -580,10 +749,11 @@ def campana(V, filas=None, lista=None):
         resumen = {"dia": res["dia"], "titulo": res["titulo"], "texto": P.sin_importes(res["texto"], V.quitar(None)),
                    "hora": res["creado"].replace(" ", "T") + "Z", "nuevo": not (r0 and r0["resumen_visto"] == res["dia"])}
     no_leidos = sum(c["no_leidos"] for c in lista.values() if not c["silenciado"])
-    menciones = sum(1 for x in items if x["sin_leer"] and x["tipo"] != "aviso")
+    menciones = sum(1 for x in items if x["sin_leer"] and x["tipo"] not in ("aviso", "directo", "ayuda"))
+    directos = sum(1 for x in items if x["sin_leer"] and x["tipo"] in ("directo", "ayuda"))
     para_ti = sum(1 for x in items if x["tipo"] == "aviso")
     nuevas = sum(1 for x in items if x["nueva"]) + (1 if resumen and resumen["nuevo"] else 0)
-    return {"no_leidos": no_leidos, "menciones": menciones, "avisos_para_ti": para_ti, "nuevas": nuevas,
+    return {"no_leidos": no_leidos, "menciones": menciones, "directos": directos, "avisos_para_ti": para_ti, "nuevas": nuevas,
             "hasta_id": max([r["id"] for r in filas], default=0), "items": items[:20], "resumen": resumen,
             "solo_lectura": V.como}
 
@@ -862,8 +1032,17 @@ def get(h, ruta, q, real, persona_):
                                      "generado_alertas": V.generado})
         if ruta == "/api/canales/campana":
             return h.responder(200, campana(V))
+        if ruta == "/api/canales/escalado":
+            return h.responder(200, escalado_para(V))
+        if ruta == "/api/canales/adjuntables":
+            return h.responder(200, {"opciones": adjuntables(V, uno("q") or "")})
+        if ruta == "/api/canales/llamadas":
+            return h.responder(200, {"video": LL.video(), "telefono": {"activo": LL.telefono_activo(), "extension": LL.extensiones().get(persona_["id"]),
+                                                                        "simulado": not LL.telefono_activo()}})
         if ruta == "/api/canales/canal":
             cid = uno("id")
+            if cid not in V.canales and pareja_directo(cid):
+                V.abrir_directo(cid)
             if cid not in V.canales:
                 S.registrar_agrupado(real["id"], "chat-equipo", "denegado", str(cid)[:80], {"motivo": "canal ajeno"}, como=persona_["id"] if V.como else None)
                 return h.responder(403, {"error": "Ese canal no es tuyo."})
@@ -949,6 +1128,8 @@ def _post(ruta, p, b, con, rastro):
     V = Vista(p, p, con)
     if ruta == "/api/canales/mensaje":
         cid = str(b.get("canal_id") or "")
+        if cid not in V.canales and pareja_directo(cid):
+            V.abrir_directo(cid)
         if cid not in V.canales:
             rastro.append(("agrupado", (p["id"], "chat-equipo", "denegado", cid[:80], {"motivo": "escribir en canal ajeno"})))
             return fin(403, {"error": "Ese canal no es tuyo."})
@@ -968,13 +1149,25 @@ def _post(ruta, p, b, con, rastro):
                 return fin(403, {"error": "Ese mensaje no está en tu canal."})
         if V.canales[cid]["tipo"] == "avisos" and not padre:
             return fin(400, {"error": "En los canales de avisos se comenta en el hilo de cada aviso."})
+        adj, err = validar_adjuntos(V, b.get("adjuntos"))
+        if err:
+            return fin(403, {"error": err})
         texto = S.limpiar_texto(crudo) if hasattr(S, "limpiar_texto") else limpiar(crudo)
         menc = menciones_en(texto)
         dentro = set(miembros_de(cid, con))
         no_ven = [m for m in menc if m not in dentro]
+        if V.canales[cid].get("tipo") == "directo":      # en un directo, la otra persona siempre lo recibe (cuenta como mención)
+            menc = list(dict.fromkeys([*menc, V.canales[cid]["con"]]))
+            no_ven = []
         cli = (padre["cliente_id"] if padre else None) or V.canales[cid].get("cliente_id")
+        no_ven_adj = []
+        for a in adj:
+            c_adj = a.get("id") if a["tipo"] == "cliente" else a.get("cliente_id")
+            if c_adj:
+                no_ven_adj += [corto(x) for x in dentro if x != p["id"] and not puede_abrir_cliente(persona(x), c_adj)]
         mid = publicar(con, cid, "mensaje", texto, None, quien=p["id"], hilo_de=padre["id"] if padre else None, menciones=menc,
-                       cliente_id=cli, alerta_id=padre["alerta_id"] if padre else None)
+                       cliente_id=cli, alerta_id=padre["alerta_id"] if padre else None,
+                       datos={"adjuntos": [{k: v for k, v in a.items() if k != "cliente_id"} for a in adj]} if adj else None)
         fila = con.execute("SELECT * FROM canal_mensajes WHERE id=?", (mid,)).fetchone()
         # Sincronía (3-oct): puente de chat app → ClickUp (opción b de 51_SINCRONIA_Y_CHAT.md), APAGADO. Con el puente
         # encendido y el grupo emparejado, el mensaje queda copiado en la cola de sincronia.py en la MISMA transacción.
@@ -990,7 +1183,8 @@ def _post(ruta, p, b, con, rastro):
         out = fila_a_json(fila, V)
         rastro.append(("registrar", (p["id"], "chat-equipo", "canal_mensaje", cid, {"mensaje_id": out["id"], "menciones": out["menciones"],
                                                                                "hilo_de": out["hilo_de"], "largo": len(out["texto"])})))
-        return fin(200, {"ok": True, "mensaje": out, "no_lo_veran": [corto(x) for x in no_ven]})
+        return fin(200, {"ok": True, "mensaje": out, "no_lo_veran": [corto(x) for x in no_ven],
+                         "no_ven_adjunto": sorted(set(no_ven_adj))[:10]})
     elif ruta == "/api/canales/leido":
         cid = str(b.get("canal_id") or "")
         if cid not in V.canales:
@@ -1081,6 +1275,8 @@ def _post(ruta, p, b, con, rastro):
             return fin(400, {"error": "Esa persona no está en la app."})
         if c["tipo"] == "general":
             return fin(400, {"error": "En #general ya está todo el equipo."})
+        if c["tipo"] == "directo":
+            return fin(400, {"error": "En un mensaje directo no se añade a nadie: crea un grupo con las personas que hagan falta."})
         if not puede_anadir(p, c):
             rastro.append(("agrupado", (p["id"], "chat-equipo", "denegado", cid[:80], {"motivo": "añadir sin permiso", "persona": otro["id"]})))
             if c.get("departamento") in ("rrhh", "direccion"):
@@ -1093,8 +1289,169 @@ def _post(ruta, p, b, con, rastro):
                  cliente_id=c.get("cliente_id"), datos={"icono": "persona"})
         rastro.append(("registrar", (p["id"], "chat-equipo", "canal_anadir", cid, {"persona": otro["id"]})))
         return fin(200, {"ok": True})
+    elif ruta == "/api/canales/escalar":
+        return escalar(V, p, b, con, rastro)
+    elif ruta == "/api/canales/videollamada":
+        return videollamada(V, p, b, con, rastro)
+    elif ruta == "/api/canales/llamar":
+        return llamar(V, p, b, con, rastro)
     else:
         return fin(404, {"error": "No existe esa ruta de avisos."})
+
+
+# =================================================================== pedir ayuda / escalar (3-oct, orden oficial de RO)
+def escalado_para(V):
+    """Los tipos de ayuda con a quién le llegaría a quien mira (orden de data/escalado.json)."""
+    pers = personas()
+    tipos = []
+    for t in ESC.resumen(pers):
+        r = ESC.a_quien(t["id"], V.p["id"], pers) or {}
+        tipos.append({**t, "para": r.get("para"), "para_nombre": corto(r.get("para")) if r.get("para") else None,
+                      "siguiente": r.get("siguiente"), "siguiente_nombre": corto(r.get("siguiente")) if r.get("siguiente") else None,
+                      "por_que": r.get("por_que") or t.get("por_que")})
+    return {"tipos": tipos, "solo_lectura": V.como, "cadena_alertas": (ESC.config().get("cadena_alertas_texto") or "")}
+
+
+def _texto_contexto(V, para, cli, pantalla, ruta):
+    partes = []
+    if cli:
+        partes.append(f"Cliente: {nombre_cliente(cli)}" if puede_abrir_cliente(persona(para), cli)
+                      else "Cliente: uno que tú no abres (pídele el nombre si hace falta)")
+    if pantalla:
+        partes.append(f"Pantalla: {limpiar(str(pantalla), 80)}")
+    return " · ".join(partes)
+
+
+def escalar(V, p, b, con, rastro):
+    """«Pedir ayuda»: mensaje directo a quien toca según el tipo, con el contexto. «subir_de»: quien lo recibió (Mili en
+    «nadie lo resuelve») lo pasa al siguiente de la cadena (Tomás), una sola vez."""
+    if b.get("subir_de"):
+        r = con.execute("SELECT * FROM canal_mensajes WHERE id=?", (int(b.get("subir_de") or 0),)).fetchone()
+        datos = json.loads((r["datos"] if r else None) or "{}")
+        e = datos.get("escalado") or {}
+        if not r or not e or r["canal_id"] not in V.canales or e.get("para") != p["id"] or not e.get("siguiente"):
+            rastro.append(("agrupado", (p["id"], "chat-equipo", "denegado", str(b.get("subir_de"))[:40], {"motivo": "subir una ayuda que no es suya"})))
+            return fin(403, {"error": "Solo quien la recibió puede pasarla al siguiente."})
+        sig = e["siguiente"]
+        # 260: el siguiente persistido no conserva autoridad después de una baja,
+        # duplicación o cambio de la cadena. Revalidar antes de crear/publicar.
+        actual = ESC.a_quien(e.get("tipo"), e.get("de"), personas())
+        if not actual or actual.get("para") != p["id"] or actual.get("siguiente") != sig:
+            return fin(409, {"error": "La cadena de ayuda ha cambiado; revisa el destinatario actual antes de escalar."})
+        if con.execute("SELECT 1 FROM canal_mensajes WHERE clave=?", (f"subir:{r['id']}",)).fetchone():
+            return fin(409, {"error": f"Ya se pasó a {corto(sig)}."})
+        nota = limpiar(str(b.get("texto") or "").strip(), 600)
+        if habla_de_sueldo(nota):
+            return fin(400, {"error": "Los sueldos no se escriben en el chat: solo dirección y RRHH los ven, en su sitio."})
+        did = id_directo(p["id"], sig)
+        t = (f"{corto(p['id'])} no encuentra quién lo resuelva y te lo pasa (pidió ayuda {corto(e.get('de'))}).\n"
+             f"Qué pasa: {e.get('que') or ''}" + (f"\n{e.get('contexto')}" if e.get("contexto") else "") + (f"\nNota de {corto(p['id'])}: {nota}" if nota else ""))
+        nuevo = {"tipo": e.get("tipo"), "tipo_texto": e.get("tipo_texto"), "para": sig, "de": p["id"], "origen": e.get("de"), "siguiente": None,
+                 "que": e.get("que"), "contexto": e.get("contexto"), "ruta": e.get("ruta"), "nivel": 2}
+        bot = [{"texto": "Abrir la pantalla", "ir": e["ruta"]}] if str(e.get("ruta") or "").startswith("#/") else []
+        mid = publicar(con, did, "mensaje", t, None, quien=p["id"], menciones=[sig], datos={"escalado": nuevo, "botones": bot} if bot else {"escalado": nuevo})
+        publicar(con, r["canal_id"], "evento", f"{corto(p['id'])} lo ha pasado a {corto(sig)}: no encuentra quién lo resuelva.", f"subir:{r['id']}",
+                 quien=p["id"], hilo_de=r["id"], menciones=[e.get("de")] if e.get("de") else [], datos={"icono": "flag"})
+        rastro.append(("registrar", (p["id"], "chat-equipo", "ayuda_subir", did, {"de_mensaje": r["id"], "a": sig, "mensaje_id": mid})))
+        return fin(200, {"ok": True, "canal_id": did, "para": sig, "para_nombre": corto(sig)})
+    tid = str(b.get("tipo") or "")
+    res = ESC.a_quien(tid, p["id"], personas())
+    if not res:
+        return fin(400, {"error": "Elige qué tipo de ayuda necesitas."})
+    que = str(b.get("texto") or "").strip()
+    if len(que) < 3:
+        return fin(400, {"error": "Cuenta en una frase qué pasa."})
+    if len(que) > 1500:
+        return fin(400, {"error": "Demasiado largo (máximo 1.500 caracteres)."})
+    if habla_de_sueldo(que):
+        return fin(400, {"error": "Los sueldos no se escriben en el chat: solo dirección y RRHH los ven, en su sitio."})
+    que = S.limpiar_texto(que) if hasattr(S, "limpiar_texto") else limpiar(que)
+    para = res["para"]
+    if not para or not (persona(para) or {}).get("activo"):
+        return fin(409, {"error": "No encuentro a quién mandarlo: avisa a Mili."})
+    cli = b.get("cliente_id") or None
+    if cli and not V.cliente(cli):
+        cli = None                       # un cliente que quien pide no abre no viaja
+    ruta = str(b.get("ruta") or "")[:200]
+    ruta = ruta if ruta.startswith("#/") and "javascript" not in ruta.lower() else None
+    contexto = _texto_contexto(V, para, cli, b.get("pantalla"), ruta)
+    t = res["tipo"]
+    texto = f"Pide ayuda · {t['texto']}\nQué pasa: {que}" + (f"\n{contexto}" if contexto else "") + \
+            (f"\nSi tú no encuentras quién lo resuelva, pulsa «Pasar a {corto(res['siguiente'])}»." if res.get("siguiente") else "")
+    did = id_directo(p["id"], para)
+    esc = {"tipo": t["id"], "tipo_texto": t["texto"], "para": para, "de": p["id"], "siguiente": res.get("siguiente"),
+           "que": que[:600], "contexto": contexto, "ruta": ruta, "nivel": 1}
+    datos = {"escalado": esc}
+    if ruta:
+        datos["botones"] = [{"texto": "Abrir la pantalla", "ir": ruta}]
+    if cli:
+        datos["adjuntos"] = [{"tipo": "cliente", "id": cli}]
+    mid = publicar(con, did, "mensaje", texto, None, quien=p["id"], menciones=[para], datos=datos)
+    con.execute("INSERT INTO canal_leidos (persona_id, canal_id, ultimo_id, hora) VALUES (?,?,?,?) "
+                "ON CONFLICT(persona_id, canal_id) DO UPDATE SET ultimo_id=excluded.ultimo_id, hora=excluded.hora", (p["id"], did, mid, ahora_utc_txt()))
+    rastro.append(("registrar", (p["id"], "chat-equipo", "ayuda_pedir", did, {"tipo": t["id"], "para": para, "cliente_id": cli, "ruta": ruta, "mensaje_id": mid})))
+    return fin(200, {"ok": True, "canal_id": did, "para": para, "para_nombre": corto(para), "por_que": res.get("por_que"),
+                     "siguiente_nombre": corto(res["siguiente"]) if res.get("siguiente") else None})
+
+
+# =================================================================== videollamada y llamar (3-oct, llamadas.py)
+def videollamada(V, p, b, con, rastro):
+    """Sala nueva (nombre aleatorio, nunca con nombres) y aviso en el canal con el botón para entrar. En un canal de avisos
+    no; con un cliente (para=cliente), solo el enlace para mandárselo a mano (la app no se lo envía)."""
+    v = LL.video()
+    if b.get("para") == "cliente":
+        cli = str(b.get("cliente_id") or "")
+        if not cli or not V.cliente(cli):
+            return fin(403, {"error": "No puedes abrir ese cliente."})
+        if v["con_clientes"] == "zoom_enlace" or not v.get("zoom_api"):
+            rastro.append(("registrar", (p["id"], "chat-equipo", "videollamada_cliente", cli, {"proveedor": "zoom", "simulado": True})))
+            return fin(200, {"ok": True, "proveedor": "zoom", "url": "https://zoom.us/start/videomeeting", "simulado": True,
+                             "texto": "Se abre Zoom con tu cuenta: copia el enlace de la reunión y mándaselo al cliente. Crear la reunión desde la app está apagado (lo enciende Tomás)."})
+    cid = str(b.get("canal_id") or "")
+    if cid not in V.canales and pareja_directo(cid):
+        V.abrir_directo(cid)
+    c = V.canales.get(cid)
+    if not c:
+        return fin(403, {"error": "Ese canal no es tuyo."})
+    if c["tipo"] == "avisos":
+        return fin(400, {"error": "En un canal de avisos no se abren videollamadas: hazlo en el grupo del equipo o en un directo."})
+    sala = LL.sala_nueva()
+    url = LL.enlace_sala(sala)
+    texto = f"{corto(p['id'])} ha abierto una videollamada. Entra con el botón (se abre en una pestaña nueva)."
+    mid = publicar(con, cid, "evento", texto, None, quien=p["id"], cliente_id=c.get("cliente_id"),
+                   menciones=[c["con"]] if c.get("tipo") == "directo" else [],
+                   datos={"icono": "video", "video": {"sala": sala, "url": url, "incrustado": v["incrustado"]},
+                          "botones": [{"texto": "Entrar en la videollamada", "url": url}]})
+    rastro.append(("registrar", (p["id"], "chat-equipo", "videollamada", cid, {"proveedor": v["proveedor"], "mensaje_id": mid})))
+    return fin(200, {"ok": True, "url": url, "sala": sala, "incrustado": v["incrustado"], "dominio": v["dominio"], "proveedor": v["proveedor"]})
+
+
+def llamar(V, p, b, con, rastro):
+    """«Te llamo y te conecto» (Zadarma /v1/request/callback/): primero tu extensión, luego el cliente. Hoy SIMULADO: se
+    apunta la acción y no se llama a nadie. El número tiene que ser de los contactos del cliente que la app ya tiene."""
+    cli = str(b.get("cliente_id") or "")
+    tel = str(b.get("telefono") or "").strip()
+    if not cli or not P.ver(p, {"tipo": "contactos_cliente", "cliente_id": cli}, V.cp)["ok"]:
+        rastro.append(("agrupado", (p["id"], "chat-equipo", "denegado", cli[:60], {"motivo": "llamar a un cliente que no lleva"})))
+        return fin(403, {"error": "Solo llama a un cliente quien lo lleva, operaciones o dirección."})
+    if tel not in LL.telefonos_de_cliente(cli):
+        return fin(400, {"error": "Ese número no está entre los contactos del cliente: no se marca a mano."})
+    ext = LL.extensiones().get(p["id"])
+    if not ext:
+        return fin(409, {"error": "No tienes extensión de Zadarma en la app: pide a Tomás que te la asigne."})
+    plan = LL.plan_callback(p["id"], tel)
+    activo = LL.telefono_activo()
+    cur = con.execute("INSERT INTO acciones (quien, herramienta, tipo, objeto, cliente_id, modulo, texto, vista_previa, estado, detalle) "
+                      "VALUES (?,?,?,?,?,?,?,?,?,?)",
+                      (p["id"], "zadarma", "llamada_callback", LL.tapar_numero(tel), cli, "chat-equipo",
+                       f"Te llamo y te conecto: extensión {ext} → {LL.tapar_numero(tel)}",
+                       json.dumps({"metodo": plan["metodo"], "from": ext, "to": LL.tapar_numero(tel)}, ensure_ascii=False),
+                       "simulada" if not activo else "pendiente",
+                       "Simulado: con el interruptor apagado no se llama a nadie (data/llamadas.json)." if not activo else "Para el despachador de Zadarma."))
+    rastro.append(("registrar", (p["id"], "chat-equipo", "llamar_callback", cli, {"accion_id": cur.lastrowid, "extension": ext, "simulado": not activo})))
+    return fin(200, {"ok": True, "simulado": not activo, "extension": ext, "accion_id": cur.lastrowid,
+                     "texto": (f"Simulado: con la llamada encendida, Zadarma haría sonar tu extensión {ext} y, al descolgar, llamaría a {LL.tapar_numero(tel)}."
+                               if not activo else f"Zadarma va a llamar a tu extensión {ext}; al descolgar, conecta con el cliente.")})
 
 
 # =================================================================== enganche a servir.py
@@ -1120,5 +1477,6 @@ def enganchar(Manejador, servir):
 
     Manejador._api_get = _api_get
     Manejador.api_post = api_post
-    if not os.environ.get("RO_AVISOS_SIN_BUCLE"):
+    import piloto_lectura
+    if not piloto_lectura.activo() and not os.environ.get("RO_AVISOS_SIN_BUCLE"):
         threading.Thread(target=bucle, daemon=True).start()

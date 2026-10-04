@@ -24,13 +24,17 @@ function plegar(c) {
   if (b) { b.setAttribute('aria-expanded', 'false'); b.replaceChildren(icono('chev'), 'Ver los consejos'); }
 }
 
-export function plegarConsejo(raiz) {
+export function plegarConsejo(raiz, { despues = false } = {}) {
   const main = document.getElementById('main');
   if (!main) return () => {};
   const mirar = () => {
     if (!raiz.isConnected) { obs.disconnect(); return; }
     const c = main.querySelector(':scope > [data-ia="consejo"]');
-    if (c) plegar(c);
+    if (c) {
+      plegar(c);
+      // Sigue siendo hijo directo de main: carcasa no crea un consejo duplicado.
+      if (despues && main.lastElementChild !== c) main.append(c);
+    }
   };
   const obs = new MutationObserver(mirar);
   obs.observe(main, { childList: true });

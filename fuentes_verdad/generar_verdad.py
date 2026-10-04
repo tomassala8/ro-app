@@ -16,10 +16,13 @@ Las definiciones van en «definiciones» dentro del propio fichero (y en el LEEM
 """
 import json
 import re
+import sys
 from datetime import date
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(AQUI))
+from fuentes_verdad.semantica_paid_290 import evaluar_publicidad, estado_integracion, positivo
 DATA = AQUI / "data"
 SALIDA = DATA / "verdad"
 
@@ -32,37 +35,38 @@ DEFINICIONES = {
     "dia_alta": "Días desde el alta del contrato (no desde la firma).",
     "encendido": "Fecha (día desde el alta) en que se encendió la campaña y si fue en plazo (día 10; límite 12, D-28): en_plazo · tarde · sin_encender_fuera_de_plazo · pendiente_en_plazo.",
     "campana_activa": "Hay campaña de Meta activa (Captación).",
-    "leads_meta_7d / leads_ghl_7d": "Leads de Meta y leads que llegaron a GoHighLevel en 7 días (Salud del CRM).",
-    "fuga_integracion": "grave si Meta da 10 o más leads en 7 días y a GoHighLevel llega menos de la mitad; leve si llega menos del 80 %.",
+    "leads_meta_7d / leads_ghl_7d": "Contadores observados de Meta y CRM; nombres heredados, unidades/cohortes no equivalentes. No son contactos cualificados ni ventas.",
+    "fuga_integracion": "Desconocida hasta disponer de unión documentada de identidad/eventos y misma ventana/cohorte Meta→CRM. No se infiere de dos contadores.",
     "sin_reunion_mes_pasado": "Ninguna reunión el mes pasado según CRM, Fathom y Zoom (Reuniones), salvo exentos y altas del propio mes.",
     "bloqueos": "Tareas del cliente en «bloqueado» (Producción). «bloqueo_callado» = la más antigua lleva más de 5 días. «tarea_id» = id de ClickUp de la más antigua (para el «Ir»).",
     "correos_sin_responder": "Correos del cliente sin contestar y días laborables del más antiguo (Desk, alarma «Sin responder»).",
-    "gravedad": "crítico · atención · bien (ver «reglas_gravedad»). Una fuga de integración grave NUNCA es «bien».",
-    "salud": "0-100 provisional con la D-02: 40 puntos de resultados del cliente, 30 de atención y 30 de arranque. Sello «a medias».",
+    "gravedad": "crítico · atención por señales observadas; sin_dato si no hay señales acreditadas. Ausencia de señales no acredita cumplimiento completo.",
+    "salud": "Desconocida sin cohortes de resultados/ventas. Atención y arranque se conservan sólo como componentes de referencia, no puntuación de cumplimiento.",
     "cartera": "R12 · Cartera de una persona en una silla = clientes con su fila vigente en asignaciones. «principal» = lleva el cliente; «apoyo» = ayuda (no es dueño). Cada pantalla cuenta su universo SOBRE esta cartera y dice cuántos quedan fuera y por qué (sin cuenta de Meta, sin subcuenta de GoHighLevel, sin marca en Metricool, sin web en el monitor). Metricool, Meta o GoHighLevel nunca deciden quién lleva un cliente.",
     "web_unica": "R12 · Una sola persona de web por cliente: la principal de asignaciones. Las bajas no están en ningún equipo.",
+    "cliente_activo": "Tomás 3-oct · fuentes_verdad/clientes_activos.py → data/verdad/estado_clientes.json: activo = línea de octubre en el Airtable de facturación o acuerdo firmado apuntado; baja = «Baja» en el libro de clientes sin línea de octubre, o carpeta en «Clientes INACTIVOS» de ClickUp. Un cliente de baja no sale en ninguna pantalla de trabajo (servir.py lo quita); su histórico, solo en finanzas e informes pasados. Los dudosos no se esconden: van a Tomás.",
     "no_imputan_ayer": "Personas activas que imputan horas (sin dudosas, bajas ni setters) con 0 h el último día laborable (Horas).",
 }
 REGLAS_GRAVEDAD = {
     "critico": [
-        "fuga de integración grave (≥ 10 leads de Meta en 7 días y llega menos de la mitad a GoHighLevel)",
+        "Fuga de integración: deshabilitada sin unión documentada de eventos y cohorte",
         "alta pasada del día 12 sin encender",
-        "correos del cliente sin contestar más de 10 días laborables Y otra señal de relación en riesgo (sin reunión el mes pasado, semáforo del account en crítico o captación en crítico)",
-        "100 € o más en Meta en 7 días y 0 leads",
+        "correos del cliente sin contestar más de 10 días laborables Y otra señal independiente de relación en riesgo (sin reunión el mes pasado o semáforo del account en crítico)",
+        "100 EUR o más y cero eventos lead Meta acreditados: cuenta220, siete días cerrados exactos/únicos, gasto/lead observados y EUR explícito; no comercio",
     ],
     "atencion": [
         "correos sin contestar más de 48 h (sin otra señal de riesgo)",
         "sin reunión el mes pasado", "bloqueo callado más de 5 días", "sin account",
-        "captación en crítico o atención por publicidad o seguimiento", "semáforo del account en crítico",
-        "alta encendida tarde", "fuga de integración leve",
+        "semáforo del account en crítico",
+        "alta encendida tarde",
     ],
-    "bien": ["nada de lo anterior"],
+    "sin_dato": ["sin señales acreditadas; no equivale a bien ni cumplimiento completo"],
 }
 
 
 # Motivo de la lista común (D-90: todos ven la lista con motivo y responsable): sin cifras ni euros.
 MOTIVO_COMUN = {"integracion": "Los leads no llegan al CRM", "arranque": "Alta fuera de plazo", "respuesta": "Correos del cliente sin contestar",
-                "publicidad": "Gasto en publicidad sin leads", "reunion": "Sin reunión el mes pasado", "bloqueo": "Tareas bloqueadas",
+                "publicidad": "Gasto en publicidad sin eventos lead acreditados", "reunion": "Sin reunión el mes pasado", "bloqueo": "Tareas bloqueadas",
                 "account": "Sin account asignado", "captacion": "Captación con problemas", "semaforo": "Su account lo marca como cliente crítico"}
 
 
@@ -77,11 +81,21 @@ def leer(rel, defecto=None):
 def main():
     hoy = date.today().isoformat()
     clientes = leer("clientes.json", [])
+    # Tomás 3-oct: un solo filtro «cliente activo» (clientes_activos.py): las bajas no entran en la verdad única.
+    try:
+        import sys as _s
+        _s.path.insert(0, str(Path(__file__).resolve().parent))
+        import clientes_activos as ACT
+        clientes = [c for c in clientes if not ACT.es_baja_id(c["id"])]
+        _tipo = {a["id"]: a["tipo"] for a in ACT.estado().get("activos", [])}
+    except Exception:
+        _tipo = {}
     asig = leer("asignaciones.json", [])
     alarmas = leer("alarmas.json", [])
     personas = {p["id"]: p for p in leer("personas.json", [])}
     nuevos = {a["cliente_id"]: a for a in (leer("nuevos/nuevos.json", {}) or {}).get("altas", [])}
-    cap = {c["cliente_id"]: c for c in (leer("captacion/captacion.json", {}) or {}).get("clientes", []) if c.get("cliente_id")}
+    _cap_doc = leer("captacion/captacion.json", {}) or {}
+    cap = {c["cliente_id"]: c for c in _cap_doc.get("clientes", []) if c.get("cliente_id")}
     crm = {s["cliente_id"]: s for s in (leer("crm/crm.json", {}) or {}).get("subcuentas", []) if s.get("cliente_id")}
     reu = {c["cliente_id"]: c for c in (leer("reuniones/reuniones.json", {}) or {}).get("clientes", [])}
     _prod_doc = leer("produccion/produccion.json", {}) or {}
@@ -124,12 +138,11 @@ def main():
         k = cap.get(cid) or {}
         s = crm.get(cid) or {}
         lm, lg = s.get("leads_meta_7d"), s.get("leads_ghl_7d")
-        fuga = None
-        if lm is not None and lg is not None and lm >= 10:
-            pct = (lg or 0) / lm if lm else 1
-            fuga = {"grave": pct < 0.5, "leve": 0.5 <= pct < 0.8, "pct_llega": round(pct * 100), "texto": f"Meta {int(lm)} leads en 7 días y a GoHighLevel llegaron {int(lg or 0)}"}
-            if not fuga["grave"] and not fuga["leve"]:
-                fuga = None
+        fuga = None  # Dos contadores independientes nunca acreditan integración.
+        integracion = estado_integracion()
+        ads290 = evaluar_publicidad(c, k, _cap_doc.get('ventanas'), hoy)
+        lm = ads290['eventos_lead'] if ads290['estado']=='medido' else positivo(lm)
+        lg = positivo(lg)  # Cero heredado no acredita censo ni ausencia de entradas CRM.
 
         r = reu.get(cid) or {}
         sin_reunion = r.get("estado") == "sin_reunion"
@@ -145,20 +158,15 @@ def main():
         if sin_resp:
             m = re.search(r"lleva (\d+) días laborables", sin_resp.get("texto") or "")
             dias_sin_resp = int(m.group(1)) if m else 3
-        gasto7 = ((k.get("gasto") or {}).get("7d")) if isinstance(k.get("gasto"), dict) else None
-        leads7 = ((k.get("leads") or {}).get("7d")) if isinstance(k.get("leads"), dict) else None
-
         criticos, atencion = [], []
-        if fuga and fuga["grave"]:
-            criticos.append(("integracion", f"Fuga de integración: {fuga['texto']}"))
         if encendido and encendido["estado"] == "sin_encender_fuera_de_plazo":
             criticos.append(("arranque", f"Alta en el día {n.get('dia')} sin encender (límite: día 12)"))
         riesgo = ("sin reunión el mes pasado" if sin_reunion else "su account lo marca como cliente crítico" if c.get("semaforo") == "crítico"
-                  else "captación en crítico" if k.get("severidad") == "critico" else None)
+                  else None)
         if dias_sin_resp is not None and dias_sin_resp > 10 and riesgo:
             criticos.append(("respuesta", f"Correos sin contestar desde hace {dias_sin_resp} días laborables y {riesgo}"))
-        if gasto7 is not None and gasto7 >= 100 and not leads7:
-            criticos.append(("publicidad", "100 € o más gastados en Meta en 7 días y 0 leads"))
+        if ads290["publicidad_sin_eventos_lead"]:
+            criticos.append(("publicidad", "100 EUR o más gastados en siete días cerrados y cero eventos lead Meta acreditados (no contactos únicos ni cualificados)"))
         elif dias_sin_resp is not None:
             atencion.append(("respuesta", f"Correos sin contestar desde hace {dias_sin_resp} días laborables"))
         if sin_reunion:
@@ -167,25 +175,22 @@ def main():
             atencion.append(("bloqueo", f"Bloqueo callado: {bloqueos['dias_max']} días"))
         if not account and c.get("sin_account") != "mantenimiento sin account":
             atencion.append(("account", "Sin account asignado"))
-        if k.get("severidad") in ("critico", "atencion") and set(k.get("cuello") or []) - {"integracion"}:
-            atencion.append(("captacion", "Captación con problemas de publicidad o seguimiento"))
         if c.get("semaforo") == "crítico":
             atencion.append(("semaforo", "Su account lo marca como cliente crítico"))
         if encendido and encendido["estado"] == "tarde":
             atencion.append(("arranque", f"Encendida tarde (día {encendido['dia']})"))
-        if fuga and fuga["leve"]:
-            atencion.append(("integracion", f"Llega a GoHighLevel el {fuga['pct_llega']} % de los leads"))
-        gravedad = "critico" if criticos else "atencion" if atencion else "bien"
+        gravedad = "critico" if criticos else "atencion" if atencion else "sin_dato"
         motivos = [t for _, t in criticos + atencion]
         claves = [k_ for k_, _ in criticos + atencion]
 
-        # Salud provisional D-02 (a medias): 40 resultados · 30 atención · 30 arranque
-        res = 40 - (40 if fuga and fuga["grave"] else 0) - (25 if gasto7 and gasto7 >= 100 and not leads7 else 0) \
-            - (15 if k.get("severidad") == "critico" and not (fuga and fuga["grave"]) else 8 if k.get("severidad") == "atencion" else 0) - (10 if fuga and fuga["leve"] else 0)
+        # Componentes históricos de referencia; no inventan resultados ni salud completa.
         ate = 30 - (20 if dias_sin_resp and dias_sin_resp > 5 else 10 if dias_sin_resp else 0) - (10 if sin_reunion else 0) - (10 if c.get("semaforo") == "crítico" else 0)
         arr = 30 - (30 if encendido and encendido["estado"] == "sin_encender_fuera_de_plazo" else 10 if encendido and encendido["estado"] == "tarde" else 0) \
             - (10 if not account else 0) - (10 if bloqueo_callado else 0)
-        salud = max(0, min(40, res)) + max(0, min(30, ate)) + max(0, min(30, arr))
+        salud = None  # Falta cohorte de resultados/ventas; retirar una penalización no prueba salud100.
+        salud_medicion = {"estado": "sin_dato", "resultados": "Sin cohorte de resultados/ventas acreditada",
+                          "atencion_referencia": max(0, min(30, ate)), "arranque_referencia": max(0, min(30, arr)),
+                          "cobertura": "parcial; componentes de referencia, no puntuación de cumplimiento"}
 
         resp = account or None
         comun.append({"id": cid, "nombre": c["nombre"], "gravedad": gravedad, "motivo": MOTIVO_COMUN.get(claves[0]) if claves else None,
@@ -197,13 +202,15 @@ def main():
             "nuevo": bool(n), "alta": n.get("alta") if n else c.get("alta"), "dia_alta": n.get("dia") if n else None,
             "encendido": encendido, "campana_activa": k.get("meta_activa"),
             "leads_meta_7d": lm, "leads_ghl_7d": lg, "fuga_integracion": fuga,
+            "integracion_medicion": integracion, "meta_medicion_290": {k_:v_ for k_,v_ in ads290.items() if k_!="gasto"},
             "sin_reunion_mes_pasado": sin_reunion, "reunion_estado": r.get("estado"), "ultima_reunion": r.get("ultima"),
             "bloqueos": bloqueos, "bloqueo_callado": bloqueo_callado,
             "correos_sin_responder_dias": dias_sin_resp,
-            "gravedad": gravedad, "motivos": motivos, "salud": salud, "salud_sello": "a medias (fórmula provisional D-02)",
+            "gravedad": gravedad, "motivos": motivos, "salud": salud, "salud_medicion": salud_medicion, "salud_sello": "a medias (fórmula provisional D-02; resultados sin cohortes de venta acreditadas)",
             # Ronda 8: cuota de la fuente única (fuentes_dinero/cuotas.json vía build_data). Dato sensible: el servidor
             # la quita fila a fila a quien no ve la cuota de ese cliente (claves cuota*).
             "cuota": c.get("cuota"), "cuota_fuente": c.get("cuota_fuente"),
+            "estado_cliente": _tipo.get(cid),   # recurrente · proyecto · firmado_sin_ficha · pendiente_factura · dudoso (estado_clientes.json)
         })
 
     # Equipo: no imputan ayer, con una sola definición
@@ -250,7 +257,7 @@ def main():
         filas_cartera.append(fila)
 
     SALIDA.mkdir(parents=True, exist_ok=True)
-    resumen = {g: sum(1 for x in comun if x["gravedad"] == g) for g in ("critico", "atencion", "bien")}
+    resumen = {g: sum(1 for x in comun if x["gravedad"] == g) for g in ("critico", "atencion", "bien", "sin_dato")}
     out = {"generado": hoy, "definiciones": DEFINICIONES, "reglas_gravedad": REGLAS_GRAVEDAD, "fuentes_usadas": fuentes_usadas,
            "resumen": {**resumen, "nuevos": sum(1 for x in comun if x["nuevo"]), "sin_account": sum(1 for x in comun if x["sin_account"]),
                        "sin_reunion_mes_pasado": sum(1 for x in detalle if x["sin_reunion_mes_pasado"]),

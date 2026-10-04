@@ -1,8 +1,0 @@
-[Unit]
-Description=App RO · tubería completa (6:00 y 14:00)
-[Timer]
-OnCalendar=*-*-* 06,14:00:00 Europe/Madrid
-Unit=ro-tarea@completa.service
-Persistent=true
-[Install]
-WantedBy=timers.target

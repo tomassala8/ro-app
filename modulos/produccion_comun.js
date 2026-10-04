@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/produccion_comun.js · piezas compartidas por M10 Producción y M11 Horas y productividad.
 // Ronda de diseño (auditoría 30, 2-oct noche): SIN hoja de estilos propia. Solo clases comunes de estilos.css
 // (fila, pila, sub, chip, av, barra-prog, titulo-seccion, lista-i…) y, donde hace falta, estilo en línea con los tokens
@@ -14,9 +15,8 @@ import { h, fmt, icono, barraProgreso, frescura, grafico, cuentagotas as cuentag
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const fDiaRO = iso => fechaCortaRO(FECHAS_RO.dia(iso));
+const fDiaHoraRO = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia ? `${fechaCortaRO(dia)}${hora ? `, ${hora}` : ''}` : '—'; };
 
 // tokens de la guía con su valor de hoy (si E0 ya los ha dado de alta, mandan los suyos)
 export const S = { 1: 'var(--s-1, 4px)', 2: 'var(--s-2, 8px)', 3: 'var(--s-3, 12px)', 4: 'var(--s-4, 16px)', 5: 'var(--s-5, 20px)', 6: 'var(--s-6, 24px)' };
@@ -87,18 +87,19 @@ export const GRUPOS_AHORA = ['vencida', 'hoy', 'semana', 'bloqueada'];
  * D.dato_de = el día del dato y D.hoy = hoy. Pedido a E0/servir.py: el mismo reagrupado para el contador del menú.
  */
 export function alDia(D, hoy = hoyMadrid()) {
-  if (!D || !Array.isArray(D.cola)) return D;
+  if (!D || !Array.isArray(D.cola) || !FECHAS_RO.fechaCivil(hoy)) return D;
   const dato = D.hoy || hoy;
   D.dato_de = dato;
   if (dato >= hoy) return D;
-  const dow = new Date(hoy + 'T12:00:00').getDay();               // 0 = domingo
+  const dow = new Date(hoy + 'T12:00:00Z').getUTCDay();               // 0 = domingo
   const domingo = sumarDias(hoy, dow === 0 ? 0 : 7 - dow);
   const diasDe = v => Math.round((Date.parse(hoy) - Date.parse(v)) / 864e5);
   for (const r of D.cola) {
-    if (!r.vence || ['revision', 'bloqueada'].includes(r.grupo)) continue;
-    if (r.vence < hoy) { r.vencida = true; if (['hoy', 'semana', 'despues', 'vencida'].includes(r.grupo)) r.grupo = diasDe(r.vence) > 30 ? 'olvidada' : 'vencida'; }
-    else if (r.vence === hoy && ['semana', 'despues'].includes(r.grupo)) r.grupo = 'hoy';
-    else if (r.vence <= domingo && r.grupo === 'despues') r.grupo = 'semana';
+    const diaVence = FECHAS_RO.dia(r.vence);
+    if (!diaVence || ['revision', 'bloqueada'].includes(r.grupo)) continue;
+    if (diaVence < hoy) { r.vencida = true; if (['hoy', 'semana', 'despues', 'vencida'].includes(r.grupo)) r.grupo = diasDe(diaVence) > 30 ? 'olvidada' : 'vencida'; }
+    else if (diaVence === hoy && ['semana', 'despues'].includes(r.grupo)) r.grupo = 'hoy';
+    else if (diaVence <= domingo && r.grupo === 'despues') r.grupo = 'semana';
   }
   const por = new Map();
   for (const r of D.cola) { const l = por.get(r.persona_id) || []; l.push(r); por.set(r.persona_id, l); }
@@ -119,7 +120,7 @@ export function revisionesDelAccount(D, yo) {
 }
 
 /** «del vie 2» · día corto en llano para decir de cuándo es el dato. */
-export const diaCortoTxt = iso => { const d = new Date(iso + 'T12:00:00'); return `${['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'][d.getDay()]} ${d.getDate()}`; };
+export const diaCortoTxt = iso => { const dia = FECHAS_RO.dia(iso); return dia ? `${FECHAS_RO.diaSemana(dia)} ${Number(dia.slice(8))}` : '—'; };
 
 export const esMovil = () => typeof matchMedia === 'function' && matchMedia('(max-width: 899px)').matches;
 
@@ -148,10 +149,9 @@ export function prioridad(r) {
 
 /** «Vence hoy», «Vencida hace 3 días», «Vence el 5 oct», con su color. */
 export function vence(iso) {
-  if (!iso) return { texto: 'Sin fecha', estado: 'gris' };
-  const d = new Date(iso + 'T12:00:00');
-  const hoy = new Date(); hoy.setHours(12, 0, 0, 0);
-  const dias = Math.round((d - hoy) / 864e5);
+  const edad = FECHAS_RO.diasDesde(iso);
+  if (edad === null) return { texto: 'Sin fecha', estado: 'gris' };
+  const dias = -edad;
   if (dias < 0) return { texto: `Vencida hace ${fmt.num(-dias)} día${dias === -1 ? '' : 's'}`, estado: -dias > 14 ? 'rojo' : 'ambar', dias: -dias };
   if (dias === 0) return { texto: 'Vence hoy', estado: 'ambar', dias: 0 };
   if (dias === 1) return { texto: 'Vence mañana', estado: '', dias: 0 };
@@ -160,28 +160,26 @@ export function vence(iso) {
 
 /** Tiempo en un estado como punto + días en tinta (guía 3.8): ≤ 2 días verde, hasta 14 ámbar, > 14 rojo. */
 export function chipDias(d, { verde = 2, ambar = 14 } = {}) {
-  if (d === null || d === undefined) return estadoTexto('gris', 'sin dato');
+  if (typeof d !== 'number' || !Number.isFinite(d) || d < 0) return estadoTexto('gris', 'sin dato');
   const est = d <= verde ? 'verde' : d <= ambar ? 'ambar' : 'rojo';
   return estadoTexto(est, d < 1 ? `${Math.round(d * 24)} h` : `${fmt.num(d, d < 10 ? 1 : 0)} días`);
 }
 
 /** horaCorta('2026-10-02 09:16') → «09:16» si es de hoy; «1 oct, 09:38» si no. */
 export function horaCorta(iso) {
-  if (!iso) return 'sin hora';
-  const d = new Date(String(iso).replace(' ', 'T'));
-  if (Number.isNaN(+d)) return String(iso);
-  const hm = d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-  return d.toDateString() === new Date().toDateString() ? hm : `${d.getDate()}-${_MES3[d.getMonth()]}, ${hm}`;   // §2.3
+  const dia = FECHAS_RO.dia(iso), hm = FECHAS_RO.hora(iso);
+  if (!dia || !hm) return 'sin hora';
+  return FECHAS_RO.esHoy(iso) ? hm : `${fechaCortaRO(dia)}, ${hm}`;
 }
 
 /** edadFuente({ fecha, edad_h, limite_h, estado }) → { edad_h, estado: 'ok'|'viejo'|'roto' }: con límite, la edad manda
  *  (R14: antes, sin estado, salía siempre «Datos al día» aunque el consejo dijera «hace 12 h»). */
 export function edadFuente(f) {
-  let edad = f.edad_h ?? null;
-  if (edad === null && f.fecha) { const d = new Date(String(f.fecha).replace(' ', 'T')); if (!Number.isNaN(+d)) edad = Math.max(0, (Date.now() - d) / 36e5); }
+  let edad = typeof f.edad_h === 'number' && Number.isFinite(f.edad_h) && f.edad_h >= 0 ? f.edad_h : null;
+  if (f.fecha) { const horas = FECHAS_RO.horasDesde(f.fecha); edad = horas !== null && horas >= 0 ? horas : null; }
   let estado = f.estado || 'ok';
-  if (!f.fecha && (edad === null || edad === undefined)) estado = 'roto';
-  else if (f.limite_h && edad !== null && edad > f.limite_h && estado === 'ok') estado = 'viejo';
+  if (edad === null) estado = 'roto';
+  else if (f.limite_h && edad > f.limite_h && estado === 'ok') estado = 'viejo';
   return { edad_h: edad, estado };
 }
 

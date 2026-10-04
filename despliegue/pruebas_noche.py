@@ -242,7 +242,7 @@ def acceso_servidor(tmp):
         time.sleep(0.5)
     casos = [("sin sello", "/api/sesion", {}, 403), ("?yo= sin sello", "/api/sesion?yo=tomas", {}, 403),
              ("X-RO-Yo sin sello", "/api/sesion", {"X-RO-Yo": "tomas"}, 403),
-             ("cabecera de correo falsificada", "/api/sesion", {"Cf-Access-Authenticated-User-Email": "tomas@rankingonline.com"}, 403),
+             ("cabecera de correo falsificada", "/api/sesion", {"Cf-Access-Authenticated-User-Email": "fixture1@rankingonline.com"}, 403),
              ("carcasa sin sello", "/index.html", {}, 403), ("datos de un módulo sin sello", "/api/modulo/bandeja/bandeja", {}, 403),
              ("salud de Render", "/vivo", {}, 200)]
     if firmar:

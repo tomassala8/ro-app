@@ -26,7 +26,9 @@ reaplicar las altas guardadas en el historial). Rutas:
 
 Pruebas sin tocar nada real: RO_DB=<copia> RO_CORREOS_ENTRADA=<copia> RO_LISTA_ACCESS=<copia> (ver pruebas_seguridad.py, N9).
 """
+import hashlib
 import json
+import threading
 import os
 import re
 import unicodedata
@@ -35,6 +37,7 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 GUIAS = AQUI.parent / "40_GUIA_EQUIPO"
+_MUTACIONES = threading.RLock()  # serializa snapshot/historial y efectos locales de N9
 S = None          # el módulo servir (lo pone enganchar)
 P = None          # permisos
 
@@ -101,6 +104,10 @@ SILLA_NOMBRE = {"account": "account", "trafficker": "trafficker", "crm": "CRM", 
                 "redes": "redes", "produccion": "producción", "outreach": "outreach"}
 
 TABLA_SQL = """
+CREATE TABLE IF NOT EXISTS altas_recibos (
+  clave TEXT PRIMARY KEY, quien TEXT NOT NULL, persona_id TEXT NOT NULL,
+  resultado TEXT NOT NULL, correo_guardado INTEGER NOT NULL DEFAULT 0,
+  lista_guardada INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS altas_tareas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   creada TEXT NOT NULL DEFAULT (datetime('now')),
@@ -428,10 +435,12 @@ def tareas_de(pid=None, tipo=None, estado=None):
         return [dict(r) for r in con.execute(q + " ORDER BY id DESC LIMIT 200", a)]
 
 
-def nueva_tarea(quien, para, tipo, pid, texto):
-    with S.conectar() as con:
-        cur = con.execute("INSERT INTO altas_tareas (para, tipo, persona_id, texto, quien) VALUES (?,?,?,?,?)", (para, tipo, pid, texto, quien))
-        return cur.lastrowid
+def nueva_tarea(quien, para, tipo, pid, texto, con=None):
+    if con is None:
+        with S.conectar() as conexion:
+            return nueva_tarea(quien, para, tipo, pid, texto, conexion)
+    cur = con.execute("INSERT INTO altas_tareas (para, tipo, persona_id, texto, quien) VALUES (?,?,?,?,?)", (para, tipo, pid, texto, quien))
+    return cur.lastrowid
 
 
 def hist(con, quien, coleccion, cid, op, datos, antes=None):
@@ -487,7 +496,7 @@ def mando():
 
 
 def es_tomas(real):
-    return "direccion" in real.get("puestos", [])
+    return real.get("id") == "tomas" and "direccion" in real.get("puestos", [])
 
 
 def puede_tocar(real, p, cambia_puestos=None):
@@ -717,18 +726,112 @@ def guardar_correo(pid, correo, activo, quien):
     escribir_correos(doc)
 
 
+def asignaciones_actuales(con):
+    """Reaplica historial en la conexión actual, sin duplicar altas ya proyectadas en el snapshot."""
+    historial = con.execute("SELECT operacion, datos FROM historial WHERE coleccion='asignaciones' ORDER BY n").fetchall()
+    eventos = [(r['operacion'], json.loads(r['datos'])) for r in historial]
+    def tenure(a):
+        return tuple(a.get(k) for k in ('cliente_id', 'silla', 'persona_id', 'desde', 'fuente'))
+    creadas = {tenure(d) for op, d in eventos if op == 'crear'}
+    actual = [dict(a) for a in S.E.crudo['asignaciones'] if tenure(a) not in creadas]
+    for op, d in eventos:
+        if op == 'crear':
+            actual.append(dict(d))
+        elif op in ('cerrar', 'confirmar'):
+            for a in actual:
+                if all(a.get(k) == d.get(k) for k in ('cliente_id', 'silla', 'persona_id')) and not a.get('hasta'):
+                    if op == 'cerrar':
+                        a['hasta'] = d['hasta']
+                    else:
+                        a['confianza'] = 'confirmada'
+    return actual
+
+
 def aplicar_cartera(con, real, pid, cartera, desde=None):
-    """Crea las asignaciones; «responsable» en una silla que ya tiene responsable lo sustituye (el anterior se cierra ayer)."""
-    ayer = (date.fromisoformat(hoy()) - timedelta(days=1)).isoformat()
+    """Transferencia idempotente por cliente/silla/persona/papel. Conserva apoyos y suplencias."""
+    fecha = desde or hoy()
+    cierre = (date.fromisoformat(fecha) - timedelta(days=1)).isoformat()
+    actuales = asignaciones_actuales(con)
     hechas, cerradas = [], []
     for x in cartera:
-        if x["papel"] == "responsable":
-            for a in S.E.crudo["asignaciones"]:
-                if a["cliente_id"] == x["cliente_id"] and a["silla"] == x["silla"] and a["persona_id"] != pid and a.get("principal", True) \
-                        and not a.get("suplencia") and P._vigente(a, hoy()) and not a.get("hasta"):
-                    cerradas.append(asig_cerrar(con, real["id"], a, ayer))
-        hechas.append(asig_crear(con, real["id"], real.get("alias"), x["cliente_id"], x["silla"], pid, x["papel"] == "responsable", desde))
+        principal = x['papel'] == 'responsable'
+        limitadas = [a for a in actuales if a['cliente_id'] == x['cliente_id'] and a['silla'] == x['silla']
+                     and not a.get('suplencia') and a.get('hasta') and (a.get('desde') or fecha) <= fecha <= a['hasta']]
+        if any((principal and a.get('principal', True) and a['persona_id'] != pid)
+               or (a['persona_id'] == pid and bool(a.get('principal', True)) != principal) for a in limitadas):
+            raise ValueError('Hay una asignación vigente con cierre programado; revisar su vigencia antes de sustituirla.')
+        if any(a['persona_id'] == pid and bool(a.get('principal', True)) == principal for a in limitadas):
+            continue
+        relevantes = [a for a in actuales if a['cliente_id'] == x['cliente_id'] and a['silla'] == x['silla']
+                      and not a.get('suplencia') and not a.get('hasta')]
+        propias = [a for a in relevantes if a['persona_id'] == pid and bool(a.get('principal', True)) == principal
+                   and (a.get('desde') or fecha) <= fecha]
+        normalizar_propia = len(propias) > 1 or any(a['persona_id'] == pid and bool(a.get('principal', True)) != principal for a in relevantes)
+        if normalizar_propia:
+            propias = []
+        cerrados_ids = set()
+        # Responsable reemplaza responsables, nunca los apoyos de otras personas.
+        for a in relevantes:
+            sustituye = (principal and a.get('principal', True) and a['persona_id'] != pid)
+            cambia_papel = a['persona_id'] == pid and normalizar_propia
+            if (sustituye or cambia_papel) and a['persona_id'] not in cerrados_ids:
+                cerradas.append(asig_cerrar(con, real['id'], a, cierre))
+                cerrados_ids.add(a['persona_id'])
+                for otra in actuales:
+                    if all(otra.get(k) == a.get(k) for k in ('cliente_id', 'silla', 'persona_id')) and not otra.get('hasta'):
+                        otra['hasta'] = cierre
+        if not propias:
+            nueva = asig_crear(con, real['id'], real.get('alias'), x['cliente_id'], x['silla'], pid, principal, fecha)
+            actuales.append(nueva)
+            hechas.append(nueva)
     return hechas, cerradas
+
+
+def clave_alta(real, payload):
+    canonico = json.dumps({'quien': real['id'], 'alta': payload}, sort_keys=True, ensure_ascii=False, separators=(',', ':'))
+    return hashlib.sha256(canonico.encode()).hexdigest()
+
+
+def completar_alta_local(clave, real, correo):
+    """Recibo duradero previo al filesystem. Nunca marca Cloudflare hecho ni publica el correo."""
+    with S.conectar() as con:
+        recibo = dict(con.execute('SELECT * FROM altas_recibos WHERE clave=? AND quien=?', (clave, real['id'])).fetchone())
+    resultado = json.loads(recibo['resultado'])
+    pid = recibo['persona_id']
+    pendientes = []
+    if correo and not recibo['correo_guardado']:
+        try:
+            guardar_correo(pid, correo, True, real['id'])
+            with S.conectar() as con:
+                con.execute('UPDATE altas_recibos SET correo_guardado=1 WHERE clave=?', (clave,))
+            recibo['correo_guardado'] = 1
+        except Exception:
+            pendientes.append('correo_entrada')
+    if correo and recibo['correo_guardado'] and not recibo['lista_guardada']:
+        try:
+            actualizar_lista_access(real.get('alias'), f"alta de {resultado['alias']}")
+            with S.conectar() as con:
+                con.execute('UPDATE altas_recibos SET lista_guardada=1 WHERE clave=?', (clave,))
+            recibo['lista_guardada'] = 1
+        except Exception:
+            pendientes.append('lista_access_local')
+    elif correo and not recibo['correo_guardado']:
+        pendientes.append('lista_access_local')
+    try:
+        S.E.recargar_personas('altas · alta')
+        comprobacion = comprobar(pid)
+    except Exception:
+        comprobacion = None
+        pendientes.append('vista_personas')
+    try:
+        S.pedir_recarga(real['id'])
+        recarga = True
+    except Exception:
+        recarga = False
+    return {**resultado, 'ok': True, 'alta_guardada': True, 'pendientes_locales': pendientes,
+            'estado': 'guardada_con_pendientes' if pendientes else 'guardada',
+            'access_externo': 'pendiente' if correo else 'sin_correo',
+            'recarga_pedida': recarga, 'comprobacion': comprobacion}
 
 
 # ---------------------------------------------------------------- departamentos y dudas de Tomás
@@ -803,6 +906,14 @@ def get(h, ruta, q, real, persona):
 
 
 def post(h, ruta, real, persona, b):
+    with _MUTACIONES:
+        try:
+            return _post(h, ruta, real, persona, b)
+        except ValueError:
+            return h.responder(400, {'error': 'No se guardó: revisa las fechas o una asignación con cierre programado.'})
+
+
+def _post(h, ruta, real, persona, b):
     if persona["id"] != real["id"]:
         return h.responder(403, {"error": "Estás en «ver como»: es solo lectura. No se escribe nada."})
     cp = P.contexto(real, S.E.crudo)
@@ -813,6 +924,14 @@ def post(h, ruta, real, persona, b):
     E = S.E
 
     if ruta == "/api/altas/alta":
+        clave = clave_alta(real, b)
+        with S.conectar() as con:
+            recibo = con.execute('SELECT persona_id FROM altas_recibos WHERE clave=? AND quien=?', (clave, real['id'])).fetchone()
+        if recibo:
+            existente = E.persona(recibo['persona_id'])
+            if existente and existente.get('estado') == 'baja':
+                return h.responder(409, {'error': 'Este alta ya se guardó y la persona está de baja. Revisa su reincorporación.'})
+            return h.responder(200, completar_alta_local(clave, real, (b.get('correo_entrada') or '').strip().lower() or None))
         extra = set(b) - CLAVES_ALTA
         if any(re.search(r"(?i)tel[eé]?f|^tel$|m[oó]vil|whatsapp|phone|extensi", k) for k in extra):
             # Regla de teléfonos (3-oct): el alta no guarda teléfonos de personas (ni con «+34» ni sin él).
@@ -854,11 +973,15 @@ def post(h, ruta, real, persona, b):
         cartera, err = validar_cartera(b.get("cartera"), puestos)
         if err:
             return h.responder(400, {"error": err})
+        with S.conectar() as con:
+            ids_creados = {r['id'] for r in con.execute("SELECT id FROM historial WHERE coleccion='personas' AND operacion='crear'")}
+        ids_creados.update(p['id'] for p in E.crudo['personas'])
+        ids_creados.update({'tomas', 'cecilia'})  # identidades nominales reservadas incluso si falta el catálogo
         pid = base = slug(nombre.split()[0])
-        if E.persona(pid):
+        if pid in ids_creados:
             pid = base = slug(" ".join(nombre.split()[:2]))
         n = 2
-        while E.persona(pid):
+        while pid in ids_creados:
             pid, n = f"{base}_{n}", n + 1
         alias = nombre.split()[0]
         if any((p.get("alias") or "") == alias for p in E.crudo["personas"]) and len(nombre.split()) > 1:
@@ -876,25 +999,22 @@ def post(h, ruta, real, persona, b):
             "aviso_correo": None if correo else "falta correo", "alta_desde_app": True,
         }
         with S.conectar() as con:
-            hist(con, real["id"], "personas", pid, "crear", persona_nueva)
-            hechas, cerradas = aplicar_cartera(con, real, pid, cartera, None)
-        if correo:
-            guardar_correo(pid, correo, True, real["id"])
-        tarea = None
-        if correo:
-            tarea = nueva_tarea(real["id"], "tomas", "access_anadir", pid,
-                                f"Añadir el correo de entrada de {alias} ({persona_nueva['rol']}) a la lista de Cloudflare Access. Entra el {entrada}.")
-            actualizar_lista_access(real.get("alias"), f"alta de {alias}")
-        S.registrar(real["id"], "ajustes", "alta_persona", pid, {"puestos": puestos, "jefe": jefe, "zona": zona, "entrada": entrada,
-                                                              "cartera": len(hechas), "sustituye": len(cerradas), "correo_entrada": bool(correo)})
-        E.recargar_personas("altas · alta")
-        try:    # auditoría 36 §6.5: sus ficheros por persona (alertas, chat, agenda) llegan con la próxima recarga: se pide ya
-            S.pedir_recarga(real["id"])
-            recarga = True
+            hist(con, real['id'], 'personas', pid, 'crear', persona_nueva)
+            hechas, cerradas = aplicar_cartera(con, real, pid, cartera, max(entrada, hoy()))
+            tarea = nueva_tarea(real['id'], 'tomas', 'access_anadir', pid,
+                                f"Añadir el correo de entrada de {alias} ({persona_nueva['rol']}) a la lista de Cloudflare Access. Entra el {entrada}.", con) if correo else None
+            resultado = {'id': pid, 'alias': alias, 'tarea_access': tarea, 'asignaciones': len(hechas), 'sustituidas': len(cerradas)}
+            con.execute('INSERT INTO altas_recibos (clave, quien, persona_id, resultado) VALUES (?,?,?,?)',
+                        (clave, real['id'], pid, json.dumps(resultado, ensure_ascii=False)))
+        respuesta = completar_alta_local(clave, real, correo)
+        try:
+            S.registrar(real['id'], 'ajustes', 'alta_persona', pid, {'puestos': puestos, 'jefe': jefe, 'zona': zona,
+                        'entrada': entrada, 'cartera': len(hechas), 'sustituye': len(cerradas), 'correo_entrada': bool(correo)})
         except Exception:
-            recarga = False
-        return h.responder(200, {"ok": True, "id": pid, "alias": alias, "tarea_access": tarea, "asignaciones": len(hechas), "recarga_pedida": recarga,
-                                 "sustituidas": len(cerradas), "comprobacion": comprobar(pid)})
+            # El historial transaccional y el recibo permanecen como evidencia de la operación guardada.
+            respuesta['pendientes_locales'].append('rastro_adicional')
+            respuesta['estado'] = 'guardada_con_pendientes'
+        return h.responder(200, respuesta)
 
     if ruta == "/api/altas/cambio":
         p = E.persona(b.get("id"))
@@ -1025,15 +1145,35 @@ def post(h, ruta, real, persona, b):
             q = E.persona(x["persona_id"])
             if x.get("cliente_id") not in ids or not q or q.get("estado") != "activo" or x.get("silla") not in sillas_de_puestos(q.get("puestos", [])):
                 return h.responder(400, {"error": "Cliente, persona o silla no válidos (la persona tiene que estar activa y tener esa silla)."})
+        por_silla = {}
+        for x in filas:
+            key = (x['cliente_id'], x['silla'])
+            if key in por_silla and por_silla[key]['persona_id'] != x['persona_id']:
+                return h.responder(400, {'error': 'La misma silla no puede repartirse a dos responsables en una petición.'})
+            por_silla[key] = x
+        hechas, cerradas = [], []
         with S.conectar() as con:
-            for x in filas:
-                asig_crear(con, real["id"], real.get("alias"), x["cliente_id"], x["silla"], x["persona_id"], True)
-            if b.get("de"):
+            for x in por_silla.values():
+                nuevas, sustituidas = aplicar_cartera(con, real, x['persona_id'],
+                    [{'cliente_id': x['cliente_id'], 'silla': x['silla'], 'papel': 'responsable'}])
+                hechas.extend(nuevas)
+                cerradas.extend(sustituidas)
+            if b.get('de'):
                 con.execute("UPDATE altas_tareas SET estado='hecha', hecha=datetime('now'), hecha_por=? WHERE persona_id=? AND tipo='repartir_cartera' AND estado='pendiente'",
-                            (real["id"], b["de"]))
-        S.registrar(real["id"], "ajustes", "repartir_cartera", b.get("de") or "", {"filas": [{k: x.get(k) for k in ("cliente_id", "silla", "persona_id")} for x in filas]})
-        E.recargar_personas("altas · reparto")
-        return h.responder(200, {"ok": True, "repartidas": len(filas)})
+                            (real['id'], b['de']))
+        pendientes = []
+        if hechas or cerradas:
+            try:
+                S.registrar(real['id'], 'ajustes', 'repartir_cartera', b.get('de') or '',
+                            {'filas': [{k: x.get(k) for k in ('cliente_id', 'silla', 'persona_id')} for x in por_silla.values()]})
+            except Exception:
+                pendientes.append('rastro_adicional')
+        try:
+            E.recargar_personas('altas · reparto')
+        except Exception:
+            pendientes.append('vista_personas')
+        return h.responder(200, {'ok': True, 'repartidas': len(hechas), 'cerradas': len(cerradas),
+                                 'sin_cambios': not (hechas or cerradas), 'pendientes_locales': pendientes})
 
     if ruta == "/api/altas/departamento":
         if not es_tomas(real):

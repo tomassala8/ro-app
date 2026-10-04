@@ -1,0 +1,13 @@
+const fs=require('fs'),path=require('path');
+const base=fs.readFileSync(path.join(__dirname,'pruebas_operaciones_equipo_262.cjs'),'utf8').split('(async()=>{')[0];
+new Function('require','__dirname',base+`
+function ctxB(){const a={id:'real',estado:'activo',activo:true,puestos:['operaciones']};return {...make(),hoy:'2026-10-04',servidor:true,real:{...a},persona:{...a},datos:{personas:[{...a},{id:'p',estado:'activo',puestos:['seo']}]},clientes:[{id:'c',activo_confirmado:true,detalle:true}]};}
+const dtoB=()=>({version:'376.1',estado:'copia_observada',generado:'2026-10-04T00:00:00Z',sha256_candidato:'1045a53219b967885e5bfe6748327c3ca19a48e71266bd4c522c4e236e833670',fuente:'ClickUp entradas',cobertura:'parcial',ventana:{desde:'2026-08-05',hasta_exclusivo:'2026-10-04',observado_hasta:'2026-10-03T00:56:00Z',zona:'Europe/Madrid',atribucion:'inicio'},fecha_fuente:'2026-10-03T00:56:00Z',unidad:'h',unidad_muestra:'usuario_id+task_id',unidad_maximo:'suma_por_caso',clasificacion:'orientativa_por_titulo',minimo_casos:5,filas:[{grupo:'optimizar seo',casos:5,mediana_h:3,max_h:7,total_h:17,registros_mas10h:0}],duracion_cerrada_confirmada:false,tipo_historico_confirmado:false,tiempo_normativo:null});
+(async()=>{
+ for(const mutation of [x=>x.real.estado='baja',x=>x.persona.activo=false,x=>x.datos.personas[0].puestos=['seo'],x=>x.datos.personas.push({...x.datos.personas[0]}),x=>x.persona.id='unknown',x=>x.veModulo=id=>id!=='produccion',x=>x.vigente=()=>false])await test('deny-before-api',async()=>{const x=ctxB();mutation(x);let reads=0;x.api=async()=>{reads++;return dtoB();};await c.renderAgrupaciones376(c.h,x);assert.equal(reads,0);});
+ await test('dataset ACT changed during read',async()=>{const x=ctxB();x.api=async()=>{x.clientes[0].activo_confirmado=false;return dtoB();};const n=await c.renderAgrupaciones376(c.h,x);assert.equal(all(n,x=>x.tag==='table').length,0);});
+ await test('dataset duplicate revoked during read',async()=>{const x=ctxB();x.api=async()=>{x.clientes.push({...x.clientes[0],activo_confirmado:false});return dtoB();};const n=await c.renderAgrupaciones376(c.h,x);assert.equal(all(n,x=>x.tag==='table').length,0);});
+ await test('public table contains no identity fields',async()=>{const x=ctxB();x.api=async()=>dtoB();const n=await c.renderAgrupaciones376(c.h,x);assert.equal(all(n,x=>x.tag==='th').length,5);for(const id of ['persona_id','cliente_id','usuario_id','task_id'])assert(!text(n).includes(id));assert(text(n).includes('orientativa'));});
+ console.log(checks+' grupos376B UI PASS');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+`)(require,__dirname);

@@ -226,6 +226,9 @@ async function render(cont, ctx) {
     const resumen = panelResumen(r, ctx);
     if (resumen) cont.append(resumen);
     cont.append(panelQueCambia(r));
+    if (r.propia) cont.append(panel({titulo: 'Cómo mejoramos la app', icono: 'info'},
+      h('div', {class: 'cuerpo pila'}, h('p', {}, 'Medimos las pantallas que abres, acciones generales y tiempo de interacción para facilitar el trabajo del equipo.'),
+        h('p', {class: 'sub'}, 'Se conserva en la app durante 30 días. Dirección y operaciones pueden consultar el resumen. Esta medición no guarda los textos que escribes ni graba la pantalla. El tiempo de uso no equivale a horas trabajadas.'))));
     for (const x of [panelEquipo(r, ctx), panelCambios(r, ctx)]) if (x) cont.append(x);
 }
 

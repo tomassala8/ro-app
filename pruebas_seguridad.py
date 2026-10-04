@@ -20,6 +20,39 @@ import urllib.request
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
+
+def ejecutar_aisladas_560():
+    """Sólo fixtures fuente/AST; no servidor, datos de negocio ni entorno secreto."""
+    entorno = {"PATH": os.defpath, "PYTHONIOENCODING": "utf-8",
+               "PYTHONDONTWRITEBYTECODE": "1", "RO_IA_REAL": "no"}
+    fallos = 0
+    for nombre in ("probar_baterias_seguras_560.py", "probar_bloque_seguridad_558.py",
+                   "probar_ia_real_559.py", "probar_capturas_opiniones_565.py",
+                   "probar_secretos_calientes_567.py", "probar_rastro_replace_569.py",
+                   "probar_confirmar_personas_572.py", "probar_trabajador_resiliente_575.py",
+                   "probar_ajustes_validaciones_579.py", "probar_clasificacion_importes_580.py",
+                   "probar_puertas_cliente_581.py", "probar_lecturas_sincronia_585.py",
+                   "probar_patrones_privados_587.py", "probar_importes_acciones_decisiones_588.py",
+                   "probar_recorte_modulo_589.py", "probar_identidad_local_590.py",
+                   "probar_evidencias_kpi_148.py", "probar_evidencias_kpi_api_151.py",
+                   "probar_informes_declarados_596.py", "probar_acciones_tipadas_603.py",
+                   "probar_decisiones_clientes_607.py", "probar_resumen_informes_611.py", "probar_cerebro_reservas_620.py",
+                   "probar_puente_cerebro_reservas_621.py", "probar_seo_fuentes_624.py",
+                   "probar_seguridad_cerebro_seo_625.py", "probar_recorte_estructurado_632.py"):
+        try:
+            r = subprocess.run([sys.executable, str(AQUI / nombre)], cwd=AQUI,
+                               env=entorno, capture_output=True, text=True, timeout=60)
+            correcto = r.returncode == 0
+            print(("✓ " if correcto else "✗ ") + nombre)
+            if not correcto:
+                print(r.stdout + r.stderr)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            correcto = False
+            print("✗ " + nombre + ": " + type(exc).__name__)
+        if not correcto:
+            fallos += 1
+    return 1 if fallos else 0
+
 def _libre(evitar=()):
     """Ronda 11: un puerto libre de 8920-8929 (el rango de pruebas de E0), siempre en 127.0.0.1.
     Ronda 12: RO_PUERTOS_PRUEBA=8965-8969 cambia el rango (el que asigne el coordinador a cada carril).
@@ -45,7 +78,7 @@ def _libre(evitar=()):
 def _quien_escucha(puerto):
     """PIDs que escuchan en 127.0.0.1:puerto (lsof). None si no se puede saber (sin lsof)."""
     try:
-        r = subprocess.run(["lsof", "-nP", f"-iTCP@127.0.0.1:{puerto}", "-sTCP:LISTEN", "-t"], capture_output=True, text=True, timeout=10)
+        r = subprocess.run(["lsof", "-nP", f"-iTCP:{puerto}", "-sTCP:LISTEN", "-t"], capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return None
     return {int(x) for x in r.stdout.split() if x.strip().isdigit()}
@@ -130,6 +163,35 @@ def pedir(ruta, metodo="GET", cuerpo=None, yo=None, como=None, cab=None, app=Tru
         return 0, f"sin respuesta del servidor: {e}", {}
 
 
+def _leer_fila_db(path, sql):
+    con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
+    try:
+        return con.execute(sql).fetchone()
+    finally:
+        con.close()
+
+
+def _intentar_mutacion_m3(path, sql, mensaje_trigger):
+    """Un lock/esquema roto NO demuestra trigger. Siempre rollback y cierre de la prueba."""
+    con = None
+    try:
+        con = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=rw", uri=True, timeout=0.1)
+        con.execute(sql)
+        return False, "mutación no bloqueada por el disparador esperado"
+    except sqlite3.DatabaseError as exc:
+        codigo = getattr(exc, "sqlite_errorcode", None)
+        esperado = getattr(sqlite3, "SQLITE_CONSTRAINT_TRIGGER", 1811)
+        if isinstance(exc, sqlite3.IntegrityError) and codigo in (None, esperado) and str(exc) == mensaje_trigger:
+            return True, "rechazo del disparador esperado"
+        return False, "error SQLite distinto del rechazo esperado (" + type(exc).__name__ + ")"
+    finally:
+        if con is not None:
+            try:
+                con.rollback()
+            finally:
+                con.close()
+
+
 def main():
     tmp = Path(tempfile.mkdtemp())
     shutil.copy(AQUI / "local.db", tmp / "prueba.db")
@@ -159,7 +221,7 @@ def main():
 
 
 def pruebas(tmp):
-    inicio_rastro = (sqlite3.connect(tmp / "prueba.db").execute("SELECT coalesce(max(id), 0) + 1 FROM registro").fetchone()[0])
+    inicio_rastro = _leer_fila_db(tmp / "prueba.db", "SELECT coalesce(max(id), 0) + 1 FROM registro")[0]
     # ---- C2 · sin identidad no se entra como Tomás; Host y Origin; cabecera propia
     ok(pedir("/api/salud")[0] == 401, "C2 · sin identidad, /api/salud → 401 (antes 200 como Tomás)")
     ok(pedir("/api/sesion")[0] == 401, "C2 · sin identidad, /api/sesion → 401")
@@ -202,10 +264,10 @@ def pruebas(tmp):
     for ruta in ("/api/salud", "/api/rastro/verificar"):
         c = pedir(ruta, yo="mili", como="tomas")[0]
         ok(c == 403, f"C3/R7 · Mili como Tomás en {ruta} → {c}")
-    r = sqlite3.connect(tmp / "prueba.db").execute("SELECT count(*) FROM registro WHERE accion='lectura' AND quien='mili' AND como='tomas'").fetchone()[0]
+    r = _leer_fila_db(tmp / "prueba.db", "SELECT count(*) FROM registro WHERE accion='lectura' AND quien='mili' AND como='tomas'")[0]
     pedir("/api/modulo/en_rojo/x", yo="mili", como="lucia")
     pedir("/api/cliente/gac", yo="mili", como="lucia")
-    r2 = sqlite3.connect(tmp / "prueba.db").execute("SELECT count(*) FROM registro WHERE accion='lectura' AND como='lucia'").fetchone()[0]
+    r2 = _leer_fila_db(tmp / "prueba.db", "SELECT count(*) FROM registro WHERE accion='lectura' AND como='lucia'")[0]
     ok(r2 >= 1, f"M2 · lo leído en «ver como» queda en el rastro ({r2})")
 
     # ---- C4 · el cliente del dato lo decide el servidor
@@ -215,8 +277,7 @@ def pruebas(tmp):
     ok(c == 403, f"C4 · …y el chat → {c}")
     c, _, _ = pedir("/api/ver_dato", "POST", {"almacen": "ficha/_privado/contactos", "ref": "concilia", "campo": "datos"}, yo="carla")
     ok(c in (200, 404), f"C4 · Carla sí abre los de Concilia (suyo) → {c}")
-    db = sqlite3.connect(tmp / "prueba.db")
-    fila = db.execute("SELECT datos FROM registro WHERE quien='carla' AND coleccion='contactos' ORDER BY id DESC LIMIT 1").fetchone()
+    fila = _leer_fila_db(tmp / "prueba.db", "SELECT datos FROM registro WHERE quien='carla' AND coleccion='contactos' ORDER BY id DESC LIMIT 1")
     ok(fila and "accompany" not in (fila[0] or "") or fila is None, "C4 · el rastro no apunta el cliente falso")
 
     # ---- A1 · dinero de la empresa en «decisiones firmadas»
@@ -275,19 +336,17 @@ def pruebas(tmp):
     # ---- M1 · rastro
     c, _, _ = pedir("/api/rastro", "POST", {"accion": "ver_dato", "modulo": "sueldos", "objeto": "x"}, yo="lina")
     ok(c == 403, f"M1 · el navegador no puede apuntar «ver_dato» → {c}")
-    ida = db.execute("SELECT id FROM registro WHERE quien<>'lina' ORDER BY id DESC LIMIT 1").fetchone()
+    ida = _leer_fila_db(tmp / "prueba.db", "SELECT id FROM registro WHERE quien<>'lina' ORDER BY id DESC LIMIT 1")
     c, _, _ = pedir("/api/rastro", "POST", {"accion": "no_aplica", "motivo": "x", "modulo": "en-rojo", "anula_a": ida[0] if ida else 1}, yo="lina")
     ok(c == 403, f"M1 · anular una fila ajena → {c}")
 
     # ---- M3 · disparadores y cadena
-    for sql, que in (("DELETE FROM decisiones", "borrar decisiones"), ("UPDATE acciones SET texto='x'", "reescribir acciones"),
-                     ("DELETE FROM registro", "borrar el rastro"), ("UPDATE registro SET quien='x'", "reescribir el rastro")):
-        try:
-            sqlite3.connect(tmp / "prueba.db").execute(sql)
-            hay = sqlite3.connect(tmp / "prueba.db").execute("SELECT count(*) FROM " + sql.split()[1 if sql.startswith("UPDATE") else 2]).fetchone()[0]
-            ok(False if hay == 0 else False, f"M3 · {que} no se bloqueó")
-        except sqlite3.DatabaseError:
-            ok(True, f"M3 · {que} → bloqueado")
+    for sql, que, mensaje in (("DELETE FROM decisiones", "borrar decisiones", "Las decisiones no se borran"),
+                              ("UPDATE acciones SET texto='x'", "reescribir acciones", "De una acción solo puede avanzar el estado"),
+                              ("DELETE FROM registro", "borrar el rastro", "El rastro no se borra: crea una anulación"),
+                              ("UPDATE registro SET quien='x'", "reescribir el rastro", "El rastro no se modifica: crea una anulación")):
+        bloqueada, motivo = _intentar_mutacion_m3(tmp / "prueba.db", sql, mensaje)
+        ok(bloqueada, f"M3 · {que} → {motivo}")
     c, t, _ = pedir(f"/api/rastro/verificar?desde={inicio_rastro}", yo="tomas")   # lo escrito en esta prueba
     ok(c == 200 and json.loads(t).get("ok"), f"M3 · la cadena del rastro se verifica ({t[:80]})")
 
@@ -336,7 +395,9 @@ def pruebas(tmp):
         ok("serie" not in md and "presupuesto" not in md, "R9 · sin inversión, la ficha no trae la serie diaria de Meta ([gasto, leads]) ni el presupuesto")
     mias = set(fichas("lucia"))
     c, t, _ = pedir(f"/api/cliente/{sorted(mias)[0]}", yo="lucia")
-    ok(c == 200 and dinero_en(json.loads(t)["fuentes"]), "R9 · Lucía (account) sí ve el dinero de SU cliente")
+    ok(c == 200 and not dinero_en(json.loads(t)["fuentes"]), f"R9 (Tomás 3-oct) · Lucía (account) NO recibe el dinero de SU cliente ({sorted(dinero_en(json.loads(t)['fuentes']))[:3] if c == 200 else c})")
+    cl = json.loads(t).get("cliente", {}) if c == 200 else {}
+    ok(c == 200 and "cuota" not in cl and "publicidad_30d" not in cl, "R9 (Tomás 3-oct) · la cabecera de su cliente llega sin cuota ni inversión")
     ajeno = next(x["id"] for x in json.loads(pedir("/api/sesion", yo="tomas")[1])["datos"]["clientes"] if x["id"] not in mias)
     ok(pedir(f"/api/cliente/{ajeno}", yo="lucia")[0] == 403, "R9 · Lucía no abre la ficha de un cliente ajeno (403)")
     ok(pedir("/api/cliente/gac", yo="camilo")[0] == 403, "R9 · Camilo (producción) no abre fichas de cliente (403)")
@@ -363,6 +424,7 @@ def pruebas(tmp):
     avisos_automaticos(tmp)
     modular_acceso(tmp)
     telefonos_regla(tmp)
+    setters_agenda(tmp)
 
     # ---- Escáner sobre todo lo que viajaría
     import escaner_secretos as ESC
@@ -371,6 +433,9 @@ def pruebas(tmp):
 
 
 # ============================================================================ ronda 11 (auditoría 35)
+# El carril aislado termina antes de leer el catálogo real o arrancar main().
+if __name__ == "__main__" and sys.argv[1:] == ["--aisladas"]:
+    raise SystemExit(ejecutar_aisladas_560())
 import re as _re11
 RE_EUR = _re11.compile(r"\d[\d.,]*\s*(?:€|euros?)|€\s*\d")
 RE_COBRO = _re11.compile(r"(?i)\b(factur\w*|impag\w*|holded|airtable|A-\d{2}-\d{2,})")
@@ -401,6 +466,16 @@ def _servidor_copia(tmp, env_extra=None):
     destino = tmp / "app"
     if not destino.exists():
         shutil.copytree(AQUI, destino, ignore=shutil.ignore_patterns("capturas", "fuentes_*", "__pycache__", "local.db", "*.log"))
+        # servir importa este módulo de verdad al arrancar; la copia de pruebas
+        # debe incluirlo, sin traer datos ni lectores de herramientas externas.
+        (destino / "fuentes_verdad").mkdir(exist_ok=True)
+        for nombre in ("clientes_activos.py", "servicios_confirmados.py", "servicios_confirmados.json"):
+            shutil.copy(AQUI / "fuentes_verdad" / nombre, destino / "fuentes_verdad" / nombre)
+        # El diagnóstico SEO importa únicamente estos motores puros al arrancar.
+        # No copiar cachés privadas ni lectores que consultan proveedores.
+        (destino / "fuentes_seo").mkdir(exist_ok=True)
+        for nombre in ("seo_prioridades.py", "seo_prioridades_fuentes.py"):
+            shutil.copy(AQUI / "fuentes_seo" / nombre, destino / "fuentes_seo" / nombre)
     shutil.copy(tmp / "prueba.db", tmp / "copia.db")
     env = {**os.environ, "RO_DB": str(tmp / "copia.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json"), **(env_extra or {})}
     env.pop("RO_MODO", None)
@@ -663,7 +738,7 @@ def ronda11(tmp):
     ok(c == 403, f"N9 · un account (Carla) no da de alta → {c}")
     c = pedir("/api/altas/alta", "POST", {**base_alta, "puestos": ["account"]}, yo="tomas", como="mili")[0]
     ok(c == 403, f"N9 · en «ver como» no se da de alta → {c}")
-    c, t, _ = pedir("/api/altas/alta", "POST", {**base_alta, "puestos": ["account"], "correo_entrada": "zoe.ficticia@rankingonline.com",
+    c, t, _ = pedir("/api/altas/alta", "POST", {**base_alta, "puestos": ["account"], "correo_entrada": "fixture2@rankingonline.com",
                                                 "cartera": [{"cliente_id": "concilia", "silla": "account", "papel": "apoyo"}, {"cliente_id": "gac", "silla": "account", "papel": "apoyo"}]}, yo="mili")
     r = json.loads(t) if c == 200 else {}
     zid = r.get("id")
@@ -672,7 +747,7 @@ def ronda11(tmp):
     s = json.loads(t) if c == 200 else {"datos": {"clientes": []}}
     det = sorted(x["id"] for x in s["datos"]["clientes"] if x.get("detalle"))
     ok(c == 200 and det == ["concilia", "gac"], f"N9 · la ficticia entra con su identidad y abre SOLO sus 2 clientes ({det})")
-    c, t, _ = pedir("/api/sesion", cab={"Cf-Access-Authenticated-User-Email": "zoe.ficticia@rankingonline.com"})
+    c, t, _ = pedir("/api/sesion", cab={"Cf-Access-Authenticated-User-Email": "fixture2@rankingonline.com"})
     ok(c == 200 and json.loads(t)["persona"]["id"] == zid, f"N9 · y entra por su correo de entrada → {c}")
     c, t, _ = pedir("/api/cliente/musashi-consultores", yo=zid)
     ok(c == 403 and "Musashi" not in t, f"N9 · la ficticia no ve un cliente ajeno (Musashi) → {c}, sin datos")
@@ -688,7 +763,23 @@ def ronda11(tmp):
     ok(c == 403, f"N9 · el jefe de un departamento solo lo cambia Tomás (Mili → {c})")
     c, t, _ = pedir("/api/altas/cambio", "POST", {"id": zid, "puestos": ["trafficker"], "cartera_anadir": [{"cliente_id": "concilia", "silla": "trafficker", "papel": "apoyo"}]}, yo="mili")
     s = json.loads(pedir("/api/sesion", yo=zid)[1])
-    ok(c == 200 and s["datos"]["carteraPorSilla"] == {"trafficker": ["concilia"]}, f"N9 · cambio a trafficker: solo Concilia en la silla trafficker ({s['datos']['carteraPorSilla']})")
+    contratos = json.loads((AQUI / "data/clientes.json").read_text())
+    concilia = next(x for x in contratos if x["id"] == "concilia")
+    ok((concilia.get("servicios") or {}).get("publicidad") == "prevista", "N9 · control: Concilia tiene publicidad prevista, sin contrato confirmado")
+    ok(c == 200 and s["datos"]["carteraPorSilla"].get("trafficker") == [] and not s["datos"]["clientes"]
+       and pedir("/api/cliente/concilia", yo=zid)[0] == 403,
+       "N9 · asignar silla trafficker sin publicidad contratada no concede acceso a Concilia ni la muestra en sesión")
+    contratado = next(x["id"] for x in contratos if (x.get("servicios") or {}).get("publicidad") == "sí"
+                      and (AQUI / "data/clientes" / f"{x['id']}.json").exists())
+    c = pedir("/api/altas/cambio", "POST", {"id": zid, "cartera_anadir": [{"cliente_id": contratado, "silla": "trafficker", "papel": "apoyo"}]}, yo="mili")[0]
+    s = json.loads(pedir("/api/sesion", yo=zid)[1])
+    ok(c == 200 and s["datos"]["carteraPorSilla"].get("trafficker") == [contratado]
+       and [x["id"] for x in s["datos"]["clientes"]] == [contratado]
+       and pedir(f"/api/cliente/{contratado}", yo=zid)[0] == 200,
+       "N9 · asignación trafficker con publicidad sí concede únicamente el cliente contratado")
+    # Endpoint de alertas: ni cabeceras de cliente rechazado tras el cambio de puesto.
+    ok(all(a.get("cliente_id") != "concilia" for a in s["datos"]["alarmas"]),
+       "N9 · el cliente sin publicidad tampoco aparece en las alarmas de sesión")
     c, t, _ = pedir("/api/altas/baja", "POST", {"id": zid}, yo="mili")
     ok(c == 200 and pedir("/api/sesion", yo=zid)[0] == 403, f"N9 · baja: ya no entra → {c}")
     lista = (tmp / "lista_access.txt").read_text()
@@ -889,7 +980,10 @@ def ronda_a4(tmp):
        f"A4 · Jerónimo ve el objetivo de GAC sin costes (leads sí) → {c}, {filas[:1]}")
     c, t, _ = pedir("/api/acciones?modulo=ficha", yo="lucia")
     filas = [json.loads(a["vista_previa"] or "{}") for a in json.loads(t).get("acciones", []) if a.get("tipo") == "objetivo_alta" and a.get("cliente_id") == "gac"]
-    ok(filas and filas[0].get("coste_lead") == 7.5, "A4 · Lucía (su account) sí ve el coste por lead")
+    ok(filas and "coste_lead" not in filas[0] and filas[0].get("leads_mes") == 40, "A4 (Tomás 3-oct) · Lucía (su account) ve el objetivo de GAC sin el coste por lead")
+    c, t, _ = pedir("/api/acciones?modulo=ficha", yo="mili")
+    filas = [json.loads(a["vista_previa"] or "{}") for a in json.loads(t).get("acciones", []) if a.get("tipo") == "objetivo_alta" and a.get("cliente_id") == "gac"] if c == 200 else []
+    ok(filas and filas[0].get("coste_lead") == 7.5, "A4 · Mili (operaciones) sí ve el coste por lead del objetivo")
     # El almacén común, generado sobre la copia de la base: recortado por el servidor como cualquier dato de módulo
     os.environ["RO_DB"] = str(tmp / "prueba.db")
     sys.path.insert(0, str(AQUI))
@@ -916,7 +1010,10 @@ def ronda_a4(tmp):
         ok(ids is not None and "emex" in ids and not ids & {"gac", "musashi"}, f"A4 · Candela recibe Emex (suyo) y no GAC ni Musashi → {c}, {sorted(ids or [])}")
         c, t, _ = pedir("/api/modulo/objetivos/objetivos", yo="lucia")
         gl = next((x for x in json.loads(t).get("clientes", []) if x["cliente_id"] == "gac"), {}) if c == 200 else {}
-        ok((gl.get("objetivo") or {}).get("coste_lead") == 7.5, "A4 · objetivos.json: Lucía recibe el coste de GAC")
+        ok(gl and "coste_lead" not in json.dumps(gl) and (gl.get("objetivo") or {}).get("leads_mes") == 40, "A4 (Tomás 3-oct) · objetivos.json: Lucía recibe GAC sin el coste por lead")
+        c, t, _ = pedir("/api/modulo/objetivos/objetivos", yo="tomas")
+        gt = next((x for x in json.loads(t).get("clientes", []) if x["cliente_id"] == "gac"), {}) if c == 200 else {}
+        ok((gt.get("objetivo") or {}).get("coste_lead") == 7.5, "A4 · objetivos.json: dirección sí recibe el coste de GAC")
         ok(pedir("/api/modulo/objetivos/objetivos", yo="sofia")[0] == 403, "A4 · administración no recibe objetivos ni semáforos")
     finally:
         if guardado is not None:
@@ -1244,7 +1341,9 @@ def ronda15(tmp):
     # ---- A6 · «Mis clientes» fijados
     ses = j(pedir("/api/sesion", yo="lucia")).get("datos", {})
     abre = [c["id"] for c in ses.get("clientes", []) if c.get("detalle")]
-    ajeno = next(c["id"] for c in ses.get("clientes", []) if not c.get("detalle"))
+    # 3-oct: con «solo su cartera» el account ya no recibe clientes ajenos en la sesión: el ajeno sale de la verdad única
+    ajeno = next((c["id"] for c in ses.get("clientes", []) if not c.get("detalle")), None) or next(
+        (c["cliente_id"] for c in json.loads((AQUI / "data/verdad/clientes.json").read_text())["clientes"] if c["cliente_id"] not in abre), None)
     ok(pedir("/api/preferencias", "POST", {"fijados": abre[:2] + [ajeno]}, yo="lucia")[0] == 403, f"R15 A6 · Lucía no fija {ajeno} (no lo abre) → 403")
     ok(pedir("/api/preferencias", "POST", {"fijados": abre[:2]}, yo="lucia")[0] == 200 and j(pedir("/api/preferencias", yo="lucia")).get("fijados") == abre[:2],
        "R15 A6 · fija dos suyos y se guardan por persona")
@@ -1456,24 +1555,52 @@ def r16c(tmp):
        f"R16c · la setter recibe la verdad con la lista común vacía ({c}, {len(v.get('comun') or [])} comunes, {len(v.get('clientes') or [])} con detalle)")
     ok(not ({"cuota_empresa", "resumen", "fuentes_usadas"} & set(v)), f"R16c · ni resumen ni cuota de la empresa ({sorted(v)})")
     ok(pedir("/api/modulo/en_rojo/atajos", yo="tomas", como="setter_ana")[0] == 403, "R16c · los atajos de «En rojo» siguen cerrados a la setter")
-    ok(len(json.loads(pedir("/api/modulo/verdad/clientes", yo="lucia")[1]).get("comun", [])) >= 60, "R16c · el resto sigue con su lista común")
+    ok(len(json.loads(pedir("/api/modulo/verdad/clientes", yo="mili")[1]).get("comun", [])) >= 60, "R16c · operaciones sigue con la lista común entera")
+    _cv = json.loads(pedir("/api/modulo/verdad/clientes", yo="lucia")[1])
+    _mias = set(json.loads(pedir("/api/sesion", yo="lucia")[1])["datos"]["carteraIds"])
+    ok(_cv.get("comun") and {x["id"] for x in _cv["comun"]} <= _mias, f"R16c (Tomás 3-oct) · Lucía (account) recibe la lista común solo con sus clientes ({len(_cv.get('comun') or [])} de {len(_mias)})")
     # 4 · contador «Producción» del menú con el hoy de Madrid, no con el día del dato (misma regla que alDia de produccion_comun.js).
     from datetime import date as _d, timedelta as _td
     prod = json.loads((AQUI / "data/produccion/produccion.json").read_text())
     dato = prod.get("hoy") or prod["generado"][:10]
     hoy = (_d.fromisoformat(dato) + _td(days=1)).isoformat()
 
-    def al_dia(pid):
+    # La cola cruda incluye clientes sin servicio: el esperado aplica el scope real,
+    # y compara dos fechas dentro del MISMO scope para comprobar el reloj.
+    import permisos as P_scope
+    personas_scope = json.loads((AQUI / "data/personas.json").read_text())
+    por_persona_scope = {p["id"]: p for p in personas_scope}
+    crudo_scope = {"personas": personas_scope, "asignaciones": asig,
+                   "clientes": json.loads((AQUI / "data/clientes.json").read_text())}
+    reloj_previo = os.environ.get("RO_RELOJ")
+    os.environ["RO_RELOJ"] = f"{hoy}T09:00"
+    try:
+        contextos_scope = {pid: P_scope.contexto(p, crudo_scope) for pid, p in por_persona_scope.items()}
+    finally:
+        if reloj_previo is None:
+            os.environ.pop("RO_RELOJ", None)
+        else:
+            os.environ["RO_RELOJ"] = reloj_previo
+
+    def al_dia(pid, fecha=hoy):
         n = 0
         for r in prod["cola"]:
             if r.get("persona_id") != pid or not r.get("vence") or r.get("grupo") in ("revision", "bloqueada"):
                 continue
+            # Producción usa «cli»; otras filas usan cliente_id. Resolver ambas
+            # sin depender de los contadores precalculados del mismo endpoint.
+            cid = r.get("cliente_id") or r.get("cli") or r.get("cid")
+            if not cid and r.get("cliente"):
+                cid = next((c["id"] for c in crudo_scope["clientes"] if c.get("nombre") == r["cliente"]), None)
+            if cid and not P_scope.ver(por_persona_scope[pid], {"tipo": "cliente_detalle", "cliente_id": cid}, contextos_scope[pid])["ok"]:
+                continue
             g = r["grupo"]
-            if r["vence"] < hoy and g in ("hoy", "semana", "despues", "vencida"):
-                g = "olvidada" if (_d.fromisoformat(hoy) - _d.fromisoformat(r["vence"])).days > 30 else "vencida"
+            if r["vence"] < fecha and g in ("hoy", "semana", "despues", "vencida"):
+                g = "olvidada" if (_d.fromisoformat(fecha) - _d.fromisoformat(r["vence"])).days > 30 else "vencida"
             n += g == "vencida"
         return n
-    quien = next((p["persona_id"] for p in prod["personas"] if p["persona_id"] in ("lucia", "lina", "jeronimo", "valeria") and al_dia(p["persona_id"]) != p.get("vencidas")), None)
+    quien = next((p["persona_id"] for p in prod["personas"] if p["persona_id"] in ("lucia", "lina", "jeronimo", "valeria")
+                  and al_dia(p["persona_id"]) != al_dia(p["persona_id"], dato)), None)
     if not quien:
         ok(False, f"R16c · sin persona con vencidas distintas al día siguiente ({quien})")
         return
@@ -1498,7 +1625,9 @@ def r16c(tmp):
                 time.sleep(0.5)
         esperado = al_dia(quien)
         fichero = next(p.get("vencidas") for p in prod["personas"] if p["persona_id"] == quien)
-        ok(cuenta == esperado, f"R16c · contador de Producción de {quien} con el hoy de Madrid ({hoy}, dato del {dato}): {cuenta} = {esperado} (el fichero dice {fichero})")
+        antes_en_scope = al_dia(quien, dato)
+        ok(cuenta == esperado and esperado != antes_en_scope,
+           f"R16c · contador de Producción de {quien} por servicio y reloj Madrid ({hoy}, dato del {dato}): {cuenta} = {esperado}; mismo scope antes {antes_en_scope} (fichero global {fichero})")
     finally:
         parar(srv)
 
@@ -1639,7 +1768,7 @@ def envios_verificados(tmp):
        "ENVIOS · nace «simulado» con el destinatario que resuelve el servidor (el contacto del ticket)")
     with sqlite3.connect(tmp / "prueba.db") as con:
         fila = con.execute("SELECT remitente, destinatario FROM envios WHERE id=?", (e_l.get("id"),)).fetchone()
-    ok(fila and "example.org" not in fila[0] + fila[1] and "marketing@rankingonline.com" in fila[0],
+    ok(fila and "example.org" not in fila[0] + fila[1] and "fixture1@rankingonline.com" in fila[0],
        "ENVIOS · el «de» y el «para» del navegador se ignoran: remitente y destinatario los pone el servidor")
     C = lista("carla")
     id_c = next((e["id"] for e in C["envios"] if "Carla" in (e.get("texto") or "")), None)
@@ -1683,7 +1812,8 @@ def envios_verificados(tmp):
     # 3-oct: un texto con huecos de plantilla sin rellenar no sale nunca (400 con motivo llano, sin acción ni envío)
     with sqlite3.connect(tmp / "prueba.db") as con:
         a0, e0 = (con.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("acciones", "envios"))
-    for hueco in ("[completar]", "[completar: fecha]", "[…]", "[...]"):
+    for hueco in ("[completar]", "[completar: fecha]", "[…]", "[...]",
+                  "[día y hora]", "[nombre]", "[enlace]", "[Fecha]", "[confirmar hora]"):   # 3-oct: huecos de borradores y plantillas
         c, t, _ = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": f"Hola, te lo mando el {hueco}. Un saludo,"})
         motivo = (json.loads(t).get("error") or "") if t.startswith("{") else ""
         ok(c == 400 and "sin rellenar" in motivo and hueco in motivo, f"ENVIOS · texto con «{hueco}» → {c} ({motivo[:70]})")
@@ -1693,7 +1823,10 @@ def envios_verificados(tmp):
         a1, e1 = (con.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in ("acciones", "envios"))
     ok(a1 == a0 and e1 == e0, f"ENVIOS · …y no deja acción en la cola ni envío ({a1 - a0}, {e1 - e0})")
     c = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": "Hola, ya lo tienes [adjunto en el correo]. Un saludo,"})[0]
-    ok(c == 200, f"ENVIOS · un corchete normal sí sale (solo bloquea [completar] y […]) → {c}")
+    ok(c == 200, f"ENVIOS · un corchete normal sí sale (solo bloquea huecos de plantilla) → {c}")
+    for normal in ("Lo tienes [aquí](https://rankingonline.com/academia-de-ventas/). Un saludo,", "Va la nota [1] del informe. Un saludo,"):
+        c = acc("lucia", {"objeto": "RO-3940", "cliente_id": "adade-zaragoza", "texto": f"Hola, {normal}"})[0]
+        ok(c == 200, f"ENVIOS · enlace o nota entre corchetes sí sale («{normal[:28]}…») → {c}")
 
 def sincronia_clickup(tmp):
     """Sincronía con ClickUp (3-oct): cada acción que va a ClickUp queda guardada en la base (copia segura) al momento; el
@@ -2025,6 +2158,65 @@ def telefonos_regla(tmp):
         ok(tels and all(_re11.fullmatch(r"\+\d{8,15}", t) for t in tels), f"TELÉFONOS · los {len(tels)} teléfonos de contactos, con «+» y sin espacios")
     c = pedir("/api/ver_dato", "POST", {"almacen": "ficha/_privado/contactos", "ref": "accompany", "campo": "datos"}, yo="setter_ana")[0]
     ok(c == 403, f"TELÉFONOS · una setter no abre los contactos de un cliente ({c})")
+
+
+def setters_agenda(tmp):
+    """Setters (3-oct, feedback de Tomás · setters_srv.py): cada setter actúa SOLO sobre sus leads y sus citas (comprobado en el
+    servidor), «Agendar cita» queda en simulación con la vista previa del servidor (hueco libre, sin dobles), la propuesta de
+    Claude solo de sus leads y nunca en «ver como», los setters no ven «En rojo» ni dinero, y el navegador no se salta la
+    regla de «lo que sale fuera» fingiendo un lead de RO."""
+    js = lambda r: json.loads(r[1]) if r[0] == 200 else {}
+    d = json.loads((AQUI / "data/ventas_ro/setters.json").read_text())
+    de = lambda s: [l["id"] for l in d["leads"] if l["setter"] == s and l.get("lista") in ("llamar_ya", "segunda", "hablado")]
+    ana, jav = de("ana"), de("javier")
+    if not ana or not jav:
+        return ok(True, "SETTERS · sin leads de los dos setters: prueba omitida")
+    acc = lambda yo, cuerpo, como=None: pedir("/api/acciones", "POST", {"modulo": "setters", **cuerpo}, yo=yo, como=como)
+    ok(acc("setter_ana", {"herramienta": "app", "tipo": "resultado_llamada", "objeto": jav[0], "texto": "No contesta"})[0] == 403,
+       "SETTERS · Ana no apunta resultados a un lead de Javier (403)")
+    ok(acc("setter_javier", {"herramienta": "app", "tipo": "confirmacion_cita", "objeto": ana[0], "texto": "Confirmada"})[0] == 403,
+       "SETTERS · Javier no confirma citas de Ana (403)")
+    ok(acc("setter_ana", {"herramienta": "app", "tipo": "resultado_llamada", "objeto": "no-existe-123", "texto": "x"})[0] == 403,
+       "SETTERS · un lead que no existe → 403")
+    ok(acc("setter_ana", {"herramienta": "app", "tipo": "informe_fin_de_dia", "objeto": "javier", "texto": "x"})[0] == 403,
+       "SETTERS · el informe de fin de día solo a su nombre")
+    c, t, _ = acc("setter_ana", {"herramienta": "whatsapp", "tipo": "whatsapp_abierto", "objeto": ana[0], "texto": "WhatsApp"})
+    ok(c == 200, f"SETTERS · WhatsApp a su propio lead de RO entra en la cola (no es un cliente) ({c})")
+    c = pedir("/api/acciones", "POST", {"modulo": "en-rojo", "herramienta": "whatsapp", "tipo": "whatsapp", "objeto": "+34600111222", "texto": "x", "_lead_ro": True}, yo="tomas")[0]
+    ok(c in (400, 403), f"SETTERS · el navegador no se salta «lo que sale fuera» mandando _lead_ro ({c})")
+    libres = (d.get("huecos") or {}).get("dias") or {}
+    if libres:
+        dia = sorted(libres)[0]
+        ini = f"{dia} {libres[dia][0]}"
+        c, t, _ = acc("setter_ana", {"herramienta": "ghl", "tipo": "crear_cita_ghl", "objeto": ana[0],
+                                     "vista_previa": {"inicio": ini, "titulo": "Prueba", "notas": "n", "contacto_id": jav[0], "calendario_id": "otro"}})
+        r = json.loads(t) if c == 200 else {}
+        vp = r.get("vista_previa") or {}
+        ok(c == 200 and r.get("estado") == "simulada" and vp.get("contacto_id") == ana[0] and vp.get("calendario_id") == "ChisJEQCj8fXSnML13AQ" and vp.get("hueco_comprobado"),
+           f"SETTERS · «Agendar cita» queda simulada y el contacto y el calendario los pone el servidor ({c})")
+        ok("pendiente de GoHighLevel" in str(r.get("pendiente")) and r.get("ghl_encendido") is False, "SETTERS · la respuesta dice «pendiente de GoHighLevel» con el interruptor apagado")
+        ok(acc("setter_ana", {"herramienta": "ghl", "tipo": "crear_cita_ghl", "objeto": ana[1 if len(ana) > 1 else 0], "vista_previa": {"inicio": ini}})[0] == 409,
+           "SETTERS · el mismo hueco no se pide dos veces")
+        ok(acc("setter_ana", {"herramienta": "ghl", "tipo": "crear_cita_ghl", "objeto": ana[0], "vista_previa": {"inicio": f"{dia} 03:17"}})[0] == 409,
+           "SETTERS · una hora que no está libre en el calendario → 409")
+        ok(acc("setter_ana", {"herramienta": "ghl", "tipo": "crear_cita_ghl", "objeto": jav[0], "vista_previa": {"inicio": ini}})[0] == 403,
+           "SETTERS · Ana no agenda a un lead de Javier")
+        with sqlite3.connect(tmp / "prueba.db") as con:
+            est = {r[0] for r in con.execute("SELECT estado FROM acciones WHERE tipo='crear_cita_ghl'")}
+        ok(est == {"simulada"}, f"SETTERS · ninguna cita sale de la cola en simulación ({est})")
+    prop = lambda yo, lead, como=None: pedir("/api/setters/propuesta_cita", "POST", {"lead": lead, "notas": "el viernes a las 10"}, yo=yo, como=como)
+    c, t, _ = prop("setter_ana", ana[0])
+    ok(c == 200 and json.loads(t).get("origen") in ("ia", "reglas"), f"SETTERS · «Claude te lo rellena» propone para su lead ({c})")
+    ok("@" not in t and not _re11.search(r"\+?\d{9,}", t), "SETTERS · la propuesta no lleva teléfonos ni correos")
+    ok(prop("setter_ana", jav[0])[0] == 403, "SETTERS · ni propuesta para un lead de otra setter")
+    ok(prop("lucia", ana[0])[0] == 403, "SETTERS · Lucía (account) no pide propuestas de citas")
+    ok(prop("tomas", ana[0], como="setter_ana")[0] == 403, "SETTERS · en «ver como» no se propone nada")
+    # los setters no ven «En rojo» ni dinero
+    for ruta in ("/api/modulo/en_rojo/atajos", "/api/modulo/dinero/resumen", "/api/modulo/finanzas/resumen"):
+        c = pedir(ruta, yo="setter_ana")[0]
+        ok(c in (403, 404), f"SETTERS · la setter no recibe {ruta} ({c})")
+    t = pedir("/api/modulo/ventas_ro/setters", yo="setter_ana")[1]
+    ok("€" not in t and "cuota" not in t and "facturacion" not in t, "SETTERS · sus datos no llevan dinero")
 
 
 if __name__ == "__main__":

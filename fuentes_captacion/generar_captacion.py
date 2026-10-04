@@ -31,9 +31,11 @@ DATA = APP / 'data'
 CAPTACION = RAIZ / '20_FASE2_CAPTACION' / 'captacion.json'
 ANUNCIOS = AQUI / 'anuncios.json'
 GHL_TOTALES = AQUI / 'ghl_totales.json'   # ghl_totales.py: contactos de cada subcuenta en toda su historia
-SUBCUENTA_SIN_USO = 5                      # menos de 5 contactos en su historia = «la subcuenta no se usa» (auditoría E-13)
 sys.path.insert(1, str(Path(__file__).resolve().parents[1]))  # C5: rutas y secretos en config.py
 import config  # noqa: E402
+from fuentes_captacion.cpm_referencia_417 import proyectar as cpm_referencia417
+from fuentes_verdad import clientes_activos as ACT
+from fuentes_captacion.coherencia_crm_297 import proyectar as proyectar_crm, conteo, suma_observada
 from fuentes_objetivos import objetivos as OBJETIVOS  # noqa: E402  (A4: el objetivo del cliente, de un solo sitio)
 TORRE_ZIP = config.TORRE_ZIP
 SALIDA = DATA / 'captacion' / 'captacion.json'
@@ -218,13 +220,13 @@ def estado_fuente(hora, limite_h, n_err, n_total, que):
     """Estado de una fuente de Captación (auditoría 35): «caida» si no respondió ninguna, «con_errores» si fallaron
     algunas, «dato_viejo» si su hora pasa del límite, «bien» si no. Con errores lleva «hora_error» = la hora de la
     lectura que falló: si fue en esta vuelta, la tubería lo cuenta como fallo de esa fuente y avisa."""
-    out = {'estado': 'bien'}
+    out = {'estado': 'bien' if n_total > 0 else 'sin_dato'}
     try:
         edad = (datetime.now() - datetime.strptime(str(hora)[:16], '%Y-%m-%d %H:%M')).total_seconds() / 3600
     except (TypeError, ValueError):
         edad = None
-    if edad is None or edad > limite_h:
-        out['estado'] = 'dato_viejo'
+    if edad is None or edad < 0 or edad > limite_h:
+        out['estado'] = 'dato_viejo' if n_total > 0 else 'sin_dato'
     if n_err:
         out.update({'estado': 'caida' if n_total and n_err >= n_total else 'con_errores', 'error': f'{n_err} de {n_total} {que}',
                     'hora_error': str(hora)[:16] if hora else datetime.now().strftime('%Y-%m-%d %H:%M')})
@@ -247,6 +249,7 @@ def main():
     asign = leer(DATA / 'asignaciones.json', [])
     asign = asign if isinstance(asign, list) else asign.get('asignaciones', [])
     base = leer(DATA / 'clientes.json', [])
+    ids_base417 = [x.get('id') for x in (base if isinstance(base, list) else base.get('clientes', [])) if isinstance(x, dict)]
     base = {c['id']: c for c in (base if isinstance(base, list) else base.get('clientes', []))}
     cap_a_app = {}
     for f in (DATA / 'clientes').glob('*.json'):
@@ -282,6 +285,8 @@ def main():
             out[silla + '_confianza'] = s[0].get('confianza') if s else None
         return out
 
+    caches_meta417 = {p.stem: leer(p, {}) for p in (APP / 'fuentes_paneles' / '_cache' / 'meta').glob('*.json')}
+    cuentas417 = [str(x.get('cuenta', '')).removeprefix('act_') for x in caches_meta417.values() if isinstance(x, dict)]
     obj_app = OBJETIVOS.leer()[0]   # A4: base de la app (ficha y Clientes nuevos), la misma lectura para toda la app
     hoy = date.today()
     filas = []
@@ -305,79 +310,49 @@ def main():
             for x in an['anuncios']:
                 x['enlace'] = (f"https://adsmanager.facebook.com/adsmanager/manage/ads?act={act_num_de(m)}&selected_ad_ids={x['ad_id']}" if x.get('ad_id')
                                else f"https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={act_num_de(m)}")
-        leads_meta_7 = (m.get('leads') or {}).get('7d') or 0
+        leads_meta_7 = conteo((m.get('leads') or {}).get('7d'))
         cr = crm.get(cid) or {}
         ghl_7 = cr.get('leads_ghl_7d') if cr else None                # contactos nuevos no manuales en 7 días (Salud del CRM)
         tot = (totales.get(c['id']) or {}).get('contactos_total')
         v_cli = verdad.get(cid) or {}
         c14 = cit.get('14d') or {}
         cm = cit.get('mes_anterior') or {}
-        sin_estado_14 = c14.get('sin_estado') or 0
+        medicion_crm = proyectar_crm(c, cr, tot, cap.get('generado'))
+        leads_meta_7 = medicion_crm['leads_meta_7d']
+        ghl_7 = medicion_crm['leads_ghl_7d']
+        tot = medicion_crm['contactos_historia']
+        sin_estado_14 = medicion_crm['sin_estado_14d']
         coste_cita_14 = cpc.get('coste_por_cita_14d')
-        motivos = [con_motivo(x) for x in c.get('motivos', [])]
-        avisos = [con_motivo(x) for x in c.get('avisos', []) if not x['texto'].startswith('Objetivo de coste')]  # se juntan en «objetivo sin cargar»
+        # Las reglas del lector anterior no prueban cohorte, vigencia de objetivos ni seguimiento.
+        # Conservar las observaciones para contraste, sin convertirlas en un diagnóstico actual.
+        diagnosticos_legacy = [dict(con_motivo(x), vigencia='referencia_legacy_no_validada')
+                              for x in c.get('motivos', []) if isinstance(x, dict) and isinstance(x.get('texto'), str)]
+        avisos_legacy = [dict(con_motivo(x), vigencia='referencia_legacy_no_validada')
+                         for x in c.get('avisos', []) if isinstance(x, dict) and isinstance(x.get('texto'), str)]
+        motivos = []
+        avisos = [{'texto': medicion_crm['medicion_integracion']['nota'],
+                   'clase_id': 'dato', 'clase': 'dato pendiente'}]
+        if m.get('error') or g.get('error') or cr.get('error'):
+            avisos.append({'texto': 'Lectura con errores: los recuentos afectados quedan desconocidos; contrastar la fuente antes de evaluar la cuenta.',
+                           'clase_id': 'dato', 'clase': 'dato pendiente'})
         objetivo_cargado = bool(oa.get('cargado')) or bool((c.get('objetivo') or {}).get('coste_cita'))
-        techo_cita = (c.get('objetivo') or {}).get('coste_cita') or ALARMA_CITA   # A4: con objetivo, el suyo
         if not objetivo_cargado:
-            avisos.append({'texto': 'Objetivo sin cargar: falta el coste por cita y por lead del cliente en la ficha del alta. Mientras, se juzga con el techo general por lead y la red de seguridad por cita.',
+            avisos.append({'texto': 'Objetivo del cliente pendiente de confirmar: los umbrales del generador anterior son referencias históricas, no objetivos vigentes.',
                            'clase_id': 'dato', 'clase': 'dato pendiente', 'objetivo_sin_cargar': True})
-        alarma_cita = bool(coste_cita_14 and coste_cita_14 > techo_cita)
-        con_obj_cita = techo_cita != ALARMA_CITA
-        if alarma_cita:
-            motivos.append({'texto': 'Coste por cita por encima del objetivo del cliente (14 días)' if con_obj_cita else 'Coste por cita por encima de la red de seguridad (14 días, sin objetivo del cliente)',
-                            'gasto_texto': f"Coste por cita de {round(coste_cita_14)} € en 14 días: por encima de {'su objetivo de ' + str(round(techo_cita)) + ' €' if con_obj_cita else 'la red de seguridad de 100 €'}",
-                            'clase_id': 'paid', 'clase': 'publicidad', 'nivel': 'atencion'})
+        # Gasto de Meta / citas de un calendario no enlazado no es un coste de adquisición.
+        alarma_cita = False
         if an and an['cansadas']:
             avisos.append({'texto': f"{an['cansadas']} anuncio{'s' if an['cansadas'] > 1 else ''} cansado{'s' if an['cansadas'] > 1 else ''} (dos señales a la vez): preparar el cambio de creatividad",
                            'clase_id': 'paid', 'clase': 'publicidad'})
         if an and an['problemas_total']:
             avisos.append({'texto': f"{an['problemas_total']} anuncio{'s' if an['problemas_total'] > 1 else ''} rechazado{'s' if an['problemas_total'] > 1 else ''} o con problemas en Meta",
                            'clase_id': 'paid', 'clase': 'publicidad'})
-        severidad = c['severidad']
-        cuello = [k for k, v in (('paid', c.get('problema_publicidad')), ('seguimiento', c.get('problema_seguimiento')), ('integracion', c.get('problema_integracion'))) if v]
-        # ---- fuga de integración con la definición común (verdad única: grave ≥ 10 leads y llega < 50 %; leve < 80 %) ----
+        severidad = 'dato'
+        cuello = []
         fuga = None
-        sin_uso = bool(cr.get('sin_uso')) if cr else bool(tot is not None and tot < SUBCUENTA_SIN_USO)
-        if cr.get('contactos_total') is not None:
-            tot = cr['contactos_total']
-        if sin_uso and c.get('meta_activa') and leads_meta_7:
-            # No es una fuga: el cliente no usa GoHighLevel (Salud del CRM, «sin_uso»). Nunca «bien» con leads que no van al CRM.
-            motivos.insert(0, {'texto': f"Subcuenta de GoHighLevel sin usar ({tot} contacto{'s' if tot != 1 else ''} en toda su historia): los {int(leads_meta_7)} leads de Meta "
-                                        f"de 7 días no van a GoHighLevel. Confirmar con el cliente el servicio de CRM y dónde recibe los leads",
-                               'clase_id': 'integracion', 'clase': 'integración', 'nivel': 'atencion'})
-            if 'integracion' not in cuello:
-                cuello.append('integracion')
-            if severidad in ('ok', 'inactivo'):
-                severidad = 'atencion'
-        elif c.get('ghl_subcuenta') and ghl_7 is not None and leads_meta_7 >= 10:
-            pct_ll = ghl_7 / leads_meta_7
-            fuga = 'grave' if pct_ll < 0.5 else 'leve' if pct_ll < 0.8 else None
-        if fuga:
-            txt = f"Meta dio {int(leads_meta_7)} leads en 7 días y a GoHighLevel llegaron {ghl_7}: revisar la conexión del formulario"
-            motivos.insert(0, {'texto': txt, 'clase_id': 'integracion', 'clase': 'integración', 'nivel': 'critico' if fuga == 'grave' else 'atencion'})
-            if 'integracion' not in cuello:
-                cuello.append('integracion')
-            if fuga == 'grave':
-                severidad = 'critico'          # una fuga grave nunca es «bien» (misma regla que la verdad única)
-            elif severidad in ('ok', 'inactivo'):
-                severidad = 'atencion'
-        if not leads_meta_7 and ghl_7 and c.get('meta_activa'):
-            avisos.append({'texto': f"Meta no dio leads en 7 días, pero a GoHighLevel llegaron {ghl_7} contactos por otra vía (web, Instagram u otra campaña)",
-                           'clase_id': 'info', 'clase': 'informativo'})
+        sin_uso = None
         if m.get('moneda') and m['moneda'] != 'EUR':
             avisos.append({'texto': f"La cuenta de Meta va en {m['moneda']}: su gasto no se suma al de la casa", 'clase_id': 'dato', 'clase': 'dato pendiente'})
-        if not cuello and severidad == 'ok':
-            cuello = []
-        # V2 (B-A2): «en orden» nunca con un aviso de integración abierto (Accompany: «CRM no conectado») → a vigilar
-        if severidad == 'ok' and any(a.get('clase_id') == 'integracion' for a in avisos):
-            severidad = 'atencion'
-            if 'integracion' not in cuello:
-                cuello.append('integracion')
-        if alarma_cita:   # D-03: red de seguridad > 100 €/cita. Sube «ok» a «atención» (las citas son todas las del calendario: a medias)
-            if severidad == 'ok':
-                severidad = 'atencion'
-            if 'paid' not in cuello:
-                cuello.insert(0, 'paid')
         t = torre_por_app.get(cid)
         serie = [{'d': p['d'], 'gasto_meta': (p.get('meta') or [None, None])[0], 'leads_meta': (p.get('meta') or [None, None])[1]} for p in c.get('serie', [])]
         s7 = serie[:7]
@@ -387,9 +362,10 @@ def main():
         gp = GADS_PARADAS.get(cid)
         fila = {
             'cliente_id': cid, 'nombre': c['nombre'], 'id_captacion': c['id'], 'nicho': b.get('descripcion'),
+            'coste_cpm_referencia_7d': cpm_referencia417(caches_meta417.get(cid), cid, m.get('cuenta_id'), cap.get('ventanas', {}).get('7d'), m.get('moneda'), activo=ACT.es_activo_id(cid) is True and ids_base417.count(cid) == 1 and cap_a_app.get(c.get('id')) == cid and sum(x.get('id') == c.get('id') for x in cap.get('clientes', []) if isinstance(x, dict)) == 1, cuenta_unica=cuentas417.count(str(m.get('cuenta_id', '')).removeprefix('act_')) == 1, error_fuente=bool(m.get('error'))),
             'nuevo': bool(v_cli['nuevo']) if 'nuevo' in v_cli else bool(b.get('nuevo')),
             'equipo': eq,
-            'severidad': severidad, 'severidad_torre_reglas': c['severidad'], 'meta_activa': c.get('meta_activa'),
+            'severidad': severidad, 'severidad_torre_reglas': c.get('severidad'), 'estado_evaluacion': 'sin_evaluacion', 'diagnosticos_legacy': diagnosticos_legacy, 'avisos_legacy': avisos_legacy, 'meta_activa': c.get('meta_activa'),
             'plataformas': sorted(set((c.get('plataformas') or []) + (['google'] if gm else []))),
             'cuello': cuello,
             'motivos': motivos, 'avisos': avisos,
@@ -401,10 +377,10 @@ def main():
                             'ultimo_dia_con_gasto': m.get('ultimo_dia_con_gasto'), 'error': m.get('error'),
                             'enlace': f'https://adsmanager.facebook.com/adsmanager/manage/campaigns?act={act_num}' if act_num else None,
                             'moneda': m.get('moneda'), 'zona_horaria': m.get('zona_horaria'), 'convertida_a_madrid': m.get('convertida_a_madrid')},
-            'leads': m.get('leads'), 'gasto': m.get('gasto'), 'cpl': m.get('cpl'),
+            'leads': {k: None if m.get('error') else conteo(v) for k, v in (m.get('leads') or {}).items()}, 'gasto': m.get('gasto'), 'cpl': m.get('cpl'),
             'cpl_resumen': {k: (c.get('cpl') or {}).get(k) for k in ('ref', 'ref_base', 'delta_pct', 'fiable', 'veces_objetivo', 'nota_muestra')},
             'muestra': {'leads_7d': leads_meta_7, 'leads_7d_prev': (m.get('leads') or {}).get('7d_prev'), 'suficiente': (c.get('cpl') or {}).get('fiable'),
-                        'nota': (c.get('cpl') or {}).get('nota_muestra') or (None if (c.get('cpl') or {}).get('fiable') else 'aún sin muestra: menos de 4 leads en alguna de las dos semanas')},
+                        'nota': (c.get('cpl') or {}).get('nota_muestra') or (None if (c.get('cpl') or {}).get('fiable') else 'Referencia anterior del contador Meta: muestra y unidad pendientes de contraste')},
             'presupuesto_ads': c.get('presupuesto'),
             'metas': c.get('metas') or [],
             'serie': serie,
@@ -413,10 +389,10 @@ def main():
             'ghl': {'conectado': bool(sub), 'subcuenta': (c.get('ghl_subcuenta') or {}).get('nombre'),
                     'enlace': f'https://app.gohighlevel.com/v2/location/{sub}/opportunities/list' if sub else None,
                     'embudo': emb or None, 'citas': cit or None, 'calendarios': g.get('calendarios') if g else None},
-            'coste_por_cita': {**cpc, 'alarma_100': alarma_cita} if cpc else None,
+            'coste_por_cita': {**cpc, 'alarma_100': False, 'medicion': 'referencia_legacy_sin_cohorte_enlazada'} if cpc else None,
             'despacho': {
                 'leads_meta_7d': leads_meta_7, 'leads_ghl_7d': ghl_7,
-                'pct_llegan_crm': round(min(100, ghl_7 / leads_meta_7 * 100)) if (ghl_7 is not None and leads_meta_7) else None,
+                'pct_llegan_crm': None, 'medicion_integracion': medicion_crm['medicion_integracion'],
                 'fuga': fuga, 'contactos_historia': tot, 'subcuenta_sin_uso': sin_uso,
                 'definicion_llegan': ((leer(DATA / 'crm' / 'crm.json', {}) or {}).get('reglas') or {}).get('lead') or 'Contactos nuevos con origen formulario o anuncio (Salud del CRM)',
                 'cohorte_30d': emb.get('cohorte_30d'), 'estancados_72h': emb.get('estancados_72h'), 'pct_estancado': emb.get('pct_estancado'),
@@ -431,14 +407,14 @@ def main():
             'quincenal': {
                 'periodo': cap['ventanas']['14d'], 'leads_14d': (m.get('leads') or {}).get('14d'), 'gasto_14d': (m.get('gasto') or {}).get('14d'),
                 'cpl_14d': (m.get('cpl') or {}).get('14d'), 'citas_14d': c14.get('agendadas'), 'celebradas_14d': c14.get('celebradas'),
-                'asistencia_14d': c14.get('asistencia_pct'), 'coste_por_cita_14d': coste_cita_14, 'sin_estado_14d': sin_estado_14,
+                'asistencia_14d': c14.get('asistencia_pct'), 'coste_por_cita_14d': None, 'coste_por_cita_referencia_14d': coste_cita_14, 'sin_estado_14d': sin_estado_14,
             },
             'historia': {
                 'torre_17sep': {'severidad': t['severidad'], 'leads_7d': t.get('leads_7d'), 'gasto_7d': t.get('spend_7d'), 'cpl_7d': t.get('cpl_7d'),
                                 'motivos': [sin_euros(x['texto']) for x in t.get('motivos', [])], 'gasto_motivos': [x['texto'] for x in t.get('motivos', [])],
                                 'pm_escrito_a_mano': t.get('pm')} if t else None,
-                'hace_4_semanas': {'periodo': [s7[0]['d'], s7[-1]['d']], 'leads_meta': round(sum((p['leads_meta'] or 0) for p in s7), 1),
-                                   'gasto_meta': round(sum((p['gasto_meta'] or 0) for p in s7), 2)} if len(s7) == 7 else None,
+                'hace_4_semanas': {'periodo': [s7[0]['d'], s7[-1]['d']], 'leads_meta': suma_observada([conteo(p['leads_meta']) for p in s7], 1),
+                                   'gasto_meta': suma_observada([p['gasto_meta'] for p in s7], 2)} if len(s7) == 7 else None,
             },
             'anuncios': an,
             'google_ads': ({'muestra': 'muestra manual', 'periodo': GADS_PERIODO, 'cuenta': gm[0], 'coste': gm[1], 'clics': gm[2],
@@ -468,13 +444,15 @@ def main():
     calc_cita = [f for f in act if (f.get('coste_por_cita') or {}).get('coste_por_cita_14d') is not None]
     resumen = {
         'clientes_con_meta': sum(1 for f in filas if f.get('cuenta_meta')), 'meta_activa': len(act),
-        'por_gravedad': {k: sum(1 for f in filas if f['severidad'] == k) for k in ('critico', 'atencion', 'ok', 'inactivo')},
+        'por_gravedad': {k: sum(1 for f in filas if f['severidad'] == k) for k in ('critico', 'atencion', 'ok', 'dato', 'inactivo')},
         'objetivos_cargados': sum(1 for f in act if (f.get('objetivo') or {}).get('cargado')),
-        'cuentas_juzgables_cpl': len(juzg), 'cuentas_en_techo_cpl': len(en_techo),
+        'cuentas_juzgables_cpl': None, 'cuentas_en_techo_cpl': None,
+        'referencia_legacy_cuentas_cpl': {'con_ratio': len(juzg), 'en_techo_35': len(en_techo), 'vigencia': 'referencia_legacy_no_validada'},
         'cuentas_con_coste_por_cita': len(calc_cita),
         'gasto_7d_casa': round(sum((f.get('gasto') or {}).get('7d') or 0 for f in filas if (f.get('cuenta_meta') or {}).get('moneda') in (None, 'EUR')), 2),
         'gasto_mes_anterior_casa': round(sum((f.get('gasto') or {}).get('mes_anterior') or 0 for f in filas if (f.get('cuenta_meta') or {}).get('moneda') in (None, 'EUR')), 2),
-        'leads_7d_casa': round(sum((f.get('leads') or {}).get('7d') or 0 for f in filas), 1),
+        'leads_7d_casa': suma_observada([conteo((f.get('leads') or {}).get('7d')) for f in filas], 1),
+        'leads_7d_casa_medicion': 'contador_meta_legacy_no_cualificados_ni_cohorte_crm',
     }
     # V2 (B-A3) · UNA cartera de publicidad por trafficker, con nombre, para Captación, Mi día y Personas › Carga.
     # Sale de la verdad única (carteras[] silla trafficker) cruzada con las filas de Captación; gravedad = la del cliente.
@@ -516,19 +494,19 @@ def main():
                        'asistencia': ASISTENCIA, 'cuentas_trafficker': CUENTAS_TRAFFICKER,
                        'reglas_torre': cap['parametros'].get('reglas_inferidas')},
         'fuentes': [
-            {'id': 'meta', 'fuente': 'Meta Ads', 'hora': cap['generado'], 'medicion': 'hoy', 'nota': 'Marketing API, token del llavero, solo lectura (captacion.py)',
+            {'id': 'meta', 'fuente': 'Meta Ads', 'hora': cap['generado'], 'medicion': 'copia', 'nota': 'Marketing API, token del llavero, solo lectura (captacion.py)',
              **estado_fuente(cap['generado'], LIMITE_LECTOR_H, n_meta_err, n_meta, 'cuentas de Meta sin responder')},
-            {'id': 'ghl', 'fuente': 'GoHighLevel (embudo y citas)', 'hora': cap['generado'], 'medicion': 'hoy', 'nota': 'App privada de agencia, solo lectura (captacion.py)',
+            {'id': 'ghl', 'fuente': 'GoHighLevel (embudo y citas)', 'hora': cap['generado'], 'medicion': 'copia', 'nota': 'App privada de agencia, solo lectura (captacion.py)',
              **estado_fuente(cap['generado'], LIMITE_LECTOR_H, n_ghl_err, n_ghl, 'subcuentas de GHL sin responder')},
-            {'id': 'anuncios', 'fuente': 'Meta Ads (anuncios)', 'hora': anu.get('generado'), 'medicion': 'hoy' if anu.get('generado') else 'no', 'nota': 'anuncios_meta.py, solo lectura',
+            {'id': 'anuncios', 'fuente': 'Meta Ads (anuncios)', 'hora': anu.get('generado'), 'medicion': 'copia' if anu.get('generado') else 'no', 'nota': 'anuncios_meta.py, solo lectura',
              **estado_fuente(anu.get('generado'), LIMITE_ANUNCIOS_H, n_anu_err, len(anu.get('cuentas') or {}), 'cuentas sin leer sus anuncios')},
             {'id': 'google_ads', 'fuente': 'Google Ads (Windsor)', 'hora': '2026-10-02 12:00', 'medicion': 'medias', 'nota': 'Muestra manual de septiembre: falta la clave de Windsor'},
             {'id': 'tiktok', 'fuente': 'TikTok Ads (Windsor)', 'hora': None, 'medicion': 'no', 'nota': 'Sin datos: la consulta se cortó; llega con la clave de Windsor'},
-            {'id': 'torre', 'fuente': 'Torre de Control (foto 17-sep)', 'hora': '2026-09-17 06:00', 'medicion': 'hoy', 'nota': 'Solo para la historia y la paridad'},
+            {'id': 'torre', 'fuente': 'Torre de Control (foto 17-sep)', 'hora': '2026-09-17 06:00', 'medicion': 'historica', 'nota': 'Solo para la historia y la paridad'},
         ],
         'personas': {pid: alias.get(pid, pid) for f in filas for pid in [f['equipo'].get(s) for s in ('trafficker', 'account', 'crm')] + sum((f['equipo'].get(s + '_otros', []) for s in ('trafficker', 'account', 'crm')), []) if pid},
         'resumen': resumen,
-        'clientes': sorted(filas, key=lambda f: (['critico', 'atencion', 'ok', 'inactivo'].index(f['severidad']), f['nombre'])),
+        'clientes': sorted(filas, key=lambda f: (['critico', 'atencion', 'ok', 'dato', 'inactivo'].index(f['severidad']), f['nombre'])),
         'google_ads_sin_cliente': GADS_SIN_CLIENTE,
         'paridad_torre': [{'cliente_id': TORRE_A_APP[t['id']], 'nombre': t['nombre'], 'torre': t['severidad'], 'pm_escrito_a_mano': t.get('pm'),
                            'app': next((f['severidad'] for f in filas if f['cliente_id'] == TORRE_A_APP[t['id']]), None)}
@@ -549,7 +527,7 @@ def main():
     tmp.replace(SALIDA)
     r = resumen
     print(f"Listo: {SALIDA.relative_to(APP)} · {len(filas)} clientes ({r['meta_activa']} con Meta activa) · "
-          f"gravedad {r['por_gravedad']} · {r['cuentas_en_techo_cpl']} de {r['cuentas_juzgables_cpl']} en el techo de 35 €")
+          f"gravedad {r['por_gravedad']} · {r['por_gravedad'].get('dato', 0)} señales pendientes de contraste (sin unión Meta→CRM)")
 
 
 if __name__ == '__main__':

@@ -1,0 +1,27 @@
+const fs=require('fs'),vm=require('vm'),path=require('path'),assert=require('assert/strict');
+const c={Date,Number};vm.createContext(c);vm.runInContext(fs.readFileSync(path.join(__dirname,'modulos/_semaforo_evidencia_258.js'),'utf8').replace(/export /g,''),c);
+const hoy='2026-10-03T13:08:00Z';
+const evidencia=()=>({autorizada:true,fuente:'fixture_local',fecha:hoy,periodo:'2026-W40',alcance:'cliente_fixture',tipo:'conteo',valor:0,cobertura:'completa',exhaustividad_confirmada:true,verificacion:'observada'});
+const regla=()=>({id:'fixture_revisar',fuente:'criterio_fixture_confirmado',periodo:'2026-W40',alcance:'cliente_fixture',tipo:'conteo',max_edad_horas:24,operador:'lte',limite:5,aviso_desde:3,autoridad:'confirmada'});
+const evalua=(e={},r={},now=hoy)=>c.evaluarSemaforo258({...evidencia(),...e},{...regla(),...r},now);
+let n=0;function test(nombre,f){f();n++;}
+test('Cero observado exhaustivo permiteverde',()=>assert.equal(evalua().estado,'verde'));
+test('Cero parcial nunca cumplimiento',()=>assert.equal(evalua({cobertura:'parcial',acotacion:'inferior'}).cumplimiento,null));
+test('Missing/null/negative/fractionalcounts/NaN unknown',()=>{for(const valor of [undefined,null,-1,.1,NaN,Infinity,'0'])assert.equal(evalua({valor}).estado,'gris');});
+test('Sello global no exhaustividad',()=>assert.equal(evalua({exhaustividad_confirmada:false}).estado,'gris'));
+test('Partiallowerbound6alreadyexceeds5',()=>{const x=evalua({valor:6,cobertura:'parcial',acotacion:'inferior'});assert.equal(x.estado,'rojo');assert.equal(x.cumplimiento,false);assert(x.razon.includes('parcial'));});
+test('Partial average is not countlowerbound',()=>assert.equal(evalua({valor:6,cobertura:'parcial'}).estado,'gris'));
+test('Partialbelowminimum cannotassertbreach',()=>assert.equal(evalua({valor:0,cobertura:'parcial',acotacion:'inferior'},{operador:'gte',limite:2,aviso_desde:undefined}).estado,'gris'));
+test('Completebelowminimumbreach',()=>assert.equal(evalua({valor:1},{operador:'gte',limite:2,aviso_desde:undefined}).estado,'rojo'));
+test('Noticeboundaryandredexclusive',()=>{assert.equal(evalua({valor:3}).estado,'ambar');assert.equal(evalua({valor:5}).estado,'ambar');assert.equal(evalua({valor:6}).estado,'rojo');});
+test('Visualartifactthreshold neverbreach',()=>{const x=evalua({valor:6},{autoridad:'referencia_visual'});assert.equal(x.estado,'ambar');assert.equal(x.cumplimiento,null);});
+test('Unknownpolicy nevergreenorred',()=>{for(const valor of [0,99])assert.equal(evalua({valor},{autoridad:'pendiente'}).estado,'gris');});
+test('Future/stale/overflowdatesunknown',()=>{for(const fecha of ['2026-10-04T13:08:00Z','2026-10-01T13:08:00Z','2026-02-30T13:08:00Z',null])assert.equal(evalua({fecha}).estado,'gris');});
+test('Explicitfreshnessboundaryonly',()=>assert.equal(evalua({fecha:'2026-10-02T13:08:00Z'}).estado,'verde'));
+test('Scope/type/period mismatchdeny interpretation',()=>{for(const x of [{alcance:'otro_cliente'},{tipo:'medida'},{periodo:'2026-W39'},{autorizada:false},{fuente:''}])assert.equal(evalua(x).estado,'gris');});
+test('Manualdeclarationnotexternalmeasurement',()=>assert.equal(evalua({verificacion:'declarada'}).estado,'gris'));
+test('Ratio compatibleexactcohort',()=>assert.equal(evalua({tipo:'ratio',numerador:1,denominador:2,cohorte:'recepcion_W40',cohorte_denominador:'recepcion_W40',periodo_denominador:'2026-W40'},{tipo:'ratio',limite:.7,aviso_desde:undefined}).estado,'verde'));
+test('Ratio denominator0/missing/mixed/partial/fractionalunknown',()=>{const base={tipo:'ratio',numerador:1,denominador:2,cohorte:'recepcion_W40',cohorte_denominador:'recepcion_W40',periodo_denominador:'2026-W40'};for(const x of [{denominador:0},{denominador:null},{numerador:3},{cohorte_denominador:'evento_W40'},{periodo_denominador:'2026-W39'},{cobertura:'parcial'},{numerador:.5}])assert.equal(evalua({...base,...x},{tipo:'ratio',limite:.7,aviso_desde:undefined}).estado,'gris');});
+test('Malformedrulesnownevercomputed',()=>{for(const x of [{limite:NaN},{max_edad_horas:undefined},{operador:'unknown'},{fuente:''},{aviso_desde:-1},{aviso_desde:6},{limite:5.5}])assert.equal(evalua({},x).estado,'gris');assert.equal(evalua({}, {},'bad').estado,'gris');});
+test('Noinputmutation',()=>{const e=evidencia(),r=regla(),before=JSON.stringify({e,r});c.evaluarSemaforo258(e,r,hoy);assert.equal(JSON.stringify({e,r}),before);});
+console.log(`${n} grupos semaforo258 PASS`);

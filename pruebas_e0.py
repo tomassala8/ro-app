@@ -53,6 +53,35 @@ def ok(cond, texto):
         fallos.append(texto)
 
 
+def leer_json_e0(ruta, yo=None, como=None, clave=None):
+    """Una identidad/dato ausente es FALLO explícito; nunca acceso vacío aprobado."""
+    try:
+        codigo, cuerpo = get(ruta, yo, como)
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        ok(False, f"{yo or 'sin identidad'}: {ruta} sin respuesta; prueba dependiente no realizada")
+        return None
+    if codigo != 200:
+        ok(False, f"{yo or 'sin identidad'}: {ruta} devolvió {codigo}; prueba dependiente no realizada")
+        return None
+    try:
+        dato = json.loads(cuerpo)
+    except (ValueError, TypeError):
+        ok(False, f"{yo or 'sin identidad'}: {ruta} no devolvió JSON válido; prueba dependiente no realizada")
+        return None
+    if not isinstance(dato, dict) or clave is not None and not isinstance(dato.get(clave), dict):
+        ok(False, f"{yo or 'sin identidad'}: {ruta} sin objeto {clave or 'JSON'} válido; prueba dependiente no realizada")
+        return None
+    return dato if clave is None else dato[clave]
+
+
+def sesion_e0(yo):
+    dato = leer_json_e0("/api/sesion", yo, clave="datos")
+    if dato is not None and (not isinstance(dato.get("clientes"), list) or not isinstance(dato.get("carteraIds"), list)):
+        ok(False, f"{yo}: sesión sin clientes/cartera válidos; prueba dependiente no realizada")
+        return None
+    return dato
+
+
 clientes = json.loads((AQUI / "data/clientes.json").read_text())
 personas = json.loads((AQUI / "data/personas.json").read_text())
 asig = json.loads((AQUI / "data/asignaciones.json").read_text())
@@ -62,9 +91,13 @@ activas = [p for p in personas if p.get("activo")]
 ok(all(p["puestos"] for p in activas), f"{len(activas)} personas activas, todas con al menos un puesto")
 
 for yo in ("lucia", "lina", "setter_ana"):
-    _, s = get("/api/sesion", yo)
-    d = json.loads(s)["datos"]
-    ajeno = next(c["id"] for c in d["clientes"] if not c["detalle"])
+    d = sesion_e0(yo)
+    if d is None:
+        continue
+    ajeno = next((c.get("id") for c in d["clientes"] if isinstance(c, dict) and c.get("detalle") is False and isinstance(c.get("id"), str)), None)
+    if ajeno is None:
+        ok(False, f"{yo}: sin cliente ajeno acreditado; prueba de denegación no realizada")
+        continue
     cod, cuerpo = get(f"/api/cliente/{ajeno}", yo)
     ok(cod == 403 and set(json.loads(cuerpo)) == {"error"}, f"{yo} pide {ajeno} (ajeno): {cod}, solo el motivo")
 
@@ -91,7 +124,12 @@ ok(cod == 403, f"setter_ana no lee las acciones de Prospección ({cod})")
 
 # «En rojo» sin detalle para puestos sin cartera (setters, outreach sin cartera, RRHH, administración)
 for yo in ("setter_ana", "eulimar", "cecilia", "sofia"):
-    d = json.loads(get("/api/sesion", yo)[1])["datos"]
+    d = sesion_e0(yo)
+    if d is None:
+        continue
+    if not isinstance(d.get("alarmas"), list):
+        ok(False, f"{yo}: sesión sin lista de alarmas; prueba dependiente no realizada")
+        continue
     con_texto = sum(1 for a in d["alarmas"] if a.get("ambito") == "cliente" and a.get("texto"))
     de_persona = sum(1 for a in d["alarmas"] if a.get("ambito") == "persona")
     lista = sum(1 for a in d["alarmas"] if a.get("ambito") == "cliente")
@@ -104,39 +142,52 @@ for yo in ("setter_ana", "eulimar", "cecilia", "sofia"):
 cod, s_ = get("/api/modulo/captacion/captacion", "lina")
 if cod == 200:
     filas = json.loads(s_).get("clientes", [])
-    sesion_lina = json.loads(get("/api/sesion", "lina")[1])["datos"]
-    suyos = set(sesion_lina["carteraIds"])
-    con_dinero_suyo = sum(1 for c in filas if c.get("cliente_id") in suyos and "gasto" in c)
-    ajenos_con_dinero = sum(1 for c in filas if c.get("cliente_id") not in suyos and "gasto" in c)
-    ok(ajenos_con_dinero == 0 and con_dinero_suyo > 0, f"Lina en Captación: {con_dinero_suyo} clientes suyos con gasto, {ajenos_con_dinero} ajenos con gasto")
+    sesion_lina = sesion_e0("lina")
+    if sesion_lina is not None:
+        suyos = set(sesion_lina["carteraIds"])
+        con_dinero_suyo = sum(1 for c in filas if c.get("cliente_id") in suyos and "gasto" in c)
+        ajenos_con_dinero = sum(1 for c in filas if c.get("cliente_id") not in suyos and "gasto" in c)
+        ok(ajenos_con_dinero == 0 and con_dinero_suyo > 0, f"Lina en Captación: {con_dinero_suyo} clientes suyos con gasto, {ajenos_con_dinero} ajenos con gasto")
 else:
     ok(False, f"Lina no recibe captacion/captacion ({cod})")
 
 # Ronda 3 · D-P-CAP2 y M4: la ficha de E1 sin dinero ni horas para quien no los ve
-sesion_g = json.loads(get("/api/sesion", "gustavo")[1])["datos"]
-cid = next((c for c in sesion_g["carteraIds"]), None)
-f = json.loads(get(f"/api/cliente/{cid}", "gustavo")[1])["fuentes"] or {}
-txt = json.dumps(f, ensure_ascii=False)
-fu = f.get("fuentes", {})
-fuga = [k for k in ('"presupuesto"', '"serie"', '"meses"', '"ltv"', '"cuota_actual"', '"gasto"') if k in txt]
-ok(not fuga and "€" not in json.dumps(fu.get("meta", {}), ensure_ascii=False), f"Gustavo (GHL) abre {cid}: sin presupuesto, series, cuota, LTV ni gasto ({fuga or 'nada'})")
-fs = json.loads(get("/api/cliente/gac", "sofia")[1])["fuentes"] or {}
-ok("datos" not in (fs.get("fuentes", {}).get("horas") or {}) and '"presupuesto"' not in json.dumps(fs), "Sofía abre GAC: ve cuota, pero no horas por cliente (D-84) ni presupuesto de Meta")
+sesion_g = sesion_e0("gustavo")
+if sesion_g is not None:
+    cid = next(iter(sesion_g["carteraIds"]), None)
+    if cid is None:
+        ok(False, "Gustavo: sin cliente de cartera; prueba de ficha dependiente no realizada")
+    else:
+        f = leer_json_e0(f"/api/cliente/{cid}", "gustavo", clave="fuentes")
+        if f is not None:
+            txt = json.dumps(f, ensure_ascii=False)
+            fu = f.get("fuentes", {})
+            fuga = [k for k in ('"presupuesto"', '"serie"', '"meses"', '"ltv"', '"cuota_actual"', '"gasto"') if k in txt]
+            ok(not fuga and "€" not in json.dumps(fu.get("meta", {}), ensure_ascii=False), f"Gustavo (GHL) abre {cid}: sin presupuesto, series, cuota, LTV ni gasto ({fuga or 'nada'})")
+fs = leer_json_e0("/api/cliente/gac", "sofia", clave="fuentes")
+if fs is not None:
+    ok("datos" not in (fs.get("fuentes", {}).get("horas") or {}) and '"presupuesto"' not in json.dumps(fs), "Sofía abre GAC: ve cuota, pero no horas por cliente (D-84) ni presupuesto de Meta")
 
 # Ronda 3 · «Actualizar ahora» y avisos: solo Mili y Tomás
 for yo, esperado in (("tomas", 200), ("mili", 200), ("lucia", 403), ("constanza", 403)):
     ok(get("/api/recarga", yo)[0] == esperado and get("/api/avisos", yo)[0] == esperado, f"{yo}: recarga y avisos → {esperado}")
-av = json.loads(get("/api/avisos", "tomas")[1])
-dias = {}
-for a in av["avisos"]:
-    dias[a["dia"]] = dias.get(a["dia"], 0) + (a["estado"] == "para_avisar")
-ok(all(n <= 3 for n in dias.values()), f"avisos «para avisar» por día ≤ 3 ({dias or 'ninguno'})")
+av = leer_json_e0("/api/avisos", "tomas")
+if av is not None:
+    if not isinstance(av.get("avisos"), list):
+        ok(False, "avisos: falta la lista; prueba dependiente no realizada")
+    else:
+        dias = {}
+        for a in av["avisos"]:
+            dias[a["dia"]] = dias.get(a["dia"], 0) + (a["estado"] == "para_avisar")
+        ok(all(n <= 3 for n in dias.values()), f"avisos «para avisar» por día ≤ 3 ({dias or 'ninguno'})")
 
 # Ronda 3 · WhatsApp: datos por cliente sin textos; setters no lo ven
 cod, s_ = get("/api/modulo/whatsapp/whatsapp", "lucia")
 w = json.loads(s_) if cod == 200 else {}
-suyos = set(json.loads(get("/api/sesion", "lucia")[1])["datos"]["carteraIds"])
-ok(cod == 200 and all(x["cliente_id"] in suyos for x in w.get("clientes", [])) and "ultimo_texto" not in s_, f"Lucía recibe WhatsApp solo de sus clientes y sin textos ({len(w.get('clientes', []))})")
+sesion_lucia = sesion_e0("lucia")
+if sesion_lucia is not None:
+    suyos = set(sesion_lucia["carteraIds"])
+    ok(cod == 200 and all(x["cliente_id"] in suyos for x in w.get("clientes", [])) and "ultimo_texto" not in s_, f"Lucía recibe WhatsApp solo de sus clientes y sin textos ({len(w.get('clientes', []))})")
 cod, s_ = get("/api/modulo/whatsapp/whatsapp", "setter_ana")
 ok(cod == 403 or not json.loads(s_).get("clientes"), "la setter no recibe ningún cliente de WhatsApp")
 ok(get("/data/whatsapp/_privado/textos.json", "tomas")[0] == 403, "los textos de WhatsApp no se sirven como fichero")
@@ -165,8 +216,9 @@ for yo in ("lina", "valeria"):
     _walk(dc)
     ok(cod == 200 and not ({"pautadas", "pct_sep", "segmento", "cuota"} & claves), f"{yo} no puede reconstruir la cuota en Dinero por cliente (solo «dentro/fuera de lo pautado»)")
 ok(get("/api/modulo/reuniones/reuniones", "sofia")[0] == 403, "Sofía no recibe las reuniones de los clientes")
-fs = json.loads(get("/api/cliente/gac", "sofia")[1])["fuentes"] or {}
-ok(set(fs.get("fuentes", {})) <= {"cartera", "libro", "arranque", "asignaciones"}, f"Sofía recibe de la ficha solo contrato y cuota ({sorted(fs.get('fuentes', {}))})")
+fs = leer_json_e0("/api/cliente/gac", "sofia", clave="fuentes")
+if fs is not None:
+    ok(set(fs.get("fuentes", {})) <= {"cartera", "libro", "arranque", "asignaciones"}, f"Sofía recibe de la ficha solo contrato y cuota ({sorted(fs.get('fuentes', {}))})")
 for yo in ("lucia", "tomas"):
     cod, s_ = get("/api/modulo/verdad/clientes", yo)
     vd = json.loads(s_) if cod == 200 else {}
@@ -179,20 +231,25 @@ ok(cod == 200 and vd.get("clientes") == [] and not vd.get("carteras"), "la sette
 for ruta in ("/data/sueldos/_privado/sueldos.json", "/api/modulo/sueldos/_privado/sueldos"):
     ok(get(ruta, "tomas")[0] == 403, f"sueldos no se sirven en bloque ({ruta})")
 
-cat = json.loads(get("/api/indicadores", "tomas")[1])
-ok(next(i for i in cat["indicadores"] if i["id"] == "jefa_crm.carga_por_especialista")["medible"] == "medias", "«Carga por especialista» a medias")
-de_puesto = [i for i in cat["indicadores"] if not i["fase2"]]
-# Ronda 12 (R13): +1 del account («resultados de su cartera», regla «cliente primero») → 229
-ok(len(de_puesto) == 229 and len(cat["indicadores"]) - len(de_puesto) == 23, f"catálogo: {len(de_puesto)} de puesto + {len(cat['indicadores']) - len(de_puesto)} de fase 2")
-ok(all(i["medible"] in ("hoy", "medias", "no") and i["umbral_origen"] for i in cat["indicadores"]), "cada indicador con estado de medición y origen del umbral")
-manda = {i["puesto"]: i["id"] for i in cat["indicadores"] if i.get("el_que_manda")}
-sal = next(i for i in cat["indicadores"] if i["id"] == "account.de_su_cartera_con_salud_60_el_que_manda")
-res = next((i for i in cat["indicadores"] if i["id"] == manda.get("account")), {})
-ok(manda.get("account") == "account.resultados_de_su_cartera_frente_a_objetivo" and not sal.get("el_que_manda") and sal.get("segundo_de") == res.get("id")
-   and {p["que"] for p in res.get("partes", [])} >= {"Leads", "Citas", "Ventas"} and all(p["medible"] in ("hoy", "medias", "no") for p in res["partes"]),
-   "R13 · el que manda del account = resultados de su cartera (leads, citas, ventas con «¿se mide hoy?»); la salud, segundo")
-cat_lucia = json.loads(get("/api/indicadores", "lucia")[1])
-ok(all(i["puesto"] == "account" for i in cat_lucia["indicadores"]), f"Lucía recibe solo los de su puesto ({len(cat_lucia['indicadores'])})")
+cat = leer_json_e0("/api/indicadores", "tomas")
+if cat is not None:
+    if not isinstance(cat.get("indicadores"), list):
+        ok(False, "catálogo sin indicadores; prueba dependiente no realizada")
+    else:
+        ok(next((i for i in cat["indicadores"] if i.get("id") == "jefa_crm.carga_por_especialista"), {}).get("medible") == "medias", "«Carga por especialista» a medias")
+        de_puesto = [i for i in cat["indicadores"] if not i["fase2"]]
+        # Ronda 12 (R13): +1 del account («resultados de su cartera», regla «cliente primero») → 229
+        ok(len(de_puesto) == 229 and len(cat["indicadores"]) - len(de_puesto) == 23, f"catálogo: {len(de_puesto)} de puesto + {len(cat['indicadores']) - len(de_puesto)} de fase 2")
+        ok(all(i["medible"] in ("hoy", "medias", "no") and i["umbral_origen"] for i in cat["indicadores"]), "cada indicador con estado de medición y origen del umbral")
+        manda = {i["puesto"]: i["id"] for i in cat["indicadores"] if i.get("el_que_manda")}
+        sal = next((i for i in cat["indicadores"] if i.get("id") == "account.de_su_cartera_con_salud_60_el_que_manda"), {})
+        res = next((i for i in cat["indicadores"] if i["id"] == manda.get("account")), {})
+        ok(manda.get("account") == "account.resultados_de_su_cartera_frente_a_objetivo" and not sal.get("el_que_manda") and sal.get("segundo_de") == res.get("id")
+           and {p["que"] for p in res.get("partes", [])} >= {"Leads", "Citas", "Ventas"} and all(p["medible"] in ("hoy", "medias", "no") for p in res.get("partes", [])),
+           "R13 · el que manda del account = resultados de su cartera (leads, citas, ventas con «¿se mide hoy?»); la salud, segundo")
+cat_lucia = leer_json_e0("/api/indicadores", "lucia")
+if cat_lucia is not None:
+    ok(isinstance(cat_lucia.get("indicadores"), list) and all(i["puesto"] == "account" for i in cat_lucia["indicadores"]), f"Lucía recibe solo los de su puesto ({len(cat_lucia.get('indicadores', []))})")
 
 ok(not ESC.escanear(), "escáner de secretos limpio sobre data/")
 
@@ -205,7 +262,7 @@ r = subprocess.run([sys.executable, str(AQUI / "pruebas_diseno.py"), "--estricto
 ok(r.returncode == 0, "guía de estilo en estricto: ningún módulo con hoja propia, letra fuera de escala ni colores sueltos"
    + ("" if r.returncode == 0 else f" ({(r.stdout.strip().splitlines() or ['?'])[-1]})"))
 
-crudo = {"personas": personas, "asignaciones": asig}
+crudo = {"personas": personas, "asignaciones": asig, "clientes": clientes}
 filas = []
 for p in personas:
     cp = P.contexto(p, crudo)

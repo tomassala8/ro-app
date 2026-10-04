@@ -4,31 +4,30 @@
 #
 #   ro-app/
 #   ├── app/          = 30_APP_PROTOTIPO sin data/, local.db, historia/, capturas/, cachés ni _privado/
-#   ├── herramientas/ = los lectores de ~/RO_HERRAMIENTAS que usa la tubería (solo .py y .json de configuración sin llaves)
+#   ├── herramientas/ = los lectores de ~/RO_HERRAMIENTAS que usa la tubería (solo .py; la configuración privada viaja separada)
 #   ├── Dockerfile    (copia de despliegue/Dockerfile)
 #   └── render.yaml   (copia de despliegue/render.yaml: Render lo busca en la raíz del repositorio)
 #
 # Los datos viajan por la base (despliegue/publicacion.py: «crudos», «cache» y «data»), nunca por el repositorio.
-# Uso: sh despliegue/preparar_contexto.sh [destino]   (por defecto despliegue/estado/ro-app)
+# Uso: sh despliegue/preparar_contexto.sh [destino]   (por defecto ../RO_CONTEXTO_CODIGO_PILOTO)
 set -eu
 AQUI=$(cd "$(dirname "$0")" && pwd)
 APP=$(dirname "$AQUI")
 HERR="${RO_HERRAMIENTAS:-$HOME/RO_HERRAMIENTAS}"
-DEST="${1:-$AQUI/estado/ro-app}"
-rm -rf "$DEST"; mkdir -p "$DEST/app" "$DEST/herramientas"
-rsync -a \
-  --exclude 'data/' --exclude 'local.db*' --exclude 'historia/' --exclude 'capturas/' --exclude '_cache/' --exclude '_crudo/' \
-  --exclude '_privado/' --exclude 'despliegue/estado/' --exclude '__pycache__/' --exclude '*.pyc' --exclude '.DS_Store' \
-  --exclude 'indicadores.json' --exclude 'fuentes_incidencias/primera_vez.json' --exclude 'fuentes_captacion/anuncios.json' \
-  "$APP/" "$DEST/app/"
+DEST="${1:-$(dirname "$APP")/RO_CONTEXTO_CODIGO_PILOTO}"
+if [ -e "$DEST" ] || [ -L "$DEST" ]; then
+  echo "El destino ya existe. Elige una carpeta nueva para conservar el contexto anterior." >&2
+  exit 1
+fi
+mkdir -p "$DEST/app" "$DEST/herramientas"
+# Política única: código por extensiones y JSON exactos, no .gitignore implícito.
+python3 "$AQUI/empaquetado.py" codigo "$APP" "$DEST/app"
 for d in captacion clickup_api ghl_agencia google holded meta metricool seranking snov windsor zadarma zoho zoom; do
   mkdir -p "$DEST/herramientas/$d"
   rsync -a --include '*.py' --exclude '*' "$HERR/$d/" "$DEST/herramientas/$d/"
 done
 cp "$HERR/externos.py" "$DEST/herramientas/"
-# estado sin llaves que leen la pantalla de conexiones (caducidad de Meta, compañía de GHL)
-cp "$HERR/meta/estado.json" "$DEST/herramientas/meta/" 2>/dev/null || true
-cp "$HERR/ghl_agencia/app_estado.json" "$DEST/herramientas/ghl_agencia/" 2>/dev/null || true
+# Los estados de herramientas son fuentes privadas, no código del repositorio.
 cp "$AQUI/Dockerfile" "$DEST/Dockerfile"
 cp "$AQUI/render.yaml" "$DEST/render.yaml"
 cp "$AQUI/docker-compose.yml" "$DEST/docker-compose.yml"   # solo para la alternativa en servidor propio
@@ -48,4 +47,8 @@ for m in malos: print("  ✗", m)
 sys.exit(1 if malos else 0)
 PY
 then echo "⛔ Hay ficheros con correos o teléfonos de fuera de RO (arriba): sacarlos del código o pasarlos a la base. No se sube nada."; exit 1; fi
-echo "Contexto listo en $DEST ($(du -sh "$DEST" | cut -f1)). Sin datos ni llaves."
+# No certificar despliegue por haber preparado el código. La hidratación privada
+# y la restauración del destino aún no están implementadas/verificadas.
+printf '%s\n' '{"listo_para_desplegar":false,"bloqueantes":["hidratacion_privada_no_implementada","restauracion_destino_no_verificada"]}' > "$DEST/preflight_piloto.json"
+echo "Contexto de código preparado. BLOQUEADO para despliegue: faltan hidratación privada y restauración verificada del destino."
+exit 2

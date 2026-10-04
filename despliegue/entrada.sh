@@ -7,10 +7,17 @@
 #   <otra>    se ejecuta tal cual (p. ej. «python3 despliegue/llave_ghl.py estado»)
 set -u
 umask 077
+PILOTO=$(python3 -c 'import piloto_lectura; print("si" if piloto_lectura.activo() else "no")') || exit 1
+if [ "$PILOTO" = "si" ] && [ "${1:-web}" != "web" ]; then
+  echo "Piloto de consulta: las tareas de actualización y los comandos alternativos están desactivados." >&2
+  exit 1
+fi
 # Ficheros .env que algunos lectores leen del disco: se escriben desde las variables y solo viven en este contenedor.
+if [ "$PILOTO" != "si" ]; then
 mkdir -p "$HOME/RO_BANDEJA_GHL/config"
 [ -n "${GHL_PIT_NEW:-}" ] && printf 'GHL_PIT_NEW=%s\n' "$GHL_PIT_NEW" > "$HOME/RO_BANDEJA_GHL/config/ghl.env"
 [ -n "${ZADARMA_KEY:-}" ] && printf 'ZADARMA_KEY=%s\nZADARMA_SECRET=%s\n' "$ZADARMA_KEY" "${ZADARMA_SECRET:-}" > "$HOME/RO_BANDEJA_GHL/config/zadarma.env"
+fi
 umask 022
 
 tuberia() {
@@ -22,7 +29,9 @@ tuberia() {
 
 case "${1:-web}" in
   web)      # data/ llega de la base ANTES de arrancar (servir.py lo carga al importarse); luego se refresca solo cada minuto
-            [ -n "${DATABASE_URL:-}" ] && python3 despliegue/publicacion.py bajar data
+            if [ "$PILOTO" != "si" ] && [ -n "${DATABASE_URL:-}" ]; then
+              python3 despliegue/publicacion.py bajar data || exit $?
+            fi
             exec python3 servir.py ;;
   ligera)   tuberia --ligero ;;
   completa) tuberia --completo ;;

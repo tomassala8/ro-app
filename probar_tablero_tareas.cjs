@@ -1,0 +1,34 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
+const read=n=>fs.readFileSync(path.join(__dirname,'modulos',n),'utf8');
+const cargar=s=>import('data:text/javascript;base64,'+Buffer.from(s).toString('base64'));
+(async()=>{
+ const P=await cargar(read('_tablero_tareas.js'));
+ const tareas=P.tarjetasUnicas([{id:'uno',persona_id:'ana',asignados:['ana','bea'],lista_id:'L',estado:'en curso',cli:'c',padre:'padre',tarea:'SEO blog',carpeta:'SEO',prio_n:1,etiquetas:['urgente']},{id:'uno',persona_id:'bea',lista_id:'L',estado:'en curso',cli:'c'},{id:'libre',asignados:[],lista_id:'L',estado:'backlog'},{id:'activeComplete',asignados:['ana'],lista_id:'L',estado:'completado'},{id:'closedReject',asignados:['ana'],lista_id:'L',estado:'rechazado'}]);
+ assert.equal(tareas.length,4);assert.deepEqual(tareas[0].asignados,['ana','bea']);assert.equal(tareas[0].padre,'padre');assert(!tareas[0].inconsistente);
+ assert.deepEqual(P.filtrarTarjetas(tareas,{vista:'equipo',yo:'ana',asignado:'__sin_asignar'}).map(x=>x.id),['libre']);
+ assert.deepEqual(P.filtrarTarjetas(tareas,{vista:'mia',yo:'ana',preset:'daily'}).map(x=>x.id),['uno']);
+ assert.equal(P.filtrarTarjetas(tareas,{vista:'mia',yo:'ana',preset:'todo'}).length,3,'No se oculta completado activo ni rechazado cerrado por nombre');
+ assert.equal(P.filtrarTarjetas(tareas,{vista:'equipo',yo:'ana',proyecto:'SEO',prioridad:'1',etiqueta:'urgente',buscar:'blog'}).length,1);
+ const datos={solo_lectura:false,estados_detalle:{L:[{estado:'backlog',tipo:'open',orden:0},{estado:'en curso',tipo:'custom',orden:1},{estado:'completado',tipo:'custom',orden:2},{estado:'rechazado',tipo:'closed',orden:3}],OTRA:[{estado:'especial',tipo:'custom',orden:0}]}};
+ const estados=P.estadosDeLista(datos,'L');assert.deepEqual(estados.map(x=>x.estado),['backlog','en curso','completado','rechazado']);assert.equal(estados[2].tipo,'custom');
+ assert.equal(P.estadosDeLista({estados_lista:{L:['inventado']},cobertura_estados:{completa:false}},'L').length,0);
+ const cols=P.columnasDeLista(tareas,estados);assert.equal(cols.columnas.reduce((n,c)=>n+c.tareas.length,0),4);assert.equal(cols.fuera.length,0);
+ const conflict=P.tarjetasUnicas([{id:'x',lista_id:'L',estado:'a'},{id:'x',lista_id:'OTRA',estado:'b'}])[0];conflict.puede_editar=true;assert(!P.puedeMover(conflict,datos,estados));
+ let reject=true,calls=[],keys=0;const t={id:'uno',estado:'en curso',puede_editar:true};
+ const mover=P.gestorMovimientos({api:async(r,b)=>{calls.push([r,b]);if(reject)throw Error('fallo');return {ok:true,estado:'simulado'};},clave:()=>`key-${++keys}`});
+ await assert.rejects(()=>mover.mover(t,'completado',datos,estados));assert.equal(t.estado_app,undefined);assert.equal(mover.pendientes.size,0);
+ reject=false;await mover.mover(t,'completado',datos,estados);assert.equal(t.estado_app,'completado');assert.equal(t.estado_clickup,'en curso');assert.equal(P.textoSincronia(t),'Guardado en la app · no enviado a ClickUp (simulación)');assert.equal(calls[0][1].cuerpo.clave,calls[1][1].cuerpo.clave,'Retry mismo intento sin duplicar');
+ await assert.rejects(()=>mover.mover(t,'especial',datos,estados),/lista/);await assert.rejects(()=>mover.mover(t,'backlog',{...datos,solo_lectura:true},estados),/lectura/);assert.equal(calls.length,2);
+ let resolver;const t2={id:'dos',estado:'backlog',puede_editar:true};const waiting=P.gestorMovimientos({api:()=>new Promise(r=>resolver=r),clave:()=> 'key-wait'});
+ const promise=waiting.mover(t2,'en curso',datos,estados);assert.equal(t2.estado_app,undefined,'No mueve antes del éxito');assert.equal(await waiting.mover(t2,'rechazado',datos,estados),null);resolver({ok:true,estado:'pendiente'});await promise;assert.equal(t2.estado_app,'en curso');assert.equal(t2.estado_clickup,'backlog');
+ const bad=P.gestorMovimientos({api:async()=>({ok:true,estado:'fallido',texto:'No aplicado'}),clave:()=> 'key-bad'});await assert.rejects(()=>bad.mover(t2,'rechazado',datos,estados));assert.equal(t2.estado_app,'en curso');
+ class El {constructor(tag,attrs={},cs=[]){this.tag=tag;this.attrs=attrs;this.cs=cs.flat().filter(Boolean);this.events=attrs.on||{};this.isConnected=true;this.value=attrs.value||'';}replaceChildren(...xs){this.cs=xs.flat().filter(Boolean)}append(...xs){this.cs.push(...xs)}addEventListener(e,f){this.events[e]=f}all(){return this.cs.flatMap(x=>x instanceof El?[x,...x.all()]:[])}}
+ globalThis.__boardDeps={h:(t,a,...cs)=>new El(t,a,cs),icono:()=>null,vacioLinea:x=>new El('p',{},[x]),bloqueTareaIA:()=>null,...P};
+ const ui=await cargar(read('tablero_tareas.js').replace(/^import .*;$/mg,'')+'\nconst {h,icono,vacioLinea,bloqueTareaIA,tarjetasUnicas,filtrarTarjetas,estadosDeLista,columnasDeLista,textoSincronia,puedeMover,gestorMovimientos}=globalThis.__boardDeps;');
+ const cont=new El('main');let apiCalls=0;const fixture={...datos,tareas:tareas.map(t=>({...t,puede_editar:true})),personas:[{id:'ana',nombre:'Ana'},{id:'bea',nombre:'Bea'}],cobertura_tareas:{completa:false,nota:'Cerradas recientes'},generado:'2026-10-03 12:00'};
+ await ui.default.render(cont,{servidor:true,persona:{id:'ana'},titulo:()=>{},nombre:x=>x,api:async()=>{apiCalls++;return fixture}});
+ assert.equal(apiCalls,1);assert(cont.all().some(e=>e.cs.includes('Daily: estados de trabajo')));assert(cont.all().some(e=>(e.textContent||'').includes('Copia parcial')));assert.equal(cont.all().filter(e=>e.attrs['data-tarjeta-tarea']==='uno').length,1);
+ const todo=cont.all().find(e=>e.tag==='button'&&e.cs.includes('Inventario completo'));todo.events.click();assert.equal(cont.all().filter(e=>e.attrs['data-tarjeta-tarea']==='activeComplete').length,1);assert.equal(cont.all().filter(e=>e.attrs['data-tarjeta-tarea']==='closedReject').length,1);
+ assert(cont.all().some(e=>e.tag==='select'&&e.attrs['aria-label']==='Mover SEO blog al estado'));assert(cont.all().some(e=>e.attrs['data-uso']==='mover-tarea'));
+ console.log('OK: ID único con multiasignados y padre; daily/todo, filtros, lista y estados exactos por tipo; permiso estricto; error sin mover, retry idempotente, doble petición bloqueada; copia app/ClickUp honestas; UI móvil/teclado semántica.');
+})().catch(e=>{console.error(e);process.exit(1)});

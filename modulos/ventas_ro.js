@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/ventas_ro.js · M16 «Ventas de RO» (E6): el embudo de venta de RO sin abrir GHL.
 // Arriba lo de cada día (cifras y «Hoy»: reuniones, propuestas paradas y contratos sin firmar); en pestañas lo de la
 // semana y el mes (embudo con ritmo, agenda de 45 min, bajas tempranas). El embudo replica calc() del panel de
@@ -35,13 +36,14 @@ const MES = { '01': 'enero', '02': 'febrero', '03': 'marzo', '04': 'abril', '05'
 
 /** Días laborables (lunes a viernes) ya cerrados este mes, sin contar hoy. */
 function laborablesCerrados(hoy) {
-  let n = 0;
-  for (let d = 1; d < hoy.getDate(); d++) { const x = new Date(hoy.getFullYear(), hoy.getMonth(), d).getDay(); if (x !== 0 && x !== 6) n++; }
+  const dia = FECHAS_RO.dia(hoy); if (!dia) return null;
+  let n = 0; for (let d = `${dia.slice(0,7)}-01`; d < dia; d = sumarDiasRO(d,1)) if (FECHAS_RO.laborable(d)) n++;
   return n;
 }
 function laborablesDelMes(hoy) {
-  let n = 0; const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-  for (let d = 1; d <= fin; d++) { const x = new Date(hoy.getFullYear(), hoy.getMonth(), d).getDay(); if (x !== 0 && x !== 6) n++; }
+  const dia = FECHAS_RO.dia(hoy); if (!dia) return null;
+  const mes = FECHAS_RO.mes(dia); let n = 0;
+  for (let d = `${mes}-01`; FECHAS_RO.mes(d) === mes; d = sumarDiasRO(d,1)) if (FECHAS_RO.laborable(d)) n++;
   return n;
 }
 
@@ -58,8 +60,8 @@ function sumaDias(dias, r) {
 }
 const _M3V = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const _DSV = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
-const fechaCorta = d => { const x = new Date(d + 'T12:00'); return `${x.getDate()}-${_M3V[x.getMonth()]}`; };   // §2.3: «2-oct»
-const diaSemanaV = d => { const x = new Date(d + 'T12:00'); return `${_DSV[x.getDay()]} ${x.getDate()}-${_M3V[x.getMonth()]}`; };   // «vie 2-oct»
+const fechaCorta = d => fechaCortaRO(FECHAS_RO.dia(d));
+const diaSemanaV = d => { const dia = FECHAS_RO.dia(d); return dia ? `${FECHAS_RO.diaSemana(dia)} ${fechaCortaRO(dia)}` : 'Fecha por contrastar'; };
 
 async function pintar(cont, ctx) {
   const [v, meta] = await Promise.all([cargar(ctx, 'ventas_ro'), cargar(ctx, 'meta')]);
@@ -70,14 +72,16 @@ async function pintar(cont, ctx) {
   const todo = ctx.nivel === 'todo';
   const fPanel = fresco(meta, 'Panel v29 · GoHighLevel', 'Panel de resultados'), fMeta = fresco(meta, 'Panel v29 · Meta', 'Meta');
   const fGHL = fresco(meta, 'GoHighLevel (subcuenta RO)', 'GoHighLevel');
-  const hoy = new Date();
-  const ym = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+  const hoy = FECHAS_RO.hoy();
+  const ym = FECHAS_RO.mes(hoy);
   const nombreMes = MES[ym.slice(5)] || ym;
-  const mesNatural = v.meses[ym] || v.meses['2026-10'];
+  const mesNatural = v.meses[ym] || null;
+  if (!mesNatural) { cont.append(avisoParcial(`Falta una copia confirmada de ${nombreMes} ${ym.slice(0,4)}; las copias históricas conservan su periodo.`, { titulo: 'Periodo por contrastar' })); }
   // periodo de la barra: suma de días; sin serie diaria (datos viejos), el mes en curso y septiembre como antes
   const p = ctx.periodo;
   const esMes = !p || p.id === 'mes';
-  const mes = (p && v.dias && sumaDias(v.dias, p)) || mesNatural;
+  const mes = p ? (v.dias ? sumaDias(v.dias, p) : p.id === 'mes' ? mesNatural : null) : mesNatural;
+  if (!mes) { cont.append(avisoParcial('No hay una serie confirmada para el periodo elegido; no se sustituyen sus cifras por las del mes actual.', { titulo: 'Periodo por contrastar' })); return; }
   const comp = p?.comp && v.dias ? sumaDias(v.dias, p.comp) : null;
   const sep = v.meses['2026-09'];
   const nombreP = p ? (p.id === 'mes' ? nombreMes : (p.rango || p.nombre)) : nombreMes;
@@ -111,14 +115,14 @@ async function pintar(cont, ctx) {
       unidad: mes.celebradas >= 5 ? `${mes.firmados} de ${mes.celebradas} celebradas` : '', comparacion: cmp(pc(mes.firmados, mes.celebradas), comp ? pc(comp.firmados, comp.celebradas) : null),
       estado: mes.celebradas >= 5 ? semaforo(pct(mes.firmados, mes.celebradas), { verde: 33, ambar: 20 }) : '',
       contexto: mes.celebradas ? (mes.celebradas < 5 ? 'Con menos de 5 reuniones no se pinta color' : 'Bien desde 1 de cada 3') : 'Todavía sin reuniones celebradas', medible: 'medias',
-      medibleDetalle: `${mes.sin_marcar} reuniones sin marcar si se celebraron${esMes && mesNatural.de_hoy_en_vivo ? ` · las de hoy, con la etapa de GHL de las ${mesNatural.de_hoy_en_vivo.hora.slice(11)}` : ''}`, frescura: fPanel }),
+      medibleDetalle: `${mes.sin_marcar} reuniones sin marcar si se celebraron${esMes && mesNatural?.de_hoy_en_vivo ? ` · las de hoy, con la etapa de GHL de las ${mesNatural.de_hoy_en_vivo.hora.slice(11)}` : ''}`, frescura: fPanel }),
     tile({ icono: 'users', etiqueta: etiP('Asistencia'), valor: asis === null ? null : fmt.pct(asis), sinDato: 'ninguna reunión marcada en el periodo', unidad: `${mes.celebradas} de ${mes.celebradas + mes.ausencias} citas ya pasadas y marcadas`,
       estado: asis === null ? '' : semaforo(asis, { verde: 80, ambar: 70 }), comparacion: cmp(asis, asisC), contexto: `Bien desde el 80 % · cuenta solo las citas que ya pasaron y tienen marca (vino / no vino); ${mes.sin_marcar} sin marcar no cuentan`, medible: 'medias', frescura: fPanel }),
   ];
   if (todo && mes.inversion !== undefined) {
     const cpc = mes.firmados ? mes.inversion / mes.firmados : null, cita = mes.citas ? mes.inversion / mes.citas : null;
     const cpcC = comp?.firmados ? comp.inversion / comp.firmados : null, citaC = comp?.citas ? comp.inversion / comp.citas : null;
-    const kMant = (() => { const d = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; })();
+    const kMant = mesAnt(ym);
     const mant = v.meses[kMant] || {}; const nombreMant = (MES[kMant.slice(5)] || kMant).replace(/^./, c => c.toUpperCase());
     const mantCpc = mant.firmados ? mant.inversion / mant.firmados : null;
     lista.push(
@@ -220,19 +224,19 @@ function pintarV4(cont, ctx, v, o) {
   aLlamar.length > TOPE ? h('details', { class: 'que-es', style: { padding: '0 var(--relleno) var(--s-3)' } }, h('summary', {}, `Ver ${fmt.plural(aLlamar.length - TOPE, 'contacto más', 'contactos más')} para llamar`),
     filasLP(aLlamar.slice(TOPE).map(x => filaLlamar(ctx, v, x)), { subir: false })) : null);
   // la cifra que manda es SIEMPRE el mes en curso (el periodo de arriba cambia las tarjetas, no esto)
-  const firmados = mesNatural.firmados;
-  const ritmo = conRitmo ? (firmados / cerrados) * o.laborables : null;
+  const firmados = mesNatural?.firmados ?? null;
+  const ritmo = firmados !== null && conRitmo ? (firmados / cerrados) * o.laborables : null;
   const ritmoPct = ritmo === null ? null : pc(ritmo, obj);
   const estRitmo = ritmoPct !== null ? semaforo(ritmoPct, { verde: 100, ambar: 85 }) : '';
   const enEuros = l => l.reduce((a, x) => a + (x.cuota_mensual || 0), 0);
   const cifra = panel({ titulo: 'Firmados del mes · la cifra que manda', icono: 'flag', id: 'vro-cifra-t', sub: `Objetivo: ${obj} al mes. Firmado = columna «Cliente» de GHL, por el día de la firma.` },
     h('div', { class: 'cuerpo pila' },
-      cifraPrincipal({ etiqueta: `${nombreMes[0].toUpperCase()}${nombreMes.slice(1)} · ${firmados} de ${obj}`, valor: String(firmados), estado: estRitmo,
-        comparacion: lineaComparacion({ num: firmados, ref: ant.firmados, modo: 'abs', texto: `frente a ${nomAnt} entero`, formato: x => fmt.num(x, 0) }) }),
-      barraObjetivo({ valor: firmados, objetivo: obj, marcas: ritmo !== null ? [{ valor: Math.round(ritmo), texto: 'A este ritmo' }] : [], formato: x => fmt.num(x, 0), etiquetaValor: 'Firmados', etiquetaObjetivo: 'Objetivo', colorea: ritmo !== null }),
-      h('p', { class: 'sub' }, conRitmo ? `A este ritmo, ${fmt.num(ritmo, 0)} a fin de mes (${fmt.pct(ritmoPct)} del objetivo).` : `El ritmo se calcula desde el quinto día laborable (van ${cerrados}): hasta entonces la barra no colorea.`),
+      cifraPrincipal({ etiqueta: `${nombreMes[0].toUpperCase()}${nombreMes.slice(1)} · ${firmados === null ? 'firmados por contrastar' : `${firmados} de ${obj}`}`, valor: firmados === null ? '—' : String(firmados), estado: estRitmo,
+        comparacion: firmados === null ? null : lineaComparacion({ num: firmados, ref: ant.firmados, modo: 'abs', texto: `frente a ${nomAnt} entero`, formato: x => fmt.num(x, 0) }) }),
+      firmados === null ? vacioLinea('Firmados y ritmo del mes actual: sin copia confirmada.', { icono: 'info' }) : barraObjetivo({ valor: firmados, objetivo: obj, marcas: ritmo !== null ? [{ valor: Math.round(ritmo), texto: 'A este ritmo' }] : [], formato: x => fmt.num(x, 0), etiquetaValor: 'Firmados', etiquetaObjetivo: 'Objetivo', colorea: ritmo !== null }),
+      h('p', { class: 'sub' }, firmados === null ? 'Ritmo del mes actual por contrastar.' : conRitmo ? `A este ritmo, ${fmt.num(ritmo, 0)} a fin de mes (${fmt.pct(ritmoPct)} del objetivo).` : `El ritmo se calcula desde el quinto día laborable (van ${cerrados}): hasta entonces la barra no colorea.`),
       h('p', { class: 'kpi-umbral' }, h('span', {}, `Umbral: ${UMB.ritmo.texto}`)),
-      h('p', { class: 'sub' }, `Si firman los ${v.contratos.length} contratos enviados: ${firmados + v.contratos.length} de ${obj} · ${fmt.eur(enEuros(v.contratos))} más al mes.`)));
+      h('p', { class: 'sub' }, firmados === null ? 'Proyección contra el objetivo del mes por contrastar.' : `Si firman los ${v.contratos.length} contratos enviados: ${firmados + v.contratos.length} de ${obj} · ${fmt.eur(enEuros(v.contratos))} más al mes.`)));
   const arriba = h('div', { class: 'dos', 'data-vro-arriba': '' }, llamar, cifra);
   cont.append(arriba);
   consejoCompacto(cont, arriba);
@@ -286,12 +290,12 @@ function pintarV4(cont, ctx, v, o) {
       embudoBarras(PASOS.map(([k, t, ic], i) => ({ etiqueta: `${t}${i ? ` · ${fmt.pct(paso(mes, i))} (${fmt.pct(paso(ant, i))})` : ''}`, valor: mes[k], icono: ic, estado: peorSet.has(i) ? 'ambar' : null, nota: `${nomAnt}: ${fmt.num(ant[k])}` }))),
       h('div', { class: 'fila' }, h('button', { type: 'button', class: 'bt mini', on: { click: ir('embudo') } }, icono('grafico', { clase: 's' }), 'Ver el embudo completo y el ritmo'), frescura(fPanel))));
   const eProp = enEuros(v.propuestas.filter(x => !parada(x))), eParadas = enEuros(paradas), eContr = enEuros(v.contratos);
-  const falta = Math.max(0, obj - firmados) * 1470;
+  const falta = firmados === null ? null : Math.max(0, obj - firmados) * 1470;
   const pipe = eProp + eParadas + eContr;
-  const pipeline = panel({ titulo: 'Pipeline en euros y cobertura', icono: 'capas', sub: `Cuota al mes de lo que está abierto: ${fmt.eur(pipe)} · lo que falta para el objetivo del mes: ${fmt.eur(falta)} (${Math.max(0, obj - firmados)} firmados a 1.470 €)` },
+  const pipeline = panel({ titulo: 'Pipeline en euros y cobertura', icono: 'capas', sub: `Cuota al mes de lo que está abierto: ${fmt.eur(pipe)} · ${falta === null ? 'lo que falta para el objetivo del mes: por contrastar' : `lo que falta para el objetivo del mes: ${fmt.eur(falta)} (${Math.max(0, obj - firmados)} firmados a 1.470 €)`}` },
     h('div', { class: 'cuerpo pila' },
       barraApilada({ etiqueta: 'Pipeline por etapa', formato: x => fmt.eur(x), partes: [{ valor: eContr, texto: `Contratos enviados · ${v.contratos.length}` }, { valor: eProp, texto: `Propuestas al día · ${v.propuestas.length - paradas.length}` }, { valor: eParadas, texto: `Propuestas paradas · ${paradas.length}` }] }),
-      h('p', { class: 'sub' }, falta ? `Cobertura: ${fmt.num(pipe / falta, 1)} veces lo que falta (sin probabilidad por etapa: GHL no la trae).` : 'Objetivo del mes cubierto con lo firmado.'),
+      h('p', { class: 'sub' }, falta === null ? 'Cobertura contra el objetivo del mes: por contrastar.' : falta ? `Cobertura: ${fmt.num(pipe / falta, 1)} veces lo que falta (sin probabilidad por etapa: GHL no la trae).` : 'Objetivo del mes cubierto con lo firmado.'),
       h('p', { class: 'kpi-umbral ref' }, h('span', {}, `Referencia, no colorea: ${UMB.cobertura.texto}`), ' · ', enlaceFuente('https://www.deltek.com/resources/articles/professional-services-benchmarks/', 'SPI Research')),
       h('div', { class: 'fila' }, h('a', { class: 'bt mini', href: '#vro-llamar-t', on: { click: e => { e.preventDefault(); document.getElementById('vro-llamar-t')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } } }, icono('phone', { clase: 's' }), 'Llamar a los que se enfrían'), abrirEn('GHL · oportunidades', v.enlaces?.ghl_oportunidades))));
   const b = v.bajas_tempranas;
@@ -361,9 +365,9 @@ function pintarHoy(zona, ctx, v, fGHL) {
   const paradas = v.propuestas.filter(parada);
   // V2 · «hoy» real (fecha de Madrid, helper común): un sábado con datos del viernes no titula «Reuniones de hoy» a las del
   // viernes. Si la lista es de otro día, se dice de cuál y que los datos son de esa lectura.
-  const hoyR = ctx.hoy || hoyMadrid();
-  const diaDato = (v.hoy[0]?.cuando || v.generado || '').slice(0, 10);
-  const deHoy = !v.hoy.length ? (v.generado || '').slice(0, 10) >= hoyR : v.hoy.every(r => String(r.cuando).slice(0, 10) === hoyR);
+  const hoyR = FECHAS_RO.dia(ctx.hoy || hoyMadrid());
+  const diaDato = FECHAS_RO.dia(v.hoy[0]?.cuando || v.generado);
+  const deHoy = !!hoyR && (!v.hoy.length ? FECHAS_RO.dia(v.generado) === hoyR : v.hoy.every(r => FECHAS_RO.dia(r.cuando) === hoyR));
   const diaTxt = diaSemanaV;
   zona.append(
     panel({ titulo: deHoy ? `Reuniones de hoy (${v.hoy.length})` : `Reuniones del ${diaTxt(diaDato)} (${v.hoy.length}) · datos de esa lectura`, icono: 'video',

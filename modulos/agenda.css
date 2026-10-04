@@ -1,0 +1,29 @@
+/* Agenda only: no selectors outside the module. */
+.ro-agenda{gap:16px!important}.ro-agenda .agenda-resumen{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;color:var(--mid);font:var(--t-meta)}
+.ro-agenda .agenda-nav{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:12px 16px}.ro-agenda .agenda-nav-count{margin-left:auto;color:var(--dim);font:var(--t-meta)}
+.ro-agenda .agenda-dias{display:none;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;padding:8px}
+.ro-agenda .agenda-dia-boton{border:1px solid var(--line);border-radius:var(--r-m);display:grid;gap:2px;padding:8px 0;min-height:70px;background:var(--card);color:var(--ink);cursor:pointer}.ro-agenda .agenda-dia-boton b{font-size:20px}.ro-agenda .agenda-dia-boton small{color:var(--mid)}.ro-agenda .agenda-dia-boton.seleccionado{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.ro-agenda .agenda-semana{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));padding:0 12px 12px;gap:6px;align-items:start}.ro-agenda .agenda-columna{min-width:0;display:grid;gap:6px;min-height:240px;background:var(--card-2);border-radius:var(--r-m);padding:5px}.ro-agenda .agenda-columna.hoy{box-shadow:inset 0 0 0 1px var(--accent)}
+.ro-agenda .agenda-col-titulo{border:0;background:transparent;color:var(--ink);font-weight:700;min-height:42px;cursor:pointer;text-align:center}.ro-agenda .agenda-evento{display:grid;gap:5px;border:1px solid var(--line);border-left:3px solid var(--mid);border-radius:var(--r-s);padding:9px 7px;background:var(--card);color:var(--ink);font:var(--t-meta);text-align:left;cursor:pointer;min-width:0;overflow-wrap:anywhere}.ro-agenda .agenda-evento b{font-variant-numeric:tabular-nums}.ro-agenda .agenda-evento small{color:var(--mid)}.ro-agenda .agenda-evento.agenda-tipo-cliente{border-left-color:var(--accent);background:var(--accent-soft)}.ro-agenda .agenda-evento.agenda-tipo-prospecto{border-left-color:#976727}.ro-agenda .agenda-evento.agenda-tipo-interna{border-left-color:#6973a8}.ro-agenda .agenda-evento .agenda-critico{color:var(--bad-ink);font-weight:700}.ro-agenda .agenda-dia-vacio{padding:12px 4px;color:var(--dim);line-height:1.5}
+.ro-agenda .agenda-detalle-dia{display:none;min-width:0}.ro-agenda .agenda-detalle-dia h3{padding:0 16px;font:var(--t-h3)}.ro-agenda .agenda-detalle-evento:not(:empty){padding:12px}.ro-agenda .agenda-sin-zoom{font:var(--t-meta);color:var(--dim);max-width:190px;line-height:1.4}.ro-agenda .agenda-acciones .bt{min-height:40px}.ro-agenda button:focus-visible,.ro-agenda a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ro-agenda .agenda-semana.agenda-horaria{grid-template-columns:54px repeat(7,minmax(0,1fr));gap:0;padding:0 8px 8px;max-height:720px;overflow:auto;align-items:stretch;isolation:isolate}
+.ro-agenda .agenda-horaria .agenda-col-titulo{position:sticky;top:0;z-index:3;background:var(--card);border-bottom:1px solid var(--line);font-size:12px;min-width:0}
+.ro-agenda .agenda-eje-cabecera{font-size:11px;color:var(--dim);padding:8px 3px;overflow-wrap:anywhere;background:var(--card)}
+.ro-agenda .agenda-eje-horas{position:relative;font-size:11px;font-variant-numeric:tabular-nums;color:var(--dim);background:var(--card)}
+.ro-agenda .agenda-eje-horas span{position:absolute;left:2px;line-height:14px;transform:translateY(-3px)}
+.ro-agenda .agenda-horaria .agenda-todo-dia{display:grid;align-content:start;gap:3px;min-width:0;padding:3px;border-left:1px solid var(--line)}
+.ro-agenda .agenda-horaria .agenda-todo-dia:empty{min-height:10px}
+.ro-agenda .agenda-horaria .agenda-columna.agenda-franja{position:relative;display:block;padding:0;min-height:0;border-radius:0;border-left:1px solid var(--line);background-image:linear-gradient(to bottom,var(--line) 1px,transparent 1px);background-repeat:repeat;overflow:visible}
+.ro-agenda .agenda-franja .agenda-evento{min-height:0;box-sizing:border-box;padding:3px 4px;gap:1px;overflow:hidden;align-content:start;font-size:11px;line-height:1.15;z-index:1}
+.ro-agenda .agenda-franja .agenda-evento b,.ro-agenda .agenda-franja .agenda-evento span,.ro-agenda .agenda-franja .agenda-evento small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ro-agenda .agenda-franja .agenda-evento:focus-visible{z-index:2;overflow:visible;min-height:44px;box-shadow:var(--sombra-1)}
+.ro-agenda .agenda-horario-nota{padding:0 16px;font-size:12px}
+@media(max-width:860px){.ro-agenda .agenda-semana{display:none}.ro-agenda .agenda-dias{display:grid}.ro-agenda .agenda-detalle-dia{display:block}.ro-agenda .agenda-nav-count{margin-left:0}}
+@media(max-width:860px){.ro-agenda .agenda-semana.agenda-horaria,.ro-agenda .agenda-horario-nota{display:none}}
+@media(max-width:640px){.ro-agenda .agenda-nav{padding:10px 8px;gap:6px}.ro-agenda .agenda-nav b{font-size:14px}.ro-agenda .agenda-acciones{justify-content:flex-start!important}.ro-agenda .agenda-sin-zoom{max-width:none}.ro-agenda .agenda-resumen{gap:6px 12px}.ro-agenda .agenda-detalle-evento{display:none}}
+
+.ro-agenda .agenda-franja .agenda-grupo-visual{background:var(--accent-soft);border-color:var(--accent);border-left:3px solid var(--accent);padding:5px;gap:4px;font-size:12px}.ro-agenda .agenda-franja .agenda-grupo-visual b{white-space:normal;overflow-wrap:normal}.ro-agenda .agenda-bloque-detalle{display:grid;gap:12px;min-width:0}.ro-agenda .agenda-bloque-detalle h3{margin:0;font:var(--t-h3)}
+
+/*322: ayuda secundaria plegada para priorizar el calendario.*/
+.ro-agenda .agenda-horario-ayuda{font-size:12px;color:var(--muted);margin:4px 0 8px}
+.ro-agenda .agenda-horario-ayuda>summary{cursor:pointer;width:fit-content}

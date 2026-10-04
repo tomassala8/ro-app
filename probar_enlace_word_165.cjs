@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+let clicks,retiradas=0,reloj;const link={attrs:{},addEventListener(k,f){clicks=f},removeAttribute(k){delete this[k]}};
+const box={document:{createElement:()=>link},URL:{createObjectURL:()=> 'blob:fixture',revokeObjectURL:()=>retiradas++},setTimeout:f=>(reloj=f,1),clearTimeout:()=>{}};
+vm.createContext(box);vm.runInContext(fs.readFileSync('modulos/_informe_word.js','utf8').replace(/export /g,'')+';this.presentar=presentarDescargaWord;',box);
+const c={servidor:true,real:{id:'tomas'},persona:{id:'tomas'},clientes:[{id:'fixture'}],ver:()=>({ok:true}),vigente:()=>true};
+const n={isConnected:true,replaceChildren(a){this.link=a}};
+const parar=box.presentar(c,'fixture','2026-09',n,{});assert.equal(n.link.href,'blob:fixture');assert.equal(n.link.download,'informe-fixture-2026-09.docx');
+let bloqueado=false;clicks({preventDefault:()=>bloqueado=true});assert.equal(bloqueado,false);
+c.persona={id:'carla'};clicks({preventDefault:()=>bloqueado=true});assert.equal(bloqueado,true);assert.equal(retiradas,1);assert.equal(link.href,undefined);parar();assert.equal(retiradas,1);
+c.persona={id:'tomas'};box.presentar(c,'fixture','2026-09',n,{});reloj();assert.equal(link.href,undefined);assert.equal(retiradas,2);
+console.log('165 PASS: enlace visible, gesto explícito, identidad revalidada y URL caducada/revocada sin duplicar.');

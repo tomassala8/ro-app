@@ -1,0 +1,7 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+(async()=>{const s=fs.readFileSync(path.join(__dirname,'modulos/_horas_diarias_238.js'),'utf8');const {serieHorasDiaria238}=await import('data:text/javascript;base64,'+Buffer.from(s).toString('base64'));
+function dto(version){const n=version==='238.2'?7:5;return {diario_238:{version,fuente:'ClickUp entradas',cobertura:'parcial',zona:'Europe/Madrid',zona_confirmada:true,fecha_fuente:'2026-10-05 02:56',desde:n===7?'2026-09-28':'2026-09-30',hasta:'2026-10-04',corte_fecha:'2026-10-05',criterio_corte:'anterior_fecha_referencia',dias:Array.from({length:n},(_,i)=>({fecha:new Date(Date.parse('2026-10-05T00:00:00Z')-(n-i)*864e5).toISOString().slice(0,10),estado:'sin_dato',horas:null,entradas:null}))}};}
+assert.equal(serieHorasDiaria238(dto('238.1'),'2026-10-05').dias.length,5);assert.equal(serieHorasDiaria238(dto('238.2'),'2026-10-05').dias.length,7);
+for(const mutate of [p=>p.diario_238.dias.pop(),p=>p.diario_238.corte_fecha='2026-10-04',p=>p.diario_238.dias[0].fecha='2026-09-29',p=>p.diario_238.fecha_fuente='2026-10-06 01:00',p=>p.diario_238.dias[0].horas=0]){const p=dto('238.2');mutate(p);assert.equal(serieHorasDiaria238(p,'2026-10-05'),null);}
+let p=dto('238.2');p.diario_238.dias[0]={fecha:'2026-09-28',estado:'observado',horas:0,entradas:1};assert.equal(serieHorasDiaria238(p,'2026-10-05').dias[0].horas,0);
+console.log('328 lector: ocho casos PASS (compatibilidad, forma, corte, fecha, unknown/0 observado).');})();

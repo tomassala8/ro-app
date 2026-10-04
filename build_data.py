@@ -350,18 +350,22 @@ def parsear_dudas(texto, clientes_f0, personas, extra_cli=None):
 
 
 # ------------------------------------------------- respuestas de Mili
-def aplicar_respuestas(respuestas, personas, asignaciones, servicios, id_app, hoy):
+def aplicar_respuestas(respuestas, personas, asignaciones, servicios, id_app, hoy, dudas=None):
     """
     Aplica 20_FASE0_DATOS/respuestas_mili.json (formato en respuestas_mili.ejemplo.json).
     Nada se borra: una asignación sustituida se cierra con «hasta» = el día anterior y «sustituida_por».
     Devuelve la lista de lo aplicado (para meta.json y el _ESTADO).
     """
     aplicado = []
+    from confirmar_personas_572 import validar_persona, persona_vigente
     por_persona = {p["id"]: p for p in personas}
     plano = []
     for r in respuestas:          # una respuesta puede ser una lista (p. ej. B1: tres clientes a la vez)
         plano.extend(r if isinstance(r, list) else [r])
     for r in plano:
+        if not isinstance(r, dict):
+            aplicado.append({"error": "Respuesta omitida: formato no válido."})
+            continue
         tipo, duda = r.get("tipo"), r.get("duda")
         origen = f"Mili · respuestas_mili.json · duda {duda or 's/n'}"
         if tipo == "asignacion":
@@ -396,27 +400,18 @@ def aplicar_respuestas(respuestas, personas, asignaciones, servicios, id_app, ho
                                      "fuente": origen, "confianza": "confirmada", "duda": None})
             aplicado.append({"duda": duda, "tipo": tipo, "cliente_id": cid, "silla": silla, "persona_id": pid, "accion": accion})
         elif tipo == "persona":
-            p = por_persona.get(r["persona_id"])
-            if not p:
-                aplicado.append({"duda": duda, "error": f"persona {r['persona_id']} no existe"})
+            if not validar_persona(r, personas, dudas):
+                aplicado.append({"duda": duda, "error": "Confirmación de persona omitida: contrato no válido."})
                 continue
-            cambios = dict(r.get("cambios") or {})
-            if "puestos" in cambios:
-                # Mili puede contestar con los puestos del organigrama («crm», «soporte»…): se traducen a los 21 de la app.
-                eq = REGLAS["equivalencias_fase0"]
-                trad = []
-                for x in cambios["puestos"]:
-                    for y in ([x] if x in PUESTOS_APP else eq.get(x, [])):
-                        if y not in trad:
-                            trad.append(y)
-                if not trad:
-                    aplicado.append({"duda": duda, "error": f"puestos sin equivalencia: {cambios['puestos']}"})
-                    continue
-                cambios["puestos"] = trad
-            if "estado" in cambios:
-                cambios["activo"] = cambios["estado"] == "activo"
+            p = persona_vigente(personas, r['persona_id'])
+            estado = r['cambios']['estado']
+            cambios = {"estado": estado, "activo": estado == 'activo'}
             p.update(cambios)
-            p.setdefault("confirmado_por", []).append(origen)
+            marcas = p.get('confirmado_por')
+            if not isinstance(marcas, list):
+                marcas = []
+                p['confirmado_por'] = marcas
+            marcas.append(origen)
             aplicado.append({"duda": duda, "tipo": tipo, "persona_id": p["id"], "cambios": cambios})
         elif tipo == "servicio":
             cid = id_app.get(r["cliente_id"], r["cliente_id"])
@@ -720,10 +715,15 @@ def main():
                 if d.get("clientes"):
                     d["clientes"] = [id_app.get(x, x) for x in d["clientes"]]
 
+        from fuentes_verdad.servicios_confirmados import aplicar as aplicar_servicios
+        declarados = [{'id': cid, 'servicios': valor} for cid, valor in servicios.items()]
+        aplicar_servicios(declarados)
+        servicios.update({x['id']: x['servicios'] for x in declarados})
+
         resp_f = FASE0 / "respuestas_mili.json"
         if resp_f.exists():
             resp = json.loads(resp_f.read_text())
-            aplicado = aplicar_respuestas(resp.get("respuestas", []), personas, asignaciones, servicios, id_app, hoy)
+            aplicado = aplicar_respuestas(resp.get("respuestas", []), personas, asignaciones, servicios, id_app, hoy, dudas=para_confirmar)
             hechas = {x.get("duda") for x in aplicado if not x.get("error")}
             for d in para_confirmar:
                 if d["id"] in hechas:
@@ -978,6 +978,18 @@ def main():
                      "sin_correo_semana", "sin_reunion_mes", "nuevos", "nuevos_tarde", "revision48")},
         "historico": (datos.get("v7") or {}).get("historico") or [],
     }
+
+    # ----------------------------------------------- Tomás 3-oct: un solo filtro «cliente activo» (fuentes_verdad/clientes_activos.py)
+    # Los clientes de baja (libro de clientes + Airtable de octubre) no entran en la base de la app; su histórico sigue en finanzas.
+    try:
+        from fuentes_verdad import clientes_activos as ACT
+        _base = {"clientes": clientes, "alarmas": alarmas, "asignaciones": asignaciones, "logos": logos}
+        _fuera = ACT.limpiar_nucleo(_base)
+        clientes, alarmas, asignaciones, logos = _base["clientes"], _base["alarmas"], _base["asignaciones"], _base["logos"]
+        if _fuera:
+            print(f"clientes de baja fuera de la base: {', '.join(_fuera)}")
+    except Exception as e:   # sin la lista, la base sale como antes (y pruebas_coherencia lo dirá)
+        print(f"aviso: sin filtro de clientes activos ({e})")
 
     # ----------------------------------------------- comprobación de fugas
     blob = json.dumps([clientes, alarmas, asignaciones, para_confirmar], ensure_ascii=False)

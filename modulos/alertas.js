@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/alertas.js · «Alertas del departamento» (carril N4, 2-oct-2026 noche; A2 y A8 de 43_IDEAS_MEJORA, misma noche).
 // Motor ÚNICO de alertas: no recalcula nada. fuentes_alertas/generar_alertas.py reúne lo que ya calculan los módulos
 // (verdad única, En rojo, Bandeja, Clientes nuevos, Captación, Salud del CRM, SEO y webs, Redes, Informes, Reuniones,
@@ -5,12 +6,13 @@
 // su dueño (la silla del cliente en asignaciones o, si no hay, el jefe del departamento).
 // Datos: data/alertas/p_<persona>.json (solo_propio: las suyas, las de su departamento si es jefe; Mili y Tomás todas).
 // Estados (nueva · vista · lo tengo · resuelta · no aplica · pospuesta) = acciones del módulo en la cola simulada, con rastro.
-// Escalado en vivo: pasado el plazo sin «Lo tengo» sube al jefe; pasado otro plazo igual, a Mili. Lo pospuesto no escala.
+// Escalado en vivo (orden oficial de data/escalado.json): pasado el plazo sin «Lo tengo» sube al responsable del área; cada plazo más, un escalón (… → Mili → Tomás). Lo pospuesto no escala.
 // A2: «Ir» abre el OBJETO (el correo con la caja de respuesta, la ficha en su pestaña, la subcuenta, la campaña…).
 // A8: selección múltiple con lote (Lo tengo · Resuelta · No aplica con motivo · Posponer), «Posponer» (mañana, el
 // lunes o una fecha) y cifras con UNA sola definición: la del generador (D.definiciones), interpretada abajo tal cual.
 
 import { franjaCifras, consejoCompacto } from './_trabajo.js';   // Ronda U (molde de pantalla de trabajo)
+import { conDeshacer } from './_deshacer.js';
 import {
   h, fmt, tile, listaLoPrimero, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, logoCliente, panel,
   icono, iniciales, limpiaTexto, tablaApilable, copiar, avisoFlotante, frescura,
@@ -32,9 +34,8 @@ function vigilarCortes(raiz) {
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const fDiaRO = iso => fechaCortaRO(FECHAS_RO.dia(iso));
+const fDiaHoraRO = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia ? `${fechaCortaRO(dia)}${hora ? `, ${hora}` : ''}` : '—'; };
 
 const ID = 'alertas';
 const GRAV = {
@@ -65,10 +66,10 @@ const BORDE_GRAV = { alta: 'var(--bad)', media: 'var(--warn)', baja: 'var(--off)
 const META = { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2) var(--s-4)', alignItems: 'center', font: 'var(--t-meta)', color: 'var(--mid)' };
 
 // --------------------------------------------------------------------- utilidades
-const aFecha = s => (s ? new Date(String(s).replace(' ', 'T')) : null);
+const aFecha = s => FECHAS_RO.instante(s);
 const corto = (ctx, id) => (id ? ctx.nombre(id) : '—');
 const dos = n => String(n).padStart(2, '0');
-const aTexto = d => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())} ${dos(d.getHours())}:${dos(d.getMinutes())}`;
+const aTexto = d => { const dia = FECHAS_RO.dia(d), hora = FECHAS_RO.hora(d); return dia && hora ? `${dia} ${hora}` : null; };
 const modDe = r => String(r || '').replace('#/', '').split('/')[0];
 function horasTexto(h) {
   if (h < 1) return 'menos de 1 h';
@@ -108,34 +109,34 @@ function delFichero(a) {
 /** Estado de cada alerta: lo pulsado aquí, la cola en vivo (posterior al fichero) o el fichero. Lo pospuesto vuelve solo. */
 function estadoDe(a) {
   let e = S.local.get(a.id);
-  if (!e) { const viva = S.acc.get(a.id); e = viva && (!S.D.generado || viva.hora > aFecha(S.D.generado)) ? viva : delFichero(a); }
-  if (e.estado === 'pospuesta' && e.hasta && aFecha(e.hasta) <= S.ahora) return { ...e, estado: 'nueva', volvio: true };
+  if (!e) { const viva = S.acc.get(a.id); const gen = aFecha(S.D.generado); e = viva?.hora && (!S.D.generado || (gen && viva.hora > gen)) ? viva : delFichero(a); }
+  if (e.estado === 'pospuesta' && aFecha(e.hasta) && FECHAS_RO.horasHasta(e.hasta, S.ahora) <= 0) return { ...e, estado: 'nueva', volvio: true };
   return e;
 }
 /** Vencimiento: al volver de «posponer», el plazo empieza de nuevo (como el generador). */
 function venceDe(a, est) {
   const base = aFecha(a.vence_antes || a.vence);
   if (!base) return null;
-  if (est.hasta && a.plazo_h) { const v2 = new Date(aFecha(est.hasta).getTime() + a.plazo_h * 36e5); return v2 > base ? v2 : base; }
+  if (est.hasta && a.plazo_h) { const vuelta = aFecha(est.hasta), plazo = Number(a.plazo_h); if (!vuelta || !Number.isFinite(plazo) || plazo <= 0) return null; const v2 = new Date(+vuelta + plazo * 36e5); return v2 > base ? v2 : base; }
   return base;
 }
-/** Escalado en vivo: pasado el plazo sin «Lo tengo» → jefe; pasado otro plazo igual → Mili. Ni cerradas ni pospuestas. */
+/** Escalado en vivo (orden oficial, 3-oct): pasado el plazo sin «Lo tengo» → responsable del área; cada plazo igual que
+ *  pasa, un escalón más de la cadena que trae la alerta (… → Mili → Tomás). Ni cerradas ni pospuestas. */
 function nivelEscalado(a, est, ahora) {
   if (!['nueva', 'vista', 'reabierta'].includes(est.estado)) return 0;
   const v = venceDe(a, est);
   if (!v) return 0;
-  const p = (a.plazo_h || 24) * 36e5;
-  let n = 0;
-  if (ahora >= v) n = 1;
-  if (ahora - v >= p) n = 2;
-  return Math.min(n, (a.escalado_cadena || []).length - 1);
+  const p = Number(a.plazo_h || 24), edad = FECHAS_RO.horasDesde(v, ahora);
+  if (!Number.isFinite(p) || p <= 0 || edad === null) return 0;
+  const n = edad >= 0 ? 1 + Math.floor(edad / p) : 0;
+  return Math.max(0, Math.min(n, (a.escalado_cadena || []).length - 1));
 }
 /** Los hechos de una alerta que usa la definición única (los mismos que hechos() del generador). */
 function hechos(a) {
   const est = estadoDe(a);
   const nivel = nivelEscalado(a, est, S.ahora);
   const v = venceDe(a, est);
-  return { estado: est.estado, gravedad: a.gravedad, dueno: a.dueno_id, responsable: (a.escalado_cadena || [])[nivel] || a.dueno_id, nivel, vencida: !!(v && v <= S.ahora) };
+  return { estado: est.estado, gravedad: a.gravedad, dueno: a.dueno_id, responsable: (a.escalado_cadena || [])[nivel] || a.dueno_id, nivel, vencida: !!v && FECHAS_RO.horasHasta(v, S.ahora) !== null && FECHAS_RO.horasHasta(v, S.ahora) <= 0 };
 }
 const cumple = (a, nombres) => cumpleTodas(S.D.definiciones || {}, nombres, hechos(a), S.ctx.persona.id);
 const cuenta = (lista, nombre) => lista.filter(a => cumple(a, S.D.contadores_def?.[nombre] || [])).length;
@@ -157,7 +158,8 @@ async function cargar(ctx) {
     try {
       const r = await ctx.api(`acciones?modulo=${ID}`);
       for (const x of [...(r.acciones || [])].sort((p, q) => p.id - q.id)) {
-        const hora = new Date(String(x.creada).replace(' ', 'T') + 'Z');
+        const hora = instanteServidorRO(x.creada);
+        if (!hora) continue;
         let vp = {};
         try { vp = typeof x.vista_previa === 'string' ? JSON.parse(x.vista_previa || '{}') || {} : x.vista_previa || {}; } catch { vp = {}; }
         const entradas = x.tipo === 'alerta_lote'
@@ -181,30 +183,93 @@ async function cargar(ctx) {
 
 // --------------------------------------------------------------------- posponer: mañana, el lunes o una fecha
 function fechaVuelta(cuando, dia) {
-  const d = new Date(S.ahora); d.setSeconds(0, 0);
-  if (cuando === 'manana') { d.setDate(d.getDate() + 1); d.setHours(9, 0); }
-  else if (cuando === 'lunes') { const n = ((8 - d.getDay()) % 7) || 7; d.setDate(d.getDate() + n); d.setHours(9, 0); }
-  else { const [y, m, dd] = String(dia).split('-').map(Number); d.setFullYear(y, m - 1, dd); d.setHours(9, 0); }
-  return d;
+  const hoy = FECHAS_RO.dia(S.ahora);
+  if (!hoy) return null;
+  let destino = null;
+  if (cuando === 'manana') destino = sumarDiasRO(hoy, 1);
+  else if (cuando === 'lunes') {
+    const dw = new Date(`${hoy}T12:00:00Z`).getUTCDay();
+    destino = sumarDiasRO(hoy, ((8 - dw) % 7) || 7);
+  } else if (cuando === 'fecha') destino = FECHAS_RO.fechaCivil(dia);
+  const max = hoyMas(S.D.posponer_max_dias || 31);
+  if (!destino || destino < hoyMas(1) || destino > max) return null;
+  const vuelta = aFecha(`${destino} 09:00`), resta = FECHAS_RO.horasHasta(vuelta, S.ahora);
+  return resta !== null && resta > 0 ? vuelta : null;
 }
 const TXT_CUANDO = { manana: 'mañana', lunes: 'el lunes', fecha: 'esa fecha' };
-const hoyMas = n => { const d = new Date(S.ahora); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}`; };
+const hoyMas = n => sumarDiasRO(FECHAS_RO.dia(S.ahora), n);
+
+function vigenteDecision594(ctx, alertas, lote = false) {
+  if (S.ctx !== ctx || ctx.vigente?.() === false || ctx.soloLectura || ctx.real?.id !== ctx.persona?.id || !ctx.veModulo(ID)) return false;
+  const ps = (ctx.datos?.personas || []).filter(p => p?.id === ctx.real.id);
+  const roles = ctx.real.puestos;
+  if (ps.length !== 1 || ps[0].estado !== 'activo' || ps[0].activo === false || !Array.isArray(roles) || !roles.length
+      || !roles.every(r => typeof r === 'string' && r) || new Set(roles).size !== roles.length
+      || JSON.stringify([...roles].sort()) !== JSON.stringify([...(ps[0].puestos || [])].sort())) return false;
+  return alertas.every(a => {
+    if (S.porId.get(a.id) !== a || (lote && !puedo(a))) return false;
+    if (!a.cliente_id) return true;
+    const cs = (ctx.clientes || []).filter(c => c?.id === a.cliente_id);
+    return cs.length === 1 && cs[0].activo_confirmado === true && cs[0].activo !== false && cs[0].estado !== 'baja'
+      && ctx.ver({ tipo: 'cliente_detalle', cliente_id: a.cliente_id })?.ok === true;
+  });
+}
+
+const ANTERIORES594 = new WeakMap();
+function decisionConDeshacer594(ctx, alertas, payload, estados, mensaje, esLote = false) {
+  if (!vigenteDecision594(ctx, alertas, esLote)) throw new Error('Esta decisión no está disponible en la vista actual.');
+  const local = S.local, sel = S.sel, antes = new Map(alertas.map(a => [a.id, local.get(a.id)]));
+  const elegidas = new Set(alertas.filter(a => sel.has(a.id)).map(a => a.id));
+  for (const a of alertas) ANTERIORES594.set(estados.get(a.id), { anterior: antes.get(a.id), seleccionada: elegidas.has(a.id), anulada: false });
+  const fuente = alertas.map(a => JSON.stringify(a));
+  const vigencia = () => vigenteDecision594(ctx, alertas, esLote) && alertas.every((a, i) => JSON.stringify(a) === fuente[i]);
+  const pintar = () => { if (vigencia()) S.refrescar?.(); };
+  const restaurar = () => {
+    for (const a of alertas) ANTERIORES594.get(estados.get(a.id)).anulada = true;
+    for (const a of alertas) if (local.get(a.id) === estados.get(a.id)) {
+      let anterior = antes.get(a.id), seleccionada = elegidas.has(a.id);
+      while (anterior && ANTERIORES594.get(anterior)?.anulada) {
+        const meta = ANTERIORES594.get(anterior); seleccionada ||= meta.seleccionada; anterior = meta.anterior;
+      }
+      if (anterior === undefined) local.delete(a.id); else local.set(a.id, anterior);
+      if (seleccionada) sel.add(a.id);
+    }
+    pintar();
+  };
+  return conDeshacer({ mensaje: `${mensaje} · pendiente de guardar`,
+    optimista: () => { for (const a of alertas) { local.set(a.id, estados.get(a.id)); sel.delete(a.id); } pintar(); },
+    revertir: restaurar,
+    hacer: async () => {
+      if (!vigencia()) throw new Error('La vista o los permisos cambiaron: no se guarda.');
+      const r = await ctx.accion(payload);
+      if (!vigencia()) throw new Error('La vista cambió. Consulta el rastro para comprobar el registro local.');
+      const confirmado = ctx.servidor
+        ? r?.ok === true && Number.isSafeInteger(r.id) && r.id > 0 && r.estado === 'simulada'
+        : r?.ok === true && r.local === true && r.estado === 'simulada';
+      if (!confirmado) throw new Error('No se confirmó el registro local. Consulta el rastro antes de repetir.');
+      for (const a of alertas) if (local.get(a.id) === estados.get(a.id)) estados.get(a.id).pendiente = false;
+      pintar();
+      avisoFlotante(ctx.servidor ? 'Decisión local guardada. Se comprueba con el dato siguiente.' : 'Decisión simulada en esta sesión.');
+    },
+  });
+}
 
 async function marcar(a, estado, texto, extra = {}) {
   const ctx = S.ctx;
+  if (estado === 'pospuesta' && (!aFecha(extra.hasta) || FECHAS_RO.horasHasta(extra.hasta, S.ahora) <= 0)) { avisoFlotante('Elige una fecha válida para posponer', { icono: 'alert' }); return; }
   const t = texto || `${ESTADO[estado]?.texto || estado}: ${a.motivo}`;
-  await ctx.accion({ herramienta: 'app', tipo: TIPO_ACCION[estado], objeto: a.id, cliente_id: a.cliente_id || null, texto: t.slice(0, 400),
+  if (!TIPO_ACCION[estado]) throw new Error('Estado de alerta no válido.');
+  const payload = { herramienta: 'app', tipo: TIPO_ACCION[estado], objeto: a.id, cliente_id: a.cliente_id || null, texto: t.slice(0, 400),
     ...(estado === 'no_aplica' ? { motivo: t } : {}),
-    vista_previa: { alerta: a.id, departamento: a.departamento, motivo: a.motivo, estado, ...extra } });
-  S.local.set(a.id, { estado, quien: ctx.real.id, hora: new Date(), texto: t, hasta: extra.hasta || null });
-  S.sel.delete(a.id);
-  avisoFlotante(estado === 'lo_tengo' ? 'Anotado: lo tienes tú. El escalado se para.' : estado === 'resuelta' ? 'Marcada resuelta: se comprueba con el dato siguiente'
-    : estado === 'no_aplica' ? 'Marcada «no aplica», con su motivo' : estado === 'pospuesta' ? `Pospuesta hasta el ${fDiaHoraRO(extra.hasta)}: no cuenta ni escala hasta entonces`
-      : estado === 'nueva' ? 'Reabierta' : 'Marcada como vista');
+    vista_previa: { alerta: a.id, departamento: a.departamento, motivo: a.motivo, estado, ...extra } };
+  const est = { estado, quien: ctx.real.id, hora: new Date(), texto: t, hasta: extra.hasta || null, pendiente: true };
+  return decisionConDeshacer594(ctx, [a], payload, new Map([[a.id, est]]), ESTADO[estado]?.texto || estado);
 }
 async function posponer(a, cuando, dia) {
+  if (!puedo(a)) return;
   const d = fechaVuelta(cuando, dia);
   const hasta = aTexto(d);
+  if (!hasta) { avisoFlotante('Elige una fecha válida para posponer', { icono: 'alert' }); return; }
   await marcar(a, 'pospuesta', `Pospuesta hasta el ${fDiaHoraRO(hasta)}: ${a.motivo}`, { hasta, cuando });
 }
 
@@ -214,14 +279,16 @@ async function lote(accion, { motivo, cuando, dia } = {}) {
   const ids = [...S.sel].filter(id => S.porId.has(id) && puedo(S.porId.get(id))).slice(0, MAX_LOTE);
   if (!ids.length) return;
   const hasta = accion === 'posponer' ? aTexto(fechaVuelta(cuando, dia)) : null;
+  if (accion === 'posponer' && !hasta) { avisoFlotante('Elige una fecha válida para posponer', { icono: 'alert' }); return; }
   const que = { lo_tengo: 'Lo tengo', resuelta: 'Resueltas', no_aplica: 'No aplica', posponer: 'Pospuestas' }[accion];
   const texto = `${que} · ${fmt.plural(ids.length, 'alerta')}${motivo ? `: ${motivo}` : ''}${hasta ? ` hasta el ${fDiaHoraRO(hasta)}` : ''}`;
-  await ctx.accion({ herramienta: 'app', tipo: 'alerta_lote', objeto: `lote:${ids.length}:${ids[0]}`, cliente_id: null, texto: texto.slice(0, 400),
-    vista_previa: { ids, accion, motivo: motivo || null, hasta, cuando: cuando || null, n: ids.length } });
+  if (!DE_LOTE[accion]) throw new Error('Acción de lote no válida.');
+  if (accion === 'no_aplica' && (!motivo || motivo.trim().length < 4)) throw new Error('Escribe el motivo.');
+  const payload = { herramienta: 'app', tipo: 'alerta_lote', objeto: `lote:${ids.length}:${ids[0]}`, cliente_id: null, texto: texto.slice(0, 400),
+    vista_previa: { ids, accion, motivo: motivo || null, hasta, cuando: cuando || null, n: ids.length } };
   const est = DE_LOTE[accion];
-  for (const id of ids) S.local.set(id, { estado: est, quien: ctx.real.id, hora: new Date(), texto, hasta });
-  S.sel.clear();
-  avisoFlotante(`${texto}. Queda en el rastro.`);
+  const estados = new Map(ids.map(id => [id, { estado: est, quien: ctx.real.id, hora: new Date(), texto, hasta, pendiente: true }]));
+  return decisionConDeshacer594(ctx, ids.map(id => S.porId.get(id)), payload, estados, texto, true);
 }
 
 // --------------------------------------------------------------------- «Ir» al objeto (A2)
@@ -244,7 +311,8 @@ function plazoDe(a, est) {
   if (!ABIERTAS.has(est.estado)) return { texto: ESTADO[est.estado]?.texto || est.estado, color: 'gris' };
   const v = venceDe(a, est);
   if (!v) return { texto: 'Aviso sin plazo', color: 'gris' };
-  const hh = (v - S.ahora) / 36e5;
+  const hh = FECHAS_RO.horasHasta(v, S.ahora);
+  if (hh === null) return { texto: 'Plazo sin fecha contrastada', color: 'gris' };
   if (hh < 0) return { texto: `Plazo pasado hace ${horasTexto(-hh)}`, color: 'rojo' };
   if (hh < 24) return { texto: `Vence en ${horasTexto(hh)}`, color: 'ambar' };
   return { texto: `Vence el ${fDiaRO(aTexto(v))}`, color: 'gris' };
@@ -376,7 +444,8 @@ function tarjeta(a) {
           : { ...UNA, flex: '1 1 200px', font: 'var(--t-h3)', fontWeight: '700' }, title: limpiaTexto(a.motivo) }, limpiaTexto(a.motivo)),   // ≥ 200 px: si no caben los chips, bajan
         h('span', { style: { flex: 'none' } }, chipEstado(pl.color, pl.texto)),
         nivel ? h('span', { style: { flex: 'none' } }, chipEstado('rojo', `Escalada a ${corto(ctx, responsable)}`)) : null,
-        est.estado !== 'nueva' ? h('span', { style: { flex: 'none' } }, chipEstado(ESTADO[est.estado]?.color || 'gris', ESTADO[est.estado]?.texto || est.estado)) : null),
+        est.pendiente ? h('span', { style: { flex: 'none' } }, chipEstado('gris', 'Pendiente de guardar'))
+          : est.estado !== 'nueva' ? h('span', { style: { flex: 'none' } }, chipEstado(ESTADO[est.estado]?.color || 'gris', ESTADO[est.estado]?.texto || est.estado)) : null),
       h('div', { class: 'sub', style: UNA }, [`${dep.nombre} · ${a.titulo}`, cli ? cli.nombre : a.persona || null, `de ${a.dueno_id === ctx.persona.id ? 'ti' : corto(ctx, a.dueno_id)}`,
         a.desde ? `desde ${fmt.hace(a.desde) === 'hoy' ? 'hoy' : fmt.hace(a.desde)}` : null, g.texto].filter(Boolean).join(' · '))),
     Object.assign(acciones, { style: 'display: flex; flex-wrap: wrap; gap: var(--s-2); flex: 0 1 auto; margin-left: auto' }),
@@ -729,3 +798,10 @@ export default {
   puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', proyectos: 'todo', rrhh: 'todo', administracion: 'todo', tecnico_altas: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', setters: null },
   render,
 };
+
+// Las acciones SQLite declaran UTC; no confundirlas con textos de negocio Madrid.
+function instanteServidorRO(t) {
+  if (typeof t !== 'string' || !t.trim()) return null;
+  const s = t.trim();
+  return FECHAS_RO.instante(/(?:Z|[+-]\d{2}:?\d{2})$/.test(s) ? s : `${s}Z`);
+}

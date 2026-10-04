@@ -167,6 +167,40 @@ def huecos_libres(cal, desde, hasta):
             dias[k] = len((v or {}).get('slots', []))
     return dias
 
+def huecos_detalle(cal, desde, hasta):
+    """3-oct (setters, «Agendar cita»): los huecos libres con su HORA de Madrid ({'2026-10-07': ['10:00', '10:45']}).
+    Solo lectura (GET free-slots). Los usa la pantalla del setter para proponer día y hora; la cita NO se crea desde aquí."""
+    q = urllib.parse.urlencode({'startDate': int(desde.timestamp() * 1000), 'endDate': int(hasta.timestamp() * 1000), 'timezone': 'Europe/Madrid'})
+    r = call('GET', f'/calendars/{cal}/free-slots?{q}', version='2021-04-15')
+    if 'ERR' in r: raise RuntimeError(f'huecos: {r}')
+    dias = {}
+    for k, v in r.items():
+        if not re.match(r'\d{4}-\d{2}-\d{2}$', k): continue
+        horas = []
+        for sl in (v or {}).get('slots', []):
+            try:
+                t = dt.datetime.fromisoformat(str(sl).replace('Z', '+00:00'))
+                t = t.astimezone(MAD) if t.tzinfo else t.replace(tzinfo=MAD)
+                if t > AHORA + dt.timedelta(minutes=30): horas.append(t.strftime('%H:%M'))
+            except ValueError:
+                continue
+        if horas: dias[k] = sorted(set(horas))
+    return dias
+
+def huecos_setters():
+    """Bloque «huecos» de setters.json: calendario de 45 min (el de Tomás), próximos 14 días, horas de Madrid."""
+    return {'calendario': 'Reunión de 45 min', 'calendario_id': CAL45, 'con': 'Tomás', 'zona': 'Europe/Madrid', 'duracion_min': 45,
+            'leido': iso(AHORA), 'dias': huecos_detalle(CAL45, AHORA, AHORA + dt.timedelta(days=14))}
+
+if '--solo-huecos' in ARGS:
+    # Refresco rápido (cada hora si se quiere): SOLO el bloque «huecos» de setters.json, sin tocar leads ni citas.
+    ruta_s = os.path.join(SALIDA, 'setters.json')
+    d_s = json.load(open(ruta_s, encoding='utf-8'))
+    d_s['huecos'] = huecos_setters()
+    guardar('setters.json', d_s)
+    print(json.dumps({'huecos': {k: len(v) for k, v in d_s['huecos']['dias'].items()}}, ensure_ascii=False))
+    sys.exit(0)
+
 # ------------------------------------------------------------------ lectura
 print(f'E6 · generando datos de ventas de RO · {AHORA:%Y-%m-%d %H:%M} (Madrid) · solo lectura')
 ghl_ok = True
@@ -328,6 +362,7 @@ if ghl_ok:
             'segunda_vence': iso(vence) if lista == 'segunda' else None, 'conversaciones': len(conv),
             'nombre_m': mascara(nombre_de(c)), 'despacho_m': mascara(c.get('companyName') or ''), 'tel_m': mascara_tel(tel),
             'aviso_tel': aviso, 'sin_tel': not tel, 'tiene_correo': bool(c.get('email')), 'ghl': ghl_url(LOC, cid),
+            'zona': c.get('timezone') or None,   # 3-oct: zona horaria de la ficha (para «hora del lead»); sin ella, España
         }
         setters_out['leads'].append(lead)
         privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', **tel_priv(c), 'correo': c.get('email') or ''}
@@ -350,7 +385,8 @@ if ghl_ok:
                                      'dia': 'hoy' if t.date() == HOY else ('mañana' if t.date() == HOY + dt.timedelta(days=1) else DIAS_ES[t.weekday()]), 'estado_ghl': e.get('appointmentStatus'),
                                      'confirmada_tel': bool(conf), 'llamadas': len(llamadas_a(num, reservada)),
                                      'nombre_m': mascara(nombre_de(c)), 'despacho_m': mascara(c.get('companyName') or ''),
-                                     'tel_m': mascara_tel(c.get('phone')), 'sin_tel': not c.get('phone'), 'tiene_correo': bool(c.get('email')), 'ghl': ghl_url(LOC, cid)})
+                                     'tel_m': mascara_tel(c.get('phone')), 'sin_tel': not c.get('phone'), 'tiene_correo': bool(c.get('email')), 'ghl': ghl_url(LOC, cid),
+                                     'zona': c.get('timezone') or None})
         privados[f['setter']][cid] = {'nombre': nombre_de(c), 'despacho': c.get('companyName') or '', **tel_priv(c), 'correo': c.get('email') or ''}
 
     # citas pasadas sin resultado (7 días): GHL no marca la cita y la tarjeta sigue en «Cita agendada» o no hay tarjeta
@@ -561,6 +597,10 @@ if ghl_ok:
         fuente('GoHighLevel · huecos libres', 'ok', '45 min, próximos 14 días')
     except Exception as e:
         fuente('GoHighLevel · huecos libres', 'error', str(e)[:200])
+    try:
+        setters_out['huecos'] = huecos_setters()   # 3-oct: «Agendar cita» del setter (horas libres del calendario de 45 min)
+    except Exception as e:
+        setters_out['huecos'] = {'calendario': 'Reunión de 45 min', 'calendario_id': CAL45, 'dias': {}, 'error': str(e)[:200]}
 ventas['objetivo_firmados_mes'] = OBJETIVO_FIRMADOS_OCT
 ventas['enlaces'] = setters_out.get('enlaces', {})
 ventas['avisos'].append('Zoho Sign sin leer desde la app: los contratos salen de la columna «Contrato enviado» de GHL.')

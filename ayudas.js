@@ -68,7 +68,8 @@ export async function contar() {
     trabajos.push(A.api('modulo/decisiones/reloj').then(r => { C.decisiones = LM.decisionesMias(ctx, D({ 'decisiones/reloj': r })).length; }).catch(() => {}));
   }
   if (veo('produccion')) trabajos.push(A.api('contadores').then(r => { if (typeof r.produccion === 'number') C.produccion = r.produccion; }).catch(() => {}));
-  if (veo('chat-equipo')) trabajos.push(A.api('canales/campana').then(r => { C['chat-equipo'] = r.menciones || 0; }).catch(() => {}));
+  // 3-oct: el número del chat en el menú = menciones + mensajes directos sin leer (peticiones de ayuda incluidas).
+  if (veo('chat-equipo')) trabajos.push(A.api('canales/campana').then(r => { C['chat-equipo'] = (r.menciones || 0) + (r.directos || 0); }).catch(() => {}));
   await Promise.all(trabajos);
   return C;
 }
@@ -156,7 +157,7 @@ function cargarIndice() {
     PAL.cargando = Promise.all([A.api('buscar/indice'), correosVivos()]).then(([r, vivos]) => {
       if (quien !== `${A.estado.real.id}|${A.estado.persona.id}`) return [];
       PAL.vivos = vivos;
-      PAL.indice = (r.filas || []).map(x => ({ ...x, ir: rutaExacta(x), _n: normal(`${x.t} ${x.s || ''} ${x.k || ''}`), _t: normal(x.t) }));
+      PAL.indice = (r.filas || []).map(x => ({ ...x, ir: rutaExacta(x), _n: normal(`${x.t || ''} ${x.s || ''} ${x.k || ''} ${x.id || ''} ${x.alias || ''}`), _t: normal(x.t) }));
       return PAL.indice;
     }).catch(() => { PAL.cargando = null; return []; });
   }
@@ -170,7 +171,10 @@ function correosVivos() {
   if (!veo('bandeja')) return Promise.resolve(null);
   return Promise.all([A.api('modulo/bandeja/bandeja'), A.api('acciones?modulo=bandeja').catch(() => ({ acciones: [] }))])
     .then(([bj, acc]) => {
-      const hechos = new Set((acc?.acciones || []).filter(a => !a.modulo || a.modulo === 'bandeja').map(a => String(a.objeto)));
+      // 3-oct (F1): solo lo que SACA el correo de la Bandeja, igual que mi_dia_bloques.js (SACAN_DE_BANDEJA): una nota,
+      // una tarea, un aviso o una asignación no lo despachan.
+      const SACAN = new Set(['responder', 'cerrar', 'no_aplica', 'despachado', 'llamada_devuelta', 'esperando_cliente']);
+      const hechos = new Set((acc?.acciones || []).filter(a => (!a.modulo || a.modulo === 'bandeja') && SACAN.has(a.tipo)).map(a => String(a.objeto)));
       return new Set((bj?.correos || []).filter(x => !x.auto && !x.boletin && !x.viejo && !hechos.has(String(x.numero ?? x.id))).map(x => String(x.id)));
     }).catch(() => null);
 }
@@ -186,22 +190,22 @@ function rutaExacta(x) {
 
 function base() {
   const est = A.estado;
-  const items = A.modulosVisibles().map(m => ({ g: 'Pantallas', t: m.titulo, s: m.estado === 'hecho' ? '' : 'prevista', ir: `#/${m.id}`, ico: ICONO_MODULO[m.id] || ICONO_GRUPO[m.grupo] || 'res' }));
+  const items = A.modulosVisibles().map(m => ({ g: 'Pantallas', id: m.id, k: [m.num, ...(Array.isArray(m.aliases) ? m.aliases : [])].filter(Boolean).join(' '), t: m.titulo, s: m.estado === 'hecho' ? '' : 'prevista', ir: `#/${m.id}`, ico: ICONO_MODULO[m.id] || ICONO_GRUPO[m.grupo] || 'res' }));
   const veFicha = veo('ficha');
   const ruta = c => (veFicha ? `#/ficha/${c.id}` : `#/en-rojo/${c.id}`);
   const mis = new Set(idsMisClientes());
   for (const c of est.datos.clientes.filter(c => c.detalle)) {
-    items.push({ g: mis.has(c.id) ? 'Mis clientes' : 'Clientes', t: c.nombre, s: c.enCartera ? 'de tu cartera' : '', ir: ruta(c), cli: c, ico: 'cli' });
+    items.push({ g: mis.has(c.id) ? 'Mis clientes' : 'Clientes', id: c.id, k: c.alias || '', t: c.nombre, s: c.enCartera ? 'de tu cartera' : '', ir: ruta(c), cli: c, ico: 'cli' });
   }
   const vePersonas = veo('personas'), veAjustes = veo('ajustes');
   if (vePersonas || veAjustes) {
     for (const p of est.datos.personas || []) {
       if (p.estado && p.estado !== 'activo') continue;
-      items.push({ g: 'Personas', t: p.alias || p.nombre, s: (p.puestos || []).map(x => A.PUESTO[x]?.nombre).filter(Boolean).join(', '), k: p.nombre,
+      items.push({ g: 'Personas', t: p.alias || p.nombre, s: (p.puestos || []).map(x => A.PUESTO[x]?.nombre).filter(Boolean).join(', '), id: p.id, k: p.nombre,
         ir: vePersonas ? `#/personas/${encodeURIComponent(p.id)}` : '#/ajustes', ico: 'persona' });
     }
   }
-  return items.map(x => ({ ...x, _n: normal(`${x.t} ${x.s || ''} ${x.k || ''}`), _t: normal(x.t) }));
+  return items.map(x => ({ ...x, _n: normal(`${x.t || ''} ${x.s || ''} ${x.k || ''} ${x.id || ''} ${x.alias || ''}`), _t: normal(x.t) }));
 }
 
 /** Día laborable siguiente a las 9:00 (para «Posponer hasta…»). V2-E: con el calendario de Madrid (ctx.hoy), no la zona del Mac. */
@@ -299,7 +303,7 @@ function filtrar() {
   const q = $('#paleta-q').value.trim();
   PAL.q = q;
   const palabras = normal(q).split(/\s+/).filter(Boolean);
-  const todos = [...base(), ...(PAL.indice || [])];
+  const todos = [...base(), ...(PAL.indice || [])].filter(x => typeof x.ir === 'string' && x.ir.startsWith('#/')); 
   const clientes = A.estado.datos.clientes.filter(c => c.detalle);
   const clientesQ = ws => (ws.length ? clientes.filter(c => ws.every(w => normal(c.nombre).includes(w))) : []).slice(0, 5);
   const puntos = x => (!palabras.length ? 0 : x._t === palabras.join(' ') ? 0 : x._t.startsWith(palabras[0]) ? 1 : ` ${x._t}`.includes(` ${palabras[0]}`) ? 2 : 3);
@@ -342,7 +346,7 @@ function pintarLista() {
 }
 function marcar() {
   document.querySelectorAll('#paleta-lista li[role=option]').forEach(li => li.setAttribute('aria-selected', li.id === `pal-${PAL.sel}` ? 'true' : 'false'));
-  $('#paleta-q').setAttribute('aria-activedescendant', `pal-${PAL.sel}`);
+  $('#paleta-q').setAttribute('aria-activedescendant', PAL.lista.length ? `pal-${PAL.sel}` : '');
   document.getElementById(`pal-${PAL.sel}`)?.scrollIntoView({ block: 'nearest' });
 }
 function saltarGrupo(dir) {
@@ -370,7 +374,7 @@ export function alternarPaleta() { $('#paleta').hidden ? abrirPaleta() : cerrarP
 /** Abre lo elegido: va a la ruta exacta (la pantalla abre sola el objeto, el editor o el formulario) o hace la acción. */
 async function ir(i) {
   const it = PAL.lista[i];
-  if (!it) return;
+  if (!it || (!it.ir && typeof it.hacer !== 'function')) return;
   $('#paleta').hidden = true;
   A.apuntar({ accion: 'paleta', objeto: it.g, datos: { grupo: it.g, accion: !!it.accion, con_texto: !!PAL.q } });
   if (it.hacer) { await it.hacer(); return; }
@@ -398,7 +402,7 @@ function conectarPaleta() {
     else if (e.key === 'PageUp' || (e.key === 'Tab' && e.shiftKey)) { e.preventDefault(); if (n) saltarGrupo(-1); }
     else if ((e.key === 'Home' || e.key === 'End') && (e.ctrlKey || e.metaKey)) { e.preventDefault(); if (n) { PAL.sel = e.key === 'Home' ? 0 : n - 1; marcar(); } }
     else if (e.key === 'Enter') { e.preventDefault(); ir(PAL.sel); }
-    else if (e.key === 'Escape') { e.preventDefault(); if (q.value) { q.value = ''; filtrar(); } else cerrarPaleta(); }
+    else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cerrarPaleta(); }
   });
   $('#paleta').addEventListener('click', e => { if (e.target.id === 'paleta') cerrarPaleta(); });
 }
@@ -629,6 +633,14 @@ export function abrirOpinion() {
         prioBt('rojo', 'Rojo · no puedo trabajar'), prioBt('ambar', 'Ámbar · molesta'), prioBt('gris', 'Gris · detalle')) : null,
       miniatura,
       h('p', { class: 'opinion-meta' }, `Se guarda: la pantalla «${pantalla}» · ${est.real.alias || est.real.nombre} · ${innerWidth} px de ancho · la hora · ${frescuraTexto()}`),
+      // 3-oct · orden de escalado: si lo que necesitas es que alguien lo resuelva ya, «Pedir ayuda» lo manda a quien toca.
+      datos.tipo === 'fallo' ? h('p', { class: 'sub' }, '¿Necesitas que alguien lo resuelva ya? ',
+        h('button', { type: 'button', class: 'bt mini', on: { click: async () => {
+          const E = await import('./modulos/_escalar.js');
+          const ctxA = E.contextoActual();
+          d.cerrar();
+          E.abrirPedirAyuda({ api: A.api, soloLectura, tipo: 'sistemas', contexto: { ...ctxA, pantalla } });
+        } } }, icono('sube'), 'Pedir ayuda a quien toca')) : null,
       h('div', { class: 'fila' }, enviar, estado));
     return f;
   }

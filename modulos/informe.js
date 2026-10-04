@@ -1,3 +1,5 @@
+import {metaInforme291} from './_meta_informe_291.js';
+import { obtenerWord, presentarDescargaWord } from './_informe_word.js';
 // modulos/informe.js · M5 «Informe del cliente» (sustituto de Looker Studio) + comparador de paridad (2-oct-2026).
 // Diseño: 10_FICHAS/G4_INFORME_DEL_CLIENTE_SUSTITUTO_LOOKER.md y E9 del plan v2. Inventario: 05_INVENTARIO_LOOKER_STUDIO.md.
 // Rutas: #/informe-cliente/<cliente>/<periodo>/<comparar>   y   #/informe-cliente/paridad
@@ -21,8 +23,11 @@ import {
   grafico, rejillaTarjetas, vacioLinea, esqueleto, barraProgreso, colorCifra,
 } from '../componentes.js';
 import { panelRevisar, estadoInforme } from './informe_revisar.js';
+import { logoInforme, motivoExportacion, evidenciaEjecucion, lecturaInforme, exigirInformeVigente } from './_informe_evidencia.js';
+import { textoEstadoInforme } from './_estado_informe.js';
 import { barraAcciones } from './_trabajo.js';
 import { plegarConsejo } from './_plegar_consejo.js';
+import { usoCrm, crmMedible, textoCrm, TEXTO_SIN_CRM } from './_servicios.js';   // Tomás 3-oct: sin CRM en uso, nada de «0 citas»
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -135,7 +140,7 @@ const GLOSARIO = [
   ['Alcance y frecuencia', 'Personas distintas que han visto el anuncio y cuántas veces de media lo han visto.'],
 ];
 
-const CACHE = { periodo: new Map(), indice: new Map(), fila: new Map(), paridad: null, comun: null, acciones: null };
+const CACHE = { periodo: new Map(), indice: new Map(), fila: new Map(), paridad: new Map(), comun: new Map(), acciones: new Map() };
 // Nombres siempre desde personas.json (ctx.nombre); si la persona vista no tiene esa ficha, el alias de reserva.
 const RESERVA = { agustina: 'Agus', mili: 'Mili', tomas: 'Tomás', yessica: 'Yessica', bautista: 'Bautista' };
 let CTX = null;
@@ -246,38 +251,32 @@ const barrita = (v, max) => h('span', { class: 'fila', style: { justifyContent: 
 
 // ------------------------------------------------------------------ datos
 async function periodo(ctx, pid) {
-  if (!CACHE.periodo.has(pid)) CACHE.periodo.set(pid, ctx.datosModulo(`informe/p_${pid}`));
-  return CACHE.periodo.get(pid);
+  return lecturaInforme(CACHE.periodo, `${yoDe(ctx)}|${pid}`, () => ctx.datosModulo(`informe/p_${pid}`));
 }
-// Auditoría 37 (causa 5): para abrir UN cliente no se baja el periodo entero (68 clientes, 1,7 MB): un índice ligero
-// (i_<periodo>: qué fuentes trae cada cliente) y la fila de ese cliente (c_<periodo>/<cliente>), las dos recortadas por
-// servir.py igual que p_<periodo> (fuentes_informe/partir_informe.py). Si falta una pieza, se usa el periodo entero.
-const yoDe = ctx => ctx.persona?.id || '';
+const yoDe = ctx => JSON.stringify([ctx.real?.id || '', ctx.persona?.id || '', !!ctx.soloLectura, !!ctx.servidor]);
+const cacheDe = (ctx, nombre, cargar) => lecturaInforme(CACHE[nombre], yoDe(ctx), cargar);
 const NOTA_FUENTES = ['ga4', 'gsc', 'meta', 'seranking', 'snov', 'google_ads', 'embudo'];
 async function indice(ctx, pid) {
-  const k = `${yoDe(ctx)}|${pid}`;
-  if (!CACHE.indice.has(k)) {
-    CACHE.indice.set(k, ctx.datosModulo(`informe/i_${pid}`).catch(async () => {
-      const d = await periodo(ctx, pid);
-      return { ...d, filas: (d.filas || []).map(f => ({ cliente_id: f.cliente_id, con: NOTA_FUENTES.filter(x => f[x]) })) };
-    }));
-  }
-  return CACHE.indice.get(k);
+  return lecturaInforme(CACHE.indice, `${yoDe(ctx)}|${pid}`, () => ctx.datosModulo(`informe/i_${pid}`).catch(async () => {
+    const d = await periodo(ctx, pid);
+    return d ? { ...d, filas: (d.filas || []).map(f => ({ cliente_id: f.cliente_id, con: NOTA_FUENTES.filter(x => f[x]) })) } : null;
+  }));
 }
 export async function filaCliente(ctx, pid, cid) {
-  const k = `${yoDe(ctx)}|${pid}|${cid}`;
-  if (!CACHE.fila.has(k)) {
-    CACHE.fila.set(k, ctx.datosModulo(`informe/c_${pid}/${encodeURIComponent(cid)}`)
-      .then(d => (d.filas || []).find(x => x.cliente_id === cid) || null)
-      .catch(async () => ((await periodo(ctx, pid)).filas || []).find(x => x.cliente_id === cid) || null));
-  }
-  return CACHE.fila.get(k);
+  return lecturaInforme(CACHE.fila, `${yoDe(ctx)}|${pid}|${cid}`, () => ctx.datosModulo(`informe/c_${pid}/${encodeURIComponent(cid)}`)
+    .then(d => (d?.filas || []).find(x => x.cliente_id === cid) || null)
+    .catch(async () => ((await periodo(ctx, pid))?.filas || []).find(x => x.cliente_id === cid) || null));
 }
+export function invalidarAccionesInforme(ctx) { CACHE.acciones.delete(yoDe(ctx)); }
 async function acciones(ctx, recargar) {
   if (!ctx.servidor) return [];
-  if (!CACHE.acciones || recargar) CACHE.acciones = ctx.api(`acciones?modulo=${MOD}`).then(d => d.acciones || []).catch(() => []);
+  if (recargar) invalidarAccionesInforme(ctx);
+  const pendientes = cacheDe(ctx, 'acciones', () => ctx.api(`acciones?modulo=${MOD}`).then(d => {
+    if (!d || !Array.isArray(d.acciones)) throw new Error('La lista de acciones no está disponible.');
+    return d.acciones;
+  }));
   const vis = new Set(ctx.clientesVisibles.map(c => c.id));
-  return (await CACHE.acciones).filter(a => !a.cliente_id || vis.has(a.cliente_id));
+  return (await pendientes.catch(() => [])).filter(a => !a.cliente_id || vis.has(a.cliente_id));
 }
 const vp = a => { try { return typeof a.vista_previa === 'string' ? JSON.parse(a.vista_previa) : a.vista_previa || {}; } catch { return {}; } };
 
@@ -320,7 +319,7 @@ export function avisosDe(f, P, ana) {
   const caida = (a, b, que, bloque) => { if (b > 20 && a !== null && a !== undefined && a < 0.2 * b) out.push({ color: 'ambar', tipo: 'caida', texto: `${que} cae un ${num4(100 - (100 * a) / b, 0)} % frente al periodo anterior (${fNum(a)} frente a ${fNum(b)}).`, quien: 'Dueño del bloque', bloque }); };
   caida(f.ga4?.actual?.usuarios, f.ga4?.anterior?.usuarios, 'Usuarios de la web', 'ga4');
   caida(f.gsc?.web?.actual?.clics, f.gsc?.web?.anterior?.clics, 'Clics desde Google', 'gsc');
-  caida(f.meta?.actual?.leads, f.meta?.anterior?.leads, 'Leads de Meta', 'meta');
+  if(f.meta?.actual?.leads>0&&f.meta?.anterior?.leads>0)caida(f.meta.actual.leads,f.meta.anterior.leads,'Resultados Meta · referencia','meta');
   if (f.meta?.actual && f.meta.conjuntos?.length && f.meta.actual.gasto !== undefined) {
     const s = sum(f.meta.conjuntos.map(x => x.gasto));
     if (f.meta.actual.gasto && Math.abs(s - f.meta.actual.gasto) / f.meta.actual.gasto > 0.01) out.push({ color: 'ambar', tipo: 'no_cuadra', texto: `Meta: la suma de los conjuntos (${fEur(s, 2)}) no da el total (${fEur(f.meta.actual.gasto, 2)}).`, quien: 'Trafficker', bloque: 'meta' });
@@ -355,27 +354,33 @@ export default {
   },
 
   async render(cont, ctx) {
+    if (ctx.vigente && !ctx.vigente()) return;
+    const raizCarga = h('div', { 'data-informe-carga': '' }, esqueleto({ tarjetas: 4, lineas: 4 }));
+    cont.replaceChildren(raizCarga);
+    const vigenteRender = () => raizCarga.isConnected && (!ctx.vigente || ctx.vigente());
     vigilarCortes(cont);
     CTX = ctx;
     document.getElementById('informe-estilos')?.remove();   // hoja de antes de la guía 30
-    cont.replaceChildren(esqueleto({ tarjetas: 4, lineas: 4 }));
+
     plegarConsejo(cont);   // ronda U (#1): el consejo de la carcasa, en una línea
     try {
-      CACHE.comun ??= ctx.datosModulo('informe/comun');
+      const comunPromesa = cacheDe(ctx, 'comun', () => ctx.datosModulo('informe/comun'));
       // auditoría 37: lo que no depende del periodo sale a la vez (antes: comun → paridad → periodo, en serie)
-      if (ctx.clientesVisibles.length) { CACHE.paridad ??= ctx.datosModulo('informe/paridad'); CACHE.paridad.catch(() => null); acciones(ctx); }
-      const comun = await CACHE.comun;
+      if (ctx.clientesVisibles.length) { cacheDe(ctx, 'paridad', () => ctx.datosModulo('informe/paridad')).catch(() => null); acciones(ctx); }
+      const comun = await comunPromesa;
+      if (!vigenteRender()) return;
       const [vista] = ctx.params;
       const raiz = h('div', { style: PILA(4), 'data-informe': '' });
       const tabs = h('div', { class: 'segm', role: 'group', 'aria-label': 'Vista' },
         h('button', { type: 'button', 'aria-pressed': String(vista !== 'paridad'), on: { click: () => ctx.navegar(MOD) } }, icono('grafico', { clase: 's' }), ' Informe'),
         h('button', { type: 'button', 'aria-pressed': String(vista === 'paridad'), on: { click: () => ctx.navegar(`${MOD}/paridad`) } }, icono('capas', { clase: 's' }), ' Comparación con Looker'));
       raiz.append(h('div', { class: 'no-imprimir' }, tabs));
-      cont.replaceChildren(raiz);
+      raizCarga.replaceChildren(raiz);
       if (vista === 'paridad') await pintarParidad(raiz, ctx, comun);
       else await pintarInforme(raiz, ctx, comun);
     } catch (e) {
-      cont.replaceChildren(vacio({ icono: 'alert', tono: 'aviso', titulo: 'No se ha podido cargar el informe', texto: String(e?.message || e), quien: 'Tomás' }));
+      if (!vigenteRender()) return;
+      raizCarga.replaceChildren(vacio({ icono: 'alert', tono: 'aviso', titulo: 'No se ha podido cargar el informe', texto: String(e?.message || e), quien: 'Tomás' }));
     }
   },
 };
@@ -387,12 +392,18 @@ async function pintarInforme(raiz, ctx, comun) {
     raiz.append(vacio({ icono: 'cli', titulo: 'No llevas ningún cliente con informe', texto: 'El informe sale para los clientes de tu cartera. Si falta alguno, la asignación se cambia en Ajustes.', quien: nm('mili') }));
     return;
   }
-  const par = await (CACHE.paridad ??= ctx.datosModulo('informe/paridad'));
+  const par = await cacheDe(ctx, 'paridad', () => ctx.datosModulo('informe/paridad'));
+  if (!raiz.isConnected || (ctx.vigente && !ctx.vigente())) return;
   PARIDAD_BLOQUES = Object.fromEntries((par.filas || []).map(p => [p.cliente_id, p.bloques]));
   const P0 = comun.periodos;
   const clave = `ro.informe.${ctx.persona.id}`;
   let [cid] = ctx.params;
-  const casa = periodoDelInforme(ctx.periodo, P0, comun.defecto);
+  const casa = periodoDeRuta(ctx.params, ctx.periodo, P0, comun.defecto);
+  if (!casa.pid) {
+    raiz.append(vacio({ icono: 'cal', titulo: 'Este periodo no tiene informe', texto: 'El periodo del enlace no está en los datos disponibles. Elige otro desde la barra de fechas.', quien: nm('agustina') }));
+    ctx.alCambiarPeriodo?.(() => { if (raiz.isConnected) ctx.navegar(`${MOD}/${cid || ''}`); });
+    return;
+  }
   const pid = casa.pid;
   const cmp = casa.cmp;
   if (!cid || !visibles.some(c => c.id === cid)) {
@@ -400,6 +411,7 @@ async function pintarInforme(raiz, ctx, comun) {
     const ultimoId = ses.leer(`${clave}.cliente`);
     if (visibles.some(c => c.id === ultimoId)) filaCliente(ctx, pid, ultimoId).catch(() => null);   // a la vez que el índice
     const docP = await indice(ctx, pid);
+    if (!raiz.isConnected || (ctx.vigente && !ctx.vigente())) return;
     const nota = id => { const f = (docP.filas || []).find(x => x.cliente_id === id); return f ? (f.con || []).length : 0; };
     const ord = [...visibles].sort((a, b) => (b.enCartera ? 1 : 0) - (a.enCartera ? 1 : 0) || nota(b.id) - nota(a.id));
     const ultimo = visibles.find(c => c.id === ses.leer(`${clave}.cliente`));
@@ -412,12 +424,17 @@ async function pintarInforme(raiz, ctx, comun) {
   const sel = selectorCliente({ clientes: visibles, actual: cid, etiqueta: 'Cliente del informe', alElegir: c => { estado.cid = c.id; repintar(); } });
   raiz.append(zona);
 
+  let renderActual = 0;
   async function repintar() {
+    const turno = ++renderActual;
+    const vigente = () => turno === renderActual && raiz.isConnected && (!ctx.vigente || ctx.vigente());
     ses.poner(`${clave}.cliente`, estado.cid);
-    try { const u = new globalThis.URL(location.href); u.hash = `#/${MOD}/${estado.cid}`; history.replaceState(null, '', u.toString()); } catch { /* nada */ }
+    try { const u = new globalThis.URL(location.href); u.hash = casa.explicit ? `#/${MOD}/${estado.cid}/${estado.pid}/${estado.cmp}` : `#/${MOD}/${estado.cid}`; history.replaceState(null, '', u.toString()); } catch { /* nada */ }
     rc(zona, esqueleto({ tarjetas: 4, lineas: 3 }));
     const P = P0.find(p => p.id === estado.pid);
-    const [f, acc] = await Promise.all([filaCliente(ctx, estado.pid, estado.cid), acciones(ctx)]);
+    const [f, acc, crmDoc] = await Promise.all([filaCliente(ctx, estado.pid, estado.cid), acciones(ctx),
+      ctx.veModulo?.('salud-crm') ? ctx.datosModulo('crm/crm').catch(() => null) : null]);
+    if (!vigente()) return;
     const doc = { filas: f ? [f] : [] };
     const c = visibles.find(x => x.id === estado.cid);
     ctx.titulo('Informe del cliente', P.texto);
@@ -425,8 +442,13 @@ async function pintarInforme(raiz, ctx, comun) {
       rc(zona, vacio({ icono: 'vacio', titulo: `Sin datos de ${c.nombre}`, texto: 'Este cliente no está en la capa de datos del informe.', quien: `${nm('agustina')} (emparejar sus cuentas)` }));
       return;
     }
-    pintarCliente(zona, ctx, { c, f, P, P0, cmp: estado.cmp, acc, bloques, doc, sel, casa });
+    // Tomás 3-oct: ¿usa el CRM con nosotros? (subcuenta con 5 o más contactos en su historia, regla de fuentes_crm)
+    const crmSub = (crmDoc?.subcuentas || []).find(s => s.cliente_id === c.id && s.tipo === 'cliente') || null;
+    const crm = usoCrm({ servicios: c.servicios, crmSub });
+    pintarCliente(zona, ctx, { c, f, P, P0, cmp: estado.cmp, acc, bloques, doc, sel, casa, crm });
   }
+  // Una elección nueva en la barra común sustituye el mes fijado por el enlace.
+  if (casa.explicit) ctx.alCambiarPeriodo?.(() => { if (raiz.isConnected) ctx.navegar(`${MOD}/${estado.cid}`); });
   await repintar();
 }
 
@@ -443,14 +465,22 @@ function periodoDelInforme(per, P0, defecto) {
   const mejor = [...P0].sort((a, b) => solape(b) - solape(a) || (_dia(a.hasta) - _dia(a.desde)) - (_dia(b.hasta) - _dia(b.desde)))[0];
   return { pid: solape(mejor) > 0 ? mejor.id : defecto, cmp, exacto: false, pedido: per.texto || per.nombre || per.rango || '' };
 }
+/** El mes del enlace prevalece sobre el periodo común; nunca se sustituye silenciosamente por otro. */
+export function periodoDeRuta(params, per, P0, defecto) {
+  const [, pid, comparar] = params || [];
+  if (!pid) return periodoDelInforme(per, P0, defecto);
+  if (!P0.some(p => p.id === pid)) return { pid: null, explicit: true };
+  const cmp = ['ant', 'anio', 'no'].includes(comparar) ? comparar : ({ anterior: 'ant', anio_ant: 'anio', no: 'no' })[per?.comparar] || 'ant';
+  return { pid, cmp, exacto: true, explicit: true };
+}
 /** Enlace al mismo informe con otro periodo cerrado (la barra común lo recoge del enlace: ?p=…&desde=…&hasta=…). */
-function enlacePeriodo(p, cmp, cid) {
+export function enlacePeriodo(p, cmp, cid) {
   try {
     const u = new globalThis.URL(location.href);
     if (p.id === 'u30') { u.searchParams.set('p', '30d'); u.searchParams.delete('desde'); u.searchParams.delete('hasta'); }
     else { u.searchParams.set('p', 'medida'); u.searchParams.set('desde', p.desde); u.searchParams.set('hasta', p.hasta); }
     u.searchParams.set('c', ({ ant: 'anterior', anio: 'anio_ant', no: 'no' })[cmp] || 'anterior');
-    u.hash = `#/${MOD}/${cid}`;
+    u.hash = `#/${MOD}/${cid}/${p.id}/${cmp}`;
     return u.toString();
   } catch { return null; }
 }
@@ -479,8 +509,30 @@ export function analisisDe(acc, cid, pid) {
   return { actual: actual ? { ...actual.vp, quien: actual.quien, creada: actual.creada } : null, otro, historial: mias };
 }
 
+function ambitoPdf609(ctx, cid, P) {
+  if (ctx.vigente?.() === false || ctx.veModulo?.(MOD) !== true) return null;
+  const ps = ctx.datos?.personas, cs = ctx.clientes;
+  if (!Array.isArray(ps) || !Array.isArray(cs)) return null;
+  const actores = [ctx.real, ctx.persona].map(p => {
+    const xs = ps.filter(x => x?.id === p?.id);
+    if (typeof p?.id !== 'string' || xs.length !== 1) return null;
+    const canon = xs[0];
+    if (canon.estado !== 'activo' || canon.activo === false || p.estado !== 'activo' || p.activo === false ||
+        !Array.isArray(canon.puestos) || !Array.isArray(p.puestos) || canon.puestos.some(r => typeof r !== 'string' || !r) || new Set(canon.puestos).size !== canon.puestos.length ||
+        JSON.stringify([...canon.puestos].sort()) !== JSON.stringify([...p.puestos].sort())) return null;
+    return canon;
+  });
+  const clientes = cs.filter(c => c?.id === cid);
+  if (actores.some(p => p === null) || clientes.length !== 1 || clientes[0].activo_confirmado !== true || clientes[0].activo === false || clientes[0].estado === 'baja' || ctx.ver?.({ tipo: 'cliente_detalle', cliente_id: cid })?.ok !== true) return null;
+  return JSON.stringify([actores, clientes[0], P.id, P.desde, P.hasta, ctx.params, ctx.periodo,
+    ['inversion', 'dinero_cliente', 'dinero_persona', 'contrato_cliente'].map(tipo => ctx.ver?.({ tipo, cliente_id: cid })?.ok === true)]);
+}
+
 function pintarCliente(zona, ctx, X) {
   const { c, f, P, P0, cmp, acc, bloques } = X;
+  const firmaPdf609 = ambitoPdf609(ctx, c.id, P);
+  const vigentePdf609 = () => zona.isConnected && firmaPdf609 !== null && ambitoPdf609(ctx, c.id, P) === firmaPdf609;
+  if (!vigentePdf609()) { zona.replaceChildren(); return; }
   const txt = textoComparar(P, cmp);
   const ana = analisisDe(acc, c.id, P.id);
   const av = avisosDe(f, P, ana);
@@ -500,7 +552,22 @@ function pintarCliente(zona, ctx, X) {
       title: [x.fu.nota, x.fu.hora ? `Último dato: ${fLocal(String(x.fu.hora).slice(0, 16))}` : null].filter(Boolean).join(' · ') || x.e.texto,
       on: { click: () => document.getElementById(`inf-b-${SELLO_BLOQUE[x.k]}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) } },
       chipEstado(x.e.chip, x.nom), h('span', { class: 'sub' }, x.fu.hora && !['sin_conectar', 'no_aplica'].includes(x.fu.estado) ? fLocal(String(x.fu.hora).slice(0, 16)) : x.e.texto)))));
-  const pdfBloq = bloqueaPDF(av);
+  const logoUrl = logoInforme(c);
+  let estadoLogo = logoUrl ? 'cargando' : 'ausente';
+  let estadoTrabajos609 = 'cargando', botonPdf609 = null;
+  const motivoPdf609 = () => motivoExportacion(av, estadoLogo) || (estadoTrabajos609 === 'disponible' ? null : estadoTrabajos609 === 'cargando' ? 'Espera a que se cargue el trabajo documentado del periodo antes de descargar el PDF.' : 'No se pudo acreditar la lectura del trabajo del periodo. Vuelve a abrir el informe antes de descargar el PDF.');
+  const notaLogo = h('p', { class: 'sub no-imprimir', role: 'status' });
+  const actualizarLogo = () => {
+    if (!vigentePdf609()) { zona.replaceChildren(); return; }
+    const motivo = motivoPdf609();
+    zona.setAttribute('data-export-bloqueada', motivo ? 'si' : 'no');
+    notaLogo.textContent = motivo || 'Logo del cliente y lectura del trabajo verificados. La cobertura se indica en el informe.';
+    if (botonPdf609) { botonPdf609.disabled = !!motivo; botonPdf609.title = motivo || 'PDF con logo del cliente y trabajo documentado; conserva la nota de cobertura.'; }
+  };
+  const imagenLogo = logoUrl ? h('img', { src: logoUrl, alt: `Logo de ${c.nombre}`, loading: 'eager', style: { maxWidth: '180px', maxHeight: '70px', objectFit: 'contain' }, on: { load: () => { estadoLogo = imagenLogo.naturalWidth > 0 ? 'cargado' : 'error'; actualizarLogo(); }, error: () => { estadoLogo = 'error'; actualizarLogo(); } } }) : null;
+  const cabCliente = soloPapel(h('section', { style: SIN_CORTE }, imagenLogo, h('b', {}, c.nombre)));
+  const bloqueoPapel = soloPapel(h('p', { 'data-export-alerta': '', role: 'alert' }, 'Exportación final bloqueada. Revisa el logo, la lectura del trabajo y los avisos de privacidad en la pantalla.'));
+  const estiloGate = h('style', {}, '@media print { [data-export-bloqueada=si] > :not([data-export-alerta]) { display:none!important } [data-export-bloqueada=no] > [data-export-alerta] { display:none!important } }');
   const otros = P0.filter(p => p.id !== P.id).map(p => { const href = enlacePeriodo(p, cmp, c.id); return href ? h('a', { href }, p.texto.replace(' 2026', '').toLowerCase()) : null; }).filter(Boolean);
   const cab = h('section', { class: 'panel no-imprimir', 'aria-label': 'Cabecera del informe' },
     h('div', { class: 'cuerpo pila' },
@@ -517,29 +584,47 @@ function pintarCliente(zona, ctx, X) {
       X.casa && !X.casa.exacto ? avisoParcial(`El informe va por periodos cerrados: enseño ${artP(P)}, el que más se parece a lo elegido arriba.`, { tipo: 'info' }) : null,
       otros.length ? h('p', { class: 'sub no-imprimir', style: { display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: '4px' } }, 'Otros periodos con informe: ', otros.flatMap((a, i) => { a.style.display = 'inline-flex'; a.style.alignItems = 'center'; a.style.minHeight = '32px'; return i ? [' · ', a] : [a]; })) : null));   // V2: zona de toque de 32 px
 
-  // I4: la cabecera del papel es la común de la carcasa (logo y nombre de RO, título, periodo y fecha de impresión): aquí
+  // 112: la cabecera común de RO se complementa con la marca real del cliente, obligatoria para exportar. Aquí
   // solo se le da el título con el cliente y las fechas. La cabecera de pantalla (selector ▾, botones, chips) no se imprime.
   const cmpTxt = cmp === 'no' ? '' : ` · frente a ${fDia((cmp === 'anio' ? P.anio_anterior : P.anterior)[0])} – ${fDia((cmp === 'anio' ? P.anio_anterior : P.anterior)[1])}`;
   ctx.titulo(`Informe de ${c.nombre}`, `${P.texto} (${fDia(P.desde)} – ${fDia(P.hasta)})${cmpTxt}`);
-  // Ronda U (#14 y #8): barra de acciones arriba y fija («Revisar y enviar» abre el panel de una pantalla con el análisis,
-  // la marca de revisado y el envío por Desk con el PDF, simulado) y, debajo, «Qué decirle al cliente este mes» en 3 líneas.
+  // Ronda U (#14 y #8): barra de acciones arriba y fija («Revisar y preparar» abre el panel de una pantalla con el análisis,
+  // la marca de revisado y el borrador guardado en la app) y, debajo, «Qué decirle al cliente este mes» en 3 líneas.
   // El informe que se manda es el del último MES cerrado (aunque arriba se miren los últimos 30 días).
   const Pmes = /^\d{4}-\d{2}$/.test(P.id) ? P : (P0.find(p => /^\d{4}-\d{2}$/.test(p.id)) || P);
   const est = estadoInforme(acc, c.id, Pmes.id);
   const zonaRev = h('div', { class: 'no-imprimir' });
+  let turnoRevision = 0;
   const abrirRev = async () => {
+    if (!zona.isConnected || (ctx.vigente && !ctx.vigente())) return;
+    const turno = ++turnoRevision;
     const ant = acc.filter(a => a.herramienta === 'desk' && a.tipo === 'correo' && a.cliente_id === c.id).sort((a, b) => b.id - a.id)[0];
-    zonaRev.replaceChildren(await panelRevisar(ctx, { c, pid: Pmes.id, ticketAnterior: ant?.objeto && /^RO-\d+$/.test(ant.objeto) ? ant.objeto : (f.informe_anterior_ticket || null) },
-      { alCerrar: () => zonaRev.replaceChildren(), alCambio: () => { CACHE.acciones = null; } }));
+    const panel = await panelRevisar(ctx, { c, pid: Pmes.id, ticketAnterior: ant?.objeto && /^RO-\d+$/.test(ant.objeto) ? ant.objeto : (f.informe_anterior_ticket || null) },
+      { alCerrar: () => { turnoRevision += 1; zonaRev.replaceChildren(); }, alCambio: () => invalidarAccionesInforme(ctx) });
+    if (turno !== turnoRevision || !zona.isConnected || (ctx.vigente && !ctx.vigente())) return;
+    zonaRev.replaceChildren(panel);
   };
   const puedeEnviar = ctx.ver({ tipo: 'responder_cliente', cliente_id: c.id }).ok && !ctx.soloLectura;
+  const zonaWord=h('div',{class:'no-imprimir',role:'status','aria-live':'polite'});
+  let retirarWord=null;
   const barra = barraAcciones({
     titulo: `Informe de ${c.nombre}`,
-    sub: `Informe de ${Pmes.texto.replace(/ \d{4}$/, '').toLowerCase()} · ${est.enviado ? `enviado (simulado) el ${fDia(String(est.enviado.creada).slice(0, 10))}` : est.revisado ? `revisado por ${alias(ctx, est.revisado.quien)}` : 'sin revisar'}`,
+    sub: `Informe de ${Pmes.texto.replace(/ \d{4}$/, '').toLowerCase()} · ${textoEstadoInforme(est) || (est.revisado ? `revisado por ${alias(ctx, est.revisado.quien)}` : 'sin revisar')}`,
     acciones: [
-      puedeEnviar && !est.enviado ? h('button', { type: 'button', class: 'bt pri', on: { click: abrirRev } }, icono('send'), 'Revisar y enviar') : null,
-      h('button', { type: 'button', class: `bt${puedeEnviar && !est.enviado ? '' : ' pri'}`, 'aria-disabled': pdfBloq ? 'true' : null, title: pdfBloq ? 'Bloqueado: hay un aviso rojo (cuenta de otro cliente o datos de leads)' : 'Imprimir o guardar como PDF (el mismo que se adjunta al enviar)',
-        on: { click: () => { if (pdfBloq) { avisoFlotante('PDF bloqueado: arregla antes el aviso rojo', { icono: 'alert' }); return; } ctx.rastro({ accion: 'descargar_pdf', objeto: `${c.id}/${P.id}` }); window.print(); } } }, icono('descarga'), 'Descargar PDF'),
+      puedeEnviar && !est.enviado ? h('button', { type: 'button', class: 'bt pri', on: { click: abrirRev } }, icono('send'), 'Revisar y preparar') : null,
+      botonPdf609 = h('button', { type: 'button', class: `bt${puedeEnviar && !est.enviado ? '' : ' pri'}`, disabled: true, title: 'El PDF final exige logo cargado y lectura del trabajo del periodo terminada',
+        on: { click: () => { if (!vigentePdf609()) { zona.replaceChildren(); return; } const motivo = motivoPdf609(); if (motivo) { avisoFlotante(motivo, { icono: 'alert' }); return; } ctx.rastro({ accion: 'descargar_pdf', objeto: `${c.id}/${P.id}` }); if (!vigentePdf609()) { zona.replaceChildren(); return; } window.print(); } } }, icono('descarga'), 'Descargar PDF'),
+      ctx.servidor && !ctx.pilotoLectura ? h('button', {type:'button',class:'bt',title:'Word con logo del cliente, análisis guardado, indicadores seleccionados y trabajo documentado. No incluye todos los gráficos y comparaciones del PDF.',on:{click:async e=>{
+        if(!zona.isConnected || (ctx.vigente && !ctx.vigente())) return;
+        const motivo=motivoExportacion(av,estadoLogo);if(motivo){avisoFlotante(motivo,{icono:'alert'});return;}
+        const boton=e.currentTarget;boton.disabled=true;
+        try{
+          const blob=await obtenerWord(ctx,c.id,P.id,zona);
+          if(!zona.isConnected || (ctx.vigente && !ctx.vigente())) return;
+          retirarWord?.();retirarWord=presentarDescargaWord(ctx,c.id,P.id,zonaWord,blob);
+        }catch(err){if(zona.isConnected && (!ctx.vigente || ctx.vigente())) avisoFlotante(err.message || 'No se pudo preparar el Word.',{icono:'alert'});}
+        finally{if(zona.isConnected && (!ctx.vigente || ctx.vigente())) boton.disabled=false;}
+      }}},icono('descarga'),'Preparar Word · resumen y tareas') : null,
     ],
   });
   barra.classList.add('no-imprimir');
@@ -550,8 +635,25 @@ function pintarCliente(zona, ctx, X) {
       h('div', { class: 'fila', style: { justifyContent: 'space-between' } }, h('span', { class: 'titulo-seccion' }, `Qué decirle al cliente ${enP(P)}`),
         h('span', { class: 'sub' }, ana.actual ? `Del análisis de ${alias(ctx, ana.actual.quien)}` : 'Propuesta con las cifras (sin análisis escrito todavía)')),
       lineas.length ? h('ul', { style: { margin: '0', paddingLeft: 'var(--s-5)', display: 'grid', gap: 'var(--s-1)' } }, lineas.map(t => h('li', { style: { maxWidth: '90ch' } }, t)))
-        : vacioLinea('Sin cifras para proponer: escribe el análisis con «Revisar y enviar».', { icono: 'editar' })));
-  rc(zona, barra, zonaRev, decir, cab);
+        : vacioLinea('Sin cifras para proponer: escribe el análisis con «Revisar y preparar».', { icono: 'editar' })));
+  rc(zona, estiloGate, bloqueoPapel, cabCliente, barra, notaLogo, zonaWord, zonaRev, decir, cab);
+  actualizarLogo();
+  if (imagenLogo?.complete) { estadoLogo = imagenLogo.naturalWidth > 0 ? 'cargado' : 'error'; actualizarLogo(); }
+  const trabajos = h('section', { class: 'panel', 'aria-label': 'Trabajo ejecutado documentado' }, h('div', { class: 'cuerpo pila' }, h('h2', {}, 'Trabajo ejecutado documentado'), h('p', { class: 'sub' }, 'Consultando evidencias del periodo…')));
+  zona.append(trabajos);
+  const pintarTrabajos = doc => {
+    if (!vigentePdf609()) { zona.replaceChildren(); return; }
+    if (!trabajos.isConnected) return;
+    const e = evidenciaEjecucion(doc, c.id, P);
+    estadoTrabajos609 = e.cobertura === 'sin_datos' ? 'error' : 'disponible';
+    trabajos.replaceChildren(h('div', { class: 'cuerpo pila' }, h('h2', {}, 'Trabajo ejecutado documentado'), h('p', { class: 'sub' }, e.nota),
+      e.fuente ? h('p', { class: 'sub' }, `Fuente: ${e.fuente}${e.fecha ? ` · lectura ${e.fecha}` : ''}`) : null,
+      ...e.tareas.map(t => h('div', { style: SIN_CORTE }, h('b', {}, t.nombre), h('p', { class: 'sub' }, `${t.fecha} · ${t.fuente} · ${t.tipo === 'finalizacion_flujo' ? 'Finalización de flujo registrada; aceptación no acreditada' : 'Ejecución documentada'}`), t.descripcion ? h('p', {}, t.descripcion) : null, t.url ? h('a', { href: t.url, target: '_blank', rel: 'noopener' }, 'Ver evidencia en ClickUp') : null)),
+      e.cobertura !== 'sin_datos' && !e.tareas.length ? h('p', {}, 'Esta copia no aporta tareas con evidencia válida en el periodo. Contrastar con el equipo y la fuente.') : null));
+    actualizarLogo();
+  };
+  if (ctx.servidor) ctx.api(`informes/tareas_ejecutadas?cliente_id=${encodeURIComponent(c.id)}&desde=${encodeURIComponent(P.desde)}&hasta=${encodeURIComponent(P.hasta)}`).then(pintarTrabajos).catch(() => pintarTrabajos(null));
+  else pintarTrabajos(null);
   const enBloques = av.filter(a => !a.fijo && a.bloque && bloques.has(a.bloque));
   const arriba = av.filter(a => a.fijo || !a.bloque);
   if (enBloques.length) arriba.push({ color: enBloques.some(a => a.color === 'rojo') ? 'rojo' : 'ambar', titulo: `${fmt.plural(enBloques.length, 'aviso')} en:`, texto: enBloques.map(a => BLOQUES.find(b => b.id === a.bloque)?.texto).filter((x, i, xs) => xs.indexOf(x) === i).join(' · ') + '. El detalle va dentro de cada bloque.' });
@@ -609,7 +711,7 @@ function todoACero(id, f) {
   const z = v => !n(v);
   if (id === 'ga4' && f.ga4 && (f.fuentes?.ga4?.estado === 'a_cero' || (z(f.ga4.actual?.usuarios) && z(f.ga4.actual?.conversiones)))) return 'todo a cero';
   if (id === 'gsc' && f.gsc && !f.bit24_propiedades && (f.fuentes?.gsc?.estado === 'a_cero' || (z(f.gsc.web?.actual?.clics) && z(f.gsc.web?.actual?.impresiones)))) return 'todo a cero';
-  if (id === 'meta' && f.meta && (f.fuentes?.meta?.estado === 'a_cero' || (z(f.meta.actual?.impresiones) && z(f.meta.actual?.leads)))) return 'sin anuncios en marcha';
+  if (id === 'meta' && f.meta && (f.fuentes?.meta?.estado === 'a_cero' || (z(f.meta.actual?.impresiones) && z(f.meta.actual?.leads)))) return 'sin datos de actividad acreditados';
   if (id === 'correo' && f.snov && z(f.snov.actual?.emails_sent) && z(f.snov.historico?.emails_sent)) return 'sin envíos';
   return null;
 }
@@ -662,7 +764,7 @@ const sinFuente = (fu, titulo, quien) => interno(vacioLinea([h('b', {}, titulo),
 const PINTAR = {
   // ------------------------------------------------------------- 0 · Resumen
   resumen(S) {
-    const { f, txt, ana, bloques } = S;
+    const { f, txt, ana, bloques } = S; const meta291=metaInforme291(f.meta?.actual,f.fuentes?.meta,S.P,S.ctx?.hoy,S.c);
     const t = [];
     const ir = id => () => document.getElementById(`inf-b-${id}`)?.scrollIntoView({ behavior: 'smooth' });
     const cm = (k) => (S.cmp === 'anio' ? k.anio_anterior : k.anterior);
@@ -672,10 +774,10 @@ const PINTAR = {
     const sr = resumenSR(f.seranking);
     if (sr && bloques.has('seranking')) t.push(tile({ icono: 'sube', etiqueta: 'Posición media', valor: sr.media == null ? h('small', { class: 'dim' }, 'Fuera del top 100') : fNum(sr.media, 1), comparacion: sr.mediaIni ? cmpTile(sr.media, sr.mediaIni, 'frente al 31-ago', { puestos: true }) : undefined, contexto: `${sr.top10} de ${sr.total} palabras en el top 10`, alPulsar: ir('seranking') }));
     if (f.meta?.actual && bloques.has('meta')) {
-      t.push(tile({ icono: 'target', etiqueta: 'Leads de Meta', valor: fNum(f.meta.actual.leads), comparacion: cmpTile(f.meta.actual.leads, S.cmp === 'ant' ? f.meta.anterior?.leads : null, S.cmp === 'ant' ? txt : null), alPulsar: ir('meta') }));
-      if (S.veInversion && f.meta.actual.gasto !== undefined) t.push(tile({ icono: 'euro', etiqueta: 'Coste por lead (Meta)', valor: f.meta.actual.cpl != null ? fEur(f.meta.actual.cpl, 2) : null, estado: colorCifra('coste_lead', f.meta.actual.cpl), comparacion: cmpTile(f.meta.actual.cpl, S.cmp === 'ant' ? f.meta.anterior?.cpl : null, S.cmp === 'ant' ? txt : null, { mejorSi: 'bajo' }), contexto: `${fEur(f.meta.actual.gasto)} invertidos`, alPulsar: ir('meta') }));
+      t.push(tile({icono:'target',etiqueta:meta291.etiqueta,valor:meta291.resultados===null?null:fNum(meta291.resultados),estado:'gris',contexto:meta291.detalle,alPulsar:ir('meta')}));
+      if(S.veInversion)t.push(tile({icono:'euro',etiqueta:'Coste por evento lead Meta',valor:meta291.cpl===null?null:fEur(meta291.cpl,2),estado:'gris',contexto:'Requiere evento, cuenta, periodo y moneda acreditados',alPulsar:ir('meta')}));
     }
-    if (f.embudo?.citas && bloques.has('embudo')) t.push(tile({ icono: 'cal', etiqueta: 'Citas agendadas', valor: fNum(f.embudo.citas.agendadas), contexto: `${fNum(f.embudo.citas.celebradas)} celebradas · ${fNum(f.embudo.citas.sin_estado)} sin marcar`, alPulsar: ir('embudo') }));
+    if(bloques.has('embudo')){const crm=medicionesEmbudoInforme(S);t.push(tile({icono:'cal',etiqueta:'Citas observadas CRM',valor:crm.agendadas===null?null:fNum(crm.agendadas),estado:'gris',contexto:crm.avisoCRM,alPulsar:ir('embudo')}));}
     if (f.google_ads && bloques.has('google_ads')) t.push(tile({ icono: 'megafono', etiqueta: 'Conversiones Google Ads', valor: fNum(f.google_ads.conversiones, 1), contexto: 'Muestra de septiembre (Windsor)', medible: 'medias', alPulsar: ir('google_ads') }));
     if (f.snov?.actual && bloques.has('correo')) t.push(tile({ icono: 'mail', etiqueta: 'Respuestas al correo en frío', valor: fNum(f.snov.actual.email_replies), comparacion: cmpTile(f.snov.actual.email_replies, S.cmp === 'ant' ? f.snov.anterior?.email_replies : null, S.cmp === 'ant' ? txt : null), contexto: `${fNum(f.snov.actual.emails_sent)} enviados`, alPulsar: ir('correo') }));
     const lineas3 = ana.actual ? APARTADOS.map(([k]) => ana.actual.apartados?.[k]).filter(Boolean).join(' ').split(/(?<=[.!?])\s+/).slice(0, 3).join(' ') : null;
@@ -684,7 +786,7 @@ const PINTAR = {
     const fr = [];
     if (f.gsc?.web?.actual && bloques.has('gsc')) fr.push(h('span', {}, h('b', {}, `${fNum(f.gsc.web.actual.clics)} clics`), ` desde Google${S.cmp !== 'no' ? v(f.gsc.web.actual.clics, cm(f.gsc.web)?.clics) : ''}`));
     if (f.ga4?.actual && bloques.has('ga4')) fr.push(h('span', {}, h('b', {}, `${fNum(f.ga4.actual.usuarios)} usuarios`), ` en la web${S.cmp !== 'no' ? v(f.ga4.actual.usuarios, cm(f.ga4)?.usuarios) : ''}`));
-    if (f.meta?.actual && bloques.has('meta')) fr.push(h('span', {}, h('b', {}, `${fNum(f.meta.actual.leads)} leads`), ' de Meta'));
+    if (f.meta?.actual && bloques.has('meta')) fr.push(h('span', {}, h('b', {}, `${meta291.resultados===null?'Sin dato':fNum(meta291.resultados)} ${meta291.etiqueta.toLowerCase()}`), ' de Meta'));
     const frase = fr.length ? h('p', { class: 'lead' }, `${enP(S.P).replace(' 2026', '').replace(/^e/, 'E')}, `, fr.slice(0, 3).flatMap((x, i) => (i ? [i === fr.slice(0, 3).length - 1 ? ' y ' : ', ', x] : [x])), '.') : null;
     return bloque(S, 'resumen', 'Lo que más importa del periodo, con su comparación.',
       [frase, t.length ? tiles(t.slice(0, 8)) : interno(vacioLinea('Ninguna fuente con datos para este cliente en tu vista: el chip «Datos» de arriba dice qué falta conectar.', { icono: 'res', quien: nm('agustina') })),
@@ -695,46 +797,34 @@ const PINTAR = {
 
   // ------------------------------------------------------------- 1 · Embudo hasta la venta
   embudo(S) {
-    const { f, P, veInversion } = S;
-    const m = f.meta?.actual; const e = f.embudo; const g = f.google_ads;
-    if (!m && !e && !g) return bloqueInterno(S, 'embudo', 'Gasto → leads → citas → asistidas → ventas, con el CRM del despacho (GHL).', sinFuente(f.fuentes?.ghl, 'Sin publicidad ni CRM conectados', `${nm('agustina')} (emparejar cuenta de Meta y subcuenta de GHL)`));
-    const inversion = veInversion ? (sum([m?.gasto, g?.coste]) || null) : undefined;
-    const pasos = [
-      { t: 'Inversión', ico: 'euro', v: inversion, f: v => fEur(v), sub: [m ? 'Meta' : null, g ? 'Google Ads' : null].filter(Boolean).join(' + '), dinero: true },
-      { t: 'Leads (publicidad)', ico: 'target', v: (m?.leads ?? null) !== null || g ? sum([m?.leads, g?.conversiones]) : null, sub: g ? 'Meta + conversiones de Google Ads' : 'Meta' },
-      { t: 'Leads en el CRM', ico: 'base', v: e?.leads_ghl ?? null, sub: 'Contactos nuevos en GHL' },
-      { t: 'Citas agendadas', ico: 'cal', v: e?.citas?.agendadas ?? null, sub: 'GHL' },
-      { t: 'Citas asistidas', ico: 'ok', v: e?.citas?.celebradas ?? null, sub: e?.citas ? `${fNum(e.citas.sin_estado)} sin marcar` : 'GHL' },
-      { t: 'Ventas', ico: 'crown', v: null, sub: 'El despacho aún no marca la venta en GHL' },
+    const {f,P,veInversion}=S,m=medicionesEmbudoInforme(S);
+    const pasos=[
+      {t:m.metaEtiqueta,ico:'target',v:m.resultadosMeta,sub:m.metaDetalle},
+      {t:'Conversiones de Google Ads',ico:'megafono',v:m.conversionesGoogle,sub:'Eventos atribuidos; sin unión por ID con leads Meta'},
+      {t:'Contactos nuevos observados en CRM',ico:'base',v:m.contactosCRM,sub:m.avisoCRM},
+      {t:'Citas creadas observadas en CRM',ico:'cal',v:m.agendadas,sub:'Fecha de creación; ventana CRM sin confirmar'},
+      {t:'Asistencia registrada',ico:'ok',v:m.celebradas,sub:'Fecha de cita; no es la cohorte de leads de publicidad'},
+      {t:'Ventas/cobros acreditados',ico:'crown',v:null,sub:'No instrumentados en estas fuentes'},
     ];
-    const maxV = Math.max(...pasos.filter(p => !p.dinero).map(p => p.v || 0), 1);
-    const esc = h('div', { style: PILA(3) }, pasos.map(p => h('div', { class: 'fila', style: { gap: 'var(--s-3)' } },
-      h('span', { class: 'fila', style: { flex: '1 1 168px', flexWrap: 'nowrap', fontWeight: '600' } }, h('span', { class: 'ico-c s' }, icono(p.ico)), p.t),
-      h('span', { style: { flex: '3 1 200px' } }, barraProgreso({ valor: p.dinero ? 1 : (p.v || 0), max: p.dinero ? 1 : maxV, estado: p.v === null || p.v === undefined ? null : null, etiqueta: `${p.t}: ${p.v ?? 'sin dato'}` })),
-      h('span', { style: { flex: '0 0 128px', textAlign: 'right' } }, h('b', { style: { font: 'var(--t-h2)' } }, p.v === undefined ? candado('Sin permiso') : p.v === null ? 'sin dato' : (p.f || fNum)(p.v)), h('small', { class: 'sub', style: { display: 'block', font: 'var(--t-meta)' } }, p.sub)))));
-    const citas = e?.citas?.agendadas; const asis = e?.citas?.celebradas;
-    const costes = veInversion && inversion ? tiles([
-      tile({ icono: 'euro', etiqueta: 'Coste por lead', valor: m?.leads ? fEur(inversion / sum([m?.leads, g?.conversiones]), 2) : null, estado: m?.leads ? colorCifra('coste_lead', inversion / sum([m?.leads, g?.conversiones])) : '', contexto: 'Inversión entre leads de publicidad' }),
-      tile({ icono: 'cal', etiqueta: 'Coste por cita', valor: citas ? fEur(inversion / citas, 2) : null, contexto: citas ? 'Inversión entre citas agendadas' : 'Sin citas en el periodo', estado: citas ? '' : 'gris' }),
-      tile({ icono: 'ok', etiqueta: 'Coste por cita asistida', valor: asis ? fEur(inversion / asis, 2) : null, contexto: 'Objetivo del día 0: pendiente de cargar' }),
-    ]) : null;
-    // dónde se rompe
-    const tasas = [['de lead a cita', m?.leads, citas], ['de cita a asistida', citas, asis]].filter(([, a, b]) => a && b !== null && b !== undefined).map(([t, a, b]) => [t, b / a]);
-    const peor = tasas.sort((a, b) => a[1] - b[1])[0];
-    const frase = !e ? 'Sin CRM conectado: el embudo se queda en los leads de la publicidad.' : peor ? `Donde más se pierde: ${peor[0]} (${num4(100 * peor[1], 0)} %).` : (m?.leads && !citas ? `Con ${fNum(m.leads)} leads no hay ninguna cita en el CRM: o el despacho no agenda, o no lo registra.` : null);
-    const sinMarcar = e?.citas?.con_fecha_en_ventana ? pct(e.citas.sin_estado, e.citas.con_fecha_en_ventana) : null;
-    return bloque(S, 'embudo', 'Cuántos clientes trae la publicidad y a qué precio, hasta la cita en el CRM del despacho.', [
-      P.id !== '2026-09' && (m || g) ? avisoParcial('Las citas del CRM salen solo del mes anterior (septiembre) por ahora: aquí se ve la parte de publicidad de este periodo.', { tipo: 'info' }) : null,
-      esc,
-      frase ? h('p', { style: { fontWeight: '600' } }, icono('flecha', { clase: 's' }), ' ', frase) : null,
-      sinMarcar !== null ? h('p', { class: 'sub' }, `${num4(sinMarcar, 0)} % de las citas con fecha están sin marcar: la asistencia puede estar inflada o desinflada.`) : null,
-      e?.funnel_90d ? h('div', {}, h('p', SUB, icono('base', { clase: 's' }), 'Oportunidades del CRM (últimos 90 días)'),
-        barras(Object.entries(e.funnel_90d).map(([k, v]) => ({ t: k[0].toUpperCase() + k.slice(1), v })), { fuente: 'GoHighLevel' })) : null,
-      e?.estancados_72h ? h('p', { class: 'sub' }, `Leads sin tocar más de 72 h: ${fNum(e.estancados_72h)} (${num4(e.pct_estancado, 0)} %). El que más lleva: ${num4(e.horas_max_parado / 24, 0)} días.`) : null,
-      costes,
-    ], { frescor: fresco(S.f.fuentes?.ghl, 'GHL'), acciones: h('span', { class: 'fila' }, atajo(URL.embudo(f), 'Abrir en GHL'), atajo(URL.meta(f), 'Abrir en Meta')) });
+    const max=Math.max(1,...pasos.map(p=>p.v??0));
+    const esc=h('div',{style:PILA(3)},pasos.map(p=>h('div',{class:'fila',style:{gap:'var(--s-3)'}},
+      h('b',{style:{flex:'1 1 168px'}},p.t),
+      h('span',{style:{flex:'3 1 200px'}},p.v===null?vacioLinea('Sin dato confirmado',{icono:'info'}):barraProgreso({valor:p.v,max,estado:'gris',etiqueta:`${p.t}: ${p.v}`})),
+      h('span',{style:{flex:'0 0 128px',textAlign:'right'}},p.v===null?'Sin dato':fNum(p.v),h('small',{class:'sub'},p.sub)))));
+    const costes=veInversion?tiles([
+      tile({icono:'euro',etiqueta:'Coste por evento lead · sólo Meta',valor:m.cplMeta===null?null:fEur(m.cplMeta,2),estado:'gris',contexto:'Sólo con evento, cuenta, ventana y moneda acreditados; no cualificados RO'}),
+      tile({icono:'megafono',etiqueta:'Coste por conversión · sólo Google Ads',valor:m.cpaGoogle===null?null:fEur(m.cpaGoogle,2),estado:'gris',contexto:'Conversión atribuida por Google; no acredita persona única ni lead cualificado'}),
+    ]):null;
+    return bloque(S,'embudo','Recuentos por fuente; no son una cohorte atribuida de captación a venta.',[
+      esc,h('p',SUB,m.avisoCRM),
+      h('p',SUB,'Sin unión por lead/oportunidad y sin historial no se calcula dónde se pierden clientes. Los contactos y las conversiones de distintas herramientas pueden solaparse; no se suman.'),
+      m.sinEstado===null?vacioLinea('Citas sin resultado: Sin dato; no se afirma que estén todas marcadas.',{icono:'info'}):h('p',SUB,`${fNum(m.sinEstado)} citas sin resultado observado; cobertura parcial.`),
+      m.etapas.length?h('div',{},h('p',SUB,'Stock de oportunidades por etapa · ventana 90 días de la fuente, no ventas ni conversiones del periodo del informe'),
+        barras(m.etapas.map(([k,v])=>({t:k[0].toUpperCase()+k.slice(1),v})),{fuente:'GoHighLevel · cobertura parcial'})):null,
+      m.parados===null?null:h('p',SUB,`${fNum(m.parados)} oportunidades sin avance de etapa observado >72 h; no acredita ausencia de contacto o trabajo.`),
+      h('p',SUB,`Lecturas: Meta ${m.fechaMeta||'sin fecha válida'} · Google Ads ${m.fechaGoogle||'sin fecha válida'} · CRM ${m.fechaCRM||'sin fecha válida'}. Periodo de CRM/stock sin vinculación acreditada a ${P.texto}.`),costes,
+    ],{frescor:fresco(f.fuentes?.ghl,'GHL'),acciones:h('span',{class:'fila'},atajo(URL.embudo(f),'Abrir en GHL'),atajo(URL.meta(f),'Abrir en Meta'))});
   },
-
   // ------------------------------------------------------------- 2 · GA4
   ga4(S) {
     const { f, txt } = S; const g = f.ga4; const fu = f.fuentes?.ga4;
@@ -906,32 +996,28 @@ const PINTAR = {
   meta(S) {
     const { f, txt, veInversion } = S; const m = f.meta; const fu = f.fuentes?.meta;
     if (!m) return bloqueInterno(S, 'meta', 'Anuncios en Facebook e Instagram (Meta Ads).', sinFuente(fu, 'Sin cuenta de Meta para este cliente', `${nm('agustina')} (emparejar la cuenta publicitaria)`));
-    const a = m.actual || {}; const b = S.cmp === 'ant' ? m.anterior : null; const t2 = S.cmp === 'ant' ? txt : null;
-    // V2 (barrido v1): todo a cero → una línea llana, no seis tarjetas con «—»
-    const todoCero = ['impresiones', 'alcance', 'leads', 'gasto'].every(k => !a[k]);
-    const cards = todoCero ? vacioLinea(`Sin actividad en Meta en este periodo: 0 impresiones y 0 leads${veInversion ? ', 0 € gastados' : ''}.`, { icono: 'target' }) : tiles([
-      veInversion && a.gasto !== undefined ? tile({ icono: 'euro', etiqueta: 'Importe gastado', valor: fEur(a.gasto, 2), comparacion: cmpTile(a.gasto, b?.gasto, t2) }) : null,
-      tile({ icono: 'ojo', etiqueta: 'Impresiones', valor: fNum(a.impresiones), comparacion: cmpTile(a.impresiones, b?.impresiones, t2) }),
-      tile({ icono: 'users', etiqueta: 'Alcance', valor: fNum(a.alcance), comparacion: cmpTile(a.alcance, b?.alcance, t2) }),
-      tile({ icono: 'recargar', etiqueta: 'Frecuencia', valor: fNum(a.frecuencia, 2), comparacion: cmpTile(a.frecuencia, b?.frecuencia, t2, { mejorSi: 'bajo' }) }),
-      tile({ icono: 'target', etiqueta: 'Leads', valor: fNum(a.leads), comparacion: cmpTile(a.leads, b?.leads, t2) }),
-      veInversion && a.gasto !== undefined ? tile({ icono: 'euro', etiqueta: 'Coste por lead', valor: a.cpl != null ? fEur(a.cpl, 2) : null, estado: colorCifra('coste_lead', a.cpl), comparacion: cmpTile(a.cpl, b?.cpl, t2, { mejorSi: 'bajo' }), contexto: 'Objetivo del día 0: pendiente' }) : null,
+    const a = m.actual || {}; const b = S.cmp === 'ant' ? m.anterior : null; const t2 = S.cmp === 'ant' ? txt : null; const mm=metaInforme291(a,fu,S.P,S.ctx?.hoy,S.c);
+    const cards=tiles([
+      veInversion?tile({icono:'euro',etiqueta:'Importe gastado · copia',valor:mm.campo('gasto')===null?null:fEur(mm.campo('gasto'),2),estado:'gris'}):null,
+      ...[['impresiones','ojo','Impresiones'],['alcance','users','Alcance'],['frecuencia','recargar','Frecuencia']].map(([k,ico,t])=>tile({icono:ico,etiqueta:t,valor:mm.campo(k)===null?null:fNum(mm.campo(k)),estado:'gris'})),
+      tile({icono:'target',etiqueta:mm.etiqueta,valor:mm.resultados===null?null:fNum(mm.resultados),estado:'gris',contexto:mm.detalle}),
+      veInversion?tile({icono:'euro',etiqueta:'Coste por evento lead',valor:mm.cpl===null?null:fEur(mm.cpl,2),estado:'gris',contexto:'Requiere cuenta, evento, moneda y periodo compatibles'}):null
     ].filter(Boolean));
     const ser = m.serie || [];
-    const graf = lineas({ x: ser.map(r => r[0]), barras: { nombre: 'Leads por día (barras)', y: ser.map(r => r[2]) }, series: veInversion && ser.length && ser[0][1] !== undefined && ser.some(r => r[1] != null) ? [{ nombre: 'Gasto por día', y: ser.map(r => r[1]) }] : [], formato: v => fEur(v), leyenda: true });
+    const graf = lineas({ x: ser.map(r => r[0]), barras: { nombre: 'Resultados Meta por día · referencia (barras)', y: ser.map(r => Number.isSafeInteger(r[2])&&r[2]>0?r[2]:null) }, series: veInversion && ser.length && ser[0][1] !== undefined && ser.some(r => r[1] != null) ? [{ nombre: 'Gasto por día', y: ser.map(r => typeof r[1]==='number'&&Number.isFinite(r[1])&&r[1]>0?r[1]:null) }] : [], formato: v => fEur(v), leyenda: true });
     const filas = (m.conjuntos || []);
-    const tabla = tablaGrande({ titulo: 'campañas', fuente: 'Meta', buscar: r => `${r.campana} ${r.conjunto}`, filas, vacio: { icono: 'target', titulo: 'Sin campañas con actividad en el periodo' }, columnas: [
+    const tabla = tablaGrande({ titulo: 'campañas', fuente: 'Meta', buscar: r => `${r.campana} ${r.conjunto}`, filas, vacio: { icono: 'target', titulo: 'Sin filas de campañas en esta copia' }, columnas: [
       { titulo: 'Campaña', principal: true, celda: r => r.campana }, { titulo: 'Conjunto', celda: r => r.conjunto },
       ...(veInversion ? [{ titulo: 'Gasto', num: true, celda: r => (r.gasto !== undefined ? fEur(r.gasto, 2) : '—') }] : []),
-      { titulo: 'Leads', num: true, celda: r => fNum(r.leads) },
-      ...(veInversion ? [{ titulo: 'Coste por lead', num: true, celda: r => (r.leads && r.gasto !== undefined ? fEur(r.gasto / r.leads, 2) : '—') }] : []),
+      { titulo: 'Resultados Meta · referencia', num: true, celda: r => Number.isSafeInteger(r.leads)&&r.leads>0?fNum(r.leads):'—' },
+      ...(veInversion ? [{ titulo: 'Coste por evento lead', num: true, celda: r => 'Sin dato acreditado' }] : []),
       { titulo: 'Frecuencia', num: true, celda: r => fNum(r.frecuencia, 2) }] });
     return bloque(S, 'meta', `Anuncios en Facebook e Instagram (Meta Ads)${fu?.cuenta?.nombre ? `, cuenta «${fu.cuenta.nombre}»` : ''}.`, [
       S.cmp === 'anio' ? avisoParcial('Meta solo trae la comparación con el periodo anterior.', { tipo: 'info' }) : null,
       !veInversion ? interno(avisoParcial('Tu puesto no ve la inversión: gasto y coste por lead quedan fuera (los quita el servidor).', { tipo: 'info' })) : null,
-      cards, h('div', {}, h('p', SUB, icono('grafico', { clase: 's' }), 'Leads por día'), graf),
+      cards, h('div', {}, h('p', SUB, icono('grafico', { clase: 's' }), 'Resultados Meta por día · referencia'), graf),
       h('div', {}, h('p', SUB, icono('capas', { clase: 's' }), 'Campañas y conjuntos'), tabla),
-      interno(h('p', { class: 'sub' }, 'Calidad de los leads (válido, no contesta, no es cliente ideal…): sale de las etiquetas de GHL cuando la subcuenta esté emparejada.')),
+      interno(h('p', { class: 'sub' }, 'Definición del evento Meta pendiente en la copia heredada. No acredita leads cualificados, compras ni conversión CRM.')),
     ], { frescor: fresco(fu, 'Meta'), acciones: fu?.cuenta?.id ? h('a', { class: 'bt mini no-imprimir', href: `https://adsmanager.facebook.com/adsmanager/manage/campaigns?act=${String(fu.cuenta.id).replace('act_', '')}`, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en Meta') : null });
   },
 
@@ -1010,14 +1096,16 @@ const PINTAR = {
         h('button', { type: 'button', class: 'bt', on: { click: () => { const b = borrador(S); for (const k of Object.keys(b)) if (campos[k] && !campos[k].value.trim()) campos[k].value = b[k]; avisoFlotante('Borrador con las cifras puesto en los huecos vacíos'); } } }, icono('spark'), 'Proponer borrador con las cifras'),
         botonConfirmar({ texto: 'Guardar y firmar', pregunta: `¿Guardar el análisis ${deP(P)} con tu firma?`, confirmar: 'Sí, guardar', soloLectura: ctx.soloLectura,
           alConfirmar: async () => {
+            exigirInformeVigente(ctx, caja);
             const apartados = Object.fromEntries(Object.entries(campos).map(([k, el]) => [k, el.value.trim()]).filter(([, v]) => v));
             const todo = Object.values(apartados).join(' ');
             if (!todo) throw new Error('Está vacío.');
             if (RE_LEAD.test(todo)) { err.textContent = 'Lleva un correo o un teléfono. Los datos de leads no van en el informe: quítalos.'; throw new Error('datos de leads en el texto'); }
             await ctx.accion({ herramienta: 'app', tipo: 'analisis_mes', objeto: `informe/${c.id}/${P.id}`, cliente_id: c.id, texto: todo.slice(0, 2000),
               vista_previa: { periodo: P.id, periodo_texto: P.texto, apartados, que_hace: 'Guarda el análisis del mes en la base local con autor y fecha. No se envía a nadie.' } });
-            CACHE.acciones = null;
-            setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')), 700);
+            invalidarAccionesInforme(ctx);
+            exigirInformeVigente(ctx, caja);
+            setTimeout(() => { if (caja.isConnected && (!ctx.vigente || ctx.vigente())) window.dispatchEvent(new HashChangeEvent('hashchange')); }, 700);
             return 'Guardado con tu firma (simulado en la base local)';
           } })));
       caja.append(h('details', { class: 'no-imprimir', open: !ana.actual || null }, h('summary', { class: 'bt', style: { width: 'fit-content', listStyle: 'none', cursor: 'pointer', marginBottom: 'var(--s-3)' } }, icono('editar'), ana.actual ? 'Escribir una versión nueva' : 'Escribir el análisis'), form));
@@ -1055,6 +1143,29 @@ function bit24(props) {
     h('p', { class: 'sub' }, 'Su Looker enseña 1 clic y 43 impresiones en septiembre. La propiedad con más datos es casi seguro la buena: el SEO lo confirma y se cambia el emparejamiento.'));
 }
 
+export function medicionesEmbudoInforme(S) {
+  const f=S.f||{},actual=S.ctx?.hoy;
+  const numero=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0?v:null;
+  const cuenta=v=>numero(v)!==null&&Number.isSafeInteger(v)?v:null;
+  const fecha=v=>{if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?$/.test(v))return null;const dia=v.slice(0,10),d=new Date(dia+'T12:00:00Z');return Number.isFinite(+d)&&d.toISOString().slice(0,10)===dia&&Number.isFinite(Date.parse(v.length===10?v+'T12:00:00Z':v.replace(' ','T')))?dia:null;};
+  const error=x=>!!x?.error||(Array.isArray(x?.errores)&&x.errores.length>0);
+  const fuente=id=>{const x=f.fuentes?.[id],dia=fecha(x?.hora),hoy=fecha(actual);return dia&&hoy&&dia<=hoy&&['bien','a_cero'].includes(x?.estado)&&!error(x)?dia:null;};
+  const fechaMeta=fuente('meta'),fechaGoogle=fuente('google_ads'),fechaCRM=fuente('ghl');
+  const contratoNo=S.c?.servicios?.crm_ghl==='no'||S.c?.servicios?.crm_ghl===false;
+  const crmDisponible=!!fechaCRM&&!contratoNo&&!['sin_uso','sin_crm'].includes(S.crm)&&!error(f.embudo);
+  const e=crmDisponible&&!error(f.embudo)?f.embudo:null,m=!error(f.meta)?f.meta?.actual:null,g=!error(f.google_ads)?f.google_ads:null;
+  const mm=metaInforme291(m,f.fuentes?.meta,S.P,S.ctx?.hoy,S.c);
+  const leadsMeta=fechaMeta?mm.leads:null,resultadosMeta=fechaMeta?mm.resultados:null,conversionesGoogle=fechaGoogle?numero(g?.conversiones):null;
+  const gastoMeta=S.veInversion&&fechaMeta?numero(m?.gasto):null,costeGoogle=S.veInversion&&fechaGoogle?numero(g?.coste):null;
+  const citas=e?.citas,agendadas=cuenta(citas?.agendadas),celebradas=cuenta(citas?.celebradas),sinEstado=cuenta(citas?.sin_estado);
+  return {leadsMeta,resultadosMeta,metaEtiqueta:mm.etiqueta,metaDetalle:mm.detalle,conversionesGoogle,contactosCRM:cuenta(e?.leads_ghl),agendadas,celebradas,sinEstado,
+    parados:cuenta(e?.estancados_72h),etapas:['nuevo','seguimiento','cita','presupuesto','cerrado','descartado'].filter(k=>cuenta(e?.funnel_90d?.[k])!==null).map(k=>[k,e.funnel_90d[k]]),
+    fechaMeta,fechaGoogle,fechaCRM,cplMeta:S.veInversion&&fechaMeta?mm.cpl:null,
+    cpaGoogle:costeGoogle!==null&&conversionesGoogle>0?costeGoogle/conversionesGoogle:null,
+    crmDisponible,ventas:null,conversionCohorte:null,
+    avisoCRM:contratoNo?'Servicio CRM no confirmado como contratado; no se evalúa su seguimiento aquí.':!crmDisponible?'Uso, fuente o cobertura CRM por confirmar. Pocos contactos observados no prueban que el despacho no use el CRM.':'CRM con cobertura parcial y ventanas de creación/cita/stock diferentes; no mide conversión atribuida ni ventas.'};
+}
+
 export function borrador(S) {
   const { f, P } = S;
   const g = f.ga4?.actual, ga = f.ga4?.anterior, s = f.gsc?.web?.actual, sa = f.gsc?.web?.anterior, m = f.meta?.actual, ma = f.meta?.anterior;
@@ -1062,14 +1173,15 @@ export function borrador(S) {
   const mes = [];
   if (g) mes.push(`La web tuvo ${fNum(g.usuarios)} usuarios (${v(g.usuarios, ga?.usuarios)} frente al periodo anterior) y ${fNum(g.conversiones)} conversiones.`);
   if (s) mes.push(`Desde Google llegaron ${fNum(s.clics)} clics con ${fNum(s.impresiones)} impresiones (${v(s.clics, sa?.clics)}); posición media ${fNum(s.posicion, 1)}.`);
-  if (m) mes.push(`En Meta, ${fNum(m.leads)} leads${m.cpl != null ? ` a ${fEur(m.cpl, 2)} cada uno` : ''} (${v(m.leads, ma?.leads)}).`);
-  if (f.embudo?.citas) mes.push(`En el CRM, ${fNum(f.embudo.citas.agendadas)} citas agendadas y ${fNum(f.embudo.citas.celebradas)} celebradas.`);
+  if (m) {const mm=metaInforme291(m,f.fuentes?.meta,P,S.ctx?.hoy,S.c);mes.push(`En Meta: ${mm.resultados===null?'Sin dato':fNum(mm.resultados)} ${mm.etiqueta.toLowerCase()}. ${mm.detalle}${S.veInversion&&mm.cpl!==null?' Coste por evento lead: '+fEur(mm.cpl,2)+'.':''}`);}
+  const crm=medicionesEmbudoInforme(S);
+  mes.push(crm.crmDisponible?`En la lectura CRM: ${crm.agendadas===null?'Sin dato':fNum(crm.agendadas)} citas creadas observadas y ${crm.celebradas===null?'Sin dato':fNum(crm.celebradas)} con asistencia registrada; ventanas y cobertura parcial, sin unión con leads publicitarios ni ventas acreditadas.`:crm.avisoCRM);
   const top = (f.gsc?.consultas || []).slice(0, 3).map(q => `«${q[0]}»`).join(', ');
   return {
     mes: `${P.texto}: ${mes.join(' ')}`.trim(),
     funciona: top ? `Las búsquedas que más traen: ${top}.` : '',
     no_funciona: '',
-    perdidas: f.embudo?.estancados_72h ? `${fNum(f.embudo.estancados_72h)} leads llevan más de 72 h sin tocar en el CRM.` : '',
+    perdidas:crm.crmDisponible&&crm.parados!==null?`${fNum(crm.parados)} oportunidades sin avance de etapa observado >72 h. No acredita ausencia de contacto, pérdidas de leads ni ventas; contrastar el registro.`:'',
     pasos: '',
   };
 }
@@ -1110,7 +1222,8 @@ function cifraApp(k, f) {
 
 async function pintarParidad(raiz, ctx, comun) {
   ctx.titulo('Comparación con Looker', 'Cliente a cliente: cada gráfico de su Looker, su equivalente en la app y si ya se puede archivar');
-  const [par, sep, acc] = await Promise.all([CACHE.paridad ??= ctx.datosModulo('informe/paridad'), periodo(ctx, '2026-09'), acciones(ctx)]);
+  const [par, sep, acc] = await Promise.all([cacheDe(ctx, 'paridad', () => ctx.datosModulo('informe/paridad')), periodo(ctx, '2026-09'), acciones(ctx)]);
+  if (!raiz.isConnected || (ctx.vigente && !ctx.vigente())) return;
   const porId = Object.fromEntries((sep.filas || []).map(f => [f.cliente_id, f]));
   const filas = (par.filas || []).map(p => {
     const f = porId[p.cliente_id];
@@ -1155,12 +1268,12 @@ async function pintarParidad(raiz, ctx, comun) {
   const TANDAS = { 1: 'Tanda 1 · ya (Google sin Ads)', 2: 'Tanda 2 · con Google Ads', 3: 'Tanda 3 · con outreach', 4: 'Tanda 4 · Google Ads y outreach', 5: 'Tanda 5 · casos aparte' };
   const chips = chipsFiltro({ etiqueta: 'Tanda', clave: 'informe.paridad.tanda', opciones: [{ valor: '', texto: 'Todas', cuenta: filas.length }, ...[1, 2, 3, 4, 5].map(t => ({ valor: String(t), texto: TANDAS[t], cuenta: filas.filter(r => r.tanda === t).length })).filter(o => o.cuenta)], alCambiar: v => pintar(v) });
   const pintar = t => {
-    rc(lista, ...filas.filter(r => !t || String(r.tanda) === t).sort((a, b) => a.tanda - b.tanda || a.nombre.localeCompare(b.nombre)).map(r => tarjetaParidad(r, ctx)));
+    rc(lista, ...filas.filter(r => !t || String(r.tanda) === t).sort((a, b) => a.tanda - b.tanda || a.nombre.localeCompare(b.nombre)).map(r => tarjetaParidad(r, ctx, raiz)));
   };
   raiz.append(chips, lista); pintar(chips.valor());
 }
 
-function tarjetaParidad(r, ctx) {
+function tarjetaParidad(r, ctx, raiz) {
   const cli = ctx.clientesVisibles.find(c => c.id === r.cliente_id) || { nombre: r.nombre };
   const okN = r.crit.filter(x => x.ok).length;
   return h('article', { class: 'panel', 'aria-label': `Comparación con Looker de ${r.nombre}`, style: { ...PILA(3), padding: 'var(--relleno)' } },
@@ -1191,10 +1304,12 @@ function tarjetaParidad(r, ctx) {
       pregunta: r.listos5 ? `¿Firmas que el informe de septiembre de ${r.nombre} se ha hecho desde la app y es bueno?` : `Aún faltan criterios (${5 - r.crit.slice(0, 5).filter(x => x.ok).length}). ¿Firmar igualmente?`,
       confirmar: 'Sí, firmar', soloLectura: ctx.soloLectura,
       alConfirmar: async () => {
+        exigirInformeVigente(ctx, raiz);
         await ctx.accion({ herramienta: 'app', tipo: 'paridad_comprobada', objeto: `paridad/${r.cliente_id}`, cliente_id: r.cliente_id, texto: `Mes en paralelo firmado: ${r.nombre}`,
           vista_previa: { criterios: r.crit.map(x => [x.t, x.ok]), looker: r.looker, que_hace: `Apunta la firma en la base local. Archivar su Looker lo decide ${nm('tomas')}; no se toca Looker.` } });
-        CACHE.acciones = null;
-        setTimeout(() => window.dispatchEvent(new HashChangeEvent('hashchange')), 900);
+        invalidarAccionesInforme(ctx);
+        exigirInformeVigente(ctx, raiz);
+        setTimeout(() => { if (raiz.isConnected && (!ctx.vigente || ctx.vigente())) window.dispatchEvent(new HashChangeEvent('hashchange')); }, 900);
         return `Firmado (simulado en la base local). Archivar el Looker lo decide ${nm('tomas')}.`;
       } })) : null);
 }

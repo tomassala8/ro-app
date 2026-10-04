@@ -1,8 +1,12 @@
 // app.js · carcasa de la app: identidad, «ver como», menú por puesto, router por módulos, cmd+K y rastro.
 // Los módulos no tocan nada de esto: reciben ctx en render(contenedor, ctx). Contrato en LEEME.md.
 
+import { iniciarUsoLocal } from './_uso_local.js';
+import { falloEntrada562 } from './_entrada_error_562.js';
+import { puestoControl239, tituloControl239, menuActual239 } from './modulos/_control_cartera_ruta_239.js';
+
 import { PUESTOS, PUESTO, nivelModulo, ver } from './permisos.js';
-import { cargarCrudo, recortar, cargarServidor, adaptarSesion, cabeceras, pedirDato, fijarPersonas, olvidarTodo, olvidarTrasCambio, alCambiarDato } from './datos.js';
+import { cargarCrudo, recortar, cargarServidor, adaptarSesion, cabeceras, pedirDato, fijarPersonas, olvidarTodo, olvidarTrasCambio, alCambiarDato, alCambiarEstadoDato } from './datos.js';
 import { MODULOS, GRUPOS } from './modulos/indice.js';
 import { h, icono, esqueleto, estadoVacio, frescura, chipEstado, configurarVista, formatoTexto, ICONO_MODULO, ICONO_GRUPO, selectorPeriodo, leerPeriodo, guardarPeriodo, PERIODO_IDS,
   fechas, fechasDe, fijarHoy, quitaPrefijoDepartamento, fmt } from './componentes.js';
@@ -13,6 +17,7 @@ const leer = k => { try { return sessionStorage.getItem(k); } catch { return nul
 const leerLocal = k => { try { return localStorage.getItem(k); } catch { return null; } };
 const guardarLocal = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin almacenamiento */ } };
 
+let medidorUso = null;
 const estado = {
   servidor: false,    // true = datos recortados por servir.py (como hará el Worker); false = modo estático
   sesion: null,       // última respuesta de /api/sesion
@@ -50,7 +55,7 @@ async function arrancar() {
   const comoIni = params.get('como') || comoGuardado(yo);
   // Ronda 14 (causa 7): el código de la pantalla de entrada se pide ya, a la vez que la sesión (el código no es secreto;
   // los datos sí, y esos los decide el servidor). Sin pantalla en la dirección, Mi día.
-  const idIni = (location.hash || '').replace(/^#\/?/, '').split(/[/?]/)[0] || 'mi-dia';
+  const idIni = (location.hash || '').replace(/^#\/?/, '').split(/[/?]/)[0] || (/^setter_/.test(comoIni || yo || '') ? 'setters' : 'mi-dia');   // 3-oct: la setter entra directa a su pantalla
   const mIni = MODULOS.find(x => x.id === idIni && x.fichero && x.estado === 'hecho');
   if (mIni) import(`./modulos/${mIni.fichero.replace('./', '')}`).catch(() => { /* se reintenta al abrirla */ });
   // …y la verdad y el catálogo, a la vez que la sesión (antes iban después). Quedan en la memoria con la misma clave
@@ -79,7 +84,11 @@ async function arrancar() {
   } catch (e) {
     if (e.status === 401) { olvidarTodo(); return pintarElegir(); }
     if (e.status === 403) olvidarTodo();
-    $('#main').replaceChildren(estadoVacio({ titulo: 'No hay datos', porque: e.message, que_hacer: 'Arranca «python3 servir.py» (o ejecuta «python3 build_data.py») en la carpeta 30_APP_PROTOTIPO y recarga.' }));
+    const fallo = falloEntrada562(e);
+    $('#titulo').textContent = fallo.titulo;
+    $('#subtitulo').textContent = '';
+    document.title = `${fallo.titulo} · App RO`;
+    $('#main').replaceChildren(estadoVacio(fallo));
     return;
   }
   await listoDisco;
@@ -88,7 +97,8 @@ async function arrancar() {
   // servidor (modo estático) se importan todos, como antes.
   const puestosServidor = estado.servidor ? estado.sesion.modulos_puestos : null;
   if (puestosServidor) {
-    estado.modulos = MODULOS.map(m => ({ ...m, ...(puestosServidor[m.id] ? { puestos_que_lo_ven: puestosServidor[m.id] } : {}) }));
+    estado.modulos = MODULOS.filter(m => Object.hasOwn(puestosServidor, m.id))
+      .map(m => ({ ...m, puestos_que_lo_ven: puestosServidor[m.id] || {} }));
   } else {
     estado.modulos = MODULOS.map(m => ({ ...m }));
     await Promise.all(estado.modulos.map(cargarModulo));
@@ -114,7 +124,20 @@ async function arrancar() {
   conectarMenuMovil();
   window.addEventListener('hashchange', () => ruta(true));
   alCambiarDato(datoCambiado);
-  await ruta(false);
+  const navegacionAlArrancar = navegacionActual;
+  let medirUso = false;
+  if (estado.servidor && !estado.sesion?.pilotoLectura) {
+    try { medirUso = (await api('uso/aviso', { rastrear: false })).disponible !== false; } catch { /* sin medición, se puede trabajar */ }
+  }
+  if (medirUso) medidorUso = iniciarUsoLocal({
+    identidad: () => ({real: estado.real.id, como: estado.persona.id}),
+    pantallas: new Set(MODULOS.map(m => m.id)),
+    enviar: (dato, quien) => fetch('api/uso', {method: 'POST', cache: 'no-store', keepalive: true,
+      headers: cabeceras(quien.real, quien.como), body: JSON.stringify(dato)}),
+  });
+  // La persona puede navegar mientras se prepara la medición: ese destino ya está pintado.
+  if (navegacionAlArrancar === navegacionActual) await ruta(false);
+  else if (pintura.id) medidorUso?.pantalla(pintura.id);
   precargarEnReposo();
   // R15: buscador, atajos, contadores y «Algo va mal», con el navegador libre (no frenan la entrada).
   setTimeout(() => (self.requestIdleCallback ? requestIdleCallback(() => ayudas().catch(() => {}), { timeout: 2500 }) : ayudas().catch(() => {})), 400);
@@ -157,12 +180,20 @@ function precargarEnReposo() {
 }
 
 // ------------------------------------- ronda 14 · lo refrescado detrás cambia → se repinta la pantalla
-const pintura = { usadas: new Set(), enCurso: false, repintar: false, id: null };
+const pintura = { usadas: new Set(), estadosLectura: new Map(), enCurso: false, repintar: false, id: null };
 let _repintarT = null;
 function datoCambiado(r) {
-  if (r === 'modulo/verdad/clientes' || r === 'indicadores') {   // lo común de la carcasa: se relee (de la memoria) y se repinta
+  if (r === 'modulo/verdad/clientes' || r === 'indicadores') {   // la carcasa se actualiza; sólo sus consumidores se repintan
+    const consumida = pintura.usadas.has(r);
+    const navegacion = navegacionActual;
+    const identidad = `${estado.real?.id}|${estado.persona?.id}`;
     estado.indicadores = null;
-    Promise.all([cargarVerdad(), catalogoIndicadores()]).then(() => { pintarMenu(); repintarLuego(); });
+    Promise.all([cargarVerdad(), catalogoIndicadores()]).then(() => {
+      if (identidad !== `${estado.real?.id}|${estado.persona?.id}`) return;
+      pintarMenu();
+      // Actualizar el menú no debe reiniciar filtros/borradores de una pantalla que no usa esta fuente.
+      if (consumida && navegacion === navegacionActual) repintarLuego();
+    });
     return;
   }
   if (!pintura.usadas.has(r)) return;
@@ -176,16 +207,73 @@ function repintarLuego() {
     if (!pintura.id || id === pintura.id || !id) ruta(false, { refresco: true });
   }, 120);
 }
+// 487 · sólo estado de transporte: sin repintar módulos ni lanzar nuevas lecturas.
+function fuenteLectura487(ruta) {
+  if (/^modulo\/crm\//.test(ruta)) return 'CRM';
+  if (/^modulo\/captacion\//.test(ruta)) return 'Captación';
+  if (/^modulo\/produccion\//.test(ruta)) return 'Producción';
+  if (/^modulo\/mi_trabajo\//.test(ruta)) return 'Mi trabajo';
+  if (/^modulo\/seo\//.test(ruta)) return 'SEO';
+  if (/^cliente\//.test(ruta)) return 'Detalle de cliente';
+  return 'Lectura de esta pantalla';
+}
+function estadoGuardado487() {
+  const fallos = [...pintura.estadosLectura.values()].filter(x => x.falloActualizacion);
+  return fallos.sort((a,b) => a.hora-b.hora)[0] || pintura.guardado || null;
+}
+function detalleLecturas487() {
+  const destino = document.getElementById('frescura');
+  if (!destino) return;
+  destino.querySelector('[data-lecturas-487]')?.remove();
+  const filas = [...pintura.estadosLectura.entries()].filter(([,e]) => e.falloActualizacion);
+  if (!filas.length) return;
+  destino.append(h('div', { class:'pila', 'data-lecturas-487':'1', style:{gap:'4px',marginTop:'6px'} },
+    filas.map(([ruta,e]) => h('span', {title:'Hora de recepción HTTP en RO; no es la fecha de observación del proveedor.'},
+      `${fuenteLectura487(ruta)} · lectura válida ${fechas.hora(new Date(e.hora).toISOString())} · último intento ${fechas.hora(new Date(e.ultimoIntento).toISOString())}: sin confirmar`))));
+}
+function estadoDatoCambiado487(ruta, info) {
+  if (ruta === null) { pintura.estadosLectura.clear(); pintura.guardado = null; }
+  else {
+    if (!pintura.usadas.has(ruta)) return;
+    if (info?.falloActualizacion && Number.isFinite(info.hora) && Number.isFinite(info.ultimoIntento)
+        && Number.isFinite(new Date(info.hora).getTime()) && Number.isFinite(new Date(info.ultimoIntento).getTime()))
+      pintura.estadosLectura.set(ruta, {hora:info.hora,ultimoIntento:info.ultimoIntento,falloActualizacion:true});
+    else pintura.estadosLectura.delete(ruta);
+    if (info === null && pintura.guardado?.ruta === ruta) pintura.guardado = null;
+  }
+  marcarGuardado(estadoGuardado487());
+  detalleLecturas487();
+}
+// 489 · en móvil el chip de cabecera está oculto: banda independiente del título.
+function avisoMovil489(info) {
+  let banda = document.getElementById('lectura-fallo-489');
+  if (!banda && info?.falloActualizacion) {
+    const cabecera = document.querySelector?.('.topbar');
+    if (!cabecera) return;
+    banda = h('div', {id:'lectura-fallo-489',class:'lectura-fallo-489 no-imprimir',role:'status','aria-live':'polite',hidden:true});
+    cabecera.after(banda);
+  }
+  if (!banda) return;
+  if (!info?.falloActualizacion) { banda.hidden = true; banda.textContent = ''; return; }
+  const fecha = new Date(info.hora);
+  const dia = fecha.toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',timeZone:'Europe/Madrid'});
+  banda.textContent = `Última lectura válida ${dia}, ${fechas.hora(fecha.toISOString())} · actualización sin confirmar`;
+  banda.title = 'Recepción de la respuesta en RO; no es la fecha de observación del proveedor. Se conserva la última lectura válida.';
+  banda.hidden = false;
+}
 function marcarGuardado(info) {
+  avisoMovil489(info);
   const el = document.getElementById('dato-guardado');
   if (!el) return;
   if (!info) { el.hidden = true; el.textContent = ''; return; }
   // V2-E (40_A M8): «Guardado 00:50» no lo entendía nadie. Ahora lo dice entero y en el móvil no sale (estilos.css).
   const hh = fechas.hora(new Date(info.hora).toISOString());
-  el.textContent = `Datos guardados a las ${hh}`;
-  el.title = `Se enseñan los datos guardados a las ${hh} mientras se comprueba si hay algo nuevo; si lo hay, la pantalla se actualiza sola.`;
+  el.textContent = info.falloActualizacion ? `Última lectura válida ${hh} · actualización sin confirmar` : `Datos guardados a las ${hh}`;
+  el.title = info.falloActualizacion ? 'Hora de recepción de la respuesta en RO, no de observación del proveedor. No se pudo confirmar la actualización.' : `Se enseñan los datos guardados a las ${hh} mientras se comprueba si hay algo nuevo; si lo hay, la pantalla se actualiza sola.`;
   el.hidden = false;
 }
+alCambiarEstadoDato(estadoDatoCambiado487);
+// Fin 487 · estado de transporte.
 
 /** «Ver como»: Mili y Tomás (reglas_permisos.json → ver_como). Con servidor, lo decide el servidor. */
 /** «Ver como» guardado en la pestaña, solo si lo guardó esta misma persona real. */
@@ -235,17 +323,30 @@ async function ponerPersona(p, { registrar = true, sesion = null } = {}) {
 
 // ------------------------------------------------------------- API (servir.py)
 /** Llama a servir.py con la identidad del prototipo. En producción, Cloudflare Access pone la identidad. */
-async function api(ruta, { metodo = 'GET', cuerpo, sinComo = false } = {}) {
+async function api(ruta, { metodo = 'GET', cuerpo, sinComo = false, vigente = () => true, rastrear = true, info: infoPeticion } = {}) {
   if (!estado.servidor) throw new Error('Sin servidor: arranca «python3 servir.py» para usar esta función.');
   // Ronda 14 (causa 4): las lecturas pasan por la memoria por persona (datos.js · pedirDato); las escrituras, no.
   if (metodo === 'GET') {
     const limpia = ruta.replace(/^\/?(api\/)?/, '');
-    pintura.usadas.add(limpia);
-    const info = {};
-    const d = await pedirDato(limpia, { yo: estado.real.id, como: sinComo ? null : estado.persona?.id, info });
-    if (info.guardado) pintura.guardado = info;
+    if (rastrear && vigente()) pintura.usadas.add(limpia);
+    const usadas = pintura.usadas;
+    const info = infoPeticion || {};
+    let d;
+    try { d = await pedirDato(limpia, { yo: estado.real.id, como: sinComo ? null : estado.persona?.id, info }); }
+    catch (e) { medidorUso?.evento('error'); throw e; }
+    if (rastrear && vigente() && usadas === pintura.usadas && info.guardado) pintura.guardado = {guardado:true,hora:info.hora,ruta:limpia};
+    if (rastrear && vigente() && usadas === pintura.usadas) estadoDatoCambiado487(limpia, info);
     return d;
   }
+  const identidadPOST529 = JSON.stringify([estado.real?.id, estado.persona?.id]);
+  const comprobarPOST529 = () => {
+    if (!vigente() || JSON.stringify([estado.real?.id, estado.persona?.id]) !== identidadPOST529) {
+      const e = new Error('La vista ha cambiado. El resultado de esta petición no se muestra aquí; comprueba su estado antes de repetirla.');
+      e.status = 409;
+      throw e;
+    }
+  };
+  comprobarPOST529();
   olvidarTrasCambio(ruta);
   const r = await fetch(`api/${ruta.replace(/^\/?(api\/)?/, '')}`, {
     method: metodo, cache: 'no-store',
@@ -253,29 +354,36 @@ async function api(ruta, { metodo = 'GET', cuerpo, sinComo = false } = {}) {
     body: cuerpo === undefined ? undefined : JSON.stringify(cuerpo),
   });
   const d = await r.json().catch(() => ({}));
-  if (!r.ok) { const e = new Error(d.error || `Error ${r.status}`); e.status = r.status; throw e; }
+  comprobarPOST529();
+  if (!r.ok) { medidorUso?.evento('error', 'guardar'); const e = new Error(d.error || `Error ${r.status}`); e.status = r.status; throw e; }
   if (_ayudas && !/^\/?(api\/)?(rastro|opinion|ia\/)/.test(ruta)) _ayudas.then(m => m.trasCambio()).catch(() => {});   // R15: contadores al día
   return d;
 }
 
 /** Ronda 5 · la verdad única por cliente (fuentes_verdad/generar_verdad.py → data/verdad/clientes.json). */
 async function cargarVerdad() {
+  const identidad = `${estado.real?.id}|${estado.persona?.id}`;
   // V2-E: sin «En rojo» en el puesto, el servidor no da la verdad única (403): no se pide y el menú no pinta su número.
   const veVerdad = !estado.servidor || estado.modulos.some(m => m.id === 'en-rojo' && nivelModulo(estado.persona, m));
   if (estado.persona?.id) guardarLocal(`ro.verdad.${estado.persona.id}`, veVerdad ? '1' : '0');
   if (!veVerdad) { estado.verdad = { porId: {}, comunPorId: {}, definiciones: {} }; return; }
   try {
-    const v = estado.servidor ? await api('modulo/verdad/clientes') : await (await fetch('data/verdad/clientes.json', { cache: 'no-cache' })).json();
+    const v = estado.servidor ? await api('modulo/verdad/clientes', { rastrear: false }) : await (await fetch('data/verdad/clientes.json', { cache: 'no-cache' })).json();
+    if (identidad !== `${estado.real?.id}|${estado.persona?.id}`) return;
     estado.verdad = { ...v, porId: Object.fromEntries((v.clientes || []).map(c => [c.cliente_id, c])), comunPorId: Object.fromEntries((v.comun || []).map(c => [c.id, c])) };
-  } catch { estado.verdad = { porId: {}, comunPorId: {}, definiciones: {} }; }
+  } catch { if (identidad === `${estado.real?.id}|${estado.persona?.id}`) estado.verdad = { porId: {}, comunPorId: {}, definiciones: {} }; }
 }
 
 async function catalogoIndicadores() {
   if (estado.indicadores) return estado.indicadores;
+  const identidad = `${estado.real?.id}|${estado.persona?.id}`;
+  let leidos;
   try {
-    estado.indicadores = estado.servidor ? await api('indicadores')
+    leidos = estado.servidor ? await api('indicadores', { rastrear: false })
       : await (await fetch('indicadores.json', { cache: 'no-cache' })).json();
-  } catch { estado.indicadores = { indicadores: [], _meta: { error: 'sin catálogo' } }; }
+  } catch { leidos = { indicadores: [], _meta: { error: 'sin catálogo' } }; }
+  if (identidad !== `${estado.real?.id}|${estado.persona?.id}`) return estado.indicadores;
+  estado.indicadores = leidos;
   estado.indicadores.porId = Object.fromEntries((estado.indicadores.indicadores || []).map(i => [i.id, i]));
   return estado.indicadores;
 }
@@ -450,6 +558,8 @@ function pintarBanda() {
 // Ronda 8 (E6): pantalla de inicio por puesto. Setters → su «Mi día del setter»; el resto → «Mi día».
 // Si TODOS los puestos de la persona tienen inicio propio, «Mi día» general sale del menú (nada de dos «Mi día»).
 const INICIO_POR_PUESTO = { setters: 'setters' };
+// 3-oct (Tomás): pantalla de inicio preferida sin quitar «Mi día» del menú. Proyectos (Coti, directora de producto) → Dirección de producto.
+const INICIO_PREFERIDO = { proyectos: 'producto' };
 function inicioPropio(p) {
   const propios = (p.puestos || []).map(x => INICIO_POR_PUESTO[x]).filter(Boolean);
   return propios.length && propios.length === (p.puestos || []).length ? propios[0] : null;
@@ -515,9 +625,17 @@ function misClientesMenu(vis) {
   return caja;
 }
 function marcarActual() {
-  const [, id, p0] = (location.hash || '').replace(/^#/, '').split('?')[0].split('/');
+  const [, id, p0, p1] = (location.hash || '').replace(/^#/, '').split('?')[0].split('/');
   const cli = ['ficha', 'en-rojo'].includes(id) ? decodeURIComponent(p0 || '') : '';
-  document.querySelectorAll('#nav a[data-id]').forEach(a => a.dataset.id === (pintura.id || id) ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
+  const solicitado = id === 'mi-dia' ? (p0 === 'control-cartera' ? p1 : ['account','operaciones','direccion'].includes(p0) ? p0 : null) : null;
+  const puesto = puestoControl239(estado.real, estado.persona, solicitado);
+  document.querySelectorAll('#nav a[data-subruta="control-cartera"]').forEach(a => {
+    if (!puesto) return;
+    a.setAttribute('href', `#/mi-dia/control-cartera/${puesto}`);
+    const texto = a.querySelector('.nl');
+    if (texto) texto.textContent = tituloControl239(puesto);
+  });
+  document.querySelectorAll('#nav a[data-id]').forEach(a => menuActual239({id:a.dataset.id,subruta:a.dataset.subruta}, pintura.id || id, p0) ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   document.querySelectorAll('#nav a[data-cli]').forEach(a => (cli && a.dataset.cli === cli ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
 }
 
@@ -537,6 +655,7 @@ function pintarMenu() {
   const misRojos = rojos !== null && estado.datos.carteraIds?.size ? estado.verdad.comun.filter(c => c.gravedad === 'critico' && estado.datos.carteraIds.has(c.id)).length : null;
   const txtRojos = rojos === null ? '' : `${rojos} ${rojos === 1 ? 'cliente crítico' : 'clientes críticos'} en la agencia${misRojos !== null ? ` · ${misRojos} de tu cartera` : ''}`;
   const vis = modulosVisibles();
+  const puestoControl = puestoControl239(estado.real, estado.persona);
   const nav = $('#nav');
   // R15 (A6): lo pendiente de cada pantalla (ayudas.js lo cuenta con la definición de «Lo mío», Alertas, Producción y la
   // campana) y «Mis clientes» fijados (o, si nunca ha fijado, su cartera) con un punto según la gravedad de la verdad única.
@@ -552,11 +671,13 @@ function pintarMenu() {
     if (!ms.length) return null;
     return h('div', { class: 'ng', role: 'group', 'aria-labelledby': `ng-${g}` },
       h('div', { class: 'ngt', id: `ng-${g}` }, g),
-      ms.map(m => h('a', { href: `#/${m.id}`, 'data-id': m.id },
+      ms.map(m => [h('a', { href: `#/${m.id}`, 'data-id': m.id },
         icono(ICONO_MODULO[m.id] || ICONO_GRUPO[m.grupo] || 'res'),   // D-P02: el icono lo pone el menú (carcasa.js queda de respaldo)
-        h('span', { class: 'nl' }, m.titulo),
+        h('span', { class: 'nl' }, m.id === inicioPropio(estado.persona) ? 'Mi día' : m.titulo),   // 3-oct (Tomás): el «Mi día» de la setter ES su pantalla
         m.id === 'en-rojo' ? (rojos ? h('span', { class: 'n r', 'aria-label': txtRojos, title: txtRojos }, rojos) : null) : contador(m),
-        m.estado !== 'hecho' ? h('span', { class: 'prev' }, m.estado === 'roto' ? 'error' : 'previsto') : null)));
+        m.estado !== 'hecho' ? h('span', { class: 'prev' }, m.estado === 'roto' ? 'error' : 'previsto') : null),
+        m.id === 'mi-dia' && puestoControl ? h('a', {href:`#/mi-dia/control-cartera/${puestoControl}`, 'data-id':'mi-dia', 'data-subruta':'control-cartera'},
+          icono('res'), h('span', {class:'nl'}, tituloControl239(puestoControl))) : null]));
   });
   const mis = misClientesMenu(vis);
   if (mis) { const iSis = GRUPOS.indexOf('Sistema'); grupos.splice(iSis >= 0 ? iSis : grupos.length, 0, mis); }
@@ -573,44 +694,62 @@ function pintarMenu() {
   $('#frescura').replaceChildren(
     h('summary', {}, txtDatos, malas ? h('b', {}, ` · ${malas} con aviso`) : '', estado.servidor ? '' : h('b', {}, ' · sin servidor')),
     h('div', { class: 'pila', style: { gap: '4px', marginTop: '6px' } }, f.map(x => frescura({ fuente: x.fuente, edad_h: x.edad_h, estado: x.estado }))));
+  detalleLecturas487();
 }
 
 // ---------------------------------------------------------------- router
+let navegacionActual = 0;
 async function ruta(porUsuario, { refresco = false } = {}) {
-  const [, id, ...resto] = (location.hash || '').replace(/^#/, '').split('?')[0].split('/');   // #/finanzas?p=7d también vale
+  const token = ++navegacionActual;
+  pintura.estadosLectura.clear();
+  pintura.guardado = null;
+  marcarGuardado(null); detalleLecturas487();
+  const vigente = () => token === navegacionActual;
+  clearTimeout(_repintarT);
+  const [, id, ...resto] = (location.hash || '').replace(/^#/, '').split('?')[0].split('/');
   const vis = modulosVisibles();
   let m = vis.find(x => x.id === id);
   if (!m) {
     const propio = inicioPropio(estado.persona);
-    const inicio = (propio && vis.find(x => x.id === propio)) || vis.find(x => x.id === 'mi-dia' && x.estado === 'hecho') || vis.find(x => x.id === 'en-rojo') || vis[0];   // D-P-MID: Mi día es el inicio (setters: el suyo)
-    if (id && estado.modulos.some(x => x.id === id)) return pintarSinPermiso(estado.modulos.find(x => x.id === id), inicio);
-    if (inicio && location.hash !== `#/${inicio.id}`) { history.replaceState(null, '', `#/${inicio.id}`); }
+    const preferido = (estado.persona.puestos || []).map(x => INICIO_PREFERIDO[x]).find(id => vis.some(x => x.id === id && x.estado === 'hecho'));
+    const inicio = (propio && vis.find(x => x.id === propio)) || (preferido && vis.find(x => x.id === preferido)) || vis.find(x => x.id === 'mi-dia' && x.estado === 'hecho') || vis.find(x => x.id === 'en-rojo') || vis[0];
+    if (id && estado.modulos.some(x => x.id === id)) {
+      pintura.id = id; pintura.usadas = new Set(); pintura.guardado = null;
+      pintura.enCurso = false; pintura.repintar = false; periodoVivo.oyentes = [];
+      marcarGuardado(null);
+      return pintarSinPermiso(estado.modulos.find(x => x.id === id), inicio);
+    }
+    if (inicio && location.hash !== `#/${inicio.id}`) history.replaceState(null, '', `#/${inicio.id}`);
     m = inicio;
   }
+  if (!m) return;
   document.querySelectorAll('#nav a[data-id]').forEach(a => a.dataset.id === m.id ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current'));
   document.querySelectorAll('#nav a[data-cli]').forEach(a => (['ficha', 'en-rojo'].includes(m.id) && a.dataset.cli === resto[0] ? a.setAttribute('aria-current', 'true') : a.removeAttribute('aria-current')));
   cerrarMenuMovil();
   const main = $('#main');
-  // Ronda 14 (causa 1): el código de la pantalla se baja al abrirla (una vez); mientras, el esqueleto.
-  if (m.estado === 'hecho' && typeof m.render !== 'function' && m.fichero) {
-    const esqCarga = setTimeout(() => { if (!refresco) main.replaceChildren(esqueleto({ tarjetas: 4, lineas: 4 })); }, 150);
-    await cargarModulo(m);
-    clearTimeout(esqCarga);
-    if (m.estado === 'roto') pintarMenu();
-    const ahora = (location.hash || '').replace(/^#/, '').split('?')[0].split('/')[1];
-    if (ahora && ahora !== m.id && modulosVisibles().some(x => x.id === ahora)) return;   // ya se ha ido a otra pantalla
-  }
+  const scroll = refresco ? window.scrollY : null;
+  // Cada ruta conserva su propio destino. Al navegar, el anterior queda desconectado aunque su render siga esperando.
+  // display:contents mantiene la disposición de los hijos en el grid/flex de #main y los selectores de sus descendientes.
+  const cont = h('div', { 'data-ruta': m.id, style: { display: 'contents' } });
+  main.replaceChildren(cont);
   $('#titulo').textContent = m.titulo;
   $('#subtitulo').textContent = m.resumen || '';
   document.title = `${m.titulo} · App RO`;
-  const scroll = refresco ? window.scrollY : null;
   pintura.usadas = new Set(); pintura.id = m.id; pintura.guardado = null;
+  medidorUso?.pantalla(m.id);
+  pintura.enCurso = false; pintura.repintar = false;
+  periodoVivo.oyentes = [];
   if (!refresco) marcarGuardado(null);
-  main.replaceChildren();
-
+  if (m.estado === 'hecho' && typeof m.render !== 'function' && m.fichero) {
+    const esqCarga = setTimeout(() => { if (vigente() && cont.isConnected && !refresco) cont.replaceChildren(esqueleto({ tarjetas: 4, lineas: 4 })); }, 150);
+    try { await cargarModulo(m); } finally { clearTimeout(esqCarga); }
+    if (!vigente()) return;
+    if (m.estado === 'roto') pintarMenu();
+    cont.replaceChildren();
+  }
   if (m.estado !== 'hecho' || typeof m.render !== 'function') {
     pintarBarraPeriodo(null); pintarBarraPeriodo.ultimo = null;
-    main.append(estadoVacio({
+    cont.append(estadoVacio({
       titulo: m.estado === 'roto' ? `${m.titulo} no carga` : `${m.titulo} está previsto (fase ${m.fase})`,
       porque: m.estado === 'roto' ? 'Esta pantalla no ha cargado.' : m.resumen,
       que_hacer: m.estado === 'roto' ? 'Recarga la página; si sigue, avisa a Tomás.' : `Llega en la fase ${m.fase}.`,
@@ -618,33 +757,36 @@ async function ruta(porUsuario, { refresco = false } = {}) {
     }));
   } else {
     await catalogoIndicadores();
-    const clavePeriodo = `${m.id}|${JSON.stringify(usaPeriodo(m, resto))}`;
+    if (!vigente()) return;
+    const clavePeriodo = `${m.id}|${JSON.stringify(usaPeriodo(m, resto))}|${location.search || ''}|${m.id === 'informe-cliente' ? JSON.stringify(resto.slice(1)) : ''}`;
     if (pintarBarraPeriodo.ultimo !== clavePeriodo || (usaPeriodo(m, resto) && !periodoVivo.valor)) { pintarBarraPeriodo(m, resto); pintarBarraPeriodo.ultimo = clavePeriodo; }
-    const ctx = crearCtx(m, resto);
-    // Ronda 9 (auditoría 30, P1-15): si el módulo tarda más de 300 ms, un esqueleto con la forma del contenido.
+    const ctx = crearCtx(m, resto, vigente);
     let miEsq = null;
-    const esq = setTimeout(() => { if (!main.childElementCount) { miEsq = esqueleto({ tarjetas: 4, lineas: 4 }); main.append(miEsq); } }, 300);
+    const esq = setTimeout(() => { if (vigente() && cont.isConnected && !cont.childElementCount) { miEsq = esqueleto({ tarjetas: 4, lineas: 4 }); cont.append(miEsq); } }, 300);
     pintura.enCurso = true; pintura.repintar = false;
-    try { await m.render(main, ctx); }
+    try { await m.render(cont, ctx); }
     catch (e) {
-      console.error(e);
-      main.replaceChildren(estadoVacio({ titulo: 'Este módulo ha fallado al pintarse', porque: String(e.message || e), que_hacer: 'Recarga; si sigue, avisa a quien lo construye.' }));
-    }
+      if (vigente()) {
+        medidorUso?.evento('error');
+        console.error(e);
+        cont.replaceChildren(estadoVacio({ titulo: 'Este módulo ha fallado al pintarse', porque: String(e.message || e), que_hacer: 'Recarga; si sigue, avisa a quien lo construye.' }));
+      }
+    } finally { clearTimeout(esq); miEsq?.remove(); }
+    if (!vigente()) return;
     pintura.enCurso = false;
-    clearTimeout(esq);
-    miEsq?.remove();
-    marcarGuardado(pintura.guardado);
+    marcarGuardado(estadoGuardado487());
     if (scroll !== null) window.scrollTo(0, scroll);
     if (pintura.repintar) { pintura.repintar = false; repintarLuego(); }
-    else if (pintura.guardado) setTimeout(() => { if (pintura.id === m.id) marcarGuardado(null); }, 6000);
+    else if (pintura.guardado) setTimeout(() => { if (vigente() && !estadoGuardado487()?.falloActualizacion) marcarGuardado(null); }, 6000);
   }
-  if (porUsuario) main.focus({ preventScroll: true });
+  if (vigente() && porUsuario) main.focus({ preventScroll: true });
 }
 
 function pintarSinPermiso(m, inicio) {
   pintarBarraPeriodo(null); pintarBarraPeriodo.ultimo = null;
   $('#titulo').textContent = m.titulo;
   $('#subtitulo').textContent = '';
+  document.title = `${m.titulo} · App RO`;
   $('#main').replaceChildren(estadoVacio({
     titulo: 'Esta pantalla no es de tu puesto',
     porque: `«${m.titulo}» no está en el menú de ${estado.persona.puestos.map(x => PUESTO[x]?.nombre).join(' + ')}.`,
@@ -685,34 +827,39 @@ function celebraciones(personas, dias) {
 }
 
 /** ctx que recibe cada módulo. Ver contrato completo en LEEME.md. */
-function crearCtx(m, resto) {
+function crearCtx(m, resto, vigente = () => true, { rastrear = true } = {}) {
   const persona = estado.persona;
   const d = estado.datos;
+  const cpPermisos = { carteraIds: d.carteraIds, carteraPorSilla: d.carteraPorSilla, personas: d.personas || estado.crudo.personas, clientesPorId: Object.fromEntries(d.clientes.map(c => [c.id, c])) };
+  const comun = (ruta, valor) => { if (rastrear && vigente()) pintura.usadas.add(ruta); return valor; };
   return {
+    vigente,                                            // identidad y navegación de esta renderización
     persona,                                            // { id, nombre, alias, puestos: [...] }
     real: estado.real,                                  // quien está de verdad delante
     puestos: persona.puestos.map(x => PUESTO[x]),       // objetos de PUESTOS
     nivel: nivelModulo(persona, m),                     // 'todo' | 'suyo' | 'resumen'
-    soloLectura: persona.id !== estado.real.id,         // «ver como» = nunca escribir
+    pilotoLectura: !!estado.sesion?.pilotoLectura,
+    soloLectura: persona.id !== estado.real.id || (estado.servidor && !!estado.sesion?.soloLectura),         // «ver como» = nunca escribir
     clientes: d.clientes,                               // todos, ya recortados (c.detalle dice si es suyo)
     clientesVisibles: d.clientes.filter(c => c.detalle),// los que puede abrir
     carteraIds: d.carteraIds,                           // los asignados a su silla (Set)
     ambito: d.ambito,                                   // 'todos' | 'disciplina' | 'cartera' | 'tareas' | 'ninguno'
+    soloSuCartera: !!d.soloSuCartera,                   // Tomás 3-oct: account sin ámbito mayor → el servidor solo manda SUS clientes
     datos: { alarmas: d.alarmas, personas: d.personas, meta: d.meta, asignaciones: d.asignaciones || [] },
-    ver: dato => ver(persona, dato, { carteraIds: d.carteraIds, carteraPorSilla: d.carteraPorSilla, personas: d.personas || estado.crudo.personas }),
+    ver: dato => ver(persona, dato, cpPermisos),
     // ---- Añadido en E0 (compatible hacia atrás: lo anterior no cambia) ----
     servidor: estado.servidor,                          // true = datos recortados por servir.py
     veModulo: id => modulosVisibles().some(x => x.id === id && x.estado === 'hecho'),   // (ronda 3) ¿ve esa pantalla?
     // ---- Ronda 5: una sola verdad por cliente y nombres únicos ----
     /** verdad(id) → detalle de la verdad única del cliente (si lo puede abrir) o, si no, su línea común
      *  { gravedad: 'critico'|'atencion'|'bien', motivo, responsable_id, sin_account, nuevo }. null si no existe. */
-    verdad: id => estado.verdad?.porId?.[id] || estado.verdad?.comunPorId?.[id] || null,
-    verdadComun: () => estado.verdad?.comun || [],
-    definiciones: () => estado.verdad?.definiciones || {},
+    verdad: id => comun('modulo/verdad/clientes', estado.verdad?.porId?.[id] || estado.verdad?.comunPorId?.[id] || null),
+    verdadComun: () => comun('modulo/verdad/clientes', estado.verdad?.comun || []),
+    definiciones: () => comun('modulo/verdad/clientes', estado.verdad?.definiciones || {}),
     /** Ronda 9 (D-P-DIN) · cuotaEmpresa() → { mes, recurrente, cuota_mes, facturable, ajustes_mes, coherente, aviso } de
      *  fuentes_dinero/cuotas.json (la misma fuente que la cuota de cada cliente). null si tu puesto no ve la cuota.
      *  Mi día, Finanzas y el Panel de dirección deben leer esta, no calcular la suya (octubre: 67.291 · 70.781 · 70.581 €). */
-    cuotaEmpresa: () => estado.verdad?.cuota_empresa || null,
+    cuotaEmpresa: () => comun('modulo/verdad/clientes', estado.verdad?.cuota_empresa || null),
     /** nombre(id) → nombre corto de personas.json («mili» → «Mili»). Nunca enseñar ids crudos. */
     /** Ronda 8 · celebraciones({ dias = 7 }) → cumpleaños (día y mes) y aniversarios de entrada de las personas activas en
      *  los próximos «dias» días (hoy incluido): [{ persona_id, alias, tipo: 'cumple'|'aniversario', fecha: 'AAAA-MM-DD',
@@ -737,29 +884,33 @@ function crearCtx(m, resto) {
     plural: (n, uno, varios) => fmt.plural(n, uno, varios),
     nombre: id => { const p = (d.personas || []).find(x => x.id === id); return id ? (p ? (p.alias || p.nombre) : 'persona sin ficha') : '—'; },
     carteraPorSilla: d.carteraPorSilla || {},           // { account: Set, trafficker: Set, … }
-    indicador: id => estado.indicadores?.porId?.[id] || null,   // ficha del catálogo (fórmula, umbral, origen, medible)
-    indicadores: () => estado.indicadores?.indicadores || [],   // los que le tocan (todos para Mili y Tomás)
-    api: (ruta, op) => api(ruta, op),                   // servir.py con la identidad de la sesión
+    indicador: id => comun('indicadores', estado.indicadores?.porId?.[id] || null),   // ficha del catálogo (fórmula, umbral, origen, medible)
+    indicadores: () => comun('indicadores', estado.indicadores?.indicadores || []),   // los que le tocan (todos para Mili y Tomás)
+    api: (ruta, op) => api(ruta, { ...op, vigente, rastrear }),                   // servir.py con la identidad de la sesión
     /** Datos de un módulo: data/<nombre>.json recortado por el servidor (o el fichero tal cual sin servidor). */
-    datosModulo: async nombre => estado.servidor ? api(`modulo/${nombre}`)   // ronda 14: con memoria por persona y ETag
+    datosModulo: async nombre => estado.servidor ? api(`modulo/${nombre}`, { vigente, rastrear })   // ronda 14: con memoria por persona y ETag
       : (await fetch(`data/${nombre}.json`, { cache: 'no-cache' })).json(),
     /** «Ver datos» de un lead (D-88): devuelve el valor completo y queda en el rastro; error si no lo trabaja. */
-    verDato: ({ almacen, ref, campo, cliente_id }) => api('ver_dato', { metodo: 'POST', cuerpo: { almacen, ref, campo, cliente_id } }),
+    verDato: ({ almacen, ref, campo, cliente_id }) => api('ver_dato', { metodo: 'POST', cuerpo: { almacen, ref, campo, cliente_id }, vigente, rastrear }),
     /** Botón: deja la acción en la cola local «simulada» con su vista previa (nunca llama a una API externa). */
-    accion: a => ctx_accion(persona, a, m.id),
+    accion: async a => {
+      if (!vigente()) throw new Error('La pantalla ha cambiado. Revisa la vista actual antes de guardar.');
+      if (estado.servidor && estado.sesion?.soloLectura) throw new Error('Este piloto es de consulta: no se guardan cambios.');
+      return ctx_accion(persona, a, m.id);
+    },
     params: resto.map(decodeURIComponent),              // #/en-rojo/<cliente> → ['<cliente>']
-    navegar: ruta2 => { location.hash = `#/${ruta2}`; },
+    navegar: ruta2 => { if (vigente()) location.hash = `#/${ruta2}`; },
     rastro: ev => apuntar({ modulo: m.id, ...ev }),     // apunta una acción (en producción, servidor)
     // ---- Ronda 9 (D-P-N1): periodo común. null si el módulo no declara usa_periodo. ----
     /** { id, desde, hasta, dias, nombre, rango, comparar: 'anterior'|'anio_ant'|'no', comp: { desde, hasta, rango } | null, texto } */
     periodo: usaPeriodo(m, resto) ? periodoVivo.valor : null,
     /** periodosConDatos([{ nombre, desde, hasta }]) · ronda 10: «Con datos» en el menú «Más» del periodo (p. ej. los meses
      *  con informe cerrado). Elegir uno deja el periodo «A medida» con esas fechas y avisa como cualquier cambio. */
-    periodosConDatos: lista => { if (usaPeriodo(m, resto) && Array.isArray(lista)) pintarBarraPeriodo(m, resto, lista); },
+    periodosConDatos: lista => { if (vigente() && usaPeriodo(m, resto) && Array.isArray(lista)) pintarBarraPeriodo(m, resto, lista); },
     /** alCambiarPeriodo(fn) → fn(periodo) cuando la persona cambia el periodo (sin volver a pintar todo). Sin oyentes, la
      *  carcasa vuelve a pintar el módulo entero con el periodo nuevo. Devuelve una función para dejar de escuchar. */
-    alCambiarPeriodo: fn => { periodoVivo.oyentes.push(fn); return () => { periodoVivo.oyentes = periodoVivo.oyentes.filter(x => x !== fn); }; },
-    titulo: (t, sub) => { if (t) $('#titulo').textContent = t; if (sub !== undefined) $('#subtitulo').textContent = sub; if (t) document.title = `${t} · App RO`; },
+    alCambiarPeriodo: fn => { if (!vigente()) return () => {}; const escuchar = v => { if (vigente()) fn(v); }; periodoVivo.oyentes.push(escuchar); return () => { periodoVivo.oyentes = periodoVivo.oyentes.filter(x => x !== escuchar); }; },
+    titulo: (t, sub) => { if (!vigente()) return; if (t) $('#titulo').textContent = t; if (sub !== undefined) $('#subtitulo').textContent = sub; if (t) document.title = `${t} · App RO`; },
   };
 }
 
@@ -771,8 +922,8 @@ function ayudas() {
   if (!_ayudas) {
     _ayudas = import('./ayudas.js').then(m => {
       m.iniciar({
-        estado, api, apuntar, modulosVisibles, pintarMenu, puedeVerComo, PUESTO, idsMisClientes,
-        ctxPara: id => crearCtx(estado.modulos.find(x => x.id === id) || modulosVisibles()[0], []),
+        estado, api: (ruta, op) => api(ruta, { ...op, rastrear: false }), apuntar, modulosVisibles, pintarMenu, puedeVerComo, PUESTO, idsMisClientes,
+        ctxPara: id => crearCtx(estado.modulos.find(x => x.id === id) || modulosVisibles()[0], [], () => true, { rastrear: false }),
       });
       return m;
     }).catch(e => { console.warn('ayudas.js no carga:', e); _ayudas = null; throw e; });

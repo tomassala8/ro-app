@@ -56,7 +56,7 @@ CANALES = {"desk": "Correo (Desk)", "whatsapp": "WhatsApp", "ghl": "GHL"}
 # Desk: de dónde sale el correo. Lo decide el servidor (nunca el «de» que mande el navegador en la vista previa).
 DESK_API = "https://desk.zoho.eu/api/v1"
 DESK_DEPARTAMENTO = "Marketing Clientes"
-DESK_REMITENTE = "marketing@rankingonline.com"
+DESK_REMITENTE = "contacto-1@example.invalid"
 GRACIA_MIN = 10            # si a los 10 min el mensaje no aparece en el hilo → fallido (no se reintenta solo: no es seguro)
 REVISAR_REBOTES_H = 48     # un rebote puede llegar después de «confirmado»: se sigue mirando 48 h
 TIPOS_SEGUROS = {"red", "tiempo", "caida"}          # errores tras los que se puede reintentar UNA vez (tras mirar si llegó)
@@ -585,6 +585,18 @@ def fila_envio(con, envio_id):
     return dict(r) if r else None
 
 
+def adjunto_no_soportado(b):
+    """El descriptor de un PDF no son sus bytes; nunca prometer ni enviar sin él."""
+    vp = b.get("vista_previa") or {}
+    if isinstance(vp, str):
+        try:
+            vp = json.loads(vp)
+        except ValueError:
+            vp = {}
+    return (isinstance(vp, dict) and bool(vp.get("adjunto") or vp.get("adjuntos"))) or (
+        b.get("herramienta", b.get("canal")) == "desk" and str(b.get("objeto") or "").startswith("informe/"))
+
+
 def ejecutar(con, envio_id, prov, quien="sistema"):
     """pendiente → enviado (y verificación al momento). Idempotente: antes de cada intento mira si ya está en el hilo;
     reintenta UNA vez solo los errores seguros (red, tiempo, caída); nunca reintenta llave, permiso ni rechazo."""
@@ -592,6 +604,11 @@ def ejecutar(con, envio_id, prov, quien="sistema"):
     act = estado_actual(con, envio_id)
     if not e or not act or act["estado"] != "pendiente":
         return act and act["estado"]
+    accion = con.execute("SELECT * FROM acciones WHERE id=?", (e.get("accion_id"),)).fetchone() if e.get("accion_id") else None
+    if adjunto_no_soportado(dict(accion) if accion else e):
+        paso(con, envio_id, "fallido", "adjunto_pendiente", quien=quien,
+             motivo="El envío del PDF desde la app está pendiente. Descarga el PDF y envíalo desde Desk; este correo no ha salido.")
+        return "fallido"
     if getattr(prov, "real", False) and not canal_real(e["canal"]):        # un proveedor de verdad nunca escribe con el canal apagado
         paso(con, envio_id, "fallido", "apagado", quien=quien, motivo=LLANO["canal_apagado"])
         return "fallido"
@@ -934,15 +951,29 @@ def _abre_cliente(persona, cid):
 
 
 def a_json(con, e, real, persona, con_pasos=True):
+    from acciones_lectura_544 import ambito as ambito_lectura544, cliente_visible as cliente_visible544
+    def contenido544():
+        try:
+            a = ambito_lectura544(S.E, P, S.ACT, real, persona)
+            if a is None:
+                return None
+            ps, cps, firma = a
+            cid = e["cliente_id"]
+            if cid is not None and not cliente_visible544(cid, S.E, P, S.ACT, ps, cps):
+                return None
+            return firma
+        except (AttributeError, TypeError, ValueError, KeyError):
+            return None
+    firma_contenido = contenido544()
     ps = pasos_de(con, e["id"])
     act = ps[-1] if ps else {}
     dest = json.loads(e["destinatario"] or "{}")
-    ver_texto = _abre_cliente(persona, e["cliente_id"]) and _abre_cliente(real, e["cliente_id"])
+    ver_texto = firma_contenido is not None
     hecho = ultimo_hecho(ps)
     ultimo_motivo = hecho.get("motivo")
     detalle = json.loads(hecho.get("detalle") or "{}") if hecho.get("detalle") else {}
     q = _persona(e["quien"])
-    return {
+    salida = {
         "id": e["id"], "creado": iso_z(e["creado"]), "quien": e["quien"], "quien_alias": q.get("alias") or e["quien"],
         "canal": e["canal"], "canal_nombre": CANALES[e["canal"]], "tipo": e["tipo"], "modo": e["modo"], "modulo": e["modulo"],
         "cliente_id": e["cliente_id"], "cliente": _cliente_nombre(e["cliente_id"]) if ver_texto else None,
@@ -956,6 +987,15 @@ def a_json(con, e, real, persona, con_pasos=True):
         "pasos": [{"estado": x["estado"], "evento": x["evento"], "hora": iso_z(x["hora"]), "quien": x["quien"], "intento": x["intento"],
                    "motivo": x["motivo"]} for x in ps] if con_pasos else None,
     }
+    if not ver_texto or contenido544() != firma_contenido:
+        # 544: el destinatario y el motivo libre también son contenido del cliente.
+        for clave in ("cliente_id", "cliente", "asunto", "texto", "motivo"):
+            salida[clave] = None
+        salida["destinatario"] = {k: None for k in ("tipo", "ref", "nombre", "resuelto")}
+        salida["texto_oculto"] = True
+        if salida["pasos"] is not None:
+            salida["pasos"] = [{**p, "motivo": None} for p in salida["pasos"]]
+    return salida
 
 
 def _get(h, ruta, q, real, persona):
@@ -1032,8 +1072,13 @@ def _post(h, ruta, real, persona, b):
                                  "mensaje": "Reintento simulado: los envíos los activa Tomás. No ha salido nada." if r.get("simulado") else "Reintento hecho."})
 
 
-# Huecos de plantilla sin rellenar: «[completar]», «[completar: fecha]», «[…]» o «[...]». Un envío así no sale nunca.
-HUECO_SIN_RELLENAR = re.compile(r"\[\s*(?:completar[^\]]*|…|\.{3})\s*\]", re.IGNORECASE)
+# Huecos de plantilla sin rellenar: «[completar]», «[completar: fecha]», «[…]», «[...]» y (3-oct) los que dejan los borradores
+# de la IA o las plantillas: «[día y hora]», «[nombre]», «[enlace]», «[fecha]», «[importe]», «[confirmar …]»… Un envío así no
+# sale nunca. Los corchetes normales sí salen: «[adjunto en el correo]», un enlace «[texto](url)» o «[1]».
+HUECO_SIN_RELLENAR = re.compile(
+    r"\[\s*(?:(?:completar|confirmar|rellenar|insertar|añadir|poner|d[ií]as?|horas?|fechas?|nombres?|enlaces?|link|url|importes?|cifras?|"
+    r"n[uú]mero|tel[eé]fono|empresa|despacho|cliente|motivo|causa|tema|plazo|mes|datos?|firma|cargo|huecos?|x+)\b[^\]\n]{0,60}|…|\.{3})\s*\](?!\()",
+    re.IGNORECASE)
 
 
 def hueco_sin_rellenar(b):
@@ -1104,6 +1149,8 @@ def enganchar(Manejador, servir):
         if ruta.startswith("/api/envios"):
             return _post(self, ruta, real, persona_, b)
         if ruta == "/api/acciones" and real["id"] == persona_["id"] and isinstance(b, dict) and es_envio(str(b.get("herramienta") or ""), str(b.get("tipo") or "")):
+            if adjunto_no_soportado(b):
+                return self.responder(422, {"error": "El envío de adjuntos desde la app está pendiente. Guarda el borrador, descarga el PDF y envíalo desde Desk.", "motivo": "adjunto_pendiente"})
             hueco = hueco_sin_rellenar(b)
             if hueco:
                 return self.responder(400, {"error": f"El mensaje tiene un hueco sin rellenar ({hueco}). Complétalo o bórralo antes de enviarlo: así no sale.",
