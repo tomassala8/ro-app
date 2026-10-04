@@ -71,7 +71,10 @@ def indice():
     f = AQUI / "indice.json"
     fuentes = [AQUI / f"{a}.json" for a in AREAS if (AQUI / f"{a}.json").exists()]
     if f.exists() and all(f.stat().st_mtime >= x.stat().st_mtime for x in fuentes):
-        return json.loads(f.read_text(encoding="utf-8"))
+        ix = json.loads(f.read_text(encoding="utf-8"))
+        ix["docs"] = {sid: dict(b) if isinstance(b, list) else b for sid, b in ix["docs"].items()}
+        ix["idf"] = dict(ix["idf"]) if isinstance(ix["idf"], list) else ix["idf"]
+        return ix
     return construir()
 
 
@@ -128,11 +131,23 @@ def principios(area):
 RESERVADAS = {"direccion", "personas_admin"}
 
 
+def _ps(puesto):
+    """«puesto» puede ser uno («setters») o los de una persona (lista): siempre un conjunto."""
+    if not puesto:
+        return set()
+    return {puesto} if isinstance(puesto, str) else set(puesto)
+
+
+def suya(f, puesto):
+    return bool(_ps(puesto) & set(f.get("puestos", [])))
+
+
 def visible(f, puesto):
     """Sin puesto (consola, pruebas) se ve todo. Con puesto, las fichas de áreas reservadas solo para sus puestos."""
-    if not puesto or f.get("area") not in RESERVADAS:
+    ps = _ps(puesto)
+    if not ps or f.get("area") not in RESERVADAS:
         return True
-    return puesto in f.get("puestos", []) or puesto == "direccion"
+    return suya(f, ps) or "direccion" in ps
 
 
 # palabras que delatan el área (raíces): si la consulta las dice, esa área sube un poco
@@ -175,7 +190,7 @@ def por_disparador(tipo=None, alerta=None, indicador=None, regla=None, puesto=No
         pre = (alerta or tipo or "").split("_")[0]
         return not (pre and (f["area"].startswith(pre) or f["id"].startswith(pre)))
 
-    out.sort(key=lambda f: (bool(puesto) and puesto not in f.get("puestos", []), nombrada(f), de_su_area(f), especifica(f),
+    out.sort(key=lambda f: (bool(puesto) and not suya(f, puesto), nombrada(f), de_su_area(f), especifica(f),
                             ORDEN_GRAVEDAD.get(f.get("gravedad"), 3)))
     return out
 
@@ -216,7 +231,7 @@ def buscar(texto, puesto=None, area=None, n=3, minimo=1.0):
         palabras = sum(min(bolsa[t], 6) * ix["idf"].get(t, 0) for t in comunes)
         explica = sum(ix["idf"].get(t, 1.0) for t in comunes) / masa
         p = (palabras + frase_pts.get(sid, 0)) * (0.3 + explica)
-        if puesto and puesto in meta.get("puestos", []):
+        if puesto and suya(meta, puesto):
             p *= 1.25
         if qt & PISTA_AREA.get(meta["area"], set()):
             p *= 1.2
@@ -246,6 +261,22 @@ def para_ia(f, con_guiones=True, max_causas=6):
     if con_guiones:
         out["guiones"] = f.get("guiones")
     return {k: v for k, v in out.items() if v}
+
+
+def ficha_corta(f):
+    """Lo que la pantalla enseña junto a un consejo: qué hacer hoy, qué comprobar y cuándo subirlo. Sin IA."""
+    if not f:
+        return None
+    return {"id": f["id"], "area": f.get("area"), "titulo": f.get("titulo"),
+            "hoy": (f.get("acciones_inmediatas") or [])[:3],
+            "comprueba": [d.get("comprueba") for d in (f.get("diagnostico") or [])[:3]],
+            "escalar": f.get("escalar"), "exito": f.get("exito")}
+
+
+def para_consejo(tipo, puesto=None):
+    """La ficha que explica un consejo o una alerta de la app (su «tipo» es el id del tipo o de la alerta)."""
+    r = por_disparador(tipo=tipo, alerta=tipo, puesto=puesto)
+    return ficha_corta(r[0]) if r else None
 
 
 def tokens_aprox(o):

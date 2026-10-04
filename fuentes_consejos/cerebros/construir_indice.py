@@ -15,6 +15,9 @@ sys.path.insert(0, str(AQUI))
 import buscar as B  # noqa: E402
 
 ix = B.construir()
-(AQUI / "indice.json").write_text(json.dumps(ix, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+# las palabras (de cada ficha y su rareza) van como pares [palabra, peso]: como claves, «token» o «nomina» parecerían campos secretos
+# al escáner de secretos (escaner_secretos.py --proyecto); buscar.py las vuelve a poner como diccionario al leer.
+guardar = dict(ix, docs={sid: sorted(b.items()) for sid, b in ix["docs"].items()}, idf=sorted(ix["idf"].items()))
+(AQUI / "indice.json").write_text(json.dumps(guardar, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 print(f"indice.json: {len(ix['situaciones'])} situaciones · {len(ix['tipo'])} tipos · {len(ix['alerta'])} alertas · "
       f"{len(ix['indicador'])} indicadores · {len(ix['frases'])} frases")

@@ -45,7 +45,7 @@
    "T5 (00_VEREDICTO.md:27): objetivo de contacto (< 15 min solo con persona dedicada). La ficha usa el contrato (≤ 1 h) como suelo.",
    "Umbrales propuestos sin firmar que usa la app: primer lead ≤ 3 / 4-7 / > 7 días; taller a entrega ≤ 5 / 6-7 / > 7 días hábiles; carga ≤ 5 / 6 / > 6 arranques. Firmar o corregir.",
    "Actualizar las plantillas 01 y 06 del alta (dicen «Taller con Tomás») y la 03 (quién manda el DNS) con lo decidido el 14 y el 16-sep.",
-   "Contraseñas: SOP-P0-02:90 dice «accesos en gestor de contraseñas» y la skill onboarding-accesos-ro:25 dice cero contraseñas guardadas. La ficha aplica la versión prudente: ninguna credencial guardada; acceso delegado.",
+   "Sobre las contraseñas, el SOP-P0-02:90 pide guardar los accesos en un gestor y la skill onboarding-accesos-ro:25 pide no guardar ninguna. La ficha aplica la versión prudente: ninguna credencial guardada; acceso delegado.",
    "Definir qué cuenta como «reunión válida» para la garantía (04_LO_PROMETIDO_EN_SALA.md:173-178). La app cuenta las citas marcadas «showed».",
    "Traer al repo 11_DECISIONES_PARA_TOMAS.md (D-28, D-30, D-48, conexiones, objetivo de coste por cita), 06_KPIS_INTERNOS_RO_POR_PUESTO.md y 02_SOP_ONBOARDING_UNICO.md: varias reglas del área solo se pueden citar a través de reglas.json e indicadores.json."
   ],

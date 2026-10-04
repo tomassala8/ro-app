@@ -13,6 +13,14 @@ Sirven para aconsejar al equipo gastando muy poca IA.
 3. Sin clave de IA, la ficha se enseña tal cual. Ya sirve: diagnóstico en orden, causas, solución, guiones y cuándo escalar.
 4. Con clave, la IA recibe solo `para_ia(ficha)` (≈ 500-1.500 tokens) más los datos del cliente, y adapta. No razona desde cero.
 
+## En la app (ia.py)
+
+- Cada consejo de «Qué haría yo hoy aquí» lleva su ficha corta: «Cómo se resuelve» y «Ver la ficha entera».
+- El copiloto del account recibe la ficha de cada alerta del cliente (máx. 3, sin guiones).
+- «Qué hago si…»: buscador en Mi día y en el Asistente. `GET /api/ia/cerebro?q=` busca y `?id=` abre; no gasta IA.
+- Con clave, «Adaptar a este cliente» (`POST /api/ia/cerebro`) pide a la IA (modelo barato) que ajuste ESA ficha.
+  Si escribe una cifra que no estaba o algo prohibido, se enseña la ficha tal cual.
+
 ## Qué tiene cada ficha
 
 | Campo | Para qué |
@@ -42,6 +50,7 @@ python3 fuentes_consejos/cerebros/buscar.py "los leads no vienen a la reunión" 
 python3 fuentes_consejos/cerebros/buscar.py --alerta crm_sin_tocar
 python3 fuentes_consejos/cerebros/construir_indice.py     # tras editar un cerebro
 python3 fuentes_consejos/cerebros/probar_cerebros.py      # antes de cada PR
+python3 fuentes_consejos/cerebros/probar_en_app.py        # los cerebros dentro de ia.py (sin servidor)
 python3 fuentes_consejos/cerebros/pendientes.py           # regenera PENDIENTES_TOMAS.md
 ```
 

@@ -125,3 +125,12 @@ Encargo de Tomás: «no quiero una IA con tokens infinitos». Respuesta completa
 
 ## Cerebro de decisiones v2 (3-oct, mañana)
 Diagnóstico antes que consejo (árbol por síntoma con evidencia y regla), prioridad por impacto (euros en riesgo o de captación × urgencia − esfuerzo + puesto + aprendizaje) con motivo en una línea, reglas propias de los 21 puestos, criterio con «Ver fuente ↗» a GitHub (178 reglas minadas del CEREBRO Cole+Hormozi, skills de RO, protocolo v3 y decisiones), confianza, prudencia, botones «Útil / No útil / Ya hecho» con seguimiento a 7/14 días e informe semanal para Tomás, y copiloto por reglas sin clave. Diseño en `../53_CEREBRO_DECISIONES.md`; contrato en LEEME («Cerebro de decisiones v2»). Pruebas: `probar_ia.py` sección 11 (`fuentes_consejos/probar_cerebro.py`).
+
+## Cerebros de área (4-oct)
+12 cerebros con 477 fichas de situación en `fuentes_consejos/cerebros/` (LEEME allí). Se localizan SIN IA.
+- **Consejos:** cada consejo lleva `ficha` (qué hacer hoy, qué comprobar, cuándo escalar, cuándo está resuelto), puesta antes de `_limpio_consejo` para que pase el mismo recorte. En pantalla, «Cómo se resuelve» plegado y «Ver la ficha entera».
+- **Copiloto:** `fichas_de_situacion` con la ficha de cada alerta del cliente (máx. 3, sin guiones).
+- **Rutas:** `GET /api/ia/cerebro?q=|id=|tipo=` (sin IA, sin coste) y `POST /api/ia/cerebro {id, cliente, pregunta}` (la IA adapta UNA ficha con `tarea="otra"`, modelo barato; sin clave, en «ver como» o si no pasa la prudencia, la ficha tal cual).
+- **Pantallas:** «Qué hago si…» en Mi día (primero de «Más de tu día») y pestaña en el Asistente (`#/asistente-ia?ficha=<id>`).
+- **Reserva:** dirección y personas_admin solo a sus puestos.
+- **Pruebas:** `probar_cerebros.py` (contenido) y `probar_en_app.py` (17/17, servir simulado). `pruebas_diseno`: 61/61 limpios. `escaner --proyecto`: solo el hallazgo previo de `pruebas_seguridad.py`. Las suites con datos (`probar_ia.py`, seguridad, coherencia) necesitan `data/` y no se han corrido aquí.
