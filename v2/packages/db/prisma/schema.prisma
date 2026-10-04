@@ -9,21 +9,49 @@ datasource db {
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model acciones {
-  id           BigInt  @id @default(autoincrement())
-  creada       String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
-  quien        String
-  herramienta  String
-  tipo         String
-  objeto       String
-  cliente_id   String?
-  modulo       String?
-  texto        String?
-  vista_previa String?
-  estado       String  @default("simulada")
-  resultado    String?
-  detalle      String?
+  id                   BigInt                 @id @default(autoincrement())
+  creada               String                 @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  quien                String
+  herramienta          String
+  tipo                 String
+  objeto               String
+  cliente_id           String?
+  modulo               String?
+  texto                String?
+  vista_previa         String?
+  estado               String                 @default("simulada")
+  resultado            String?
+  detalle              String?
+  intenciones_acciones intenciones_acciones[]
 
   @@index([objeto], map: "i_acc_obj")
+}
+
+model actas_claves {
+  quien      String
+  clave      String
+  cliente_id String
+  huella     String
+
+  @@id([quien, clave])
+}
+
+model actas_lotes {
+  quien      String
+  cliente_id String
+  huella     String
+  resultado  String
+
+  @@id([quien, cliente_id, huella])
+}
+
+model altas_recibos {
+  clave           String @id
+  quien           String
+  persona_id      String
+  resultado       String
+  correo_guardado Int    @default(0)
+  lista_guardada  Int    @default(0)
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -211,6 +239,16 @@ model decisiones {
   other_decisiones decisiones[] @relation("decisionesTodecisiones")
 }
 
+model decisiones_intenciones_382 {
+  intencion_id   String @id
+  autor          String
+  huella         String
+  decision_id    Int
+  operacion      String
+  revision_final String
+  registrado_en  String @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+}
+
 model docs {
   coleccion String
   id        String
@@ -270,6 +308,30 @@ model envios {
   @@index([quien], map: "i_envios_quien")
 }
 
+model eventos {
+  n         BigInt @id @default(autoincrement())
+  registro  String
+  operacion String
+  actor     String
+  fecha     String
+  datos     String
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model fuente_lectura {
+  id      BigInt  @id @default(autoincrement())
+  fuente  String
+  recurso String
+  hora    String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
+  ok      Int
+  codigo  String?
+  error   String?
+  cuerpo  String?
+  huella  String?
+
+  @@index([fuente, recurso, ok, id], map: "i_fuente_lectura")
+}
+
 model historial {
   n         BigInt  @id @default(autoincrement())
   ts        String  @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
@@ -319,6 +381,17 @@ model ia_lotes {
   peticiones    String?
 }
 
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ia_reservas {
+  id            String @id
+  creada        String
+  tarea         String
+  quien         String
+  llave         String
+  reservado_eur Float  @db.Real
+  estado        String
+}
+
 model ia_topes {
   id      BigInt  @id @default(autoincrement())
   creada  String
@@ -344,12 +417,170 @@ model incidencias {
   datos                String?
 }
 
+model intenciones_acciones {
+  actor     String
+  intencion String
+  huella    String
+  accion_id BigInt
+  acciones  acciones @relation(fields: [accion_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([actor, intencion])
+}
+
+model leads_eventos {
+  cliente_id String
+  source     String
+  event_id   String
+  payload    String
+  huella     String
+  actor_id   String
+  fuente_key String
+  registrado String
+
+  @@id([cliente_id, source, event_id])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model leads_meta {
+  version Int
+
+  @@ignore
+}
+
+model leads_recibos {
+  recibo_id  String  @id
+  cliente_id String
+  source     String
+  event_id   String?
+  actor_id   String
+  resultado  String
+  motivo     String
+  registrado String
+}
+
 model llaves {
   nombre     String  @id
   valor      String?
   rotada     String?
   rotaciones Int?    @default(0)
   origen     String?
+}
+
+model mt_crono {
+  persona String @id
+  tarea   String
+  inicio  String
+}
+
+model operaciones_anomalias_276 {
+  id           BigInt @id @default(autoincrement())
+  anomalia     String
+  revision     Int
+  actor        String
+  persona_id   String
+  origen_hash  String
+  decision     String
+  prueba       String
+  hora         String
+  intencion    String
+  request_hash String
+
+  @@unique([actor, intencion])
+  @@unique([anomalia, revision])
+}
+
+model operaciones_control_272 {
+  id        BigInt @id @default(autoincrement())
+  objeto    String
+  revision  Int
+  actor     String
+  autor     String
+  asignado  String
+  tipo      String
+  hora      String
+  contenido String
+  intencion String
+  huella    String
+
+  @@unique([actor, intencion])
+  @@unique([objeto, revision])
+}
+
+model operaciones_feedback_273 {
+  intencion_id  String @id
+  cliente_id    String
+  semana        String
+  revision      Int
+  autor         String
+  registrado_en String
+  estado        String
+  nota          String
+  huella        String
+
+  @@unique([cliente_id, semana, revision])
+}
+
+model operaciones_notas_equipo_281 {
+  id         BigInt  @id @default(autoincrement())
+  persona_id String
+  periodo    String
+  revision   Int
+  autor      String
+  hora       String
+  nota       Int?
+  prueba     String
+  accion     String?
+  intencion  String
+  huella     String
+
+  @@unique([autor, intencion])
+  @@unique([persona_id, revision])
+}
+
+model operaciones_pedidos_account_294 {
+  intencion_id    String @id
+  cliente_id      String
+  tipo            String
+  referencia_id   String
+  revision        Int
+  autor           String
+  receptor        String
+  estado          String
+  registrado_en   String
+  revision_fuente String
+  huella          String
+
+  @@unique([cliente_id, tipo, referencia_id, revision], map: "operaciones_pedidos_account_2_cliente_id_tipo_referencia_id_key")
+}
+
+model operaciones_prioridades_300 {
+  intencion_id    String @id
+  actor           String
+  prioridad_id    String
+  fuente_revision String
+  dia             String
+  revision        Int
+  estado          String
+  nota            String
+  registrado_en   String
+  huella          String
+
+  @@unique([actor, prioridad_id, fuente_revision, dia, revision])
+}
+
+model operaciones_registros_269 {
+  id            BigInt @id @default(autoincrement())
+  propietario   String
+  clave         String
+  revision      Int
+  autor         String
+  registrado_en String
+  contenido     String
+  intencion     String
+  huella        String
+
+  @@unique([autor, intencion])
+  @@unique([propietario, clave, revision])
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -412,6 +643,19 @@ model personas {
   actualizado     String            @default(dbgenerated("to_char((now() AT TIME ZONE 'UTC'::text), 'YYYY-MM-DD HH24:MI:SS'::text)"))
   actualizado_por String?
   persona_puestos persona_puestos[]
+}
+
+model planes_fuegos_255 {
+  accion_id    String @id
+  cliente_id   String
+  version      Int
+  operacion    String
+  actor_id     String
+  hora         String
+  payload_hash String
+  datos        String
+
+  @@unique([cliente_id, version])
 }
 
 model preferencias {
@@ -477,6 +721,24 @@ model registro_huellas {
   huella String
 }
 
+model registros {
+  id      String @id
+  clave   String @unique
+  cliente String
+  actor   String
+  payload String
+  hash    String
+  estado  String
+  creado  String
+}
+
+model revocaciones {
+  clave    String @id
+  registro String
+  actor    String
+  motivo   String
+}
+
 model sellos {
   paso           String  @id
   ultimo_bueno   String?
@@ -523,4 +785,45 @@ model sinc_pasos {
   sinc_cambios sinc_cambios @relation(fields: [cambio_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([cambio_id, id], map: "i_sinc_pasos")
+}
+
+model tareas_vistas_privadas {
+  propietario String
+  id          String
+  nombre      String
+  filtros     String
+  version     Int
+  revision    Int
+
+  @@id([propietario, id])
+}
+
+model uso_eventos {
+  id        Int    @id
+  instante  Float  @db.Real
+  actor     String
+  visto     String
+  pantalla  String
+  accion    String
+  control   String
+  activo_ms Int
+
+  @@index([actor, instante], map: "uso_actor")
+  @@index([instante], map: "uso_instante")
+}
+
+model uso_sesiones {
+  actor     String
+  sesion    String
+  secuencia Int
+  instante  Float  @db.Real
+  visto     String
+  pantalla  String
+
+  @@id([actor, sesion])
+}
+
+model uso_ventanas {
+  actor String @id
+  fin   Float  @db.Real
 }

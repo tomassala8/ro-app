@@ -23,7 +23,9 @@ Uso:
 La idea: se corre ahora (3-oct) y se vuelve a correr la noche de la migración. --comparar enseña
 las pantallas, rutas, tablas y reglas nuevas o cambiadas durante el día, para que Cursor no se deje nada.
 """
+import ast
 import hashlib
+import itertools
 import json
 import re
 import subprocess
@@ -158,8 +160,9 @@ PATRON_SQL = re.compile(r"CREATE\s+(?:UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF
 PATRON_ALTER = re.compile(r"ALTER\s+TABLE\s+(\w+)\s+ADD\s+COLUMN\s+(\{\w+\}|\w+)\s+(\w+)", re.I)
 
 
-def _bloque_sql(texto, ini):
-    """Desde CREATE hasta el ; que cierra (respetando paréntesis y BEGIN…END)."""
+def _bloque_sql(texto, ini, cadena=False):
+    """Desde CREATE hasta el ; que cierra (respetando paréntesis y BEGIN…END). cadena=True: el texto ya es el valor
+    de una cadena de Python (sin comillas), así que una " no es el final de nada."""
     prof, i, en_begin = 0, ini, False
     while i < len(texto):
         c = texto[i]
@@ -173,21 +176,88 @@ def _bloque_sql(texto, ini):
             prof -= 1
         elif c == ";" and prof <= 0 and not en_begin:
             return texto[ini:i + 1]
-        elif c == '"' and prof <= 0 and not en_begin and texto[i - 1] != "\\" and i > ini + 30:
+        elif not cadena and c == '"' and prof <= 0 and not en_begin and texto[i - 1] != "\\" and i > ini + 30:
             # final de una cadena de Python que contenía el SQL sin ;
             return texto[ini:i].rstrip() + ";"
         i += 1
     return texto[ini:]
 
 
+def _cadenas_py(texto):
+    """[(línea, sql)] de un .py tal como lo ve Python: concatenación implícita («…» «…»), comillas escapadas, y nombres
+    hechos con «+» o f-string (p. ej. «"…_sin_"+op.lower()+" BEFORE "+op» dentro de «for op in ('UPDATE','DELETE')»,
+    o una constante del módulo como TABLA). Lo que no se puede resolver sale como aviso. None si no compila."""
+    try:
+        arbol = ast.parse(texto)
+    except SyntaxError:
+        return None
+    const = {t.id: n.value.value for n in arbol.body if isinstance(n, ast.Assign) and isinstance(n.value, ast.Constant)
+             and isinstance(n.value.value, str) for t in n.targets if isinstance(t, ast.Name)}
+    salida = []
+
+    def valor(n, env):
+        if isinstance(n, ast.Constant) and isinstance(n.value, str):
+            return n.value
+        if isinstance(n, ast.Name) and (n.id in env or n.id in const):
+            return env.get(n.id, const.get(n.id))
+        if isinstance(n, ast.BinOp) and isinstance(n.op, ast.Add):
+            a, b = valor(n.left, env), valor(n.right, env)
+            return None if a is None or b is None else a + b
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute) and n.func.attr in ("lower", "upper") and not n.args:
+            v = valor(n.func.value, env)
+            return None if v is None else getattr(v, n.func.attr)()
+        if isinstance(n, ast.JoinedStr):
+            trozos = [valor(x.value if isinstance(x, ast.FormattedValue) else x, env) for x in n.values]
+            return None if None in trozos else "".join(trozos)
+        return None
+
+    def visitar(n, bucles):
+        if isinstance(n, ast.For) and isinstance(n.target, ast.Name) and isinstance(n.iter, (ast.Tuple, ast.List)) \
+                and all(isinstance(e, ast.Constant) and isinstance(e.value, str) for e in n.iter.elts):
+            bucles = {**bucles, n.target.id: [e.value for e in n.iter.elts]}
+        if isinstance(n, (ast.BinOp, ast.JoinedStr, ast.Constant)):
+            usadas = sorted({x.id for x in ast.walk(n) if isinstance(x, ast.Name) and x.id in bucles})
+            envs = [dict(zip(usadas, c)) for c in itertools.product(*(bucles[u] for u in usadas))]
+            vals = [valor(n, e) for e in envs]
+            if None not in vals:
+                salida.extend((n.lineno, v) for v in vals)
+                return
+            if isinstance(n, ast.BinOp) and any(PATRON_SQL.search(x.value) for x in ast.walk(n)
+                                                if isinstance(x, ast.Constant) and isinstance(x.value, str)):
+                salida.append((n.lineno, None))   # SQL con un trozo que no se puede resolver
+                return
+        for h in ast.iter_child_nodes(n):
+            visitar(h, bucles)
+    visitar(arbol, {})
+    return salida
+
+
+def es_prueba(rel):   # las tablas de mentira de las pruebas no son de la app (p. ej. «fixture»)
+    base = rel.rsplit("/", 1)[-1]
+    return base.startswith(("probar", "pruebas", "test_")) or "/fixtures/" in rel or rel.startswith("fixtures/")
+
+
 def tablas(ficheros):
     sql_total, por_tabla = [], {}
+    ficheros = [f for f in ficheros if not es_prueba(f)]
     for rel in ficheros:
         if not rel.endswith((".sql", ".py")):
             continue
         t = leer(rel)
-        for m in PATRON_SQL.finditer(t):
-            bloque = _bloque_sql(t, m.start())
+        cadenas = _cadenas_py(t) if rel.endswith(".py") else None
+        if cadenas is None:   # .sql (o un .py que no compila): el texto tal cual
+            cadenas = [(1, t)]
+        hallados = []
+        for linea, s in cadenas:
+            if s is None:
+                sql_total.append(f"-- {rel}\n-- ⚠ SQL construido con un trozo dinámico en la línea {linea}: revisar a mano\n")
+                continue
+            for m in PATRON_SQL.finditer(s):
+                bloque = _bloque_sql(s, m.start(), cadena=rel.endswith(".py")).rstrip()
+                if not bloque.endswith(";"):
+                    bloque += ";"
+                hallados.append((m, bloque, linea + s[:m.start()].count("\n")))
+        for m, bloque, linea in hallados:
             sql_total.append(f"-- {rel}\n{bloque}\n")
             if m.group(1).upper() == "TABLE":
                 cols = []
@@ -202,7 +272,7 @@ def tablas(ficheros):
                     c = re.match(r"\s*([a-z_][a-z0-9_]*)\s+(TEXT|INTEGER|REAL|BLOB|NUMERIC|BOOLEAN|TIMESTAMP\w*|JSONB?|BIGINT|SERIAL|BIGSERIAL|DOUBLE|BYTEA)", linea, re.I)
                     if c and c.group(1).upper() not in ("PRIMARY", "UNIQUE", "CHECK", "FOREIGN", "CONSTRAINT"):
                         cols.append({"columna": c.group(1), "tipo": c.group(2).upper()})
-                por_tabla.setdefault(m.group(2), []).append({"fichero": rel, "linea": t[:m.start()].count("\n") + 1, "columnas": cols})
+                por_tabla.setdefault(m.group(2), []).append({"fichero": rel, "linea": linea, "columnas": cols})
     # columnas añadidas al arrancar (ALTER TABLE … ADD COLUMN): CREATE IF NOT EXISTS no las trae y se perderían
     for rel in ficheros:
         if not rel.endswith((".sql", ".py")):

@@ -1,3 +1,15 @@
+-- actas.py
+CREATE TABLE IF NOT EXISTS actas_lotes (quien TEXT NOT NULL, cliente_id TEXT NOT NULL, huella TEXT NOT NULL, resultado TEXT NOT NULL, PRIMARY KEY (quien, cliente_id, huella));
+
+-- actas.py
+CREATE TABLE IF NOT EXISTS actas_claves (quien TEXT NOT NULL, clave TEXT NOT NULL, cliente_id TEXT NOT NULL, huella TEXT NOT NULL, PRIMARY KEY (quien, clave));
+
+-- altas_personas.py
+CREATE TABLE IF NOT EXISTS altas_recibos (
+  clave TEXT PRIMARY KEY, quien TEXT NOT NULL, persona_id TEXT NOT NULL,
+  resultado TEXT NOT NULL, correo_guardado INTEGER NOT NULL DEFAULT 0,
+  lista_guardada INTEGER NOT NULL DEFAULT 0);
+
 -- altas_personas.py
 CREATE TABLE IF NOT EXISTS altas_tareas (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,6 +112,15 @@ CREATE TRIGGER IF NOT EXISTS avisos_prog_hechos_sin_update BEFORE UPDATE ON avis
 -- avisos_programados.py
 CREATE TRIGGER IF NOT EXISTS avisos_prog_hechos_sin_delete BEFORE DELETE ON avisos_prog_hechos BEGIN SELECT RAISE(ABORT, 'Un «hecho» no se borra'); END;
 
+-- decisiones_durables_382.py
+CREATE TABLE IF NOT EXISTS decisiones_intenciones_382 (intencion_id TEXT PRIMARY KEY,autor TEXT NOT NULL,huella TEXT NOT NULL,decision_id INTEGER NOT NULL,operacion TEXT NOT NULL,revision_final TEXT NOT NULL,registrado_en TEXT NOT NULL DEFAULT (datetime('now')));
+
+-- decisiones_durables_382.py
+CREATE TRIGGER IF NOT EXISTS decisiones382_no_UPDATE BEFORE UPDATE ON decisiones_intenciones_382 BEGIN SELECT RAISE(ABORT,'Intención inmutable'); END;
+
+-- decisiones_durables_382.py
+CREATE TRIGGER IF NOT EXISTS decisiones382_no_DELETE BEFORE DELETE ON decisiones_intenciones_382 BEGIN SELECT RAISE(ABORT,'Intención inmutable'); END;
+
 -- despliegue/estado.py
 CREATE TABLE IF NOT EXISTS ejecuciones (id {pk}, modo TEXT, quien TEXT, inicio TEXT, fin TEXT, estado TEXT, resumen TEXT);
 
@@ -176,6 +197,15 @@ CREATE TRIGGER IF NOT EXISTS envio_pasos_sin_update BEFORE UPDATE ON envio_pasos
 -- envios.py
 CREATE TRIGGER IF NOT EXISTS envio_pasos_sin_delete BEFORE DELETE ON envio_pasos BEGIN SELECT RAISE(ABORT, 'Un paso no se borra'); END;
 
+-- evidencias_kpi.py
+CREATE TABLE IF NOT EXISTS registros(id TEXT PRIMARY KEY,clave TEXT UNIQUE NOT NULL,cliente TEXT NOT NULL,actor TEXT NOT NULL,payload TEXT NOT NULL,hash TEXT NOT NULL,estado TEXT NOT NULL,creado TEXT NOT NULL);
+
+-- evidencias_kpi.py
+CREATE TABLE IF NOT EXISTS eventos(n INTEGER PRIMARY KEY AUTOINCREMENT,registro TEXT NOT NULL,operacion TEXT NOT NULL,actor TEXT NOT NULL,fecha TEXT NOT NULL,datos TEXT NOT NULL);
+
+-- evidencias_kpi.py
+CREATE TABLE IF NOT EXISTS revocaciones(clave TEXT PRIMARY KEY,registro TEXT NOT NULL,actor TEXT NOT NULL,motivo TEXT NOT NULL);
+
 -- ia_gasto.py
 CREATE TABLE IF NOT EXISTS ia_gasto (
   id INTEGER PRIMARY KEY AUTOINCREMENT, creada TEXT NOT NULL, dia TEXT NOT NULL, mes TEXT NOT NULL,
@@ -204,9 +234,126 @@ CREATE TRIGGER IF NOT EXISTS ia_topes_sin_update BEFORE UPDATE ON ia_topes BEGIN
 CREATE TRIGGER IF NOT EXISTS ia_topes_sin_delete BEFORE DELETE ON ia_topes BEGIN SELECT RAISE(ABORT, 'Un cambio de topes no se borra'); END;
 
 -- ia_gasto.py
+CREATE TABLE IF NOT EXISTS ia_reservas (
+  id TEXT PRIMARY KEY, creada TEXT NOT NULL, tarea TEXT NOT NULL, quien TEXT NOT NULL,
+  llave TEXT NOT NULL, reservado_eur REAL NOT NULL CHECK(reservado_eur >= 0),
+  estado TEXT NOT NULL CHECK(estado IN ('activa','incierta','cerrada')));
+
+-- ia_gasto.py
+CREATE TRIGGER IF NOT EXISTS ia_reservas_sin_delete BEFORE DELETE ON ia_reservas BEGIN SELECT RAISE(ABORT,'Una reserva no se borra'); END;
+
+-- ia_gasto.py
 CREATE TABLE IF NOT EXISTS ia_lotes (
   id TEXT PRIMARY KEY, creado TEXT NOT NULL, quien TEXT NOT NULL, tarea TEXT NOT NULL, llave TEXT NOT NULL, modelo TEXT,
   n INTEGER NOT NULL, reservado_eur REAL NOT NULL, estado TEXT NOT NULL, cerrado TEXT, peticiones TEXT);
+
+-- intenciones_acciones.py
+CREATE TABLE IF NOT EXISTS intenciones_acciones (
+        actor TEXT NOT NULL,
+        intencion TEXT NOT NULL,
+        huella TEXT NOT NULL,
+        accion_id INTEGER NOT NULL REFERENCES acciones(id),
+        PRIMARY KEY(actor, intencion)
+    );
+
+-- leads_archivo.py
+CREATE TABLE IF NOT EXISTS leads_meta (version INTEGER NOT NULL);
+
+-- leads_archivo.py
+CREATE TABLE IF NOT EXISTS leads_eventos (
+                    cliente_id TEXT NOT NULL, source TEXT NOT NULL, event_id TEXT NOT NULL,
+                    payload TEXT NOT NULL, huella TEXT NOT NULL, actor_id TEXT NOT NULL,
+                    fuente_key TEXT NOT NULL, registrado TEXT NOT NULL,
+                    PRIMARY KEY(cliente_id,source,event_id));
+
+-- leads_archivo.py
+CREATE TABLE IF NOT EXISTS leads_recibos (
+                    recibo_id TEXT PRIMARY KEY, cliente_id TEXT NOT NULL, source TEXT NOT NULL,
+                    event_id TEXT, actor_id TEXT NOT NULL, resultado TEXT NOT NULL,
+                    motivo TEXT NOT NULL, registrado TEXT NOT NULL);
+
+-- mi_trabajo.py
+CREATE TABLE IF NOT EXISTS mt_crono (
+  persona TEXT PRIMARY KEY,                 -- un cronómetro en marcha por persona
+  tarea TEXT NOT NULL,
+  inicio TEXT NOT NULL                      -- UTC, ISO
+);
+
+-- operaciones_anomalias_276.py
+CREATE TABLE IF NOT EXISTS operaciones_anomalias_276 (id INTEGER PRIMARY KEY AUTOINCREMENT, anomalia TEXT NOT NULL, revision INTEGER NOT NULL, actor TEXT NOT NULL, persona_id TEXT NOT NULL, origen_hash TEXT NOT NULL, decision TEXT NOT NULL, prueba TEXT NOT NULL, hora TEXT NOT NULL, intencion TEXT NOT NULL, request_hash TEXT NOT NULL, UNIQUE(anomalia,revision), UNIQUE(actor,intencion));
+
+-- operaciones_anomalias_276.py
+CREATE TRIGGER IF NOT EXISTS operaciones_276_sin_update BEFORE UPDATE ON operaciones_anomalias_276 BEGIN SELECT RAISE(ABORT,'Revisión de horas inmutable'); END;
+
+-- operaciones_anomalias_276.py
+CREATE TRIGGER IF NOT EXISTS operaciones_276_sin_delete BEFORE DELETE ON operaciones_anomalias_276 BEGIN SELECT RAISE(ABORT,'Revisión de horas inmutable'); END;
+
+-- operaciones_feedback_273.py
+CREATE TABLE IF NOT EXISTS operaciones_feedback_273 (intencion_id TEXT PRIMARY KEY, cliente_id TEXT NOT NULL, semana TEXT NOT NULL, revision INTEGER NOT NULL, autor TEXT NOT NULL, registrado_en TEXT NOT NULL, estado TEXT NOT NULL, nota TEXT NOT NULL, huella TEXT NOT NULL, UNIQUE(cliente_id,semana,revision));
+
+-- operaciones_feedback_273.py
+CREATE TRIGGER IF NOT EXISTS feedback273_sin_update BEFORE UPDATE ON operaciones_feedback_273 BEGIN SELECT RAISE(ABORT,'Opinión declarada inmutable'); END;
+
+-- operaciones_feedback_273.py
+CREATE TRIGGER IF NOT EXISTS feedback273_sin_delete BEFORE DELETE ON operaciones_feedback_273 BEGIN SELECT RAISE(ABORT,'Opinión declarada inmutable'); END;
+
+-- operaciones_notas_equipo_281.py
+CREATE TABLE IF NOT EXISTS operaciones_notas_equipo_281 (id INTEGER PRIMARY KEY AUTOINCREMENT, persona_id TEXT NOT NULL, periodo TEXT NOT NULL, revision INTEGER NOT NULL, autor TEXT NOT NULL, hora TEXT NOT NULL, nota INTEGER, prueba TEXT NOT NULL, accion TEXT, intencion TEXT NOT NULL, huella TEXT NOT NULL, UNIQUE(persona_id,revision), UNIQUE(autor,intencion));
+
+-- operaciones_notas_equipo_281.py
+CREATE TRIGGER IF NOT EXISTS operaciones_281_sin_update BEFORE UPDATE ON operaciones_notas_equipo_281 BEGIN SELECT RAISE(ABORT,'Nota humana inmutable'); END;
+
+-- operaciones_notas_equipo_281.py
+CREATE TRIGGER IF NOT EXISTS operaciones_281_sin_delete BEFORE DELETE ON operaciones_notas_equipo_281 BEGIN SELECT RAISE(ABORT,'Nota humana inmutable'); END;
+
+-- operaciones_pedidos_account.py
+CREATE TABLE IF NOT EXISTS operaciones_pedidos_account_294 (intencion_id TEXT PRIMARY KEY,cliente_id TEXT NOT NULL,tipo TEXT NOT NULL,referencia_id TEXT NOT NULL,revision INTEGER NOT NULL,autor TEXT NOT NULL,receptor TEXT NOT NULL,estado TEXT NOT NULL,registrado_en TEXT NOT NULL,revision_fuente TEXT NOT NULL,huella TEXT NOT NULL,UNIQUE(cliente_id,tipo,referencia_id,revision));
+
+-- operaciones_pedidos_account.py
+CREATE TRIGGER IF NOT EXISTS pedidos294_no_UPDATE BEFORE UPDATE ON operaciones_pedidos_account_294 BEGIN SELECT RAISE(ABORT,'Pedido inmutable'); END;
+
+-- operaciones_pedidos_account.py
+CREATE TRIGGER IF NOT EXISTS pedidos294_no_DELETE BEFORE DELETE ON operaciones_pedidos_account_294 BEGIN SELECT RAISE(ABORT,'Pedido inmutable'); END;
+
+-- operaciones_prioridades_300.py
+CREATE TABLE IF NOT EXISTS operaciones_prioridades_300 (intencion_id TEXT PRIMARY KEY,actor TEXT NOT NULL,prioridad_id TEXT NOT NULL,fuente_revision TEXT NOT NULL,dia TEXT NOT NULL,revision INTEGER NOT NULL,estado TEXT NOT NULL,nota TEXT NOT NULL,registrado_en TEXT NOT NULL,huella TEXT NOT NULL,UNIQUE(actor,prioridad_id,fuente_revision,dia,revision));
+
+-- operaciones_prioridades_300.py
+CREATE TRIGGER IF NOT EXISTS prioridades300_sin_update BEFORE UPDATE ON operaciones_prioridades_300 BEGIN SELECT RAISE(ABORT,'Rastro propio inmutable'); END;
+
+-- operaciones_prioridades_300.py
+CREATE TRIGGER IF NOT EXISTS prioridades300_sin_delete BEFORE DELETE ON operaciones_prioridades_300 BEGIN SELECT RAISE(ABORT,'Rastro propio inmutable'); END;
+
+-- operaciones_registros_269.py
+CREATE TABLE IF NOT EXISTS operaciones_registros_269 (id INTEGER PRIMARY KEY AUTOINCREMENT, propietario TEXT NOT NULL, clave TEXT NOT NULL, revision INTEGER NOT NULL, autor TEXT NOT NULL, registrado_en TEXT NOT NULL, contenido TEXT NOT NULL, intencion TEXT NOT NULL, huella TEXT NOT NULL, UNIQUE(autor,intencion), UNIQUE(propietario,clave,revision));
+
+-- operaciones_registros_269.py
+CREATE TRIGGER IF NOT EXISTS operaciones_269_sin_update BEFORE UPDATE ON operaciones_registros_269 BEGIN SELECT RAISE(ABORT,'Registro operativo inmutable'); END;
+
+-- operaciones_registros_269.py
+CREATE TRIGGER IF NOT EXISTS operaciones_269_sin_delete BEFORE DELETE ON operaciones_registros_269 BEGIN SELECT RAISE(ABORT,'Registro operativo inmutable'); END;
+
+-- operaciones_registros_272.py
+CREATE TABLE IF NOT EXISTS operaciones_control_272 (id INTEGER PRIMARY KEY AUTOINCREMENT, objeto TEXT NOT NULL, revision INTEGER NOT NULL, actor TEXT NOT NULL, autor TEXT NOT NULL, asignado TEXT NOT NULL, tipo TEXT NOT NULL, hora TEXT NOT NULL, contenido TEXT NOT NULL, intencion TEXT NOT NULL, huella TEXT NOT NULL, UNIQUE(actor,intencion), UNIQUE(objeto,revision));
+
+-- operaciones_registros_272.py
+CREATE TRIGGER IF NOT EXISTS operaciones_272_sin_update BEFORE UPDATE ON operaciones_control_272 BEGIN SELECT RAISE(ABORT,'Registro de control inmutable'); END;
+
+-- operaciones_registros_272.py
+CREATE TRIGGER IF NOT EXISTS operaciones_272_sin_delete BEFORE DELETE ON operaciones_control_272 BEGIN SELECT RAISE(ABORT,'Registro de control inmutable'); END;
+
+-- planes_fuegos_255.py
+CREATE TABLE IF NOT EXISTS planes_fuegos_255 (
+  accion_id TEXT PRIMARY KEY, cliente_id TEXT NOT NULL, version INTEGER NOT NULL,
+  operacion TEXT NOT NULL, actor_id TEXT NOT NULL, hora TEXT NOT NULL,
+  payload_hash TEXT NOT NULL, datos TEXT NOT NULL, UNIQUE(cliente_id, version)
+);
+
+-- planes_fuegos_255.py
+CREATE TRIGGER IF NOT EXISTS fuego255_sin_update BEFORE UPDATE ON planes_fuegos_255 BEGIN SELECT RAISE(ABORT, 'El historial de planes no se modifica'); END;
+
+-- planes_fuegos_255.py
+CREATE TRIGGER IF NOT EXISTS fuego255_sin_delete BEFORE DELETE ON planes_fuegos_255 BEGIN SELECT RAISE(ABORT, 'El historial de planes no se borra'); END;
 
 -- schema_v2.sql
 CREATE TABLE IF NOT EXISTS personas (
@@ -409,6 +556,28 @@ CREATE TABLE IF NOT EXISTS avisos (
   UNIQUE (dia, tipo, clave)
 );
 
+-- schema_v2.sql
+CREATE TABLE IF NOT EXISTS fuente_lectura (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  fuente      TEXT NOT NULL,                   -- gsc | metricool | ghl | hostinger | holded…
+  recurso     TEXT NOT NULL,                   -- cliente, cuenta o subcuenta ('' si la fuente es una sola)
+  hora        TEXT NOT NULL DEFAULT (datetime('now')),
+  ok          INTEGER NOT NULL CHECK (ok IN (0,1)),
+  codigo      TEXT,                            -- en error: código HTTP, «vacio», «a_cero», «sospechoso» o la excepción
+  error       TEXT,                            -- una línea
+  cuerpo      TEXT,                            -- JSON de lo que devolvió la API
+  huella      TEXT                             -- sha256 del JSON canónico
+);
+
+-- schema_v2.sql
+CREATE INDEX IF NOT EXISTS i_fuente_lectura ON fuente_lectura(fuente, recurso, ok, id);
+
+-- schema_v2.sql
+CREATE VIEW IF NOT EXISTS fuente_ultimo_bueno AS
+  SELECT f.* FROM fuente_lectura f
+   WHERE f.ok = 1
+     AND f.id = (SELECT MAX(g.id) FROM fuente_lectura g WHERE g.fuente = f.fuente AND g.recurso = f.recurso AND g.ok = 1);
+
 -- servir.py
 CREATE TABLE IF NOT EXISTS preferencias (persona TEXT NOT NULL, clave TEXT NOT NULL, valor TEXT NOT NULL,
   cambiado TEXT NOT NULL DEFAULT (datetime('now')), PRIMARY KEY (persona, clave));
@@ -471,6 +640,16 @@ CREATE TRIGGER IF NOT EXISTS acciones_solo_estado BEFORE UPDATE ON acciones
     OR NEW.cliente_id IS NOT OLD.cliente_id OR NEW.texto IS NOT OLD.texto OR NEW.vista_previa IS NOT OLD.vista_previa OR NEW.creada IS NOT OLD.creada
   BEGIN SELECT RAISE(ABORT, 'De una acción solo puede avanzar el estado'); END;
 
+-- servir.py
+CREATE TRIGGER IF NOT EXISTS registro_sin_reinsertar_569 BEFORE INSERT ON registro
+WHEN NEW.id > 0 AND NEW.id <= (SELECT MAX(id) FROM registro)
+BEGIN SELECT RAISE(ABORT, 'El rastro no reutiliza IDs: crea una anulación'); END;
+
+-- servir.py
+CREATE TRIGGER IF NOT EXISTS huellas_sin_reinsertar_569 BEFORE INSERT ON registro_huellas
+WHEN NEW.id > 0 AND NEW.id <= (SELECT MAX(id) FROM registro_huellas)
+BEGIN SELECT RAISE(ABORT, 'La huella del rastro no reutiliza IDs'); END;
+
 -- sincronia.py
 CREATE TABLE IF NOT EXISTS sinc_cambios (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -524,6 +703,33 @@ CREATE TRIGGER IF NOT EXISTS sinc_pasos_sin_update BEFORE UPDATE ON sinc_pasos B
 
 -- sincronia.py
 CREATE TRIGGER IF NOT EXISTS sinc_pasos_sin_delete BEFORE DELETE ON sinc_pasos BEGIN SELECT RAISE(ABORT, 'Un paso no se borra'); END;
+
+-- uso_local.py
+CREATE TABLE IF NOT EXISTS uso_eventos (
+ id INTEGER PRIMARY KEY, instante REAL NOT NULL, actor TEXT NOT NULL,
+ visto TEXT NOT NULL, pantalla TEXT NOT NULL, accion TEXT NOT NULL, control TEXT NOT NULL, activo_ms INTEGER NOT NULL);
+
+-- uso_local.py
+CREATE INDEX IF NOT EXISTS uso_instante ON uso_eventos(instante);
+
+-- uso_local.py
+CREATE INDEX IF NOT EXISTS uso_actor ON uso_eventos(actor, instante);
+
+-- uso_local.py
+CREATE TABLE IF NOT EXISTS uso_sesiones (
+ actor TEXT NOT NULL, sesion TEXT NOT NULL, secuencia INTEGER NOT NULL,
+ instante REAL NOT NULL, visto TEXT NOT NULL, pantalla TEXT NOT NULL,
+ PRIMARY KEY(actor,sesion));
+
+-- uso_local.py
+CREATE TABLE IF NOT EXISTS uso_ventanas (
+ actor TEXT PRIMARY KEY, fin REAL NOT NULL);
+
+-- vistas_tareas.py
+CREATE TABLE IF NOT EXISTS tareas_vistas_privadas (
+        propietario TEXT NOT NULL, id TEXT NOT NULL, nombre TEXT NOT NULL,
+        filtros TEXT NOT NULL, version INTEGER NOT NULL, revision INTEGER NOT NULL,
+        PRIMARY KEY(propietario,id));
 
 -- servir.py
 ALTER TABLE decisiones ADD COLUMN IF NOT EXISTS titulo TEXT;

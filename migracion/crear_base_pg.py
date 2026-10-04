@@ -26,8 +26,9 @@ SQL = RAIZ / "migracion" / "inventario" / "tablas.sql"
 
 
 PRIMERO = ("schema_v2.sql", "servir.py")   # las tablas de la app mandan sobre las de las tareas si se llaman igual
-DISPARADOR_CON_CONDICION = re.compile(
-    r"CREATE TRIGGER IF NOT EXISTS (\w+) BEFORE (UPDATE|DELETE|INSERT) ON (\w+)\s+WHEN (.+?)\s+BEGIN SELECT RAISE\(ABORT, '([^']*)'\); END;",
+DISPARADOR_CON_CONDICION = re.compile(   # el mismo final tolerante que base.py («RAISE(ABORT,'…')», sin «;» final)
+    r"CREATE TRIGGER IF NOT EXISTS (\w+)\s+BEFORE\s+(UPDATE|DELETE|INSERT)\s+ON\s+(\w+)\s+WHEN\s+(.+?)\s+"
+    r"BEGIN\s+SELECT\s+RAISE\(\s*ABORT\s*,\s*'([^']*)'\s*\)\s*;\s*END\b;?",
     re.S)
 
 

@@ -1,7 +1,12 @@
 [
   {
+    "fichero": "despliegue/probar_base_traduccion.py",
+    "lineas": 294,
+    "doc": "despliegue/probar_base_traduccion.py · regresión del traductor SQLite → Postgres de despliegue/base.py."
+  },
+  {
     "fichero": "despliegue/pruebas_noche.py",
-    "lineas": 1232,
+    "lineas": 1236,
     "doc": "despliegue/pruebas_noche.py · la batería nocturna (3:00) en UNA orden (carril C5, punto 3.6 del estudio 23)."
   },
   {
@@ -10,8 +15,28 @@
     "doc": "despliegue/pruebas_tokens.py · la caché del token de acceso (~/RO_HERRAMIENTAS/cache_tokens.py) evita refrescos de más."
   },
   {
+    "fichero": "fuentes/probar_lectura.py",
+    "lineas": 226,
+    "doc": "fuentes/probar_lectura.py · pruebas de fuentes/lectura.py (N-01) con una API FALSA. Ninguna llamada sale fuera."
+  },
+  {
+    "fichero": "fuentes_agenda/probar_crosswalk_189.py",
+    "lineas": 123,
+    "doc": "Crosswalk sintético y evidencia estructural local; no importa el generador ni proveedores.\"\"\""
+  },
+  {
+    "fichero": "fuentes_agenda/probar_crosswalk_runtime_199.py",
+    "lineas": 152,
+    "doc": "199 fixtures del contrato crosswalk; no importa productores ni proveedores.\"\"\""
+  },
+  {
+    "fichero": "fuentes_agenda/probar_duplicados.py",
+    "lineas": 126,
+    "doc": "Fixtures sintéticas del helper puro: nunca importa/ejecuta el generador.\"\"\""
+  },
+  {
     "fichero": "fuentes_alertas/probar_alertas.py",
-    "lineas": 253,
+    "lineas": 254,
     "doc": "probar_alertas.py · pruebas y capturas de «Alertas del departamento» (carril N4)."
   },
   {
@@ -25,9 +50,69 @@
     "doc": "fuentes_consejos/probar_cerebro.py · pruebas del CEREBRO DE DECISIONES v2 (3-oct-2026)."
   },
   {
+    "fichero": "fuentes_contexto/probar_contexto.py",
+    "lineas": 203,
+    "doc": "fuentes_contexto/probar_contexto.py · Pruebas del contexto del cliente (4-oct-2026). Sin red."
+  },
+  {
+    "fichero": "fuentes_crm/probar_adaptadores_ultima_valida_493.py",
+    "lineas": 88,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_crm/probar_autoridad_ultima_valida_499.py",
+    "lineas": 94,
+    "doc": "499: constructor real + P/gate servidor reales; sólo fixtures anónimas.\"\"\""
+  },
+  {
+    "fichero": "fuentes_crm/probar_colector_lecturas_504.py",
+    "lineas": 102,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_crm/probar_pipeline_ultima_valida_496.py",
+    "lineas": 110,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_crm/probar_revision_colector_510.py",
+    "lineas": 66,
+    "doc": "510 independiente: contratos reales504→493→490, sólo memoria sintética.\"\"\""
+  },
+  {
+    "fichero": "fuentes_crm/probar_stock_abierto_503.py",
+    "lineas": 59,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_crm/probar_ultima_valida_490.py",
+    "lineas": 105,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_diagnosticos/probar_diagnosticos.py",
+    "lineas": 160,
+    "doc": "fuentes_diagnosticos/probar_diagnosticos.py · pruebas con DATOS INVENTADOS (4-oct-2026). Sin red, sin IA, sin tocar data/."
+  },
+  {
     "fichero": "fuentes_ficha/probar_a4.py",
     "lineas": 203,
     "doc": "fuentes_ficha/probar_a4.py · A4 (2-oct): objetivo y semáforo del lunes desde la cabecera de la ficha, de punta a punta."
+  },
+  {
+    "fichero": "fuentes_gbp/probar_gbp.py",
+    "lineas": 153,
+    "doc": "probar_gbp.py · pruebas de la ficha de Google (Google Business Profile) sin tocar nada real."
+  },
+  {
+    "fichero": "fuentes_historial_reuniones/probar_historial.py",
+    "lineas": 123,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_horas/probar_historial_diario_359.py",
+    "lineas": 67,
+    "doc": ""
   },
   {
     "fichero": "fuentes_ia/probar_gasto.py",
@@ -45,6 +130,21 @@
     "doc": "Prueba de M14 Incidencias con Chrome sin cabeza (Playwright): consola, desbordes, recorte por persona, pestañas,"
   },
   {
+    "fichero": "fuentes_mi_trabajo/probar_mi_trabajo.py",
+    "lineas": 103,
+    "doc": "Prueba de «Mi trabajo» con Chrome sin cabeza (Playwright): consola, desbordes, textos < 12 px, flujo de acciones y capturas."
+  },
+  {
+    "fichero": "fuentes_pagespeed/probar_lectura_api.py",
+    "lineas": 63,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_pagespeed/probar_pagespeed.py",
+    "lineas": 48,
+    "doc": ""
+  },
+  {
     "fichero": "fuentes_personas/probar_m20_m22.py",
     "lineas": 68,
     "doc": "Prueba en Chrome sin cabeza (Playwright) de M20 Personas, M21 Decisiones y M22 Conexiones."
@@ -55,13 +155,78 @@
     "doc": "Prueba de M10 Producción y M11 Horas con Chrome sin cabeza (Playwright): consola, desbordes, recorte y capturas."
   },
   {
+    "fichero": "fuentes_produccion/probar_horas_observadas_144.py",
+    "lineas": 47,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_produccion/probar_mediciones_131.py",
+    "lineas": 38,
+    "doc": "Ejecuta sólo función pura y expresión append real por AST; jamás importa main.\"\"\""
+  },
+  {
+    "fichero": "fuentes_produccion/probar_planning_observado_355.py",
+    "lineas": 69,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_produccion/probar_planning_observado_395.py",
+    "lineas": 66,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_produccion/probar_urgencias_observadas_398.py",
+    "lineas": 71,
+    "doc": ""
+  },
+  {
     "fichero": "fuentes_reuniones/probar_m13_m15.py",
     "lineas": 95,
     "doc": "Prueba de M13 Informes mensuales y M15 Reuniones con Chrome sin cabeza (Playwright): consola, desbordes,"
   },
   {
+    "fichero": "fuentes_riesgo/probar_riesgo.py",
+    "lineas": 243,
+    "doc": "fuentes_riesgo/probar_riesgo.py · pruebas del semáforo en tres ejes y del riesgo de baja (4-oct-2026)."
+  },
+  {
+    "fichero": "fuentes_seo/probar_contexto_286b.py",
+    "lineas": 57,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_seo/probar_contexto_candidato_286.py",
+    "lineas": 36,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_seo/probar_motores_contexto.py",
+    "lineas": 22,
+    "doc": ""
+  },
+  {
+    "fichero": "fuentes_verdad/probar_clientes_operativos.py",
+    "lineas": 65,
+    "doc": "Regresiones del filtro operativo; catálogo sintético, sin editar fuentes reales.\"\"\""
+  },
+  {
+    "fichero": "pruebas_altas_135.py",
+    "lineas": 252,
+    "doc": "N9 sobre SQLite temporal y dependencias locales inyectadas; sin servidor ni ficheros reales.\"\"\""
+  },
+  {
+    "fichero": "pruebas_arranque_privado.py",
+    "lineas": 98,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_cobertura_crm.py",
+    "lineas": 55,
+    "doc": ""
+  },
+  {
     "fichero": "pruebas_coherencia.py",
-    "lineas": 1258,
+    "lineas": 1364,
     "doc": "pruebas_coherencia.py · UNA SOLA VERDAD: ¿cuenta cada pantalla lo mismo que la verdad única? (E0 ronda 5)"
   },
   {
@@ -71,12 +236,97 @@
   },
   {
     "fichero": "pruebas_e0.py",
-    "lineas": 220,
+    "lineas": 277,
     "doc": "pruebas_e0.py · pruebas de aceptación de E0 contra servir.py ya arrancado (solo lectura: no escribe nada)."
   },
   {
+    "fichero": "pruebas_empaquetado.py",
+    "lineas": 65,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_entrada_piloto.py",
+    "lineas": 45,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_envios_adjuntos.py",
+    "lineas": 37,
+    "doc": "Regresión: un descriptor de PDF nunca debe salir como correo sin adjunto.\"\"\""
+  },
+  {
+    "fichero": "pruebas_hidratar_privado.py",
+    "lineas": 110,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_importar_hoja_w5.py",
+    "lineas": 167,
+    "doc": "Lectores reales con entradas sintéticas; sin API, importación ni generación.\"\"\""
+  },
+  {
+    "fichero": "pruebas_informe_word_149.py",
+    "lineas": 78,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_informe_word_api_154.py",
+    "lineas": 133,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_metodo_cuentas.py",
+    "lineas": 76,
+    "doc": "Metodología pura y proyección de privacidad, sin conexión ni envíos.\"\"\""
+  },
+  {
+    "fichero": "pruebas_metodo_cuentas_131.py",
+    "lineas": 49,
+    "doc": "QA131: fuentes sintéticas, catálogo ACT real; sin red/datasets de clientes.\"\"\""
+  },
+  {
+    "fichero": "pruebas_metodo_cuentas_305.py",
+    "lineas": 43,
+    "doc": "Política de cohorte exacta: fixtures locales; sin proveedores ni datos escritos.\"\"\""
+  },
+  {
+    "fichero": "pruebas_oportunidades_cerradas.py",
+    "lineas": 75,
+    "doc": ""
+  },
+  {
+    "fichero": "pruebas_paridad_tareas.py",
+    "lineas": 115,
+    "doc": "Pruebas aisladas del prototipo. No realizan conexiones ni escrituras externas.\"\"\""
+  },
+  {
+    "fichero": "pruebas_permisos_servicio.py",
+    "lineas": 196,
+    "doc": "Pruebas puras de servicio contratado, cartera account y paridad. Sin red/servidor/base.\"\"\""
+  },
+  {
+    "fichero": "pruebas_procedimientos_contexto.py",
+    "lineas": 164,
+    "doc": "134/143 propuestas genéricas: permisos y hashes con fixtures, sin proveedores/DB.\"\"\""
+  },
+  {
     "fichero": "pruebas_seguridad.py",
-    "lineas": 2032,
+    "lineas": 2225,
     "doc": "pruebas_seguridad.py · reproduce cada hallazgo de 27_AUDITORIA_SEGURIDAD.md y comprueba que está cerrado (E0 ronda 6)."
+  },
+  {
+    "fichero": "pruebas_seguridad_146.py",
+    "lineas": 101,
+    "doc": "Regresión independiente: hooks reales, permisos reales, SQLite temporal, sin proveedores.\"\"\""
+  },
+  {
+    "fichero": "pruebas_uso_local.py",
+    "lineas": 142,
+    "doc": "Pruebas aisladas: no servidor, red ni base de producto.\"\"\""
+  },
+  {
+    "fichero": "pruebas_vistas_tareas.py",
+    "lineas": 181,
+    "doc": "Preferencias privadas en SQLite temporal, sin tareas/ficheros/proveedores reales.\"\"\""
   }
 ]

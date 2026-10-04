@@ -9,6 +9,8 @@
     "puestos_extra",
     "datos_de_modulo",
     "modulos_sin_puesto",
+    "sillas_de_equipo",
+    "solo_su_cartera",
     "almacenes_privados",
     "ficha_solo_contrato",
     "tipos",
@@ -228,6 +230,7 @@
     "comparar_personas",
     "contactos_cliente",
     "contrasena",
+    "coste_herramientas",
     "cuota",
     "dinero_empresa",
     "editar_objetivo_alta",
@@ -235,6 +238,7 @@
     "gbp_responder",
     "grabacion",
     "horas_cliente",
+    "horas_pautadas",
     "horas_persona",
     "inversion",
     "lead",
@@ -257,6 +261,8 @@
   ],
   "datos_de_modulo": [
     "agenda/agenda",
+    "agus/agus",
+    "agus/licencias_coste",
     "ajustes/conexiones",
     "alertas/alertas",
     "alertas/p_*",
@@ -266,6 +272,7 @@
     "captacion/captacion",
     "chat_equipo/p_*",
     "conexiones/salud",
+    "contexto/contexto_clientes",
     "crm/crm",
     "decisiones/direccion",
     "decisiones/firmadas",
@@ -308,6 +315,7 @@
     "mi_dia/p_*",
     "mi_dia/puestos/*/p_*",
     "mi_dia/ronda_mili",
+    "mi_trabajo/mi_trabajo",
     "modular/tablero",
     "modular/webs",
     "nuevos/nuevos",
@@ -337,6 +345,7 @@
     "produccion/produccion",
     "redes/redes",
     "reuniones/reuniones",
+    "riesgo/riesgo_baja",
     "seo/seo",
     "seo/webs",
     "telefonos/dudosos",
@@ -345,8 +354,11 @@
     "ventas_ro/setters",
     "ventas_ro/ventas_ro",
     "ventas_ro_extra/anuncios",
+    "verdad/bajas_tareas",
     "verdad/clientes",
     "verdad/equipo",
+    "verdad/estado_clientes",
+    "verdad/objetivos_clientes",
     "whatsapp/whatsapp"
   ],
   "almacenes_privados": [
@@ -361,6 +373,16 @@
     "whatsapp/_privado/textos"
   ],
   "acciones_permitidas": {
+    "informe-cliente": [
+      "borrador_informe"
+    ],
+    "mi-trabajo": [
+      "cambiar_estado",
+      "cambiar_fecha",
+      "marcar_hecha",
+      "imputar_horas",
+      "comentario"
+    ],
     "primera-semana": [
       "primera_semana_paso"
     ],
@@ -383,7 +405,8 @@
       "confirmacion_cita",
       "llamada_iniciada",
       "whatsapp_abierto",
-      "correo_abierto"
+      "correo_abierto",
+      "crear_cita_ghl"
     ],
     "ventas-ro": [
       "llamada_iniciada",
@@ -604,9 +627,9 @@
   ],
   "cifras": {
     "puestos": 21,
-    "tipos": 39,
-    "datos_de_modulo": 92,
+    "tipos": 41,
+    "datos_de_modulo": 100,
     "almacenes_privados": 9,
-    "acciones": 133
+    "acciones": 140
   }
 }

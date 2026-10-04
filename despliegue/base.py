@@ -15,6 +15,8 @@ Con DATABASE_URL (Render), servir.conectar() devuelve una ConexionPG que traduce
   BEGIN IMMEDIATE           → candado de transacción (pg_advisory_xact_lock): un solo escritor del rastro a la vez
   PRAGMA table_info(t)      → columnas de information_schema (fila[1] = nombre, como en SQLite)
   lastrowid                 → RETURNING <columna con contador> añadido a los INSERT de cualquier tabla que la tenga
+  CREATE TABLE/INDEX/TRIGGER lanzados con execute() (no executescript) → la misma traducción del esquema, una vez
+  in_transaction            → como sqlite3: True si hay transacción abierta (ia_gasto, intenciones, vistas lo miran)
 y el esquema (schema_v2.sql) se traduce solo con esquema_postgres(): AUTOINCREMENT → BIGSERIAL, las vistas, y los
 disparadores que impiden borrar o cambiar el rastro (también los que llevan condición WHEN) → funciones plpgsql que
 lanzan el mismo mensaje.
@@ -34,9 +36,13 @@ CLAVE_AUTO = {"asignaciones": "id", "registro": "id", "acciones": "id", "inciden
               "recargas": "id", "avisos": "id", "historial": "n"}
 
 
-def esquema_postgres(sql):
+def esquema_postgres(sql, cabecera=True):
+    # Fin de un disparador SQLite: «RAISE(ABORT, 'msg'); END;». Tolerante: con o sin espacio tras la coma y sin el «;»
+    # final (los módulos nuevos escriben «RAISE(ABORT,'…'); END» en un execute()). Local: probar_rastro_replace_569
+    # ejecuta esta función suelta.
+    fin = r"BEGIN\s+SELECT\s+RAISE\(\s*ABORT\s*,\s*'([^']*)'\s*\)\s*;\s*END\b;?"
     sql = re.sub(r"(?m)^\s*PRAGMA[^;]*;\s*$", "", sql)
-    sql = re.sub(r"INTEGER PRIMARY KEY AUTOINCREMENT", "BIGSERIAL PRIMARY KEY", sql)
+    sql = re.sub(r"INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT", "BIGSERIAL PRIMARY KEY", sql)
     sql = sql.replace("(datetime('now'))", f"({AHORA_PG})").replace("datetime('now')", AHORA_PG).replace("date('now')", HOY_PG)
     sql = sql.replace("CREATE VIEW IF NOT EXISTS", "CREATE OR REPLACE VIEW")
     cab = ("CREATE OR REPLACE FUNCTION ro_prohibido() RETURNS trigger LANGUAGE plpgsql AS $f$ "
@@ -59,11 +65,11 @@ def esquema_postgres(sql):
                 f"IF ({' '.join(cond.split())}) THEN RAISE EXCEPTION '%', '{msg}'; END IF; RETURN {fila}; END $f$;\n"
                 f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
                 f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION {nombre}_fn();")
-    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+) BEFORE (UPDATE|DELETE|INSERT) ON (\w+)\s+WHEN (.+?)\s+BEGIN "
-                 r"SELECT RAISE\(ABORT, '([^']*)'\); END;", con_condicion, sql, flags=re.S)
-    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+) BEFORE (UPDATE|DELETE) ON (\w+) BEGIN SELECT RAISE\(ABORT, '([^']*)'\); END;",
+    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+)\s+BEFORE\s+(UPDATE|DELETE|INSERT)\s+ON\s+(\w+)\s+WHEN\s+(.+?)\s+"
+                 + fin, con_condicion, sql, flags=re.S)
+    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+)\s+BEFORE\s+(UPDATE|DELETE)\s+ON\s+(\w+)\s+" + fin,
                  disparador, sql)
-    return cab + sql
+    return (cab if cabecera else "") + sql
 
 
 SQLITE_MASTER_PG = ("(SELECT table_name AS name, table_name AS tbl_name, 'table' AS type FROM information_schema.tables "
@@ -74,6 +80,13 @@ def traducir(sql, claves=None, auto=None):
     """claves(tabla) → columnas de la clave primaria (para INSERT OR REPLACE); auto(tabla) → su columna con contador
     (BIGSERIAL), para que lastrowid funcione en TODAS las tablas, no solo en las de CLAVE_AUTO. Las da ConexionPG."""
     s = sql.strip()
+    if re.match(r"(?is)^CREATE\s+(UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\b", s):
+        # DDL lanzado con execute() (preparar() de los módulos nuevos): la misma traducción que el esquema.
+        # Los % se doblan como en el resto: execute() sin parámetros los deshace.
+        pg = esquema_postgres(s, cabecera=False)
+        if "ro_prohibido(" in pg:
+            pg = esquema_postgres("") + pg
+        return pg.replace("%", "%%"), ()
     if re.match(r"(?i)^PRAGMA\s+foreign_keys", s):
         return None, None
     if re.match(r"(?i)^BEGIN(\s+(IMMEDIATE|EXCLUSIVE|DEFERRED))?;?$", s):
@@ -123,13 +136,17 @@ def _marcadores(s):
 
 
 class Fila(dict):
-    """Como sqlite3.Row: por nombre y por posición."""
+    """Como sqlite3.Row: por nombre, por posición y por trozos (fila[:3]); al recorrerla o desempaquetarla
+    («for a, b in con.execute(…)») da los VALORES, no los nombres (ia_gasto lo hace así)."""
     def __init__(self, columnas, valores):
         super().__init__(zip(columnas, valores))
         self._v = list(valores)
 
     def __getitem__(self, k):
-        return self._v[k] if isinstance(k, int) else dict.__getitem__(self, k)
+        return self._v[k] if isinstance(k, (int, slice)) else dict.__getitem__(self, k)
+
+    def __iter__(self):
+        return iter(self._v)
 
     def keys(self):
         return list(dict.keys(self))
@@ -233,6 +250,7 @@ class ConexionPG:
     def __init__(self, url):
         self._url = url
         self._con = None
+        self._ddl = []   # DDL «IF NOT EXISTS» de esta transacción: cuenta como hecho solo tras el COMMIT
         while self._con is None:
             with _CANDADO:
                 libre = _LIBRES.pop() if _LIBRES else None
@@ -265,11 +283,24 @@ class ConexionPG:
             _AUTO[clave] = r[0]
         return _AUTO[clave]
 
+    @property
+    def in_transaction(self):
+        # como sqlite3.Connection.in_transaction (psycopg abre la transacción sola con la primera consulta)
+        info = getattr(self._con, "info", None)
+        estado = info.transaction_status if info is not None else self._con.get_transaction_status()
+        return int(estado) != 0   # 0 = IDLE en psycopg 3 y en psycopg2
+
     def execute(self, sql, args=()):
+        ddl = (self._url, sql) if not args and _solo_crea_si_no_existe(sql) else None
+        if ddl in _ESQUEMAS_HECHOS:   # preparar() en cada petición: en Postgres, una vez por proceso y base
+            return CursorPG(None)
         q, extra = traducir(sql, self._claves, self._auto)
         if q is None:
             return CursorPG(None)
         cur = self._con.cursor()
+        if ddl:   # de uno en uno, como executescript (si no, «tuple concurrently updated»)
+            cur.execute(f"SELECT pg_advisory_xact_lock({_CANDADO_ESQUEMA})")
+            self._ddl.append(ddl)
         params = tuple(args) if args else extra
         if params:
             cur.execute(q, params)
@@ -298,8 +329,15 @@ class ConexionPG:
 
     def commit(self):
         self._con.commit()
+        _ESQUEMAS_HECHOS.update(self._ddl)
+        self._ddl = []
+
+    def rollback(self):
+        self._con.rollback()
+        self._ddl = []
 
     def close(self):
+        self._ddl = []
         _devolver(self._con)
         self._con = None
 
@@ -311,7 +349,7 @@ class ConexionPG:
         # conexión por bloque «with» y en Postgres cada conexión abierta cuenta (el plan Basic admite pocas): como
         # mucho quedan RO_PG_LIBRES libres; las demás se cierran.
         try:
-            (self._con.rollback if tipo else self._con.commit)()
+            (self.rollback if tipo else self.commit)()
         except Exception:
             _cerrar(self._con)
             self._con = None

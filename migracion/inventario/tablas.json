@@ -1,8 +1,88 @@
 {
+  "actas_lotes": [
+    {
+      "fichero": "actas.py",
+      "linea": "PRIMARY KEY (quien, cliente_id, huella)",
+      "columnas": [
+        {
+          "columna": "quien",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "resultado",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "actas_claves": [
+    {
+      "fichero": "actas.py",
+      "linea": "PRIMARY KEY (quien, clave)",
+      "columnas": [
+        {
+          "columna": "quien",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "altas_recibos": [
+    {
+      "fichero": "altas_personas.py",
+      "linea": "lista_guardada INTEGER NOT NULL DEFAULT 0",
+      "columnas": [
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "quien",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "persona_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "resultado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "correo_guardado",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "lista_guardada",
+          "tipo": "INTEGER"
+        }
+      ]
+    }
+  ],
   "altas_tareas": [
     {
       "fichero": "altas_personas.py",
-      "linea": 104,
+      "linea": "hecha_por TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -50,7 +130,7 @@
   "canal_grupos": [
     {
       "fichero": "avisos.py",
-      "linea": 86,
+      "linea": "creado TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "id",
@@ -78,7 +158,7 @@
   "canal_miembros": [
     {
       "fichero": "avisos.py",
-      "linea": 89,
+      "linea": "hora TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "n",
@@ -110,7 +190,7 @@
   "canal_mensajes": [
     {
       "fichero": "avisos.py",
-      "linea": 93,
+      "linea": "creado TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "id",
@@ -178,7 +258,7 @@
   "canal_leidos": [
     {
       "fichero": "avisos.py",
-      "linea": 99,
+      "linea": "PRIMARY KEY (persona_id, canal_id)",
       "columnas": [
         {
           "columna": "persona_id",
@@ -202,7 +282,7 @@
   "canal_preferencias": [
     {
       "fichero": "avisos.py",
-      "linea": 102,
+      "linea": "actualizado TEXT",
       "columnas": [
         {
           "columna": "persona_id",
@@ -226,7 +306,7 @@
   "canal_resumenes": [
     {
       "fichero": "avisos.py",
-      "linea": 104,
+      "linea": "PRIMARY KEY (persona_id, dia)",
       "columnas": [
         {
           "columna": "persona_id",
@@ -258,7 +338,7 @@
   "canal_campana": [
     {
       "fichero": "avisos.py",
-      "linea": 107,
+      "linea": "hora TEXT",
       "columnas": [
         {
           "columna": "persona_id",
@@ -282,7 +362,7 @@
   "avisos_prog_cambios": [
     {
       "fichero": "avisos_programados.py",
-      "linea": 58,
+      "linea": "hora TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "n",
@@ -318,7 +398,7 @@
   "avisos_prog_hechos": [
     {
       "fichero": "avisos_programados.py",
-      "linea": 61,
+      "linea": "hora TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "n",
@@ -339,10 +419,46 @@
       ]
     }
   ],
+  "decisiones_intenciones_382": [
+    {
+      "fichero": "decisiones_durables_382.py",
+      "linea": "registrado_en TEXT NOT NULL DEFAULT (datetime('now'))",
+      "columnas": [
+        {
+          "columna": "intencion_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "decision_id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "operacion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision_final",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado_en",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
   "ejecuciones": [
     {
       "fichero": "despliegue/estado.py",
-      "linea": 37,
+      "linea": "resumen TEXT",
       "columnas": [
         {
           "columna": "modo",
@@ -374,7 +490,7 @@
   "pasos": [
     {
       "fichero": "despliegue/estado.py",
-      "linea": 38,
+      "linea": "error TEXT",
       "columnas": [
         {
           "columna": "ejecucion",
@@ -414,7 +530,7 @@
   "llaves": [
     {
       "fichero": "despliegue/estado.py",
-      "linea": 40,
+      "linea": "origen TEXT",
       "columnas": [
         {
           "columna": "nombre",
@@ -442,7 +558,7 @@
   "avisos": [
     {
       "fichero": "despliegue/estado.py",
-      "linea": 41,
+      "linea": "creado TEXT",
       "columnas": [
         {
           "columna": "dia",
@@ -472,7 +588,7 @@
     },
     {
       "fichero": "schema_v2.sql",
-      "linea": 187,
+      "linea": "UNIQUE (dia, tipo, clave)",
       "columnas": [
         {
           "columna": "id",
@@ -516,7 +632,7 @@
   "sellos": [
     {
       "fichero": "despliegue/estado.py",
-      "linea": 42,
+      "linea": "motivo TEXT",
       "columnas": [
         {
           "columna": "paso",
@@ -544,7 +660,7 @@
   "datos_blob": [
     {
       "fichero": "despliegue/publicacion.py",
-      "linea": 43,
+      "linea": "contenido {blob}",
       "columnas": [
         {
           "columna": "sha",
@@ -556,7 +672,7 @@
   "datos_version": [
     {
       "fichero": "despliegue/publicacion.py",
-      "linea": 44,
+      "linea": "bytes INTEGER",
       "columnas": [
         {
           "columna": "espacio",
@@ -588,7 +704,7 @@
   "datos_fichero": [
     {
       "fichero": "despliegue/publicacion.py",
-      "linea": 45,
+      "linea": "PRIMARY KEY (version, ruta)",
       "columnas": [
         {
           "columna": "version",
@@ -608,7 +724,7 @@
   "envios": [
     {
       "fichero": "envios.py",
-      "linea": 68,
+      "linea": "modo TEXT NOT NULL CHECK (modo IN ('simulado','real','prueba','canario'))",
       "columnas": [
         {
           "columna": "id",
@@ -680,7 +796,7 @@
   "envio_pasos": [
     {
       "fichero": "envios.py",
-      "linea": 87,
+      "linea": "detalle TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -721,10 +837,106 @@
       ]
     }
   ],
+  "registros": [
+    {
+      "fichero": "evidencias_kpi.py",
+      "linea": "creado TEXT NOT NULL",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "payload",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "hash",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "creado",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "eventos": [
+    {
+      "fichero": "evidencias_kpi.py",
+      "linea": "datos TEXT NOT NULL",
+      "columnas": [
+        {
+          "columna": "n",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "registro",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "operacion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "fecha",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "datos",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "revocaciones": [
+    {
+      "fichero": "evidencias_kpi.py",
+      "linea": "motivo TEXT NOT NULL",
+      "columnas": [
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registro",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "motivo",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
   "ia_gasto": [
     {
       "fichero": "ia_gasto.py",
-      "linea": 77,
+      "linea": "peticion TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -808,7 +1020,7 @@
   "ia_topes": [
     {
       "fichero": "ia_gasto.py",
-      "linea": 86,
+      "linea": "motivo TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -833,10 +1045,46 @@
       ]
     }
   ],
+  "ia_reservas": [
+    {
+      "fichero": "ia_gasto.py",
+      "linea": "estado TEXT NOT NULL CHECK(estado IN ('activa','incierta','cerrada'))",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "creada",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "tarea",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "quien",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "llave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "reservado_eur",
+          "tipo": "REAL"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
   "ia_lotes": [
     {
       "fichero": "ia_gasto.py",
-      "linea": 90,
+      "linea": "peticiones TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -885,10 +1133,530 @@
       ]
     }
   ],
+  "intenciones_acciones": [
+    {
+      "fichero": "intenciones_acciones.py",
+      "linea": "PRIMARY KEY(actor, intencion)",
+      "columnas": [
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "intencion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "accion_id",
+          "tipo": "INTEGER"
+        }
+      ]
+    }
+  ],
+  "leads_meta": [
+    {
+      "fichero": "leads_archivo.py",
+      "linea": "version INTEGER NOT NULL",
+      "columnas": [
+        {
+          "columna": "version",
+          "tipo": "INTEGER"
+        }
+      ]
+    }
+  ],
+  "leads_eventos": [
+    {
+      "fichero": "leads_archivo.py",
+      "linea": "PRIMARY KEY(cliente_id,source,event_id)",
+      "columnas": [
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "source",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "event_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "payload",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "fuente_key",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "leads_recibos": [
+    {
+      "fichero": "leads_archivo.py",
+      "linea": "registrado TEXT NOT NULL",
+      "columnas": [
+        {
+          "columna": "recibo_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "source",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "event_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "resultado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "motivo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "mt_crono": [
+    {
+      "fichero": "mi_trabajo.py",
+      "linea": "ISO",
+      "columnas": [
+        {
+          "columna": "persona",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "tarea",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "inicio",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_anomalias_276": [
+    {
+      "fichero": "operaciones_anomalias_276.py",
+      "linea": "UNIQUE(actor,intencion)",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "anomalia",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "persona_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "origen_hash",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "decision",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "prueba",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "hora",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "intencion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "request_hash",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_feedback_273": [
+    {
+      "fichero": "operaciones_feedback_273.py",
+      "linea": "UNIQUE(cliente_id,semana,revision)",
+      "columnas": [
+        {
+          "columna": "intencion_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "semana",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado_en",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "nota",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_notas_equipo_281": [
+    {
+      "fichero": "operaciones_notas_equipo_281.py",
+      "linea": "UNIQUE(autor,intencion)",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "persona_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "periodo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "hora",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "nota",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "prueba",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "accion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "intencion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_pedidos_account_294": [
+    {
+      "fichero": "operaciones_pedidos_account.py",
+      "linea": "UNIQUE(cliente_id,tipo,referencia_id,revision)",
+      "columnas": [
+        {
+          "columna": "intencion_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "tipo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "referencia_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "receptor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado_en",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision_fuente",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_prioridades_300": [
+    {
+      "fichero": "operaciones_prioridades_300.py",
+      "linea": "UNIQUE(actor,prioridad_id,fuente_revision,dia,revision)",
+      "columnas": [
+        {
+          "columna": "intencion_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "prioridad_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "fuente_revision",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "dia",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "nota",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado_en",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_registros_269": [
+    {
+      "fichero": "operaciones_registros_269.py",
+      "linea": "UNIQUE(propietario,clave,revision)",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "propietario",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "registrado_en",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "contenido",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "intencion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "operaciones_control_272": [
+    {
+      "fichero": "operaciones_registros_272.py",
+      "linea": "UNIQUE(objeto,revision)",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "objeto",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "autor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "asignado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "tipo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "hora",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "contenido",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "intencion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "planes_fuegos_255": [
+    {
+      "fichero": "planes_fuegos_255.py",
+      "linea": "UNIQUE(cliente_id, version)",
+      "columnas": [
+        {
+          "columna": "accion_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cliente_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "version",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "operacion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "actor_id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "hora",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "payload_hash",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "datos",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
   "personas": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 16,
+      "linea": "actualizado_por TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -956,7 +1724,7 @@
   "persona_puestos": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 35,
+      "linea": "PRIMARY KEY (persona_id, puesto)",
       "columnas": [
         {
           "columna": "persona_id",
@@ -976,7 +1744,7 @@
   "asignaciones": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 48,
+      "linea": "CHECK (suplencia = 0 OR hasta IS NOT NULL)",
       "columnas": [
         {
           "columna": "id",
@@ -1044,7 +1812,7 @@
   "registro": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 76,
+      "linea": "CHECK (accion IS NULL OR accion <> 'no_aplica' OR (motivo IS NOT NULL AND length(trim(motivo)) > 0))",
       "columnas": [
         {
           "columna": "id",
@@ -1097,7 +1865,7 @@
   "historial": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 96,
+      "linea": "datos       TEXT",
       "columnas": [
         {
           "columna": "n",
@@ -1137,7 +1905,7 @@
   "acciones": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 111,
+      "linea": "detalle     TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -1193,7 +1961,7 @@
   "incidencias": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 130,
+      "linea": "datos       TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -1253,7 +2021,7 @@
   "decisiones": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 148,
+      "linea": "prueba…",
       "columnas": [
         {
           "columna": "id",
@@ -1314,7 +2082,7 @@
   "docs": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 166,
+      "linea": "PRIMARY KEY (coleccion, id)",
       "columnas": [
         {
           "columna": "coleccion",
@@ -1342,7 +2110,7 @@
   "recargas": [
     {
       "fichero": "schema_v2.sql",
-      "linea": 173,
+      "linea": "salida (últimas líneas)}]",
       "columnas": [
         {
           "columna": "id",
@@ -1379,10 +2147,46 @@
       ]
     }
   ],
+  "fuente_lectura": [
+    {
+      "fichero": "schema_v2.sql",
+      "linea": "huella      TEXT",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "fuente",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "recurso",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "ok",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "codigo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "cuerpo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "huella",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
   "preferencias": [
     {
       "fichero": "servir.py",
-      "linea": 325,
+      "linea": "PRIMARY KEY (persona, clave)",
       "columnas": [
         {
           "columna": "persona",
@@ -1406,7 +2210,7 @@
   "opiniones": [
     {
       "fichero": "servir.py",
-      "linea": 327,
+      "linea": "estado_hora TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -1478,7 +2282,7 @@
   "registro_huellas": [
     {
       "fichero": "servir.py",
-      "linea": 339,
+      "linea": "huella TEXT NOT NULL",
       "columnas": [
         {
           "columna": "id",
@@ -1494,7 +2298,7 @@
   "rastro_cortes": [
     {
       "fichero": "servir.py",
-      "linea": 340,
+      "linea": "anotado TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "id",
@@ -1514,7 +2318,7 @@
   "rastro_incidencias": [
     {
       "fichero": "servir.py",
-      "linea": 341,
+      "linea": "anotado TEXT NOT NULL DEFAULT (datetime('now'))",
       "columnas": [
         {
           "columna": "n",
@@ -1546,7 +2350,7 @@
   "sinc_cambios": [
     {
       "fichero": "sincronia.py",
-      "linea": 99,
+      "linea": "modo TEXT NOT NULL CHECK (modo IN ('simulado','real','prueba'))",
       "columnas": [
         {
           "columna": "id",
@@ -1614,7 +2418,7 @@
   "sinc_pasos": [
     {
       "fichero": "sincronia.py",
-      "linea": 119,
+      "linea": "detalle TEXT",
       "columnas": [
         {
           "columna": "id",
@@ -1651,6 +2455,126 @@
         {
           "columna": "detalle",
           "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "uso_eventos": [
+    {
+      "fichero": "uso_local.py",
+      "linea": "activo_ms INTEGER NOT NULL",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "instante",
+          "tipo": "REAL"
+        },
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "visto",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "pantalla",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "accion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "control",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "activo_ms",
+          "tipo": "INTEGER"
+        }
+      ]
+    }
+  ],
+  "uso_sesiones": [
+    {
+      "fichero": "uso_local.py",
+      "linea": "PRIMARY KEY(actor,sesion)",
+      "columnas": [
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "sesion",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "secuencia",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "instante",
+          "tipo": "REAL"
+        },
+        {
+          "columna": "visto",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "pantalla",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "uso_ventanas": [
+    {
+      "fichero": "uso_local.py",
+      "linea": "fin REAL NOT NULL",
+      "columnas": [
+        {
+          "columna": "actor",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "fin",
+          "tipo": "REAL"
+        }
+      ]
+    }
+  ],
+  "tareas_vistas_privadas": [
+    {
+      "fichero": "vistas_tareas.py",
+      "linea": "PRIMARY KEY(propietario,id)",
+      "columnas": [
+        {
+          "columna": "propietario",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "id",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "nombre",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "filtros",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "version",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "revision",
+          "tipo": "INTEGER"
         }
       ]
     }

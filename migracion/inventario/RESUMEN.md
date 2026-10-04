@@ -4,35 +4,40 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 
 | Qué | Cuántos |
 |---|---|
-| Pantallas en el menú (`modulos/indice.js`) | 37 (37 hechas) |
-| Ficheros en `modulos/` | 61 (38 pantallas, 11 piezas comunes) |
-| Líneas de front (módulos + carcasa + estilos) | 36459 |
-| Rutas de API en `servir.py` | 37 (23 GET, 14 POST) |
-| Ficheros que enchufan rutas a servir.py | 11 (62 rutas más; 5 con bucle propio) |
-| Rutas distintas que llama el front (`ctx.api`) | 54 |
-| Tablas | 40 |
+| Pantallas en el menú (`modulos/indice.js`) | 42 (42 hechas) |
+| Ficheros en `modulos/` | 193 (44 pantallas, 134 piezas comunes) |
+| Líneas de front (módulos + carcasa + estilos) | 48388 |
+| Rutas de API en `servir.py` | 37 (22 GET, 15 POST) |
+| Ficheros que enchufan rutas a servir.py | 49 (125 rutas más; 5 con bucle propio) |
+| Rutas distintas que llama el front (`ctx.api`) | 86 |
+| Tablas | 66 |
 | Puestos | 21 |
-| Tipos de dato con regla | 39 |
-| Ficheros de datos con permiso (`datos_de_modulo`) | 92 |
+| Tipos de dato con regla | 41 |
+| Ficheros de datos con permiso (`datos_de_modulo`) | 100 |
 | Almacenes privados | 9 |
-| Tipos de acción permitidos | 133 |
+| Tipos de acción permitidos | 140 |
 | Componentes exportados (`componentes.js`) | 107 |
-| Campos de `ctx` | 40 |
-| Pasos de la tubería | 50 |
-| Generadores `fuentes_*/` | 86 |
-| Baterías de prueba | 16 |
+| Campos de `ctx` | 43 |
+| Pasos de la tubería | 52 |
+| Generadores `fuentes_*/` | 175 |
+| Baterías de prueba | 66 |
 
 ## Pantallas
 
 | Ruta | Título | Grupo | Fichero | Estado |
 |---|---|---|---|---|
+| `#/operaciones` | Dirección de operaciones | Operaciones | `./operaciones.js` | hecho |
+| `#/prioridades-cliente` | Prioridades por cliente | Hoy | `./prioridades_cliente.js` | hecho |
+| `#/uso-app` | Uso y mejoras | Equipo | `./uso_app.js` | hecho |
 | `#/mi-dia` | Mi día | Hoy | `./mi_dia.js` | hecho |
+| `#/mi-trabajo` | Mi trabajo | Hoy | `./mi_trabajo.js` | hecho |
 | `#/en-rojo` | En rojo | Hoy | `./en_rojo.js` | hecho |
 | `#/bandeja` | Bandeja | Hoy | `./bandeja.js` | hecho |
 | `#/agenda` | Agenda | Hoy | `./agenda.js` | hecho |
 | `#/chat-equipo` | Chat del equipo | Hoy | `./chat_equipo.js` | hecho |
 | `#/asistente-ia` | Asistente IA | Hoy | `./asistente_ia.js` | hecho |
 | `#/alertas` | Alertas del departamento | Hoy | `./alertas.js` | hecho |
+| `#/producto` | Dirección de producto | Clientes | `./producto.js` | hecho |
 | `#/ficha` | Ficha del cliente | Clientes | `./ficha.js` | hecho |
 | `#/informe-cliente` | Informe del cliente | Clientes | `./informe.js` | hecho |
 | `#/paneles` | Paneles de herramientas | Clientes | `./paneles.js` | hecho |
@@ -68,67 +73,108 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 
 | Método | Ruta | Línea en servir.py |
 |---|---|---|
-| GET | `/api/elegir` | 2072 |
-| GET | `/api/` | 2076 |
-| GET | `/vivo` | 2077 |
-| GET | `/api/modulo/` | 2185 |
-| GET | `/api/cliente/` | 2185 |
-| GET | `/api/buscar` | 2185 |
-| GET | `/api/sesion` | 2196 |
-| GET | `/api/indicadores` | 2237 |
-| GET | `/api/ajustes` | 2258 |
-| GET | `/api/rastro` | 2280 |
-| GET | `/api/acciones` | 2291 |
-| GET | `/api/recarga` | 2321 |
-| GET | `/api/avisos` | 2330 |
-| GET | `/api/decisiones` | 2338 |
-| GET | `/api/buscar/indice` | 2342 |
-| GET | `/api/contadores` | 2361 |
-| GET | `/api/perfil` | 2375 |
-| GET | `/api/preferencias` | 2381 |
-| GET | `/api/opiniones` | 2387 |
-| GET | `/api/opiniones/captura` | 2387 |
-| GET | `/api/respuestas_mili` | 2407 |
-| GET | `/api/rastro/verificar` | 2463 |
-| GET | `/api/salud` | 2478 |
-| POST | `/api/ver_dato` | 2514 |
-| POST | `/api/rastro` | 2517 |
-| POST | `/api/acciones` | 2548 |
-| POST | `/api/decisiones` | 2710 |
-| POST | `/api/recarga` | 2713 |
-| POST | `/api/perfil/zona` | 2736 |
-| POST | `/api/preferencias` | 2741 |
-| POST | `/api/opinion` | 2761 |
-| POST | `/api/opiniones/estado` | 2792 |
-| POST | `/api/avisos/visto` | 2805 |
-| POST | `/api/ajustes/` | 2813 |
-| POST | `/api/ajustes/persona` | 2867 |
-| POST | `/api/ajustes/asignacion` | 2920 |
-| POST | `/api/ajustes/confirmar` | 2941 |
+| GET | `/api/elegir` | 2550 |
+| GET | `/api/` | 2554 |
+| GET | `/vivo` | 2555 |
+| GET | `/api/en-rojo/planes` | 2679 |
+| GET | `/api/sesion` | 2683 |
+| GET | `/api/indicadores` | 2742 |
+| GET | `/api/ajustes` | 2763 |
+| GET | `/api/rastro` | 2785 |
+| GET | `/api/acciones` | 2818 |
+| GET | `/api/recarga` | 2869 |
+| GET | `/api/avisos` | 2878 |
+| GET | `/api/decisiones` | 2886 |
+| GET | `/api/buscar/indice` | 2900 |
+| GET | `/api/buscar` | 2900 |
+| GET | `/api/contadores` | 2919 |
+| GET | `/api/perfil` | 2933 |
+| GET | `/api/preferencias` | 2939 |
+| GET | `/api/opiniones` | 2945 |
+| GET | `/api/opiniones/captura` | 2945 |
+| GET | `/api/respuestas_mili` | 2972 |
+| GET | `/api/rastro/verificar` | 3038 |
+| GET | `/api/salud` | 3053 |
+| POST | `/api/ver_dato` | 3237 |
+| POST | `/api/en-rojo/planes` | 3240 |
+| POST | `/api/rastro` | 3244 |
+| POST | `/api/acciones` | 3275 |
+| POST | `/api/decisiones` | 3384 |
+| POST | `/api/recarga` | 3387 |
+| POST | `/api/perfil/zona` | 3410 |
+| POST | `/api/preferencias` | 3415 |
+| POST | `/api/opinion` | 3435 |
+| POST | `/api/opiniones/estado` | 3466 |
+| POST | `/api/avisos/visto` | 3479 |
+| POST | `/api/ajustes/` | 3487 |
+| POST | `/api/ajustes/persona` | 3556 |
+| POST | `/api/ajustes/asignacion` | 3615 |
+| POST | `/api/ajustes/confirmar` | 3632 |
 
 ## Rutas enchufadas desde otros ficheros
 
 | Fichero | Rutas | ¿Bucle propio? |
 |---|---|---|
+| `actas.py` | `/api/ficha/acta` | no |
+| `agenda_zoom_api.py` | `/api/agenda/zoom` | no |
+| `agrupaciones_tarea_api_376.py` | `/api/horas/agrupaciones-tarea` | no |
 | `altas_personas.py` | `/api/altas`, `/api/altas/`, `/api/altas/alta`, `/api/altas/baja`, `/api/altas/cambio`, `/api/altas/comprobar`, `/api/altas/departamento`, `/api/altas/guia`, `/api/altas/repartir`, `/api/altas/tarea_hecha` | no |
-| `avisos.py` | `/api/canales`, `/api/canales/`, `/api/canales/buscar`, `/api/canales/campana`, `/api/canales/campana_vista`, `/api/canales/canal`, `/api/canales/clickup`, `/api/canales/estado`, `/api/canales/grupo`, `/api/canales/leido`, `/api/canales/mensaje`, `/api/canales/miembro`, `/api/canales/preferencias` | sí |
+| `avisos.py` | `/api/canales`, `/api/canales/`, `/api/canales/adjuntables`, `/api/canales/buscar`, `/api/canales/campana`, `/api/canales/campana_vista`, `/api/canales/canal`, `/api/canales/clickup`, `/api/canales/escalado`, `/api/canales/escalar`, `/api/canales/estado`, `/api/canales/grupo`, `/api/canales/leido`, `/api/canales/llamadas`, `/api/canales/llamar`, `/api/canales/mensaje`, `/api/canales/miembro`, `/api/canales/preferencias`, `/api/canales/videollamada` | sí |
 | `avisos_programados.py` | `/api/avisos_programados`, `/api/avisos_programados/`, `/api/avisos_programados/cambiar`, `/api/avisos_programados/ejecutar`, `/api/avisos_programados/hecho`, `/api/avisos_programados/vista_previa` | sí |
+| `borradores_api.py` | `/api/cerebro/borrador` | no |
+| `cerebro_api.py` | `/api/cerebro/operativo` | no |
+| `cerebro_seo_api.py` | `/api/cerebro/seo` | no |
+| `contratos_privados.py` |  | no |
+| `crm_embudo_api_467.py` |  | no |
+| `crm_ultima_valida_api_513.py` | `/api/crm/ultima-valida` | no |
+| `decisiones_durables_382.py` | `/api/operaciones/decisiones-locales` | no |
 | `despliegue/vigia.py` | `/api/vigia`, `/api/vigia/probar` | sí |
+| `ejemplos_creador_api_438.py` | `/api/produccion/ejemplos-creador` | no |
 | `envios.py` | `/api/acciones`, `/api/envios`, `/api/envios/`, `/api/envios/envio`, `/api/envios/reintentar` | sí |
+| `evidencias_kpi_api.py` | `/api/clientes/evidencias_kpi` | no |
 | `fuentes_alertas/guardia_alertas.py` | `/api/acciones` | no |
 | `fuentes_gbp/servidor_gbp.py` | `/api/gbp/borrador`, `/api/gbp/cola`, `/api/gbp/estado`, `/api/gbp/responder` | no |
 | `fuentes_modular/acceso.py` | `/api/modular/acceso` | no |
-| `ia.py` | `/api/ia/`, `/api/ia/borrador`, `/api/ia/consejo`, `/api/ia/consejo/informe`, `/api/ia/consejo/valorar`, `/api/ia/copiloto`, `/api/ia/estado`, `/api/ia/gasto`, `/api/ia/gasto/`, `/api/ia/lista` | no |
+| `fuentes_pagespeed/lectura_api.py` | `/api/pagespeed/cache` | no |
+| `fuentes_reuniones/propuesta_reunion.py` | `/api/reuniones/propuesta`, `/api/reuniones/propuesta/calidad` | no |
+| `historial_diario_api_362.py` | `/api/horas/historial-diario` | no |
+| `historial_reuniones_api.py` | `/api/historial/reuniones` | no |
+| `historico_llamadas_350.py` | `/api/operaciones/llamadas/historico` | no |
+| `ia.py` | `/api/ia/`, `/api/ia/borrador`, `/api/ia/cerebro`, `/api/ia/consejo`, `/api/ia/consejo/informe`, `/api/ia/consejo/valorar`, `/api/ia/copiloto`, `/api/ia/estado`, `/api/ia/gasto`, `/api/ia/gasto/`, `/api/ia/lista` | no |
 | `ia_gasto.py` | `/api/ia/gasto/reabrir`, `/api/ia/gasto/topes` | no |
+| `informe_word_api.py` | `/api/informes/word` | no |
+| `informes_tareas_api.py` | `/api/informes/tareas_ejecutadas` | no |
+| `meta_diaria_api_385.py` |  | no |
+| `metodo_cuentas.py` | `/api/metodo/sugerencias` | no |
+| `mi_trabajo.py` | `/api/acciones`, `/api/mi_trabajo`, `/api/mi_trabajo/contexto_ia`, `/api/mi_trabajo/crono`, `/api/mi_trabajo/metadatos` | no |
+| `operaciones_anomalias_276.py` | `/api/operaciones/anomalias` | no |
+| `operaciones_feedback_273.py` | `/api/operaciones/feedback` | no |
+| `operaciones_notas_equipo_281.py` | `/api/operaciones/notas-equipo` | no |
+| `operaciones_pedidos_account.py` | `/api/operaciones/pedidos-account` | no |
+| `operaciones_prioridades_300.py` | `/api/operaciones/prioridades` | no |
+| `operaciones_registros_269.py` | `/api/operaciones/registros` | no |
+| `operaciones_registros_272.py` | `/api/operaciones/control` | no |
+| `piloto_lectura.py` | `/api/bandeja/triaje-intenciones`, `/api/cerebro/borrador`, `/api/cerebro/operativo`, `/api/cerebro/seo`, `/api/cliente/`, `/api/en-rojo/planes`, `/api/historial/reuniones`, `/api/metodo/sugerencias`, `/api/mi_trabajo`, `/api/modulo/`, `/api/produccion/urgencias-observadas`, `/api/recarga`, `/api/sesion`, `/api/uso/aviso` | no |
+| `planning_observado_api_356.py` | `/api/produccion/planning-observado` | no |
+| `planning_observado_api_405.py` |  | no |
+| `setters_srv.py` | `/api/acciones`, `/api/setters/propuesta_cita` | no |
 | `sincronia.py` | `/api/acciones`, `/api/sincronia`, `/api/sincronia/`, `/api/sincronia/a_mano`, `/api/sincronia/cambio`, `/api/sincronia/elegir`, `/api/sincronia/objeto`, `/api/sincronia/reintentar` | sí |
+| `tareas_local.py` | `/api/tareas/cambio`, `/api/tareas/tablero`, `/api/tareas/vistas` | no |
+| `transiciones_produccion_208.py` | `/api/produccion/transiciones` | no |
+| `triaje_intenciones_437.py` | `/api/bandeja/triaje-intenciones` | no |
+| `urgencias_observadas_api_402.py` | `/api/produccion/urgencias-observadas` | no |
+| `uso_local.py` | `/api/uso`, `/api/uso/aviso` | no |
 
 ## Rutas que llama el front
 
-`/api/acciones`, `/api/ajustes`, `/api/ajustes/persona`, `/api/altas`, `/api/altas/alta`, `/api/altas/baja`, `/api/altas/cambio`, `/api/altas/comprobar`, `/api/altas/guia`, `/api/altas/repartir`, `/api/altas/tarea_hecha`, `/api/avisos`, `/api/avisos/visto`, `/api/avisos_programados`, `/api/avisos_programados/cambiar`, `/api/avisos_programados/ejecutar`, `/api/avisos_programados/hecho`, `/api/avisos_programados/vista_previa`, `/api/canales`, `/api/canales/buscar`, `/api/canales/campana`, `/api/canales/canal`, `/api/canales/clickup`, `/api/canales/estado`, `/api/canales/grupo`, `/api/canales/leido`, `/api/canales/mensaje`, `/api/canales/miembro`, `/api/canales/preferencias`, `/api/cliente/:x`, `/api/decisiones`, `/api/envios`, `/api/envios/reintentar`, `/api/gbp/borrador`, `/api/gbp/responder`, `/api/ia/borrador`, `/api/ia/copiloto`, `/api/ia/estado`, `/api/ia/gasto`, `/api/ia/gasto/reabrir`, `/api/ia/gasto/topes`, `/api/ia/lista`, `/api/modular/acceso`, `/api/modulo/prioridades/p_:x`, `/api/opiniones`, `/api/opiniones/estado`, `/api/perfil${pid `, `/api/perfil/zona`, `/api/rastro`, `/api/recarga`, `/api/sincronia`, `/api/sincronia/:x`, `/api/vigia`, `/api/vigia/probar`
+`/api/:x`, `/api/acciones`, `/api/ajustes`, `/api/ajustes/persona`, `/api/altas`, `/api/altas/alta`, `/api/altas/baja`, `/api/altas/cambio`, `/api/altas/comprobar`, `/api/altas/guia`, `/api/altas/repartir`, `/api/altas/tarea_hecha`, `/api/avisos`, `/api/avisos/visto`, `/api/avisos_programados`, `/api/avisos_programados/cambiar`, `/api/avisos_programados/ejecutar`, `/api/avisos_programados/hecho`, `/api/avisos_programados/vista_previa`, `/api/bandeja/triaje-intenciones`, `/api/canales`, `/api/canales/campana`, `/api/canales/canal`, `/api/canales/mensaje`, `/api/cerebro/borrador`, `/api/cerebro/seo`, `/api/cliente/:x`, `/api/clientes/evidencias_kpi`, `/api/clientes/evidencias_kpi/informes`, `/api/clientes/evidencias_kpi/resumen`, `/api/crm/embudo-observado`, `/api/decisiones`, `/api/en-rojo/planes`, `/api/envios`, `/api/envios/reintentar`, `/api/ficha/acta`, `/api/gbp/borrador`, `/api/gbp/responder`, `/api/historial/reuniones`, `/api/horas/agrupaciones-tarea`, `/api/horas/historial-diario`, `/api/ia/borrador`, `/api/ia/cerebro`, `/api/ia/copiloto`, `/api/ia/estado`, `/api/ia/gasto`, `/api/ia/gasto/reabrir`, `/api/ia/gasto/topes`, `/api/ia/lista`, `/api/informes/tareas_ejecutadas`, `/api/metodo/sugerencias`, `/api/mi_trabajo`, `/api/mi_trabajo/crono`, `/api/mi_trabajo/metadatos`, `/api/modular/acceso`, `/api/modulo/prioridades/p_:x`, `/api/operaciones/anomalias`, `/api/operaciones/control`, `/api/operaciones/decisiones-locales`, `/api/operaciones/feedback`, `/api/operaciones/llamadas/historico`, `/api/operaciones/notas-equipo`, `/api/operaciones/pedidos-account/resumen`, `/api/operaciones/prioridades`, `/api/operaciones/registros`, `/api/opiniones`, `/api/opiniones/estado`, `/api/paid/mediciones-diarias`, `/api/perfil${pid `, `/api/perfil/zona`, `/api/produccion/ejemplos-creador`, `/api/produccion/planning-observado`, `/api/produccion/transiciones`, `/api/produccion/urgencias-observadas`, `/api/rastro`, `/api/recarga`, `/api/reuniones/propuesta`, `/api/reuniones/propuesta/calidad`, `/api/setters/propuesta_cita`, `/api/sincronia`, `/api/sincronia/:x`, `/api/tareas/tablero`, `/api/tareas/vistas`, `/api/uso`, `/api/vigia`, `/api/vigia/probar`
 
 ## Tablas
 
 - `acciones` (schema_v2.sql)
+- `actas_claves` (actas.py)
+- `actas_lotes` (actas.py)
+- `altas_recibos` (altas_personas.py)
 - `altas_tareas` (altas_personas.py)
 - `asignaciones` (schema_v2.sql)
 - `avisos` (despliegue/estado.py, schema_v2.sql)
@@ -145,33 +191,56 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 - `datos_fichero` (despliegue/publicacion.py)
 - `datos_version` (despliegue/publicacion.py)
 - `decisiones` (schema_v2.sql)
+- `decisiones_intenciones_382` (decisiones_durables_382.py)
 - `docs` (schema_v2.sql)
 - `ejecuciones` (despliegue/estado.py)
 - `envio_pasos` (envios.py)
 - `envios` (envios.py)
+- `eventos` (evidencias_kpi.py)
+- `fuente_lectura` (schema_v2.sql)
 - `historial` (schema_v2.sql)
 - `ia_gasto` (ia_gasto.py)
 - `ia_lotes` (ia_gasto.py)
+- `ia_reservas` (ia_gasto.py)
 - `ia_topes` (ia_gasto.py)
 - `incidencias` (schema_v2.sql)
+- `intenciones_acciones` (intenciones_acciones.py)
+- `leads_eventos` (leads_archivo.py)
+- `leads_meta` (leads_archivo.py)
+- `leads_recibos` (leads_archivo.py)
 - `llaves` (despliegue/estado.py)
+- `mt_crono` (mi_trabajo.py)
+- `operaciones_anomalias_276` (operaciones_anomalias_276.py)
+- `operaciones_control_272` (operaciones_registros_272.py)
+- `operaciones_feedback_273` (operaciones_feedback_273.py)
+- `operaciones_notas_equipo_281` (operaciones_notas_equipo_281.py)
+- `operaciones_pedidos_account_294` (operaciones_pedidos_account.py)
+- `operaciones_prioridades_300` (operaciones_prioridades_300.py)
+- `operaciones_registros_269` (operaciones_registros_269.py)
 - `opiniones` (servir.py)
 - `pasos` (despliegue/estado.py)
 - `persona_puestos` (schema_v2.sql)
 - `personas` (schema_v2.sql)
+- `planes_fuegos_255` (planes_fuegos_255.py)
 - `preferencias` (servir.py)
 - `rastro_cortes` (servir.py)
 - `rastro_incidencias` (servir.py)
 - `recargas` (schema_v2.sql)
 - `registro` (schema_v2.sql)
 - `registro_huellas` (servir.py)
+- `registros` (evidencias_kpi.py)
+- `revocaciones` (evidencias_kpi.py)
 - `sellos` (despliegue/estado.py)
 - `sinc_cambios` (sincronia.py)
 - `sinc_pasos` (sincronia.py)
+- `tareas_vistas_privadas` (vistas_tareas.py)
+- `uso_eventos` (uso_local.py)
+- `uso_sesiones` (uso_local.py)
+- `uso_ventanas` (uso_local.py)
 
 ## Campos de ctx
 
-`accion`, `alCambiarPeriodo`, `ambito`, `api`, `avisosCelebraciones`, `carteraIds`, `carteraPorSilla`, `celebraciones`, `clientes`, `clientesVisibles`, `cuotaEmpresa`, `datos`, `datosModulo`, `definiciones`, `diaDatos`, `fechas`, `fechasDe`, `hoy`, `indicador`, `indicadores`, `navegar`, `nivel`, `nombre`, `params`, `periodo`, `periodosConDatos`, `persona`, `plural`, `puestos`, `rastro`, `real`, `servidor`, `soloLectura`, `titulo`, `veModulo`, `ver`, `verDato`, `verdad`, `verdadComun`, `zona`
+`accion`, `alCambiarPeriodo`, `ambito`, `api`, `avisosCelebraciones`, `carteraIds`, `carteraPorSilla`, `celebraciones`, `clientes`, `clientesVisibles`, `cuotaEmpresa`, `datos`, `datosModulo`, `definiciones`, `diaDatos`, `fechas`, `fechasDe`, `hoy`, `indicador`, `indicadores`, `navegar`, `nivel`, `nombre`, `params`, `periodo`, `periodosConDatos`, `persona`, `pilotoLectura`, `plural`, `puestos`, `rastro`, `real`, `servidor`, `soloLectura`, `soloSuCartera`, `titulo`, `veModulo`, `ver`, `verDato`, `verdad`, `verdadComun`, `vigente`, `zona`
 
 ## Dependencias fuera del repositorio (`~/RO_HERRAMIENTAS`)
 
@@ -195,6 +264,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 - `modular`
 - `modular/pegar.sh`
 - `modular/pegar.sh.`
+- `seranking/pegar.sh.`
 - `snov`
 - `snov/sv.py`
 - `zadarma/zd.py`

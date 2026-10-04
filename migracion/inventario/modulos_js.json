@@ -1,5 +1,167 @@
 [
   {
+    "fichero": "modulos/_account_fuegos_346.js",
+    "lineas": 20,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./control_cartera.js"
+    ],
+    "ctx_usa": [
+      "datos",
+      "hoy",
+      "nombre",
+      "persona",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_agrupaciones_tarea_376.js",
+    "lineas": 43,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_cabeceras_operaciones_423.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "horas/agrupaciones-tarea"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_alarmas_operaciones_342.js",
+    "lineas": 71,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_mensaje_alarma_345.js",
+      "./_top_alarmas_388.js"
+    ],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "nombre",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "alarma_detalle",
+      "alarma_persona",
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_alcance_asistente_333.js",
+    "lineas": 15,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_badges_operaciones_311.js",
+    "lineas": 50,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "verdad",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_bandas_horas_381.js",
+    "lineas": 27,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_bandeja_accounts_340.js",
+    "lineas": 37,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "hoy"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/_bitacora.js",
     "lineas": 39,
     "es_pantalla": false,
@@ -21,6 +183,256 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/_cabeceras_operaciones_423.js",
+    "lineas": 20,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_cadencia_metodo.js",
+    "lineas": 35,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_metodo_cohorte_305.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_cierre_artifact_253.js",
+    "lineas": 66,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_comentario_durable_366.js",
+    "lineas": 76,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "persona",
+      "real"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "comentario"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_contexto_ficha_233.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_control_artifact_250.js",
+    "lineas": 105,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_control_cartera_ruta_239.js",
+    "lineas": 54,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_imputa_personal_390.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "params",
+      "persona",
+      "real",
+      "servidor",
+      "titulo",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_pautadas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_control_equipo_313.js",
+    "lineas": 19,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_horas_diarias_238.js"
+    ],
+    "ctx_usa": [
+      "datos",
+      "hoy",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona",
+      "observado",
+      "sin_dato"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_control_paneles_213.js",
+    "lineas": 18,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "params",
+      "persona",
+      "real",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_control_periodos_227.js",
+    "lineas": 17,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_coste_cita_299.js",
+    "lineas": 16,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_crm_mediciones.js",
+    "lineas": 171,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_crm_secundario_317.js",
+    "lineas": 20,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_resultados_dia_314.js"
+    ],
+    "ctx_usa": [
+      "datos",
+      "hoy"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_decision_durable_382.js",
+    "lineas": 43,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/decisiones-locales"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/_deshacer.js",
     "lineas": 133,
     "es_pantalla": false,
@@ -32,6 +444,165 @@
       "accion",
       "api"
     ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_detalle_tarea_197.js",
+    "lineas": 42,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_tarea_ia.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_ejemplos_creador_438.js",
+    "lineas": 25,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_planning_observado_360.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "hoy",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "produccion/ejemplos-creador"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_embudo_observado_469.js",
+    "lineas": 49,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "crm/embudo-observado/"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_equipo_horas_254.js",
+    "lineas": 46,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_control_periodos_227.js",
+      "./_horas_diarias_238.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_escalar.js",
+    "lineas": 117,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_escalar.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_estado_ficha_495.js",
+    "lineas": 19,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_estado_informe.js",
+    "lineas": 44,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_evidencias_resumen.js",
+    "lineas": 52,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_ficha_medicion_548.js",
+    "lineas": 46,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_paid_mediciones.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_finalizar_tarea_203.js",
+    "lineas": 10,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
     "api_rutas": [],
     "datos_modulo": [],
     "acciones_tipo": [],
@@ -67,8 +638,300 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/_herramientas_perfil.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "persona",
+      "real",
+      "veModulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_historial_diario_364.js",
+    "lineas": 52,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "horas/historial-diario"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_horas_cartera_349.js",
+    "lineas": 41,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_pautadas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_horas_diarias_238.js",
+    "lineas": 26,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_horas_fuegos_341.js",
+    "lineas": 25,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_operaciones_equipo_262.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_pautadas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_horas_mi_trabajo_370.js",
+    "lineas": 21,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_imputa_personal_390.js",
+    "lineas": 38,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_bandas_horas_381.js",
+      "./_historial_diario_364.js"
+    ],
+    "ctx_usa": [
+      "datos",
+      "hoy"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "porcentaje"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_informe_evidencia.js",
+    "lineas": 59,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_informe_semanal_operaciones.js",
+    "lineas": 54,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientesVisibles",
+      "hoy",
+      "persona",
+      "real",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_informe_word.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientes",
+      "persona",
+      "real",
+      "servidor",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_informes_declarados_612.js",
+    "lineas": 97,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_intencion_crm_528.js",
+    "lineas": 98,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "nivel",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/_intencion_paid_516.js",
+    "lineas": 122,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "nivel",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "acciones"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "inversion"
+    ],
+    "usa_localStorage": true
+  },
+  {
     "fichero": "modulos/_ir.js",
     "lineas": 61,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_kpis_compactos_396.js",
+    "lineas": 28,
     "es_pantalla": false,
     "pieza_comun": true,
     "imports": [],
@@ -87,6 +950,238 @@
       "../componentes.js",
       "./indice.js"
     ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_llamadas_historicas_353.js",
+    "lineas": 41,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_matriz_paid_508.js",
+    "lineas": 28,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_mensaje_alarma_345.js",
+    "lineas": 54,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_mensaje_incidente_330.js",
+    "lineas": 25,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "responder_cliente"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_meta_diaria_386.js",
+    "lineas": 49,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_metricas_campanas_448.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "paid/mediciones-diarias/"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "inversion"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_meta_informe_291.js",
+    "lineas": 17,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_meta_mediciones_216.js",
+    "lineas": 75,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_meta_semantica_285.js",
+    "lineas": 24,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_metadatos_tarea_225.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "vigente"
+    ],
+    "api_rutas": [
+      "mi_trabajo/metadatos"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_metodo_cohorte_305.js",
+    "lineas": 21,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_metricas_campanas_448.js",
+    "lineas": 24,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_metricas_tarjetas_277.js",
+    "lineas": 39,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_meta_semantica_285.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "hoy",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_pautadas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_miniserie_operaciones_439.js",
+    "lineas": 20,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
     "ctx_usa": [],
     "api_rutas": [],
     "datos_modulo": [],
@@ -130,13 +1225,1326 @@
     "usa_localStorage": false
   },
   {
-    "fichero": "modulos/_plegar_consejo.js",
+    "fichero": "modulos/_movimiento_detalle_200.js",
+    "lineas": 13,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_movimiento_tablero_192.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_movimiento_tablero_192.js",
+    "lineas": 54,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cambiar_estado"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_nota_compacta_336.js",
+    "lineas": 7,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_notas_horas_383.js",
+    "lineas": 51,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_historial_diario_364.js"
+    ],
+    "ctx_usa": [
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona",
+      "notas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_numeros_semanales_449.js",
+    "lineas": 19,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_objetivos_seo_374.js",
+    "lineas": 76,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "cerebro/seo"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_accounts_263.js",
+    "lineas": 458,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_alarmas_operaciones_342.js",
+      "./_cabeceras_operaciones_423.js",
+      "./_control_artifact_250.js",
+      "./_control_cartera_ruta_239.js",
+      "./_evidencias_resumen.js",
+      "./_horas_cartera_349.js",
+      "./_imputa_personal_390.js",
+      "./_informes_declarados_612.js",
+      "./_kpis_compactos_396.js",
+      "./_llamadas_historicas_353.js",
+      "./_orden_clientes_348.js",
+      "./_pedidos_macro_344.js",
+      "./_referencia_score_408.js",
+      "./_seguimiento_accounts_404.js",
+      "./_top_alarmas_388.js",
+      "./control_cartera.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "carteraPorSilla",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "navegar",
+      "nombre",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "verdad",
+      "vigente"
+    ],
+    "api_rutas": [
+      "clientes/evidencias_kpi/informes",
+      "clientes/evidencias_kpi/resumen",
+      "operaciones/llamadas/historico",
+      "operaciones/pedidos-account/resumen"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "envio_observado",
+      "horas_pautadas"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_anomalias_276.js",
+    "lineas": 72,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "persona",
+      "real",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/anomalias"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_bandeja_270.js",
+    "lineas": 97,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_bandeja_accounts_340.js",
+      "./_meta_semantica_285.js",
+      "./_operaciones_feedback_273.js",
+      "./_pedidos_account_local.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datosModulo",
+      "hoy",
+      "nombre",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "devolver_llamada",
+      "responder_correo"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_decisiones_387.js",
+    "lineas": 68,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_decision_durable_382.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/decisiones-locales"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_dia_direccion_265.js",
+    "lineas": 331,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_informe_semanal_operaciones.js",
+      "./_miniserie_operaciones_439.js",
+      "./_numeros_semanales_449.js",
+      "./_operaciones_decisiones_387.js",
+      "./_operaciones_prioridades_300.js",
+      "./_operaciones_registros_269.js",
+      "./_operaciones_registros_272.js",
+      "./_operaciones_resumen_274.js",
+      "./_planes_pendientes_327.js",
+      "./_rastro_declarativo_392.js",
+      "./_tendencias_operaciones_329.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_equipo_262.js",
+    "lineas": 236,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_agrupaciones_tarea_376.js",
+      "./_bandas_horas_381.js",
+      "./_cabeceras_operaciones_423.js",
+      "./_ejemplos_creador_438.js",
+      "./_historial_diario_364.js",
+      "./_horas_diarias_238.js",
+      "./_operaciones_anomalias_276.js",
+      "./_operaciones_notas_equipo_281.js",
+      "./_operaciones_registros_269.js",
+      "./_orden_equipo_dia_539.js",
+      "./_orden_horas_artifact_447.js",
+      "./_orden_horas_cliente_555.js",
+      "./_pauta_proporcional_306.js",
+      "./_planning_comparacion_320.js",
+      "./_planning_observado_360.js",
+      "./_produccion_baseline.js",
+      "./_produccion_creadas_287.js",
+      "./control_cartera.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "diaria",
+      "horas_pautadas",
+      "horas_persona",
+      "notas_persona",
+      "porcentaje"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_feedback_273.js",
+    "lineas": 63,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/feedback"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_fichas_nuevos_271.js",
+    "lineas": 80,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_metodo_cohorte_305.js",
+      "./_metricas_tarjetas_277.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "navegar",
+      "nombre",
+      "persona",
+      "real",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "metodo/sugerencias"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "cuota"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_fuegos_268.js",
+    "lineas": 92,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_account_fuegos_346.js",
+      "./_cabeceras_operaciones_423.js",
+      "./_horas_fuegos_341.js",
+      "./_meta_semantica_285.js",
+      "./_plan_fuego_255.js",
+      "./_produccion_baseline.js"
+    ],
+    "ctx_usa": [
+      "datosModulo",
+      "hoy",
+      "veModulo",
+      "verdad"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_incongruencias_278.js",
     "lineas": 40,
     "es_pantalla": false,
     "pieza_comun": true,
     "imports": [
       "../componentes.js"
     ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "incidencias/incidencias"
+    ],
+    "acciones_tipo": [
+      "alarma_persona",
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_notas_equipo_281.js",
+    "lineas": 96,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_horas_diarias_238.js",
+      "./_notas_horas_383.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "persona",
+      "real",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/notas-equipo"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona",
+      "notas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_prioridades_300.js",
+    "lineas": 66,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/prioridades"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_registros_269.js",
+    "lineas": 89,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "datos",
+      "persona",
+      "real",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/registros"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_registros_272.js",
+    "lineas": 114,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "nombre",
+      "persona",
+      "real",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/control"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "encargo",
+      "foto",
+      "notas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_resumen_274.js",
+    "lineas": 120,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_control_cartera_ruta_239.js",
+      "./_historial_diario_364.js",
+      "./_operaciones_accounts_263.js",
+      "./_operaciones_bandeja_270.js",
+      "./_operaciones_urgencias_406.js",
+      "./_pasos_resumen_433.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "datosModulo",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "verdad",
+      "vigente"
+    ],
+    "api_rutas": [
+      "decisiones",
+      "en-rojo/planes",
+      "produccion/urgencias-observadas"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_rituales_264.js",
+    "lineas": 93,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_repartir_accounts_352.js",
+      "./_viernes_accounts_347.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datosModulo",
+      "navegar",
+      "persona",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "bandeja/bandeja",
+      "mi_dia/ronda_mili",
+      "produccion/produccion"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_operaciones_urgencias_406.js",
+    "lineas": 73,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "produccion/urgencias-observadas"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "ver_como"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_orden_clientes_348.js",
+    "lineas": 37,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_orden_equipo_dia_539.js",
+    "lineas": 24,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_orden_horas_artifact_447.js",
+    "lineas": 10,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_orden_horas_cliente_555.js",
+    "lineas": 38,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_paid_mediciones.js",
+    "lineas": 62,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_panel_especialista.js",
+    "lineas": 71,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_pasos_resumen_433.js",
+    "lineas": 22,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_pauta_proporcional_306.js",
+    "lineas": 13,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_pedidos_account_local.js",
+    "lineas": 70,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_mensaje_incidente_330.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "${RUTA}"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "responder_cliente"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_pedidos_macro_344.js",
+    "lineas": 45,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_plan_fuego_255.js",
+    "lineas": 111,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "nombre",
+      "soloLectura",
+      "vigente"
+    ],
+    "api_rutas": [
+      "en-rojo/planes"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_planes_pendientes_327.js",
+    "lineas": 27,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [
+      "en-rojo/planes"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_planning_comparacion_320.js",
+    "lineas": 17,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_produccion_creadas_287.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "horas_persona"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_planning_observado_360.js",
+    "lineas": 98,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./control_cartera.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "carteraPorSilla",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "produccion/planning-observado"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "ver_como"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_plegar_consejo.js",
+    "lineas": 44,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_prioridades_contexto_337.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_tarea_ia.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_produccion_accounts_237.js",
+    "lineas": 38,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./control_cartera.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_produccion_baseline.js",
+    "lineas": 141,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_produccion_creadas_287.js",
+    "lineas": 89,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "datos",
+      "hoy",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_propuesta_reunion.js",
+    "lineas": 159,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_deshacer.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "soloLectura"
+    ],
+    "api_rutas": [
+      "envios",
+      "reuniones/propuesta",
+      "reuniones/propuesta/calidad"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "correo"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_rastro_declarativo_392.js",
+    "lineas": 90,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "operaciones/prioridades"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "ver_como"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_referencia_score_408.js",
+    "lineas": 21,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_repartir_accounts_352.js",
+    "lineas": 13,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_account_fuegos_346.js",
+      "./_viernes_accounts_347.js"
+    ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_resultados_dia_314.js",
+    "lineas": 39,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_crm_mediciones.js",
+      "./_meta_semantica_285.js",
+      "./_paid_mediciones.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "ver"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_revision_citas_334.js",
+    "lineas": 30,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "revisado_cita"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_revision_leads_369.js",
+    "lineas": 48,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "revisado_lead"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_seguimiento_accounts_404.js",
+    "lineas": 55,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_seguimiento_metodo_453.js",
+    "lineas": 40,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_cadencia_metodo.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_semaforo_evidencia_258.js",
+    "lineas": 38,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_seo_mediciones.js",
+    "lineas": 146,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_seo_oportunidades_332.js",
+    "lineas": 33,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_seo_mediciones.js"
+    ],
+    "ctx_usa": [
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_serie_paid_549.js",
+    "lineas": 57,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_servicios.js",
+    "lineas": 102,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "clientes",
+      "verdad"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_tablero_mi_trabajo_181.js",
+    "lineas": 26,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_tablero_tareas.js",
+    "lineas": 70,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_tarea_ia.js",
+    "lineas": 101,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
     "ctx_usa": [],
     "api_rutas": [],
     "datos_modulo": [],
@@ -155,6 +2563,40 @@
     "api_rutas": [],
     "datos_modulo": [],
     "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_tendencias_operaciones_329.js",
+    "lineas": 81,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_top_alarmas_388.js",
+    "lineas": 41,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "../componentes.js",
+      "./_alarmas_operaciones_342.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "clientesVisibles",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
     "usa_localStorage": false
   },
   {
@@ -180,6 +2622,84 @@
       "../componentes.js",
       "./_trabajo.js"
     ],
+    "ctx_usa": [],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_transicion_produccion_206.js",
+    "lineas": 34,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_detalle_tarea_197.js"
+    ],
+    "ctx_usa": [
+      "persona",
+      "pilotoLectura",
+      "real",
+      "soloLectura",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_triaje_durable_432.js",
+    "lineas": 70,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
+    "ctx_usa": [
+      "accion",
+      "clientes",
+      "clientesVisibles",
+      "datos",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": true
+  },
+  {
+    "fichero": "modulos/_triaje_lectura_exacta_440.js",
+    "lineas": 29,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_triaje_durable_432.js"
+    ],
+    "ctx_usa": [
+      "api"
+    ],
+    "api_rutas": [
+      "bandeja/triaje-intenciones"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/_urgencias_fuegos_397.js",
+    "lineas": 20,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [],
     "ctx_usa": [],
     "api_rutas": [],
     "datos_modulo": [],
@@ -215,8 +2735,35 @@
     "usa_localStorage": true
   },
   {
+    "fichero": "modulos/_viernes_accounts_347.js",
+    "lineas": 24,
+    "es_pantalla": false,
+    "pieza_comun": true,
+    "imports": [
+      "./_account_fuegos_346.js"
+    ],
+    "ctx_usa": [
+      "carteraPorSilla",
+      "clientesVisibles",
+      "datos",
+      "hoy",
+      "persona",
+      "real",
+      "servidor",
+      "veModulo",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle"
+    ],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/agenda.js",
-    "lineas": 563,
+    "lineas": 760,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -230,22 +2777,26 @@
       "nivel",
       "nombre",
       "persona",
+      "real",
       "titulo",
       "verDato",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
       "agenda/agenda"
     ],
     "acciones_tipo": [
+      "evento",
+      "fuera",
       "parcial"
     ],
     "usa_localStorage": false
   },
   {
     "fichero": "modulos/ajustes.js",
-    "lineas": 866,
+    "lineas": 867,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -363,11 +2914,12 @@
   },
   {
     "fichero": "modulos/alertas.js",
-    "lineas": 732,
+    "lineas": 808,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_deshacer.js",
       "./_trabajo.js"
     ],
     "ctx_usa": [
@@ -383,7 +2935,9 @@
       "servidor",
       "soloLectura",
       "titulo",
-      "veModulo"
+      "veModulo",
+      "ver",
+      "vigente"
     ],
     "api_rutas": [
       "acciones"
@@ -393,17 +2947,19 @@
     ],
     "acciones_tipo": [
       "alerta_lote",
+      "cliente_detalle",
       "info"
     ],
     "usa_localStorage": false
   },
   {
     "fichero": "modulos/asistente_ia.js",
-    "lineas": 178,
+    "lineas": 216,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_alcance_asistente_333.js",
       "./ia_componentes.js"
     ],
     "ctx_usa": [
@@ -420,13 +2976,15 @@
   },
   {
     "fichero": "modulos/bandeja.js",
-    "lineas": 1331,
+    "lineas": 1330,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "./_deshacer.js",
       "./_plegar_consejo.js",
+      "./_triaje_durable_432.js",
+      "./_triaje_lectura_exacta_440.js",
       "./ia_componentes.js",
       "./indice.js"
     ],
@@ -449,7 +3007,8 @@
       "titulo",
       "veModulo",
       "ver",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
@@ -462,8 +3021,6 @@
       "finanzas/impagos_clientes"
     ],
     "acciones_tipo": [
-      "asignar",
-      "cerrar",
       "correo",
       "info",
       "llamada",
@@ -473,12 +3030,20 @@
   },
   {
     "fichero": "modulos/captacion.js",
-    "lineas": 1420,
+    "lineas": 1600,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_coste_cita_299.js",
+      "./_crm_mediciones.js",
       "./_deshacer.js",
+      "./_intencion_paid_516.js",
+      "./_matriz_paid_508.js",
+      "./_meta_diaria_386.js",
+      "./_paid_mediciones.js",
+      "./_panel_especialista.js",
+      "./_serie_paid_549.js",
       "./_trabajo.js",
       "./_trabajo_ancho.js",
       "./ajustes_conexiones.js",
@@ -490,6 +3055,8 @@
       "carteraIds",
       "carteraPorSilla",
       "clientes",
+      "clientesVisibles",
+      "datos",
       "datosModulo",
       "fechas",
       "hoy",
@@ -501,11 +3068,14 @@
       "params",
       "periodo",
       "persona",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
+      "veModulo",
       "ver",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
@@ -519,6 +3089,7 @@
       "auditoria_semanal",
       "aviso",
       "bitacora_cuenta",
+      "cliente_detalle",
       "info",
       "inversion",
       "motivo",
@@ -529,14 +3100,13 @@
   },
   {
     "fichero": "modulos/catalogo.js",
-    "lineas": 258,
+    "lineas": 259,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js"
     ],
     "ctx_usa": [
-      "clientes",
       "clientesVisibles",
       "datos",
       "navegar",
@@ -553,11 +3123,12 @@
   },
   {
     "fichero": "modulos/chat_equipo.js",
-    "lineas": 948,
+    "lineas": 1100,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
-      "../componentes.js"
+      "../componentes.js",
+      "./_escalar.js"
     ],
     "ctx_usa": [
       "api",
@@ -569,19 +3140,11 @@
       "rastro",
       "servidor",
       "soloLectura",
-      "titulo"
+      "titulo",
+      "vigente"
     ],
     "api_rutas": [
-      "canales",
-      "canales/buscar",
-      "canales/canal",
-      "canales/clickup",
-      "canales/estado",
-      "canales/grupo",
-      "canales/leido",
-      "canales/mensaje",
-      "canales/miembro",
-      "canales/preferencias"
+      "canales"
     ],
     "datos_modulo": [
       "chat_equipo/p_${pid}"
@@ -589,19 +3152,40 @@
     "acciones_tipo": [
       "app",
       "cu",
+      "directo",
       "info",
       "mensaje"
     ],
     "usa_localStorage": true
   },
   {
+    "fichero": "modulos/control_cartera.js",
+    "lineas": 180,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [],
+    "ctx_usa": [
+      "datos"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/crm.js",
-    "lineas": 780,
+    "lineas": 835,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_crm_mediciones.js",
       "./_deshacer.js",
+      "./_embudo_observado_469.js",
+      "./_intencion_crm_528.js",
+      "./_nota_compacta_336.js",
+      "./_revision_citas_334.js",
+      "./_revision_leads_369.js",
       "./_trabajo.js",
       "./_trabajo_ancho.js",
       "./ficha.js"
@@ -611,7 +3195,10 @@
       "api",
       "carteraIds",
       "clientes",
+      "clientesVisibles",
+      "datos",
       "datosModulo",
+      "hoy",
       "indicador",
       "indicadores",
       "navegar",
@@ -619,12 +3206,16 @@
       "nombre",
       "params",
       "persona",
+      "pilotoLectura",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
+      "veModulo",
       "ver",
       "verDato",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones"
@@ -635,6 +3226,7 @@
     "acciones_tipo": [
       "aviso_integracion",
       "casilla_montaje",
+      "cliente_detalle",
       "comparar_personas",
       "escalar",
       "info",
@@ -688,24 +3280,30 @@
   },
   {
     "fichero": "modulos/dinero_cliente.js",
-    "lineas": 418,
+    "lineas": 425,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_cierre_artifact_253.js",
       "./dinero_comun.js",
       "./dinero_v4.js"
     ],
     "ctx_usa": [
       "clientes",
+      "clientesVisibles",
       "datosModulo",
       "navegar",
       "nivel",
+      "nombre",
+      "params",
       "periodo",
       "persona",
       "soloLectura",
       "titulo",
-      "veModulo"
+      "veModulo",
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
@@ -773,12 +3371,13 @@
   },
   {
     "fichero": "modulos/en_rojo.js",
-    "lineas": 391,
+    "lineas": 416,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "./_deshacer.js",
+      "./_plan_fuego_255.js",
       "./_trabajo.js"
     ],
     "ctx_usa": [
@@ -788,16 +3387,20 @@
       "clientesVisibles",
       "datos",
       "datosModulo",
+      "hoy",
       "navegar",
       "nombre",
       "params",
       "persona",
       "rastro",
+      "real",
       "soloLectura",
+      "soloSuCartera",
       "titulo",
       "veModulo",
       "verdad",
-      "verdadComun"
+      "verdadComun",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
@@ -835,18 +3438,53 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/evidencias_kpi.js",
+    "lineas": 115,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientes",
+      "nombre",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "ver",
+      "vigente"
+    ],
+    "api_rutas": [
+      "clientes/evidencias_kpi"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [
+      "cliente_detalle",
+      "responder_cliente"
+    ],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/ficha.js",
-    "lineas": 1576,
+    "lineas": 1695,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "./_bitacora.js",
+      "./_contexto_ficha_233.js",
       "./_deshacer.js",
+      "./_estado_ficha_495.js",
+      "./_ficha_medicion_548.js",
       "./_gbp_bloques.js",
       "./_legible.js",
       "./_modular.js",
       "./_plegar_consejo.js",
+      "./_servicios.js",
+      "./evidencias_kpi.js",
       "./ficha_equipo.js",
       "./ia_componentes.js",
       "./objetivos_comun.js"
@@ -861,6 +3499,7 @@
       "clientesVisibles",
       "datos",
       "datosModulo",
+      "hoy",
       "navegar",
       "nivel",
       "nombre",
@@ -875,12 +3514,15 @@
       "veModulo",
       "ver",
       "verDato",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
       "cliente/${id}",
       "cliente/<id>",
+      "historial/reuniones",
+      "ia/cerebro",
       "rastro"
     ],
     "datos_modulo": [
@@ -903,7 +3545,7 @@
   },
   {
     "fichero": "modulos/ficha_equipo.js",
-    "lineas": 365,
+    "lineas": 389,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
@@ -913,6 +3555,8 @@
     "ctx_usa": [
       "accion",
       "api",
+      "clientes",
+      "clientesVisibles",
       "datos",
       "datosModulo",
       "fechas",
@@ -923,15 +3567,18 @@
       "real",
       "servidor",
       "soloLectura",
-      "veModulo"
+      "veModulo",
+      "ver",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
-      "canales/mensaje"
+      "canales/mensaje",
+      "ficha/acta"
     ],
     "datos_modulo": [],
     "acciones_tipo": [
-      "acta",
+      "cliente_detalle",
       "marcar",
       "tarea"
     ],
@@ -984,7 +3631,7 @@
   },
   {
     "fichero": "modulos/gasto_ia.js",
-    "lineas": 197,
+    "lineas": 255,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -993,7 +3640,14 @@
     ],
     "ctx_usa": [
       "api",
-      "titulo"
+      "datos",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "vigente"
     ],
     "api_rutas": [
       "ia/gasto",
@@ -1006,12 +3660,16 @@
   },
   {
     "fichero": "modulos/horas.js",
-    "lineas": 385,
+    "lineas": 510,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_control_periodos_227.js",
       "./_deshacer.js",
+      "./_equipo_horas_254.js",
+      "./_horas_diarias_238.js",
+      "./_plegar_consejo.js",
       "./produccion_comun.js"
     ],
     "ctx_usa": [
@@ -1021,11 +3679,15 @@
       "datosModulo",
       "indicador",
       "nombre",
+      "params",
       "persona",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
+      "veModulo",
       "ver",
+      "vigente",
       "zona"
     ],
     "api_rutas": [
@@ -1035,13 +3697,14 @@
       "horas/horas"
     ],
     "acciones_tipo": [
-      "comparar_personas"
+      "comparar_personas",
+      "libre"
     ],
     "usa_localStorage": false
   },
   {
     "fichero": "modulos/ia_componentes.js",
-    "lineas": 473,
+    "lineas": 598,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
@@ -1062,6 +3725,7 @@
     ],
     "api_rutas": [
       "ia/borrador",
+      "ia/cerebro",
       "ia/copiloto",
       "ia/estado",
       "ia/lista"
@@ -1074,7 +3738,7 @@
   },
   {
     "fichero": "modulos/incidencias.js",
-    "lineas": 1148,
+    "lineas": 1158,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1144,7 +3808,7 @@
   },
   {
     "fichero": "modulos/indice.js",
-    "lineas": 175,
+    "lineas": 196,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [],
@@ -1158,20 +3822,27 @@
   },
   {
     "fichero": "modulos/informe.js",
-    "lineas": 1201,
+    "lineas": 1316,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_estado_informe.js",
+      "./_informe_evidencia.js",
+      "./_informe_word.js",
+      "./_meta_informe_291.js",
       "./_plegar_consejo.js",
+      "./_servicios.js",
       "./_trabajo.js",
       "./informe_revisar.js"
     ],
     "ctx_usa": [
       "accion",
+      "alCambiarPeriodo",
       "api",
       "carteraIds",
       "carteraPorSilla",
+      "clientes",
       "clientesVisibles",
       "datos",
       "datosModulo",
@@ -1181,17 +3852,23 @@
       "params",
       "periodo",
       "persona",
+      "pilotoLectura",
       "rastro",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
+      "veModulo",
       "ver",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
-      "acciones"
+      "acciones",
+      "informes/tareas_ejecutadas"
     ],
     "datos_modulo": [
+      "crm/crm",
       "informe/c_${pid}/${encodeURIComponent(cid)}",
       "informe/comun",
       "informe/i_${pid}",
@@ -1203,6 +3880,7 @@
       "a_cero",
       "analisis_mes",
       "caida",
+      "cliente_detalle",
       "datos_leads",
       "info",
       "inversion",
@@ -1217,24 +3895,28 @@
   },
   {
     "fichero": "modulos/informe_revisar.js",
-    "lineas": 193,
+    "lineas": 206,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "./_deshacer.js",
+      "./_estado_informe.js",
+      "./_informe_evidencia.js",
+      "./_meta_informe_291.js",
       "./informe.js"
     ],
     "ctx_usa": [
       "api",
       "clientes",
       "datosModulo",
+      "hoy",
       "nombre",
-      "rastro",
       "real",
       "servidor",
       "soloLectura",
-      "ver"
+      "ver",
+      "vigente"
     ],
     "api_rutas": [
       "acciones"
@@ -1244,7 +3926,7 @@
     ],
     "acciones_tipo": [
       "analisis_mes",
-      "correo",
+      "borrador_informe",
       "inversion",
       "marcar",
       "pdf"
@@ -1253,11 +3935,12 @@
   },
   {
     "fichero": "modulos/informes_mensuales.js",
-    "lineas": 523,
+    "lineas": 525,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_estado_informe.js",
       "./_plegar_consejo.js",
       "./informe_revisar.js"
     ],
@@ -1293,14 +3976,22 @@
   },
   {
     "fichero": "modulos/mi_dia.js",
-    "lineas": 1017,
+    "lineas": 1282,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "../permisos.js",
+      "./_cadencia_metodo.js",
+      "./_control_artifact_250.js",
+      "./_control_cartera_ruta_239.js",
+      "./_control_equipo_313.js",
       "./_deshacer.js",
+      "./_evidencias_resumen.js",
+      "./_herramientas_perfil.js",
+      "./_imputa_personal_390.js",
       "./_trabajo.js",
+      "./control_cartera.js",
       "./ia_componentes.js",
       "./indice.js",
       "./mi_dia_bloques.js"
@@ -1311,6 +4002,7 @@
       "carteraPorSilla",
       "celebraciones",
       "clientes",
+      "clientesVisibles",
       "datos",
       "datosModulo",
       "hoy",
@@ -1320,17 +4012,20 @@
       "nombre",
       "params",
       "persona",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
       "veModulo",
       "ver",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
       "avisos",
       "canales/campana",
+      "clientes/evidencias_kpi/resumen",
       "modulo/prioridades/p_${encodeURIComponent(ctx.persona.id)}"
     ],
     "datos_modulo": [
@@ -1342,8 +4037,10 @@
       "alerta",
       "aviso",
       "bloque",
+      "cliente_detalle",
       "correo",
       "decision",
+      "horas_pautadas",
       "mencion",
       "persona",
       "recargar",
@@ -1354,12 +4051,17 @@
   },
   {
     "fichero": "modulos/mi_dia_bloques.js",
-    "lineas": 2311,
+    "lineas": 2206,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "../permisos.js",
+      "./_cadencia_metodo.js",
+      "./_control_equipo_313.js",
+      "./_crm_secundario_317.js",
+      "./_paid_mediciones.js",
+      "./_resultados_dia_314.js",
       "./produccion_comun.js"
     ],
     "ctx_usa": [
@@ -1370,6 +4072,7 @@
       "cuotaEmpresa",
       "datos",
       "datosModulo",
+      "hoy",
       "nombre",
       "persona",
       "servidor",
@@ -1383,7 +4086,7 @@
   },
   {
     "fichero": "modulos/mi_perfil.js",
-    "lineas": 239,
+    "lineas": 242,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1412,8 +4115,53 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/mi_trabajo.js",
+    "lineas": 730,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_comentario_durable_366.js",
+      "./_deshacer.js",
+      "./_detalle_tarea_197.js",
+      "./_finalizar_tarea_203.js",
+      "./_horas_mi_trabajo_370.js",
+      "./_metadatos_tarea_225.js",
+      "./_movimiento_detalle_200.js",
+      "./_movimiento_tablero_192.js",
+      "./_tablero_mi_trabajo_181.js",
+      "./_trabajo.js",
+      "./tarea_ia.js"
+    ],
+    "ctx_usa": [
+      "accion",
+      "api",
+      "clientes",
+      "datosModulo",
+      "hoy",
+      "nombre",
+      "persona",
+      "pilotoLectura",
+      "real",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [
+      "mi_trabajo",
+      "mi_trabajo/crono"
+    ],
+    "datos_modulo": [
+      "mi_trabajo/mi_trabajo"
+    ],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/nuevos.js",
-    "lineas": 1105,
+    "lineas": 1138,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1461,7 +4209,7 @@
   },
   {
     "fichero": "modulos/objetivos_comun.js",
-    "lineas": 125,
+    "lineas": 129,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
@@ -1488,8 +4236,32 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/operaciones.js",
+    "lineas": 139,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_badges_operaciones_311.js",
+      "./_plegar_consejo.js"
+    ],
+    "ctx_usa": [
+      "navegar",
+      "params",
+      "persona",
+      "real",
+      "titulo",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/outreach.js",
-    "lineas": 309,
+    "lineas": 312,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1524,7 +4296,7 @@
   },
   {
     "fichero": "modulos/panel_direccion.js",
-    "lineas": 1222,
+    "lineas": 1260,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1551,7 +4323,8 @@
       "soloLectura",
       "titulo",
       "veModulo",
-      "verDato"
+      "verDato",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
@@ -1580,11 +4353,14 @@
   },
   {
     "fichero": "modulos/paneles.js",
-    "lineas": 761,
+    "lineas": 770,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
+      "./_control_paneles_213.js",
+      "./_meta_mediciones_216.js",
+      "./_servicios.js",
       "./_trabajo.js"
     ],
     "ctx_usa": [
@@ -1610,7 +4386,7 @@
   },
   {
     "fichero": "modulos/personas.js",
-    "lineas": 671,
+    "lineas": 705,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1619,6 +4395,7 @@
       "./_deshacer.js",
       "./_ir.js",
       "./_trabajo.js",
+      "./horas.js",
       "./mi_perfil.js",
       "./personas_comun.js"
     ],
@@ -1627,6 +4404,7 @@
       "celebraciones",
       "datos",
       "datosModulo",
+      "navegar",
       "nombre",
       "params",
       "persona",
@@ -1634,15 +4412,16 @@
       "soloLectura",
       "titulo",
       "veModulo",
-      "verDato"
+      "verDato",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
       "captacion/captacion",
+      "horas/horas",
       "personas_m20/contratacion",
       "personas_m20/equipo",
-      "verdad/clientes",
-      "verdad/equipo"
+      "verdad/clientes"
     ],
     "acciones_tipo": [
       "info",
@@ -1703,8 +4482,34 @@
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/prioridades_cliente.js",
+    "lineas": 213,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_prioridades_contexto_337.js",
+      "./_trabajo.js",
+      "./tarea_ia.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "nombre",
+      "servidor",
+      "titulo",
+      "veModulo",
+      "vigente"
+    ],
+    "api_rutas": [
+      "cerebro/borrador"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/produccion.js",
-    "lineas": 757,
+    "lineas": 964,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1712,7 +4517,12 @@
       "../permisos.js",
       "./_deshacer.js",
       "./_ir.js",
+      "./_planning_observado_360.js",
+      "./_produccion_accounts_237.js",
+      "./_produccion_baseline.js",
+      "./_produccion_creadas_287.js",
       "./_trabajo_ancho.js",
+      "./_transicion_produccion_206.js",
       "./produccion_comun.js"
     ],
     "ctx_usa": [
@@ -1720,6 +4530,7 @@
       "api",
       "carteraPorSilla",
       "clientes",
+      "clientesVisibles",
       "datos",
       "datosModulo",
       "hoy",
@@ -1727,18 +4538,23 @@
       "indicadores",
       "navegar",
       "nombre",
+      "operacionesVista",
       "params",
       "persona",
+      "pilotoLectura",
+      "real",
       "servidor",
       "soloLectura",
       "titulo",
       "veModulo",
       "ver",
-      "verdad"
+      "verdad",
+      "vigente"
     ],
     "api_rutas": [
       "acciones",
-      "canales/canal"
+      "canales/canal",
+      "produccion/transiciones"
     ],
     "datos_modulo": [
       "produccion/marca",
@@ -1746,19 +4562,16 @@
       "produccion/produccion"
     ],
     "acciones_tipo": [
+      "cliente_detalle",
       "comentario",
       "comparar_personas",
-      "horas_cliente",
-      "info",
-      "mover_estado",
-      "pieza_aprobar",
-      "pieza_pedir_cambios"
+      "info"
     ],
     "usa_localStorage": false
   },
   {
     "fichero": "modulos/produccion_comun.js",
-    "lineas": 279,
+    "lineas": 277,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [
@@ -1769,6 +4582,27 @@
     ],
     "api_rutas": [],
     "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/producto.js",
+    "lineas": 202,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_trabajo.js"
+    ],
+    "ctx_usa": [
+      "clientes",
+      "datosModulo",
+      "titulo"
+    ],
+    "api_rutas": [],
+    "datos_modulo": [
+      "verdad/objetivos_clientes"
+    ],
     "acciones_tipo": [],
     "usa_localStorage": false
   },
@@ -1839,14 +4673,17 @@
   },
   {
     "fichero": "modulos/reuniones.js",
-    "lineas": 571,
+    "lineas": 606,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "../permisos.js",
+      "./_cadencia_metodo.js",
       "./_ir.js",
-      "./_plegar_consejo.js"
+      "./_plegar_consejo.js",
+      "./_propuesta_reunion.js",
+      "./_seguimiento_metodo_453.js"
     ],
     "ctx_usa": [
       "accion",
@@ -1864,10 +4701,13 @@
       "real",
       "servidor",
       "soloLectura",
-      "titulo"
+      "titulo",
+      "veModulo",
+      "vigente"
     ],
     "api_rutas": [
-      "acciones"
+      "acciones",
+      "metodo/sugerencias"
     ],
     "datos_modulo": [
       "reuniones/reuniones"
@@ -1875,7 +4715,6 @@
     "acciones_tipo": [
       "acta",
       "clasificar_reunion",
-      "correo",
       "file",
       "info",
       "url"
@@ -1884,7 +4723,7 @@
   },
   {
     "fichero": "modulos/seo.js",
-    "lineas": 755,
+    "lineas": 815,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1893,6 +4732,11 @@
       "./_gbp_bloques.js",
       "./_ir.js",
       "./_modular.js",
+      "./_nota_compacta_336.js",
+      "./_objetivos_seo_374.js",
+      "./_panel_especialista.js",
+      "./_seo_mediciones.js",
+      "./_seo_oportunidades_332.js",
       "./_trabajo.js",
       "./_trabajo_ancho.js"
     ],
@@ -1900,14 +4744,17 @@
       "accion",
       "carteraIds",
       "clientes",
+      "clientesVisibles",
       "datosModulo",
+      "hoy",
       "navegar",
       "nombre",
       "params",
       "persona",
       "rastro",
       "soloLectura",
-      "titulo"
+      "titulo",
+      "vigente"
     ],
     "api_rutas": [],
     "datos_modulo": [
@@ -1919,14 +4766,13 @@
       "aviso_account",
       "caida_lo_tengo",
       "comprobar_posiciones",
-      "medir_velocidad",
       "tarea"
     ],
     "usa_localStorage": false
   },
   {
     "fichero": "modulos/setters.js",
-    "lineas": 415,
+    "lineas": 546,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -1937,6 +4783,7 @@
       "./_ventas_comun.js"
     ],
     "ctx_usa": [
+      "api",
       "nivel",
       "nombre",
       "persona",
@@ -1944,21 +4791,94 @@
       "titulo",
       "ver"
     ],
-    "api_rutas": [],
+    "api_rutas": [
+      "setters/propuesta_cita"
+    ],
     "datos_modulo": [],
     "acciones_tipo": [
-      "cita",
       "comparar_personas",
-      "lead",
       "number",
-      "pasada",
       "textarea"
     ],
     "usa_localStorage": false
   },
   {
+    "fichero": "modulos/tablero_tareas.js",
+    "lineas": 201,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_tablero_tareas.js",
+      "./tarea_ia.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "nombre",
+      "persona",
+      "servidor",
+      "soloLectura",
+      "titulo",
+      "vigente"
+    ],
+    "api_rutas": [
+      "tareas/tablero",
+      "tareas/vistas"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/tarea_ia.js",
+    "lineas": 105,
+    "es_pantalla": false,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./_tarea_ia.js",
+      "./objetivos_comun.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "clientesVisibles",
+      "hoy",
+      "nombre",
+      "servidor",
+      "vigente"
+    ],
+    "api_rutas": [
+      "cliente/${encodeURIComponent(c.id)}"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
+    "fichero": "modulos/uso_app.js",
+    "lineas": 39,
+    "es_pantalla": true,
+    "pieza_comun": false,
+    "imports": [
+      "../componentes.js",
+      "./indice.js"
+    ],
+    "ctx_usa": [
+      "api",
+      "nombre",
+      "servidor",
+      "titulo"
+    ],
+    "api_rutas": [
+      "uso"
+    ],
+    "datos_modulo": [],
+    "acciones_tipo": [],
+    "usa_localStorage": false
+  },
+  {
     "fichero": "modulos/ventas_ro.js",
-    "lineas": 457,
+    "lineas": 461,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
