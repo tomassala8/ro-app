@@ -7,7 +7,9 @@
                                              # (fuente «prueba_lectura…»). No poda el resto de la tabla.
 
 Comprueba: lectura buena → se guarda; API caída → la última buena marcada vieja con su hora; todo a 0 tras un dato
-bueno → la última buena; nunca hubo dato → «sin dato» (None, nunca 0); comprobación propia (sospechoso); se guardan 30.
+bueno → la última buena; nunca hubo dato → «sin dato» (None, nunca 0); comprobación propia (sospechoso); se guardan 30;
+estructura sin dato ({"rows": []}) y ceros en texto ("0,00") tras un dato bueno → la última buena; caída de más del 80 %
+de las hojas → la última buena; una lista vieja va envuelta con «_viejo».
 Sale con 1 si algo falla.
 """
 import os
@@ -146,6 +148,51 @@ def main():
     ok(n == 30, f"35 lecturas buenas → quedan {n} (30)")
     api.falla = 503
     ok(L.leer(F, "cli_30", api).datos == {"clics": 234}, "tras podar, la última buena es la más reciente")
+    api.falla = None
+
+    # 11 · estructura sin dato tras un dato bueno → la última buena, nunca la vacía como nueva buena
+    api.respuesta = {"rows": [{"clics": 5}]}
+    ok(L.leer(F, "cli_rows", api).estado == "ok", "{'rows': [{'clics': 5}]} → ok")
+    for forma in ({"rows": []}, {"rows": [], "next": None}, {"a": {"b": []}}, [[]], {"x": None, "y": ""}):
+        api.respuesta = forma
+        l = L.leer(F, "cli_rows", api)
+        ok(l.estado == "viejo" and l.datos == {"rows": [{"clics": 5}]} and "vacio" in l.error, f"{forma!r} tras dato → viejo")
+    ok(L.vacio({"nombre": "Acme"}) is False and L.vacio(["/a"]) is False and L.vacio({"rows": [], "n": "3"}) is False,
+       "vacio(): textos sueltos, listas con algo o cifras en texto no son vacío")
+
+    # 12 · nunca hubo dato y llega estructura sin dato → sin_dato, no ok
+    api.respuesta = {"rows": []}
+    l = L.leer(F, "cli_nuevo", api)
+    ok(l.estado == "sin_dato" and l.datos is None and L.marcar(l) is None, f"{{'rows': []}} sin dato previo → sin_dato ({l.estado})")
+
+    # 13 · ceros en texto: "0", "0.0", "0,00" son cifras
+    ok(L.a_cero({"clics": "0", "coste": "0,00", "ctr": "0.0"}) and not L.a_cero({"clics": "0", "coste": "1,50"}),
+       "a_cero ve los ceros en texto")
+    ok(not L.a_cero({"nombre": "Acme", "activo": False}), "a_cero: sin cifras (texto, booleanos) no es «a cero»")
+    api.respuesta = {"clics": "120", "coste": "35,40"}
+    ok(L.leer(F, "cli_txt", api).estado == "ok", "cifras en texto → ok")
+    api.respuesta = {"clics": "0", "coste": "0,00"}
+    l = L.leer(F, "cli_txt", api)
+    ok(l.estado == "viejo" and l.datos["clics"] == "120" and "a_cero" in l.error, "ceros en texto tras dato → viejo")
+
+    # 14 · caída grande de hojas con dato (menos del 20 %) → la última buena
+    api.respuesta = {"paginas": [{"url": f"/p{i}", "clics": 10 + i} for i in range(10)]}   # 20 hojas
+    ok(L.leer(F, "cli_hojas", api).estado == "ok", "20 hojas → ok")
+    api.respuesta = {"paginas": [{"url": "/p0", "clics": 10}]}                              # 2 de 20 (10 %)
+    l = L.leer(F, "cli_hojas", api)
+    ok(l.estado == "viejo" and len(l.datos["paginas"]) == 10 and "menguado" in l.error, f"2 de 20 hojas → viejo ({l.error})")
+    api.respuesta = {"paginas": [{"url": f"/p{i}", "clics": 10 + i} for i in range(2)]}    # 4 de 20 (20 %)
+    ok(L.leer(F, "cli_hojas", api).estado == "ok", "4 de 20 hojas (justo el 20 %) → ok")
+
+    # 15 · marcar una lista vieja: va envuelta para que la pantalla lo sepa
+    api.respuesta = [{"url": "/a", "clics": 7}]
+    l = L.leer(F, "cli_lista", api)
+    ok(l.estado == "ok" and L.marcar(l) == [{"url": "/a", "clics": 7}], "lista buena → marcar la deja tal cual")
+    api.falla = 500
+    l = L.leer(F, "cli_lista", api)
+    m = L.marcar(l)
+    ok(l.estado == "viejo" and m == {"datos": [{"url": "/a", "clics": 7}], "_viejo": True, "_desde": l.desde},
+       "lista vieja → {'datos': …, '_viejo': True, '_desde': hora}")
     api.falla = None
 
     if not PG:   # podar() es global: en Postgres no se toca lo que no es de la prueba

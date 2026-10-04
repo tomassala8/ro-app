@@ -22,6 +22,14 @@ describe('entorno al arrancar', () => {
     expect(falla({ ...prod, RO_LEGADO_URL: undefined })).toBe(true);
   });
   it('HOST solo 127.0.0.1 o 0.0.0.0', () => expect(falla({ ...BIEN, HOST: '192.168.1.20' })).toBe(true));
+  it('Supabase: pooler de sesión y certificado en producción', () => {
+    const sb = 'postgresql://postgres.x:y@aws-0-eu-central-1.pooler.supabase.com';
+    expect(falla({ ...BIEN, DATABASE_URL: `${sb}:6543/postgres` })).toBe(true);
+    const prod = { ...BIEN, RO_ENTORNO: 'produccion', RO_IDENTIDAD: 'access', RO_LEGADO_URL: 'http://legado:8771' };
+    expect(falla({ ...prod, DATABASE_URL: `${sb}:5432/postgres?sslmode=require` })).toBe(true);
+    expect(falla({ ...prod, DATABASE_URL: `${sb}:5432/postgres?sslmode=require`, RO_PG_CA: 'x' })).toBe(false);
+  });
+
   it('0.0.0.0 con identidad local solo dentro de un contenedor', () => {
     expect(falla({ ...BIEN, RO_IDENTIDAD: 'local', HOST: '0.0.0.0' })).toBe(true);
     expect(falla({ ...BIEN, RO_IDENTIDAD: 'local', HOST: '0.0.0.0', RO_EN_CONTENEDOR: '1' })).toBe(false);

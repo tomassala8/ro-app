@@ -18,6 +18,10 @@ export function comprobarEntorno(env: NodeJS.ProcessEnv = process.env): void {
   // pone RO_EN_CONTENEDOR=1 y publica el puerto en 127.0.0.1); en el Mac, 127.0.0.1.
   if (env.HOST === '0.0.0.0' && env.RO_IDENTIDAD !== 'access' && env.RO_EN_CONTENEDOR !== '1')
     fallos.push('HOST=0.0.0.0 con RO_IDENTIDAD=local solo dentro de un contenedor (RO_EN_CONTENEDOR=1): usa 127.0.0.1.');
+  // Supabase: el «Transaction pooler» (6543) rompe los candados y las sentencias preparadas; hace falta el de sesión.
+  if (/:6543\//.test(env.DATABASE_URL ?? '')) fallos.push('DATABASE_URL: usa el «Session pooler» de Supabase (5432), no el de transacciones (6543).');
+  if (nube && /supabase\.(com|co)/.test(env.DATABASE_URL ?? '') && !env.RO_PG_CA)
+    fallos.push('RO_PG_CA hace falta con Supabase: su certificado (Database › SSL) para verificar la conexión.');
   if (env.RO_LEGADO_URL && !/^https?:\/\/[^/]+/.test(env.RO_LEGADO_URL)) fallos.push('RO_LEGADO_URL no es una URL.');
   if (nube && !env.RO_LEGADO_URL) fallos.push('RO_LEGADO_URL hace falta en producción (el servicio privado del legado).');
   if (fallos.length) {

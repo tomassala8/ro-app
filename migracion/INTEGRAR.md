@@ -126,3 +126,15 @@ dentro de la consulta, pruebas Python de hoy en `baterias.sh` y su pantalla con 
      (`desde` está en UTC: a Madrid con `ahora_madrid`/`RO_RELOJ` al pintar) y el sello del menú desde la tubería.
 - **Al mudarla:** se queda en Python (los lectores viven en `ro-legado`). Nest solo lee la vista `fuente_ultimo_bueno`
   si una pantalla necesita «de cuándo es este dato».
+
+## 6. Servidor MCP de la app (Tomás, 4-oct)
+
+- **Qué es:** en lugar de una API pública, cada miembro conecta la app a **su** Claude. Diseño completo en `PLAN_MAESTRO.md` §2.14.
+- **Esta noche:** nada. No se empieza hasta que las rutas de lectura estén en Nest: las herramientas llaman a esos servicios.
+- **Contrato:** `POST /mcp` (MCP por HTTP), `GET /.well-known/oauth-authorization-server` y `oauth-protected-resource`,
+  `/mcp/autorizar` (detrás de Access), `/mcp/token`, `/mcp/registro`. Tabla nueva `mcp_token` (solo la huella del token).
+- **Permisos:** la misma guarda de Nest. La persona sale del token, nunca de una cabecera. En cada llamada, motor de
+  permisos de la persona ∩ alcances del token. Sin «ver como». Solo lectura por defecto.
+- **Pruebas:** las del final de §2.14, como e2e de Nest, más los vectores de permisos pasados por las herramientas.
+- **Falta decidir (Tomás):** qué herramientas de escritura hay al principio y cuánto dura un token (propuesta: 30 días).
+

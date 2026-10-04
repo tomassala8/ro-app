@@ -186,7 +186,7 @@ Hoy todas las llaves salen de un único sitio, `config.py › secreto()`, que la
 - **El día del despliegue (Tomás, unos 10 minutos):**
   1. `python3 migracion/llaves_nube.py --exportar` escribe `~/RO_MIGRACION/ro-llaves.env` (permiso 600, fuera del repositorio).
   2. En Render › Env Groups › `ro-llaves` › «Add from .env», se pega y después se borra el fichero.
-  3. `DATABASE_URL=<la de Render> python3 despliegue/llave_ghl.py sembrar`
+  3. `DATABASE_URL=<la de Supabase> python3 despliegue/llave_ghl.py sembrar`
   4. `despliegue/salud_conexiones.py` en la nube: las 27 conexiones en verde.
 - **Los lectores de verdad** (`~/RO_HERRAMIENTAS`: zh.py, hd.py, mt.py, gg.py…) no están en el repositorio. Los mete en la imagen `despliegue/preparar_contexto.sh`, como hasta ahora.
 
@@ -227,7 +227,7 @@ Para que funcionen de verdad en la nube:
 - **Copia inmutable diaria (4-oct, juntado con el hilo de buenas prácticas):** R2 cada hora durante 7 días para recuperar rápido (bloqueo de 7 días), **y** a las 3 y a las 15 UTC la misma copia a **Backblaze B2** en una cuenta aparte, con Object Lock «compliance» de 30 días. R2 protege de un error o de alguien con la llave de la app; B2, de alguien que se haga con Cloudflare o con todas nuestras llaves. Sustituye a la copia semanal en un disco desenchufado (si se quiere, una al mes sigue siendo buena idea). Sin `RO_B2_*` no sube y, en producción, la copia de esas horas sale en rojo.
 - **Dónde corre:** cron `ro-copias` cada hora en `despliegue/render.yaml` (y en `v2/render.yaml`, F7.2). Sin las llaves de R2 sale **en rojo**: en Render el disco de un cron se borra al terminar y la copia no sobreviviría. Las llaves de R2 (`RO_R2_*`) las crea Tomás en Cloudflare; hoy no existen.
 - **Restaurar:** `pg_restore --no-owner -d <base nueva> postgres.dump` de la hora que se quiera. Lo ensaya entero la puerta 7 (volcar, restaurar en otra base, misma API) y `copia_base.py --probar` el día 1 de cada mes.
-- **Además:** según el hilo «Buenas prácticas», la Postgres gratis de Render no tiene copias y las de pago traen recuperación a un momento dado de 3 o 7 días, que restaura en una base NUEVA (hay que cambiar `DATABASE_URL`). Es un plan B, no el principal. No lo he comprobado yo. **Antes del piloto, ensayo de restauración en Render de verdad.** La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
+- **Además:** la base va en **Supabase** (Tomás, 4-oct). Sus copias diarias son un plan B; la vuelta a un minuto concreto (PITR) es un complemento de pago, y restaura en el mismo proyecto. Las nuestras (R2 cada hora, B2 inmutable) restauran en cualquier Postgres: por eso el volcado lleva solo el esquema `public` y sin permisos. El cliente `pg_dump` de la imagen es el 17 (vuelca 15, 16 y 17). **Antes del piloto, ensayo de restauración desde R2 en una base nueva.** La app de hoy en SQLite sigue con su copia diaria verificada (`copia_seguridad.py`).
 - **Antes de cada despliegue que cambie la base**, una copia a mano (botón «Trigger Run» del cron `ro-copias` en Render) y después `prisma migrate deploy` como paso que **bloquea el despliegue** si falla (`preDeployCommand` de `ro-api`).
 - **Ensayado el 4-oct** sobre la Postgres de prueba: 41 tablas y 4.742 filas, iguales que la base viva; borra las de más de 7 días y no toca lo que no es una copia. Arreglado de paso: la imagen instalaba `pg_dump` 15, que no puede volcar una Postgres 16 (N-22). La imagen no la he podido construir aquí.
 
@@ -242,7 +242,7 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 - Filtro global de errores con la forma de `servir.py` (`{"error": …}`): Prisma P2002 → 409, P2025 → 404, P2003 → 400; JSON roto → 400 y cuerpo grande → 413 (N-13 en las rutas de Nest); nunca la pila ni el SQL; solo los 5xx van al registro como error.
 - El entorno se comprueba al arrancar (`src/entorno.ts`): sin base o sin identidad no arranca; en producción, ni `RO_IDENTIDAD=local` (cualquiera podría hacerse pasar por otro) ni `RO_RELOJ` (el reloj fijo de la noche).
 - Cierre ordenado al parar (`enableShutdownHooks`), tope de conexiones de la API a Postgres (`RO_PG_POOL_MAX`, 10) y la imagen de la API sin root (`USER node`).
-- **Cuenta de conexiones a Postgres en la nube:** API ≤ 10 + legado (medido: 15-17 en el pico de 30 personas, Nest incluido) + tubería (crons ligera, completa y noche, uno a la vez por el bloqueo) + copias (1). Tiene que quedar por debajo del 70 % del `max_connections` del plan de Render (mirarlo en el panel antes del piloto: no lo he podido comprobar). La puerta de carga falla si se pasa de 60.
+- **Cuenta de conexiones a Postgres en la nube:** API ≤ 10 + legado (medido: 15-17 en el pico de 30 personas, Nest incluido) + tubería (crons ligera, completa y noche, uno a la vez por el bloqueo) + copias (1). Tiene que quedar por debajo del 70 % del tamaño del pool de sesión de Supabase (Database › Connection pooling; DESPLIEGUE T1b pide ≥ 40) y de su `max_connections` (mirarlo en el panel antes del piloto: no lo he podido comprobar). La puerta de carga falla si se pasa de 60.
 - La lista de rutas con su permiso guardada en el repositorio (`src/permisos/rutas-permisos.txt`, idea de Twenty): una ruta nueva o un permiso cambiado se ve en el diff.
 
 **En la fase 5 (reglas de cada ruta nueva):**
@@ -251,7 +251,7 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 - La escritura y su anotación en el rastro, en la misma transacción.
 - Cambios de base solo hacia delante y en dos pasos (columna opcional → rellenar → obligatoria); una migración aplicada no se edita nunca.
 
-**Después del piloto:** que la app no sea dueña de las tablas (un usuario de base sin `TRUNCATE`, `UPDATE` ni `DELETE` sobre el rastro; hoy en Render hay un solo usuario), colas de trabajos en Postgres (pg-boss) con reintentos e idempotencia, logs estructurados con id de petición (nestjs-pino), contrato zod compartido front/back, `/listo` que compruebe base y cadena del rastro, dinero en `Decimal`, fechas `timestamptz`, permisos por campo en la capa de datos.
+**Después del piloto:** que la app no sea dueña de las tablas (un usuario de base sin `TRUNCATE`, `UPDATE` ni `DELETE` sobre el rastro; en Supabase, un papel propio en vez de `postgres`), colas de trabajos en Postgres (pg-boss) con reintentos e idempotencia, logs estructurados con id de petición (nestjs-pino), contrato zod compartido front/back, `/listo` que compruebe base y cadena del rastro, dinero en `Decimal`, fechas `timestamptz`, permisos por campo en la capa de datos.
 
 **No encaja (para 30 personas):** un esquema de base por cliente, GraphQL, Redis para caché o permisos, réplicas de lectura, tokens en `localStorage`, CORS abierto.
 
@@ -266,6 +266,7 @@ Referencias revisadas: Twenty (CRM de código abierto, Nest + Postgres; clonado 
 | Un empleado que se va | Quitarlo del grupo de Access (y de Google): pierde el acceso al momento | Solo Tomás da y quita accesos (D2) | Al dar de baja a alguien | Probar su correo → no entra |
 | **Ataques de denegación (DDoS)** y bots | Cloudflare en modo «proxied» absorbe el tráfico; Access corta en el borde a quien no ha entrado, antes de llegar a Render | — | En Cloudflare: Bot Fight Mode, reglas gestionadas del WAF (gratis), «Under Attack Mode» solo en emergencia, y una regla de límite de peticiones en `/api/` **por persona o muy alta por IP** (las 30 personas salen por la misma IP de la oficina: un límite bajo os bloquearía a vosotros) | `seguridad_nube.py` ve `cf-ray`. La carga de 30 personas (§2.6) da la cifra para el límite |
 | Saltarse Cloudflare por la dirección de Render | Desactivar las direcciones `*.onrender.com` (T8). `ro-api` y `ro-legado` como **servicios privados** (sin dirección pública): solo `ro-web` da la cara | Plan F7.2 | T8 en cada servicio público | `seguridad_nube.py --render …` |
+| **La base, abierta por internet** (Supabase) | Data API de Supabase **desactivada** (si no, las tablas de `public` se leen con la llave anónima); SSL obligatorio y verificado (`RO_PG_CA`); restricciones de red: solo las IP de salida de Render; solo el pooler de sesión | `entorno.ts` no arranca con el pooler 6543 ni sin certificado en producción | T1b de `DESPLIEGUE.md` | Desde una IP que no es de Render, conectar a la base → rechazado. `curl https://<proyecto>.supabase.co/rest/v1/registro` → sin datos |
 | Algo parecido a Wordfence | El WAF de Cloudflare hace ese papel (reglas contra ataques conocidos, bots, límites). Dentro de la app: permisos en un solo sitio, errores sin detalles, cuerpo máximo de 200 KB, cabeceras de seguridad, escáner de secretos | Sí (dentro de la app) | WAF, como arriba | `seguridad_http.py` en cada puerta |
 | Llaves robadas del repositorio | Nunca llaves en el repo (escáner de secretos); en Render, variables `sync: false` | Sí | — | `escaner_secretos.py --proyecto` |
 
@@ -293,6 +294,27 @@ La orden `security` falsa es una barrera de PATH: quien llame a `/usr/bin/securi
 5. Por la mañana, antes de creerte PROGRESO.md: `bash migracion/comprobar_manana.sh`.
 
 **Next en modo autónomo:** `next.config.ts` usa `output: "standalone"`, así que se sirve con `node .next/standalone/apps/web/server.js` (con `public` y `.next/static` copiados al lado), no con `next start`. Lo hace `servicios.sh` y lo hace la imagen de Docker: lo que pasa las puertas es lo mismo que irá a la nube.
+
+### 2.14 El servidor MCP de la app: cada uno desde su Claude, con su alcance (Tomás, 4-oct)
+
+Decisión de Tomás: no habrá una API pública. La app tendrá **su propio servidor MCP** y cada miembro del equipo lo conecta
+desde **su** Claude (su propia cuenta paga la IA). Cada token solo puede hacer lo que la persona puede hacer en la app, y
+dentro de eso, solo lo que ese token tenga permitido. **No se construye esta noche**: necesita las rutas ya en Nest (F5).
+
+| Pieza | Cómo |
+|---|---|
+| Dónde | Módulo `mcp` de Nest con el SDK oficial (`@modelcontextprotocol/sdk`, transporte HTTP «streamable»), en `https://mcp.rankingonline.app/mcp`. Otro nombre que la app: Claude lo llama desde sus servidores, así que no puede ir detrás del inicio de sesión de Access |
+| Cómo se entra | OAuth 2.1 con PKCE y registro dinámico de clientes, que es lo que pide un conector personalizado de Claude. La pantalla de autorizar vive en `app.rankingonline.app/mcp/autorizar`, **detrás de Access** (Google + segundo factor): solo quien ya entra en la app puede crear un token. Sin comprobar: si Access de Cloudflare puede hacer él de servidor OAuth para MCP, sobra la pantalla propia |
+| El token | Aleatorio, guardado solo su huella (tabla `mcp_token`: persona, nombre, alcances, creado, caduca a los 30 días, último uso, revocado y por quién). Se renueva rotando. «Mis conexiones» en Mi perfil para verlos y revocarlos; Tomás revoca los de cualquiera; al dar de baja a una persona se revocan todos solos |
+| El alcance | Cada token lleva una lista de herramientas elegida al autorizar, y nunca más de lo que la persona ve. En **cada** llamada se vuelve a mirar con el motor de permisos de siempre (`@ro/permisos`): si a alguien le cambian el puesto, su token lo nota al momento. «Ver como», nunca. Por defecto, solo lectura |
+| Las herramientas | Las mismas funciones de la app, no la API entera: buscar cliente, ficha, Mi día, En rojo, riesgo de baja, «Qué hago si…», contexto del cliente, agenda… Cada una llama al MISMO servicio de Nest que su pantalla (permiso en el `WHERE`, recorte de importes). Ninguna herramienta de SQL ni «llamar a cualquier ruta» |
+| Alimentar la app | Las de escritura (por ejemplo, dejar una nota de reunión en un cliente o marcar una acción) solo si el token tiene ese alcance y la persona puede hacerlo en la app; pasan por la misma guarda y dejan su línea en el rastro |
+| Auditoría | Cada llamada deja una línea en el rastro (`coleccion = 'mcp'`, la herramienta, el token y la persona). Límite por token (por ejemplo 60 llamadas por minuto y un tope diario) y regla de Cloudflare para `mcp.` |
+| Lo que vuelve | Datos, nunca instrucciones: los textos de clientes van marcados como datos; sin llaves, sin correos de personas que esa persona no vería |
+
+Pruebas que lo cierran: un token de un account no ve un cliente ajeno por ninguna herramienta; un token de solo lectura no
+escribe; cambiar el puesto de la persona cambia lo que ve su token en la siguiente llamada; un token revocado o caducado da
+401; cada llamada está en el rastro.
 
 ---
 
@@ -405,6 +427,7 @@ Pendientes para la noche (están en `PROGRESO.md`):
 
 ## 8. Después de la noche (para que escale)
 
+- **Servidor MCP** (§2.14): primero tras el piloto, cuando las rutas de lectura estén en Nest. Ficha en `migracion/INTEGRAR.md` §6.
 - **Funciones nuevas** (cerebros, diagnósticos, riesgo de baja, contexto del cliente, copia propia de las APIs): una ficha por función en `migracion/INTEGRAR.md`, con su contrato, permisos, datos, pruebas y qué falta. Esta noche viajan como están; se mudan con su grupo.
 - Pasar a Nest lo que quedó en el legado (tubería y bucles con `@nestjs/schedule` y una cola; envíos, sincronía, IA, triaje con sus transacciones en Postgres), con las mismas puertas.
 - Pasar la matriz de permisos a tablas (`puestos`, `reglas`, `permisos_por_puesto`) con su pantalla en Ajustes y su rastro. El motor ya estará en un solo sitio (`@ro/permisos`).

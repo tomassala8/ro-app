@@ -4,11 +4,13 @@
 Todos los lectores pasan por aquí:
   from fuentes.lectura import leer, marcar
   l = leer("gsc", cliente_id, lambda: pedir_search_console(cliente_id))
-  datos = marcar(l)      # dict con «_viejo» y «_desde» si la API falló; None si nunca hubo dato
+  datos = marcar(l)      # «_viejo» y «_desde» si la API falló (lo que no es dict va en {"datos": …}); None si nunca hubo dato
+                         # (l.estado siempre dice ok | viejo | sin_dato, sea cual sea la forma de los datos)
 
   · lectura buena → se guarda en fuente_lectura y se devuelve (estado «ok»);
-  · error, vacío (None, {}, [], "") o todo a 0 donde la última buena no lo estaba → la última buena,
-    estado «viejo», con su hora en «desde»; el error también se guarda;
+  · error, vacío (ver vacio(): estructura sin dato, p. ej. {"rows": []}), todo a 0 donde la última buena no lo estaba
+    (también "0", "0,00") o con menos del 20 % de las hojas de la última buena → la última buena, estado «viejo»,
+    con su hora en «desde»; el error también se guarda;
   · nunca hubo dato → estado «sin_dato» y datos None. Nunca un 0.
   · sospechoso(nuevo, ultimo_bueno) → texto si la lectura no vale (comprobaciones propias de cada fuente).
 
@@ -17,6 +19,7 @@ Las horas van en UTC, texto «AAAA-MM-DD HH:MM:SS», como el resto de schema_v2.
 """
 import hashlib
 import json
+import math
 import os
 import sqlite3
 import sys
@@ -27,6 +30,10 @@ APP = Path(__file__).resolve().parent.parent
 ESQUEMA = APP / "schema_v2.sql"
 GUARDAR = 30            # lecturas buenas por fuente y recurso
 DIAS_ERRORES = 30
+# Si la lectura trae menos del 20 % de las hojas con dato de la última buena, no vale: las APIs devuelven a medias
+# (página cortada, permiso perdido en una cuenta, cuota agotada) sin dar error. Las variaciones normales de un día a
+# otro (menos páginas, menos campañas) rara vez bajan más del 80 %; si una fuente las tiene, que use sospechoso().
+CAIDA_HOJAS = 0.2
 
 Lectura = namedtuple("Lectura", "datos estado desde error")   # estado: ok | viejo | sin_dato
 _PREPARADAS = set()
@@ -65,22 +72,71 @@ def _json(datos):
     return json.dumps(datos, sort_keys=True, ensure_ascii=False, default=str)
 
 
-def _numeros(x):
-    """Todas las hojas numéricas (sin booleanos)."""
+def _num(x):
+    """El número de una hoja (también "12", "0.0", "0,00"); None si no lo es. Los booleanos no son cifras."""
+    if isinstance(x, bool):
+        return None
+    if isinstance(x, (int, float)):
+        return x
+    if isinstance(x, str):
+        try:
+            n = float(x.strip().replace(",", "."))
+        except ValueError:
+            return None
+        return n if math.isfinite(n) else None
+    return None
+
+
+def _hojas(x):
+    """Todas las hojas (lo que no es dict ni lista)."""
     if isinstance(x, dict):
         for v in x.values():
-            yield from _numeros(v)
+            yield from _hojas(v)
     elif isinstance(x, (list, tuple)):
         for v in x:
-            yield from _numeros(v)
-    elif isinstance(x, (int, float)) and not isinstance(x, bool):
+            yield from _hojas(v)
+    else:
         yield x
 
 
+def _listas(x):
+    """Todas las listas, también las de dentro."""
+    if isinstance(x, dict):
+        for v in x.values():
+            yield from _listas(v)
+    elif isinstance(x, (list, tuple)):
+        yield x
+        for v in x:
+            yield from _listas(v)
+
+
+def _numeros(x):
+    """Todas las hojas numéricas, también las que vienen como texto (sin booleanos)."""
+    return (n for n in map(_num, _hojas(x)) if n is not None)
+
+
+def _con_dato(x):
+    """Cuántas hojas traen algo (no None ni texto vacío). Un 0 cuenta: es un dato."""
+    return sum(1 for h in _hojas(x) if h is not None and not (isinstance(h, str) and not h.strip()))
+
+
 def a_cero(x):
-    """True si hay cifras y todas son 0."""
+    """True si hay cifras y todas son 0 ("0" y "0,00" también son cifras)."""
     nums = list(_numeros(x))
     return bool(nums) and all(n == 0 for n in nums)
+
+
+def vacio(datos):
+    """True si la respuesta tiene forma pero no dato: ninguna cifra y, o bien ninguna hoja con algo, o bien
+    listas y todas vacías ({"rows": []}, {"rows": [], "next": None}). Un dict solo con textos ({"nombre": "X"}) no es vacío."""
+    if datos is None or datos == "":
+        return True
+    if next(_numeros(datos), None) is not None:
+        return False
+    if _con_dato(datos) == 0:
+        return True
+    listas = list(_listas(datos))
+    return bool(listas) and all(len(li) == 0 for li in listas)
 
 
 def _ultimo_bueno(con, fuente, recurso):
@@ -96,12 +152,16 @@ def _apuntar(con, fuente, recurso, ok, codigo=None, error=None, datos=None):
 
 def _fallo(datos, anterior, sospechoso):
     """(codigo, error) si la lectura no vale; None si es buena."""
-    if datos is None or datos == {} or datos == [] or datos == "":
-        return "vacio", "La API no devolvió nada"
     if isinstance(datos, dict) and datos.get("_error"):
         return "error", str(datos["_error"])[:300]
+    if vacio(datos):       # sin dato previo acaba en «sin_dato»; con él, en «viejo»: nunca se guarda como buena
+        return "vacio", "La API no devolvió nada (o solo la estructura, sin dato)"
     if anterior is not None and a_cero(datos) and not a_cero(anterior):
         return "a_cero", "Todo a 0 y la última lectura buena no lo estaba"
+    if anterior is not None:
+        n, antes = _con_dato(datos), _con_dato(anterior)
+        if n < CAIDA_HOJAS * antes:
+            return "menguado", f"Trae {n} datos y la última lectura buena {antes} (menos del {CAIDA_HOJAS:.0%})"
     motivo = sospechoso(datos, anterior) if sospechoso else None
     if motivo:
         return "sospechoso", str(motivo)[:300]
@@ -141,11 +201,15 @@ def leer(fuente, recurso, funcion, *, sospechoso=None):
 
 
 def marcar(lectura):
-    """Convención del plan (§2.5): dict con «_viejo»: True y «_desde»: hora si va con dato viejo; None si no hay dato."""
+    """Convención del plan (§2.5): con dato viejo, dict con «_viejo»: True y «_desde»: hora; si los datos no son dict
+    (lista, número…) van envueltos: {"datos": …, "_viejo": True, "_desde": hora}. None si no hay dato.
+    Quien necesite saberlo sin mirar la forma tiene siempre lectura.estado (ok | viejo | sin_dato)."""
     if lectura.estado == "sin_dato":
         return None
-    if lectura.estado == "viejo" and isinstance(lectura.datos, dict):
-        return {**lectura.datos, "_viejo": True, "_desde": lectura.desde}
+    if lectura.estado == "viejo":
+        if isinstance(lectura.datos, dict):
+            return {**lectura.datos, "_viejo": True, "_desde": lectura.desde}
+        return {"datos": lectura.datos, "_viejo": True, "_desde": lectura.desde}
     return lectura.datos
 
 

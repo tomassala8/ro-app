@@ -8,8 +8,9 @@
 #   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
 #   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS).
 #                      A las 3 y a las 15 UTC, además a Backblaze B2 (otra cuenta, inmutable 30 días)
-#   ro-base            UNA sola Postgres: rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con
-#                      bloqueo y los datos de cada módulo por versión (despliegue/publicacion.py)
+#   La base es Supabase (Postgres, Frankfurt; Tomás, 4-oct), no una base de Render: DATABASE_URL va en el grupo ro-base.
+#                      Rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con bloqueo y los datos
+#                      de cada módulo por versión (despliegue/publicacion.py). Pasos en DESPLIEGUE.md (T1b).
 #
 # Horarios en UTC (Render no admite zona horaria). Con horario de verano (UTC+2) caen a su hora; en invierno (UTC+1)
 # una hora antes. La ligera cubre de 5 a 22 UTC para tapar los dos casos. Render no lanza dos vueltas del MISMO
@@ -18,16 +19,13 @@
 previews:
   generation: manual            # entornos de vista previa por cambio (plan Pro), a petición
 
-databases:
-  - name: ro-base
-    region: frankfurt
-    plan: basic-1gb             # ligera: basic-256mb
-    databaseName: ro
-    user: ro
-    postgresMajorVersion: "16"
-    ipAllowList: []             # sin acceso desde internet: solo la red privada de Render
-
 envVarGroups:
+  - name: ro-base
+    envVars:
+      # Supabase › Connect › «Session pooler» (puerto 5432, IPv4, SSL). NO el «Transaction pooler» (6543): rompe los
+      # candados de sesión y las sentencias preparadas de psycopg. Formato:
+      # postgresql://postgres.<proyecto>:<clave>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - { key: DATABASE_URL, sync: false }
   - name: ro-comun
     envVars:
       - key: RO_ENTORNO
@@ -96,8 +94,7 @@ services:
       # Ronda 11 (A8, auditoría 35): el Origin que manda el navegador en los POST. Sin esto, todos los botones (acciones,
       # decisiones, Ajustes, «Ver datos», IA) dan 403 «Origen no permitido». Varios, separados por comas.
       - { key: RO_ORIGEN_APP, value: "https://app.rankingonline.app" }
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-vigilancia
     # La web NO lleva las llaves de las herramientas: los botones dejan acciones simuladas y la tubería es quien lee.
@@ -112,8 +109,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh ligera
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves
       - fromGroup: ro-vigilancia
@@ -128,8 +124,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh completa
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves
       - fromGroup: ro-vigilancia
@@ -144,8 +139,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh copias
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - key: RO_COPIAS_DIAS
         value: "7"                # cuántos días se guardan las copias de cada hora; se cambia aquí
       - fromGroup: ro-comun
@@ -161,8 +155,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh noche
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves     # comprobar.py lee Meta (3 lecturas)
       - fromGroup: ro-vigilancia

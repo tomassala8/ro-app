@@ -49,6 +49,9 @@ DIAS = 14
 CARPETA = Path(os.environ.get("RO_COPIAS_DIR") or config.ESTADO_DIR / "copias")
 HORAS = CARPETA / "horas"
 DIAS_HORAS = float(os.environ.get("RO_COPIAS_DIAS") or 7)   # Tomás, 4-oct: «a lo mejor siete días»; se cambia aquí
+# Solo el esquema de la app. En Supabase hay además auth, storage, realtime… (suyos, no nuestros): volcarlos haría que
+# la copia no se pudiera restaurar en otra Postgres. Sin permisos: los papeles anon/authenticated solo existen allí.
+VOLCADO = ["pg_dump", "-Fc", "--no-owner", "--no-privileges", "--schema", os.environ.get("RO_PG_ESQUEMA") or "public"]
 SELLO = "%Y-%m-%d_%H"                                       # una carpeta por hora (UTC: no se repite al cambiar la hora)
 
 
@@ -80,7 +83,7 @@ def copiar():
     url = os.environ.get("DATABASE_URL", "")
     if url.startswith(("postgres://", "postgresql://")):
         destino = hoy / "postgres.dump"
-        r = subprocess.run(["pg_dump", "-Fc", "--no-owner", "-f", str(destino), url], capture_output=True, text=True)
+        r = subprocess.run([*VOLCADO, "-f", str(destino), url], capture_output=True, text=True)
         if r.returncode != 0:
             sys.exit(f"pg_dump falló: {r.stderr[-300:]}")
         hechas.append(destino)
@@ -230,7 +233,7 @@ def copia_hora():
         return True
     carpeta.mkdir(parents=True, exist_ok=True)
     dump = carpeta / "postgres.dump"
-    r = subprocess.run(["pg_dump", "-Fc", "--no-owner", "-f", str(dump), url], capture_output=True, text=True)
+    r = subprocess.run([*VOLCADO, "-f", str(dump), url], capture_output=True, text=True)
     if r.returncode != 0:
         shutil.rmtree(carpeta, ignore_errors=True)
         sys.exit(f"pg_dump falló: {r.stderr[-300:]}")
