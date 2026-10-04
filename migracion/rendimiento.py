@@ -107,8 +107,16 @@ def comparar(a):
     capt_n = Path(a.capturas_nuevo or viejo.parent.parent / "capturas" / "nuevo").expanduser() / "_tiempos.json"
     pantallas = 0
     if capt_v.exists() and capt_n.exists():
-        tv = json.loads(capt_v.read_text())
-        for clave, ms in json.loads(capt_n.read_text()).items():
+        # Una foto por persona y pantalla es una sola muestra (la primera de cada persona sale fría): se compara la
+        # mediana de cada pantalla entre todas las personas, no cada foto suelta.
+        def por_pantalla(d):
+            g = {}
+            for clave, ms in d.items():
+                tam, _persona, pant = clave.split("/", 2)
+                g.setdefault(f"{tam}/{pant}", []).append(ms)
+            return {k: statistics.median(v) for k, v in g.items()}
+        tv = por_pantalla(json.loads(capt_v.read_text()))
+        for clave, ms in por_pantalla(json.loads(capt_n.read_text())).items():
             if clave in tv:
                 pantallas += 1
                 motivo = peor(tv[clave], ms, TECHO_PANTALLA, HOLGURA_PANTALLA)

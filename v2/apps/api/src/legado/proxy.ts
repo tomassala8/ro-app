@@ -25,6 +25,12 @@ export function proxyLegado(base = process.env.RO_LEGADO_URL, { cuerpoMax = CUER
     if (process.env.RO_IDENTIDAD !== 'access' && !/^(127\.0\.0\.1|localhost)(:\d+)?$/i.test(req.headers.host ?? '')) {
       return json(res, 403, 'Host no permitido.');
     }
+    // HEAD y OPTIONS: servir.py no tiene do_HEAD y el de la biblioteca de Python sirve ficheros sin pasar por la
+    // identidad ni los permisos (auditoría del 4-oct, L-07). Aquí no pasan: 405.
+    if (req.method === 'HEAD' || req.method === 'OPTIONS') {
+      res.writeHead(405, { Allow: 'GET, POST', 'Content-Type': 'application/json; charset=utf-8' });
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify({ error: 'Método no permitido.' }));
+    }
     if (Number(req.headers['content-length'] ?? 0) > cuerpoMax) {
       req.resume();
       return json(res, 413, 'Petición demasiado grande.');

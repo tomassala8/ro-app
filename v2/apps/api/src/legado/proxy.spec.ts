@@ -79,4 +79,13 @@ describe('proxy de legado', () => {
     lento.closeAllConnections();
     lento.close();
   });
+
+  it('HEAD y OPTIONS no llegan al legado (se saltarían identidad y permisos): 405', async () => {
+    const legado = await legadoFalso();
+    const app = express();
+    app.use(proxyLegado(legado.url));
+    expect((await request(app).head('/data/_privado/x.json').set('Host', '127.0.0.1:3000')).status).toBe(405);
+    expect((await request(app).options('/api/sesion').set('Host', '127.0.0.1:3000')).status).toBe(405);
+    legado.cerrar();
+  });
 });

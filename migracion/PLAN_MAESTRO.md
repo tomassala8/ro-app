@@ -91,9 +91,13 @@ Reglas del backend (para cada ruta que se muda):
 - **Identidad:** `RO_IDENTIDAD=local` (`X-RO-Yo` / `?yo=` / galleta `ro_yo`, solo en 127.0.0.1) o `access` (solo el sello firmado de Cloudflare Access). Solo entra quien está `activo`. Mientras una ruta va por el proxy, la identidad la sigue comprobando `servir.py`.
 - **«Ver como»:** solo lectura, la intersección de las dos personas, y lo leído queda en el rastro.
 - **Permisos en un solo sitio** (Tomás, 4-oct). Ya está montado en `v2/apps/api/src/permisos/` y probado:
-  - cada ruta declara su permiso con una línea: `@Permiso({ modulo: 'crm', recortar: true })`, o `@Publico('motivo')` si no tiene datos;
-  - una guarda global deniega toda ruta sin declarar (403) y pregunta al motor; un recorte global pasa la respuesta por `recortar()`;
-  - «ver como» no puede escribir (`escritura: true`);
+  - cada ruta declara su permiso con una línea: `@Permiso({ modulo: 'crm' })`, o `@Publico('motivo')` si no tiene datos;
+  - una guarda global deniega toda ruta sin declarar (403) y pregunta al motor;
+  - **lo seguro va por defecto** (auditoría del hilo de feedback, parte 2):
+    - toda respuesta sale recortada salvo `sinRecorte: '<motivo>'`;
+    - todo método que no sea GET es escritura, y «ver como» no puede escribir salvo `lecturaPorPost: '<motivo>'`;
+    - toda petición en «ver como» deja rastro desde la guarda, y si no se puede apuntar, 503;
+    - `HEAD` y `OPTIONS` no pasan del proxy (405).
   - el motor es UNO (`@ro/permisos`, que lee `reglas_permisos.json`); hasta la fase 4, deniega todo;
   - `rutas-declaradas.spec.ts` rompe la compilación si una ruta no declara permiso o si alguien fuera de `src/permisos` decide mirando puestos.
   Así, cambiar quién ve qué es tocar la matriz o una línea, nunca buscar comprobaciones por el código.
@@ -119,14 +123,14 @@ Reglas del backend (para cada ruta que se muda):
 
 Regla: **lo que manda una API se guarda en nuestra base antes de usarlo. Si la API falla, se enseña lo último bueno con su hora y el aviso «Sin datos en tiempo real», nunca un 0 ni un vacío.**
 
-Cómo está hoy (revisado el 4-oct, detalle en `PENDIENTES_LOGICA.md` L-1 a L-12):
+Cómo está hoy (revisado el 4-oct, detalle en `PENDIENTES_LOGICA.md` N-01 a N-12):
 - **Bien:** si un paso de la tubería falla entero, sus ficheros se restauran y se marca `dato_viejo`. Holded, GBP, Modular, Nuevos y Ventas ya sirven el último dato bueno. La ficha del cliente distingue «bien», «a cero» y «dato viejo».
 - **Mal:** lo que llega de las APIs solo vive en ficheros sueltos, no en la base.
 - **Mal:** cuando un lector se traga el error y escribe ceros, la tubería no lo ve. Pasa en SEO, Redes, CRM por subcuenta, Hostinger y Paneles.
 - **Mal:** el aviso de dato viejo no llega a las pantallas.
 - **Mal:** unos 200 `?? 0` en el front convierten «no sé» en «0».
 
-Cómo queda (paso F5.10, fallos L-1 a L-12):
+Cómo queda (paso F5.10, fallos N-01 a N-12):
 - **Tabla `fuente_lectura`** (se escribe solo, no se borra): fuente, recurso (cliente o cuenta), hora, ok, código, error, cuerpo (jsonb comprimido) y huella.
   - Vista `fuente_ultimo_bueno` con la última lectura buena de cada fuente y recurso.
   - Se guardan las 30 últimas lecturas buenas por recurso y 30 días de errores.
@@ -163,9 +167,55 @@ Cada una con su puerta medible, en `puerta.sh` f3, f5, f6 y f7:
 - todo va compilado (`next build` + `next start`), como en la nube.
 
 **Ensayado el 4-oct:**
-- caídas en verde, con un fallo heredado (JSON roto → 500, L-13);
+- caídas en verde, con un fallo heredado (JSON roto → 500, N-13);
 - seguridad en verde;
 - velocidad: el legado sobre Postgres era hasta 7 veces más lento que SQLite (17 → 130 ms en `/api/rastro/verificar`), porque abría una conexión por petición. Con la reutilización, 59 ms y puerta en verde.
+
+### 2.7 Las conexiones con las APIs, a la nube sin repetir las altas (Tomás, 4-oct)
+
+Hoy todas las llaves salen de un único sitio, `config.py › secreto()`, que las busca en este orden: carpeta privada → variable de entorno → `.env` → llavero del Mac. En la nube basta con dárselas como variables de entorno: **se copian las mismas llaves, con sus «refresh tokens», y no hay que repetir ninguna alta**.
+
+- `python3 migracion/llaves_nube.py` dice qué llaves hay en el Mac, de dónde salen y si `render.yaml` las pide, **sin enseñar valores**. Hoy faltan 12 en el grupo `ro-llaves` (N-16).
+- **Excepciones:**
+  - GHL agencia: su llave rota en cada uso. Va a la base de la nube con `despliegue/llave_ghl.py sembrar`, una sola vez. Desde ese momento el Mac no vuelve a usarla, o deja de valer.
+  - Meta: el token caduca el 1-dic. Hay que cambiarlo por el de usuario de sistema (ya lo dice `config.py`).
+- **Esta noche Cursor no mueve ninguna llave** (línea roja). Deja `render.yaml` completo (N-16) y arregla los lectores que solo funcionan en un Mac (N-14 llavero, N-15 rutas a `~/Downloads`).
+- **El día del despliegue (Tomás, unos 10 minutos):**
+  1. `python3 migracion/llaves_nube.py --exportar` escribe `~/RO_MIGRACION/ro-llaves.env` (permiso 600, fuera del repositorio).
+  2. En Render › Env Groups › `ro-llaves` › «Add from .env», se pega y después se borra el fichero.
+  3. `DATABASE_URL=<la de Render> python3 despliegue/llave_ghl.py sembrar`
+  4. `despliegue/salud_conexiones.py` en la nube: las 27 conexiones en verde.
+- **Los lectores de verdad** (`~/RO_HERRAMIENTAS`: zh.py, hd.py, mt.py, gg.py…) no están en el repositorio. Los mete en la imagen `despliegue/preparar_contexto.sh`, como hasta ahora.
+
+### 2.8 ClickUp en la app nueva
+
+**No cambia nada:** los envíos a ClickUp siguen siendo de `sincronia.py`, dentro del legado.
+- Cada botón guarda su acción y deja un cambio en la cola `sinc_cambios`, que no se puede borrar. La pantalla dice «Hecho en la app · pendiente de ClickUp».
+- El envío lleva una marca `ro:<clave>`, así que nunca se duplica. Reintenta los fallos de red durante unas 5 horas, y si alguien tocó la tarea en ClickUp, pregunta qué versión vale.
+- Escribe estados, comentarios, horas, asignados y mensajes de chat.
+
+Hoy todo va **simulado**. Para encenderlo hacen falta tres cosas: el interruptor activado por Tomás, `RO_CLICKUP_REAL=si` y la llave de servicio `CLICKUP_TOKEN_SERVICIO`, que no puede ser la del propietario. Esta noche se queda apagado.
+
+Antes de encenderlo en la nube hay que arreglar:
+- N-17: el reconciliador lee SQLite en vez de Postgres;
+- N-19: crear tarea no funciona en modo real;
+- N-20: el interruptor vive en `data/`.
+
+### 2.9 Escalados («sube a X persona»)
+
+Hay tres mecanismos, y los tres publican **dentro de la app** (canal y campana; nada de correo, WhatsApp ni ClickUp):
+1. **Alertas:** dueño → jefe del departamento → Mili → Tomás, como mucho 3 niveles. Solo escala si pasa el plazo; lo marcado «Lo tengo» o pospuesto no escala. Se ve en Mi día («Escaladas a ti») y en la campana.
+2. **Avisos automáticos** (`avisos_programados.py`): si un aviso sigue sin hacerse pasadas sus horas, sube a la jefa, a Mili o a Tomás.
+3. **Vigía de conexiones:** si cae una conexión, avisa a Agus; si sigue en rojo más de 60 minutos, a Mili y Tomás.
+
+Los cerebros por área (PR #2) aún no escalan nada: su consejo «escalar» es una nota para la IA. Cuando se conecten, irán por el mismo `avisos.publicar`.
+
+Para que funcionen de verdad en la nube:
+- **Los bucles tienen que correr.** Esta noche se apagan a propósito con `RO_AVISOS_SIN_BUCLE=1`, para que no salga nada fuera.
+  - En `v2/render.yaml` esa variable **no puede aparecer**: lo comprueba la puerta 7.
+  - El legado va en **una sola copia**: con dos, los bucles irían dobles; las claves únicas evitan mensajes repetidos, pero no trabajo doble.
+  - El vigía tiene que correr en la nube (N-18).
+- **Puerta (F5.11):** un ensayo de escalados sobre Postgres. Usa la copia `ro_esc`, un legado aparte con los bucles encendidos y las salidas apagadas, y el reloj adelantado. Se crea una alerta y un aviso automático vencidos, y comprueba que el mensaje «sube a X» llega al canal y a la campana de la persona correcta, una sola vez. Además entran en `baterias.sh` las pruebas que ya existen: `pruebas_seguridad.py` (`alertas_a8`, `avisos_automaticos`, `sincronia_clickup`) y `fuentes_alertas/probar_alertas.py`.
 
 ---
 
@@ -203,7 +253,8 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 | **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
 | **5 · API a Nest** | grupos de §2.2, uno a uno: se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | lo que quede hasta 2 h antes del final | `puerta.sh f5` por grupo |
-| **5.10 · fallos pendientes** | cada fallo abierto de `PENDIENTES_LOGICA.md`, de seguridad a presentación, con su prueba | hasta 90 min; los de seguridad no se saltan por reloj | `puerta.sh f5` + la prueba de cada fallo |
+| **4.2 · pruebas de permisos** | las que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8) | 30–45 min | `puerta.sh f4` |
+| **5.10 · fallos pendientes** | los 69 de `PENDIENTES_LOGICA.md` (L-01…L-49 del hilo de feedback y N-01…N-20 de la migración), L-01 y L-21 primero y luego de seguridad a presentación, con su prueba | hasta 90 min; los de seguridad no se saltan por reloj | `puerta.sh f5` + la prueba de cada fallo |
 | **6 · front en React** | carcasa en `/carcasa`, `ctx.ts`, puente; carcasa a «/» con fotos iguales; pantallas una a una | lo que quede hasta 1 h antes del final | `puerta.sh f6` por pieza |
 | **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 

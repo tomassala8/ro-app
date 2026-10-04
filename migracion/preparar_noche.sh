@@ -101,7 +101,7 @@ LIBRE=$(df -g "$RAIZ" 2>/dev/null | awk 'NR==2{print $4}'); [ -z "$LIBRE" ] && L
 mkdir -p "$FUERA" && ok "carpeta para datos de la migración: $FUERA (fuera del repo)"
 
 LISTA="$FUERA/PENDIENTES_LOGICA.md"; [ -f "$LISTA" ] || LISTA="migracion/PENDIENTES_LOGICA.md"
-ABIERTOS=$(grep -cE '^\| L-[1-9][0-9]* .*\| *abierto *\|$' "$LISTA" 2>/dev/null); ABIERTOS=${ABIERTOS:-0}
+ABIERTOS=$(cat migracion/PENDIENTES_LOGICA.md "$FUERA/PENDIENTES_LOGICA.md" 2>/dev/null | grep -E '^\| [LN]-[0-9]+ .*\| *abierto' | cut -d'|' -f2 | sort -u | grep -c .); ABIERTOS=${ABIERTOS:-0}
 if [ "$ABIERTOS" -gt 0 ]; then ok "$ABIERTOS fallos de lógica abiertos para arreglar en la noche ($LISTA)"
 else ojo "la lista de fallos de lógica está vacía ($LISTA)" "si hay fallos sin arreglar en la app de hoy, apúntalos ahí antes de lanzar (o pide a Claude que la copie del hilo de feedback)"; fi
 

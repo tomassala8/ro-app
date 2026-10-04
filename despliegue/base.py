@@ -149,7 +149,8 @@ class CursorPG:
     def fetchall(self):
         if self._c is None or self._c.description is None:
             return []
-        return [Fila(self._cols(), r) for r in self._c.fetchall()]
+        cols = self._cols()   # una vez, no por fila: psycopg rehace description en cada llamada (era el 70 % del tiempo)
+        return [Fila(cols, r) for r in self._c.fetchall()]
 
     def __iter__(self):
         return iter(self.fetchall())

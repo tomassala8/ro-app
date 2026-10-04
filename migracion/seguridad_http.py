@@ -57,6 +57,14 @@ def main():
         en, _ = pedir(a.nuevo, ruta)
         if en == 200 and ev != 200:
             malos.append(f"{ruta}: la nueva lo sirve (200) y la de hoy no ({ev})")
+    for ruta in ["/data/_privado/x.json", "/local.db", "/api/sesion"]:
+        req = urllib.request.Request(a.nuevo.rstrip("/") + ruta, method="HEAD")
+        try:
+            with urllib.request.urlopen(req, timeout=20) as r:
+                malos.append(f"HEAD {ruta}: la nueva responde {r.status} (debe ser 405: HEAD se salta identidad y permisos, L-07)")
+        except urllib.error.HTTPError as e:
+            if e.code < 400:
+                malos.append(f"HEAD {ruta}: {e.code}")
     for ruta in SIN_IDENTIFICAR:
         ev, _ = pedir(a.viejo, ruta)
         en, _ = pedir(a.nuevo, ruta)

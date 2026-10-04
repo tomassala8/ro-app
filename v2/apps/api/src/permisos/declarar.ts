@@ -3,9 +3,15 @@ import { SetMetadata } from '@nestjs/common';
 /**
  * Cada ruta de Nest DECLARA su permiso con UNA línea encima del método, y nada más:
  *
- *   @Permiso({ modulo: 'crm', recortar: true })   // entra quien tenga nivel en ese módulo; la respuesta sale recortada
- *   @Permiso({ tipo: 'cliente', escritura: true })
+ *   @Permiso({ modulo: 'crm' })                    // entra quien tenga nivel en ese módulo; la respuesta SIEMPRE sale recortada
+ *   @Permiso({ tipo: 'cliente' })
+ *   @Permiso({ modulo: 'ver_dato', lecturaPorPost: 'solo lee: igual que servir.py' })   // POST que «ver como» puede usar
+ *   @Permiso({ modulo: 'capturas', sinRecorte: 'binario' })                             // respuesta que no es JSON
  *   @Publico('comprobación de vida')               // solo para rutas sin datos (/vivo)
+ *
+ * Lo seguro va por defecto (auditoría del 4-oct, parte 2): toda respuesta se recorta salvo `sinRecorte`, todo método
+ * que no sea GET es escritura y «ver como» no puede escribir salvo `lecturaPorPost`, y toda petición en «ver como»
+ * deja rastro (RASTRO_VER_COMO). Una ruta nueva nace segura aunque quien la escriba no se acuerde de nada.
  *
  * Una ruta sin ninguna de las dos responde 403 (denegar por defecto) y además rompe la prueba
  * rutas-declaradas.spec.ts. Ningún controlador ni servicio mira puestos ni personas a mano: lo decide
@@ -19,10 +25,10 @@ export interface DeclaracionPermiso {
   modulo?: string;
   /** Tipo de dato de reglas_permisos.json (ver() de permisos.py). */
   tipo?: string;
-  /** La respuesta pasa por recortar() antes de salir. */
-  recortar?: boolean;
-  /** Ruta que cambia datos: «ver como» la deniega siempre (es de solo lectura). */
-  escritura?: boolean;
+  /** Solo con motivo: la respuesta NO pasa por recortar() (p. ej. 'binario'). Por defecto, todo se recorta. */
+  sinRecorte?: string;
+  /** Solo con motivo: un POST que solo lee y que «ver como» puede usar (hoy: /api/ver_dato y los /api/ia/* de lectura). */
+  lecturaPorPost?: string;
 }
 
 export const Permiso = (declaracion: DeclaracionPermiso) => SetMetadata(CLAVE_PERMISO, declaracion);

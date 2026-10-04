@@ -149,6 +149,8 @@ case "$FASE" in
     PUERTO=3000
     [ "$FASE" = f7 ] && paso "informe de la noche escrito" test -s migracion/INFORME_NOCHE.md
     [ "$FASE" = f7 ] && paso "copia de la base restaurada y comprobada" restauracion
+    [ "$FASE" = f7 ] && paso "render.yaml: llaves completas y bucles encendidos" bash -c "python3 migracion/llaves_nube.py && test -f v2/render.yaml && ! grep -q RO_AVISOS_SIN_BUCLE v2/render.yaml"
+    [ "$FASE" = f7 ] && [ -f migracion/escalados.py ] && paso "escalados sobre Postgres" python3 migracion/escalados.py
     paso "v2 compila, pasa sus pruebas y su lint" bash -c "cd v2 && pnpm build && pnpm test && pnpm lint"
     paso "contrato: app nueva = app de hoy" contrato "$PUERTO" nuevo
     paso "escrituras: app nueva = app de hoy" escritura nuevo

@@ -4,7 +4,7 @@ import { map, type Observable } from 'rxjs';
 import { CLAVE_PERMISO, type DeclaracionPermiso } from './declarar.js';
 import { MOTOR_PERMISOS, type MotorPermisos, type Vista } from './motor.js';
 
-/** Recorte global: si la ruta declara `recortar: true`, la respuesta sale por el motor. Nadie recorta a mano. */
+/** Recorte global: TODA respuesta de una ruta con @Permiso sale por el motor, salvo `sinRecorte: '<motivo>'`. */
 @Injectable()
 export class RecortarInterceptor implements NestInterceptor {
   constructor(
@@ -17,7 +17,7 @@ export class RecortarInterceptor implements NestInterceptor {
       contexto.getHandler(),
       contexto.getClass(),
     ]);
-    if (!declaracion?.recortar) return siguiente.handle();
+    if (!declaracion || declaracion.sinRecorte) return siguiente.handle();
     const req = contexto.switchToHttp().getRequest<{ vista?: Vista }>();
     return siguiente.handle().pipe(map((cuerpo) => this.motor.recortar(req.vista, declaracion, cuerpo)));
   }

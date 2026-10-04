@@ -38,7 +38,7 @@ cd v2/tools/capturas && node capturar.mjs --base http://127.0.0.1:8770 --modo vi
 ```
 Abre 5 fotos al azar: tienen que enseñar la pantalla con datos, no «Cargando…». Si alguna sale vacía, arregla la espera en `capturar.mjs` y repite. Mira `_errores.json`: los errores que ya tiene la app de hoy se apuntan (no se arreglan esta noche) y no cuentan contra la nueva. `_tiempos.json` guarda cuánto tarda cada pantalla (lo usa la puerta de velocidad).
 Todo esto va con el reloj fijo (`RO_RELOJ`, lo ponen `servicios.sh`, `puerta.sh` y `noche.sh`): no lo quites, o lo grabado antes de medianoche no se parecerá a lo de después.
-Crea `~/RO_MIGRACION/excepciones_solidez.txt` con una línea por fallo heredado que ya conoces: `JSON roto  # L-13 servir.py da 500 con un JSON mal formado`.
+Crea `~/RO_MIGRACION/excepciones_solidez.txt` con una línea por fallo heredado que ya conoces: `JSON roto  # N-13 servir.py da 500 con un JSON mal formado`.
 
 ## F1.5 · Casos de escritura
 
@@ -104,11 +104,21 @@ Después, enchúfalo en la API: en `v2/apps/api/src/permisos/` crea `MotorRo imp
 
 ---
 
+## F4.2 · Pruebas de permisos que impiden volver atrás
+
+Anexo de `migracion/PENDIENTES_LOGICA.md`, punto 8. En `v2/apps/api/test/permisos-regresion.e2e-spec.ts`, con el motor portado y los vectores (`RO_VECTORES`):
+- toda ruta de escritura de Nest da 403 en «ver como», salvo la lista de `lecturaPorPost` (la prueba la imprime y la compara con una lista fija);
+- ninguna respuesta en «ver como» trae algo que la persona real no vería (compara las dos respuestas);
+- para cada puesto, ninguna respuesta lleva claves de dinero o de leads que su tipo no permite (las cuatro expresiones de L-04, iguales que en `permisos.py`);
+- un account no recibe nada de un cliente ajeno por ninguna ruta (raíz, ruta o fila);
+- `HEAD`/`OPTIONS` a una ruta de datos por el puerto de Next → 405 (ya cubierto en el proxy: compruébalo de punta a punta).
+Mientras las rutas sigan en el proxy, estas pruebas van contra la app nueva entera (puerto 3000), así que también vigilan a `servir.py`: lo que falle por un L-xx abierto se marca `it.todo('L-xx …')` y se activa al arreglarlo en F5.10. Súmala a `puerta.sh f4`. Plan B: lo que no salga, `it.todo` con su motivo y al informe.
+
 ## F5.x · Un grupo de rutas a Nest
 
 Para el grupo del paso (tabla §2.2 del plan):
 1. Lee el código Python de cada ruta del grupo (servir.py y el enchufe que toque) y reprodúcelo en un módulo de Nest: mismos códigos, mensajes, claves JSON, recorte (con `@ro/permisos`), rastro y cabeceras. Base con `PrismaService` (SQL crudo con `$queryRaw` solo si Prisma no llega). Datos de módulos: de `datos_version`/`datos_fichero`/`datos_blob` (espacio «data», versión vigente, zlib), con caché por versión.
-   **Permisos:** cada método lleva `@Permiso({ modulo | tipo, recortar, escritura })` (o `@Publico('motivo')` si no tiene datos). Prohibido comprobar puestos, personas o carteras a mano en el controlador o el servicio: si la declaración no llega, se amplía el motor en `src/permisos/` (y su prueba), no la ruta. `rutas-declaradas.spec.ts` lo vigila y no se relaja.
+   **Permisos:** cada método lleva `@Permiso({ modulo | tipo })` (o `@Publico('motivo')` si no tiene datos). Todo sale recortado y todo POST es escritura por defecto; `sinRecorte` y `lecturaPorPost` solo con motivo y solo donde `servir.py` hace lo mismo hoy. F5.6 implementa `RASTRO_VER_COMO` (rastro de «ver como» agrupado por minuto, L-08) en lugar de `RastroVerComoSinPortar`: hasta entonces, «ver como» a una ruta de Nest da 503, y por eso F5.6 va antes que cualquier grupo que tenga pantallas en «ver como» (si no da tiempo, esas rutas se quedan en el proxy). Prohibido comprobar puestos, personas o carteras a mano en el controlador o el servicio: si la declaración no llega, se amplía el motor en `src/permisos/` (y su prueba), no la ruta. `rutas-declaradas.spec.ts` lo vigila y no se relaja.
 2. Añade sus rutas a `v2/apps/api/src/legado/rutas-en-nest.ts`.
 3. `bash migracion/puerta.sh f5 --rapido` para iterar; `bash migracion/puerta.sh f5` para cerrar.
 4. VERDE → commit «F5.x · <grupo> en Nest». ROJO tras 3 intentos → quita sus rutas de la lista, `git switch -c intento/<grupo>` con el módulo, vuelve a `migracion/v2`, ⚠ y siguiente.
@@ -116,15 +126,26 @@ F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|a
 
 ## F5.10 · Fallos pendientes de lógica
 
-Lista: `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe; si no, `migracion/PENDIENTES_LOGICA.md`. Regla de Tomás: lo que no quedó arreglado en la app de hoy se arregla aquí sí o sí. Orden: seguridad → datos → funcional → presentación. Para cada fallo `abierto`:
+Lista: `migracion/PENDIENTES_LOGICA.md` **juntada** con `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe (por id; para un id en las dos manda la columna Estado del Mac, que es la que actualiza Astra; las filas de una sola se suman). Escribe el resultado en `migracion/PENDIENTES_LOGICA.md` y trabaja sobre ese. Regla de Tomás: lo que no quedó arreglado en la app de hoy se arregla aquí sí o sí. Orden: **L-01 y L-21 primero** (tumban el servidor), luego seguridad → datos → funcional → presentación. Los `decide Tomás (Dn)` no se tocan (van al informe con su recomendación). Los `arreglado hoy` / `ya estaba`: solo comprobar que su prueba pasa en la app nueva. Para cada fallo `abierto`:
 1. Escribe primero la prueba que lo demuestra y comprueba que FALLA (Vitest en `v2/` si la ruta está en Nest; Python en `migracion/` o junto a la batería que toque si sigue en `servir.py`).
 2. Arréglalo donde viva esa noche: el módulo de Nest si la ruta ya se mudó; `servir.py` (o su enchufe) si sigue por el proxy; si es de permisos, en `reglas_permisos.json` (lo leen los dos motores) o en los dos motores a la vez (`permisos.py` y `@ro/permisos`), y vuelve a sacar los vectores con `vectores_permisos.py` para que la paridad siga al 100 %.
 3. La prueba pasa. Las rutas cuya respuesta cambia a propósito van a `~/RO_MIGRACION/excepciones.txt` con `# L-n <motivo>`.
 4. `bash migracion/puerta.sh f5` en VERDE → commit «L-n · <qué>» y estado `arreglado en v2 (<commit>)` en la lista.
 Tras 3 intentos sin salir: deshaz el arreglo, deja la prueba marcada como pendiente (`it.todo`/`skip` con «L-n»; nunca borrada), estado `pendiente: <motivo>` y siguiente. Los de **seguridad** se hacen aunque el reloj diga «sin tiempo», antes de la fase 7.
-Para L-1 a L-12 (fuentes), sigue `PLAN_MAESTRO.md` §2.5: primero L-1 (tabla `fuente_lectura` en `v2/packages/db` con su migración, y `fuentes/lectura.py › leer()` con su prueba), y luego cada lector pasa por `leer()` con una prueba de «API falsa caída → último dato bueno + aviso, ningún 0» añadida a `despliegue/pruebas_noche.py --solo-solidez`. Para L-10, escribe `migracion/nunca_ceros.mjs` (cuenta `?? 0` y `|| 0` sobre cifras pintadas en `modulos/` y `v2/apps/web/src`; guarda la cifra de partida en `~/RO_MIGRACION/nunca_ceros.txt` y falla si sube) y súmalo a `baterias.sh`. Ningún lector se prueba contra la API de verdad: siempre con una falsa en 127.0.0.1 o un módulo de mentira.
-Cuando arregles L-13, quita su línea de `~/RO_MIGRACION/excepciones_solidez.txt`.
+Para N-01 a N-12 (fuentes), sigue `PLAN_MAESTRO.md` §2.5: primero N-01 (tabla `fuente_lectura` en `v2/packages/db` con su migración, y `fuentes/lectura.py › leer()` con su prueba), y luego cada lector pasa por `leer()` con una prueba de «API falsa caída → último dato bueno + aviso, ningún 0» añadida a `despliegue/pruebas_noche.py --solo-solidez`. Para N-10, escribe `migracion/nunca_ceros.mjs` (cuenta `?? 0` y `|| 0` sobre cifras pintadas en `modulos/` y `v2/apps/web/src`; guarda la cifra de partida en `~/RO_MIGRACION/nunca_ceros.txt` y falla si sube) y súmalo a `baterias.sh`. Ningún lector se prueba contra la API de verdad: siempre con una falsa en 127.0.0.1 o un módulo de mentira.
+Cuando arregles N-13, quita su línea de `~/RO_MIGRACION/excepciones_solidez.txt`.
 Los fallos `arreglado hoy`: comprueba que su prueba pasa también en la app nueva (`--pantallas` o la ruta); si no, trátalo como abierto.
+
+## F5.11 · Escalados sobre Postgres
+
+Escribe `migracion/escalados.py` y súmalo a la puerta 7:
+1. Base limpia `ro_esc` (`contrato_escritura.py base-limpia ro_esc`).
+2. Legado aparte en 127.0.0.1:8783 sobre ella, con los bucles ENCENDIDOS (sin `RO_AVISOS_SIN_BUCLE`) y TODAS las salidas apagadas (sin `RO_ENVIOS_REALES` ni `RO_CLICKUP_REAL`).
+3. Un `RO_RELOJ` más tarde que el plazo de una alerta y de una regla de aviso automático (créalas como lo hacen `pruebas_seguridad.py › alertas_a8` y `avisos_automaticos`).
+4. Comprueba por la API (`/api/canales/campana` de cada persona) que el «sube a X» llega a la persona que toca según `cadena_escalado` y `avisos_programados.escalar()`, **una sola vez** aunque pasen dos vueltas del bucle, y que lo marcado «Lo tengo» no escala.
+5. Lo paras. Nunca contra `ro_app`.
+
+Si algo no escala sobre Postgres y en SQLite sí, es un fallo de `despliegue/base.py`: arréglalo con su prueba. Plan B: apuntarlo como bloqueo para el piloto.
 
 ---
 
@@ -155,7 +176,7 @@ Primero, si no existe, `src/components/ro/` (componentes.js en React, mismas cla
 
 ## F7.2 · render.yaml
 
-`v2/render.yaml` a partir de `despliegue/render.yaml`: `ro-web` (Next), `ro-api` (Nest, `RO_LEGADO_URL` al servicio privado del legado), `ro-legado` (la imagen de `despliegue/Dockerfile`, **una sola copia**, con la tubería y los bucles), `ro-base` (Postgres). Sin llaves. Cloudflare Access delante, como en `despliegue/DESPLIEGUE.md`.
+`v2/render.yaml` a partir de `despliegue/render.yaml` (y `PLAN_MAESTRO.md` §2.7–2.9): `ro-web` (Next), `ro-api` (Nest, `RO_LEGADO_URL` al servicio privado del legado), `ro-legado` (la imagen de `despliegue/Dockerfile`, **una sola copia**, con la tubería y los bucles), `ro-base` (Postgres). Sin llaves. Cloudflare Access delante, como en `despliegue/DESPLIEGUE.md`. El grupo `ro-llaves` completo (comprueba con `python3 migracion/llaves_nube.py`: nada «FALTA en render.yaml») y solo en `ro-legado`. Sin `RO_AVISOS_SIN_BUCLE` (los escalados necesitan los bucles). El vigía, como cron o dentro del legado (N-18). ClickUp real apagado. **Nunca ejecutes `llaves_nube.py --exportar`**: es de Tomás.
 
 ## F7.3 · Informe y puerta 7
 
