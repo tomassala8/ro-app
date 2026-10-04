@@ -53,7 +53,7 @@ clientes en riesgo alto o crítico, con la escala de la D-41 (≤ 2 bien · 3-4 
 
 | Señal | Hoy | Qué falta |
 |---|---|---|
-| Resultados | objetivo de la ficha + Meta (leads, coste) + GoHighLevel (citas); si no, salud del panel | nada para empezar; cuantos más objetivos cargados, mejor |
+| Resultados | objetivo de la ficha + Meta (leads, coste) + GoHighLevel (citas); si no, salud del panel. Con resultados en ámbar o rojo, la causa probable sale del veredicto del embudo (`data/diagnosticos/diagnosticos.json`, PR #3: leads malos, despacho que no atiende, no vienen…) | nada para empezar; cuantos más objetivos cargados, mejor |
 | Nuestro último correo | `desk.ult_correo_saliente` (panel) | — |
 | Su última respuesta | correos suyos abiertos en la Bandeja, llamadas contestadas (Zadarma), reuniones | **su último correo en tickets ya cerrados**: `desk.ult_correo_entrante`. Sale de Zoho Desk (`customerResponseTime` del ticket más reciente de la cuenta, cerrados incluidos). Mientras falte, el eje sale con confianza «parcial» |
 | Calidez en la reunión | el account la marca cada lunes en el semáforo: cálido, normal o frío (`vista_previa.tono`) | leerla de las actas de Fathom con IA, como propuesta para que el account la confirme |

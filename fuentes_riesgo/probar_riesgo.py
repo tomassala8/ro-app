@@ -60,6 +60,10 @@ ok(r["color"] == "ambar" and r["confianza"] == "provisional", "sin objetivo: sal
 r = RB.eje_resultados({**MAL, "dias_desde_alta": 20})
 ok(r["color"] == "ambar" and r["arranque"], "en arranque (día 20) el rojo baja a ámbar")
 ok(RB.eje_resultados({})["color"] == "gris", "sin nada → gris")
+r = RB.eje_resultados({**MAL, "veredicto_embudo": {"veredicto": "despacho_no_atiende", "frase": "El despacho no llama a tiempo."}})
+ok(r["causa_probable"]["veredicto"] == "despacho_no_atiende" and any("Causa probable" in m for m in r["motivos"]),
+   "resultados en rojo + veredicto del embudo → causa probable")
+ok(RB.eje_resultados({**BIEN, "veredicto_embudo": {"veredicto": "leads_malos"}})["causa_probable"] is None, "en verde no se pone causa")
 
 ok(RB.eje_silencio(RESPONDE, HOY)["color"] == "verde", "nos contestó después de nuestro correo → verde")
 s = RB.eje_silencio({"ult_saliente": d(7), "ult_entrante": d(10), "tiene_entrante_desk": True}, HOY)
@@ -156,6 +160,9 @@ with tempfile.TemporaryDirectory() as t:
     (D / "bandeja").mkdir()
     (D / "verdad").mkdir()
     (D / "agenda").mkdir()
+    (D / "diagnosticos").mkdir()
+    (D / "diagnosticos/diagnosticos.json").write_text(json.dumps({"clientes": [
+        {"cliente_id": "dos", "veredicto_embudo": {"veredicto": "leads_malos", "frase": "El problema está en el origen."}}]}))
 
     def fichero(cid, nombre, meta=None, desk=None, extra=None, libro="Activo"):
         fu = {"cartera": {"estado": "bien", "datos": {"account": "Persona A", "riesgo_panel": 30}},
@@ -187,6 +194,7 @@ with tempfile.TemporaryDirectory() as t:
     ok(por["uno"]["patron"] == "queja_y_silencio" and por["uno"]["ejes"]["silencio"]["reuniones"]["no_asistio"] == 1,
        f"uno: en objetivo + queja marcada + no vino a la reunión → {por['uno']['patron']}")
     ok(por["dos"]["patron"] == "desenganche" and por["dos"]["nivel"] == "alto" and por["dos"]["discrepancia"], f"dos: gasta sin leads + 10 días callado → {por['dos']['patron']} · {por['dos']['nivel']}, y el lunes decía verde")
+    ok(por["dos"]["ejes"]["resultados"]["causa_probable"]["veredicto"] == "leads_malos", "dos: lee el veredicto del embudo de diagnosticos.json")
     ok(por["tres"]["semaforo"]["quejas"] == "rojo" and por["tres"]["semaforo"]["silencio"] == "verde",
        "tres: correo «Sin leads» → queja; nos escribió ayer → no está callado")
     ok(all(f.get("cliente_id") for f in out["clientes"]), "cada fila lleva cliente_id (el servidor recorta por cliente)")

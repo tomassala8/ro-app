@@ -19,6 +19,8 @@ Lee lo que ya deja la tubería (nada nuevo que conectar para empezar):
   · data/objetivos/objetivos.json  objetivo del cliente y semáforo del lunes (con la marca «se ha quejado esta semana»)
   · data/bandeja/bandeja.json      correos del cliente sin contestar (su fecha cuenta como respuesta; la marca de queja)
   · data/incidencias/incidencias.json  incidencias con queja
+  · data/diagnosticos/diagnosticos.json  dónde se cae el embudo (veredicto_embudo, PR #3), como causa probable si los
+                                   resultados están en ámbar o rojo; si no existe, se ignora
   · data/agenda/agenda.json        reuniones con el cliente de los últimos 14 días: «noshow» (Bookings, GHL), «showed» o
                                    grabación de Zoom pegada (celebrada); las que no constan como celebradas
 Escribe data/riesgo/riesgo_baja.json: una fila por cliente (con cliente_id: el servidor solo la manda a quien ve ese
@@ -168,7 +170,15 @@ def eje_resultados(r, hoy=None):
     if color == "gris":
         confianza = "sin_dato"
         motivos.append("Sin objetivo cargado ni salud: no se puede juzgar")
-    return {"color": color, "motivos": motivos, "medido": sorted(set(medido)), "confianza": confianza, "arranque": arranque}
+    # Dónde se cae el embudo (diagnósticos de calidad, PR #3): leads malos ≠ despacho que no atiende ≠ no vienen.
+    ve = r.get("veredicto_embudo") or {}
+    causa = None
+    if color in ("ambar", "rojo") and ve.get("veredicto") not in (None, "sin_dato", "embudo_sano"):
+        causa = {"veredicto": ve["veredicto"], "frase": ve.get("frase")}
+        if ve.get("frase"):
+            motivos.append(f"Causa probable: {ve['frase']}")
+    return {"color": color, "motivos": motivos, "medido": sorted(set(medido)), "confianza": confianza, "arranque": arranque,
+            "causa_probable": causa}
 
 
 def eje_silencio(c, hoy):
@@ -419,7 +429,7 @@ def reuniones_de(cid, eventos, historial, hoy):
 ORDEN_ASISTENCIA = {"asistio": 0, "no_asistio": 1, "sin_constancia": 2}
 
 
-def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=None):
+def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=None, diag=None):
     """Fichero de cliente + objetivos + bandeja + incidencias → entrada normalizada para calcular()."""
     cid = doc.get("id")
     cart, _ = _datos(doc, "cartera")
@@ -440,6 +450,7 @@ def entrada_de(doc, obj, correos, incidencias, hoy, account_id=None, eventos=Non
         "gasto_14d": _ventana(meta.get("gasto"), "14d"), "leads_14d": _ventana(meta.get("leads"), "14d"),
         "salud": None if cart.get("riesgo_panel") is None else max(0, 100 - (_num(cart.get("riesgo_panel")) or 0)),
         "dias_desde_alta": (hoy - alta).days if alta else None,
+        "veredicto_embudo": (diag or {}).get("veredicto_embudo"),
     }
     mios = [c for c in correos if c.get("cliente_id") == cid and not c.get("auto")]
     zl = [((zad.get(m) or {}).get("ultima_contestada")) for m in ("octubre", "septiembre")]
@@ -503,6 +514,7 @@ def generar(hoy=None, escribir=True):
     objetivos = {c["cliente_id"]: c for c in (_j(DATA / "objetivos/objetivos.json", {}) or {}).get("clientes", [])}
     accounts = {c.get("cliente_id"): c.get("account") for c in (_j(DATA / "verdad/clientes.json", {}) or {}).get("comun", [])}
     eventos = (_j(DATA / "agenda/agenda.json", {}) or {}).get("eventos", []) or []
+    diags = {c.get("cliente_id"): c for c in (_j(DATA / "diagnosticos/diagnosticos.json", {}) or {}).get("clientes", []) or []}
     correos = (_j(DATA / "bandeja/bandeja.json", {}) or {}).get("correos", []) or []
     inc_doc = _j(DATA / "incidencias/incidencias.json", {}) or {}
     incidencias = [x for v in inc_doc.values() if isinstance(v, list) for x in v if isinstance(x, dict)] \
@@ -512,7 +524,7 @@ def generar(hoy=None, escribir=True):
         doc = _j(p)
         if not doc or doc.get("activo_libro") not in (None, "Activo"):
             continue
-        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id")), eventos), hoy))
+        filas.append(calcular(entrada_de(doc, objetivos.get(doc.get("id")), correos, incidencias, hoy, accounts.get(doc.get("id")), eventos, diags.get(doc.get("id"))), hoy))
     filas.sort(key=lambda f: (-ORDEN_NIVEL[f["nivel"]], -f["puntos"], f.get("cliente") or ""))
     out = {
         "formato": 1, "generado": datetime.now().strftime("%Y-%m-%d %H:%M"), "hoy": hoy.isoformat(),
