@@ -2,6 +2,8 @@
 data/
 historia/
 capturas/
+# …salvo la herramienta de fotos de la migración (código, sin fotos: las fotos van a ~/RO_MIGRACION)
+!v2/tools/capturas/
 *.db
 *.db-journal
 *.db-wal
