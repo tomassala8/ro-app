@@ -119,21 +119,8 @@ def calcular(eventos, desde, hasta, corte, cobertura=None):
                 entrada_no_asignable = True
             continue
         cobertura.append(c)
-    # 653: source es el espacio de identidad de origen. Una misma identidad
-    # no puede adquirir dos clientes por particionar antes de resolver variantes.
-    # Examinar también variantes no confirmadas o con cliente malformado.
-    eventos = list(eventos or [])
-    clientes_por_evento = defaultdict(set)
-    for raw in eventos:
-        if not isinstance(raw, dict):
-            continue
-        source, eid, cid = (raw.get(k) for k in ("source", "event_id", "cliente_id"))
-        if _public_id(source) and _id(eid):
-            clientes_por_evento[(source, eid)].add(cid if _public_id(cid) else None)
-    conflictos_ambito = {ident for ident, clientes in clientes_por_evento.items() if len(clientes) > 1}
-    incidencias["event_id_ambito_conflictivo"] = len(conflictos_ambito)
     # Primero resolver todos los conflictos, independiente del orden de llegada.
-    for raw in eventos:
+    for raw in eventos or []:
         if not isinstance(raw, dict):
             incidencias["evento_invalido"] += 1
             entrada_no_asignable = True
@@ -150,9 +137,6 @@ def calcular(eventos, desde, hasta, corte, cobertura=None):
             continue
         clave = (cid, source)
         claves.add(clave)
-        if (source, eid) in conflictos_ambito:
-            afectados.add(clave)
-            continue
         # Cualificación comercial debe estar definida, no inferida de campos llenos.
         version = raw.get("criterio_version") if etapa == "cualificado" else None
         confirmado = raw.get("confirmado") is True

@@ -16,12 +16,12 @@ from embudo_eventos import ETAPAS
 APP=Path(__file__).resolve().parent
 ENV='RO_EMBUDO_OBSERVADO_467'
 SHA='165c83eacd2773ebbc0ee56680b752c97cd2546feed0f483318d750257158359'
-MANIFEST_SHA='294e497ae89b259ae007f25c3eced534baf4890e35acf58bcf758e5855d6a19e'
+MANIFEST_SHA='7f209d41b52f4c3e71010e90b3656b9b65893201a5bde65935fe52894cd8d28a'
 VERSION='467.1'
 MAX=5_000_000
 INCIDENCIAS_MOTOR=frozenset({'evento_invalido','cobertura_invalida','cualificacion_sin_criterio_confirmado',
     'resultado_sin_confirmacion','replay_id','event_id_conflictivo','replay_semantico',
-    'posterior_al_corte','lead_sin_recepcion','recepcion_repetida','evento_antes_de_recepcion'})
+    'posterior_al_corte','lead_sin_recepcion','recepcion_repetida','evento_antes_de_recepcion','event_id_ambito_conflictivo'})
 DIAGNOSTICOS=frozenset({'contacto_coleccion_invalida','contacto_identidad_invalida','contacto_payload_invalido',
     'contacto_replay','contacto_conflicto','contacto_no_lead_explicito','contacto_fecha_invalida',
     'contacto_fecha_futura','cita_coleccion_invalida','cita_identidad_invalida','cita_payload_invalido',

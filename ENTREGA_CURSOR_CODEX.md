@@ -1,3 +1,6 @@
+## Estado actual670 · integración CRM local
+Leer entrega/670_INTEGRACION_CRM_LOCAL_VERIFICADA_CODEX.md.667/668/669/670 integrados y probados;652/653 ya no son candidatos pendientes de integración. La fuente de cierres todavía no está conectada al productor. GitHub conserva650; este corte sigue local, sin fuentes privadas. No ampliar etapas ni actualizar fechas como si fueran datos recién recibidos.
+
 # Entrega RO para Fable y Cursor · 4 octubre2026
 
 Esta rama reúne el código local de la revisión RO y las correcciones posteriores al corte627. No es un despliegue ni certifica el objetivo100% completo. La rama de migración de Fable permanece independiente: comparar e integrar sin sobrescribir migracion/ ni v2/.

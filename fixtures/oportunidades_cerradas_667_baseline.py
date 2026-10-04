@@ -11,7 +11,7 @@ ID = re.compile(r'^[A-Za-z0-9_-]{1,128}$')
 
 
 def _entero(v):
-    return isinstance(v, int) and not isinstance(v, bool) and 0 <= v <= 2**53 - 1
+    return isinstance(v, int) and not isinstance(v, bool) and v >= 0
 
 
 def _fecha(v, hoy):
@@ -47,7 +47,6 @@ def collect(g, location_id, *, max_pages=5, hoy, incluir_privado=False, esquema=
         raise ValueError('hoy debe ser una fecha explícita.')
     registros = {}
     conflictos = set()
-    scopes_observados = {}
     cobertura = {}
     location_key = 'location_id' if esquema == 'legacy' else 'locationId'
     for estado in ESTADOS:
@@ -77,14 +76,9 @@ def collect(g, location_id, *, max_pages=5, hoy, incluir_privado=False, esquema=
             for o in filas:
                 if not isinstance(o, dict) or not isinstance(o.get('id'), str) or not ID.fullmatch(o['id']):
                     fallos.append('registro_sin_identidad'); continue
-                oid = o['id']
-                scope = (o.get('locationId') if o.get('locationId') is not None else location_id, o.get('status'))
-                if oid in scopes_observados and scopes_observados[oid] != scope:
-                    conflictos.add(oid); fallos.append('identidad_con_scope_conflictivo')
-                else:
-                    scopes_observados[oid] = scope
                 if o.get('locationId') not in (None, location_id) or o.get('status') != estado:
                     fallos.append('registro_fuera_filtro'); continue
+                oid = o['id']
                 registro = {'id': oid, 'estado': estado, 'fecha_cierre': None,
                     'creada': _fecha(o.get('createdAt') or o.get('dateAdded'), actual),
                     'actualizada': _fecha(o.get('updatedAt'), actual),
@@ -97,13 +91,9 @@ def collect(g, location_id, *, max_pages=5, hoy, incluir_privado=False, esquema=
                 if oid not in ids_estado:
                     nuevos += 1
                 ids_estado.add(oid)
-            meta = r.get('meta', {})
-            if meta is None:
-                meta = {}
+            meta = r.get('meta') or {}
             if not isinstance(meta, dict):
                 fallos.append('metadatos_invalidos'); break
-            if 'total' in meta and not _entero(meta['total']):
-                fallos.append('total_invalido'); break
             if _entero(meta.get('total')):
                 if total is not None and total != meta['total']:
                     fallos.append('total_cambio_durante_lectura')
