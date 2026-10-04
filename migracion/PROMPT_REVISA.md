@@ -9,6 +9,7 @@ NO tocas código, ni la base, ni los servicios, ni git, ni nada dentro del repo.
    b. ¿Hace TODO lo que pide el «Objetivo» y cada punto de «Pasos»? Un paso a medias es MAL, aunque la puerta pase.
    c. ¿Ha hecho trampa? Por ejemplo: tocar un fichero que juzga, añadir a `excepciones.txt` sin id L-/N-, saltarse o vaciar una prueba, un `try/except` que se traga el error, un `return` fijo, un `TODO` en lugar del código, o datos inventados donde iban los de verdad. Cualquiera de esas es MAL.
    d. ¿Ha caído en una de sus «Trampas»? ¿Rompe algo que ya funcionaba (permisos, rastro, identidad, dinero, borrados)? ¿Respeta las reglas de `migracion/PROMPT_NOCHE.md` y `.cursor/rules/`?
+   e. ¿Cae en un error ya conocido? Mira la sección de su fase en `migracion/contexto/BUENAS_PRACTICAS_Y_ERRORES.md` (Postgres y datos §1 y §3, Prisma §2, Nest e identidad §4, Next §5, copias §7, secretos §8, seguridad §10 P0, agente solo §0). Si el cambio repite uno de esos errores, es MAL y lo citas.
    No es MAL: el estilo, nombres que no te gustan, o mejoras que el plan no pedía. Solo lo que falta, lo que está mal o lo que es trampa.
 4. Escribe el fichero que te da el supervisor. Su PRIMERA línea es exactamente una de estas dos:
    - `REVISIÓN: BIEN`, y debajo, en una a tres líneas, qué has comprobado.
