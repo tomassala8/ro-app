@@ -1,5 +1,11 @@
+# Corte actual675 · Traspaso para el plan D
+
+Esta entrega incorpora los commits660,661,666,670 y674 posteriores al corte650, conservando su historial. El código de674 corresponde a9e7ad791e4beeff7237015346a4ec15d49a538c6. Las menciones «sólo local» y «GitHub650» en las notas anteriores describen el estado antes de esta nueva publicación autorizada; no son el estado del corte675.
+
+Leer primero entrega/675_TRASPASO_PLAN_D_CODEX.md y después los informes por bloque. No ejecutar productores reales ni reemplazar fuentes privadas con fixtures al migrar. Código y pruebas portables incluidos; datos, bases y secretos no incluidos. migracion/ yv2/ siguen fuera de los cambios.
+
 ## Estado actual674 · Paid y seguimiento CRM
-Leer entrega/674_PAID_Y_SEGUIMIENTO_CRM_LOCAL_CODEX.md.671/672/673 integrados; pruebas y checkpoint1050/4335366B verificados. No snapshots regenerados ni nueva publicaciónGitHub.650sigue remoto; cerrar/ventas/cobros y otros agregados pendientes.
+Leer entrega/674_PAID_Y_SEGUIMIENTO_CRM_LOCAL_CODEX.md.671/672/673 integrados; pruebas y checkpoint1050/4335365B verificados. No snapshots regenerados ni nueva publicaciónGitHub.650sigue remoto; cerrar/ventas/cobros y otros agregados pendientes.
 
 ## Estado actual670 · integración CRM local
 Leer entrega/670_INTEGRACION_CRM_LOCAL_VERIFICADA_CODEX.md.667/668/669/670 integrados y probados;652/653 ya no son candidatos pendientes de integración. La fuente de cierres todavía no está conectada al productor. GitHub conserva650; este corte sigue local, sin fuentes privadas. No ampliar etapas ni actualizar fechas como si fueran datos recién recibidos.
