@@ -487,4 +487,6 @@ def main():
 
 
 if __name__ == "__main__":
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):   # la ayuda no escribe nada (4-oct: --help regeneraba el inventario)
+        print(__doc__ or ""); sys.exit(0)
     main()
