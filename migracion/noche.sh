@@ -22,7 +22,10 @@ cd "$(dirname "$0")/.."
 RAIZ="$(pwd)"
 FUERA="${RO_MIGRACION:-$HOME/RO_MIGRACION}"; LOGS="$FUERA/logs"; mkdir -p "$LOGS"
 export RO_MIGRACION="$FUERA"
-HORAS="${RO_HORAS:-8}"
+# Sin plazo (Tomás, 4-oct 13:39: «no marques deadlines; avanzad sin parar hasta que me necesitéis»): la noche sigue
+# hasta acabar todos los pasos. RO_HORAS es solo un tope de seguridad; los cortes del reloj de PROGRESO.md cuentan
+# desde ese tope, así que con 72 h no recortan nada y todo se hace en orden, React incluido.
+HORAS="${RO_HORAS:-72}"
 # Quién hace qué (Tomás, 4-oct 12:09): Fable planea y hace de guardia; Opus lo crítico; Sonnet lo que pide pensar;
 # Grok Fast el volumen. En F5.10 manda la gravedad de cada fallo en PENDIENTES_LOGICA.md: seguridad → Opus, datos y
 # funcional → Sonnet, presentación → Grok. Si un modelo de pago se queda sin saldo, ese paso baja un escalón
@@ -46,6 +49,10 @@ TOPE_REVISION="${RO_TOPE_REVISION:-1500}"
 PROMPT="$RAIZ/migracion/PROMPT_NOCHE.md"
 PROMPT_REVISA="$RAIZ/migracion/PROMPT_REVISA.md"
 REVISIONES="$FUERA/revisiones"; INICIOS="$FUERA/inicio_pasos.txt"   # veredictos y commit con que empezó cada paso
+# Notas de Claude desde GitHub: Claude sigue la noche desde fuera (la rama migracion/v2 se sube tras cada paso) y deja
+# sus correcciones en migracion/NOTAS_REVISOR.md de su rama. Cada «## PARA: F2.3» va a ese paso; si ya estaba ✅, se reabre.
+RAMA_REVISOR="${RO_RAMA_REVISOR:-origin/claude/project-thread-rjes21}"
+NOTAS="$FUERA/notas_revisor"
 CUADERNO="$RAIZ/migracion/PROGRESO.md"
 PLAN_NOCHE="$RAIZ/migracion/PLAN_NOCHE.md"
 PLAN_GUARDADO="$FUERA/PLAN_NOCHE.auditado.md"
@@ -97,9 +104,9 @@ if [ -n "$nueva" ]; then
   bash migracion/servicios.sh parar >/dev/null 2>&1 || true   # nada suelto de otra noche o del ensayo en los puertos
   bash migracion/juntar_plan.sh || echo "⚠ juntar_plan.sh falló: F1.3 lo repite"
   # 2. el plan de la noche, escrito y auditado (si ya lo está y nada cambió, esto tarda un segundo)
-  #    Con tope: si el plan no estaba hecho de antes, como mucho RO_HORAS_PLAN horas (3); después la noche empieza con lo que haya.
+  #    Con tope: si el plan no estaba hecho de antes, como mucho RO_HORAS_PLAN horas (8); después la noche empieza con lo que haya.
   if [ "${RO_SIN_PLAN:-}" != "1" ]; then
-    RO_PLAN_FIN=$(( $(date +%s) + ${RO_HORAS_PLAN:-3} * 3600 )) bash migracion/planear.sh \
+    RO_PLAN_FIN=$(( $(date +%s) + ${RO_HORAS_PLAN:-8} * 3600 )) bash migracion/planear.sh \
       || echo "⚠ planear.sh no terminó: la noche sigue con el plan que haya y con PROMPTS_CURSOR.md"
   fi
   # 3. sin restos de otra noche o del ensayo
@@ -377,14 +384,46 @@ Escribe tu veredicto en: $salida"
   return 0
 }
 
+# --- Claude desde fuera: subir cada paso y leer sus notas ------------------------------------------------------------
+subir() {   # copia en GitHub tras cada paso cerrado, para que Claude lo revise; nunca --force ni otra rama
+  [ "${RO_SUBIR:-1}" = 1 ] || return 0
+  [ "$(git symbolic-ref -q --short HEAD)" = "migracion/v2" ] || return 0
+  ( git push -q origin migracion/v2 >> "$LOGS/subir.log" 2>&1 || echo "$(date '+%H:%M') push falló" >> "$LOGS/subir.log" ) &
+}
+ultima_mirada=0
+leer_notas() {
+  [ "${RO_NOTAS_REVISOR:-1}" = 1 ] || return 0
+  local ahora blob f p; ahora=$(date +%s)
+  [ $((ahora - ultima_mirada)) -ge "${RO_NOTAS_CADA:-300}" ] || return 0; ultima_mirada=$ahora   # como mucho cada 5 min
+  git fetch -q origin "${RAMA_REVISOR#origin/}" 2>/dev/null || return 0
+  blob="$(git rev-parse -q --verify "$RAMA_REVISOR:migracion/NOTAS_REVISOR.md" 2>/dev/null)" || return 0
+  mkdir -p "$NOTAS"; grep -qxF "$blob" "$NOTAS/leidas.txt" 2>/dev/null && return 0
+  echo "$blob" >> "$NOTAS/leidas.txt"; git show "$blob" > "$NOTAS/ultima.md" 2>/dev/null || return 0
+  rm -f "$NOTAS"/*.nueva
+  awk -v d="$NOTAS" '/^## PARA: F[0-9]+\.[0-9]+[[:space:]]*$/ {f=d "/" $3 ".nueva"; next} /^## / {f=""} f {print > f}' "$NOTAS/ultima.md"
+  for f in "$NOTAS"/*.nueva; do
+    [ -f "$f" ] || continue; p="$(basename "$f" .nueva)"; mv "$f" "$NOTAS/$p.md"
+    echo "  ✉ nota de Claude para $p ($(wc -l < "$NOTAS/$p.md" | tr -d ' ') líneas)"
+    if hechos | grep -qxF "$p" && reabrir "$p" 2; then
+      { echo "PLAN: VIGENTE · $p · intento 2 · $(date +%H:%M)"
+        echo "Lo pide Claude, que revisa la noche desde fuera: el paso se cerró sin estar bien. Arréglalo y vuelve a cerrarlo."
+        cat "$NOTAS/$p.md"; } > "$PLAN"
+      echo "$p NOTA-REABRE $(date +%H:%M)" >> "$REVISIONES/registro.txt" 2>/dev/null
+      echo "  ✘ $p se reabre por la nota de Claude"
+    fi
+  done
+}
+
 # al relanzar la misma noche, los registros siguen numerándose (no se pisan los de antes)
 vuelta=$(ls "$LOGS"/vuelta_*.log 2>/dev/null | wc -l | tr -d ' '); planes=$(ls "$LOGS"/replan_*.log 2>/dev/null | wc -l | tr -d ' ')
 [ -n "$nueva" ] && { mkdir -p "$LOGS/antes"; mv "$LOGS"/vuelta_* "$LOGS"/replan_* "$LOGS"/revision_* "$LOGS/antes/" 2>/dev/null; vuelta=0; planes=0
-  rm -rf "$REVISIONES.antes"; [ -d "$REVISIONES" ] && mv "$REVISIONES" "$REVISIONES.antes"; rm -f "$INICIOS"; }
+  rm -rf "$REVISIONES.antes"; [ -d "$REVISIONES" ] && mv "$REVISIONES" "$REVISIONES.antes"; rm -f "$INICIOS"
+  mkdir -p "$NOTAS"; rm -f "$NOTAS"/F*.md; }   # las leídas se quedan: una nota vieja no se aplica dos veces
 fallos_seguidos=0; sin_avance=0; fallos_plan=0; ultimo_fallo_plan=0
 while [ "$(date +%s)" -lt "$FIN" ] && ! terminado; do
   guardar_plan
   huellas_referencia
+  leer_notas
   read -r paso intento fallo <<< "$(paso_actual)"; paso="${paso:-}"; intento="${intento:-1}"; fallo="${fallo:--}"
   clave="$paso"; [ "$fallo" != "-" ] && clave="$paso $fallo"
   # al cambiar de paso (o de fallo), un plan de guardia que no es para el nuevo ya no vale: ni su GASTADO
@@ -422,6 +461,11 @@ Su sección del plan: python3 migracion/revisar_plan.py --seccion ${clave:-<paso
     mensaje="$mensaje
 Hay un plan de guardia VIGENTE para este paso en migracion/PLAN_VUELTA.md${replan:+ (recién escrito)}: síguelo antes que la sección."
   fi
+  if [ -n "$paso" ] && [ -s "$NOTAS/$paso.md" ]; then
+    mensaje="$mensaje
+NOTA DE CLAUDE para $paso (revisa la noche desde fuera; manda sobre la sección del plan, nunca sobre PROMPT_NOCHE.md ni .cursor/rules):
+$(cat "$NOTAS/$paso.md")"
+  fi
   if dice_terminado; then
     mensaje="$mensaje
 AVISO: PROGRESO.md dice «ESTADO: TERMINADO» pero quedan pasos en ⬜ o 🔄. Ciérralos (✅, o ⚠ con su motivo y plan B) antes de dar la noche por terminada."
@@ -446,10 +490,13 @@ AVISO: las dos últimas vueltas no han cambiado ni el cuaderno ni el código. Ap
   fi
   fallos_seguidos=0
   if [ "$antes" = "$despues" ]; then sin_avance=$((sin_avance + 1)); else sin_avance=0; fi
+  cerrados=""
   for p in $(hechos); do   # pasos que esta vuelta acaba de cerrar: los revisa un modelo de pago
     case "$hechos_antes" in *" $p "*) continue ;; esac
+    cerrados=1
     revisar "$p" "$modelo" || break   # reabierto: la siguiente vuelta lo rehace
   done
+  [ -n "$cerrados" ] && subir
   if [ $sin_avance -ge 12 ]; then echo "✘ 12 vueltas seguidas sin cambiar nada: paro para no gastar. Mira $log"; break; fi
   [ $sin_avance -ge 6 ] && sleep 300      # algo raro: no quemar vueltas en bucle
 done

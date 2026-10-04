@@ -4,7 +4,7 @@ ANTES DE NADA, en este orden:
 0. Rama: `git switch migracion/v2 2>/dev/null || git switch -c migracion/v2`. Nunca trabajes en `main`.
 1. Lee `migracion/PROGRESO.md` (el cuaderno de la noche: qué está hecho, qué toca y cómo se cierra cada paso).
 2. Lee `.cursor/rules/` y, de `migracion/PLAN_MAESTRO.md`, §0 y §5. El resto lo trae el plan de cada paso.
-3. Mira la hora (`date`) y `echo $RO_FIN_NOCHE` (si está vacío, usa «Fin de la noche» de PROGRESO.md; si tampoco hay, escríbelo: ahora + 8 h). Si faltan menos de 60 minutos, ve directo a la fase 7.
+3. Mira la hora (`date`) y `echo $RO_FIN_NOCHE` (si está vacío, usa «Fin de la noche» de PROGRESO.md; si tampoco hay, escríbelo: ahora + 72 h). Si faltan menos de 60 minutos, ve directo a la fase 7.
 4. Comprueba los servicios: `bash migracion/servicios.sh estado`. Arranca solo lo de fases ya cerradas: `viejo` tras F1.4, `legado` tras F2.3, `api` y `web` tras F3.1 (`bash migracion/servicios.sh arrancar <nombre>`). Nunca `arrancar` a secas antes de F2.3: crearía tablas en `ro_app` vacía.
 
 DESPUÉS, repite sin parar:

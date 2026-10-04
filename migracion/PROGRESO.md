@@ -8,7 +8,7 @@ Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/
 Mientras dura: `🔄 F2.4 · 01:10 · intento 2/3 · <qué estás probando>` (el número de intento va en la línea del paso: si te relanzan, sigues por ahí). En F5.10, con el fallo en curso: `🔄 F5.10 · 01:10 · L-03 · intento 2/3 · <qué>`.
 Al retomar, arranca solo lo de fases cerradas: `viejo` tras F1.4, `legado` tras F2.3, `api` y `web` tras F3.1. Nunca un `servicios.sh arrancar` a secas antes de F2.3: crearía tablas en `ro_app` vacía.
 
-Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 8 h en la primera vuelta y úsala como fin)
+Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 72 h en la primera vuelta y úsala como fin)
 
 Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al principio):
 - F5.10: hasta **2 h 30** antes del fin (L-01 y L-21, luego los de seguridad, van primero; no tienen prórroga). Lo que quede → `pendiente: sin tiempo` y al informe.
