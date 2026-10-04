@@ -27,3 +27,6 @@ Actualización650 (corte actual): lector JSON estricto649, corrección conservad
 
 
 Actualización660: resiliencia654/656 integrada y probada en local y en esta entrega. Una sección malformada no tumba recomendaciones válidas de otras secciones o clientes; números no representables quedan desconocidos. Ver entrega/656_CEREBRO_RESILIENTE_LOCAL_Y_PARCHES_COMERCIALES_CODEX.md. Los parches652/653 siguen aislados y no se consideran aplicados.
+
+
+Actualización661: integrada defensa de responsables y fuentes cambiantes657, y tabla Accounts659 alineada con la validación canónica305. El encargo copiable658 queda pendiente explícito. Parches comerciales652/653 aislados y reproducibles en entrega/parches_comerciales; no aplicar653 sin revisar las listas de diagnósticos y manifiestos del consumidor. Ver entrega/661_CIERRE_Y_TRASPASO_CURSOR.md. Este corte está guardado localmente; publicación externa pendiente de aprobación automática.
