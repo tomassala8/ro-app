@@ -8,7 +8,7 @@
    "finanzas_direccion",
    "operaciones"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "central:skills/criterio-tomas-ro/LEYES.md (D3 y D4)",
@@ -36,17 +36,12 @@
   ],
   "nota": "Cubre personas del equipo (alertas, horas, carga, 1:1, nota del mes, conversaciones difíciles, salidas, ausencias, incorporación, celebraciones, contratación, privacidad) y administración (alta en facturación, impagos hasta el corte, SEPA, facturas mal emitidas, cambios de cuota, cierres, conciliación). Material sensible: no contiene sueldos, valoraciones de personas concretas ni datos personales. Donde Cole Gordon o Hormozi aconsejan despedir rápido, manda la escalera de Tomás y, por encima, la ley laboral aplicable. Deriva a operaciones la capacidad y el reparto de cartera, a account la relación con el cliente, a direccion las decisiones económicas y a altas el arranque del cliente. Prefijo «skills-compartidas:» = repo skills-compartidas-entre-compas (fuera de los cuatro prefijos del encargo).",
   "pendientes_tomas": [
-   "Primer cobro con tarjeta (protocolo v3, 28-sep) frente a C-D3-17 «SEPA siempre»: aplicado el protocolo por más reciente; falta enmendar la ley.",
    "Fecha de la factura del equipo: mapa de enrutado dice día 5 (colaboradores a facturas@) y también «facturas antes del 20» para el pago del 25. ¿Cuál vale para quién?",
-   "Plan de pago antes de 60 días: ¿puede administración acordarlo o siempre lo aprueba Tomás? Aplicado: lo aprueba Tomás.",
-   "PLAYBOOK redacta-mail §3.12 sugiere culpar a un cambio de plataforma de facturación y el ejemplo de admin pide transferencia: no se usan; conviene parchear el PLAYBOOK.",
-   "Forma de salida según la relación (contrato laboral en España, colaborador por factura, otros países): confirmar con la asesoría laboral el protocolo por tipo.",
    "Faltan SOPs: RRHH (incorporación de personas, evaluación quincenal, 1:1), factura rectificativa, cambio de cuota y baja (P7), impagos y facturación (están en 90_CONFIDENCIAL, no en repo).",
-   "11_DECISIONES_PARA_TOMAS.md y 06_KPIS_INTERNOS no están en repo: la escalera 30/60/2 cuotas, el 1:1 trimestral y el mínimo de 3 personas se citan vía reglas.json.",
-   "Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar.",
-   "Umbral horas_minimas del aviso de horas vive en data no versionada; la referencia de 8 h sale del indicador.",
-   "Extras por reconocimiento (Mili §4, «06_ §B») siguen pendientes de ratificar."
-  ]
+   "11_DECISIONES_PARA_TOMAS.md y 06_KPIS_INTERNOS no están en repo: la escalera 30/60/2 cuotas, el 1:1 trimestral y el mínimo de 3 personas se citan vía reglas.json. Los sube Tomás (respuestas n.º 58-60).",
+   "Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -93,13 +88,13 @@
   },
   {
    "id": "personas_admin_p_sepa_siempre",
-   "texto": "Se cobra por domiciliación SEPA con mandato firmado; cualquier otra vía la autoriza Tomás. Excepción vigente: el primer mes del Método se cobra con tarjeta.",
+   "texto": "Se cobra primero con tarjeta y después por domiciliación SEPA con mandato firmado; cualquier otra vía la autoriza Tomás (decisión de Tomás, 4-oct).",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:325 y ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md:78",
    "autor": "Tomás"
   },
   {
    "id": "personas_admin_p_escalera_impago",
-   "texto": "Impago: reclamar al vencer, aviso al account a 30 días, decisión de Tomás a 60 y nunca más de dos cuotas acumuladas.",
+   "texto": "Impago: reclamar al vencer, aviso al account a 30 días, decisión de Tomás a 60 y nunca más de dos cuotas acumuladas. Con 2 cuotas, la app propone la pausa ese mismo día y decide Tomás. Un plan de pago solo lo aprueba Tomás.",
    "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:1378",
    "autor": "Tomás"
   },
@@ -1906,7 +1901,7 @@
      "canal": "interno",
      "para": "equipo",
      "cuando": "A Tomás, para pedir la decisión",
-     "texto": "Tomás: propongo valorar la salida de {nombre}. Escalera: aviso {fecha_1}, 1:1 formal {fecha_2}, escrito {fecha_3}, plazo vencido {fecha_4}. Cobertura de sus clientes: {plan}. Falta: revisión de la asesoría laboral sobre la forma. Decides tú."
+     "texto": "Tomás: propongo valorar la salida de {nombre}. Escalera: aviso {fecha_1}, 1:1 formal {fecha_2}, escrito {fecha_3}, plazo vencido {fecha_4}. Cobertura de sus clientes: {plan}. Decides tú la forma."
     },
     {
      "canal": "correo",
@@ -1984,10 +1979,10 @@
     },
     {
      "id": "c3",
-     "causa": "Duda legal sobre la forma de salida",
+     "causa": "Duda sobre la forma de salida",
      "como_confirmar": "No está claro el tipo de relación o la causa",
      "solucion": [
-      "Consulta a la asesoría laboral o jurídica antes de decir nada a la persona.",
+      "La forma de la salida la ve siempre Tomás, internamente, antes de decir nada a la persona.",
       "Decide solo Tomás."
      ],
      "quien": "direccion",
@@ -2015,7 +2010,7 @@
     }
    ],
    "acciones_inmediatas": [
-    "No comuniques nada a la persona hasta que Tomás decida con asesoría jurídica.",
+    "No comuniques nada a la persona hasta que Tomás lo vea y decida.",
     "Prepara en paralelo el plan de cobertura de sus clientes.",
     "Si la salida es voluntaria, agradece y abre el traspaso."
    ],
@@ -2026,10 +2021,10 @@
     "No dejes accesos abiertos ni clientes sin interlocutor un solo día."
    ],
    "escalar": {
-    "cuando": "Siempre: la salida es nivel 3, solo Tomás con asesoría jurídica",
+    "cuando": "Siempre: la salida es nivel 3; la ve siempre Tomás, internamente",
     "a": "direccion"
    },
-   "exito": "Salida decidida por Tomás con escalera documentada y revisión legal; 0 días de cliente sin interlocutor; accesos cerrados el último día.",
+   "exito": "Salida decidida por Tomás con escalera documentada; 0 días de cliente sin interlocutor; accesos cerrados el último día.",
    "fuentes": [
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
@@ -2088,7 +2083,12 @@
     {
      "fichero": "criterio",
      "autor": "RO",
-     "nota": "Consultar la asesoría laboral antes de comunicar una salida; distinguir contrato laboral de colaboración mercantil: ley española, sin fuente interna"
+     "nota": "Distinguir contrato laboral de colaboración mercantil (ley española). La forma de la salida la ve siempre Tomás internamente; la asesoría laboral no se consulta por defecto (4-oct)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 54: la salida de una persona la ve siempre Tomás, internamente."
     }
    ]
   },
@@ -3457,7 +3457,7 @@
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
      "linea": 78,
      "autor": "Tomás",
-     "nota": "Primer pago con tarjeta (28-sep): manda sobre C-D3-17 para el mes 1"
+     "nota": "Primer pago con tarjeta (28-sep): manda sobre C-D3-17 para el mes 1; confirmado por Tomás el 4-oct"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
@@ -3476,6 +3476,11 @@
      "linea": 997,
      "autor": "RO",
      "nota": "Sin encargo RGPD no se pide ningún acceso"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -3773,7 +3778,7 @@
      "causa": "Problema de caja del cliente",
      "como_confirmar": "Lo dice o pide aplazar",
      "solucion": [
-      "Recoge su propuesta de fechas y llévala a Tomás: un plan de pago lo aprueba dirección."
+      "Recoge su propuesta de fechas y llévala a Tomás: un plan de pago solo lo aprueba Tomás."
      ],
      "quien": "administracion",
      "plazo": "48 h"
@@ -3841,6 +3846,11 @@
      "linea": 136,
      "autor": "Tomás",
      "nota": "Condiciones sobre un cliente concreto: Tomás"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 23: impago: con 2 cuotas la app propone la pausa ese mismo día y decide Tomás; un plan de pago solo lo aprueba Tomás."
     }
    ]
   },
@@ -3891,7 +3901,7 @@
     "finanzas_direccion",
     "direccion"
    ],
-   "sintoma": "Un recibo pasa de 60 días o el cliente acumula dos cuotas sin pagar. A partir de aquí no se reclama más: decide Tomás entre cortar, plan de pago, monitorio o darla por perdida.",
+   "sintoma": "Un recibo pasa de 60 días o el cliente acumula dos cuotas sin pagar. A partir de aquí no se reclama más: decide Tomás entre cortar, plan de pago, monitorio o darla por perdida. Al llegar a 2 cuotas, la app propone la pausa ese mismo día.",
    "gravedad": "alta",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -4027,6 +4037,11 @@
      "linea": 2026,
      "autor": "Cole Gordon",
      "nota": "Congelar el servicio tras no responder; en RO lo decide Tomás"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 23: impago: con 2 cuotas la app propone la pausa ese mismo día y decide Tomás; un plan de pago solo lo aprueba Tomás."
     }
    ]
   },
@@ -4174,7 +4189,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 325,
      "autor": "Tomás",
-     "nota": "SEPA siempre; otra vía, Tomás"
+     "nota": "Tarjeta el primer cobro y luego SEPA; otra vía, Tomás"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/ejemplos/admin.md",
@@ -4199,6 +4214,11 @@
      "linea": 8160,
      "autor": "Hormozi",
      "nota": "Reintentar: los cobros fallidos son churn involuntario"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -4326,13 +4346,18 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 325,
      "autor": "Tomás",
-     "nota": "C-D3-17 FIRME"
+     "nota": "C-D3-17, enmendada el 4-oct: primer cobro con tarjeta, luego SEPA"
     },
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
      "linea": 78,
      "autor": "Tomás",
      "nota": "Primer pago con tarjeta, no por domiciliación"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
     }
    ]
   },
@@ -4452,7 +4477,7 @@
     "No decidas un gesto económico extra: en error grave, dirección."
    ],
    "escalar": {
-    "cuando": "Error de lote, cliente molesto o compensación por encima de la diferencia",
+    "cuando": "Error de lote, cliente molesto o compensación por encima de la diferencia (se habla primero con Coti)",
     "a": "direccion"
    },
    "exito": "Rectificativa emitida y diferencia devuelta o descontada en la fecha que eligió el cliente; causa corregida en origen.",
@@ -4485,6 +4510,11 @@
      "fichero": "criterio",
      "autor": "RO",
      "nota": "Factura rectificativa en vez de borrar: normativa española de facturación; sin SOP interno"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },

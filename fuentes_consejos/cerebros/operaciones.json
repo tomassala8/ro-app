@@ -6,7 +6,7 @@
    "operaciones",
    "proyectos"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
@@ -28,16 +28,12 @@
    "ro-app:fuentes_alertas/generar_alertas.py",
    "ro-app:modulos/incidencias.js"
   ],
-  "nota": "Cubre el control de la cartera (semáforo, críticos y rojos, visto de Coti), el ritmo semanal (lectura del lunes, semanal de operaciones, viernes a cero), la escalera de consecuencias del account, bloqueos y compromisos vencidos, incidencias y su escalado, carga por puesto, traspasos y suplencias, higiene de ClickUp y la parte de proyectos (taller de la oferta, criterio del día 0, garantía, coste por nicho, newsletter, auditoría). Puestos: «operaciones» es la dirección de operaciones (Mili); «proyectos» es la dueña de producto y de la cartera (Coti). No cubre: la redacción del correo al cliente (cerebro comunicacion), la conversación de retención cliente a cliente (account), el arreglo técnico de campañas (publicidad) ni del CRM (crm), sueldos, salidas y nóminas (personas_admin; la salida de una persona la decide solo Tomás). Fuentes que faltan y que varias reglas citan: 11_DECISIONES_PARA_TOMAS.md (2-oct) y 06_KPIS_INTERNOS_RO_POR_PUESTO.md; por eso varias cifras se citan desde el catálogo de la app (indicadores.json), que las transcribe.",
+  "nota": "Cubre el control de la cartera (semáforo, críticos y rojos, visto de Coti), el ritmo semanal (lectura del lunes, semanal de operaciones, viernes a cero), la escalera de consecuencias del account, bloqueos y compromisos vencidos, incidencias y su escalado, carga por puesto, traspasos y suplencias, higiene de ClickUp y la parte de proyectos (taller de la oferta, criterio del día 0, primer mes, coste por nicho, newsletter, auditoría). Puestos: «operaciones» es la dirección de operaciones (Mili); «proyectos» es la dueña de producto y de la cartera (Coti). No cubre: la redacción del correo al cliente (cerebro comunicacion), la conversación de retención cliente a cliente (account), el arreglo técnico de campañas (publicidad) ni del CRM (crm), sueldos, salidas y nóminas (personas_admin; la salida de una persona la decide solo Tomás). Fuentes que faltan y que varias reglas citan: 11_DECISIONES_PARA_TOMAS.md (2-oct) y 06_KPIS_INTERNOS_RO_POR_PUESTO.md; por eso varias cifras se citan desde el catálogo de la app (indicadores.json), que las transcribe.",
   "pendientes_tomas": [
-   "Rol del account en la cartera antigua: el 29-sep el account pasa a soporte y paid lleva la estrategia, pero solo para clientes del Método. El antifallo sigue tratando al account como dueño. Aquí se aplica el antifallo a la cartera antigua y el 29-sep a la nueva hasta que decidas.",
-   "Precio: el RACI y A_QUIEN_PREGUNTO dicen «solo Tomás»; el plan de Coti (4-sep) dice «los precios los decides tú, Coti»; la oferta del 1-sep fija precio único. Operaciones no toca precio en ningún caso: eleva a Coti, que consulta contigo. Falta confirmar quién firma excepciones.",
-   "Dos rituales semanales conviven: el Semanal de operaciones del lunes (SOP-TR-20, Mili) y el barrido del lunes + comité del martes (02_RITUAL_SEMANAL, Coti). La ley C-D4-12 pide que no entre una cadencia sin que salga otra. ¿Siguen vivos los dos?",
-   "Umbrales ámbar y rojo de «compromisos vencidos sin aviso» (1-2 / 3 o más) y ámbar de «viernes a cero» (1-5) constan como propuesta sin firmar en indicadores.json.",
-   "No hay SOP de capacidad y reparto de cuentas posterior al 2-oct (la regla de 12 y 16 proyectos vive en 11_DECISIONES, que no está en ningún repo).",
-   "Mapa de compañeros de suplencia (SOP-TR-06 rama B) y dueño de vacaciones y ausencias (hueco 3 del charter): no consta que existan hoy.",
-   "El número de causas raíz baila (12 en PLAYBOOK §6, 13 en barrido_cartera.md). Las autopsias de baja necesitan una lista cerrada."
-  ]
+   "Umbral ámbar de «viernes a cero» (1-5): sigue como propuesta sin firmar en indicadores.json. Los compromisos vencidos sí se firmaron el 4-oct (respuesta n.º 47).",
+   "No hay SOP de capacidad y reparto de cuentas posterior al 2-oct (la regla de 12 y 16 proyectos vive en 11_DECISIONES, que no está en ningún repo)."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -111,6 +107,30 @@
    "texto": "Ataca una sola restricción cada vez: la que hoy más limita la cartera. Un área adelantada no es la restricción.",
    "fuente": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md:2310",
    "autor": "Hormozi"
+  },
+  {
+   "id": "operaciones_p_un_ritual",
+   "texto": "Un solo ritual semanal, el lunes: el semanal de operaciones de Mili y el barrido de cartera con el comité de Coti, con los dos órdenes del día juntos. No entra una cadencia sin que salga otra.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 30)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_suplencias",
+   "texto": "Suplencias y vacaciones: la dueña es Mili, que mantiene el mapa de suplencias por puesto. Nadie que lleve clientes se ausenta sin suplente.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 31)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_causas_de_baja",
+   "texto": "Toda baja se cierra con autopsia contra la lista cerrada de causas: las 13 de barrido_cartera más «traspaso de account sin los 3 entregables»: 1 expectativas desde la venta, 2 cero leads o leads malos sin aviso, 2b velocidad de contacto, 4 nicho sin filtro, 5 error en ventana crítica, 6 paid a ciegas o bajo el suelo, 7 señal P0 sin escalar, 8 sin interlocutor válido, 9 liquidez, 10 precio y no resultados, 11 desbordamiento del cliente, 12 canal incorrecto y 13 SEO sin palabras al cerrar el mes 1.",
+   "fuente": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/barrido_cartera.md:22 · decision_tomas_2026-10-04 (respuesta n.º 56)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "operaciones_p_rol_account",
+   "texto": "En la cartera antigua el account lleva la relación y la reunión mensual. En los clientes del Método la estrategia es de paid y sus reuniones quincenales cuentan como reunión del ciclo.",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 27 y 28)",
+   "autor": "Tomás"
   }
  ],
  "situaciones": [
@@ -1600,7 +1620,7 @@
      "correo sin contestar"
     ]
    },
-   "sintoma": "Tareas en revisión o bloqueadas con fecha pasada y 48 h sin movimiento, más correos del cliente de más de 48 h. 0 verde, 1-2 ámbar, 3 o más rojo (ámbar y rojo, propuesta sin firmar).",
+   "sintoma": "Tareas en revisión o bloqueadas con fecha pasada y 48 h sin movimiento, más correos del cliente de más de 48 h. 0 verde, 1-2 ámbar, 3 o más rojo (ámbar y rojo, firmado el 4-oct; se revisa con datos el 3-dic-2026).",
    "gravedad": "alta",
    "plazo": "Hoy",
    "diagnostico": [
@@ -1725,7 +1745,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 1094,
      "autor": "RO",
-     "nota": "compromisos vencidos sin aviso: 0 / 1-2 / 3 o más; ámbar y rojo, propuesta sin firmar"
+     "nota": "compromisos vencidos sin aviso: 0 / 1-2 / 3 o más; ámbar y rojo, firmado el 4-oct; se revisa con datos el 3-dic-2026"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
@@ -1756,6 +1776,11 @@
      "linea": 385,
      "autor": "RO",
      "nota": "los días de retraso de ClickUp no son la fecha prometida al cliente"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -3258,7 +3283,7 @@
      "causa": "Llaman y no lo registran.",
      "como_confirmar": "El despacho dice que llama pero el CRM no lo muestra.",
      "solucion": [
-      "Enséñales a registrar el intento; sin registro no hay seguimiento ni garantía."
+      "Enséñales a registrar el intento: solo cuentan las llamadas registradas en GHL."
      ],
      "quien": "account",
      "plazo": "48 h"
@@ -3341,6 +3366,11 @@
      "linea": 110,
      "autor": "RO",
      "nota": "cliente que no cumple su parte: re-encuadre; dos semanas → conversación formal"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
@@ -4126,7 +4156,7 @@
   },
   {
    "id": "operaciones_garantia_en_riesgo",
-   "titulo": "Un cliente va camino de no cumplir la garantía de dos reuniones válidas en 30 días",
+   "titulo": "Un cliente llega al día 25 desde el encendido con menos de dos reuniones celebradas",
    "puestos": [
     "proyectos",
     "account"
@@ -4138,28 +4168,28 @@
      "proyectos.garantia_cumplida"
     ],
     "palabras_clave": [
-     "garantía",
-     "dos reuniones",
-     "30 días",
      "día 25",
-     "no paga los honorarios",
-     "reuniones válidas",
-     "garantía en riesgo"
+     "primer mes flojo",
+     "pocas reuniones",
+     "reuniones celebradas",
+     "nadie se presenta",
+     "garantía",
+     "reuniones válidas"
     ]
    },
-   "sintoma": "Con la garantía, el reloj de 30 días empieza al encender la publicidad. Proyectos avisa el día 25 si no hay dos reuniones válidas.",
+   "sintoma": "Día 25 desde el encendido y menos de dos reuniones celebradas (citas a las que el lead se ha presentado). No hay garantía de resultados (decisión de Tomás, 4-oct): es una alarma de primer mes flojo. La app aún llama al indicador «garantía cumplida».",
    "gravedad": "alta",
    "plazo": "Hoy",
    "diagnostico": [
     {
      "paso": 1,
-     "comprueba": "¿El acuerdo de este cliente lleva garantía? (no todos)",
+     "comprueba": "¿El acuerdo trae alguna cláusula de resultado o devolución? (no hay garantía desde el 4-oct)",
      "donde": "Acuerdo firmado",
      "si_falla": "c1"
     },
     {
      "paso": 2,
-     "comprueba": "¿Qué día del reloj es y cuántas reuniones válidas hay marcadas?",
+     "comprueba": "¿Qué día es desde el encendido y cuántas reuniones celebradas hay marcadas?",
      "donde": "GHL del cliente + fecha de encendido",
      "si_falla": "c2"
     },
@@ -4179,10 +4209,10 @@
    "causas": [
     {
      "id": "c1",
-     "causa": "El acuerdo no lleva garantía.",
-     "como_confirmar": "Cláusula sin garantía.",
+     "causa": "El acuerdo trae una cláusula de resultado o devolución.",
+     "como_confirmar": "Consta en el acuerdo firmado.",
      "solucion": [
-      "No apliques el reloj; sigue el criterio del día 0."
+      "No la interpretes: pásala a Tomás hoy con el recuento real."
      ],
      "quien": "proyectos",
      "plazo": "Hoy"
@@ -4190,7 +4220,7 @@
     {
      "id": "c2",
      "causa": "Faltan reuniones.",
-     "como_confirmar": "Menos de dos válidas el día 25.",
+     "como_confirmar": "Menos de dos celebradas el día 25.",
      "solucion": [
       "Plan con publicidad y CRM para los 5 días que quedan."
      ],
@@ -4202,7 +4232,7 @@
      "causa": "El despacho no cumple sus deberes.",
      "como_confirmar": "Contacto lento o pocos intentos.",
      "solucion": [
-      "Díselo hoy por llamada con el dato; sus deberes rigen la garantía."
+      "Díselo hoy por llamada con el dato: sus deberes de contacto deciden si llegan reuniones."
      ],
      "quien": "account",
      "plazo": "Hoy"
@@ -4219,51 +4249,55 @@
     }
    ],
    "acciones_inmediatas": [
-    "El día 25, aviso de proyectos con el recuento real."
+    "El día 25, aviso de proyectos con el recuento real de reuniones celebradas y el plan."
    ],
    "guiones": [
     {
      "canal": "llamada",
      "para": "cliente",
      "cuando": "Día 25",
-     "texto": "{nombre}, llevamos {dias} días con la publicidad encendida y hay {n} reuniones válidas marcadas. Para llegar a dos necesitamos que {deber}. ¿Lo vemos juntos hoy?"
+     "texto": "{nombre}, llevamos {dias} días con la publicidad encendida y han venido {n} personas a reunión. Para que lleguen más necesitamos que {deber}. ¿Lo vemos juntos hoy?"
     }
    ],
    "que_no_hacer": [
-    "Hablar de la garantía fuera del documento de oferta.",
-    "Prometer el reembolso sin dirección.",
-    "Contar reuniones no válidas."
+    "Hablar de garantía: no la hay.",
+    "Prometer un reembolso o un número de reuniones.",
+    "Contar como reunión una cita a la que el lead no se presentó."
    ],
    "escalar": {
-    "cuando": "Día 30 sin dos reuniones válidas",
+    "cuando": "Día 30 con menos de dos reuniones celebradas, o una cláusula firmada en juego",
     "a": "direccion"
    },
-   "exito": "Dos reuniones válidas antes del día 30, o decisión de dirección registrada.",
+   "exito": "Plan del día 25 hecho con datos y, si el acuerdo trae cláusula, decisión de Tomás registrada antes del día 30.",
    "reglas_relacionadas": [],
    "fuentes": [
     {
      "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_arranque/03_LOS_PRIMEROS_14_DIAS.md",
      "linea": 66,
      "autor": "RO",
-     "nota": "reloj de la garantía desde el encendido: 30 días, dos reuniones válidas; avisa Coti el día 25"
+     "nota": "aviso de Coti el día 25 desde el encendido"
     },
     {
      "fichero": "ro-app:indicadores.json",
      "linea": 1249,
      "autor": "RO",
-     "nota": "garantía cumplida; medible a medias"
-    },
-    {
-     "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
-     "linea": 18,
-     "autor": "Tomás",
-     "nota": "garantía del 1-sep: mínimo 2 reuniones válidas en 30 días o no paga los honorarios; manda sobre LEYES C-D2-05"
+     "nota": "indicador «garantía cumplida»: desde el 4-oct se lee solo como alarma de primer mes"
     },
     {
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "RO",
-     "nota": "cuatro deberes del despacho que rigen la garantía"
+     "nota": "cuatro deberes del despacho: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h y registro"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 19: reunión válida = cita a la que el lead se ha presentado."
     }
    ]
   },
@@ -5199,7 +5233,7 @@
     },
     {
      "paso": 2,
-     "comprueba": "¿Tiene compañero de suplencia designado?",
+     "comprueba": "¿Tiene compañero designado en el mapa de suplencias por puesto? Lo mantiene Mili.",
      "donde": "Mapa de suplencias",
      "si_falla": "c2"
     },
@@ -5334,6 +5368,11 @@
      "linea": 389,
      "autor": "Tomás",
      "nota": "nadie es punto único de fallo"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 31: suplencias y vacaciones: Mili es la dueña y mantiene un mapa de suplencias por puesto."
     }
    ]
   },
@@ -5359,7 +5398,7 @@
      "flota"
     ]
    },
-   "sintoma": "Lunes 9:00: lectura de 10 minutos con tres preguntas; 10:00 semanal de 30-45 minutos con tres decisiones.",
+   "sintoma": "Lunes 9:00: lectura de 10 minutos con tres preguntas; 10:00 semanal de 30-45 minutos con tres decisiones. Es el único ritual semanal: lleva también el barrido y el comité de cartera de Coti (decisión de Tomás, 4-oct).",
    "gravedad": "media",
    "plazo": "Hoy",
    "diagnostico": [
@@ -5525,6 +5564,11 @@
      "linea": 47,
      "autor": "RO",
      "nota": "comité: cuenta sin nada que contar = señal y se habla primero"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 30: un solo ritual semanal, el lunes, con los dos órdenes del día juntos."
     }
    ]
   },
@@ -6054,7 +6098,7 @@
     },
     {
      "paso": 3,
-     "comprueba": "¿Hay autopsia contra las causas raíz firmada por operaciones?",
+     "comprueba": "¿Hay autopsia contra la lista cerrada de causas: las 13 de barrido_cartera más «traspaso de account sin los 3 entregables», firmada por operaciones?",
      "donde": "Registro de autopsias de proyectos",
      "si_falla": "c3"
     },
@@ -6154,7 +6198,7 @@
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-09_offboarding-impecable.md",
      "linea": 26,
      "autor": "RO",
-     "nota": "autopsia esa misma semana contra las causas raíz"
+     "nota": "autopsia esa misma semana contra la lista cerrada de causas"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/01_CONTRATO_DE_CUMPLIMIENTO_ACCOUNT.md",
@@ -6167,6 +6211,17 @@
      "linea": 103,
      "autor": "RO",
      "nota": "accesos de clientes de baja: se cierran esa semana"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/consejero-account-ro/referencia/barrido_cartera.md",
+     "linea": 22,
+     "autor": "RO",
+     "nota": "Las 13 causas raíz (8 con señal y 5 sin señal, líneas 22-45)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 56: causas de baja: las 13 de barrido_cartera más «traspaso de account sin los 3 entregables»."
     }
    ]
   }

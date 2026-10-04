@@ -10,7 +10,7 @@
    "tecnico_altas",
    "ficha_google"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py",
@@ -30,26 +30,21 @@
   "nota": "Cubre cómo responder cada tipo de correo, WhatsApp o reseña de cliente: qué averiguar antes, qué prometer y qué no, plantilla completa con variantes por tono, seguimiento si no contesta y escalado. No duplica cerebro.py (que clasifica y da estructura y longitud): lo profundiza. Claves añadidas al esquema: disparadores.cerebro_respuestas (tipo de cerebro.py o resenas.py que debe abrir la ficha) y prometer {si, no}. Los huecos van entre llaves; al redactar, la IA deja como [completar: …] lo que no esté en el contexto. Deriva a: account (salud, semáforo, rescate), altas (ronda de accesos completa), personas_admin (cobros y deuda), seo_web (gestión de la ficha), ventas_ro (prospectos).",
   "contradicciones_resueltas": [
    "Idioma: PLAYBOOK §1 de redacta-mail-ro (catalán territorial) frente a C-D7-17 y SKILL v1.6.0 (castellano siempre). Manda C-D7-17 (§13 n.º 5).",
-   "Longitud: C-D7-18 (3-5 líneas) y SKILL (3-8 líneas) frente a cerebro.py del 3-oct (longitud por tipo). En respuestas a correos de cliente manda cerebro.py, por ser lo más reciente y lo que usa la app; C-D7-18 sigue para los correos que iniciamos nosotros.",
+   "Longitud: C-D7-18 (3-5 líneas) y SKILL (3-8 líneas) frente a cerebro.py del 3-oct (longitud por tipo). En respuestas a correos de cliente manda cerebro.py, por ser lo más reciente y lo que usa la app; C-D7-18 sigue para los correos que iniciamos nosotros. Confirmado por Tomás el 4-oct (respuesta n.º 45).",
    "Petición de reseñas: PLAYBOOK §3.14 (texto preescrito) frente a la nota de julio en SKILL (en neutro, sin dictar texto). Manda la nota de SKILL.",
    "Enlace de agenda: PLAYBOOK §3.4 cita Zoho Bookings; §2-bis (17-sep) lo prohíbe. Manda §2-bis.",
    "Reunión con el cliente: Método = quincenal (contrato); cartera antigua = mensual con alarma a los 35 días (§3 del mapa).",
-   "Garantía: C-D2-05 frente a la oferta del 1-sep. Manda el 1-sep con el matiz del 9-sep (§13 n.º 1): en los correos no se menciona y, si el cliente la invoca, contesta dirección."
+   "Garantía: no hay garantía (decisión de Tomás, 4-oct, respuesta n.º 18). Manda C-D2-05: en los correos no se menciona y, si el cliente la invoca, se le dice que no hay garantía de resultados."
   ],
-  "pendientes_tomas": [
-   "Confirmar que en respuestas a clientes manda la longitud por tipo de cerebro.py sobre C-D7-18 (3-5 líneas) y enmendar la ley o acotarla a correos proactivos.",
-   "Parchear redacta-mail-ro: PLAYBOOK §1 y checklist §5 (catalán), ejemplos en catalán de ejemplos/cuenta.md, §3.4 (Zoho Bookings) y §3.14 (texto de reseña preescrito).",
-   "WhatsApp con clientes: ¿canal oficial o solo apoyo del correo? Hay cuentas que lo usan como canal principal y skills que piden canal por correo y sin grupos. Falta regla y plantillas propias.",
-   "Frase oficial para cuando un cliente del Método invoque la garantía del 1-sep: el documento de oferta no está en ningún repo.",
-   "Umbrales de seguimiento cuando el cliente no contesta (2 y 5 días si bloquea; una semana si no): hoy salen de fuentes distintas (PLAYBOOK §3.6 e indicador de bloqueos). Confirmar."
-  ],
+  "pendientes_tomas": [],
   "fuentes_que_faltan": [
    "06_KPIS_INTERNOS_RO_POR_PUESTO.md (fuente de la regla respuesta_24_48; aquí se usa la decisión D-29 vía indicadores.json).",
    "11_DECISIONES_PARA_TOMAS.md (D-29, D-09 e impago_corte).",
-   "OFERTA_RO_METODO_CLIENTE_RENTABLE_DEFINITIVA.docx (garantía del Método).",
+   "OFERTA_RO_METODO_CLIENTE_RENTABLE_DEFINITIVA.docx (oferta del 1-sep con los 4 casos; la sube Tomás).",
    "MINADO_EMAIL_WHATSAPP_SHOWUP_2026-08 (único minado de WhatsApp).",
    "Fichas por cliente (_MANUAL_VOZ_ESTILO.md, 00_GUIA_TRATO_HUMANO.md) en el Desktop de Tomás: mandan sobre la voz genérica y no están en repo."
-  ]
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -69,6 +64,12 @@
    "texto": "La longitud la decide el tipo de correo: un acuse o una reunión, dos líneas; una queja o una duda de resultados, varios párrafos cortos con cifras, lectura y plan. En respuestas a clientes manda esto sobre la regla fija de 3-5 u 3-8 líneas.",
    "fuente": "ro-app:fuentes_ia/cerebro_respuestas/cerebro.py:408",
    "autor": "RO"
+  },
+  {
+   "id": "comunicacion_p_canal_oficial",
+   "texto": "El correo es el canal oficial con el cliente. WhatsApp es apoyo y no se abren grupos nuevos. Si el cliente no contesta: seguimiento a los 2 y 5 días si nos bloquea; a la semana si no.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 45)",
+   "autor": "Tomás"
   },
   {
    "id": "comunicacion_p_no_inventar",
@@ -249,7 +250,7 @@
      "solucion": [
       "Para el daño primero (pausa el envío, retira la pieza).",
       "Admite sin matices y describe el error con exactitud.",
-      "Si toca su dinero, avisa a dirección hoy: la compensación la construye dirección con dos opciones."
+      "Si toca su dinero, avisa hoy: la compensación se habla primero con Coti, con dos opciones."
      ],
      "quien": "account",
      "plazo": "Hoy"
@@ -294,7 +295,7 @@
     ],
     "no": [
      "Leads, posiciones o resultados.",
-     "Compensaciones, descuentos o cambios de cuota: los decide dirección.",
+     "Compensaciones (se hablan primero con Coti), descuentos o cambios de cuota (dirección).",
      "Culpables con nombre, ni del equipo ni del cliente."
     ]
    },
@@ -417,6 +418,11 @@
      "fichero": "criterio",
      "autor": "RO",
      "nota": "sin fuente: criterio de éxito de dos semanas sin queja repetida"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -606,7 +612,7 @@
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
      "linea": 62,
      "autor": "RO",
-     "nota": "Compensación: dos opciones con coste transparente; la construye dirección, el account solo la presenta."
+     "nota": "Compensación: dos opciones con coste transparente; se habla primero con Coti y el account solo la presenta."
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-08_incidencias-disculpa-proactiva.md",
@@ -619,6 +625,11 @@
      "linea": 22,
      "autor": "RO",
      "nota": "Sin negritas ni viñetas; listas numeradas para varios entregables."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -780,7 +791,7 @@
      "Penalizaciones, permanencias, cláusulas o importes.",
      "Descuentos ni nada a cambio de quedarse.",
      "Resultados para retenerle.",
-     "Interpretar la garantía del contrato: si la invoca, lo contesta dirección."
+     "Hablar de garantía: no hay garantía de resultados. Si invoca una cláusula firmada, la contesta dirección."
     ]
    },
    "guiones": [
@@ -820,7 +831,7 @@
     "Responder con un descuento: enseña a toda la cartera que quejarse abarata.",
     "Hablar de permanencia, penalizaciones o importes.",
     "Contestar solo por correo: cuando están a punto de irse, la siguiente acción es una llamada de dirección.",
-    "Mencionar la garantía si el cliente no la saca.",
+    "Mencionar una garantía: no la hay.",
     "Prometer leads, citas, posiciones o facturación. Se promete proceso, alcance y fecha."
    ],
    "escalar": {
@@ -882,12 +893,17 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 143,
      "autor": "Tomás",
-     "nota": "C-D2-05: sin garantía de resultado. Contradicción §13 n.º 1: manda la oferta del 1-sep con el matiz del 9-sep (la garantía solo vive en el documento de oferta): no se menciona en el correo y, si el cliente la invoca, contesta dirección."
+     "nota": "C-D2-05: sin garantía de resultado. Desde el 4-oct no hay garantía: no se menciona en el correo y, si el cliente la invoca, se le dice que no la hay; una cláusula firmada la contesta dirección."
     },
     {
      "fichero": "criterio",
      "autor": "RO",
      "nota": "sin fuente: no apagar campaña ni publicaciones sin orden escrita"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
     }
    ]
   },
@@ -1556,7 +1572,7 @@
      "La confirmación de cierre ese día."
     ],
     "no": [
-     "Compensaciones (las construye dirección).",
+     "Compensaciones (se hablan primero con Coti).",
      "Que no volverá a pasar, sin un correctivo concreto detrás."
     ]
    },
@@ -1651,6 +1667,11 @@
      "linea": 385,
      "autor": "RO",
      "nota": "Plantilla de error de RO: impacto real cuantificado y medida correctiva."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
     }
    ]
   },
@@ -5580,6 +5601,11 @@
      "fichero": "criterio",
      "autor": "RO",
      "nota": "sin fuente: no mandar audios largos y revisar WhatsApp dos veces al día"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 45: correo canal oficial; WhatsApp de apoyo, sin grupos nuevos; longitud por tipo en respuestas; seguimiento a 2 y 5 días si nos bloquea, a una semana si no."
     }
    ]
   },
@@ -5755,7 +5781,7 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 143,
      "autor": "Tomás",
-     "nota": "C-D2-05: se garantiza proceso, alcance y fecha de juicio; «quien promete X clientes al mes, hay que huir»."
+     "nota": "C-D2-05: se compromete proceso, alcance y fecha de juicio; «quien promete X clientes al mes, hay que huir»."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",

@@ -6,7 +6,7 @@
    "jefa_crm",
    "especialista_ghl"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
@@ -38,14 +38,8 @@
    "ro-app:indicadores.json",
    "ro-app:fuentes_consejos/conocimiento/reglas.json"
   ],
-  "nota": "Cubre el embudo del despacho dentro de GoHighLevel: llegada de leads (fuga Meta→GHL), leads sin tocar, velocidad de contacto, agendado, asistencia y no-show, citas sin estado, cierre y registro de ventas, automatizaciones y WhatsApp, subcuentas y gestión del área. La ficha crm_diagnostico_embudo es el diagnosticador por etapas con umbrales y enruta al resto. Deriva: publicidad (pocos leads, coste por lead, creatividades) al cerebro de publicidad; el guion y la calidad de la llamada al de setters; la relación y la conversación de incumplimiento con el despacho al de account; landing y formularios web al de seo_web; montaje del alta y día 10 al de altas. Velocidad: manda la garantía del contrato y la decisión del 2-oct (≤ 1 h y 4 intentos en 72 h) sobre CADENCIA.md (< 5 min) y Cole (< 10 min). Intentos: suelo exigible 4 en 72 h (contrato, 1-sep, 2-oct); objetivo operativo 5 (A-2, 16-ago). Asistencia: manda D-45 de RO sobre Cole. Las decisiones del 2-oct se citan por su espejo en ro-app (reglas.json e indicadores.json): 11_DECISIONES_PARA_TOMAS.md no está en los repos.",
+  "nota": "Cubre el embudo del despacho dentro de GoHighLevel: llegada de leads (fuga Meta→GHL), leads sin tocar, velocidad de contacto, agendado, asistencia y no-show, citas sin estado, cierre y registro de ventas, automatizaciones y WhatsApp, subcuentas y gestión del área. La ficha crm_diagnostico_embudo es el diagnosticador por etapas con umbrales y enruta al resto. Deriva: publicidad (pocos leads, coste por lead, creatividades) al cerebro de publicidad; el guion y la calidad de la llamada al de setters; la relación y la conversación de incumplimiento con el despacho al de account; landing y formularios web al de seo_web; montaje del alta y día 10 al de altas. Velocidad: manda el compromiso del contrato y las decisiones del 2-oct y del 4-oct (≤ 1 h y 4 intentos en 72 h, objetivo 5; solo cuentan las llamadas registradas en GHL) sobre CADENCIA.md (< 5 min) y Cole (< 10 min). Intentos: suelo exigible 4 en 72 h (contrato, 1-sep, 2-oct); objetivo operativo 5 (A-2, 16-ago). Asistencia: manda D-45 de RO sobre Cole. Las decisiones del 2-oct se citan por su espejo en ro-app (reglas.json e indicadores.json): 11_DECISIONES_PARA_TOMAS.md no está en los repos.",
   "pendientes_tomas": [
-   "Umbral de fuga Meta→GHL: la verdad única alarma por debajo del 80 % (grave < 50 %) y el indicador del trafficker pide 100 / 90-99 / < 90 % (propuesta sin firmar). Aplicado: 80/50 para alarmar y vigilar todo lo que baje del 90 %. Falta unificar.",
-   "Objetivo interno T5 (primer intento en < 15 min donde llama una persona dedicada): sin decidir. Aplicado: solo se exige ≤ 1 h y 4 intentos en 72 h.",
-   "Llamadas desde el móvil del asesor: no dejan evento y el contador de intentos miente. ¿Se escribe en el contrato que el compromiso solo se audita sobre llamadas registradas? Aplicado: se pide apuntar el intento (registro de 3 campos).",
-   "PL-P2-11 se contradice (cuerpo: < 5 intentos; resumen: < 4) y CADENCIA.md titula «6 llamadas» con tope de 5. Aplicado: exigible 4 en 72 h, objetivo 5. Hay que corregir ambos textos.",
-   "Umbrales de la jefa de CRM (% subcuentas en verde 80/60, rojos por especialista 2/5, flujos con error 0/24 h) son propuestas sin firmar. Aplicados tal cual como referencia.",
-   "Quién hace el toque personal 1 h antes de la cita (despacho o RO) y si se aprueba la cadencia extendida 2 h / 1 h / 15 min y el rescate de no-show de 48 h (enmiendas E1-E3): pendiente. Aplicado: protocolo base (24 h, 1-2 h, llamada a los 3 min) y rescate en 48 h como recomendación.",
    "Gate del frontend de GHL con lectura propuesta el 5-oct-2026 (G1-G3): sin firma conocida."
   ],
   "fuentes_ausentes": [
@@ -54,7 +48,8 @@
    "MINADO_EMAIL_WHATSAPP_SHOWUP_2026-08 (piezas literales WF-09/WF-10)",
    "SETTING_ASESORIAS_2026-07",
    "OFERTA_RO_METODO_CLIENTE_RENTABLE_DEFINITIVA.docx (1-sep)"
-  ]
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -128,6 +123,24 @@
    "texto": "La asistencia no se arregla con una táctica suelta sino con el protocolo entero: confirmación con un SÍ, recordatorio de 24 h con coste, aviso corto y llamada a los 3 minutos.",
    "fuente": "hormozi-cole-gordon:CEREBRO/11_ASISTENCIA_A_CITAS.md:455",
    "autor": "Cole Gordon"
+  },
+  {
+   "id": "crm_p_reunion_valida",
+   "texto": "Reunión válida es la cita a la que el lead se ha presentado. Sin estado marcado no cuenta.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 19)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "crm_p_solo_registradas",
+   "texto": "El compromiso de contacto del despacho (≤ 1 h y 4 intentos en 72 h; objetivo 5) solo se audita sobre llamadas registradas en GoHighLevel.",
+   "fuente": "decision_tomas_2026-10-04 (respuestas n.º 32 y 33)",
+   "autor": "Tomás"
+  },
+  {
+   "id": "crm_p_recordatorios",
+   "texto": "RO automatiza los recordatorios de cita a 24 h, 2 h y 15 minutos. El despacho hace un toque personal 1 h antes. Si alguien no viene, rescate en 48 h.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 34)",
+   "autor": "Tomás"
   }
  ],
  "situaciones": [
@@ -421,7 +434,7 @@
      "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
      "linea": 1298,
      "autor": "Tomás",
-     "nota": "garantía del despacho ≤ 1 h y 4 intentos en 72 h (origen 11_DECISIONES_PARA_TOMAS.md:107, decisión del 2-oct). Manda sobre CADENCIA.md (< 5 min) y Cole (< 10 min): mapa §13 #3"
+     "nota": "compromiso del despacho ≤ 1 h y 4 intentos en 72 h (origen 11_DECISIONES_PARA_TOMAS.md:107, decisión del 2-oct). Manda sobre CADENCIA.md (< 5 min) y Cole (< 10 min): mapa §13 #3"
     },
     {
      "fichero": "ro-equipo:40_MEMORIA/project_cruce_leads_meta_ghl.md",
@@ -616,7 +629,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 2249,
      "autor": "RO",
-     "nota": "indicador del trafficker 100 / 90-99 / < 90 % (propuesta sin firmar): manda el umbral de la verdad única 80/50 para alarmar; ver pendientes"
+     "nota": "indicador del trafficker 100 / 90-99 / < 90 %: firmado el 4-oct como alarma por debajo del 80 % y objetivo 90 %; se revisa con datos el 3-dic-2026"
     },
     {
      "fichero": "ro-equipo:40_MEMORIA/project_cruce_leads_meta_ghl.md",
@@ -653,6 +666,11 @@
      "linea": 294,
      "autor": "RO",
      "nota": "un formulario por canal y FBCLID/GCLID en cada formulario"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -762,7 +780,7 @@
      "como_confirmar": "Confirma por teléfono que llamó y no hay registro.",
      "solucion": [
       "Enséñale el registro de 3 campos (quién, cuándo, resultado): 15 segundos por llamada.",
-      "Explica que la garantía exige el registro en el CRM."
+      "Explica que solo cuentan las llamadas registradas en el CRM (decisión de Tomás, 4-oct)."
      ],
      "quien": "account",
      "plazo": "48 h"
@@ -875,13 +893,18 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "Tomás",
-     "nota": "los cuatro deberes de la garantía: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h, registro en CRM"
+     "nota": "los cuatro deberes del despacho: ≤ 1 h, 4 intentos en 72 h, 2 huecos en 48 h, registro en CRM"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/P2_MOTOR_CAPTACION/SOP-P2-03_sistema-comercial-ghl-protocolo.md",
      "linea": 74,
      "autor": "Tomás",
      "nota": "registro de llamadas de 3 campos (decisión del 11-jul)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
@@ -949,7 +972,7 @@
      "como_confirmar": "El despacho da fecha y hora de la llamada.",
      "solucion": [
       "Marca «Revisado · El despacho lo llamó desde su móvil».",
-      "Pide que apunte el intento en GHL la próxima vez: la garantía solo se audita sobre lo registrado."
+      "Pide que apunte el intento en GHL la próxima vez: el compromiso solo se audita sobre llamadas registradas."
      ],
      "quien": "especialista_ghl",
      "plazo": "Hoy"
@@ -1040,6 +1063,11 @@
      "linea": 77,
      "autor": "RO",
      "nota": "contacto de prueba marcado y borrado al terminar (líneas 77-89)"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
@@ -1068,7 +1096,7 @@
      "tardan en llamar",
      "primer contacto lento",
      "no llaman en la primera hora",
-     "garantía de velocidad",
+     "compromiso de velocidad",
      "tiempo de respuesta",
      "llaman al día siguiente",
      "pocos intentos"
@@ -1213,7 +1241,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "Tomás",
-     "nota": "cuatro deberes de la garantía del 1-sep"
+     "nota": "cuatro deberes del despacho (oferta del 1-sep)"
     },
     {
      "fichero": "ro-app:fuentes_consejos/cd_diagnostico.py",
@@ -1286,6 +1314,16 @@
      "linea": 7,
      "autor": "RO",
      "nota": "el ×7 es de 2011 y se dice el año"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 32: al despacho, primer intento en 1 h o menos y 4 intentos en 72 h; objetivo 5; < 15 min solo con persona dedicada; el setter de RO, < 5 min."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 33: el compromiso de contacto solo se audita sobre llamadas registradas en GoHighLevel."
     }
    ]
   },
@@ -2065,7 +2103,7 @@
      "causa": "Sin huecos en la agenda",
      "como_confirmar": "El que cierra no tiene huecos en menos de 7 días.",
      "solucion": [
-      "Pacta 2 huecos en 48 h como mínimo (deber de la garantía)."
+      "Pacta 2 huecos en 48 h como mínimo (deber del despacho)."
      ],
      "quien": "account",
      "plazo": "Esta semana"
@@ -2132,7 +2170,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "Tomás",
-     "nota": "deber de la garantía: 2 huecos en 48 h"
+     "nota": "deber del despacho: 2 huecos en 48 h"
     }
    ]
   },
@@ -2631,7 +2669,7 @@
     },
     {
      "paso": 3,
-     "comprueba": "¿El protocolo anti-plantón está entero? Confirmación con un SÍ, recordatorio 24 h con frase de coste, aviso 1-2 h, llamada a los 3 min de la hora.",
+     "comprueba": "¿El protocolo anti-plantón está entero? Confirmación con un SÍ; recordatorios automáticos de RO a 24 h (con frase de coste), 2 h y 15 min; toque personal del despacho 1 h antes; llamada a los 3 min de la hora.",
      "donde": "Flujo de cita de la subcuenta y conversaciones de 3 citas",
      "si_falla": "c3"
     },
@@ -2664,7 +2702,7 @@
      "causa": "Protocolo anti-plantón incompleto (lo normal)",
      "como_confirmar": "Falta alguna pieza: confirmación activa, recordatorio de 24 h con coste, aviso corto o llamada a los 3 min.",
      "solucion": [
-      "Completa la cadencia: confirmación con micro-sí al agendar, 24 h con agenda concreta y frase de coste, 1-2 h corto, llamada a los 3 min.",
+      "Completa la cadencia: confirmación con micro-sí al agendar; recordatorios automáticos a 24 h (agenda concreta y frase de coste), 2 h y 15 min; toque personal del despacho 1 h antes; llamada a los 3 min.",
       "Abre crm_citas_sin_recordatorio si faltan recordatorios."
      ],
      "quien": "especialista_ghl",
@@ -2715,7 +2753,7 @@
    ],
    "acciones_inmediatas": [
     "Pon las citas sin estado a cero y vuelve a calcular.",
-    "Revisa las 3 últimas citas: ¿salieron confirmación, 24 h, 1-2 h y la llamada a los 3 min?",
+    "Revisa las 3 últimas citas: ¿salieron confirmación, 24 h, 2 h, 15 min, el toque de 1 h y la llamada a los 3 min?",
     "Si la asistencia es < 60 %, arreglarla es la prioridad del mes antes que conseguir más citas."
    ],
    "guiones": [
@@ -2728,7 +2766,7 @@
     {
      "canal": "whatsapp",
      "para": "lead",
-     "cuando": "1-2 h antes",
+     "cuando": "2 h antes (automático)",
      "texto": "{nombre}, en un rato nos vemos: a las {hora}, con {quien_cierra}. Aquí tienes el enlace: {enlace}"
     },
     {
@@ -2865,6 +2903,16 @@
      "linea": 55,
      "autor": "RO",
      "nota": "cifras vetadas"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 34: recordatorios automáticos de RO a 24 h, 2 h y 15 min; toque personal del despacho 1 h antes; rescate en 48 h."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 19: reunión válida = cita a la que el lead se ha presentado."
     }
    ]
   },
@@ -3017,6 +3065,11 @@
      "linea": 1343,
      "autor": "Cole Gordon",
      "nota": "S09.049: los no presentados son oportunidad curada del setter"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 34: recordatorios automáticos de RO a 24 h, 2 h y 15 min; toque personal del despacho 1 h antes; rescate en 48 h."
     }
    ]
   },
@@ -3750,7 +3803,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 2780,
      "autor": "RO",
-     "nota": "umbral propuesto sin firmar; mientras, el correo de aviso de GHL"
+     "nota": "umbral firmado el 4-oct; se revisa con datos el 3-dic-2026; además, el correo de aviso de GHL"
     },
     {
      "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
@@ -3781,6 +3834,11 @@
      "linea": 16,
      "autor": "RO",
      "nota": "stopper de fin de semana que paró los mensajes"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -4810,7 +4868,7 @@
      "causa": "No lo ve como su tarea",
      "como_confirmar": "Cierra pero no marca.",
      "solucion": [
-      "Explica que el registro en el CRM es uno de los cuatro deberes de la garantía y que sin él no podemos optimizar a ventas."
+      "Explica que el registro en el CRM es uno de los cuatro deberes del despacho y que sin él no podemos optimizar a ventas."
      ],
      "quien": "account",
      "plazo": "Esta semana"
@@ -4871,7 +4929,7 @@
      "fichero": "ro-equipo:50_PRODUCTO/_AVISO_VIGENCIA.md",
      "linea": 21,
      "autor": "Tomás",
-     "nota": "registro en CRM: uno de los cuatro deberes de la garantía"
+     "nota": "registro en CRM: uno de los cuatro deberes del despacho"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/pipeline-comercial-gohighlevel-despacho/SKILL.md",
@@ -5722,7 +5780,7 @@
      "revisión semanal de CRM"
     ]
    },
-   "sintoma": "Subcuentas encendidas en verde ÷ encendidas: verde ≥ 80 %, ámbar 60-79 %, rojo < 60 % (umbral propuesto, sin firmar).",
+   "sintoma": "Subcuentas encendidas en verde ÷ encendidas: verde ≥ 80 %, ámbar 60-79 %, rojo < 60 % (firmado el 4-oct; se revisa con datos el 3-dic-2026).",
    "gravedad": "alta",
    "plazo": "Esta semana",
    "diagnostico": [
@@ -5820,7 +5878,7 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 2912,
      "autor": "RO",
-     "nota": "≥ 80 / 60-79 / < 60 %, propuesta sin firmar; el que manda de la jefa"
+     "nota": "≥ 80 / 60-79 / < 60 %, firmado el 4-oct; se revisa con datos el 3-dic-2026; el que manda de la jefa"
     },
     {
      "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/11_TIJERA/02_SPEC_SNAPSHOT_GHL_V1.md",
@@ -5833,6 +5891,11 @@
      "linea": 7,
      "autor": "RO",
      "nota": "los sistemas fallan, no las personas"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },
@@ -5940,13 +6003,18 @@
      "fichero": "ro-app:indicadores.json",
      "linea": 2979,
      "autor": "RO",
-     "nota": "≤ 2 / 3-4 / ≥ 5, propuesta sin firmar"
+     "nota": "≤ 2 / 3-4 / ≥ 5, firmado el 4-oct; se revisa con datos el 3-dic-2026"
     },
     {
      "fichero": "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
      "linea": 7,
      "autor": "RO",
      "nota": "procesos, no culpables"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 47: bandas propuestas firmadas tal cual; se revisan en 60 días con datos; la satisfacción se mide cada trimestre, nunca como alarma."
     }
    ]
   },

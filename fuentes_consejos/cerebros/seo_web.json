@@ -8,7 +8,7 @@
    "ficha_google",
    "web"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:20_METODO/METODO_ENTREGA_RO/P1_DESPACHO_VISIBLE/SOP-P1-01_gmb-viva-resenas.md",
@@ -40,21 +40,18 @@
    "ro-app:fuentes_consejos/conocimiento/reglas.json",
    "ro-app:modulos/seo.js"
   ],
-  "nota": "Cubre posiciones y clics (SE Ranking y Search Console), indexación, canibalización, contenidos, cosecha trimestral, ficha de Google (reseñas, llamadas, Maps, suspensión, cambios sensibles) y salud web (caídas, spam, certificado, copias, hosting, velocidad, medición, formulario, rediseños). Sin doctrina de Cole Gordon ni Hormozi: no tienen SEO; todo sale de RO. Los SOP P1 siguen vigentes para la cartera Despacho Visible (capa de vigencia 24-jul). Deriva a publicidad (campañas, CPL, conversión de anuncios), a crm (leads que no se atienden, GHL), a account (relación y reuniones) y a altas (accesos del arranque). Contradicciones resueltas: nombre de la ficha, manda la política de 3 niveles de gestion-gmb (2-ago) sobre «marca + ciudad + servicios» de SOP-P1-01, PL-P1-01 y rendimiento.md; petición de reseñas, manda gestion-gmb (neutra, por WhatsApp 1-3 días tras el hito, sin texto sugerido) sobre la plantilla de texto de PL-P1-02 (11-jul); velocidad, manda D-54 (≥ 85 / 50-84 / < 50 o ≥ 2,5 s) para el semáforo y el gate de SOP-P2-09 (≥ 50, < 2,5 s) para entregar WPO; posts de la ficha, manda el indicador de la app (2-3 al mes, ≤ 15 días) sobre los 4 al mes de gestion-gmb, porque el ciclo mensual (2-ago) confirma que el post no rankea.",
+  "nota": "Cubre posiciones y clics (SE Ranking y Search Console), indexación, canibalización, contenidos, cosecha trimestral, ficha de Google (reseñas, llamadas, Maps, suspensión, cambios sensibles) y salud web (caídas, spam, certificado, copias, hosting, velocidad, medición, formulario, rediseños). Sin doctrina de Cole Gordon ni Hormozi: no tienen SEO; todo sale de RO. Los SOP P1 siguen vigentes para la cartera Despacho Visible (capa de vigencia 24-jul). Deriva a publicidad (campañas, CPL, conversión de anuncios), a crm (leads que no se atienden, GHL), a account (relación y reuniones) y a altas (accesos del arranque). Contradicciones resueltas: nombre de la ficha, manda la política de 3 niveles de gestion-gmb (2-ago) sobre «marca + ciudad + servicios» de SOP-P1-01, PL-P1-01 y rendimiento.md; petición de reseñas, manda gestion-gmb (neutra, por WhatsApp 1-3 días tras el hito, sin texto sugerido) sobre la plantilla de texto de PL-P1-02 (11-jul); velocidad, manda D-54 (≥ 85 / 50-84 / < 50 o ≥ 2,5 s) para el semáforo y el gate de SOP-P2-09 (≥ 50, < 2,5 s) para entregar WPO; posts de la ficha, manda el indicador de la app (2-3 al mes, ≤ 15 días) sobre los 4 al mes de gestion-gmb, porque el ciclo mensual (2-ago) confirma que el post no rankea. Alcance en la cartera (decisión de Tomás, 4-oct): lo mínimo, ficha de Google y salud técnica, sin contenidos salvo pacto. El addon Local de SE Ranking no se contrata: los indicadores de Maps van a medias.",
   "pendientes_tomas": [
-   "Alcance del SEO en la cartera tras el 1-sep: el producto vigente (1.470 €) lo deja fuera del núcleo y no hay decisión escrita de cuánto SEO se mantiene ni de los volúmenes por defecto (están en 11_DECISIONES, que no está en repo).",
-   "Quién paga la limpieza de una web hackeada cuando el hosting o las actualizaciones los gestiona RO: el SOP-P0-04 dice presupuesto aparte, pero no distingue si la web estaba a nuestro cargo.",
-   "Medición local: contratar el addon Local de SE Ranking y Local Falcon para medir Maps y cuota de voz; sin ellos los indicadores de Maps van a medias (project_gmb_top1_cartera l.22).",
-   "Estandarizar la promesa comercial «dominancia del mapa» y los pilotos de fichas de profesionales y spam fighting (project_gmb_top1_cartera l.22).",
-   "Clave de la API de PageSpeed para medir velocidad real (hoy solo tiempo de servir la portada; generar_alertas.py l.240).",
-   "Si el WPO se empaqueta como add-on vendible o queda como higiene interna (wpo-wordpress-ia-despacho l.168)."
+   "Pilotos de fichas de profesionales y spam fighting (project_gmb_top1_cartera l.22): sin decisión. La «dominancia del mapa» ya no se promete (respuesta n.º 44).",
+   "Clave de la API de PageSpeed para medir velocidad real (hoy solo tiempo de servir la portada; generar_alertas.py l.240). La pone Tomás en el entorno del servidor (respuestas n.º 58-60)."
   ],
   "fuentes_que_faltan": [
    "11_DECISIONES_PARA_TOMAS.md (decisiones 119-122: número de la jefa de SEO, velocidad D-54, ficha la lleva el SEO, avisos de landing caída): citadas vía reglas.json e indicadores.json.",
    "06_KPIS_INTERNOS_RO_POR_PUESTO.md.",
    "Desktop/PROYECTOS IA 2026/04_PROYECTOS/GMB_TOP1_2026-08/00_INFORME_GMB_TOP1.md (informe base de la ficha de Google).",
    "17_ANALYTICS_A_CERO_REVISION.md (revisión de Analytics del 2-oct que alimenta la alerta web_medicion)."
-  ]
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
  },
  "principios": [
   {
@@ -119,7 +116,7 @@
   },
   {
    "id": "seoweb_p_sin_promesas",
-   "texto": "No se prometen posiciones, plazos de Google ni resultado de denuncias: se garantiza proceso, alcance y fecha de revisión.",
+   "texto": "No se prometen posiciones, plazos de Google, «dominancia del mapa» ni resultado de denuncias: nos comprometemos con proceso, alcance y fecha de revisión. No hay garantía de resultados.",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:143 · ro-equipo:30_SKILLS/blindaje-competitivo-gmb/SKILL.md:173",
    "autor": "Tomás"
   },
@@ -128,6 +125,12 @@
    "texto": "Nadie toca una web en producción sin copia que restaure y sin probar a mano después el formulario, la cita previa y la medición.",
    "fuente": "ro-equipo:30_SKILLS/wpo-wordpress-ia-despacho/SKILL.md:32 · ro-equipo:30_SKILLS/wpo-wordpress-ia-despacho/SKILL.md:90",
    "autor": "RO"
+  },
+  {
+   "id": "seoweb_p_cartera_minimo",
+   "texto": "En la cartera, tras el 1-sep, el SEO se queda en lo mínimo: ficha de Google y salud técnica, sin contenidos salvo pacto. El WPO es higiene interna, no un extra que se vende. Si RO lleva el hosting o las actualizaciones, la limpieza de una web hackeada la paga RO.",
+   "fuente": "decision_tomas_2026-10-04 (respuesta n.º 44)",
+   "autor": "Tomás"
   }
  ],
  "situaciones": [
@@ -574,7 +577,7 @@
      "causa": "Infección profunda sin copia limpia",
      "como_confirmar": "Todas las copias recientes contienen el código malicioso.",
      "solucion": [
-      "Para y escala: la limpieza completa va con presupuesto aparte, según el SOP de saneado.",
+      "Para y escala. Si RO lleva el hosting o las actualizaciones, la limpieza la paga RO (decisión de Tomás, 4-oct); si no, va con presupuesto aparte, según el SOP de saneado.",
       "El account avisa al cliente hoy con las opciones."
      ],
      "quien": "jefa_seo",
@@ -644,6 +647,11 @@
      "linea": 345,
      "autor": "RO",
      "nota": "Si hay datos personales expuestos, el reloj de 72 h ante la autoridad empieza al conocerlo; se eleva al cliente el mismo día."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 44: SEO en la cartera: lo mínimo (ficha de Google y salud técnica); hackeo con hosting de RO lo paga RO; la dominancia del mapa no se promete; el WPO es higiene interna."
     }
    ]
   },
@@ -1100,6 +1108,11 @@
      "linea": 58,
      "autor": "RO",
      "nota": "Brecha clic → landing < 70 % con ≥ 300 clics."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 44: SEO en la cartera: lo mínimo (ficha de Google y salud técnica); hackeo con hosting de RO lo paga RO; la dominancia del mapa no se promete; el WPO es higiene interna."
     }
    ]
   },
@@ -4437,13 +4450,23 @@
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
      "linea": 143,
      "autor": "Tomás",
-     "nota": "C-D2-05: no se garantizan resultados (en el Método manda la oferta del 1-sep, ver §13 del mapa; en SEO no hay garantía de posiciones)."
+     "nota": "C-D2-05: no se garantizan resultados. Desde el 4-oct no hay garantía en ningún servicio."
     },
     {
      "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/SKILL.md",
      "linea": 64,
      "autor": "RO",
      "nota": "Voz RO: primera persona, tuteo, 3-8 líneas, «Un saludo»."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 18: NO HAY GARANTÍA. No se ofrece, no se promete, no se usa."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 44: SEO en la cartera: lo mínimo (ficha de Google y salud técnica); hackeo con hosting de RO lo paga RO; la dominancia del mapa no se promete; el WPO es higiene interna."
     }
    ]
   },
@@ -6126,6 +6149,11 @@
      "linea": 220,
      "autor": "RO",
      "nota": "«Toda la ciudad» no se promete nunca."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 53: el addon Local de SE Ranking no se contrata."
     }
    ]
   }
