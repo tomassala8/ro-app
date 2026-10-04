@@ -29,11 +29,11 @@
    "ro-app:indicadores.json (tecnico_altas.*)",
    "central:skills/criterio-tomas-ro/LEYES.md"
   ],
-  "nota": "Cubre del día de la firma al día 90 (dueña técnica: Agus, vigila Mili) y la revisión del día 120 del Método (no hay garantía: decisión de Tomás, 4-oct). Plazos de encendido contados desde el alta del contrato (D-28: objetivo día 10, límite 12), que manda sobre el calendario de 14 días del 14-sep. El taller lo da Coti desde el 14-sep; las plantillas del alta que dicen «con Tomás» están desfasadas en ese punto. Los registros DNS los hace la líder de onboarding (decisión de Tomás, 4-oct). Deriva a: publicidad (lectura del test por conjunto, días 5-30, fondo de 300 €), crm (velocidad de contacto y asistencia tras el encendido), account (relación a partir del día 30), personas_admin (facturación, cobro del primer mes, encargo RGPD) y direccion (precio, bajas).",
+  "nota": "Cubre del día de la firma al día 90 (dueña técnica: Agus, vigila Mili) y la revisión del día 120 del Método (no hay garantía: decisión de Tomás, 4-oct). Plazos de encendido contados desde el alta del contrato (D-28: objetivo día 10, límite 12), que manda sobre el calendario de 14 días del 14-sep. El taller lo da Coti desde el 14-sep; las plantillas del alta que dicen «con Tomás» están desfasadas en ese punto. La líder de onboarding pide los registros DNS al informático del cliente; RO no los toca (decisión de Tomás, 4-oct). Deriva a: publicidad (lectura del test por conjunto, días 5-30, fondo de 300 €), crm (velocidad de contacto y asistencia tras el encendido), account (relación a partir del día 30), personas_admin (facturación, cobro del primer mes, encargo RGPD) y direccion (precio, bajas).",
   "contradicciones_resueltas": [
    "Día de encendido: D-28 (2-oct, día 10 desde el alta del contrato, límite 12) manda sobre 03_LOS_PRIMEROS_14_DIAS.md (14-sep: prueba el día 10, encendido el 14).",
    "Garantía: no hay garantía (decisión de Tomás, 4-oct, respuesta n.º 18). Supera la oferta del 1-sep; no se menciona en el alta y, si el cliente la saca, se le dice que no la hay.",
-   "Registros DNS: los hace la líder de onboarding (decisión de Tomás, 4-oct, respuesta n.º 55), sobre la decisión del 16-sep y la plantilla 03 del 10-sep.",
+   "Registros DNS: la líder de onboarding se los pide al informático del cliente y RO no los toca (decisión de Tomás, 4-oct). Supera la decisión del 16-sep y la plantilla 03 del 10-sep; C-D6-16 se mantiene.",
    "Quién da el taller: Coti desde el 14-sep (TALLER_DE_LA_OFERTA/00_LEEME.md:4) manda sobre las plantillas 01 y 06 del 10-sep («con Tomás»).",
    "Velocidad de contacto: el contrato (≤ 1 h y 4 intentos en 72 h) manda sobre < 5 min de kits antiguos; < 15 min solo como objetivo interno donde hay persona dedicada (decisión de Tomás, 4-oct).",
    "Resultados la primera semana (Cole, ER03.058) frente a la regla de RO sin previsiones: manda RO; se comunican hitos cuando ocurren, sin plazo."
@@ -107,7 +107,7 @@
   },
   {
    "id": "altas_p_infra_del_cliente",
-   "texto": "Los registros DNS los hace la líder de onboarding (decisión de Tomás, 4-oct), con autorización escrita del titular. Nadie más de RO toca el DNS, el dominio ni el correo de un cliente, y la urgencia no es excepción.",
+   "texto": "La líder de onboarding no toca el DNS: pide al informático del cliente que deje los registros configurados para que RO tome el control (Tomás, 4-oct). Nadie de RO toca el DNS, el dominio ni el correo de un cliente (C-D6-16), y la urgencia no es excepción.",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:634 · decision_tomas_2026-10-04 (respuesta n.º 55)",
    "autor": "Tomás"
   },
@@ -3492,7 +3492,7 @@
      "como_confirmar": "SPF, DKIM o MX no aparecen o el host está duplicado",
      "solucion": [
       "Revisa los tres detalles: MX con la misma prioridad, DKIM en una línea, host relativo o completo.",
-      "Pide la corrección al informático o, con autorización escrita del titular, la hace la líder de onboarding."
+      "Pide la corrección al informático del cliente; nadie de RO la hace."
      ],
      "quien": "especialista_ghl",
      "plazo": "24 h"
@@ -3551,7 +3551,7 @@
     }
    ],
    "que_no_hacer": [
-    "Tocar el DNS del cliente sin ser la líder de onboarding y sin autorización escrita del titular.",
+    "Tocar el DNS del cliente: lo configura su informático.",
     "Escribir los registros de memoria o copiarlos de otro cliente.",
     "Mandar un segundo correo al informático por un registro olvidado."
    ],
@@ -3587,7 +3587,7 @@
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
      "linea": 165,
      "autor": "RO",
-     "nota": "Nadie de RO toca el DNS de un cliente; desde el 4-oct, solo la líder de onboarding y con autorización escrita."
+     "nota": "Nadie de RO toca el DNS de un cliente (se mantiene tras el 4-oct)."
     },
     {
      "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
@@ -3604,7 +3604,7 @@
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 55: los registros DNS los hace la líder de onboarding."
+     "nota": "Respuesta n.º 55: los registros DNS los gestiona la líder de onboarding con el informático del cliente; RO no los toca."
     }
    ]
   },
@@ -6068,7 +6068,7 @@
     }
    ],
    "acciones_inmediatas": [
-    "Lo lleva la líder de onboarding: registros, correo, persecución y verificación.",
+    "Lo lleva la líder de onboarding: manda los registros al informático del cliente, persigue y verifica. Ella no los toca.",
     "Usa la skill correo-dns-cliente-ro: se copia, no se redacta."
    ],
    "guiones": [
@@ -6097,7 +6097,7 @@
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
      "linea": 35,
      "autor": "Tomás",
-     "nota": "Los registros DNS los hace la líder de onboarding (decisión de Tomás del 4-oct); supera la del 16-sep (los mandaba Yessica, con el account en copia) y las plantillas del 10-sep."
+     "nota": "La líder de onboarding pide los registros DNS al informático del cliente (decisión de Tomás del 4-oct); supera la del 16-sep (los mandaba Yessica, con el account en copia) y las plantillas del 10-sep."
     },
     {
      "fichero": "ro-equipo:30_SKILLS/correo-dns-cliente-ro/SKILL.md",
@@ -6132,7 +6132,7 @@
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 55: los registros DNS los hace la líder de onboarding."
+     "nota": "Respuesta n.º 55: los registros DNS los gestiona la líder de onboarding con el informático del cliente; RO no los toca."
     }
    ]
   },

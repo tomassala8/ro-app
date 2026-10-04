@@ -270,7 +270,7 @@
    ],
    "que_no_hacer": [
     "No cuelgues sin día y hora de la de 45.",
-    "No mandes el enlace de 45 a quien no ha pasado por la de 15, salvo que lo pida Tomás.",
+    "No mandes el enlace de 45 a quien no ha pasado por la de 15 o por la llamada del setter, salvo que lo pida Tomás.",
     "No prometas cifras ni plazos.",
     "No uses Zoho Bookings."
    ],
@@ -296,7 +296,7 @@
      "fichero": "ro-equipo:40_MEMORIA/reference_calendario_reunion_tomas.md",
      "linea": 14,
      "autor": "RO",
-     "nota": "Enlace de 45 solo tras la de 15 o si lo pide Tomás"
+     "nota": "Enlace de 45 solo tras la de 15, tras la llamada del setter (que agenda directo la de 45, 4-oct) o si lo pide Tomás"
     },
     {
      "fichero": "ro-equipo:40_MEMORIA/reference_calendario_reunion_tomas.md",

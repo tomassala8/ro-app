@@ -32,16 +32,18 @@
   ],
   "nota": "Cubre decidir con datos (restricción única, coste por cliente, margen, caja), cartera en riesgo, impagos que decide Tomás, decisiones con reloj, precio y cómo actuar como dirección ante un cliente enfadado. No trae sueldos ni datos de personas: el coste del equipo se lee agregado. Deriva a: account (relación diaria y planes de cuenta), personas_admin (cobro operativo y RRHH), ventas_ro (venta y captación propia en detalle), publicidad y crm (diagnóstico técnico de campañas y embudo), altas (arranques). Las bandas de finanzas se firmaron tal cual el 4-oct y se revisan con datos el 3-dic-2026 (respuesta n.º 47).",
   "pendientes_tomas": [
-   "Norte: el 4-oct Tomás fija el objetivo de acabar en «150» (respuesta n.º 25), pero falta confirmar la unidad. Mientras tanto las fichas ponderan contra beneficio (NORTE.md) y usan el 100k de MRR solo para captación.",
-   "Coste por cliente captado: objetivo máximo 700 € (respuesta n.º 26). Falta decir si el 700 € es solo publicidad (D-13, como mide la app) o el coste completo con venta para el ratio de 3 a 1. Aplicado: 700 € sobre la inversión en Meta.",
    "Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir)."
   ],
-  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta.",
+  "contradicciones_resueltas": [
+   "Norte: 150k de facturación mensual (Tomás, 4-oct, segunda ronda). El beneficio sigue mandando en cada propuesta; NORTE.md pendiente de enmienda.",
+   "Coste por cliente captado: máximo 700 €, medido sobre publicidad (unos 600 € de publicidad por cliente). Es la medida de D-13 que usa la app."
+  ]
  },
  "principios": [
   {
    "id": "dir_p_beneficio",
-   "texto": "El norte es el beneficio, no la facturación: toda propuesta se pondera contra beneficio, retención neta e ingresos por persona. Tomás fija el objetivo 150 (pendiente de confirmar la unidad, 4-oct).",
+   "texto": "El norte es el beneficio, no la facturación: toda propuesta se pondera contra beneficio, retención neta e ingresos por persona. Tomás fija el objetivo de 150k de facturación mensual (4-oct).",
    "fuente": "central:skills/criterio-tomas-ro/LEYES.md:13",
    "autor": "Tomás"
   },
@@ -875,7 +877,7 @@
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €, medido sobre publicidad (unos 600 € de publicidad por cliente)."
     }
    ]
   },
@@ -3633,7 +3635,7 @@
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €, medido sobre publicidad (unos 600 € de publicidad por cliente)."
     }
    ]
   },
@@ -4039,12 +4041,12 @@
      "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
      "linea": 11,
      "autor": "Tomás",
-     "nota": "Norte firmado el 30-ago: 100k de MRR recurrente. El 4-oct Tomás fija el objetivo 150 (pendiente de confirmar la unidad); NORTE.md sigue pendiente de enmienda."
+     "nota": "Norte firmado el 30-ago: 100k de MRR recurrente. El 4-oct Tomás fija el objetivo de 150k de facturación mensual; NORTE.md sigue pendiente de enmienda."
     },
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en «150» (pendiente de confirmar la unidad)."
+     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en 150k de facturación mensual."
     },
     {
      "fichero": "decision_tomas_2026-10-04",
@@ -5779,7 +5781,7 @@
      "fichero": "ro-equipo:40_MEMORIA/project_plan_paid_100k_31oct.md",
      "linea": 11,
      "autor": "Tomás",
-     "nota": "Norte a 31-oct con CAC límite de 700 € (2-sep). El 4-oct Tomás confirma 700 € como máximo y fija el objetivo 150 (pendiente de confirmar la unidad)."
+     "nota": "Norte a 31-oct con CAC límite de 700 € (2-sep). El 4-oct Tomás confirma 700 € como máximo y fija el objetivo de 150k de facturación mensual."
     },
     {
      "fichero": "ro-equipo:40_MEMORIA/project_plan_100k_sep_dic.md",
@@ -5790,12 +5792,12 @@
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en «150» (pendiente de confirmar la unidad)."
+     "nota": "Respuesta n.º 25: Norte: objetivo de acabar en 150k de facturación mensual."
     },
     {
      "fichero": "decision_tomas_2026-10-04",
      "autor": "Tomás",
-     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €."
+     "nota": "Respuesta n.º 26: coste por cliente captado: objetivo máximo 700 €, medido sobre publicidad (unos 600 € de publicidad por cliente)."
     }
    ]
   },

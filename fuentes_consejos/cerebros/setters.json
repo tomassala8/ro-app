@@ -38,10 +38,12 @@
   ],
   "nota": "Cubre dos tipos de persona que llama. (1) El setter de RO: trabaja en «Mi día del setter» de la app, solo con la subcuenta de RO, y llama a despachos que dejaron sus datos para que se reúnan con Tomás. Es el sentido principal y el que tiene disparadores en la app. (2) Quien llama en el despacho cliente a los leads del despacho: RO le da guion, cadencia y QA. Las fichas de ese caso llevan «(despacho)» en el título. Las reglas de oficio (velocidad, cadencia, ley, objeciones, confirmación, rescate) valen para los dos. Deriva a: crm (montaje de GHL, flujos, recordatorios automáticos), ventas_ro (reunión de 45 min y cierre de Tomás), account (relación con el despacho y cláusula de incumplimiento), personas_admin (sueldos, contratos, despidos). Contradicciones resueltas según mapa §13: velocidad, manda el contrato y la decisión del 2-oct (≤ 1 h al despacho; el minuto mide nuestro sistema); intentos, manda A-2 (5 llamadas) con el suelo exigible del contrato (4 intentos en 72 h); llamadas, manda la ley española sobre Cole (sin doble marcación, 9:00-21:00 L-V, nunca móvil, fuera al primer no); precio en el setting, manda RO (no se da cifra de honorarios).",
   "pendientes_tomas": [
-   "¿La llamada del setter con los 5 filtros sustituye a la de 15 minutos con Tomás, o el setter manda siempre al enlace de 15? La app confirma citas de 45 min. La recomendación (el setter agenda directo la de 45) no está confirmada: la respuesta n.º 46 solo trata el outreach y el suelo de publicidad.",
    "KPI y retribución del setter de RO: sin definir (respuesta n.º 50). La regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número."
   ],
-  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta.",
+  "contradicciones_resueltas": [
+   "El setter de RO agenda directamente la reunión de 45 minutos con Tomás tras su llamada con los 5 filtros (Tomás, 4-oct, segunda ronda). La llamada de 15 queda para respuestas de prospección."
+  ]
  },
  "principios": [
   {

@@ -27,10 +27,12 @@
   ],
   "nota": "Cubre el árbol de diagnóstico de publicidad: no gasta, CPL alto, pocos leads, leads basura, fatiga, rechazos, cuenta bloqueada, medición, aprendizaje, presupuesto, segmentación, ganador, escalado, test de arranque y gestión de la cartera. Lo que pasa después del lead (llamada, cita, asistencia) se deriva al cerebro de crm y setters; la landing y la web, a seo_web; la producción de piezas, a redes_produccion; la conversación con el cliente, a account. Contradicciones resueltas: manda el 1-sep (Meta único) sobre PRECEDENCIA §5; manda el protocolo del 28-sep y su cuadro del 29-sep sobre rendimiento.md §4 (CPL de referencia, histórico); manda el cuadro del 29-sep (juicio por conjunto) sobre el criterio por anuncio del protocolo; manda D-39 (dos señales) sobre el nodo de fatiga de una señal de la app; manda RO sobre Cole Gordon en escalado y en abrir cuentas o BM nuevos. Fuentes que faltaban y se citan de forma indirecta: 11_DECISIONES_PARA_TOMAS.md (D-03, D-07, D-39, D-40, D-41), 06_KPIS_INTERNOS_RO_POR_PUESTO.md, 01_LA_CELULA.md, la oferta definitiva (.docx), DOCTRINA_META_ADS_2026/02_ARBOL_DE_DIAGNOSTICO.md (Desktop) y 14_GOOGLE_ADS_VIA_WINDSOR.md. Presupuesto (decisión de Tomás, 4-oct): fase agresiva de test a 50 €/día durante 3-4 días; con ganadores se vuelve a bajar; el total es 600 €/mes y el escalado se plantea dentro de ese total. Google Ads: no se abren cuentas nuevas y las heredadas se mantienen solo mientras conviertan.",
   "pendientes_tomas": [
-   "Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos? La recomendación era un solo conjunto con ganador; la respuesta n.º 40 solo fija que el escalado va dentro de los 600 €/mes.",
-   "Fondo de 300 € de RO (28-sep) para quien no tiene ganador el día 25: ¿sigue vivo con el total de 600 €/mes (respuesta n.º 39)? La ficha pub_sin_ganador_fin_mes_1 lo mantiene mientras tanto."
+   "Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos? La recomendación era un solo conjunto con ganador; la respuesta n.º 40 solo fija que el escalado va dentro de los 600 €/mes."
   ],
-  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta.",
+  "contradicciones_resueltas": [
+   "Fondo de 300 € de RO: sigue (Tomás, 4-oct, segunda ronda). Es para meter boost si el primer mes no ha generado leads, solo en clientes que de verdad interesan a RO y cuando ya se han quemado las demás cartas. No entra en los 600 €/mes."
+  ]
  },
  "principios": [
   {
@@ -4065,7 +4067,7 @@
      "día 25"
     ]
    },
-   "sintoma": "Día 25 del primer mes sin ningún conjunto ganador. Los 300 € de RO solo se activan si el despacho está en la lista aprobada y ha cumplido la cláusula 3 (contacto registrado en GHL).",
+   "sintoma": "Día 25 del primer mes sin ningún conjunto ganador. Los 300 € de RO solo se activan si el despacho está en la lista aprobada y ha cumplido la cláusula 3 (contacto registrado en GHL). Es la última carta: solo para clientes que de verdad interesan a RO y cuando ya se probó todo lo demás.",
    "gravedad": "alta",
    "plazo": "Día 25 del mes 1",
    "diagnostico": [
@@ -4187,6 +4189,11 @@
      "linea": 1158,
      "autor": "RO",
      "nota": "regla fondo_300_ro"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 39 (segunda ronda): el fondo de 300 € sigue, como boost del primer mes sin leads, solo en clientes que interesan a RO y con las demás cartas quemadas."
     }
    ]
   },

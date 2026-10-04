@@ -3,11 +3,9 @@
 Lo que cada cerebro no puede cerrar solo. Entre tanto, la ficha aplica lo que dice cada punto.
 Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y vuelve a lanzar este script.
 
-## Dirección y finanzas (3)
+## Dirección y finanzas (1)
 
-1. Norte: el 4-oct Tomás fija el objetivo de acabar en «150» (respuesta n.º 25), pero falta confirmar la unidad. Mientras tanto las fichas ponderan contra beneficio (NORTE.md) y usan el 100k de MRR solo para captación.
-2. Coste por cliente captado: objetivo máximo 700 € (respuesta n.º 26). Falta decir si el 700 € es solo publicidad (D-13, como mide la app) o el coste completo con venta para el ratio de 3 a 1. Aplicado: 700 € sobre la inversión en Meta.
-3. Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir).
+1. Decisiones abiertas de NORTE §4 que tocan estas fichas: recorte de cartera y cola de cuentas pequeñas (respuesta n.º 51: sin definir).
 
 ## Operaciones y proyectos (control de cartera, ritmo y coordinación) (2)
 
@@ -22,19 +20,17 @@ Al decidir: corrige el cerebro, quita el punto de su `_meta.pendientes_tomas` y 
 
 1. Traer al repo 11_DECISIONES_PARA_TOMAS.md (D-28, D-30, D-48, conexiones, objetivo de coste por cita) y 06_KPIS_INTERNOS_RO_POR_PUESTO.md (los sube Tomás, respuestas n.º 58-60), y 02_SOP_ONBOARDING_UNICO.md: varias reglas del área solo se pueden citar a través de reglas.json e indicadores.json.
 
-## Publicidad de pago (Meta y, en la cartera heredada, Google Ads) (2)
+## Publicidad de pago (Meta y, en la cartera heredada, Google Ads) (1)
 
 1. Tras el test de arranque: ¿se consolida en un solo conjunto o se mantienen los tres ángulos? La recomendación era un solo conjunto con ganador; la respuesta n.º 40 solo fija que el escalado va dentro de los 600 €/mes.
-2. Fondo de 300 € de RO (28-sep) para quien no tiene ganador el día 25: ¿sigue vivo con el total de 600 €/mes (respuesta n.º 39)? La ficha pub_sin_ganador_fin_mes_1 lo mantiene mientras tanto.
 
 ## CRM y embudo (GoHighLevel) (1)
 
 1. Gate del frontend de GHL con lectura propuesta el 5-oct-2026 (G1-G3): sin firma conocida.
 
-## Setters: llamar al lead, cualificar, agendar y confirmar citas (2)
+## Setters: llamar al lead, cualificar, agendar y confirmar citas (1)
 
-1. ¿La llamada del setter con los 5 filtros sustituye a la de 15 minutos con Tomás, o el setter manda siempre al enlace de 15? La app confirma citas de 45 min. La recomendación (el setter agenda directo la de 45) no está confirmada: la respuesta n.º 46 solo trata el outreach y el suelo de publicidad.
-2. KPI y retribución del setter de RO: sin definir (respuesta n.º 50). La regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número.
+1. KPI y retribución del setter de RO: sin definir (respuesta n.º 50). La regla juzgar_setter cita 11_DECISIONES_PARA_TOMAS.md, que no está en ningún repo. La «cuota» de la rampa (40 % y 70 %) no está definida en número.
 
 ## SEO, ficha de Google y web (2)
 
