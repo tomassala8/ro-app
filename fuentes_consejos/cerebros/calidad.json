@@ -12,7 +12,7 @@
    "seo",
    "trafficker"
   ],
-  "version": "1.0",
+  "version": "1.1",
   "fecha": "2026-10-04",
   "fuentes_principales": [
    "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md",
@@ -24,9 +24,13 @@
   ],
   "nota": "Una ficha por diagnóstico de fuentes_diagnosticos/. Se dispara por el id del diagnóstico (disparadores.diagnosticos), no por alertas: así no cambia qué ficha sale para las alertas que ya existen.",
   "pendientes_tomas": [
-   "Umbrales de calidad del lead (20 % ámbar, 35 % rojo).",
-   "¿Un correo de Gmail o Hotmail resta calidad? Hoy no.",
-   "Umbrales SEO: blog 50/70 %, informativa 60 %, marca 70 %."
+   "Cuántos clics de servicio «salvan» un SEO con mucho blog (hoy 100 en 28 días y el 25 % del total).",
+   "Umbrales SEO de intención: informativa 60 %, marca 70 %."
+  ],
+  "decisiones_tomas": [
+   "4-oct-2026: leads que no se pueden llamar, ámbar 20 % y rojo 35 %.",
+   "4-oct-2026: Gmail u Hotmail no restan calidad de entrada (señal secundaria).",
+   "4-oct-2026: blog ámbar 50 % y rojo 70 %, pero con bastantes clics transaccionales baja un escalón."
   ]
  },
  "principios": [
@@ -781,7 +785,7 @@
      "tráfico informacional"
     ]
    },
-   "sintoma": "Más de la mitad de los clics de Google van a entradas de blog y muy pocos a las páginas de servicio o a la portada.",
+   "sintoma": "Más de la mitad de los clics de Google van a entradas de blog y pocos a las páginas de servicio o a la portada. Si las páginas de servicio ya suman bastantes clics, el diagnóstico baja un escalón: el blog suma, no tapa.",
    "gravedad": "media",
    "plazo": "Este mes",
    "diagnostico": [
@@ -889,6 +893,11 @@
      "linea": 92,
      "autor": "RO",
      "nota": "principio: el contenido informacional genera tráfico, no clientes"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "Tomás",
+     "nota": "4-oct-2026: con bastantes clics transaccionales el blog puede salvarse"
     }
    ]
   },

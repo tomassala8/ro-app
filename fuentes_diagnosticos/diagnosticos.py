@@ -21,8 +21,8 @@ DIA = 864e5
 
 UMBRALES = {
     # ARBOL E4: «validación <40 % tras 50 leads»; aquí solo se mira el dato de contacto, que es un filtro previo y más grosero.
-    "calidad_ambar_pct": (20, "criterio RO, pendiente de Tomás"),
-    "calidad_rojo_pct": (35, "criterio RO, pendiente de Tomás"),
+    "calidad_ambar_pct": (20, "decisión de Tomás, 4-oct-2026"),
+    "calidad_rojo_pct": (35, "decisión de Tomás, 4-oct-2026"),
     "calidad_muestra_min": (10, "criterio RO"),
     # ARBOL E5: «% <24 h <90 % (cláusula) · p90 >4 h · leads con 0 intentos >0».
     "atencion_24h_ambar_pct": (90, "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:93"),
@@ -38,8 +38,11 @@ UMBRALES = {
     "asistencia_ambar_pct": (60, "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:111"),
     "asistencia_muestra_min": (8, "ro-equipo:30_SKILLS/diagnostico-embudo-despacho/recursos/ARBOL.md:111"),
     # seo_web: «El contenido informacional genera tráfico, no clientes» (SOP-P1-02:60).
-    "blog_ambar_pct": (50, "criterio RO, pendiente de Tomás"),
-    "blog_rojo_pct": (70, "criterio RO, pendiente de Tomás"),
+    "blog_ambar_pct": (50, "decisión de Tomás, 4-oct-2026"),
+    "blog_rojo_pct": (70, "decisión de Tomás, 4-oct-2026"),
+    # Tomás, 4-oct: «si tiene bastantes clics transaccionales puede llegar a salvar» → con este volumen baja un escalón
+    "blog_salvan_clics_utiles": (100, "criterio RO sobre decisión de Tomás, 4-oct-2026; cifra pendiente de Tomás"),
+    "blog_salvan_pct_utiles": (25, "criterio RO sobre decisión de Tomás, 4-oct-2026; cifra pendiente de Tomás"),
     "seo_clics_min": (30, "criterio RO"),
     "informativa_ambar_pct": (60, "criterio RO, pendiente de Tomás"),
     "marca_ambar_pct": (70, "criterio RO, pendiente de Tomás"),
@@ -101,7 +104,7 @@ def calidad_correo(correo):
     if local in ROL:
         return "rol"
     if dom in GRATUITOS:
-        return "gratuito"      # normal en autónomos y pymes: se cuenta, pero NO resta calidad (pendiente de Tomás)
+        return "gratuito"      # normal en autónomos y pymes: se cuenta como señal secundaria, NO resta calidad (Tomás, 4-oct)
     return "ok"
 
 
@@ -374,8 +377,17 @@ def diag_seo_blog(gsc):
     pb = pct(por["blog"], vistos)
     estado = "rojo" if pb >= U("blog_rojo_pct") else "ambar" if pb >= U("blog_ambar_pct") else "verde"
     util = por["servicio"] + por["portada"]
-    lectura = (f"El {pb} % de los clics de Google van al blog y solo {util} a páginas de servicio o portada: mucho tráfico, poco cliente."
-               if estado != "verde" else f"El tráfico va sobre todo a páginas de servicio y portada ({util} clics); el blog es el {pb} %.")
+    salva = estado != "verde" and util >= U("blog_salvan_clics_utiles") and pct(util, vistos) >= U("blog_salvan_pct_utiles")
+    if salva:                      # bastantes clics transaccionales: el blog suma, no tapa
+        estado = "ambar" if estado == "rojo" else "verde"
+    ev["clics_utiles"], ev["salvado_por_transaccional"] = util, salva
+    if salva:
+        lectura = (f"El blog se lleva el {pb} % de los clics, pero las páginas de servicio y la portada suman {util}: "
+                   "hay tráfico transaccional suficiente y el blog suma.")
+    elif estado != "verde":
+        lectura = f"El {pb} % de los clics de Google van al blog y solo {util} a páginas de servicio o portada: mucho tráfico, poco cliente."
+    else:
+        lectura = f"El tráfico va sobre todo a páginas de servicio y portada ({util} clics); el blog es el {pb} %."
     if ev["cobertura_pct"] is not None and ev["cobertura_pct"] < 60:
         lectura += f" Ojo: solo se ven las páginas que suman el {ev['cobertura_pct']} % de los clics."
     return resultado("seo_trafico_blog", "seo_web", estado, "Tráfico SEO que puede ser cliente", lectura, ev, total,

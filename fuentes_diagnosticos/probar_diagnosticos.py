@@ -98,6 +98,10 @@ servicio = {"mes": {"clics": 400}, "paginas": [["https://despacho.es/", 150, 200
 sb, ss = D.diag_seo_blog(blog), D.diag_seo_blog(servicio)
 ok(sb["estado"] == "rojo" and sb["evidencia"]["pct_blog"] == 83.3, f"SEO blog: {sb['estado']} {sb['evidencia']}")
 ok(ss["estado"] == "verde", f"SEO servicio: {ss['estado']}")
+# Tomás, 4-oct: con bastantes clics transaccionales el blog no hunde el diagnóstico (rojo → ámbar)
+grande = {"mes": {"clics": 3000}, "paginas": [["https://despacho.es/blog/a/", 2000, 1, 1, 1], ["https://despacho.es/asesoria-fiscal/", 800, 1, 1, 1]]}
+sg = D.diag_seo_blog(grande)
+ok(sg["estado"] == "ambar" and sg["evidencia"]["salvado_por_transaccional"], f"blog con 800 clics de servicio: {sg['estado']} {sg['evidencia']}")
 marca = D.marca_de("Despacho Ejemplo Asesores", "despachoejemplo.es")
 ib, is_ = D.diag_seo_intencion(blog, marca), D.diag_seo_intencion(servicio, marca)
 ok(ib["estado"] == "rojo", f"intención blog: {ib['estado']} {ib['evidencia']} marca={marca}")

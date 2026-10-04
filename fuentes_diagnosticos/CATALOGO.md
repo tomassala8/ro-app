@@ -81,9 +81,9 @@ veredicto del embudo para separar «resultados flojos por leads malos» de «por
 
 ## Lo que tiene que decidir Tomás
 
-1. Umbrales de calidad del lead: ámbar con un 20 % de leads que no se pueden llamar, rojo con un 35 %.
-2. ¿Un correo de Gmail o Hotmail resta calidad? Hoy **no** (en autónomos y pymes es lo normal); se cuenta aparte.
-3. Umbrales SEO: blog ámbar 50 % y rojo 70 % de los clics; búsquedas informativas 60 %; marca 70 %.
+1. ~~Umbrales de calidad del lead~~ Firmado 4-oct: ámbar 20 %, rojo 35 %.
+2. ~~Gmail o Hotmail~~ Firmado 4-oct: no restan calidad de entrada; se cuentan como señal secundaria.
+3. Blog: firmado 4-oct ámbar 50 % y rojo 70 %, pero si las páginas de servicio y portada suman al menos 100 clics en 28 días y el 25 % del total, baja un escalón (esas dos cifras están pendientes). Búsquedas informativas 60 % y marca 70 %, pendientes.
 
 Todos están en `diagnosticos.py → UMBRALES`, con su fuente. Los que vienen del árbol del embudo (atención 90 % en 24 h,
 cita 25 %, asistencia 60 % con 8 citas) ya están firmados en `ro-equipo:30_SKILLS/diagnostico-embudo-despacho`.
