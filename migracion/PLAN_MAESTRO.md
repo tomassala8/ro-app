@@ -10,7 +10,7 @@ Stack de destino: **Next.js 16** (web) · **NestJS 12** (API) · **PostgreSQL 16
 
 ## 0. Las seis reglas que mandan sobre todo lo demás
 
-1. **Nada cambia para quien usa la app.** Mismas pantallas, textos, colores, direcciones (`/#/mi-dia`), rutas de API, respuestas y 403. Si algo se ve o responde distinto, es un fallo, no una mejora.
+1. **Nada cambia para quien usa la app.** Mismas pantallas, textos, colores, direcciones (`/#/mi-dia`), rutas de API, respuestas y 403. Si algo se ve o responde distinto, es un fallo, no una mejora. **La única excepción** son los fallos de lógica de `migracion/PENDIENTES_LOGICA.md`: esos se arreglan sí o sí (paso F5.10), cada uno con su prueba y su línea en las excepciones.
 2. **Se demuestra, no se supone.** Una pieza solo se da por hecha con `bash migracion/puerta.sh <fase>` en **VERDE**. La puerta guarda su informe en `~/RO_MIGRACION/puertas/`.
 3. **La app nueva siempre funciona entera.** Lo que no está migrado lo atiende la app de hoy a través del proxy. Una pieza migrada sustituye a la vieja solo con su puerta en verde; si no, se deshace y se queda la vieja.
 4. **Cursor nunca se para y nunca pregunta.** Si algo falla, lo intenta otra vez con otro enfoque (hasta 3). Si sigue sin salir, aplica el **plan B** de ese paso (§5), lo apunta y pasa al siguiente. Las dudas se resuelven con la opción más conservadora y se apuntan para Tomás.
@@ -90,6 +90,13 @@ Reglas del backend (para cada ruta que se muda):
 - **Mismo contrato:** método, ruta, códigos, mensajes de error, claves JSON en `snake_case`, fechas en texto UTC, cabeceras que importan (`ETag`, `Cache-Control`; `X-RO-App` obligatoria en POST).
 - **Identidad:** `RO_IDENTIDAD=local` (`X-RO-Yo` / `?yo=` / galleta `ro_yo`, solo en 127.0.0.1) o `access` (solo el sello firmado de Cloudflare Access). Solo entra quien está `activo`. Mientras una ruta va por el proxy, la identidad la sigue comprobando `servir.py`.
 - **«Ver como»:** solo lectura, la intersección de las dos personas, y lo leído queda en el rastro.
+- **Permisos en un solo sitio** (Tomás, 4-oct). Ya está montado en `v2/apps/api/src/permisos/` y probado:
+  - cada ruta declara su permiso con una línea: `@Permiso({ modulo: 'crm', recortar: true })`, o `@Publico('motivo')` si no tiene datos;
+  - una guarda global deniega toda ruta sin declarar (403) y pregunta al motor; un recorte global pasa la respuesta por `recortar()`;
+  - «ver como» no puede escribir (`escritura: true`);
+  - el motor es UNO (`@ro/permisos`, que lee `reglas_permisos.json`); hasta la fase 4, deniega todo;
+  - `rutas-declaradas.spec.ts` rompe la compilación si una ruta no declara permiso o si alguien fuera de `src/permisos` decide mirando puestos.
+  Así, cambiar quién ve qué es tocar la matriz o una línea, nunca buscar comprobaciones por el código.
 - **Autoridad en el servidor y en cada lectura** (Astra): se revalida persona, puesto, cartera y ámbito en cada petición; nada se fía de ocultar en el navegador.
 - **Desconocido no es cero** (Astra): ausencia de dato, error de fuente, cobertura parcial y cero medido son estados distintos y se conservan tal cual.
 - **Rastro imborrable:** disparadores en la base (ya en `0_base`) y la cadena de huellas calculada igual, con un solo escritor a la vez (candado de transacción, como `BEGIN IMMEDIATE` hoy).
@@ -143,6 +150,7 @@ Cursor trabaja con **un solo prompt** (`migracion/PROMPT_NOCHE.md`) y un cuadern
 | **3 · app nueva entera** | Nest y Next con proxy a la app de hoy. Debería salir verde a la primera: ya está ensayado | 20 min | `puerta.sh f3` |
 | **4 · permisos** | `permisos.py` → `@ro/permisos`, función a función | 60–90 min | `puerta.sh f4` (100 %) |
 | **5 · API a Nest** | grupos de §2.2, uno a uno: se escribe el módulo, se añaden sus rutas a `RUTAS_EN_NEST`, puerta; si no sale en 3 intentos, se quitan de la lista | lo que quede hasta 2 h antes del final | `puerta.sh f5` por grupo |
+| **5.10 · fallos pendientes** | cada fallo abierto de `PENDIENTES_LOGICA.md`, de seguridad a presentación, con su prueba | hasta 90 min; los de seguridad no se saltan por reloj | `puerta.sh f5` + la prueba de cada fallo |
 | **6 · front en React** | carcasa en `/carcasa`, `ctx.ts`, puente; carcasa a «/» con fotos iguales; pantallas una a una | lo que quede hasta 1 h antes del final | `puerta.sh f6` por pieza |
 | **7 · cierre** | contenedores (`docker compose --profile completo`), `v2/render.yaml`, ensayo de restauración, `INFORME_NOCHE.md`, `git push` de la rama `migracion/v2` | la última hora, pase lo que pase | `puerta.sh f7` |
 
@@ -165,6 +173,7 @@ Regla general: **tres intentos con enfoques distintos** (cada uno apuntado en `P
 | El motor de permisos no llega al 100 % en 90 minutos | Se guarda lo hecho, se apunta qué vectores fallan y **no se muda a Nest ninguna ruta que dependa de permisos** (casi todas): se salta la fase 5 y se pasa a la 6. La app sigue entera por el proxy. |
 | Un grupo de rutas no pasa su puerta | Se quitan de `RUTAS_EN_NEST` (vuelven al proxy), se deja el código del módulo en una rama `intento/<grupo>` y se sigue con el siguiente grupo. |
 | La carcasa o una pantalla en React no queda igual | Se queda la de hoy. Una pantalla a medias nunca sustituye a la vieja. |
+| Un fallo de `PENDIENTES_LOGICA.md` no sale en 3 intentos | Se deja como estaba, con la prueba que lo demuestra marcada como pendiente (no borrada), y va al informe. Si es de **seguridad**, es **bloqueo para el piloto**. |
 | Algo de Cursor se cuelga (servidor que no responde, orden que no vuelve) | `bash migracion/servicios.sh parar todo && bash migracion/servicios.sh arrancar` y repetir el paso. |
 | Se rompe algo de la app de hoy | `git restore` de lo tocado; la base real nunca se toca (todo va sobre copias en `~/RO_MIGRACION/`). |
 | Hace falta una decisión de Tomás | La opción más conservadora (la que no cambia nada visible y se deshace fácil), apuntada en «Preguntas para Tomás» de `NOTAS_NOCHE.md`. |

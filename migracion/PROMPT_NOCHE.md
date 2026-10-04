@@ -20,6 +20,8 @@ REGLAS QUE NO SE NEGOCIAN:
 - Datos reales SOLO en ~/RO_MIGRACION. No los pegues en el chat ni los subas a git. Nunca credenciales en ficheros.
 - Nunca toques `local.db`, `data/` ni nada que salga fuera (envíos, ClickUp, proveedores). Servidores solo en 127.0.0.1.
 - Nunca `git push` a `main` ni `--force`. Solo `git push origin migracion/v2` (al final de cada fase, como copia de seguridad).
+- Permisos en un solo sitio: toda ruta de Nest declara `@Permiso(...)` o `@Publico(...)` (v2/apps/api/src/permisos/). Nunca compruebes puestos o personas a mano en una ruta.
+- Los fallos de `PENDIENTES_LOGICA.md` se arreglan sí o sí (paso F5.10): son la única diferencia permitida con la app de hoy, cada uno con su prueba y su excepción.
 - Cuando notes que te queda poco contexto: deja el paso actual cerrado (✅/⚠) o con una nota exacta de por dónde ibas en «En curso», haz commit y termina la vuelta. Te volverán a lanzar con este mismo mensaje y seguirás desde PROGRESO.md.
 - Cuando todos los pasos estén en ✅ o ⚠ (y la fase 7 hecha), escribe `ESTADO: TERMINADO` en la primera línea de estado de PROGRESO.md, haz commit y push de la rama, y termina.
 

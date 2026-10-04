@@ -100,6 +100,11 @@ LIBRE=$(df -g "$RAIZ" 2>/dev/null | awk 'NR==2{print $4}'); [ -z "$LIBRE" ] && L
 [ "${LIBRE:-0}" -ge 10 ] && ok "${LIBRE} GB libres" || mal "poco disco (${LIBRE:-?} GB)" "deja al menos 10 GB libres (node_modules, Docker, fotos)"
 mkdir -p "$FUERA" && ok "carpeta para datos de la migración: $FUERA (fuera del repo)"
 
+LISTA="$FUERA/PENDIENTES_LOGICA.md"; [ -f "$LISTA" ] || LISTA="migracion/PENDIENTES_LOGICA.md"
+ABIERTOS=$(grep -cE '^\| L-[1-9][0-9]* .*\| *abierto *\|$' "$LISTA" 2>/dev/null); ABIERTOS=${ABIERTOS:-0}
+if [ "$ABIERTOS" -gt 0 ]; then ok "$ABIERTOS fallos de lógica abiertos para arreglar en la noche ($LISTA)"
+else ojo "la lista de fallos de lógica está vacía ($LISTA)" "si hay fallos sin arreglar en la app de hoy, apúntalos ahí antes de lanzar (o pide a Claude que la copie del hilo de feedback)"; fi
+
 echo "6 · Proyecto nuevo (v2)"
 if [ -d v2 ] && command -v pnpm >/dev/null; then
   if [ $INSTALAR = 1 ]; then (cd v2 && pnpm install --frozen-lockfile >/dev/null 2>&1) && ok "dependencias instaladas" || mal "pnpm install falló" "cd v2 && pnpm install  y mira el error"; fi

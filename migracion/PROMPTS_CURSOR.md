@@ -97,7 +97,8 @@ Lee `permisos.py`, `permisos.js`, `reglas_permisos.json` y `v2/packages/permisos
 - «Ver como» en Python es un hilo (`_HILO`); aquí, un objeto «vista» explícito (real + su contexto), nunca un global.
 - «Hoy» es el día en Europe/Madrid.
 - `cargar_modulos()` lee `modulos/indice.js` con expresiones regulares: mismo resultado (los vectores traen `modulos.json`).
-Completa `test/paridad.test.ts`: ver y ver_como de cada pregunta, nivel de cada módulo, cartera, ámbito y recorte de cada persona. `bash migracion/puerta.sh f4` al 100 %. Commit.
+Completa `test/paridad.test.ts`: ver y ver_como de cada pregunta, nivel de cada módulo, cartera, ámbito y recorte de cada persona. `bash migracion/puerta.sh f4` al 100 %.
+Después, enchúfalo en la API: en `v2/apps/api/src/permisos/` crea `MotorRo implements MotorPermisos` (entrar = nivel del módulo o `ver()` del tipo, con los mismos códigos y mensajes que `servir.py`; recortar = `recortar()`) y ponlo en `permisos.module.ts` en lugar de `MotorSinPortar`. No toques la guarda, el recorte ni `rutas-declaradas.spec.ts`. Commit.
 
 ---
 
@@ -105,10 +106,21 @@ Completa `test/paridad.test.ts`: ver y ver_como de cada pregunta, nivel de cada 
 
 Para el grupo del paso (tabla §2.2 del plan):
 1. Lee el código Python de cada ruta del grupo (servir.py y el enchufe que toque) y reprodúcelo en un módulo de Nest: mismos códigos, mensajes, claves JSON, recorte (con `@ro/permisos`), rastro y cabeceras. Base con `PrismaService` (SQL crudo con `$queryRaw` solo si Prisma no llega). Datos de módulos: de `datos_version`/`datos_fichero`/`datos_blob` (espacio «data», versión vigente, zlib), con caché por versión.
+   **Permisos:** cada método lleva `@Permiso({ modulo | tipo, recortar, escritura })` (o `@Publico('motivo')` si no tiene datos). Prohibido comprobar puestos, personas o carteras a mano en el controlador o el servicio: si la declaración no llega, se amplía el motor en `src/permisos/` (y su prueba), no la ruta. `rutas-declaradas.spec.ts` lo vigila y no se relaja.
 2. Añade sus rutas a `v2/apps/api/src/legado/rutas-en-nest.ts`.
 3. `bash migracion/puerta.sh f5 --rapido` para iterar; `bash migracion/puerta.sh f5` para cerrar.
 4. VERDE → commit «F5.x · <grupo> en Nest». ROJO tras 3 intentos → quita sus rutas de la lista, `git switch -c intento/<grupo>` con el módulo, vuelve a `migracion/v2`, ⚠ y siguiente.
 F5.1 (identidad) es la guarda global de las rutas de Nest: `RO_IDENTIDAD=local|access` como `despliegue/acceso_cf.py`; las rutas que siguen en el proxy las sigue comprobando servir.py.
+
+## F5.10 · Fallos pendientes de lógica
+
+Lista: `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe; si no, `migracion/PENDIENTES_LOGICA.md`. Regla de Tomás: lo que no quedó arreglado en la app de hoy se arregla aquí sí o sí. Orden: seguridad → datos → funcional → presentación. Para cada fallo `abierto`:
+1. Escribe primero la prueba que lo demuestra y comprueba que FALLA (Vitest en `v2/` si la ruta está en Nest; Python en `migracion/` o junto a la batería que toque si sigue en `servir.py`).
+2. Arréglalo donde viva esa noche: el módulo de Nest si la ruta ya se mudó; `servir.py` (o su enchufe) si sigue por el proxy; si es de permisos, en `reglas_permisos.json` (lo leen los dos motores) o en los dos motores a la vez (`permisos.py` y `@ro/permisos`), y vuelve a sacar los vectores con `vectores_permisos.py` para que la paridad siga al 100 %.
+3. La prueba pasa. Las rutas cuya respuesta cambia a propósito van a `~/RO_MIGRACION/excepciones.txt` con `# L-n <motivo>`.
+4. `bash migracion/puerta.sh f5` en VERDE → commit «L-n · <qué>» y estado `arreglado en v2 (<commit>)` en la lista.
+Tras 3 intentos sin salir: deshaz el arreglo, deja la prueba marcada como pendiente (`it.todo`/`skip` con «L-n»; nunca borrada), estado `pendiente: <motivo>` y siguiente. Los de **seguridad** se hacen aunque el reloj diga «sin tiempo», antes de la fase 7.
+Los fallos `arreglado hoy`: comprueba que su prueba pasa también en la app nueva (`--pantallas` o la ruta); si no, trátalo como abierto.
 
 ---
 
@@ -146,7 +158,8 @@ Primero, si no existe, `src/components/ro/` (componentes.js en React, mismas cla
 `migracion/INFORME_NOCHE.md`, para Tomás, en castellano y frases cortas:
 1. Resumen en 5 líneas: qué funciona en la app nueva, qué se ha mudado a Nest y a React, qué sigue por el proxy o el puente.
 2. Puertas: cada una con VERDE/ROJO y su informe.
-3. Bloqueos para el piloto (Astra): permisos con datos reales, restauración, fuentes, funciones críticas; excepciones conocidas.
+3. Bloqueos para el piloto (Astra): permisos con datos reales, restauración, fuentes, funciones críticas; excepciones conocidas; fallos de seguridad de `PENDIENTES_LOGICA.md` sin arreglar.
+   Y una tabla con cada fallo de `PENDIENTES_LOGICA.md`: arreglado (dónde y commit) o pendiente (por qué).
 4. Preguntas para Tomás.
 5. Pasos de la mañana, exactos.
 Después, `bash migracion/puerta.sh f7`.
