@@ -81,6 +81,11 @@ export function carteraPorSilla(persona, asignaciones, hoy = hoyISO(), clientes 
       (out[silla] ||= new Set()).add(a.cliente_id);
     }
   }
+  // L-25 (Tomás, 4-oct): «altas» es una silla virtual: los clientes con alta firmada en los últimos 90 días (verdad «nuevo»).
+  if (sillas.has('altas') && clientes !== null) {
+    const nuevos = clientes.filter(c => c.nuevo).map(c => c.id);
+    if (nuevos.length) { const s = (out.altas ||= new Set()); for (const id of nuevos) s.add(id); }
+  }
   if (clientes !== null) {
     const porId = Object.fromEntries(clientes.map(c => [c.id, c]));
     for (const [silla, ids] of Object.entries(out)) {

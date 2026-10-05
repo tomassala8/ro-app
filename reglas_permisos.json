@@ -171,7 +171,7 @@
     "disciplina",
     "todos"
   ],
-  "_sillas": "Qué sillas de la tabla asignaciones dan cartera a cada puesto. «ghl» se mantiene por compatibilidad con la semilla antigua; la fase 0 escribe «crm».",
+  "_sillas": "Qué sillas de la tabla asignaciones dan cartera a cada puesto. «ghl» se mantiene por compatibilidad con la semilla antigua; la fase 0 escribe «crm». «altas»: silla virtual del técnico de altas = los clientes con alta firmada en los últimos 90 días (verdad «nuevo»), sin filas en asignaciones; no está en «sillas» y Ajustes no la ofrece (sillas_virtuales). L-25.",
   "sillas_de_puesto": {
     "account": [
       "account"
@@ -200,6 +200,9 @@
     ],
     "outreach": [
       "outreach"
+    ],
+    "tecnico_altas": [
+      "altas"
     ]
   },
   "sillas": [
@@ -211,6 +214,9 @@
     "redes",
     "produccion",
     "outreach"
+  ],
+  "sillas_virtuales": [
+    "altas"
   ],
   "_jefe_de_puesto": "Jefa por disciplina (además del campo «jefe» de cada persona).",
   "jefe_de_puesto": {
@@ -1477,12 +1483,13 @@
             "direccion",
             "finanzas_direccion",
             "operaciones",
-            "administracion"
+            "administracion",
+            "proyectos"
           ]
         }
       ],
-      "no": "La cuota solo la ven dirección, operaciones y administración. Los accounts no ven dinero (Tomás, 3-oct): ven las horas pactadas frente a las imputadas.",
-      "origen": "00 §3 · D-80 · D-87 (la jefa de SEO no ve euros) · feedback de Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT): los accounts no ven cuota, facturado ni importes"
+      "no": "La cuota solo la ven dirección, operaciones, administración y proyectos. Los accounts no ven dinero (Tomás, 3-oct): ven las horas pactadas frente a las imputadas.",
+      "origen": "00 §3 · D-80 · D-87 (la jefa de SEO no ve euros) · feedback de Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT): los accounts no ven cuota, facturado ni importes · L-25 (Tomás, 4-oct, D1): proyectos ve la cuota de cada cliente"
     },
     "horas_pautadas": {
       "si": [
@@ -1512,18 +1519,19 @@
             "direccion",
             "finanzas_direccion",
             "operaciones",
-            "jefa_publicidad"
+            "jefa_publicidad",
+            "proyectos"
           ]
         },
         {
           "puestos": [
             "trafficker"
           ],
-          "cartera": "trafficker"
+          "cartera": true
         }
       ],
-      "no": "La inversión publicitaria solo la ven publicidad (su trafficker y la jefa), operaciones y dirección. Los accounts no ven dinero (Tomás, 3-oct).",
-      "origen": "00 §3 · D-81 · D-87 · feedback de Tomás 3-oct: los accounts no ven importes de sus clientes (ni gasto ni coste por lead)"
+      "no": "La inversión publicitaria solo la ven publicidad (su trafficker y la jefa), proyectos, operaciones y dirección. Los accounts no ven dinero (Tomás, 3-oct).",
+      "origen": "00 §3 · D-81 · D-87 · feedback de Tomás 3-oct: los accounts no ven importes de sus clientes (ni gasto ni coste por lead) · L-25 (Tomás, 4-oct, D1): proyectos la ve; el trafficker la ve de cualquier silla de su cartera, no solo la suya («cartera: true» en vez de «cartera: trafficker»; sin cliente sigue sin verla)"
     },
     "rentabilidad_cliente": {
       "si": [
@@ -1531,12 +1539,13 @@
           "puestos": [
             "direccion",
             "finanzas_direccion",
-            "operaciones"
+            "operaciones",
+            "proyectos"
           ]
         }
       ],
-      "no": "La rentabilidad por cliente es de dirección y operaciones (31,47 €/h, sin caja ni beneficio).",
-      "origen": "D-85"
+      "no": "La rentabilidad por cliente es de dirección, operaciones y proyectos (31,47 €/h, sin caja ni beneficio).",
+      "origen": "D-85 · L-25 (Tomás, 4-oct, D1): proyectos"
     },
     "cobros": {
       "si": [
@@ -2368,14 +2377,19 @@
   "_solo_propio": "Ronda 6 (M24 Chat): «solo_propio» en datos_de_modulo = el fichero <carpeta>/p_<id> solo lo recibe esa persona. Sustituye a las 32 altas por persona. Las filas con «miembros» solo llegan a sus miembros.",
   "_nombres_dueno": "Ronda 6 (auditoría 29, F-10): «nombres_dueno» en datos_de_modulo = el dueño del lead (su setter, ventas de RO en sus reuniones, la persona de la agenda) recibe el nombre completo sin pulsar; teléfono y correo siguen detrás de «Ver completo». Queda en el rastro.",
   "_solo_real": "Ronda 7 (D-P-C2): «solo_real» = el puesto lo tiene que tener la persona que está delante de verdad (en «ver como» nunca se presta). Además, toda regla por puesto en «ver como» usa solo los puestos que tienen las dos personas.",
-  "_puestos_solo_tomas": "Ronda 11 (A3, auditoría 35): dar o quitar estos puestos, y cambiar puestos, estado (baja), jefe o correo de quien ya tiene uno, solo lo hace Tomás (dirección). operaciones da «ver como» y Ajustes; ventas_ro, los prospectos de Tomás; administración, los cobros.",
+  "_puestos_solo_tomas": "Ronda 11 (A3, auditoría 35): dar o quitar estos puestos, y cambiar puestos, estado (baja), jefe o correo de quien ya tiene uno, solo lo hace Tomás (dirección). operaciones da «ver como» y Ajustes; ventas_ro, los prospectos de Tomás; administración, los cobros. L-25 (Tomás, 4-oct, D2): también proyectos, técnico de altas y las tres jefaturas (publicidad, CRM, SEO).",
   "puestos_solo_tomas": [
     "direccion",
     "finanzas_direccion",
     "rrhh",
     "operaciones",
     "ventas_ro",
-    "administracion"
+    "administracion",
+    "proyectos",
+    "tecnico_altas",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
   ],
   "_zona_horaria": "Mi perfil (3-oct, encargo de Tomás «que el equipo pueda actualizar su timezone»). Quién cambia la zona horaria de una persona: ella misma (propia), su jefe directo (jefe_directo) y los puestos de «puestos» (Mili y Tomás). A una persona con puesto de mando (puestos_solo_tomas) solo se la cambia Tomás («mando_solo»), aunque ella siempre puede cambiar la suya. En «ver como» nunca se escribe. Vale cualquier zona IANA; «zonas_equipo» es la lista corta que sale arriba. Lo aplican altas_personas.py (puede_cambiar_zona, POST /api/perfil/zona) y modulos/mi_perfil.js (para enseñar el botón). Queda en el historial de personas y en el rastro (zona_cambiada, solo del servidor).",
   "zona_horaria": {

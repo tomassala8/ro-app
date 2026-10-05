@@ -101,6 +101,12 @@ def cartera_por_silla(persona, asignaciones, hoy=None, clientes=None):
                      and not (a.get("suplencia") and not a.get("hasta"))}
             if todos:
                 out.setdefault(silla, set()).update(todos)
+    # L-25 (Tomás, 4-oct): «altas» es una silla virtual. Su técnico lleva los clientes con alta firmada en los últimos
+    # 90 días (verdad «nuevo»), sin filas en asignaciones.
+    if "altas" in sillas and clientes is not None:
+        nuevos = {c["id"] for c in clientes if c.get("nuevo")}
+        if nuevos:
+            out.setdefault("altas", set()).update(nuevos)
     if clientes is not None:
         por_id = {c["id"]: c for c in clientes}
         for silla, ids in out.items():

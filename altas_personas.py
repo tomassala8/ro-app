@@ -273,7 +273,9 @@ def pantallas_de(persona):
 
 
 def sillas_de_puestos(puestos):
-    return [s for p in puestos for s in P.REGLAS["sillas_de_puesto"].get(p, [])]
+    # L-25: las sillas virtuales («altas») no se asignan a mano; no salen en Ajustes ni se aceptan en la cartera.
+    virtuales = set(P.REGLAS.get("sillas_virtuales") or [])
+    return [s for p in puestos for s in P.REGLAS["sillas_de_puesto"].get(p, []) if s not in virtuales]
 
 
 def plantilla(puesto):

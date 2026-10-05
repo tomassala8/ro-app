@@ -38,7 +38,7 @@ export const MODULOS = [
   { id: 'en-rojo', num: 'M2', titulo: 'En rojo', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './en_rojo.js', puestos_que_lo_ven: TODOS,
     resumen: 'Clientes en rojo con motivo y responsable; detalle solo para quien lo lleva.' },
   { id: 'bandeja', num: 'M3', titulo: 'Bandeja', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './bandeja.js',
-    puestos_que_lo_ven: { ...DIR, tecnico_altas: 'suyo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', account: 'suyo', trafficker: 'suyo', especialista_ghl: 'suyo' },
+    puestos_que_lo_ven: { ...DIR, tecnico_altas: 'suyo', jefa_publicidad: 'todo', jefa_seo: null, jefa_crm: 'todo', account: 'suyo', trafficker: 'suyo', especialista_ghl: 'suyo' },   // L-25 (Tomás, 4-oct, D3): la Bandeja no clasifica por tema, así que la jefa de SEO no la ve; sus quejas le llegan por En rojo e Incidencias
     resumen: 'Correos de clientes con 24/48 h (Desk), llamadas sin devolver (Zadarma), quejas arriba, por account y día; contestar con tu firma, nota, asignar, cerrar, «no aplica» (simulado hasta W1); triaje sin agente; WhatsApp en W6.' },
   // M23 y M24 (2-oct, petición de Tomás). Datos: data/agenda/ (fuentes_agenda/generar_agenda.py) y data/chat_equipo/p_<persona>.json
   // (fuentes_chat_equipo/generar_chat_equipo.py). Cada uno ve lo suyo; jefes su equipo (agenda); Mili y Tomás, todo.
@@ -95,7 +95,7 @@ export const MODULOS = [
     resumen: 'Cada fallo con su historia: detectada, avisada, reiterada, escalada (reloj de 48 h para Tomás) y resuelta con prueba; causa en dos campos. Desk, Zadarma, incongruencias ClickUp ↔ Desk ↔ CRM, accesos, traspasos y mapas de control.' },
 
   { id: 'captacion', num: 'M6', titulo: 'Captación', grupo: 'Captación y CRM', fase: 2, estado: 'hecho', fichero: './captacion.js',
-    puestos_que_lo_ven: { ...DIR, jefa_publicidad: 'todo', tecnico_altas: 'resumen', jefa_crm: 'resumen', account: 'suyo', trafficker: 'suyo', especialista_ghl: 'resumen', produccion: 'resumen' },
+    puestos_que_lo_ven: { ...DIR, jefa_publicidad: 'todo', tecnico_altas: 'resumen', jefa_crm: 'resumen', account: 'suyo', trafficker: 'todo', especialista_ghl: 'resumen' },   // L-25 (Tomás, 4-oct, D4): producción ya no la ve; el trafficker, todos los clientes
     resumen: 'Publicidad + embudo GHL: coste por cita frente al objetivo del cliente.' },
   // M7 (2-oct): datos en data/crm/ (fuentes_crm/generar_crm.py: GHL de las 66 subcuentas + captacion.json).
   { id: 'salud-crm', num: 'M7', titulo: 'Salud del CRM', grupo: 'Captación y CRM', fase: 2, estado: 'hecho', fichero: './crm.js',

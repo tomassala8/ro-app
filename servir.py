@@ -2812,9 +2812,11 @@ class Manejador(SimpleHTTPRequestHandler):
                 cat["indicadores"] = [i for i in cat["indicadores"] if i["puesto"] in mios]
                 cat["_meta"]["recortado"] = "Solo los indicadores de tus puestos."
             # R16 (N13): umbrales en euros solo para quien ve la inversión (o la cuota) en general; al resto, sin cifra.
-            pu = P.puestos_de(persona)
-            quita = P.importes_a_quitar(bool(pu & {"direccion", "operaciones", "proyectos", "administracion", "finanzas_direccion"}),
-                                        bool(pu & {"direccion", "operaciones", "jefa_publicidad", "trafficker", "finanzas_direccion"}))
+            # L-25: los conjuntos de puestos ya no se escriben aquí; manda la matriz (cuota e inversión de reglas_permisos.json).
+            # La inversión del trafficker es por cliente de su cartera: «la ve» si la ve de alguno de ellos.
+            ve_inv = P.ver(persona, {"tipo": "inversion"}, cp)["ok"] or any(
+                P.ver(persona, {"tipo": "inversion", "cliente_id": cid}, cp)["ok"] for cid in cp["cartera_ids"])
+            quita = P.importes_a_quitar(P.ver(persona, {"tipo": "cuota"}, cp)["ok"], ve_inv)
             if quita:
                 cat = P.sin_importes(cat, quita)          # indicadores y umbrales firmados
             cuerpo = json.dumps(cat, ensure_ascii=False).encode()
