@@ -2757,6 +2757,8 @@ class Manejador(SimpleHTTPRequestHandler):
                 "puedeVerComo": P.ver(real, {"tipo": "ver_como"}, P.contexto(real, E.crudo))["ok"],
                 "datos": datos,
                 "bloqueados": sorted(E.bloqueados) if P.ver(persona, {"tipo": "ver_como"}, cp)["ok"] else [],
+                # L-26: solo los nombres de los almacenes privados declarados (nunca su contenido); sustituye al fetch de la matriz
+                "almacenes_privados": sorted(P.REGLAS.get("almacenes_privados", {})),
             })
 
         m = re.fullmatch(r"/api/cliente/([\w\-]+)", ruta)

@@ -104,15 +104,26 @@ const texto = el => sinRef((el?.textContent || '').replace(/\s+/g, ' ').trim());
 const tieneCl = (el, c) => el?.classList?.contains(c);
 const hijosEl = el => [...(el?.children || [])];
 
-function parsear(html) {
+const ETIQUETAS_PERMITIDAS = new Set(['DIV', 'SPAN', 'P', 'B', 'STRONG', 'I', 'EM', 'U', 'SMALL', 'BR', 'HR', 'UL', 'OL', 'LI', 'TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'TH', 'TD',
+  'A', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'IMG', 'SECTION', 'ARTICLE', 'HEADER', 'FOOTER', 'NAV', 'MAIN', 'SUP', 'SUB', 'CODE', 'PRE', 'BLOCKQUOTE',
+  'DETAILS', 'SUMMARY', 'BUTTON', 'INPUT', 'TITLE',   // los usa el panel de dirección (details/summary, selectores de días)
+  'SVG', 'LINE', 'TEXT', 'PATH', 'CIRCLE', 'RECT', 'G', 'POLYLINE', 'POLYGON', 'TSPAN']);   // gráficos del panel (sin script ni foreignObject)
+
+export function parsear(html) {
   const doc = new DOMParser().parseFromString(`<!doctype html><meta charset="utf-8"><body><div id="pdir-r">${html || ''}</div>`, 'text/html');
   const r = doc.getElementById('pdir-r');
   r.querySelectorAll('script,iframe,object,embed,link,style,form,meta').forEach(x => x.remove());
   // V2 (C-28): restos del dato en los nombres («Pinheiro Leonardo⁷»): fuera los superíndices pegados a un nombre
   r.querySelectorAll('.px-name').forEach(e => { const w = doc.createTreeWalker(e, NodeFilter.SHOW_TEXT); for (let n = w.nextNode(); n; n = w.nextNode()) n.nodeValue = n.nodeValue.replace(/([A-Za-zÁÉÍÓÚÑáéíóúñ])[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, '$1'); });
-  r.querySelectorAll('*').forEach(e => [...e.attributes].forEach(a => {
-    if (/^on/i.test(a.name) || (/^(href|src|xlink:href)$/i.test(a.name) && /^\s*javascript:/i.test(a.value))) e.removeAttribute(a.name);
-  }));
+  // L-26: lista BLANCA. Etiqueta que no está en la lista → se queda su contenido, sin la etiqueta; atributos «on…» fuera;
+  // href/src solo hacia «#», «/», http(s) o mailto. SVG y los controles del panel propio están en la lista porque los pinta el panel.
+  r.querySelectorAll('*').forEach(e => {
+    [...e.attributes].forEach(a => {
+      if (/^on/i.test(a.name)) e.removeAttribute(a.name);
+      else if (/^(href|src|xlink:href)$/i.test(a.name) && !/^\s*(#|\/|https?:\/\/|mailto:)/i.test(a.value)) e.removeAttribute(a.name);
+    });
+    if (!ETIQUETAS_PERMITIDAS.has(e.tagName.toUpperCase())) e.replaceWith(...e.childNodes);
+  });
   return document.importNode(r, true);
 }
 
@@ -934,8 +945,7 @@ function bloqueEquipo(ctx) {
   const ALM = 'sueldos/_privado/sueldos';
   let declarado = null;
   const comprobar = async () => {
-    if (declarado === null) declarado = await fetch('reglas_permisos.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))
-      .then(r => Object.keys(r.almacenes_privados || {}).some(k => k.startsWith('sueldos/')));
+    if (declarado === null) declarado = ((await ctx.almacenesPrivados?.()) || []).some(k => k.startsWith('sueldos/'));   // L-26: por ctx, no por fetch
     return declarado;
   };
   const celdaCoste = p => {

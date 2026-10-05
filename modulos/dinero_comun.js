@@ -105,7 +105,7 @@ export const pctS = (n, dec = 0) => (n === null || n === undefined ? '—' : `${
 /** Carga un fichero de módulo; devuelve { d } o { error } (403 = no es de su puesto). */
 export async function cargarDatos(ctx, nombre) {
   try {
-    const d = ctx.datosModulo ? await ctx.datosModulo(nombre) : await (await fetch(`data/${nombre}.json`, { cache: 'no-cache' })).json();
+    const d = ctx.datosModulo ? await ctx.datosModulo(nombre) : null;   // L-26: sin ctx.datosModulo no hay lectura propia
     return d ? { d } : { error: 'Sin datos' };
   } catch (e) { return { error: e.message || String(e) }; }
 }

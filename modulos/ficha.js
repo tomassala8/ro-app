@@ -187,7 +187,7 @@ async function cargarCliente(ctx, id) {
   exigirFichaVigente233(ctx);
   let doc = null;
   if (ctx.servidor) doc = (await ctx.api(`cliente/${id}`)).fuentes;
-  else doc = await (await fetch(`data/clientes/${id}.json`, { cache: 'no-cache' })).json();   // modo de respaldo sin permisos (LEEME)
+  else doc = await ctx.datosModulo(`clientes/${id}`);   // modo de respaldo sin permisos (LEEME): el único fetch vive en app.js (L-26)
   exigirFichaVigente233(ctx);
   return doc;
 }

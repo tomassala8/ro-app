@@ -907,6 +907,9 @@ function crearCtx(m, resto, vigente = () => true, { rastrear = true } = {}) {
     /** Datos de un módulo: data/<nombre>.json recortado por el servidor (o el fichero tal cual sin servidor). */
     datosModulo: async nombre => estado.servidor ? api(`modulo/${nombre}`, { vigente, rastrear })   // ronda 14: con memoria por persona y ETag
       : (await fetch(`data/${nombre}.json`, { cache: 'no-cache' })).json(),
+    /** L-26 · nombres de los almacenes privados declarados (sin contenido): de /api/sesion, o de la matriz en el modo de respaldo. */
+    almacenesPrivados: async () => estado.servidor ? (estado.sesion?.almacenes_privados || [])
+      : Object.keys((await fetch('reglas_permisos.json', { cache: 'no-cache' }).then(r => r.ok ? r.json() : {}).catch(() => ({}))).almacenes_privados || {}),
     /** «Ver datos» de un lead (D-88): devuelve el valor completo y queda en el rastro; error si no lo trabaja. */
     verDato: ({ almacen, ref, campo, cliente_id }) => api('ver_dato', { metodo: 'POST', cuerpo: { almacen, ref, campo, cliente_id }, vigente, rastrear }),
     /** Botón: deja la acción en la cola local «simulada» con su vista previa (nunca llama a una API externa). */
