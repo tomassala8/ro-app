@@ -28,7 +28,7 @@ from pathlib import Path
 AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
 sys.path.insert(0, str(APP / 'fuentes'))
-from comun import escanear, escribir, leer, norm, sanear, slug, tokens  # noqa: E402
+from comun import ahora_madrid, escanear, escribir, leer, norm, sanear, slug, tokens  # noqa: E402
 
 DATA = APP / 'data'
 SALIDA = DATA / 'informes' / 'informes.json'
@@ -44,7 +44,24 @@ HOY = date.today()
 AHORA = datetime.now()
 
 MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-CLAVE_MES = {'2026-07': 'jul', '2026-08': 'ago', '2026-09': 'sep', '2026-10': 'oct'}
+ABREV_MES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+
+
+def ultimos_meses(n, hasta=None):
+    """L-20: los `n` meses que acaban en el de hoy (Madrid), del más viejo al más nuevo: ['2026-08', '2026-09', '2026-10']."""
+    h = hasta or ahora_madrid()
+    a, m = h.year, h.month
+    salida = []
+    for _ in range(n):
+        salida.append(f'{a}-{m:02d}')
+        m -= 1
+        if m == 0:
+            a, m = a - 1, 12
+    return salida[::-1]
+
+
+# L-20: las claves de los cuatro últimos meses salen de hoy; las que ya producen los ficheros no cambian (jul…oct de 2026).
+CLAVE_MES = {m: ABREV_MES[int(m[5:]) - 1] for m in ultimos_meses(4)}
 RE_TAREA = re.compile(r'informe mensual|reporte mensual|entrega de resultados|cierre de mes|informe (de )?(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)|reporte (de )?(acciones )?(de )?(julio|agosto|septiembre|octubre)', re.I)
 RE_ASUNTO = re.compile(r'informe|resultados|reporte|report', re.I)
 RE_MES_ASUNTO = re.compile(r'mensual|' + '|'.join(MESES), re.I)
@@ -55,7 +72,8 @@ def mes_anterior(d):
     return (d.replace(day=1) - timedelta(days=1)).strftime('%Y-%m')
 
 
-def mes_de_texto(texto, anio=2026):
+def mes_de_texto(texto, anio=None):
+    anio = anio or ahora_madrid().year
     t = norm(texto)
     for i, m in enumerate(MESES):
         if re.search(rf'\b{m}\b', t):
@@ -244,7 +262,7 @@ def main():
             plan = 'B · build/informes_mensuales.json del panel (2-oct 06:30)'
 
     ciclo = mes_anterior(HOY)                       # el informe que toca enviar este mes
-    meses = [m for m in ('2026-08', '2026-09', '2026-10') if m <= ciclo]
+    meses = [m for m in ultimos_meses(3) if m <= ciclo]
     filas = []
     for cid, c in cli.items():
         if c['activo'] == 'Baja' or (not c['en_panel'] and c['activo'] != 'Activo'):

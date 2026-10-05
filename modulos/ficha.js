@@ -26,8 +26,10 @@ import {
   h, fmt, semaforo, tile, tiles, chipEstado, chipsFiltro, selectorCliente, pestanas, barraEtapas,
   lineaTiempo, vacio, avisoParcial, logoCliente, candado, panel, frescura, icono, iniciales,
   listaLoPrimero, listaConIcono, tablaApilable, graficoSerie, botonesContacto, normalizarTelefono, copiar, avisoFlotante,
-  variacion, esqueleto, rejillaTarjetas, vacioLinea, campoTexto, menuMas,
+  variacion, esqueleto, rejillaTarjetas, vacioLinea, campoTexto, menuMas, hoyMadrid, sumarDias, fechas as FECHAS_MADRID,
 } from '../componentes.js';
+/** L-20: el nombre del mes anterior al «hoy» de Madrid («septiembre» si hoy es octubre), no un mes fijo. */
+const MES_ANT = () => FECHAS_MADRID.nombreMes(sumarDias(hoyMadrid().slice(0, 8) + '01', -1));
 import { botonAvisar, compositorAviso, pintarReunion } from './ficha_equipo.js';
 import { botonDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_plegar_consejo.js';
@@ -880,7 +882,7 @@ const PINTAR = {
     const ci = capt?.datos?.citas;
     const kc = n === 7 ? '7d' : 'mes_anterior';
     if (!crmMedible(sv.crm)) L.push(tile({ icono: 'cal', etiqueta: 'CRM', valor: null, estado: 'gris', contexto: textoCrm(sv.crm) || TEXTO_SIN_CRM }));
-    else if (pintable(capt) && ci) L.push(tile({ icono: 'cal', etiqueta: n === 7 ? 'Citas · 7 días' : 'Citas · septiembre', valor: fmt.num(ci[kc]?.agendadas), estado: (ci[kc]?.agendadas || 0) === 0 && (md.leads?.[n === 7 ? '7d' : 'mes_anterior'] || 0) > 0 ? 'ambar' : '',
+    else if (pintable(capt) && ci) L.push(tile({ icono: 'cal', etiqueta: n === 7 ? 'Citas · 7 días' : `Citas · ${MES_ANT()}`, valor: fmt.num(ci[kc]?.agendadas), estado: (ci[kc]?.agendadas || 0) === 0 && (md.leads?.[n === 7 ? '7d' : 'mes_anterior'] || 0) > 0 ? 'ambar' : '',
       contexto: ci[kc]?.asistencia_pct != null ? `Asistencia ${fmt.pct(ci[kc].asistencia_pct)} · verde desde el 75 %` : 'En su calendario de GoHighLevel', frescura: frescuraDe(capt), alPulsar: () => irA('resultados') }));
     // 3 · trabajo
     const td = tar?.datos || {};
@@ -1037,7 +1039,7 @@ const PINTAR = {
         h('div', { class: 'cuerpo pila' },
           barras([['Nuevo', fu.nuevo], ['Seguimiento', fu.seguimiento], ['Cita', fu.cita], ['Presupuesto', fu.presupuesto], ['Cerrado', fu.cerrado, 'verde'], ['Descartado', fu.descartado, 'rojo']]),
           h('div', { class: 'meta-linea' },
-            h('span', {}, icono('cal'), `Citas ${n === 7 ? '7 días' : 'septiembre'}: ${fmt.num(v.agendadas)} agendadas · ${fmt.num(v.celebradas)} celebradas`),
+            h('span', {}, icono('cal'), `Citas ${n === 7 ? '7 días' : MES_ANT()}: ${fmt.num(v.agendadas)} agendadas · ${fmt.num(v.celebradas)} celebradas`),
             v.asistencia_pct != null ? h('span', {}, icono('users'), `Asistencia ${fmt.pct(v.asistencia_pct)}`) : null,
             e.estancados_72h ? h('span', {}, icono('clock'), `${e.estancados_72h} parados más de 72 h`) : null),
           capt.datos.coste_por_cita?.nota ? h('p', { class: 'sub' }, capt.datos.coste_por_cita.nota) : null,
@@ -1169,7 +1171,7 @@ const PINTAR = {
       tileCorreos(cc),
       tile({ icono: 'send', etiqueta: 'Último correo nuestro', valor: dd.ult_correo_saliente ? fDiaRO(dd.ult_correo_saliente) : null, estado: dd.ult_correo_saliente ? (dd.correo_esta_semana ? 'verde' : 'ambar') : 'gris', contexto: dd.ult_correo_saliente ? (dd.correo_esta_semana ? 'Ya hay correo esta semana' : 'Sin correo nuestro esta semana') : 'Sin dato', frescura: frescuraDe(desk) }),
       tile({ icono: 'phone', etiqueta: 'Llamadas · octubre', valor: pintable(zad) ? fmt.num(oct.contestadas) : null, unidad: 'contestadas', contexto: `${fmt.num(oct.contestadas_30s_o_mas)} de 30 s o más · ${fmt.num(oct.intentos_sin_contestar)} sin contestar · septiembre: ${fmt.num(sep.contestadas)}${oct.confianza_cruce && oct.confianza_cruce !== 'seguro' ? ' · cruce del número con el cliente probable, sin confirmar' : ''}`, frescura: frescuraDe(zad) }),
-      tile({ icono: 'video', etiqueta: 'Reuniones · septiembre', valor: rd.reuniones_mes_anterior ?? null, contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · hace ${rd.dias_sin_reunion} días` : 'Sin reuniones registradas', estado: rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }), medible: reu?.medicion, medibleDetalle: reu?.nota, frescura: frescuraDe(reu) }),
+      tile({ icono: 'video', etiqueta: `Reuniones · ${MES_ANT()}`, valor: rd.reuniones_mes_anterior ?? null, contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · hace ${rd.dias_sin_reunion} días` : 'Sin reuniones registradas', estado: rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }), medible: reu?.medicion, medibleDetalle: reu?.nota, frescura: frescuraDe(reu) }),
     ]));
     // Cada correo con «Sugerir respuesta» (IA): el borrador se revisa y se copia o se contesta en la Bandeja; nunca sale solo.
     const veIA = F.ve.responder && !F.admin;
@@ -1230,7 +1232,7 @@ const PINTAR = {
     L.push(tile({ icono: 'alert', etiqueta: 'Revisiones de más de 48 h', valor: fmt.num(td.revision_mas_48h || 0), unidad: `de ${fmt.num(td.revision_total || 0)}`, estado: semaforo(td.revision_mas_48h || 0, { verde: 0, ambar: 3, mejorSi: 'bajo' }), frescura: frescuraDe(tar) }));
     L.push(tile({ icono: 'cal', etiqueta: 'Tareas vencidas', valor: fmt.num(td.vencidas || 0), estado: (td.vencidas || 0) > 10 ? 'ambar' : '', contexto: `${fmt.num(td.sin_fecha)} sin fecha` }));
     L.push(tile({ icono: 'capas', etiqueta: 'No planificadas · semana', valor: fmt.num(td.no_planificadas_semana || 0), estado: semaforo(td.no_planificadas_semana || 0, { verde: 4, ambar: 4, mejorSi: 'bajo' }), contexto: 'Aviso con 5 o más por proyecto y semana' }));
-    L.push(tile({ icono: 'check', etiqueta: 'Cerradas · semana', valor: fmt.num(td.cerradas_semana || 0), contexto: `${fmt.num(td.creadas_mes)} creadas este mes · ${fmt.num(td.creadas_mes_ant)} en septiembre` }));
+    L.push(tile({ icono: 'check', etiqueta: 'Cerradas · semana', valor: fmt.num(td.cerradas_semana || 0), contexto: `${fmt.num(td.creadas_mes)} creadas este mes · ${fmt.num(td.creadas_mes_ant)} en ${MES_ANT()}` }));
     z.append(rejilla(L));
     if (F.ve.horas.ok && F.ve.horas.nivel === 'resumen') z.append(avisoParcial(F.ve.horas.motivo || 'Horas del cliente en agregado.', { tipo: 'info' }));
     const estados = Object.entries(td.abiertas_por_estado || {}).sort((a, b) => b[1] - a[1]);

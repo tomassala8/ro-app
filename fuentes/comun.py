@@ -136,10 +136,21 @@ def escribir(ruta, obj):
 FORMATOS = ("%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M", "%d-%m-%Y %H:%M", "%Y-%m-%d")
 
 
-def fecha(texto, anio=2026):
-    """Interpreta las horas que escriben los generadores del panel («02-10 07:00» incluido)."""
+def ahora_madrid():
+    """L-20: la hora de Madrid (con RO_RELOJ en las pruebas), la misma de `permisos.ahora_madrid`."""
+    try:
+        import permisos as P
+        return P.ahora_madrid()
+    except ImportError:
+        return datetime.now()
+
+
+def fecha(texto, anio=None):
+    """Interpreta las horas que escriben los generadores del panel («02-10 07:00» incluido).
+    Sin año en el texto, el año es el de hoy en Madrid (L-20: no un 2026 fijo)."""
     if not texto:
         return None
+    anio = anio or ahora_madrid().year
     t = str(texto).strip()[:19]
     for f in FORMATOS:
         try:
