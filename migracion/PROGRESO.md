@@ -50,7 +50,7 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 
 ## Fase 3 · La app nueva entera (por el proxy)
 
-- ⬜ F3.1 `servicios.sh arrancar` (api y web) y `bash migracion/puerta.sh f3` en VERDE. Push. Plan B: arreglar fontanería del proxy; si no, apuntar y seguir con la fase 4. **Si F3.1 queda ⚠: F5.1–F5.9 y F6.x → ⚠ sin intentarlo; F5.10 se cierra con su prueba + `puerta.sh f2`.**
+- 🔄 F3.1 · 09:41 · intento 1/3 · arranque de api y web y puerta f3 · `servicios.sh arrancar` (api y web) y `bash migracion/puerta.sh f3` en VERDE. Push. Plan B: arreglar fontanería del proxy; si no, apuntar y seguir con la fase 4. **Si F3.1 queda ⚠: F5.1–F5.9 y F6.x → ⚠ sin intentarlo; F5.10 se cierra con su prueba + `puerta.sh f2`.**
 
 ## Fase 4 · Motor de permisos en TypeScript
 
