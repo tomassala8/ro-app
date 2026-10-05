@@ -166,7 +166,10 @@ def plan(cfg, modo, desde_crudo, solo=None):
 
 
 # ------------------------------------------------------------------ último dato bueno
-SIN_COPIA_PARTES = {"_cache", "_crudo", "_privado"}   # nunca se copian a la instantánea (datos personales o en bruto)
+# N-07 (5-oct): las cachés (_cache) y los crudos (_crudo) SÍ se copian a la instantánea: es una carpeta temporal 0700 fuera del
+# proyecto que se borra al acabar el paso, y sin la copia un paso que pisa su caché con {} no se puede deshacer. Siguen sin
+# copiarse: _privado (datos personales) y todo lo que el escáner de secretos marque (ver _guardable).
+SIN_COPIA_PARTES = {"_privado"}
 
 
 def _ficheros_de(s):

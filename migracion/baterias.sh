@@ -59,6 +59,7 @@ bateria N-03 120 python3 despliegue/pruebas_solidez_N-03.py
 bateria N-04 120 python3 despliegue/pruebas_solidez_N-04.py
 bateria N-05 120 python3 despliegue/pruebas_solidez_N-05.py
 bateria N-06 120 python3 despliegue/pruebas_solidez_N-06.py
+bateria N-07 120 python3 despliegue/pruebas_solidez_N-07.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos
