@@ -2,24 +2,6 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F3.1
-
-Puerta f3 (vuelta 9, 10:29): al reconectarse Cursor se lanzó una segunda `puerta.sh f3` con la primera aún en las fotos; las dos escribieron en la misma carpeta y esa pasada no vale. Ahora:
-1. Antes de lanzar la puerta: `pgrep -fl 'puerta.sh'`. Si hay alguna, NO lances otra: espera a que acabe (`while pgrep -f 'puerta.sh' >/dev/null; do sleep 30; done` está permitido aquí, es corta y no mantiene servicios).
-2. Si quedaron restos de una puerta cortada, para lo que siga vivo de ella (`pkill -f 'puerta.sh f3'`, y el capturar.mjs que lanzó) y lanza UNA sola vez `bash migracion/puerta.sh f3` en primer plano. Dura unos 85 min (2.100 fotos ≈ 70): espera a que acabe.
-3. No reinicies servicios ni relances la puerta a mitad por una desconexión de Cursor: comprueba primero con pgrep.
-Hecho cuando: una sola pasada completa de la puerta f3 sale VERDE.
-
-Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
-
-## PARA: F4.1
-
-Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
-
-## PARA: F4.2
-
-Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
-
 ## PARA: F5.10
 
 Fallo nuevo N-24 (Claude, 5-oct, al revisar F2.4 ⚠): las 11 rutas «503 por diseño» de la puerta f2 NO son aceptables para el piloto. Son funciones de Operaciones que Astra escribió solo para SQLite y que en la nube (Postgres) se niegan a funcionar: `operaciones_registros_269.py:158`, `operaciones_registros_272.py:271`, `operaciones_feedback_273.py:132`, `operaciones_anomalias_276.py:140`, `operaciones_notas_equipo_281.py:102`, `operaciones_prioridades_300.py:122`, `operaciones_pedidos_account.py:252`, `decisiones_durables_382.py:178`, `evidencias_kpi_api.py:76` (más `actas.py:119` y `fuentes_objetivos/objetivos.py:57`: revisa si también apagan algo). Regla de Tomás: los fallos se arreglan sí o sí.
@@ -33,3 +15,10 @@ Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4
 
 Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
 
+## PARA: F5.1
+
+Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
+
+## PARA: F6.2
+
+Cambio de modelo (decisión de Tomás, 4-oct): los pasos tienen dueño. Opus: F4.1, F4.2, F5.1. Sonnet: F2.4, F3.1, F5.10, F6.2. Grok: todos los demás. El supervisor elige el modelo al EMPEZAR cada vuelta, según el paso que toca. Por eso, al cerrar un paso (punto d de PROMPT_NOCHE.md), mira de quién es el siguiente: si es de otro dueño que el paso que acabas de cerrar, NO lo empieces. Haz commit, deja el cuaderno al día con «Siguiente: <paso>» y TERMINA LA VUELTA; el supervisor te relanza con el modelo que toca. Esto manda sobre el «sigue sin parar» del punto d. Sobre todo antes de F4.1 (Opus): nunca lo empieces si no eres Opus.
