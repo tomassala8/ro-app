@@ -100,8 +100,14 @@ def leer(p, defecto=None):
 
 
 def iso_ms(s):
-    """Unidad ms o ISO aware estrictos; ausencia/invalidez no son cero."""
-    return fecha_mensaje676(s)
+    if s is None:
+        return None
+    if isinstance(s, (int, float)):
+        return int(s)
+    try:
+        return int(dt.datetime.fromisoformat(str(s).replace("Z", "+00:00")).timestamp() * 1000)
+    except Exception:
+        return None
 
 
 def timestamp_mensaje(valor):
@@ -139,160 +145,6 @@ def intentos_medidos672(lead):
     if set(m)!={'fuente','estado','desde_ms','hasta_ms','completa'} or m.get('fuente')!='ghl_conversacion' or m.get('estado')!='observado_parcial' or m.get('completa') is not False:return False
     desde,hasta=timestamp_mensaje(m.get('desde_ms')),timestamp_mensaje(m.get('hasta_ms'))
     return desde is not None and hasta is not None and desde==timestamp_mensaje(lead.get('creado')) and desde<=hasta and hasta==AHORA_MS
-
-
-def fecha_mensaje676(v):
-    if type(v) in (int,float):
-        if not math.isfinite(v) or not 0<=v<=9007199254740991 or v!=int(v):return None
-        try:dt.datetime.fromtimestamp(v/1000,dt.timezone.utc)
-        except (ValueError,OverflowError,OSError):return None
-        return int(v)
-    if not isinstance(v,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})',v):return None
-    if not v.endswith('Z'):
-        h,m=map(int,v[-5:].split(':'))
-        if h>14 or m>59 or h==14 and m:return None
-    n=timestamp_mensaje(v)
-    return n if n is not None and 0<=n<=9007199254740991 else None
-
-
-def conflictos_globales676(paquetes):
-    """Identidad opaca global dentro de una subcuenta/captura, antes de ventanas."""
-    grupos={}
-    for p in paquetes:
-        row=p.get('mensaje') if isinstance(p,dict) else None
-        ident=row.get('id') if isinstance(row,dict) else None
-        if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',ident):continue
-        bindings=[v for v in (row.get('contactId'),row.get('contact_id'),p.get('contacto_conversacion')) if v is not None]
-        good=bool(bindings) and all(isinstance(v,str) and re.fullmatch(r'[A-Za-z0-9_-]{1,160}',v) and v==bindings[0] for v in bindings)
-        conv=p.get('conversacion_id');rawconv=row.get('conversationId')
-        if conv is not None and (not isinstance(conv,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',conv)):good=False
-        if rawconv is not None and (not isinstance(rawconv,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',rawconv) or rawconv!=conv):good=False
-        if conv is None and not any(isinstance(v,str) and re.fullmatch(r'[A-Za-z0-9_-]{1,160}',v) for v in (row.get('contactId'),row.get('contact_id'))):good=False
-        consumido={k:row.get(k) for k in ('messageType','direction','source','status','conversationId')}
-        for k in ('messageType','direction','source','status'):
-            if isinstance(consumido[k],str):consumido[k]=consumido[k].strip().upper() if k=='messageType' else consumido[k].strip().lower()
-        consumido['contactId']=bindings[0] if good else None
-        consumido['dateAdded']=fecha_mensaje676(row.get('dateAdded'))
-        try:firma=json.dumps(consumido,sort_keys=True,allow_nan=False,separators=(',',':')) if good else None
-        except (ValueError,TypeError,OverflowError,RecursionError):firma=None
-        grupos.setdefault(ident,set()).add(firma)
-    return {ident for ident,firmas in grupos.items() if None in firmas or len(firmas)!=1}
-
-
-def normalizar_mensajes676(paquetes,creado,corte,contacto,lectura_ok):
-    """Registros por ventana/binding explícitos; sólo devuelve metadatos y mínimos.
-
-    `entrada` no acredita respuesta humana, llamada atendida, gestión o venta.
-    Conflictos se resuelven globalmente antes de filtrar fechas/contactos.
-    """
-    from collections import Counter,defaultdict
-    diag=Counter();inicio,fin=fecha_mensaje676(creado),fecha_mensaje676(corte)
-    grupos=defaultdict(dict);validos=[];salidas_desconocidas=0
-    contexto=isinstance(contacto,str) and re.fullmatch(r'[A-Za-z0-9_-]{1,160}',contacto)
-    if inicio is None or fin is None or inicio>fin or not contexto:diag['contexto_invalido']+=1
-    if lectura_ok is not True:diag['lectura_incompleta']+=1
-    if not isinstance(paquetes,list):diag['coleccion_invalida']+=1;paquetes=[]
-    if 'contexto_invalido' in diag:paquetes=[]
-    for p in paquetes:
-        row=p.get('mensaje') if isinstance(p,dict) else None
-        ident=row.get('id') if isinstance(row,dict) else None
-        if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',ident):diag['identidad_invalida']+=1;continue
-        consumido={k:row.get(k) for k in ('id','messageType','direction','source','status','conversationId')}
-        for k in ('messageType','direction','source','status'):
-            if isinstance(consumido[k],str):consumido[k]=consumido[k].strip().upper() if k=='messageType' else consumido[k].strip().lower()
-        consumido['dateAdded']=fecha_mensaje676(row.get('dateAdded'))
-        consumido['contactId']=contacto
-        try:firma=json.dumps(consumido,sort_keys=True,allow_nan=False,separators=(',',':'))
-        except (ValueError,TypeError,OverflowError,RecursionError):firma=None
-        bindings=[row.get('contactId'),row.get('contact_id'),p.get('contacto_conversacion')]
-        presentes=[x for x in bindings if x is not None]
-        if not presentes or any(x!=contacto for x in presentes):firma=None;diag['contacto_incoherente']+=1
-        conv=p.get('conversacion_id');rawconv=row.get('conversationId')
-        if conv is not None and (not isinstance(conv,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',conv)):firma=None;diag['conversacion_incoherente']+=1
-        if rawconv is not None and (not isinstance(rawconv,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',rawconv) or rawconv!=conv):firma=None;diag['conversacion_incoherente']+=1
-        if conv is None and not any(isinstance(v,str) and re.fullmatch(r'[A-Za-z0-9_-]{1,160}',v) for v in (row.get('contactId'),row.get('contact_id'))):firma=None;diag['conversacion_incoherente']+=1
-        if p.get('conflicto_global676') is True:firma=None;diag['id_ambito_conflictivo']+=1
-        if firma in grupos[ident]:diag['replay_id']+=1
-        grupos[ident][firma]={**row,**consumido}
-    for variantes in grupos.values():
-        if None in variantes or len(variantes)!=1:diag['id_conflictivo']+=1;continue
-        row=next(iter(variantes.values()));ts=fecha_mensaje676(row.get('dateAdded'))
-        if ts is None:diag['fecha_invalida']+=1;continue
-        if fin is None or ts>fin:diag['fecha_futura']+=1;continue
-        if inicio is None or ts<inicio:continue
-        tipo,direccion=row.get('messageType'),row.get('direction')
-        if not isinstance(tipo,str):diag['tipo_invalido']+=1;continue
-        if tipo not in COMUNICACION:continue
-        if direccion not in ('inbound','outbound'):diag['direccion_desconocida']+=1;continue
-        origen=row.get('source');status=row.get('status')
-        if not isinstance(origen,str) or not origen.strip():diag['origen_desconocido']+=1;continue
-        if isinstance(status,str) and status.lower() in {'queued','pending','scheduled','draft'}:continue
-        if status is not None and not isinstance(status,str):diag['status_invalido']+=1;continue
-        if direccion=='inbound' and (not isinstance(status,str) or status not in {'received','delivered','read'}):
-            diag['estado_entrada_desconocido']+=1;continue
-        if direccion=='outbound' and (not isinstance(status,str) or status not in {'sent','delivered','read','completed','answered','failed','undelivered','bounced'}):
-            diag['estado_salida_desconocido']+=1;salidas_desconocidas+=1;continue
-        validos.append({k:row.get(k) for k in ('dateAdded','messageType','direction','source','status')})
-    errores={k:v for k,v in diag.items() if k!='replay_id' and v}
-    fiable=not errores
-    sal=[x for x in validos if x['direction']=='outbound']
-    humanos=[x for x in sal if x['source'].lower() not in AUTOMATICO|{'bot','ai','assistant','system'}]
-    autos=[x for x in sal if x['source'].lower() in AUTOMATICO|{'bot','ai','assistant','system'}]
-    entradas=[x for x in validos if x['direction']=='inbound' and x['source'].lower() not in AUTOMATICO|{'bot','ai','assistant','system'} and 'CALL' not in x['messageType']]
-    calls=sum('CALL' in x['messageType'] for x in humanos)
-    valores={'llamadas':calls};minimos={'llamadas':calls if calls else None,'registros_salida_estado_desconocido':salidas_desconocidas if salidas_desconocidas else None}
-    for canal,tipos,fallos in [('wa',{'TYPE_WHATSAPP'},{'failed','undelivered'}),('sms',{'TYPE_SMS','TYPE_CUSTOM_SMS','TYPE_CUSTOM_PROVIDER_SMS'},{'failed','undelivered'}),('mail',{'TYPE_EMAIL','TYPE_CUSTOM_EMAIL','TYPE_CUSTOM_PROVIDER_EMAIL'},{'failed','bounced','undelivered'})]:
-        rows=[x for x in sal if x['messageType'] in tipos];n=len(rows);fallidos=sum(isinstance(x['status'],str) and x['status'].lower() in fallos for x in rows)
-        estados={'failed','undelivered','bounced','sent','delivered','read','received','completed','answered'}
-        statusok=all(isinstance(x['status'],str) and x['status'].lower() in estados for x in rows)
-        valores[canal+'_env']=n if fiable else None;valores[canal+'_fallo']=fallidos if fiable and statusok else None
-        minimos[canal+'_env']=n if n else None;minimos[canal+'_fallo']=fallidos if fallidos else None
-    valores['llamadas']=calls if fiable else None
-    # Los mínimos positivos sobreviven a otra lectura fallida; nunca completan ceros.
-    fechas=[fecha_mensaje676(x['dateAdded']) for x in entradas]
-    med={'version':'676.1','fuente':'ghl_conversacion','estado':'observado_parcial' if validos or fiable else 'desconocido','desde_ms':inicio,'hasta_ms':fin,'completa':False,'conteos_acreditados':fiable,'entradas_observadas':len(entradas) if entradas else None,'ultima_entrada_ms':max(fechas) if fechas else None,'respuesta_humana_confirmada':None,'resultado_comercial_confirmado':None,'diagnosticos':dict(sorted(diag.items()))}
-    return {'sal':sal,'humanos':humanos,'autos':autos,'respondio':True if entradas else None,'conteos':valores,'minimos':minimos,'medicion':med,'fiable':fiable}
-
-
-def canal_observado676(leads,canal):
-    """Pares observados del mismo corte; los desconocidos no rellenan sus parejas."""
-    rows=[]
-    for x in leads:
-        m=x.get('mensajes_medicion');a=x.get(canal+'_env');b=x.get(canal+'_fallo')
-        if isinstance(m,dict) and m.get('version')=='676.1' and m.get('fuente')=='ghl_conversacion' and m.get('conteos_acreditados') is True and m.get('hasta_ms')==AHORA_MS and type(a) is int and type(b) is int and 0<=b<=a<=9007199254740991:rows.append((a,b))
-    a,b=sum(x[0] for x in rows),sum(x[1] for x in rows)
-    if not rows or a>9007199254740991 or b>9007199254740991:return {'enviados':None,'fallidos':None,'observados':0,'total':len(leads)}
-    return {'enviados':a,'fallidos':b,'observados':len(rows),'total':len(leads)}
-
-
-def respuesta_publica676(x,cid,sid,ref,hora_fuente):
-    m=x.get('mensajes_medicion')
-    if not isinstance(x.get('contacto'),str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',x['contacto']):return None
-    if not isinstance(m,dict) or m.get('version')!='676.1' or m.get('fuente')!='ghl_conversacion' or m.get('completa') is not False or x.get('respondio') is not True:return None
-    n=m.get('entradas_observadas');desde=fecha_mensaje676(m.get('desde_ms'));hasta=fecha_mensaje676(m.get('hasta_ms'));ultima=fecha_mensaje676(m.get('ultima_entrada_ms'))
-    if type(n) is not int or not 0<n<=9007199254740991 or desde is None or hasta is None or ultima is None or desde!=fecha_mensaje676(x.get('creado')) or not desde<=ultima<=hasta:return None
-    # Fuente histórica declarada a minuto Madrid: no sustituirla por el reloj actual.
-    if not isinstance(hora_fuente,str) or dt.datetime.fromtimestamp(hasta/1000,MAD).strftime('%Y-%m-%d %H:%M')!=hora_fuente:return None
-    if any(not isinstance(v,str) or not v for v in (cid,sid,ref)):return None
-    if m.get('estado')!='observado_parcial' or m.get('respuesta_humana_confirmada') is not None or m.get('resultado_comercial_confirmado') is not None:return None
-    return {k:m[k] for k in ('version','fuente','estado','desde_ms','hasta_ms','completa','entradas_observadas','ultima_entrada_ms','respuesta_humana_confirmada','resultado_comercial_confirmado')}|{'cliente_id':cid,'sub_id':sid,'ref':ref}
-
-
-def sin_tocar_publico676(leads,cid,sid,hora_fuente,desde,fin_cohorte,corte):
-    """Cohorte cerrada distinta del corte de conversaciones, ligada a la fuente."""
-    a,b,c=fecha_mensaje676(desde),fecha_mensaje676(fin_cohorte),fecha_mensaje676(corte)
-    if a is None or b is None or c is None or not a<b<=c or c!=AHORA_MS or not isinstance(leads,list):return None
-    if any(not isinstance(v,str) or not v for v in (cid,sid)):return None
-    if not isinstance(hora_fuente,str) or dt.datetime.fromtimestamp(c/1000,MAD).strftime('%Y-%m-%d %H:%M')!=hora_fuente:return None
-    ids=[];observados=0
-    for x in leads:
-        if not isinstance(x,dict):return None
-        ident=x.get('contacto');creado=fecha_mensaje676(x.get('creado'));m=x.get('mensajes_medicion')
-        if not isinstance(ident,str) or not re.fullmatch(r'[A-Za-z0-9_-]{1,160}',ident) or ident in ids or creado is None or not a<=creado<b or x.get('es_lead') is not True:return None
-        ids.append(ident)
-        if intentos_medidos672(x) and isinstance(m,dict) and m.get('version')=='676.1' and m.get('fuente')=='ghl_conversacion' and m.get('desde_ms')==creado and m.get('hasta_ms')==c and m.get('conteos_acreditados') is True and m.get('completa') is False:observados+=1
-    if not observados:return None
-    return {'version':'676.1','fuente':'ghl_conversacion','cobertura':'parcial','cliente_id':cid,'sub_id':sid,'desde_ms':a,'cohorte_hasta_ms':b,'hasta_ms':c,'hora_fuente':hora_fuente,'leads_observados':observados,'leads_elegibles':len(leads),'completa':False}
 
 
 def ms_iso(ms):
@@ -383,25 +235,23 @@ def leer_subcuenta(g, loc):
             out["citas"].append({"id": ev.get("id"), "calendario": cal.get("name"), "inicio": iso_ms(ev.get("startTime")),
                                  "estado": (ev.get("appointmentStatus") or ev.get("appoinmentStatus") or "sin_estado").lower(),
                                  "contacto": ev.get("contactId"), "creada": iso_ms(ev.get("dateAdded"))})
-    con_cita = {c["contacto"] for c in out["citas"] if isinstance(c.get("contacto"),str)}
+    con_cita = {c["contacto"] for c in out["citas"] if c["contacto"]}
 
-    # Mensajes privados transitorios: preflight global por subcuenta antes de proyectar.
-    lecturas_mensajes=[]
     # leads: solo los que no se crearon a mano en el CRM
     for c in contactos[:150]:
         medio = ((c.get("attributionSource") or {}).get("medium") or "").lower() or None
         manual = medio == "manual" or ((c.get("attributionSource") or {}).get("sessionSource") == "CRM UI")
         creado = iso_ms(c.get("dateAdded"))
         lead = {"contacto": c.get("id"), "creado": creado, "medio": medio or (c.get("source") or "sin origen"),
-                "fuente": c.get("source"), "manual": manual, "cita": isinstance(c.get("id"),str) and c["id"] in con_cita, "tags": c.get("tags") or [],
+                "fuente": c.get("source"), "manual": manual, "cita": c.get("id") in con_cita, "tags": c.get("tags") or [],
                 "privado": {"nombre": " ".join(x for x in [c.get("firstName"), c.get("lastName")] if x) or c.get("contactName"),
                             "telefono": c.get("phone"), "correo": c.get("email")}}
         lead["es_lead"], lead["descartado"] = clasificar(lead, loc)
         if lead["es_lead"]:
-            cv = g.req(loc, "GET", "/conversations/search", locationId=loc, contactId=c.get("id"), limit=5) if isinstance(c.get("id"),str) and re.fullmatch(r"[A-Za-z0-9_-]{1,160}",c["id"]) else {"_error":"identidad_invalida"}
+            cv = g.req(loc, "GET", "/conversations/search", locationId=loc, contactId=c.get("id"), limit=5)
             msgs = []
             conversaciones = cv.get('conversations') if isinstance(cv,dict) else None
-            conversaciones_validas = isinstance(cv,dict) and '_error' not in cv and isinstance(conversaciones,list) and all(isinstance(x,dict) and isinstance(x.get('id'),str) and re.fullmatch(r'[A-Za-z0-9_-]{1,160}',x['id']) for x in conversaciones)
+            conversaciones_validas = isinstance(cv,dict) and '_error' not in cv and isinstance(conversaciones,list) and all(isinstance(x,dict) and isinstance(x.get('id'),str) and x['id'] for x in conversaciones)
             for conv in (conversaciones[:2] if conversaciones_validas else []):
                 m = g.req(loc, "GET", f"/conversations/{conv['id']}/messages", limit=100)
                 paquete=m.get('messages') if isinstance(m,dict) else None
@@ -409,32 +259,31 @@ def leer_subcuenta(g, loc):
                 if not isinstance(m,dict) or '_error' in m or not isinstance(mensajes,list) or any(not isinstance(x,dict) for x in mensajes):
                     conversaciones_validas=False
                 else:
-                    if len(mensajes)>100:conversaciones_validas=False
-                    msgs += [{"mensaje":x,"contacto_conversacion":conv.get("contactId"),"conversacion_id":conv["id"]} for x in mensajes[:100]]
-            lecturas_mensajes.append((lead,msgs,conversaciones_validas))
+                    msgs += mensajes
+            com = [x for x in msgs if x.get("messageType") in COMUNICACION]
+            sal = sorted([x for x in com if x.get("direction") == "outbound" or (x.get("messageType") == "TYPE_CALL" and x.get("direction") != "inbound")],
+                         key=lambda x: timestamp_mensaje(x.get("dateAdded")) or 0)
+            humanos = [x for x in sal if (x.get("source") or "").lower() not in AUTOMATICO]
+            autos = [x for x in sal if (x.get("source") or "").lower() in AUTOMATICO]
+            intentos_h = resumir_intentos(humanos, creado, AHORA_MS)
+            intentos_a = resumir_intentos(autos, creado, AHORA_MS)
+            wa = [x for x in sal if x.get("messageType") == "TYPE_WHATSAPP"]
+            sms = [x for x in sal if x.get("messageType") in ("TYPE_SMS", "TYPE_CUSTOM_SMS", "TYPE_CUSTOM_PROVIDER_SMS")]
+            lead.update({
+                "humano_min": intentos_h["primer_min"] if conversaciones_validas else None,
+                "auto_min": intentos_a["primer_min"] if conversaciones_validas else None,
+                "mensajes_fecha_desconocida": intentos_h["fechas_desconocidas"] + intentos_a["fechas_desconocidas"],
+                "intentos": intentos_h["intentos_observados"] if conversaciones_validas else None,
+                "intentos_medicion": {"fuente":"ghl_conversacion", "estado":"observado_parcial" if conversaciones_validas and intentos_h["intentos_observados"] is not None else "desconocido", "desde_ms":creado, "hasta_ms":AHORA_MS, "completa":False},
+                "intentos_72h": intentos_h["intentos_72h"] if conversaciones_validas else None,
+                "llamadas": sum(1 for x in humanos if "CALL" in (x.get("messageType") or "")),
+                "respondio": any(x.get("direction") == "inbound" for x in com),
+                "wa_env": len(wa), "wa_fallo": sum(1 for x in wa if (x.get("status") or "").lower() in ("failed", "undelivered")),
+                "sms_env": len(sms), "sms_fallo": sum(1 for x in sms if (x.get("status") or "").lower() in ("failed", "undelivered")),
+                "mail_env": sum(1 for x in sal if x.get("messageType") == "TYPE_EMAIL"),
+                "mail_fallo": sum(1 for x in sal if x.get("messageType") == "TYPE_EMAIL" and (x.get("status") or "").lower() in ("failed", "bounced", "undelivered")),
+            })
         out["leads"].append(lead)
-
-    conflictos=conflictos_globales676([p for _,ps,_ in lecturas_mensajes for p in ps])
-    for lead,msgs,conversaciones_validas in lecturas_mensajes:
-        creado=lead.get('creado')
-        msgs=[{**p,'conflicto_global676':True} if isinstance(p['mensaje'].get('id'),str) and p['mensaje']['id'] in conflictos else p for p in msgs]
-        normalizado=normalizar_mensajes676(msgs,creado,AHORA_MS,lead.get('contacto'),conversaciones_validas)
-        humanos,autos=normalizado['humanos'],normalizado['autos']
-        conversaciones_validas=normalizado['fiable']
-        intentos_h=resumir_intentos(humanos,creado,AHORA_MS)
-        intentos_a=resumir_intentos(autos,creado,AHORA_MS)
-        lead.update({
-            "humano_min": intentos_h["primer_min"] if conversaciones_validas else None,
-            "auto_min": intentos_a["primer_min"] if conversaciones_validas else None,
-            "mensajes_fecha_desconocida": intentos_h["fechas_desconocidas"] + intentos_a["fechas_desconocidas"],
-            "intentos": intentos_h["intentos_observados"] if conversaciones_validas else None,
-            "intentos_medicion": {"fuente":"ghl_conversacion", "estado":"observado_parcial" if conversaciones_validas and intentos_h["intentos_observados"] is not None else "desconocido", "desde_ms":creado, "hasta_ms":AHORA_MS, "completa":False},
-            "intentos_72h": intentos_h["intentos_72h"] if conversaciones_validas else None,
-            "respondio":normalizado['respondio'],
-            "mensajes_medicion":normalizado['medicion'],
-            "mensajes_minimos_observados":normalizado['minimos'],
-            **normalizado['conteos'],
-        })
 
     etapas = {}
     pl = g.req(loc, "GET", "/opportunities/pipelines", locationId=loc)
@@ -593,10 +442,12 @@ def main():
         cuatro = [x for x in juzg72 if (x.get("intentos_72h") or 0) >= 4]
         auto_ok = [x for x in auto if x.get("auto_min") is not None and 0 <= x["auto_min"] <= 5]
         tiempos = [x["humano_min"] for x in auto if x.get("humano_min") is not None]
-        wm=canal_observado676(auto,'wa');sm=canal_observado676(auto,'sms');em=canal_observado676(auto,'mail')
-        wa_env,wa_fallo=wm['enviados'],wm['fallidos']
-        sms_env,sms_fallo=sm['enviados'],sm['fallidos']
-        mail_env,mail_fallo=em['enviados'],em['fallidos']
+        wa_env = sum(x.get("wa_env", 0) for x in auto)
+        wa_fallo = sum(x.get("wa_fallo", 0) for x in auto)
+        sms_env = sum(x.get("sms_env", 0) for x in auto)
+        sms_fallo = sum(x.get("sms_fallo", 0) for x in auto)
+        mail_env = sum(x.get("mail_env", 0) for x in auto)
+        mail_fallo = sum(x.get("mail_fallo", 0) for x in auto)
         leads_ghl_7d = (None if sin_uso else sum(1 for x in auto if x["creado"] >= inicio_dia(7))) if v else None   # 7 días naturales cerrados
         opps = v.get("oportunidades") or []
         opps30 = [o for o in opps if o.get("creada") and o["creada"] >= ini30]
@@ -643,12 +494,12 @@ def main():
                 M("rojo", "sin_citas", f"{len(auto)} leads en 30 días y ninguna cita en 90 días: el despacho no los convierte en reunión")
         if len(opps30) >= 3 and len(paradas) * 2 >= len(opps30):
             M("ambar", "estancados", f"{len(paradas)} de {len(opps30)} oportunidades del último mes llevan más de 72 h sin moverse")
-        if wa_env is not None and wa_fallo is not None and wa_env >= 5 and wa_fallo * 100 / wa_env > 10:
+        if wa_env >= 5 and wa_fallo * 100 / wa_env > 10:
             M("rojo", "whatsapp", f"WhatsApp: {wa_fallo} de {wa_env} mensajes fallidos ({wa_fallo * 100 / wa_env:.0f} %)")
-        elif wa_env is not None and wa_fallo is not None and wa_env >= 5 and wa_fallo * 100 / wa_env >= 2:
+        elif wa_env >= 5 and wa_fallo * 100 / wa_env >= 2:
             M("ambar", "whatsapp", f"WhatsApp: {wa_fallo} de {wa_env} mensajes fallidos")
-        if encendida and len(auto) >= 3 and not auto_ok and wa_env == 0 and sms_env == 0 and mail_env == 0 and all(isinstance(x.get("mensajes_medicion"),dict) and x["mensajes_medicion"].get("conteos_acreditados") is True for x in auto):
-            M("ambar", "sin_automatico", "No hay salida automática observada en la copia parcial de los leads revisados: contrastar el flujo de bienvenida")
+        if encendida and len(auto) >= 3 and not auto_ok and not wa_env and not sms_env and not mail_env:
+            M("ambar", "sin_automatico", "Entran leads y no sale ningún mensaje automático: revisar el flujo de bienvenida")
         if juzg and len(juzg) >= 3:
             p1 = len(en1h) * 100 / len(juzg)
             if p1 < 40:
@@ -678,20 +529,20 @@ def main():
             "leads_meta_7d": leads_meta_7d, "leads_meta_sep": leads_meta_30d, "leads_ghl_7d": leads_ghl_7d,
             "leads_30d": len(auto) if v else emb.get("cohorte_30d"), "leads_manuales_30d": sum(1 for x in L if x["manual"]),
             "sin_tocar_24h": len(sin_tocar) if v and any(intentos_medidos672(x) for x in auto) else None,
-            "sin_tocar_medicion": sin_tocar_publico676(auto,cid,sid,hora_vivo,ini30,HOY0_MS,AHORA_MS),
+            "sin_tocar_medicion": {"fuente":"ghl_conversacion", "cobertura":"parcial", "leads_observados":sum(intentos_medidos672(x) for x in auto), "leads_elegibles":len(auto), "completa":False},
             "velocidad": {"juzgables": len(juzg), "en_1h": len(en1h), "pct_1h": pct(len(en1h), len(juzg)),
                           "juzgables_72h": len(juzg72), "cuatro_en_72h": len(cuatro), "pct_4en72": pct(len(cuatro), len(juzg72)),
                           "mediana_min": round(statistics.median(tiempos)) if tiempos else None,
                           "con_intento": sum(1 for x in auto if x.get("intentos")), "intentos_medios": round(sum(x["intentos"] for x in auto if intentos_medidos672(x)) / sum(intentos_medidos672(x) for x in auto), 1) if any(intentos_medidos672(x) for x in auto) else None,
                           "intentos_medios_cobertura": {"observados":sum(intentos_medidos672(x) for x in auto), "total":len(auto), "completa":False},
-                          "auto_5min": len(auto_ok), "respondieron": sum(1 for x in auto if x.get("respondio") is True and isinstance(x.get("mensajes_medicion"),dict) and x["mensajes_medicion"].get("version")=="676.1") if any(isinstance(x.get("mensajes_medicion"),dict) and x["mensajes_medicion"].get("conteos_acreditados") is True or x.get("respondio") is True and isinstance(x.get("mensajes_medicion"),dict) and x["mensajes_medicion"].get("version")=="676.1" for x in auto) else None} if v else None,
+                          "auto_5min": len(auto_ok), "respondieron": sum(1 for x in auto if x.get("respondio"))} if v else None,
             "citas_14d": c14, "citas_30d": c30, "citas_90d": c90, "calendarios": len(v.get("calendarios", [])) if v else (cp.get("ghl") or {}).get("calendarios"),
             "embudo": {"cohorte_30d": len(opps30) if v else emb.get("cohorte_30d"), "estancados_72h": len(paradas) if v else emb.get("estancados_72h"),
                        "pct_estancado": pct(len(paradas), len(opps30)) if v else emb.get("pct_estancado"),
                        "horas_max_parado": emb.get("horas_max_parado"), "funnel": emb.get("funnel")} if emb else None,
-            "whatsapp": {"enviados": wa_env, "fallidos": wa_fallo, "pct_fallo": pct(wa_fallo, wa_env) if wa_env is not None and wa_fallo is not None else None, "cobertura":wm, "numero": "no medible"},
-            "sms": {"enviados": sms_env, "fallidos": sms_fallo, "cobertura":sm},
-            "correo": {"enviados": mail_env, "fallidos": mail_fallo, "pct_fallo": pct(mail_fallo, mail_env) if mail_env is not None and mail_fallo is not None else None, "cobertura":em},
+            "whatsapp": {"enviados": wa_env, "fallidos": wa_fallo, "pct_fallo": pct(wa_fallo, wa_env), "numero": "no medible"},
+            "sms": {"enviados": sms_env, "fallidos": sms_fallo},
+            "correo": {"enviados": mail_env, "fallidos": mail_fallo, "pct_fallo": pct(mail_fallo, mail_env)},
             "flujos": {"medible": False, "motivo": "Falta un permiso de GoHighLevel para leer los flujos (responde 401). Los errores de flujo («Needs Review») no salen por la API ni con ese permiso."},
             "estado": estado, "motivos": mot, "errores_lectura": v.get("errores", []) if v else [],
             "enlaces": {"ghl": f"{GHL_WEB}/{sid}/dashboard", "flujos": f"{GHL_WEB}/{sid}/automation/workflows",
@@ -708,7 +559,7 @@ def main():
             privado["leads"][ref] = {"datos": x["privado"], "cliente_id": cid}
             fl = {"ref": ref, "sub_id": sid, "subcuenta": fila["nombre"], "creado": ms_iso(x["creado"]),
                   "horas": round((AHORA_MS - x["creado"]) / 3600e3), "medio": x["medio"], "automatico": x.get("auto_min") is not None,
-                  "respondio": x.get("respondio"), "respuesta_medicion676":respuesta_publica676(x,cid,sid,ref,hora_vivo), "creado_iso676":dt.datetime.fromtimestamp(x["creado"]/1000,dt.timezone.utc).isoformat() if fecha_mensaje676(x.get("creado")) is not None else None, "enlace": f"{GHL_WEB}/{sid}/contacts/detail/{x['contacto']}",
+                  "respondio": x.get("respondio"), "enlace": f"{GHL_WEB}/{sid}/contacts/detail/{x['contacto']}",
                   "especialista_id": fila["especialista_id"]}
             if cid:
                 fl["cliente_id"] = cid

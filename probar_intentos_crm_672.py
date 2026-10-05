@@ -4,8 +4,6 @@ from collections import Counter
 from copy import deepcopy
 import datetime as dt
 import math
-import json
-import hashlib
 from pathlib import Path
 import re
 import unittest
@@ -19,8 +17,8 @@ NOW=dt.datetime(2026,10,4,12,tzinfo=ZoneInfo('Europe/Madrid'))
 CREADO=int(dt.datetime(2026,9,30,12,tzinfo=ZoneInfo('Europe/Madrid')).timestamp()*1000)
 
 def cargar(p):
-    tree=ast.parse(p.read_text());names={'inicio_dia','iso_ms','timestamp_mensaje','resumir_intentos','intentos_medidos672','clasificar','leer_subcuenta','fecha_mensaje676','normalizar_mensajes676','conflictos_globales676','canal_observado676','respuesta_publica676','sin_tocar_publico676'}
-    ns={'dt':dt,'math':math,'re':re,'json':json,'HOY':NOW,'MAD':ZoneInfo('Europe/Madrid'),'AHORA_MS':int(NOW.timestamp()*1000),'VENTANA_LEADS':30,'EXCLUSIONES':{}}
+    tree=ast.parse(p.read_text());names={'inicio_dia','iso_ms','timestamp_mensaje','resumir_intentos','intentos_medidos672','clasificar','leer_subcuenta'}
+    ns={'dt':dt,'math':math,'re':re,'HOY':NOW,'MAD':ZoneInfo('Europe/Madrid'),'AHORA_MS':int(NOW.timestamp()*1000),'VENTANA_LEADS':30,'EXCLUSIONES':{}}
     assignments={'MEDIOS_LEAD','MEDIOS_NO','RX_PRUEBA','RX_NO_LEAD','RX_LANDING','RX_CORREO_PRUEBA','COMUNICACION','AUTOMATICO'}
     nodes=[n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name in names or isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id in assignments for t in n.targets)]
     exec(compile(ast.Module(body=nodes,type_ignores=[]),'<productorAST>','exec'),ns)
@@ -38,14 +36,14 @@ class Transporte:
             if args and args[0].get('pageLimit')==1:return {'total':10}
             return {'contacts':[{'id':'contactFixture','dateAdded':CREADO,'attributionSource':{'medium':'form'}}]}
         if ruta=='/calendars/':return {'calendars':[]}
-        if ruta=='/conversations/search':return deepcopy(self.cv) if self.cv is not None else {'conversations':[{'id':'conversationFixture','contactId':'contactFixture'}]}
+        if ruta=='/conversations/search':return deepcopy(self.cv) if self.cv is not None else {'conversations':[{'id':'conversationFixture'}]}
         if ruta=='/conversations/conversationFixture/messages':return {'_error':'fallo_sintetico'} if self.msgerror else {'messages':{'messages':deepcopy(self.mensajes)}}
         if ruta=='/opportunities/pipelines':return {'pipelines':[]}
         if ruta=='/opportunities/search':return {'opportunities':[]}
         if ruta=='/workflows/':return {'workflows':[]}
         raise AssertionError('ruta fuera de transporte falso')
 
-def msg(fecha):return {'id':'msg'+hashlib.sha256(repr(fecha).encode()).hexdigest()[:16],'contactId':'contactFixture','dateAdded':fecha,'messageType':'TYPE_EMAIL','direction':'outbound','source':'app','status':'sent'}
+def msg(fecha):return {'id':'msgFixture','dateAdded':fecha,'messageType':'TYPE_EMAIL','direction':'outbound','source':'app'}
 def ejecutar(ns,t):
     lead=ns['leer_subcuenta'](t,'sidFixture')['leads'][0];scope={**ns,'auto':[lead],'hace24':ns['AHORA_MS']-86400000};exec(ns['sin_tocar_ast'],scope);return lead,scope['sin_tocar']
 

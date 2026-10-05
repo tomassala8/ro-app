@@ -3,7 +3,7 @@ const base=fs.readFileSync(__dirname+'/pruebas_crm_compacto_245.cjs','utf8').spl
 const {e,h,N}=new Function('require',base+';return {e,h,N};')(require);
 const source=fs.readFileSync(__dirname+'/modulos/crm.js','utf8');let options,filterChanged,nav=0,valid=true,chipsOptions;
 (async()=>{
-const M=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_crm_mediciones.js','utf8')).toString('base64'));Object.assign(e,M);const M677=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_contacto_observado_677.js','utf8')).toString('base64'));Object.assign(e,M677);
+const M=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_crm_mediciones.js','utf8')).toString('base64'));Object.assign(e,M);
 const {notaCompacta336}=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_nota_compacta_336.js','utf8')).toString('base64'));
 e.notaCompacta336=notaCompacta336;e.chipsFiltro=o=>{chipsOptions=o;filterChanged=o.alCambiar;return Object.assign(h('div',{}),{valor:()=>''});};e.tablaDensa=o=>{options=o;return h('table',{},o.columnas.map(c=>h('th',{},c.titulo)),o.filas.map(r=>h('tr',{},o.columnas.map(c=>h('td',{},c.celda(r))))));};e.chipEstado=(state,t)=>h('span',{'data-state':state},t);e.semaforo=()=> 'gris';e.fDiaRO=x=>x;e.vacioLinea=t=>h('p',{},t);
 vm.createContext(e);vm.runInContext(source.slice(source.indexOf('function pintarSubcuentas('),source.indexOf('// ------------------------------------------------------------------ pestaña: leads sin tocar')),e);

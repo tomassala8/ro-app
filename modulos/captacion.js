@@ -1,4 +1,3 @@
-import { celdaCtrTotalPaid682 } from './_ctr_paid_682.js';
 import { sumaSeriePaid549, compararSeriesPaid549, fechaPaid549, minimoGastoPaid554 } from './_serie_paid_549.js';
 import {ambitoPaid516,guardarPaid516,cargarLecturaPaid516} from './_intencion_paid_516.js';
 import { conteoMeta508, deltaMeta508, creativosMatriz508, cuentaMetaError508 } from './_matriz_paid_508.js';
@@ -931,7 +930,7 @@ function pCreatividades(el, ctx, d, filas) {
           chipEstado('gris', a.estado === 'cansada' ? 'Cansada' : a.estado === 'vigilar' ? 'Vigilar' : a.estado === 'ganadora' ? 'Ganadora' : 'Normal'),
           a.senales?.length ? h('span', { title:a.senales.join(' + '),class:'sub' }, `${a.senales.length} ${a.senales.length===1?'señal':'señales'}`) : null) },
         { clave: 'frecuencia_7d', titulo: 'Frec.', tituloCompleto:'Frecuencia de impresión · 7 días', num: true, celda: a => (typeof a.frecuencia_7d!=='number'||!Number.isFinite(a.frecuencia_7d)||a.frecuencia_7d<0 ? '—' : h('span',{title:'Frecuencia registrada en la copia; referencia sin evaluación de fatiga.'},chipEstado('gris', num(a.frecuencia_7d, 1), { punto: false }))) },
-        { clave: 'ctr_7d', titulo: 'CTR tot.', tituloCompleto:'CTR total registrado · clics totales / impresiones · 7 días; periodo anterior como referencia', num: true, celda: a => celdaCtrTotalPaid682(h, num, a) },
+        { clave: 'ctr_7d', titulo: 'CTR', tituloCompleto:'Porcentaje de clics · 7 días; caída frente al periodo anterior', num: true, celda: a => (typeof a.ctr_7d!=='number'||!Number.isFinite(a.ctr_7d)||a.ctr_7d<0 ? '—' : h('span', { style: NOWRAP }, `${num(a.ctr_7d, 2)} %`, a.caida_ctr_pct !== null && a.caida_ctr_pct !== undefined ? h('small', { class: 'sub' }, ` (${a.caida_ctr_pct > 0 ? '−' : '+'}${num(Math.abs(a.caida_ctr_pct))} %)`) : null)) },
         { clave: 'leads_7d', titulo: 'Meta 7d', tituloCompleto:'Contador Meta · 7 días; tipo de evento y cualificación pendientes', num: true, celda: a => a.leads_7d==null?'—':num(a.leads_7d) },
         { clave: 'cpl_7d', titulo: 'Coste†', tituloCompleto:'Coste registrado · unidad pendiente; no acredita CPL real', num: true, celda: a => {
           if(!a.dinero)return candado('—');
@@ -1335,7 +1334,7 @@ function tAnuncios(el, ctx, d, c) {
       { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.nombre), h('small', { class: 'sub' }, distingue(x))) },
       { clave: 'e', titulo: 'Estado', celda: x => h('span', { style: { display: 'grid', gap: S[1] } }, chipEstado(x.cansada ? 'rojo' : x.vigilar ? 'ambar' : x.ganadora ? 'verde' : 'gris', x.cansada ? 'Cansada' : x.vigilar ? 'Vigilar' : x.ganadora ? 'Ganadora' : 'Normal'), x.senales?.length ? h('small', { class: 'sub' }, x.senales.join(' + ')) : null) },
       { clave: 'f', titulo: 'Frecuencia', num: true, celda: x => (x.frecuencia_7d ? num(x.frecuencia_7d, 1) : '—') },
-      { clave: 'ctr', titulo: 'CTR tot.', tituloCompleto:'CTR total registrado · clics totales / impresiones · 7 días; periodo anterior como referencia', num: true, celda: x => celdaCtrTotalPaid682(h, num, x) },
+      { clave: 'ctr', titulo: '% de clics', num: true, celda: x => (x.ctr_7d === undefined ? '—' : `${num(x.ctr_7d, 2)} %${x.ctr_previo ? ` (antes ${num(x.ctr_previo, 2)})` : ''}`) },
       { clave: 'l', titulo: 'Leads 7 d', num: true, celda: x => num(x.leads_7d ?? null) },
       { clave: 'c', titulo: 'Coste registrado · unidad pendiente', num: true, celda: x => (!c.dinero || x.cpl_7d === undefined && x.cpl_30d === undefined ? candado('—') : x.cpl_7d ? eur(x.cpl_7d) : x.cpl_30d ? `${eur(x.cpl_30d)} (30 d)` : '—') },
       { clave: 'autor', titulo: 'Autor', celda: x => nombre(d, x.autor) || h('span', { class: 'dim' }, 'sin autor') },

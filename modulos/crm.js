@@ -1,4 +1,3 @@
-import {entradaLead677,primerIntento677,sinIntento677,agregarSinIntento677} from './_contacto_observado_677.js';
 import {crearAccionCRM528} from './_intencion_crm_528.js';
 import {leadsPendientes369,estadoRevisionLead369,crearRevisionLead369} from './_revision_leads_369.js';
 import {notaCompacta336} from './_nota_compacta_336.js';
@@ -160,7 +159,7 @@ function vista(ctx, d) {
     etiqueta: jefatura ? 'Toda la casa' : ctx.nivel === 'suyo' ? (especialista ? 'Tus subcuentas' : 'Tus clientes') : 'Resumen de tus clientes' };
 }
 
-function sumar(filas,fuente,hoy) {
+function sumar(filas) {
   const enc = filas.filter(f => f.encendida);
   const s=fn=>{const vs=filas.map(fn).filter(v=>conteoCRM(v)!==null);return vs.length?vs.reduce((a,n)=>a+n,0):null;};
   const parejas=filas.filter(f=>conteoCRM(f.citas_30d?.celebradas)!==null&&conteoCRM(f.citas_30d?.no_presentadas)!==null);
@@ -169,9 +168,9 @@ function sumar(filas,fuente,hoy) {
   const juz=paresIntentos.length?paresIntentos.reduce((a,f)=>a+f.velocidad.juzgables,0):null,en1=paresIntentos.length?paresIntentos.reduce((a,f)=>a+f.velocidad.en_1h,0):null;
   const waMedicion = agregarMensajesCRM597(filas,'whatsapp'), wa = waMedicion.enviados, waf = waMedicion.fallidos;
   return {
-    filas, enc, sinIntentoLectura677:agregarSinIntento677(filas,fuente,hoy), senalesSinTocar:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')),senalesSinEstado:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_estado'&&m.origen==='observacion_muestra')),senalesWA:filas.some(f=>f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')),verde: enc.filter(f => f.estado === 'verde').length, rojo: enc.filter(f => f.estado === 'rojo').length, ambar: enc.filter(f => f.estado === 'ambar').length,
+    filas, enc, senalesSinTocar:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')),senalesSinEstado:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_estado'&&m.origen==='observacion_muestra')),senalesWA:filas.some(f=>f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')),verde: enc.filter(f => f.estado === 'verde').length, rojo: enc.filter(f => f.estado === 'rojo').length, ambar: enc.filter(f => f.estado === 'ambar').length,
     pctVerde:enc.length&&enc.every(f=>f._medicionCRM?.cobertura==='completa') ? Math.round(enc.filter(f => f.estado === 'verde').length * 1000 / enc.length) / 10 : null,
-    leads: s(f => f.leads_30d), sinTocar: agregarSinIntento677(filas,fuente,hoy).valor??agregarSinIntento677(filas,fuente,hoy).referencia, sinEstado14: s(f => f.citas_14d?.sin_estado),
+    leads: s(f => f.leads_30d), sinTocar: s(f => f.sin_tocar_24h), sinEstado14: s(f => f.citas_14d?.sin_estado),
     agendadas30: s(f => f.citas_30d?.agendadas), celebradas: cel, noPresentadas: nop, asistencia:cel!==null&&nop!==null&&cel+nop>0?Math.round(cel*1000/(cel+nop))/10:null,
     futuras: s(f => f.citas_30d?.futuras), estancados: s(f => f.embudo?.estancados_72h), opps30: s(f => f.embudo?.cohorte_30d), agendadas14: s(f => f.citas_14d?.agendadas), juzgables: juz, en1h: en1, pct1h: juz ? Math.round(en1 * 1000 / juz) / 10 : null,
     wa, waf, waMedicion, pctWa: waMedicion.pct === null ? null : Math.round(waMedicion.pct * 10) / 10,
@@ -244,8 +243,8 @@ function botonVerDatos(ctx, fila, vis) {
 // ------------------------------------------------------------------ pantalla principal
 function pintarInicio(cont, ctx, d) {
   const vis = vista(ctx, d);
-  const S = sumar(vis.base,d.fuentes?.ghl,ctx.hoy);
-  const casa = sumar(vis.reales,d.fuentes?.ghl,ctx.hoy);
+  const S = sumar(vis.base);
+  const casa = sumar(vis.reales);
   ctx.titulo('Salud del CRM', `${vis.etiqueta} · ${vis.base.length} subcuentas de GoHighLevel · 30 días naturales cerrados · lectura GHL ${d.fuentes?.ghl?.hora || 'sin fecha'}`);
 
   if (!vis.base.length) {
@@ -301,8 +300,8 @@ function pintarInicio(cont, ctx, d) {
     contexto:'Sólo citas con resultado registrado; cobertura parcial, no cohorte ni cumplimiento contractual', ir: 'Ver citas sin estado', alPulsar: ir('citas'),
   }));
   fichas.push(tile({
-    icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: fmt.num(S.sinTocar), unidad: S.sinIntentoLectura677.cobertura||'',
-    estado: !S.leads ? 'gris' : S.sinTocar>0&&S.senalesSinTocar&&S.sinIntentoLectura677.todoScope?'ambar':'gris', contexto: S.sinIntentoLectura677.detalle, ir: 'Ver los leads', alPulsar: ir('leads'),
+    icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: fmt.num(S.sinTocar), unidad: `de ${fmt.num(S.leads)} leads`,
+    estado: !S.leads ? 'gris' : S.sinTocar>0&&S.senalesSinTocar?'ambar':'gris', contexto: S.leads ? 'Sin intento observado en los mensajes leídos; no prueba ausencia de llamada. Cobertura parcial.' : 'Conteo de leads sin confirmar; comprobar fecha y cobertura.', ir: 'Ver los leads', alPulsar: ir('leads'),
   }));
   fichas.push(tile({
     icono: 'cal', etiqueta: 'Citas sin estado · 14 d', valor: fmt.num(S.sinEstado14), unidad: 'sin marcar',
@@ -310,7 +309,7 @@ function pintarInicio(cont, ctx, d) {
     contexto:'Resultados pendientes observados; cero no acredita que estén todas las citas marcadas', ir: 'Marcarlas', alPulsar: ir('citas'),
   }));
   fichas.push(tile({
-    icono: 'clock', etiqueta: '1.er intento < 1 h', valor: primerIntento677({velocidad:{en_1h:S.en1h,juzgables:S.juzgables}}).texto, unidad: '',
+    icono: 'clock', etiqueta: '1.er intento < 1 h', valor: sd(S.pct1h === null ? null : pc(S.pct1h)), unidad: S.pct1h === null ? '' : `${S.en1h} de ${S.juzgables}`,
     estado:'gris', contexto: 'Referencia del generador anterior: 70 % de intentos registrados en < 1 h; pendiente de adaptar al método vigente. No evalúa garantía contractual.', ir: 'Ver por subcuenta', alPulsar: ir('subcuentas'),
   }));
   fichas.push(tile({
@@ -426,8 +425,8 @@ function pintarSubcuentas(zona, ctx, d, vis) {
         { clave: 'estado', titulo: 'Estado', valor: f => EST[f.estado].o, celda: f => puntoEstado(punto(f), EST[f.estado].t) },
         { clave: 'especialista', titulo: 'Especialista', celda: f => h('span', {title:f.especialista||'sin asignar'}, f.especialista || 'sin asignar') },
         { clave: 'leads_30d', titulo: 'GHL30d · Meta7d', tituloCompleto:'Leads observados en GHL: 30 días; eventos lead en Meta: 7 días. Recuentos independientes', num: true, celda: f => h('span',{style:{whiteSpace:'nowrap'},title:`GHL30d: ${f.leads_30d??'Sin dato'} · Meta7d: ${f.leads_meta_7d??'Sin dato'}. Recuentos independientes, no unión por lead ni tasa de conversión`,'aria-label':`GHL30d: ${f.leads_30d??'Sin dato'}; Meta7d: ${f.leads_meta_7d??'Sin dato'}`},f.leads_30d==null?'—':numFuerte(f.leads_30d),' · ',f.leads_meta_7d==null?'—':numFuerte(f.leads_meta_7d)) },
-        { clave: 'sin_tocar_24h', titulo: 'Sin int.24h', num: true, celda: f => {const p=sinIntento677(f,d.fuentes?.ghl,ctx.hoy);return h('span',{title:p.detalle,'aria-label':p.detalle},p.texto);} },
-        { clave: 'v1h', titulo: 'Intento <1h', num: true, valor: f => primerIntento677(f).numerador, celda: f => {const p=primerIntento677(f);return h('span',{class:'sub',title:p.detalle,'aria-label':p.detalle},p.texto);} },
+        { clave: 'sin_tocar_24h', titulo: 'Sin intento24h', num: true, celda: f => numFuerte(f.sin_tocar_24h) },
+        { clave: 'v1h', titulo: 'Intento <1h', num: true, valor: f => f.velocidad?.pct_1h, celda: f => f.velocidad?.juzgables ? h('span', { title:'Primer intento registrado, no respuesta',style: { display:'grid',gap:'2px',fontVariantNumeric:'tabular-nums' } },h('span',{},pc(f.velocidad.pct_1h)),h('span',{class:'sub'},`${f.velocidad.en_1h}/${f.velocidad.juzgables}`)) : '—' },
         { clave: 'se', titulo: 'Sin est14d · Asist30d', tituloCompleto:'Citas sin estado: 14 días; asistencia entre resultados registrados: 30 días', num: true, valor: f => f.citas_14d?.sin_estado, celda: f => h('span',{style:{whiteSpace:'nowrap'},title:`Citas sin estado14d: ${f.citas_14d?.sin_estado??'Sin dato'} · Asistencia30d: ${f.citas_30d?.asistencia_pct??'Sin dato'}. Sólo resultados registrados, no todas las citas ni ventas`,'aria-label':`Citas sin estado14d: ${f.citas_14d?.sin_estado??'Sin dato'}; Asistencia30d: ${f.citas_30d?.asistencia_pct??'Sin dato'}`},f.citas_14d?.sin_estado==null?'—':numFuerte(f.citas_14d.sin_estado),' · ',f.citas_30d?.asistencia_pct !== null && f.citas_30d?.asistencia_pct !== undefined ? pc(f.citas_30d.asistencia_pct) : '—') },
         { clave: 'ir', titulo: 'Detalle / GHL', ordenable: false, celda: f => detalleSubcuenta245(ctx,d,f) },
       ],
@@ -463,7 +462,7 @@ function pintarLeads(zona, ctx, d, vis, leads) {
   leads = leadsPendientes369(leads,vis.base);
   const gota = x => senalFilaCRM541('lead',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado;
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
-  zona.append(panel({ titulo: 'Leads señalados sin intento registrado', icono: 'phone', sub: 'Leads señalados en la copia parcial; contrasta llamadas y mensajes con el despacho. La revisión en RO no elimina el pendiente ni confirma una llamada en GHL. Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
+  zona.append(panel({ titulo: 'Leads señalados sin intento registrado', icono: 'phone', sub: 'Sin ninguna llamada ni mensaje de una persona en GoHighLevel. La revisión en RO no elimina el pendiente ni confirma una llamada en GHL. Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas: leads, buscar: { campos: ['subcuenta', 'medio'], placeholder: 'Buscar subcuenta u origen' }, filtros: [{ clave: 'subcuenta', titulo: 'Subcuenta' }],
       orden: { clave: 'horas', dir: 'desc' },
@@ -473,7 +472,7 @@ function pintarLeads(zona, ctx, d, vis, leads) {
         { clave: 'horas', titulo: 'Edad en copia', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
         { clave: 'medio', titulo: 'Origen', celda: x => h('span', { style: { display: 'inline-block', minWidth: '140px' } }, x.medio || '—') },
         { clave: 'automatico', titulo: 'Mensaje automático', celda: x => x.automatico ? 'Sí salió' : h('span',{class:'sub',title:'No consta mensaje automático en esta lectura parcial'},'No consta') },
-        { clave: 'respondio', titulo: 'El lead escribió', celda: x => {const e=entradaLead677(x,ctx.hoy,d.fuentes?.ghl);return h('span',{class:'sub',title:e.detalle,'aria-label':e.detalle},e.texto);} },
+        { clave: 'respondio', titulo: 'El lead escribió', celda: x => x.respondio===true ? h('span',{class:'sub',title:'Entrada registrada en la copia; no resultado de gestión acreditado'},'Sí, revisar') : 'No consta' },
         { clave: 'revision_ro', titulo: 'Revisión RO', ordenable: false, celda: x => estadoRevisionLead369(h,x,d) },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
           // Ronda U: fila compacta · verbo principal (Revisado) + Ver datos + «⋯» con lo que sale fuera (GHL, nota, tarea)
@@ -674,8 +673,8 @@ function indicadoresPuesto(ctx, S, casa, vis) {
     vis.jefatura ? fichaCatalogo(ind('jefa_crm.de_subcuentas_con_el_crm_en_verde_el_que_manda'), { valor: casa.pctVerde === null ? null : fmt.num(casa.pctVerde, 1), unidad: '%', estado: semaforo(casa.pctVerde, { verde: 80, ambar: 60 }), frescura: fr, icono: 'base', parcial: 'Sin los flujos con error (no se pueden leer).' }) : null,
     fichaCatalogo(ind('especialista_ghl.asistencia_a_las_citas_de_sus_despachos_el_que_m'), { valor: S.asistencia === null ? null : fmt.num(S.asistencia, 1), unidad: '%', estado:'gris', frescura: fr, icono: 'users', parcial: S.asistencia === null ? 'Sin denominador de asistencia confirmado; cobertura parcial.' : null }),
     fichaCatalogo(ind('especialista_ghl.citas_sin_estado'), { valor: S.sinEstado14, unidad: 'en 14 días', estado:S.sinEstado14>0&&S.senalesSinEstado?'ambar':'gris', frescura: fr, icono: 'cal' }),
-    fichaCatalogo(ind('especialista_ghl.leads_sin_tocar_a_las_24_h'), { valor: S.sinTocar, estado: S.sinTocar>0&&S.senalesSinTocar&&S.sinIntentoLectura677.todoScope?'ambar':'gris', frescura: fr, icono: 'phone', parcial: 'Sólo intentos observados en mensajes leídos de GHL; cobertura parcial, no llamadas externas.' }),
-    fichaCatalogo(ind('especialista_ghl.velocidad_del_despacho_con_el_lead'), { valor: primerIntento677({velocidad:{en_1h:S.en1h,juzgables:S.juzgables}}).texto, unidad: '', estado:'gris', frescura: fr, icono: 'clock', parcial: 'Primeros intentos del registro anterior, numerador/denominador por contrastar; no tasa vigente ni respuesta acreditada.' }),
+    fichaCatalogo(ind('especialista_ghl.leads_sin_tocar_a_las_24_h'), { valor: S.sinTocar, estado: S.sinTocar>0&&S.senalesSinTocar?'ambar':'gris', frescura: fr, icono: 'phone', parcial: 'Sólo intentos observados en mensajes leídos de GHL; cobertura parcial, no llamadas externas.' }),
+    fichaCatalogo(ind('especialista_ghl.velocidad_del_despacho_con_el_lead'), { valor: S.pct1h === null ? null : fmt.num(S.pct1h, 1), unidad: '% en < 1 h', estado:'gris', frescura: fr, icono: 'clock' }),
     fichaCatalogo(ind('especialista_ghl.whatsapp_fallido_o_desconectado'), { valor: S.pctWa === null ? null : fmt.num(S.pctWa, 1), unidad: '%', estado: S.waf>0&&S.senalesWA?'ambar':'gris', frescura: fr, icono: 'wa' }),
   ].filter(Boolean);
   const todos = ctx.indicadores().filter(i => /^(especialista_ghl|jefa_crm)\./.test(i.id || ''));
@@ -717,8 +716,8 @@ function pintarDetalle(cont, ctx, d, subId) {
   const asis = c30.asistencia_pct === null || c30.asistencia_pct === undefined ? null : c30.asistencia_pct;
   cont.append(rejillaTarjetas([
     tile({ icono: 'users', etiqueta: 'Asistencia · 30 días', valor: asis === null ? sinDato() : pc(asis), unidad: asis === null ? '' : `${c30.celebradas} de ${c30.celebradas + c30.no_presentadas}`, estado:'gris', contexto:'Sólo resultados de asistencia/ausencia registrados; lectura parcial, no todas las citas ni ventas' }),
-    tile({ icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: f.sin_tocar_24h===null?sinDato():fmt.num(f.sin_tocar_24h), unidad: sinIntento677(f,d.fuentes?.ghl,ctx.hoy).cobertura||'', estado: !f.leads_30d ? 'gris' : sinIntento677(f,d.fuentes?.ghl,ctx.hoy).vigente&&f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto: sinIntento677(f,d.fuentes?.ghl,ctx.hoy).detalle }),
-    tile({ icono: 'clock', etiqueta: '1.er intento < 1 h', valor: primerIntento677(f).texto, unidad: '', estado:'gris', contexto: `Referencia anterior por contrastar; no tasa vigente ni respuesta. Mediana ${v.mediana_min !== null && v.mediana_min !== undefined ? horasTxt(Math.round(v.mediana_min / 60)) : '—'} · 4 intentos en 72 h: ${v.juzgables_72h ? `${v.cuatro_en_72h} de ${v.juzgables_72h}` : '—'}` }),
+    tile({ icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: f.sin_tocar_24h===null?sinDato():fmt.num(f.sin_tocar_24h), unidad: `de ${fmt.num(f.leads_30d)} leads`, estado: !f.leads_30d ? 'gris' : f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto: `${f.leads_manuales_30d || 0} contactos creados a mano, aparte` }),
+    tile({ icono: 'clock', etiqueta: '1.er intento < 1 h', valor: v.juzgables ? pc(v.pct_1h) : sinDato(), unidad: v.juzgables ? `${v.en_1h} de ${v.juzgables}` : '', estado:'gris', contexto: `Mediana ${v.mediana_min !== null && v.mediana_min !== undefined ? horasTxt(Math.round(v.mediana_min / 60)) : '—'} · 4 intentos en 72 h: ${v.juzgables_72h ? `${v.cuatro_en_72h} de ${v.juzgables_72h}` : '—'}` }),
     tile({ icono: 'cal', etiqueta: 'Citas sin estado · 14 d', valor: c14.sin_estado===null?sinDato():fmt.num(c14.sin_estado), unidad: c14.sin_estado ? `la más antigua, ${horasTxt(c14.sin_estado_max_h)}` : '', estado:f.motivos?.some(m=>m.clave==='sin_estado'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto:`${fmt.num(c90.agendadas)} citas observadas en90 días · ${fmt.num(c30.futuras)} próximas; cero no acredita todas marcadas` }),
     tile({ icono: 'hist', etiqueta: 'Paradas > 72 h', valor: f.embudo?.cohorte_30d ? fmt.num(f.embudo.estancados_72h) : sinDato('Sin oportunidades'), unidad: f.embudo?.cohorte_30d ? `de ${f.embudo.cohorte_30d} del mes` : '', estado:'gris', contexto: 'Confirmar origen de la fecha: etapa, estado o actualización' }),
     tile({ icono: 'wa', etiqueta: 'WhatsApp fallido', valor: f.whatsapp?.enviados ? `${f.whatsapp.fallidos}/${f.whatsapp.enviados}` : sinDato('Sin envíos'), estado: f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto: 'El número conectado no se mide por API' }),
