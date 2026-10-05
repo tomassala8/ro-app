@@ -229,6 +229,27 @@ def esc_decisiones(t, M, llamar):
     return sal, M.RUTA
 
 
+def esc_evidencias(t, M, llamar):
+    t.body["clave"] = u(80)
+    r = M.RUTA
+    q = {"cliente_id": ["uno"]}
+    sal = [llamar("GET", q, "own", "own"),
+           llamar("POST", dict(t.body), "own", "own"),
+           llamar("POST", dict(t.body), "own", "own"),
+           llamar("POST", {**t.body, "motivo": "soporte"}, "own", "own"),
+           llamar("POST", dict(t.body), "ops", "ops"),
+           llamar("GET", q, "own", "own")]
+    fila = next(iter((sal[-1][1] or {}).get("registros") or []), None)
+    exige(bool(fila), "evidencias: el registro creado no aparece en la lectura")
+    if fila:
+        rev = {"accion": "revocar", "cliente_id": "uno", "clave": u(81), "registro_id": fila["id"], "motivo": "correccion"}
+        sal += [llamar("POST", rev, "own", "own"), llamar("POST", rev, "own", "own"), llamar("GET", q, "own", "own")]
+    sal += [llamar("GET", {"semana_inicio": ["2026-09-28"]}, "own", "own", ruta=r + "/resumen"),
+            llamar("GET", {"periodo_informe": ["2026-09"]}, "own", "own", ruta=r + "/informes"),
+            llamar("GET", q, "other", "other")]
+    return sal, r
+
+
 # nombre: (fichero, módulo, fixture (módulo de prueba, clase, método), tabla, escenario)
 MODULOS = {
     "registros_269": ("operaciones_registros_269.py", "operaciones_registros_269", ("probar_operaciones_registros_269", "Registros", "test_replay_y_conflicto_mismo_uuid"), "operaciones_registros_269", esc_registros),
@@ -238,6 +259,7 @@ MODULOS = {
     "notas_281": ("operaciones_notas_equipo_281.py", "operaciones_notas_equipo_281", ("probar_notas_equipo_281", "Notas", "test_durable_autor_periodo_no_kpi_no_decision_laboral"), "operaciones_notas_equipo_281", esc_notas),
     "prioridades_300": ("operaciones_prioridades_300.py", "operaciones_prioridades_300", ("probar_operaciones_prioridades_300", "Prioridades", "test_durable_restart_declaracion_no_ejecucion"), "operaciones_prioridades_300", esc_prioridades),
     "pedidos_account": ("operaciones_pedidos_account.py", "operaciones_pedidos_account", ("probar_pedidos_account_294", "Test", "test_store_replay"), "operaciones_pedidos_account", esc_pedidos),
+    "evidencias_kpi": ("evidencias_kpi_api.py", "evidencias_kpi_api", ("probar_evidencias_kpi_api_151", "Api", "test_registrar_replay_get_y_revocar"), "registros|evidencias_kpi_registros", esc_evidencias),
     "decisiones_382": ("decisiones_durables_382.py", "decisiones_durables_382", ("probar_decisiones_durables_382", "Pruebas382", "test_nueva_replay_durable"), "decisiones", esc_decisiones),
 }
 
@@ -253,6 +275,7 @@ def montar(fixture, backend):
         return t
     import base as BASE
     os.environ["DATABASE_URL"] = URL_ESC
+    os.environ.pop("RO_EVIDENCIAS_KPI", None)      # en la nube no hay fichero del depósito: va a la base común
     t.S.conectar = BASE.conectar
     t.con = BASE.conectar
     if hasattr(t, "path"):
@@ -287,14 +310,14 @@ def correr(nombre, backend):
     M.enganchar(H, S)
     h = H()
 
-    def llamar(metodo, datos, rid, vid, persona=None):
+    def llamar(metodo, datos, rid, vid, persona=None, ruta=None):
         real = dict(persona or {"id": rid})
         vista = dict(persona or {"id": vid})
         real["id"], vista["id"] = rid, vid
         try:
             if metodo == "GET":
-                return h._api_get(M.RUTA, datos, real, vista)
-            return h.api_post(M.RUTA, real, vista, datos)
+                return h._api_get(ruta or M.RUTA, datos, real, vista)
+            return h.api_post(ruta or M.RUTA, real, vista, datos)
         except Exception as e:      # un fallo del módulo es un resultado más, y se compara
             return "EXC", {"error": type(e).__name__ + ": " + str(e)[:200]}
 
@@ -303,7 +326,8 @@ def correr(nombre, backend):
         n = None
         c = conectar_de(t, backend)
         try:
-            n = c.execute(f"SELECT COUNT(*) FROM {getattr(M, 'TABLA', None) or tabla}").fetchone()[0]
+            nombre_tabla = getattr(M, "TABLA", None) or (tabla.split("|") * 2)[1 if backend == "pg" else 0]
+            n = c.execute(f"SELECT COUNT(*) FROM {nombre_tabla}").fetchone()[0]
         except Exception:
             n = "sin tabla"
         finally:

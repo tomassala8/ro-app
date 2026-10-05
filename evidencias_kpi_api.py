@@ -7,7 +7,9 @@ from zoneinfo import ZoneInfo
 from acciones_lectura_544 import ambito
 from pathlib import Path
 import config
-from evidencias_kpi import ArchivoEvidencias, ErrorEvidencia, identificador, validar, clave_uuid, fecha_aware
+from contextlib import closing, contextmanager
+from evidencias_kpi import ArchivoEvidencias, ErrorEvidencia, identificador, validar, clave_uuid, fecha_aware, SCHEMA, HOSTS
+import bd_comun as bd
 from datetime import date, datetime, timezone
 import re
 
@@ -71,9 +73,37 @@ def validar_salida(S,doc,cid,recibo=False):
     return {'cliente_id':cid,'registros':[validar_registro(S,r,cid) for r in doc['registros']],
             'cobertura':{'source_kind':'registro_equipo','contacto_exhaustivo':False,'verificacion_externa':False},'cumplimiento':None}
 
+TABLAS_BD=re.compile(r'\b(registros|eventos|revocaciones)\b')
+
+def tabla_bd(sql):
+    """N-24: en la base común las tres tablas del depósito llevan prefijo (no hay un fichero para ellas)."""
+    return TABLAS_BD.sub(r'evidencias_kpi_\1',sql)
+
+class _ConexionPrefijada:
+    def __init__(self,con):self._c=con
+    def execute(self,sql,args=()):return self._c.execute(tabla_bd(sql),args)
+    def executescript(self,sql):return self._c.executescript(tabla_bd(sql))
+
+class ArchivoEvidenciasBD(ArchivoEvidencias):
+    """El mismo depósito sobre la base común (Postgres, `despliegue/base.py`): sin fichero ni permisos de fichero.
+    Todo lo demás (ámbito, validación, claves, duplicados, revocaciones) es el de `ArchivoEvidencias`."""
+    def __init__(self,conectar,catalogo,personas,puede_ver,puede_revocar=None,ahora=None,hosts=HOSTS):
+        self._conectar_bd=conectar;self.ruta=None;self.catalogo=catalogo;self.personas=personas;self.puede_ver=puede_ver
+        self.puede_revocar=puede_revocar or (lambda actor,cid,registro:False);self.ahora=ahora or (lambda:datetime.now(timezone.utc));self.hosts=frozenset(hosts)
+        with self._conectar() as con:con.executescript(SCHEMA)
+    @contextmanager
+    def _conectar(self):
+        with self._conectar_bd() as con:yield _ConexionPrefijada(con)    # confirma al salir, deshace si hubo error, y la devuelve
+
+def _leer_informes_bd(S):
+    """Como `_leer_informes611`, pero en la base común: no crea nada; sin tabla, sin registros."""
+    with closing(S.conectar()) as con:
+        if not con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='evidencias_kpi_registros'").fetchone():return []
+        return con.execute('SELECT * FROM evidencias_kpi_registros').fetchall()
+
 def deposito():
     ruta=os.environ.get('RO_EVIDENCIAS_KPI')
-    if (os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL')) and not ruta:raise ErrorEvidencia(503,'El depósito independiente no está habilitado en este entorno.')
+    if bd.es_pg() and not ruta:return None    # N-24: en la nube el depósito es la base común (ver ArchivoEvidenciasBD)
     p=Path(ruta) if ruta else config.ESTADO_DIR/'evidencias_kpi'/'registros.sqlite3'
     if not p.is_absolute():raise ErrorEvidencia(503,'Configuración del depósito inválida.')
     return p
@@ -84,7 +114,9 @@ def archivo(S,rid,vid,cid,escritura):
     def vigente(pid,cliente):
         autorizar(S,rid,vid,cliente,escritura)
         return pid in (rid,vid)
-    return ArchivoEvidencias(deposito(),catalogo,personas,vigente)
+    p=deposito()
+    if p is None:return ArchivoEvidenciasBD(S.conectar,catalogo,personas,vigente)
+    return ArchivoEvidencias(p,catalogo,personas,vigente)
 
 def resumen(S,rid,vid,semana):
     if not isinstance(semana,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',semana):raise ErrorEvidencia(400,'Selecciona el lunes exacto.')
@@ -188,7 +220,7 @@ def resumen_informes611(S,rid,vid,periodo):
                 'verificacion_externa':False,'cumplimiento':None} for cid in sorted(ids)}
     if ids:
         p=deposito()
-        rows=_leer_informes611(p)
+        rows=_leer_informes_bd(S) if p is None else _leer_informes611(p)
         vistos=set()
         for row in rows:
             if row['cliente'] not in ids:continue
@@ -224,7 +256,7 @@ def enganchar(Manejador,S):
             doc=archivo(S,rid,vid,cid,False).listar(rid,vid,cid)
             autorizar(S,rid,vid,cid)
             return self.responder(200,validar_salida(S,doc,cid))
-        except (ErrorEvidencia,OSError,sqlite3.Error,ValueError,TypeError,KeyError,AttributeError) as e:return error(self,e)
+        except (ErrorEvidencia,OSError,ValueError,TypeError,KeyError,AttributeError)+bd.ERRORES_BD as e:return error(self,e)
     def post(self,ruta,real,vista,b):
         if ruta!=RUTA:return post_orig(self,ruta,real,vista,b)
         try:
@@ -240,5 +272,5 @@ def enganchar(Manejador,S):
             doc=a.registrar(rid,vid,payload) if accion=='registrar' else a.revocar(rid,vid,cid,b['registro_id'],b['clave'],b['motivo'])
             autorizar(S,rid,vid,cid,True)
             return self.responder(200,validar_salida(S,doc,cid,True))
-        except (ErrorEvidencia,OSError,sqlite3.Error,ValueError,TypeError,KeyError,AttributeError) as e:return error(self,e)
+        except (ErrorEvidencia,OSError,ValueError,TypeError,KeyError,AttributeError)+bd.ERRORES_BD as e:return error(self,e)
     Manejador._api_get=get;Manejador.api_post=post

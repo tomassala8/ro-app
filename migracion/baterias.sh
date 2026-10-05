@@ -42,6 +42,8 @@ bateria m20_m22 900 python3 fuentes_personas/probar_m20_m22.py "$PUERTO"
 bateria m10_m11 900 python3 fuentes_produccion/probar_equipo.py "$PUERTO"
 bateria m13_m15 900 python3 fuentes_reuniones/probar_m13_m15.py "$PUERTO"
 bateria m14 900 python3 fuentes_incidencias/probar_incidencias.py "$PUERTO"
+bateria L-01 120 python3 migracion/pruebas_L-01.py --puerto "$PUERTO"
+bateria N-24 300 python3 migracion/pruebas_N-24.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos
