@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F3.1. F2.4 ⚠ a las 09:38 (puerta f2 VERDE con excepciones, ver NOTAS «Fase 2 · Postgres»). F2.3 cerrado a las 08:39 (`4af065b`).
+Siguiente: F4.1. F3.1 ⚠ a las 12:50 (plan B con cascada, ver NOTAS «Fase 3»). F2.4 ⚠ a las 09:38 (puerta f2 VERDE con excepciones, ver NOTAS «Fase 2 · Postgres»). F2.3 cerrado a las 08:39 (`4af065b`).
 
 Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
 - candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
@@ -50,39 +50,39 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 
 ## Fase 3 · La app nueva entera (por el proxy)
 
-- 🔄 F3.1 · 12:10 · intento 2/3 (el 1 falló: puerta f3 ROJA 2 de 11, ver Intentos) · arranque de api y web y puerta f3 · `servicios.sh arrancar` (api y web) y `bash migracion/puerta.sh f3` en VERDE. Push. Plan B: arreglar fontanería del proxy; si no, apuntar y seguir con la fase 4. **Si F3.1 queda ⚠: F5.1–F5.9 y F6.x → ⚠ sin intentarlo; F5.10 se cierra con su prueba + `puerta.sh f2`.**
+- ⚠ F3.1 · 12:50 · plan B: puerta f3 ROJA 2 de 11 (fotos 96/2100 por 4 causas y 30 personas por la cola de 8770 en macOS), ninguna fontanería; 9 ✔ (compila, reinicio, e2e, contrato, escrituras, baterías, velocidad, seguridad, caídas); causas en NOTAS «Fase 3» · puerta: ~/RO_MIGRACION/puertas/f3.md
 
 ## Fase 4 · Motor de permisos en TypeScript
 
 - ⬜ F4.1 `permisos.py` → `v2/packages/permisos` función a función, con «ver como» explícito, y enchufarlo como el motor de `v2/apps/api/src/permisos/` (sustituye a `MotorSinPortar`). `bash migracion/puerta.sh f4` al 100 %. Máximo 90 minutos. Plan B: apuntar los vectores que fallan y saltar los grupos de rutas (⚠ en F5.1–F5.9). F5.10 (arreglando solo en el legado: `servir.py`, `permisos.py`, `reglas_permisos.json`) y F5.11 siguen.
-- ⬜ F4.2 Pruebas de permisos que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), en `test/*.e2e-spec.ts` (las lanza `puerta.sh` f3/f5/f6/f7). Si F4.1 queda ⚠, F4.2 se hace igual: lo que necesite el motor en TypeScript va a `it.todo('F4.1 ⚠')`. Se cierra con `bash migracion/puerta.sh f3` en VERDE. Plan B: `it.todo` con su motivo.
+- ⬜ F4.2 Pruebas de permisos que impiden volver atrás (anexo de `PENDIENTES_LOGICA.md`, punto 8), en `test/*.e2e-spec.ts` (las lanza `puerta.sh` f3/f5/f6/f7). Si F4.1 queda ⚠, F4.2 se hace igual: lo que necesite el motor en TypeScript va a `it.todo('F4.1 ⚠')`. Se cierra con `bash migracion/puerta.sh f3` en VERDE. Plan B: `it.todo` con su motivo. · Con F3.1 ⚠ se cierra con `cd v2 && DATABASE_URL=postgresql://ro:ro@127.0.0.1:5432/ro_app RO_VECTORES=~/RO_MIGRACION/vectores pnpm --filter @ro/api test:e2e`, no con puerta.sh f3
 
 ## Fase 5 · Rutas a Nest (un grupo cada vez; cada uno: módulo + RUTAS_EN_NEST + puerta f5)
 
 Primero los fallos y los escalados (Tomás, 4-oct: los fallos se arreglan sí o sí; mudar rutas a Nest no cambia nada de lo que ve el equipo). Las rutas que no están en ningún grupo de F5.1–F5.9 (muchas rutas nuevas de enchufes de la entrega) se quedan por el proxy: está bien así, para el equipo no cambia nada. Los «Pendientes de producto de la entrega» de `PENDIENTES_LOGICA.md` no se construyen esta noche: van al informe. Mientras tanto todas las rutas siguen por el proxy, así que en F5.10 se arregla en `servir.py` (y en los dos motores si es de permisos).
-- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-23; L-16 ya cerrado por la entrega; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 2 h 30 antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto).
+- ⬜ F5.10 Fallos pendientes (L-01…L-49 del hilo de feedback y N-01…N-23; L-16 ya cerrado por la entrega; L-01 y L-21 primero; D1–D8 ya contestadas, lo «pendiente» no se toca) (N-01 a N-12 son la copia propia de las APIs y «nunca ceros»: `PLAN_MAESTRO.md` §2.5) de `migracion/PENDIENTES_LOGICA.md` (o de `~/RO_MIGRACION/PENDIENTES_LOGICA.md` si existe), de seguridad a presentación: cada uno con su prueba, su commit «<id> · …» (L-n o N-n) y su estado en la lista. Por fallo: su prueba + `puerta.sh f5 --rapido`; la puerta completa, una vez al acabar cada bloque (seguridad, datos, funcional, presentación). Las pruebas nuevas o cambiadas van en ficheros NUEVOS (`migracion/pruebas_L-<n>.py`, `despliegue/pruebas_solidez_N-<n>.py`); nunca se tocan los `pruebas_*.py` ni `pruebas_noche.py` que ya existen (juzgan). Intentos: hasta 3 **por fallo**, no por paso, contados en «Intentos y notas» («F5.10 · L-07 · intento 2 · …»); la línea del paso dice qué fallo llevas. Reloj: hasta 2 h 30 antes del fin. Plan B por fallo: se queda como estaba, con la prueba marcada pendiente, y va al informe (seguridad = bloqueo para el piloto). · Con F3.1 ⚠: cada fallo con su prueba + `bash migracion/puerta.sh f2` (no f5)
 - ⬜ F5.11 Ensayo de escalados sobre Postgres (`migracion/escalados.py`, `PLAN_MAESTRO.md` §2.9): alerta y aviso automático vencidos → «sube a X» a la persona correcta, una vez. Se cierra con `python3 migracion/escalados.py` saliendo con 0. Plan B: apuntar qué no escala como bloqueo para el piloto.
 
 Después, las rutas a Nest:
-- ⬜ F5.1 identidad (guarda global) + escritor del rastro de «ver como» (`RASTRO_VER_COMO`) + sesion. **Si F5.1 queda ⚠, F5.2–F5.9 → ⚠ sin intentarlo** (sin identidad ni rastro, toda ruta de Nest falla) y a la fase 6.
-- ⬜ F5.2 rastro (lectura, escritura y verificar)
-- ⬜ F5.3 datos (`/api/modulo/**`)
-- ⬜ F5.4 clientes y logos
-- ⬜ F5.5 buscar, contadores e indicadores
-- ⬜ F5.6 perfil y preferencias
-- ⬜ F5.7 decisiones y opiniones
-- ⬜ F5.8 ajustes y ver_dato
-- ⬜ F5.9 acciones, avisos y canales
+- ⚠ F5.1 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) identidad (guarda global) + escritor del rastro de «ver como» (`RASTRO_VER_COMO`) + sesion. **Si F5.1 queda ⚠, F5.2–F5.9 → ⚠ sin intentarlo** (sin identidad ni rastro, toda ruta de Nest falla) y a la fase 6.
+- ⚠ F5.2 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) rastro (lectura, escritura y verificar)
+- ⚠ F5.3 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) datos (`/api/modulo/**`)
+- ⚠ F5.4 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) clientes y logos
+- ⚠ F5.5 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) buscar, contadores e indicadores
+- ⚠ F5.6 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) perfil y preferencias
+- ⚠ F5.7 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) decisiones y opiniones
+- ⚠ F5.8 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) ajustes y ver_dato
+- ⚠ F5.9 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) acciones, avisos y canales
 Detalle de los nueve: sección «F5.x» de `PROMPTS_CURSOR.md`.
 Plan B de cada grupo: quitar sus rutas de `RUTAS_EN_NEST` (vuelven al proxy), guardar el módulo en la rama `intento/<grupo>` (cómo, en «F5.x»; también si ya hiciste commit), ⚠ y siguiente grupo.
 Reloj: ver «Cortes del reloj» arriba (grupos hasta 1 h 30 antes del fin).
 
 ## Fase 6 · Front en React + shadcn
 
-- ⬜ F6.1 shadcn init con versión fijada (sin tocar el tema ni el CSS sin preflight; tokens nuevos a `ro-tema.css`), `src/lib/ctx.ts` (43 campos; la cuenta que manda está en `migracion/inventario/RESUMEN.md`) y `PantallaPuente`.
-- ⬜ F6.2 Carcasa en React en `src/app/carcasa/`, con el puente para las 42 pantallas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa); con `RO_CARCASA=1` «/» la enseña sin cambiar la dirección (sin la variable, «/» sigue siendo el front de hoy); fotos con la variable iguales que las de hoy.
-- ⬜ F6.3 La carcasa encendida por defecto y `bash migracion/puerta.sh f6` en VERDE. Plan B: la carcasa se queda apagada (solo con `RO_CARCASA=1`) y «/» sigue siendo el front de hoy.
-- ⬜ F6.4 Pantallas en React, una cada vez, de menos a más riesgo (lista en PROMPTS_CURSOR.md). Plan B por pantalla: se queda con el puente.
+- ⚠ F6.1 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) shadcn init con versión fijada (sin tocar el tema ni el CSS sin preflight; tokens nuevos a `ro-tema.css`), `src/lib/ctx.ts` (43 campos; la cuenta que manda está en `migracion/inventario/RESUMEN.md`) y `PantallaPuente`.
+- ⚠ F6.2 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) Carcasa en React en `src/app/carcasa/`, con el puente para las 42 pantallas (cuenta en `migracion/inventario/RESUMEN.md`; manda esa); con `RO_CARCASA=1` «/» la enseña sin cambiar la dirección (sin la variable, «/» sigue siendo el front de hoy); fotos con la variable iguales que las de hoy.
+- ⚠ F6.3 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) La carcasa encendida por defecto y `bash migracion/puerta.sh f6` en VERDE. Plan B: la carcasa se queda apagada (solo con `RO_CARCASA=1`) y «/» sigue siendo el front de hoy.
+- ⚠ F6.4 · 12:50 · F3.1 ⚠ (sin intentar; sus rutas siguen por el proxy) Pantallas en React, una cada vez, de menos a más riesgo (lista en PROMPTS_CURSOR.md). Plan B por pantalla: se queda con el puente.
 Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 7.
 
 ## Fase 7 · Cierre (la última hora, pase lo que pase)
@@ -114,3 +114,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F3.1 · intento 1 · 10:50 · la pasada de las 10:29 no vale: dos puertas f3 escribieron a la vez en `capturas/nuevo` (vuelta cortada y relanzada). Paradas (`pkill` de `puerta.sh f3` y `capturar.mjs`, `pgrep` limpio, servicios 8770/8771/4000/3000 vivos) y lanzada UNA sola `puerta.sh f3` a las 10:50, log en `~/RO_MIGRACION/logs/puerta_f3_vuelta10.txt`. Si te relanzan: `pgrep -fl puerta.sh` antes de nada; si sigue viva, esperar.
 - F3.1 · intento 1 · 12:10 · puerta f3 única (10:50–12:02), ROJA 9/11. ✔ compila/test/lint, reinicio, e2e, contrato, escrituras, baterías, velocidad, seguridad, caídas. ✘ fotos: 96 de 2100 por encima de 0,5 % (produccion 28, chat-equipo 11, operaciones 6, uso-app 5, en-rojo 4, otras ≤ 3; las 96 con 0,5–91 %; uso-app alto 13151→844 px). Hipótesis: no es fontanería, es la guarda 503 de F2.4: con `DATABASE_URL` el legado responde 503 «requiere SQLite local verificado» en `/api/operaciones/{control,registros,feedback,prioridades,pedidos-account,decisiones-locales}` y `/api/tareas/vistas` (8770=200, 3000=503, comprobado con curl como tomas) y capacidades `base_no_validada`; el contrato las tapa con `excepciones.txt`, las fotos no. Con `uso/aviso` «medición desactivada» la pantalla uso-app sale casi vacía. ✘ 30 personas: `rendimiento.py carga` revienta con `ConnectionResetError` (traceback sin capturar, `pedir` solo atrapa URLError/TimeoutError) en `medir_carga(a.referencia)`, es decir en 8770 (la app de hoy), no en 3000; reproducido 2 veces; contra 8770 solo, con 20 personas × 6 hilos ya se resetea (cola `request_queue_size = 64`, 180 conexiones a la vez); con 5 y 10 no hay reset. Ni `rendimiento.py` ni `servir.py` se pueden tocar en este paso. Servicios: los pone `servicios.sh` y mueren al cerrar la orden que los lanzó; la puerta los reinicia sola. Pendiente para el intento 2: (a) decidir si las fotos de las pantallas con 503 por DATABASE_URL son plan B parcial (no es L-19) o se arregla en F5.10/F2.4 quitando la guarda en el legado; (b) para la carga, una manera de que la referencia aguante 30×6 sin tocar jueces (p. ej. 8770 con cola mayor en `~/RO_MIGRACION/ref/servir.py`, que es copia, no el repo) o plan B apuntado.
 - F2.4 · intento 2 · 09:38 · plan de guardia: el contrato en rojo no es traducción (0 `psycopg.errors`). `ro_app` limpiada (copias con `--vaciar`, `opiniones`/`preferencias` vaciadas; recuentos como F2.3, `datos` vigente). `excepciones.txt` (13) y `excepciones_rendimiento.txt` (9). Puerta f2 sin `DATABASE_URL`: vueltas 1–3 solo velocidad en rojo (`cerebro/operativo` 301→442 ms ruido; `rastro/verificar` 50→266 ms, una sola llamada en frío, 90 ms en caliente); vuelta 4 VERDE 5/5. `probar_base_traduccion.py` OK. `base.py` intacto. Plan: 13 rutas > 10 ⇒ ⚠, siguiente F3.1.
+- F3.1 · intento 2 · 12:50 · plan de guardia: los 2 rojos no son del proxy (4 causas de fotos: guardas DATABASE_URL, max() de 2 argumentos en avisos.py:1196, carrera del consejo en capturar.mjs, referencia de natalia/paneles; carga: cola 64 de servir.py en macOS). Sin pasada nueva. Plan B con cascada. Paso 2: POST /api/canales/leido como agustina → 500, legado.log `function max(integer, integer) does not exist`, canal_leidos = 0 en ro_app. Paso 3: 10 personas p95 953 ms, pico PG 15, 162 con 503 (guardas); 30 personas 4005 con 5xx (503 + 502 por el reset de 8771).
