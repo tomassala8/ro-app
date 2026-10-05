@@ -28,6 +28,9 @@ import sys
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(AQUI)
+if APP not in sys.path:
+    sys.path.insert(0, APP)
+from fuentes.lectura import leer as leer_api, marcar  # noqa: E402  · N-01/N-05: toda lectura de API se guarda; si falla, la última buena
 SALIDA = os.path.join(APP, 'data', 'hostinger', 'hostinger.json')   # webs, certificados y dominios por cliente (SEO, ficha y webs)
 CUENTA = os.path.join(APP, 'data', 'hostinger', 'cuenta.json')        # VPS y renovaciones: solo dirección, operaciones y técnico
 CACHE = os.path.join(AQUI, '_cache', 'volcado.json')
@@ -173,14 +176,29 @@ def leer():
         import hg  # noqa: E402
     except ImportError:
         return {'_sin_clave': 'No está el lector ~/RO_HERRAMIENTAS/hostinger/hg.py en este equipo.'}
-    try:
-        d = hg.volcar(ssl='--ssl' in sys.argv)
-    except hg.SinClave as e:
-        return {'_sin_clave': str(e)}
-    except hg.HostingerError as e:
-        return {'_error': str(e)}
-    guardar(CACHE, d)  # crudo SOLO en fuentes_hostinger/_cache (no se sirve)
-    return d
+    sin_clave = []
+
+    def llamar():
+        try:
+            return hg.volcar(ssl='--ssl' in sys.argv)
+        except hg.SinClave as e:       # no hay token: no es un fallo de la API
+            sin_clave.append(str(e))
+            raise
+        except hg.HostingerError as e:   # N-05: el error lanza; leer() sirve la última lectura buena
+            raise RuntimeError(str(e)) from e
+    l = leer_api('hostinger', 'cuenta', llamar)
+    if sin_clave:
+        return {'_sin_clave': sin_clave[0]}
+    if l.estado == 'ok':
+        guardar(CACHE, l.datos)  # crudo SOLO en fuentes_hostinger/_cache (no se sirve)
+        return l.datos
+    if l.estado == 'viejo':
+        return marcar(l)
+    try:    # la base empieza vacía: la caché de ficheros de la última vuelta buena vale como dato viejo
+        previa = json.load(open(CACHE))
+        return {**previa, '_viejo': True, '_desde': previa.get('leido')}
+    except (OSError, ValueError):
+        return {'_error': l.error or 'sin respuesta', '_sin_dato': True}
 
 
 def construir(d):
@@ -437,8 +455,11 @@ def main():
         out = sin_conectar('No hay token de la API de Hostinger en este equipo.')
     elif '_error' in d:
         out = sin_conectar('La API de Hostinger respondió con error: ' + d['_error'])
+        out['_meta'].update(estado='sin_dato', titular='sin dato', que_hacer='La API de Hostinger no respondió y no hay lectura anterior: se reintenta en la próxima vuelta.')
     else:
         out = construir(d)
+        if d.get('_viejo'):    # N-05: la API falló; son los últimos datos buenos
+            out['_meta'].update(estado='dato_viejo', dato_viejo_desde=d.get('_desde'))
     destino = sys.argv[sys.argv.index('--salida') + 1] if '--salida' in sys.argv else SALIDA
     if out['_meta']['estado'] == 'simulado' and destino == SALIDA:
         sys.exit('--simulado escribe solo con --salida <fichero> (los datos inventados nunca van a data/).')
@@ -447,6 +468,8 @@ def main():
     guardar(CUENTA if destino == SALIDA else re.sub(r'(\.json)?$', '_cuenta.json', destino, count=1), cuenta)
     r = out.get('resumen')
     print(f"{os.path.relpath(destino, APP)} (+ cuenta) · {out['_meta']['estado']}" + (f" · {r}" if r else f" · sin clave · {out['_meta']['que_hacer']}"))
+    if out['_meta']['estado'] == 'sin_dato':
+        sys.exit(2)    # N-05: la tubería tiene que ver que no hubo dato (antes salía 0 con «sin conectar»)
 
 
 if __name__ == '__main__':
