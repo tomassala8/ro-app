@@ -2,22 +2,6 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F1.5
-
-Reabierto por error a las 06:47 (una nota general de Claude, no un fallo del paso). NO lo rehagas: no relances baterías, fotos ni la puerta. Comprueba en 2 minutos que su «Hecho cuando» se cumple con lo que ya hay (su línea ✅ de antes, sus commits y, si tiene, su puerta en ~/RO_MIGRACION/puertas/) y vuelve a marcarlo ✅ con la hora y el resultado de antes, más « · re-marcado sin rehacer». Hecho cuando: la línea vuelve a ✅ y pasas al siguiente.
-
-## PARA: F1.6
-
-Reabierto por error a las 06:47 (una nota general de Claude, no un fallo del paso). NO lo rehagas: no relances baterías, fotos ni la puerta. Comprueba en 2 minutos que su «Hecho cuando» se cumple con lo que ya hay (su línea ✅ de antes, sus commits y, si tiene, su puerta en ~/RO_MIGRACION/puertas/) y vuelve a marcarlo ✅ con la hora y el resultado de antes, más « · re-marcado sin rehacer». Hecho cuando: la línea vuelve a ✅ y pasas al siguiente.
-
-## PARA: F1.7
-
-Reabierto por error a las 06:47 (una nota general de Claude, no un fallo del paso). NO lo rehagas: no relances baterías, fotos ni la puerta. Comprueba en 2 minutos que su «Hecho cuando» se cumple con lo que ya hay (su línea ✅ de antes, sus commits y, si tiene, su puerta en ~/RO_MIGRACION/puertas/) y vuelve a marcarlo ✅ con la hora y el resultado de antes, más « · re-marcado sin rehacer». Hecho cuando: la línea vuelve a ✅ y pasas al siguiente.
-
-## PARA: F2.1
-
-Reabierto por error a las 06:47 (una nota general de Claude, no un fallo del paso). NO lo rehagas: no relances baterías, fotos ni la puerta. Comprueba en 2 minutos que su «Hecho cuando» se cumple con lo que ya hay (su línea ✅ de antes, sus commits y, si tiene, su puerta en ~/RO_MIGRACION/puertas/) y vuelve a marcarlo ✅ con la hora y el resultado de antes, más « · re-marcado sin rehacer». Hecho cuando: la línea vuelve a ✅ y pasas al siguiente.
-
 ## PARA: F2.2
 
 ANTES de F2.2: si F1.5, F1.6, F1.7 o F2.1 están en 🔄 por la nota de las 06:47, fue un error de la maquinaria. NO los rehagas: comprueba su «Hecho cuando» con lo que ya hay y vuelve a marcarlos ✅ con la hora y el resultado de antes. Si F1.4 sigue regrabando fotos, deja que termine antes de copiar la base (las fotos miden tiempos y la copia cargaría el Mac).
