@@ -37,6 +37,9 @@ sys.path.insert(0, str(AQUI))
 import comun as C  # noqa: E402
 import periodos as PER  # noqa: E402
 import meta_mediciones_220 as META220  # noqa: E402
+if str(APP) not in sys.path:
+    sys.path.insert(2, str(APP))
+from fuentes.lectura import leer as leer_api, marcar  # noqa: E402  · N-01/N-06: toda lectura de API se guarda; si falla, la última buena
 
 for p in ("google", "meta", "metricool", "ghl_agencia", "zoho", "zadarma"):
     sys.path.insert(0, os.path.expanduser(f"~/RO_HERRAMIENTAS/{p}"))
@@ -133,6 +136,30 @@ def cache_escribir(fuente, cid, obj):
     tmp = ruta.with_suffix(".tmp")
     tmp.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")))
     os.replace(tmp, ruta)
+
+
+def lectura_fuente(fuente, cid, fn):
+    """N-06: la lectura de una fuente para un cliente pasa por la base. Si la API falla (o devuelve `_error`), se escribe en la
+    caché la última lectura buena con `_viejo` y `_desde` (la ficha dirá «dato_viejo»); «rota» solo si nunca hubo dato."""
+    ultimo = []
+
+    def cuerpo():
+        r = fn()
+        ultimo.append(r)
+        if isinstance(r, dict) and r.get("_error"):
+            raise RuntimeError(f"{fuente} {cid}: {r['_error']} {r.get('_msg', '')}".strip()[:300])
+        return r
+    l = leer_api(f"paneles_{fuente}", cid, cuerpo)
+    if l.estado == "ok":
+        cache_escribir(fuente, cid, l.datos)
+    elif l.estado == "viejo":
+        cache_escribir(fuente, cid, marcar(l))
+    else:   # sin dato en la base: lo último bueno de la caché de ficheros, o lo que dio la API (con su `_error`), como hoy
+        previa = cache_leer(fuente, cid)
+        if isinstance(previa, dict) and previa and not previa.get("_error"):
+            cache_escribir(fuente, cid, {**previa, "_viejo": True, "_desde": previa.get("leido")})
+        else:
+            cache_escribir(fuente, cid, ultimo[0] if ultimo else {"_error": l.error or "sin respuesta", "leido": AHORA})
 
 
 # ====================================================================== clientes y emparejamientos
@@ -760,23 +787,23 @@ def en_vivo(cls):
 
         def uno_google(c):
             if "ga" in FUENTES and c.get("ga4"):
-                cache_escribir("ga", c["id"], ga_leer(tk, c)); log(f"  ga {c['id']}")
+                lectura_fuente("ga", c["id"], lambda: ga_leer(tk, c)); log(f"  ga {c['id']}")
             if "gsc" in FUENTES and c.get("gsc"):
-                cache_escribir("gsc", c["id"], gsc_leer(tk, c)); log(f"  gsc {c['id']}")
+                lectura_fuente("gsc", c["id"], lambda: gsc_leer(tk, c)); log(f"  gsc {c['id']}")
             if "idx" in FUENTES and c.get("gsc"):
                 g = cache_leer("gsc", c["id"]) or {}
                 top = [k for k, *_ in ((g.get("periodos") or {}).get("30d") or {}).get("paginas", [])]
                 if not top and c.get("web"):
                     top = [c["web"]]
                 # la inspección pide la URL completa tal cual: se usa la del sitio (las páginas guardadas ya van sin parámetros)
-                cache_escribir("idx", c["id"], idx_leer(tk, c, top)); log(f"  idx {c['id']}")
+                lectura_fuente("idx", c["id"], lambda: idx_leer(tk, c, top)); log(f"  idx {c['id']}")
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(uno_google, vivo))
     if "psi" in FUENTES:
         with ThreadPoolExecutor(4) as ex:
             def uno_psi(c):
                 if c.get("gsc") or c.get("ga4"):
-                    cache_escribir("psi", c["id"], psi_leer(c)); log(f"  psi {c['id']}")
+                    lectura_fuente("psi", c["id"], lambda: psi_leer(c)); log(f"  psi {c['id']}")
             list(ex.map(uno_psi, vivo))
     if "meta" in FUENTES:
         import mt
@@ -784,7 +811,7 @@ def en_vivo(cls):
         with ThreadPoolExecutor(4) as ex:
             def uno_meta(c):
                 if c.get("meta"):
-                    cache_escribir("meta", c["id"], meta_leer(mtk, c)); log(f"  meta {c['id']}")
+                    lectura_fuente("meta", c["id"], lambda: meta_leer(mtk, c)); log(f"  meta {c['id']}")
             list(ex.map(uno_meta, vivo))
     if "ghl" in FUENTES:
         g = GHL()
@@ -792,7 +819,7 @@ def en_vivo(cls):
             def uno_ghl(c):
                 if c.get("ghl"):
                     try:
-                        cache_escribir("ghl", c["id"], ghl_leer(g, c)); log(f"  ghl {c['id']}")
+                        lectura_fuente("ghl", c["id"], lambda: ghl_leer(g, c)); log(f"  ghl {c['id']}")
                     except SystemExit as e:
                         log(f"  ghl {c['id']}: {e}")
             list(ex.map(uno_ghl, vivo))
@@ -800,7 +827,7 @@ def en_vivo(cls):
         with ThreadPoolExecutor(4) as ex:
             def uno_mc(c):
                 if c.get("metricool"):
-                    cache_escribir("mc", c["id"], mc_leer(c)); log(f"  metricool {c['id']}")
+                    lectura_fuente("mc", c["id"], lambda: mc_leer(c)); log(f"  metricool {c['id']}")
             list(ex.map(uno_mc, vivo))
     if "desk" in FUENTES and not SOLO:
         try:
@@ -839,6 +866,8 @@ def estado_de(raw, clave_datos):
     if raw.get("_error"):
         return "rota"
     d = raw.get(clave_datos)
+    if raw.get("_viejo") and d:       # N-06: la API falló en la última vuelta; son los últimos datos buenos
+        return "dato_viejo"
     return "bien" if d else "a_cero"
 
 
@@ -899,14 +928,14 @@ def construir(cls):
         # Meta
         me = cache_leer("meta", cid) if c.get("meta") else None
         me = META220.preparar_cache(me) if me else None
-        f["meta"] = {"estado": ("rota" if (me or {}).get("_error") else "bien" if me and (me.get("gasto_serie") or me.get("periodos")) else "sin_dato" if me else "sin_leer") if c.get("meta") else "sin_conectar",
+        f["meta"] = {"estado": ("rota" if (me or {}).get("_error") else ("dato_viejo" if me.get("_viejo") else "bien") if me and (me.get("gasto_serie") or me.get("periodos")) else "sin_dato" if me else "sin_leer") if c.get("meta") else "sin_conectar",
                      "hora": (me or {}).get("leido"), "nombre": c.get("meta_nombre"), "abrir": ENLACE["meta"](c) if c.get("meta") else None,
                      "nota": nota_error((me or {}).get("_error")) or (None if c.get("meta") else "Sin cuenta publicitaria de Meta emparejada")}
         if me and not me.get("_error"):
             escribir_fila("meta", c, META220.proyectar_cache(me, cliente_id=c.get('id')))
         # GHL
         gh = cache_leer("ghl", cid) if c.get("ghl") else None
-        f["ghl"] = {"estado": ("rota" if (gh or {}).get("_error") else "bien" if gh else "sin_leer") if c.get("ghl") else "sin_conectar",
+        f["ghl"] = {"estado": ("rota" if (gh or {}).get("_error") else ("dato_viejo" if gh.get("_viejo") else "bien") if gh else "sin_leer") if c.get("ghl") else "sin_conectar",
                     "hora": (gh or {}).get("leido"), "nombre": c.get("ghl_nombre"), "abrir": ENLACE["ghl"](c) if c.get("ghl") else None,
                     "nota": nota_error((gh or {}).get("_error")) or (None if c.get("ghl") else "Sin subcuenta de GoHighLevel emparejada")}
         if gh and not gh.get("_error"):
@@ -924,11 +953,14 @@ def construir(cls):
                                      "embudos": emb, "oportunidades": opps})
         # Metricool
         mm = cache_leer("mc", cid) if c.get("metricool") else None
-        f["mc"] = {"estado": ("bien" if (mm or {}).get("redes") else "a_cero" if mm else "sin_leer") if c.get("metricool") else "sin_conectar",
+        f["mc"] = {"estado": (("dato_viejo" if mm.get("_viejo") else "bien") if (mm or {}).get("redes") else "a_cero" if mm else "sin_leer") if c.get("metricool") else "sin_conectar",
                    "hora": (mm or {}).get("leido"), "nombre": c.get("metricool_nombre"), "abrir": ENLACE["mc"](c) if c.get("metricool") else None,
                    "nota": None if c.get("metricool") else "Sin marca de Metricool emparejada"}
         if mm and mm.get("redes"):
             escribir_fila("mc", c, {k: mm.get(k) for k in ("marca", "leido", "redes", "errores")})
+        for clave_f, raw_f in (("ga4", ga), ("gsc", gs), ("meta", me), ("ghl", gh), ("mc", mm)):   # N-06: desde cuándo es el dato viejo
+            if f[clave_f]["estado"] == "dato_viejo":
+                f[clave_f]["desde"] = (raw_f or {}).get("_desde")
         indice.append({"cliente_id": cid, "nombre": c["nombre"], "web": c.get("web"), "fuentes": f})
     _compacto(SALIDA / "indice.json", {"formato": 1, "generado": AHORA, "periodos": PERIODOS, "filas": indice})
     # Empresa: Desk y Zadarma

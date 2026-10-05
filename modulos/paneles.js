@@ -728,7 +728,7 @@ export default {
     nav.append(filaEntre(
       VISTAS.length > 1 ? chipsFiltro({ etiqueta: 'Vista', valor: vista, opciones: VISTAS.map(v => ({ valor: v.id, texto: v.texto, icono: v.icono })), alCambiar: id => navegar(`paneles/${cli.id}/${herr}/${id}`) }) : h('span'),
       h('span', { class: 'fila' },
-        fx.hora ? frescura({ fuente: HERR[herr].fuente, fecha: fx.hora }) : null,
+        fx.hora ? frescura({ fuente: HERR[herr].fuente, fecha: fx.hora, ...(fx.estado === 'dato_viejo' ? { estado: 'viejo' } : {}) }) : null,
         fx.abrir ? h('a', { class: 'bt mini', href: fx.abrir, target: '_blank', rel: 'noopener', title: fx.nombre || null }, icono('ext', { clase: 's' }), `Abrir en ${HERR[herr].texto}`) : null)));
     let P = periodoDe(ctx);
     estado.repintar = () => {
