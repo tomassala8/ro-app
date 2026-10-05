@@ -164,11 +164,13 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const cohorteClics=resumenClicsCarteraSEO(base,metaS,ctx.hoy);
   const sumSem=cohorteClics.actual,sumAnt=cohorteClics.anterior;
   const fuera = base.reduce((a, f) => a + f.alertas.filter(x=>x.tipo==='fuera_top10'&&x.acreditada===true).length, 0);
-  const desap = base.reduce((a, f) => a + ((f.visibilidad || {}).desaparecen || 0), 0);
+  // N-10 · suma solo lo observado: sin ningún dato, null (desconocido), nunca 0
+  const sumaObs = (xs, g) => { const v = xs.map(g).filter(x => typeof x === 'number' && Number.isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0) : null; };
+  const desap = sumaObs(base, f => f.visibilidad?.desaparecen);
   const conTop5=base.filter(f=>conteoSEO(f.reparto?.top5?.hoy)!==null);
   const top5h=conTop5.length?conTop5.reduce((a,f)=>a+f.reparto.top5.hoy,0):null;
   const top5m=conTop5.length&&conTop5.every(f=>conteoSEO(f.reparto.top5.mes)!==null)?conTop5.reduce((a,f)=>a+f.reparto.top5.mes,0):null;       // R12: solo palabras que SE Ranking ve hoy
-  const top5sin = base.reduce((a, f) => a + (f.reparto?.top5.sin_ver_hoy || 0), 0);
+  const top5sin = sumaObs(base, f => f.reparto?.top5?.sin_ver_hoy);
   const websRojo = webs.filter(w => w.estado === 'rojo');
   const avisosMed = webs.reduce((a, w) => a + w.avisos.length, 0);
   const caidas = webs.filter(w => w.estado === 'rojo' && !(w.comprobacion?.estado >= 200 && w.comprobacion?.estado < 400));
@@ -206,7 +208,7 @@ function pintarPortada(cont, ctx, d, { webObjetivo = null } = {}) {
   const ctxN = [rejillaTarjetas(t)];   // Ronda U (#1): las tarjetas grandes y los avisos van debajo de la lista, plegados
 
   // ---------- aviso de calidad del dato (lo que NO es un problema del cliente)
-  const totalDes = base.reduce((a, f) => a + ((f.visibilidad || {}).desaparecen || 0), 0);
+  const totalDes = desap;
   const conGsc = base.filter(f => f.clics);
   const suben = conGsc.filter(f => (f.clics.var_mes || 0) > 0).length;
   if (r !== 'web' && totalDes > 50) {
@@ -447,7 +449,7 @@ function pintarTablero(z, ctx, d, r) {
   pintarLista();
   const R = T.resumen || {};
   const cab = h('div', { class: 'fila sub', style: { gap: S[2] } }, frescura({ fuente: 'Modular DS', fecha: meta.leido || meta.generado }),
-    h('span', {}, `${num(webs.length)} webs en Modular · ${num(R.caidas_ahora ?? 0)} caídas ahora · ${num(R.con_vulnerabilidad_critica ?? 0)} con vulnerabilidad crítica · ${num(fuera.length)} webs de clientes fuera de Modular`),
+    h('span', {}, `${num(webs.length)} webs en Modular · ${num(R.caidas_ahora)} caídas ahora · ${num(R.con_vulnerabilidad_critica)} con vulnerabilidad crítica · ${num(fuera.length)} webs de clientes fuera de Modular`),
     meta.dato_viejo ? chipEstado('ambar', 'Dato de la última lectura buena') : null);
   // Ronda U (#1): la primera fila a menos de 300 px · el resumen y la hora del dato van al pie del tablero
   z.append(panel({ titulo: 'Tablero de webs (Modular)', icono: 'mundo_web', sub: 'La más urgente primero, con sus acciones. Pulsa el nombre para ver todo.' },
@@ -510,7 +512,8 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
       if (!w.modular) return sinModular(w);
       if (!c) return h('span', { class: 'sub', title: 'La clave de Modular no ve las copias' }, 'sin acceso');
       if (!c.ultima_buena) return estadoTexto('rojo', 'nunca');
-      const dd = c.dias_sin_copia_buena ?? 0;
+      const dd = c.dias_sin_copia_buena;
+      if (typeof dd !== 'number') return estadoTexto('gris', 'sin dato', `Última copia buena: ${fDiaHoraRO(c.ultima_buena)}`);   // N-10: sin días no es «hoy»
       return estadoTexto(dd >= 7 ? 'rojo' : dd >= 2 ? 'ambar' : 'verde', dd < 1 ? 'hoy' : `hace ${num(dd)} ${dd === 1 ? 'día' : 'días'}`, `Última copia buena: ${fDiaHoraRO(c.ultima_buena)}`);
     } },
     { clave: 'act', titulo: 'Actualizaciones', num: true, valor: w => w.modular?.actualizaciones?.pendientes ?? -1, celda: w => {
@@ -523,7 +526,7 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
       const v = w.modular.vulnerabilidades;
       if (!v) return h('span', { class: 'sub' }, 'sin dato');
       if (!v.criticas && !v.altas) return estadoTexto('verde', 'sin fallos graves');
-      return estadoTexto(v.criticas ? 'rojo' : 'ambar', `${num(v.criticas || 0)} críticas · ${num(v.altas || 0)} altas`, (v.lista || []).map(x => `${x.componente}: ${x.nombre}`).join(' · ') || null);
+      return estadoTexto(v.criticas ? 'rojo' : 'ambar', `${num(v.criticas)} críticas · ${num(v.altas)} altas`, (v.lista || []).map(x => `${x.componente}: ${x.nombre}`).join(' · ') || null);
     } },
     { clave: 'fuera', titulo: 'Fuera de RO', valor: w => ({ down: 0, unknown: 1, up: 2 })[w.modular?.disponibilidad?.estado] ?? 3, celda: w => {
       if (!w.modular) return sinModular(w);
@@ -566,7 +569,7 @@ function pintarWebs(z, ctx, d, r, webObjetivo = null) {
   else if (webObjetivo) z.prepend(avisoParcial('Esa web no está entre las vigiladas.', { titulo: 'No la encuentro.' }));
   const lineaModular = M.conectado
     ? h('div', { class: 'fila sub', style: { gap: S[2] } }, frescura({ fuente: 'Modular DS', fecha: M.meta.leido || M.meta.generado }),
-      M.resumen ? h('span', {}, `${num(M.resumen.emparejadas ?? 0)} webs en Modular · ${num(M.resumen.caidas_ahora ?? 0)} caídas ahora · ${num(M.resumen.vulnerabilidades_graves ?? 0)} fallos de seguridad graves · ${num(M.resumen.actualizaciones_pendientes ?? 0)} actualizaciones pendientes`) : null,
+      M.resumen ? h('span', {}, `${num(M.resumen.emparejadas)} webs en Modular · ${num(M.resumen.caidas_ahora)} caídas ahora · ${num(M.resumen.vulnerabilidades_graves)} fallos de seguridad graves · ${num(M.resumen.actualizaciones_pendientes)} actualizaciones pendientes`) : null,
       (M.meta.errores_parciales || []).length ? h('span', { title: (M.meta.errores_parciales || []).map(x => (typeof x === 'string' ? x : x.texto || x.parte || '')).join(' · ') }, 'Algunas partes sin acceso') : null,
       M.meta.enlace ? h('a', { class: 'bt mini', href: M.meta.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir Modular') : null)
     : h('div', { class: 'fila', style: { gap: S[2] } }, chipEstado('gris', 'Modular sin conectar'), h('span', { class: 'sub', style: { flex: '1 1 320px', minWidth: '0' } }, MODULAR_PASO));

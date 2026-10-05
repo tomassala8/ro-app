@@ -25,6 +25,54 @@ if (elegidas.length < 2) fallos.push('no hay una persona de dirección y un acco
 
 const navegador = await chromium.launch();
 
+// ---------------------------------------------------------------------------------------------------------------
+// N-10 · «sin dato no es cero». Uso:  node migracion/pruebas_L-18.mjs --base http://127.0.0.1:8771 --solo-texto --nunca-ceros
+// Quita campos numéricos de las respuestas con `page.route` y mira el texto: tiene que decir «—» o «sin gravedad», nunca 0.
+// (Los datos no se guardan: solo se comparan frases.)
+async function leerConRespuestas(persona, ruta, rutasAPI, retocar, abrir) {
+  const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 }, locale: 'es-ES', timezoneId: 'Europe/Madrid', reducedMotion: 'reduce' });
+  const pagina = await ctx.newPage();
+  try {
+    for (const patron of rutasAPI) {
+      await pagina.route(patron, async (r) => {
+        const resp = await r.fetch();
+        let j;
+        try { j = await resp.json(); } catch { return r.fulfill({ response: resp }); }
+        if (retocar) retocar(j);
+        return r.fulfill({ response: resp, json: j });
+      });
+    }
+    await pagina.goto(`${base}/?yo=${persona}&hoy=2026-10-05#/${ruta}`, { waitUntil: 'load', timeout: 45_000 });
+    await pagina.waitForTimeout(4000);
+    const tab = pagina.locator('[role=tab]', { hasText: abrir });
+    await tab.first().click({ timeout: 15_000 });
+    await pagina.waitForTimeout(2500);
+    return await pagina.evaluate(() => (document.querySelector('#main') || document.body).innerText);
+  } finally {
+    await ctx.close();
+  }
+}
+
+if (args['nunca-ceros']) {
+  const quitar = (j, claves) => { (function rec(o) { if (Array.isArray(o)) o.forEach(rec); else if (o && typeof o === 'object') { claves.forEach((k) => delete o[k]); Object.values(o).forEach(rec); } })(j); };
+  const tomas = personas.find((p) => (p.puestos || []).includes('direccion'))?.id;
+  const ok = (c, t) => { console.log(`  ${c ? '✔' : '✘'} ${t}`); if (!c) fallos.push(t); };
+  // SEO y webs · pestaña Webs: el resumen de Modular sin sus cifras
+  const web = await leerConRespuestas(tomas, 'seo-web', ['**/api/modulo/modular/**'], (j) => { if (j.resumen) for (const k of ['caidas_ahora', 'con_vulnerabilidad_critica', 'emparejadas', 'vulnerabilidades_graves', 'actualizaciones_pendientes']) delete j.resumen[k]; }, 'Webs');
+  ok(/— webs en Modular · — caídas ahora · — fallos de seguridad graves · — actualizaciones pendientes/.test(web), 'seo-web: sin cifras de Modular el resumen dice «—»');
+  ok(!/(^|[^\d])0 (webs en Modular|caídas ahora|fallos de seguridad graves|actualizaciones pendientes)/.test(web), 'seo-web: no aparece «0» donde no hay dato');
+  // Captación · por trafficker: sin gravedad (viene de verdad/clientes) y sin anuncios
+  const cap = await leerConRespuestas(tomas, 'captacion', ['**/api/modulo/captacion/captacion*', '**/api/modulo/verdad/**'], (j) => quitar(j, ['gravedad', 'anuncios']), 'Por trafficker');
+  const tabla = cap.slice(cap.indexOf('Cuentas por trafficker'), cap.indexOf('Cifras y referencias por trafficker'));
+  ok(tabla.length > 100 && /sin gravedad/.test(tabla), 'captacion · por trafficker: sin gravedad se lee «sin gravedad»');
+  ok((tabla.match(/sin gravedad/g) || []).length >= 2 && !/\d+ · \+\d+ a vigilar/.test(tabla), 'captacion · por trafficker: cada trafficker sin gravedad dice «sin gravedad», no «0 críticos»');
+  ok(/— \/ —/.test(tabla) && !/(^|\t)0 \/ 0(\t|$)/m.test(tabla), 'captacion · por trafficker: sin anuncios «— / —», no «0 / 0»');
+  await navegador.close();
+  if (fallos.length) { console.log(`✘ N-10: ${fallos.length} fallos`); process.exit(1); }
+  console.log('✔ N-10: sin dato se pinta «—», no cero');
+  process.exit(0);
+}
+
 function normalizar(t) {
   return (t || '')
     .replace(/hace \d+ ?(min|h)/g, 'hace N')

@@ -296,6 +296,8 @@ function resumenObservadoPaid4(filas,d,hoy) {
 
 // ------------------------------------------------------------------ cálculos sobre un conjunto de cuentas
 function cifras(filas, d) {
+  // N-10 · suma solo lo observado: si ninguna fila trae el dato, null (desconocido), nunca 0. (Dentro de `cifras`: las pruebas la recortan sola.)
+  const sumaObs = (xs, f) => { const v = xs.map(f).filter(x => typeof x === 'number' && Number.isFinite(x)); return v.length ? v.reduce((a, b) => a + b, 0) : null; };
   const activas = filas.filter(c => c.meta_activa);
   const conDinero = filas.filter(c => c.dinero);
   const tiendas = filas.filter(esTienda);
@@ -316,12 +318,12 @@ function cifras(filas, d) {
     conObjetivo: activas.filter(c => c.objetivo?.cargado),
     alarmaCita: filas.filter(c => c.coste_por_cita?.alarma_100),
     gasto7: suma('gasto', '7d'), gasto7p: suma('gasto', '7d_prev'), gastoMesAnt: suma('gasto', 'mes_anterior'),
-    leads7: deLeads.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0), leads7p: deLeads.reduce((s, c) => s + (c.leads?.['7d_prev'] || 0), 0),
-    tiendas, conversionesTienda7: tiendas.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0),
+    leads7: sumaObs(deLeads, c => c.leads?.['7d']), leads7p: sumaObs(deLeads, c => c.leads?.['7d_prev']),
+    tiendas, conversionesTienda7: sumaObs(tiendas, c => c.leads?.['7d']),
     pctCrm: null, comparacionRecuentos: conGhl.length > 0, sumMeta, sumGhl, conGhl,
-    cansadas: filas.reduce((s, c) => s + (c.anuncios?.cansadas || 0), 0),
-    vigilar: filas.reduce((s, c) => s + (c.anuncios?.vigilar || 0), 0),
-    rechazados: filas.reduce((s, c) => s + (c.anuncios?.problemas_total || 0), 0),
+    cansadas: sumaObs(filas, c => c.anuncios?.cansadas),
+    vigilar: sumaObs(filas, c => c.anuncios?.vigilar),
+    rechazados: sumaObs(filas, c => c.anuncios?.problemas_total),
     paradas: activas.filter(c => (c.gasto?.ayer === 0) || (c.cuenta_meta?.ultimo_dia_con_gasto && c.cuenta_meta.ultimo_dia_con_gasto < d.datos_hasta)),
   };
 }
@@ -781,13 +783,14 @@ function pEquipo(el, ctx, d, filas) {
   const [verde, ambar] = d.parametros.rojos_trafficker;
   const filasT = [...por.entries()].map(([t, cs]) => {
     const Ct = cifras(cs, d);
+    const gravObs = cs.filter(c => ['critico', 'atencion', 'bien'].includes(c?.gravedad)).length;   // N-10: sin gravedad no hay «cero críticos»
     return {
       id: t, nombre: t === '—' ? 'Sin trafficker asignado' : nombre(d, t), cuentas: cs.length, activas: Ct.activas.length, cp: (d.carteras_publicidad || {})[t] || null,
-      rojos: Ct.criticos.length, atencion: Ct.atencion.length, gasto7: Ct.conDinero.length ? Ct.gasto7 : null, gastoMes: Ct.conDinero.length ? Ct.gastoMesAnt : null,
+      rojos: gravObs ? Ct.criticos.length : null, atencion: gravObs ? Ct.atencion.length : null, gasto7: Ct.conDinero.length ? Ct.gasto7 : null, gastoMes: Ct.conDinero.length ? Ct.gastoMesAnt : null,
       techo: Ct.juzg.length ? Math.round(Ct.enTecho.length / Ct.juzg.length * 100) : null, techoTxt: Ct.juzg.length ? `${Ct.enTecho.length} de ${Ct.juzg.length}` : '—',
       cansadas: Ct.cansadas, rechazados: Ct.rechazados, objetivos: `${Ct.conObjetivo.length} de ${Ct.activas.length}`,
     };
-  }).sort((a, b) => b.rojos - a.rojos || b.activas - a.activas);
+  }).sort((a, b) => (b.rojos ?? -1) - (a.rojos ?? -1) || b.activas - a.activas);
   const total = cifras(filas, d);
   const observado648 = resumenEquipo648(filas, d);
 
@@ -812,15 +815,15 @@ function pEquipo(el, ctx, d, filas) {
         { clave: 'nombre', titulo: 'Trafficker', principal: true, celda: x => h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(x.nombre)), x.nombre) },
         // V2 (B-A3): la misma cartera con nombre que Mi día y Personas (carteras_publicidad)
         { clave: 'cuentas', titulo: 'Cartera', num: true, celda: x => (x.cp ? h('span', { style: { display: 'inline-grid', justifyItems: 'end' } }, `${x.cp.cartera} clientes${x.cp.apoyo ? ` + ${x.cp.apoyo} de apoyo` : ''}`, h('small', { class: 'sub' }, `${x.cp.con_meta} con Meta · ${x.cp.meta_encendida} encendidas`)) : `${x.activas} encendidas de ${x.cuentas}`) },
-        { clave: 'rojos', titulo: 'Críticos', num: true, celda: x => chipEstado('gris',`${x.rojos}${x.atencion?` · +${x.atencion} a vigilar`:''}`) },
+        { clave: 'rojos', titulo: 'Críticos', num: true, celda: x => x.rojos === null ? h('span', { class: 'sub', title: 'Estas cuentas no traen gravedad: no se sabe cuántas son críticas' }, chipEstado('gris', 'sin gravedad')) : chipEstado('gris',`${x.rojos}${x.atencion?` · +${x.atencion} a vigilar`:''}`) },
         { clave: 'techo', titulo:'Ref. coste', num: true, celda: x => h('span',{title:`Referencia anterior ${d.parametros.techo_cpl} € · no objetivo: ${x.techoTxt}`},x.techoTxt) },
         { clave: 'gasto7', titulo: 'Gasto 7 d', num: true, celda: x => (x.gasto7 === null ? candado('—') : eur(x.gasto7)) },
         { clave: 'gastoMes', titulo: 'Septiembre', num: true, celda: x => (x.gastoMes === null ? candado('—') : eur(x.gastoMes)) },
-        { clave: 'cansadas', titulo: 'Señales / rechazos', num: true, celda: x => h('span',{title:`${x.cansadas} anuncios con señal de cansada · ${x.rechazados} rechazados`},`${x.cansadas} / ${x.rechazados}`) },
+        { clave: 'cansadas', titulo: 'Señales / rechazos', num: true, celda: x => h('span',{title:`${x.cansadas ?? '—'} anuncios con señal de cansada · ${x.rechazados ?? '—'} rechazados`},`${x.cansadas ?? '—'} / ${x.rechazados ?? '—'}`) },
         { clave: 'objetivos', titulo: 'Objetivos', num: true, celda:x=>h('span',{title:'Cuentas con objetivo cargado / activas; no acredita objetivo ratificado ni cumplimiento.'},x.objetivos) },
       ],
       alPulsar: x => { try { sessionStorage.setItem('captacion.filtro', JSON.stringify({ trafficker: x.id })); } catch { /* */ } ctx.navegar(`captacion/~trafficker/${x.id}`); },
-      etiquetaFila: x => `${x.nombre}: ${fmt.plural(x.rojos, 'cuenta crítica', 'cuentas críticas')}. Ver sus cuentas`,
+      etiquetaFila: x => `${x.nombre}: ${x.rojos === null ? 'sin gravedad en sus cuentas' : fmt.plural(x.rojos, 'cuenta crítica', 'cuentas críticas')}. Ver sus cuentas`,
     }))));
   el.append(plegablePaid411('Cifras y referencias por trafficker',cifrasEquipo416,
     h('p',{class:'sub'},`Ref. coste: comparación anterior con ${d.parametros.techo_cpl} €; no objetivo acordado. Responsable: tabla de asignaciones, no el «PM» escrito a mano de la Torre. Señales / rechazos conserva los recuentos de anuncios; no confirma fatiga actual.`)));
