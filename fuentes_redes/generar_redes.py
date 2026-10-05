@@ -60,6 +60,10 @@ def limpiar_cache(obj):
     return obj
 
 
+sys.path.insert(0, APP) if APP not in sys.path else None
+from fuentes.lectura import leer, marcar  # noqa: E402  · N-01/N-03: toda lectura de API se guarda; si falla, la última buena
+
+
 def leer_en_vivo():
     from pathlib import Path  # 3-oct: faltaba (NameError en la vuelta completa, solo con --en-vivo)
     sys.path.insert(1, str(Path(__file__).resolve().parents[1])); import config  # C5: rutas en config.py
@@ -70,56 +74,94 @@ def leer_en_vivo():
         q = {'userId': mc.llave('metricool_user_id'), **q}
         req = urllib.request.Request('https://app.metricool.com/api' + path + '?' + urllib.parse.urlencode(q),
                                      headers={'X-Mc-Auth': mc.llave('metricool_token'), 'Accept': 'application/json'})
-        try:
-            return json.load(urllib.request.urlopen(req, timeout=60))
-        except Exception as e:  # una marca que falla no tumba al resto
-            return {'_error': str(e)[:120]}
+        # N-03: un error de la API lanza; leer() sirve entonces la última lectura buena de esa marca (nunca «0 publicaciones»)
+        return json.load(urllib.request.urlopen(req, timeout=60))
 
-    marcas = g('/admin/simpleProfiles')
-    marcas = marcas if isinstance(marcas, list) else marcas.get('data', [])
-    out = {'leido': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'marcas': []}
+    def lista_marcas():
+        m = g('/admin/simpleProfiles')
+        m = m if isinstance(m, list) else m.get('data')
+        if not isinstance(m, list):
+            raise RuntimeError('Metricool no devolvió la lista de marcas')
+        # solo lo necesario: la respuesta trae más (correos del dueño) y la base no es sitio para eso
+        return [{'id': b['id'], 'label': b.get('label'),
+                 'redes': [k for k in ('instagram', 'facebook', 'linkedinCompany', 'tiktok', 'youtube', 'gmb', 'twitter') if b.get(k)]} for b in m]
+
+    # La base de lecturas empieza vacía: la primera vez que la API falle, la caché de ficheros de ayer es el último dato bueno.
+    try:
+        previa = json.load(open(CACHE))
+    except (OSError, ValueError):
+        previa = None
+    ml = leer('metricool', 'marcas', lista_marcas)
+    if ml.estado == 'sin_dato' and previa and previa.get('marcas'):
+        previa['estado'], previa['_desde'] = 'viejo', previa.get('_desde') or previa.get('leido')
+        print(f'Metricool no responde ({ml.error}): se queda la caché de {previa["_desde"]}', flush=True)
+        return previa
+    out = {'leido': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'marcas': [], 'estado': ml.estado}
+    if ml.estado == 'viejo':
+        out['_desde'] = ml.desde
+    if ml.estado == 'sin_dato':
+        out['error'] = ml.error
+    marcas = ml.datos or []
     for b in marcas:
-        redes = [k for k in ('instagram', 'facebook', 'linkedinCompany', 'tiktok', 'youtube', 'gmb', 'twitter') if b.get(k)]
-        p = g('/v2/scheduler/posts', blogId=b['id'], start=f'{DESDE}T00:00:00', end=f'{HASTA}T23:59:59', timezone='Europe/Madrid')
-        posts = p.get('data', p) if isinstance(p, dict) else p
-        limpios = []
-        for x in posts if isinstance(posts, list) else []:
-            limpios.append({
-                'id': x.get('id'), 'fecha': (x.get('publicationDate') or {}).get('dateTime'),
-                'texto': re.sub(r'\s+', ' ', x.get('text') or '').strip()[:160],
-                'draft': bool(x.get('draft')), 'auto': bool(x.get('autoPublish')),
-                'miniatura': (x.get('videoThumbnailUrl') or (x.get('media') or [None])[0]),
-                'redes': [{'red': pr.get('network'), 'estado': pr.get('status'), 'detalle': (pr.get('detailedStatus') or '')[:140],
-                           'url': pr.get('publicUrl')} for pr in x.get('providers', [])],
-            })
-        rend = {}
-        for net in ('instagram', 'facebook', 'linkedin'):
-            if (net == 'linkedin' and 'linkedinCompany' not in redes) or (net != 'linkedin' and net not in redes):
+        out_marca = leer('metricool', f"marca:{b['id']}", lambda b=b: cuerpo_marca(g, b))
+        if out_marca.estado == 'sin_dato' and previa:   # la base aún no la tenía: vale la de la caché de ficheros
+            antes = next((m for m in previa.get('marcas', []) if m.get('id') == b['id']), None)
+            if antes:
+                out['marcas'].append({**antes, '_viejo': True, '_desde': antes.get('_desde') or previa.get('leido')})
+                print(f"{(b.get('label') or '')[:30]:30} dato viejo de la caché de ficheros: {out_marca.error}", flush=True)
                 continue
-            r = g(f'/v2/analytics/posts/{net}', blogId=b['id'], **{'from': f'{DESDE}T00:00:00', 'to': f'{HOY}T23:59:59'})
-            filas = []
-            for y in (r.get('data') if isinstance(r, dict) else r) or []:
-                if net == 'instagram':
-                    filas.append({'fecha': (y.get('publishedAt') or {}).get('dateTime'), 'url': y.get('url'), 'tipo': y.get('type'),
-                                  'texto': re.sub(r'\s+', ' ', y.get('content') or '')[:110], 'alcance': y.get('reach'),
-                                  'interacciones': y.get('interactions'), 'guardados': y.get('saved'), 'compartidos': y.get('shares'),
-                                  'me_gusta': y.get('likes'), 'vistas': y.get('views')})
-                elif net == 'facebook':
-                    filas.append({'fecha': (y.get('created') or {}).get('dateTime'), 'url': y.get('link'), 'tipo': y.get('type'),
-                                  'texto': re.sub(r'\s+', ' ', y.get('text') or '')[:110], 'alcance': y.get('impressionsUnique'),
-                                  'interacciones': (y.get('reactions') or 0) + (y.get('comments') or 0) + (y.get('shares') or 0) + (y.get('clicks') or 0)})
-                else:
-                    filas.append({'fecha': (y.get('created') or {}).get('dateTime'), 'url': y.get('url'), 'tipo': 'post',
-                                  'texto': re.sub(r'\s+', ' ', y.get('title') or y.get('comment') or '')[:110], 'impresiones': y.get('impressions'),
-                                  'interacciones': (y.get('clicks') or 0) + (y.get('likes') or 0) + (y.get('shares') or 0) + (y.get('comments') or 0)})
-            rend[net] = filas
-        out['marcas'].append({'id': b['id'], 'nombre': b.get('label'), 'redes': redes, 'posts': limpios, 'rendimiento': rend})
-        print(f"{(b.get('label') or '')[:30]:30} {len(limpios):4} publicaciones", flush=True)
+        if out_marca.estado == 'sin_dato':      # nunca hubo dato de esta marca: no se inventa una marca vacía
+            out.setdefault('marcas_sin_dato', []).append(b.get('label'))
+            print(f"{(b.get('label') or '')[:30]:30} sin dato: {out_marca.error}", flush=True)
+            continue
+        m = limpiar_cache(marcar(out_marca))
+        out['marcas'].append({'id': b['id'], 'nombre': b.get('label'), 'redes': b['redes'], **m})
+        print(f"{(b.get('label') or '')[:30]:30} {len(m['posts']):4} publicaciones" + (' (dato viejo)' if out_marca.estado == 'viejo' else ''), flush=True)
     os.makedirs(os.path.dirname(CACHE), exist_ok=True)
     out = limpiar_cache(out)
     json.dump(out, open(CACHE + '.tmp', 'w'), ensure_ascii=False)
     os.replace(CACHE + '.tmp', CACHE)
     return out
+
+
+def cuerpo_marca(g, b):
+    """Todas las lecturas de una marca: si una falla, falla la marca entera y leer() sirve la última buena."""
+    redes = b['redes']
+    p = g('/v2/scheduler/posts', blogId=b['id'], start=f'{DESDE}T00:00:00', end=f'{HASTA}T23:59:59', timezone='Europe/Madrid')
+    posts = p.get('data', p) if isinstance(p, dict) else p
+    limpios = []
+    for x in posts if isinstance(posts, list) else []:
+        limpios.append({
+            'id': x.get('id'), 'fecha': (x.get('publicationDate') or {}).get('dateTime'),
+            'texto': re.sub(r'\s+', ' ', x.get('text') or '').strip()[:160],
+            'draft': bool(x.get('draft')), 'auto': bool(x.get('autoPublish')),
+            'miniatura': (x.get('videoThumbnailUrl') or (x.get('media') or [None])[0]),
+            'redes': [{'red': pr.get('network'), 'estado': pr.get('status'), 'detalle': (pr.get('detailedStatus') or '')[:140],
+                       'url': pr.get('publicUrl')} for pr in x.get('providers', [])],
+        })
+    rend = {}
+    for net in ('instagram', 'facebook', 'linkedin'):
+        if (net == 'linkedin' and 'linkedinCompany' not in redes) or (net != 'linkedin' and net not in redes):
+            continue
+        r = g(f'/v2/analytics/posts/{net}', blogId=b['id'], **{'from': f'{DESDE}T00:00:00', 'to': f'{HOY}T23:59:59'})
+        filas = []
+        for y in (r.get('data') if isinstance(r, dict) else r) or []:
+            if net == 'instagram':
+                filas.append({'fecha': (y.get('publishedAt') or {}).get('dateTime'), 'url': y.get('url'), 'tipo': y.get('type'),
+                              'texto': re.sub(r'\s+', ' ', y.get('content') or '')[:110], 'alcance': y.get('reach'),
+                              'interacciones': y.get('interactions'), 'guardados': y.get('saved'), 'compartidos': y.get('shares'),
+                              'me_gusta': y.get('likes'), 'vistas': y.get('views')})
+            elif net == 'facebook':
+                filas.append({'fecha': (y.get('created') or {}).get('dateTime'), 'url': y.get('link'), 'tipo': y.get('type'),
+                              'texto': re.sub(r'\s+', ' ', y.get('text') or '')[:110], 'alcance': y.get('impressionsUnique'),
+                              'interacciones': (y.get('reactions') or 0) + (y.get('comments') or 0) + (y.get('shares') or 0) + (y.get('clicks') or 0)})
+            else:
+                filas.append({'fecha': (y.get('created') or {}).get('dateTime'), 'url': y.get('url'), 'tipo': 'post',
+                              'texto': re.sub(r'\s+', ' ', y.get('title') or y.get('comment') or '')[:110], 'impresiones': y.get('impressions'),
+                              'interacciones': (y.get('clicks') or 0) + (y.get('likes') or 0) + (y.get('shares') or 0) + (y.get('comments') or 0)})
+        rend[net] = filas
+    # marca_id: una marca sin publicaciones es un dato (huecos), no «sin dato»; sin él leer() la vería vacía
+    return {'marca_id': b['id'], 'posts': limpios, 'rendimiento': rend}
 
 
 def tasa(f, red):
@@ -267,8 +309,18 @@ def construir(cache):
                       + (f" y ayudas en {e['apoyo']} ({e['apoyo_en_metricool']} conectados)" if e['apoyo'] else '') + '.')
     total = len(filas)
     verdes = sum(1 for f in filas if f['estado_14'] == 'verde')
+    # N-03: solo si la lectura no fue buena del todo; con datos al día el fichero sale igual que siempre
+    aviso = {}
+    if cache.get('estado') in ('viejo', 'sin_dato'):
+        aviso['estado_fuente'] = 'dato_viejo' if cache['estado'] == 'viejo' else 'sin_dato'
+        aviso['dato_viejo_desde' if cache['estado'] == 'viejo' else 'error_fuente'] = cache.get('_desde') or cache.get('error')
+    if cache.get('marcas_sin_dato'):
+        aviso['marcas_sin_dato'] = cache['marcas_sin_dato']
+    viejas = [m['nombre'] for m in cache['marcas'] if m.get('_viejo')]
+    if viejas:
+        aviso['marcas_con_dato_viejo'] = viejas
     return {
-        '_meta': {'generado': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'leido_metricool': cache['leido'],
+        '_meta': {**aviso, 'generado': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'leido_metricool': cache['leido'],
                   'hoy': str(HOY), 'ventana': [str(HOY), str(HASTA)], 'hueco_dias': HUECO_DIAS,
                   'regla_hueco': f'Hueco = {HUECO_DIAS} días seguidos o más sin nada programado (plan por defecto de RO ≈ 3-4 piezas por semana; el plan pactado de cada cliente todavía no está cargado).',
                   'aprobaciones': 'La API de Metricool no da el estado de aprobación (pendiente / aprobado / rechazado): solo «borrador». Se cuentan los borradores con fecha futura como «por aprobar».',
