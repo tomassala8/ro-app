@@ -18,3 +18,25 @@ Pasos:
 Trampas: no cambies comparar.mjs (juzga). No bajes el número de pantallas ni de personas. No metas pantallas en excepciones.txt por este fallo. No toques app.js ni quites el envío de uso. No subas los plazos en vez de cambiar la espera.
 Hecho cuando: la puerta de F1.4 en VERDE con las fotos de las 42 pantallas grabadas.
 Si falla: apunta la salida del punto 2 en «Intentos y notas» y sigue el plan B de F1.4.
+
+## PARA: F1.4 (añadido 05:00 — vale si F1.4 sigue abierto)
+
+Por qué: las 2.688 fotos de ~/RO_MIGRACION/capturas/viejo son buenas. Lo único roto es `viejo/_tiempos.json`: la repetición parcial de 3 pantallas lo reescribió entero y dejó solo 3 entradas. `capturar.mjs` pisa `_tiempos.json` y `_errores.json` en cada pasada, aunque sea parcial.
+
+Pasos:
+1. NO borres ni regrabes las fotos de `viejo`.
+2. Si `viejo_pasada2/_tiempos.json` existe y tiene 2.688 entradas:
+   Orden: `python3 -c 'import json,sys;print(len(json.load(open(sys.argv[1]))))' ~/RO_MIGRACION/capturas/viejo_pasada2/_tiempos.json`
+   Si sale 2688: `cp ~/RO_MIGRACION/capturas/viejo_pasada2/_tiempos.json ~/RO_MIGRACION/capturas/viejo/_tiempos.json`. Hecho.
+3. Si no existe o tiene menos: relanza la pasada completa a `viejo_pasada2` LO PRIMERO de la vuelta (unos 40 min) y luego el punto 2.
+4. Arreglo de fondo en v2/tools/capturas/capturar.mjs, líneas 81–82: que una pasada mezcle con lo que ya había en vez de pisarlo. Código exacto:
+   ```js
+   const previo = (f) => { try { return JSON.parse(readFileSync(join(salida, f), 'utf8')); } catch { return null; } };
+   const tiemposPrevios = previo('_tiempos.json') || {};
+   const erroresPrevios = (previo('_errores.json') || []).filter((e) => !errores.some((x) => x.persona === e.persona && x.tamano === e.tamano && x.pantalla === e.pantalla));
+   writeFileSync(join(salida, '_errores.json'), JSON.stringify([...erroresPrevios, ...errores], null, 1));
+   writeFileSync(join(salida, '_tiempos.json'), JSON.stringify({ ...tiemposPrevios, ...tiempos }, null, 1));
+   ```
+
+Trampas: no uses `--personas` ni pasadas parciales sobre `viejo` antes del arreglo del punto 4. No inventes ni rellenes tiempos a mano.
+Hecho cuando: `viejo/_tiempos.json` tiene 2.688 entradas y la puerta de F1.4 está en VERDE.
