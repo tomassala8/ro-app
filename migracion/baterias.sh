@@ -65,6 +65,7 @@ bateria N-09 120 python3 despliegue/pruebas_solidez_N-09.py
 bateria N-10 300 node migracion/nunca_ceros.mjs
 bateria N-10p 300 node migracion/pruebas_L-18.mjs --base "http://127.0.0.1:$PUERTO" --solo-texto --nunca-ceros
 bateria N-11 300 node migracion/pruebas_N-11.mjs --base "http://127.0.0.1:$PUERTO"
+bateria N-12 300 python3 migracion/pruebas_N-12.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos

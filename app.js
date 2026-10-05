@@ -8,7 +8,7 @@ import { puestoControl239, tituloControl239, menuActual239 } from './modulos/_co
 import { PUESTOS, PUESTO, nivelModulo, ver } from './permisos.js';
 import { cargarCrudo, recortar, cargarServidor, adaptarSesion, cabeceras, pedirDato, fijarPersonas, olvidarTodo, olvidarTrasCambio, alCambiarDato, alCambiarEstadoDato } from './datos.js';
 import { MODULOS, GRUPOS } from './modulos/indice.js';
-import { h, icono, esqueleto, estadoVacio, frescura, chipEstado, configurarVista, formatoTexto, ICONO_MODULO, ICONO_GRUPO, selectorPeriodo, leerPeriodo, guardarPeriodo, PERIODO_IDS,
+import { h, icono, esqueleto, estadoVacio, frescura, avisoParcial, chipEstado, configurarVista, formatoTexto, ICONO_MODULO, ICONO_GRUPO, selectorPeriodo, leerPeriodo, guardarPeriodo, PERIODO_IDS,
   fechas, fechasDe, fijarHoy, quitaPrefijoDepartamento, fmt } from './componentes.js';
 
 const $ = sel => document.querySelector(sel);
@@ -688,7 +688,8 @@ function pintarMenu() {
   const f = (estado.datos.meta || estado.crudo.meta).fuentes || [];
   const malas = f.filter(x => x.estado !== 'ok').length;
   // V2-E (40_A B12, 40_C 6): una sola hora de datos, y si no son de hoy se dice el día («Datos del vie 2, 23:14»).
-  const gen = (estado.datos.meta || estado.crudo.meta).generado || '';
+  const metaDatos = estado.datos.meta || estado.crudo.meta;
+  const gen = metaDatos.generado_tuberia || metaDatos.generado || '';   // N-12: la hora de la última vuelta de la tubería, si la hay
   const dd = fechas.diaDatos(gen), hhGen = fechas.hora(gen) || gen.slice(-5);
   const txtDatos = dd.esHoy || !dd.dia ? `Datos de las ${hhGen}` : `Datos ${dd.texto.startsWith('datos de ayer') ? 'de ayer' : `del ${fechas.diaSemana(dd.dia)} ${Number(dd.dia.slice(8, 10))}`}, ${hhGen}`;
   $('#frescura').replaceChildren(
@@ -773,6 +774,7 @@ async function ruta(porUsuario, { refresco = false } = {}) {
       }
     } finally { clearTimeout(esq); miEsq?.remove(); }
     if (!vigente()) return;
+    avisoDatoViejoN12(cont, m);
     pintura.enCurso = false;
     marcarGuardado(estadoGuardado487());
     if (scroll !== null) window.scrollTo(0, scroll);
@@ -780,6 +782,21 @@ async function ruta(porUsuario, { refresco = false } = {}) {
     else if (pintura.guardado) setTimeout(() => { if (vigente() && !estadoGuardado487()?.falloActualizacion) marcarGuardado(null); }, 6000);
   }
   if (vigente() && porUsuario) main.focus({ preventScroll: true });
+}
+
+/** N-12 · si algún paso de la tubería que alimenta esta pantalla va con dato viejo (o sin ningún dato bueno), lo dice arriba,
+ *  con la hora del último dato bueno. Un solo sitio para todas las pantallas; con todo bien no pinta nada. */
+function avisoDatoViejoN12(cont, m) {
+  cont.querySelectorAll?.(':scope > [data-aviso-n12]').forEach(x => x.remove());
+  const sellos = (estado.datos?.meta?.sellos || []).filter(s => (s.modulos || [s.modulo]).includes(m.id) && s.estado && s.estado !== 'bien');
+  if (!sellos.length) return;
+  const buenos = sellos.map(s => s.ultimo_bueno).filter(Boolean).sort();
+  const hora = buenos.length === sellos.length ? fechas.hora(buenos[0]) : '';
+  const dia = buenos.length === sellos.length ? fechas.diaDatos(buenos[0]) : null;
+  const cuando = !hora ? 'todavía no hay un dato bueno' : dia && dia.dia && !dia.esHoy ? `lo último es del ${fechas.diaSemana(dia.dia)} ${Number(dia.dia.slice(8, 10))} a las ${hora}` : `lo último es de las ${hora}`;
+  const aviso = avisoParcial(`Sin datos en tiempo real: ${cuando}`, { titulo: 'Aviso' });
+  aviso.dataset.avisoN12 = '1';
+  cont.prepend(aviso);
 }
 
 function pintarSinPermiso(m, inicio) {

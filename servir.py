@@ -251,6 +251,62 @@ def logos_a_direcciones(datos):
     return {**datos, "clientes": out}
 
 
+_SELLOS_N12 = {"estado": None, "pasos": None, "marca": None}
+
+
+def _modulos_de_paso_n12():
+    """N-12 · de `despliegue/pasos.json`: qué pantallas (ids de módulo) alimenta cada paso de la tubería.
+    El campo `modulo` es texto libre («seo-web», «setters · ventas-ro», «comun (E0)»): solo valen los ids en minúsculas."""
+    fichero = AQUI / "despliegue" / "pasos.json"
+    try:
+        marca = fichero.stat().st_mtime
+        if _SELLOS_N12["pasos"] is None or _SELLOS_N12["marca"] != marca:
+            pasos = json.loads(fichero.read_text(encoding="utf-8")).get("pasos", [])
+            tabla = {}
+            for p in pasos:
+                ids = []
+                for trozo in re.sub(r"\([^)]*\)", "", p.get("modulo") or "").split("·"):
+                    palabras = trozo.split()
+                    if palabras and re.fullmatch(r"[a-z][a-z0-9\-]*", palabras[0]) and palabras[0] != "comun":
+                        ids.append(palabras[0])
+                tabla[p["id"]] = ids
+            _SELLOS_N12.update({"pasos": tabla, "marca": marca})
+    except Exception:
+        return {}
+    return _SELLOS_N12["pasos"] or {}
+
+
+def sellos_de_la_tuberia():
+    """N-12 · (sellos, generado_tuberia): el último dato bueno de cada paso de la tubería y la hora en que acabó la última
+    vuelta. Se lee de la base de estado (`despliegue/estado.py`) en cada /api/sesion, con una sola conexión. Sin base de
+    estado (en el Mac, si la tubería nunca ha corrido, no hay `tuberia.db`) o con cualquier fallo: ([], None) y nada cambia.
+    Se devuelve solo lo que NO va bien (paso, módulos, estado y hora del último bueno): ni el motivo ni el error de la fuente."""
+    try:
+        if _SELLOS_N12["estado"] is None:
+            import estado as TUBERIA_N12
+            if not os.environ.get("DATABASE_URL", "").startswith(("postgres://", "postgresql://")):
+                db = Path(os.environ.get("RO_ESTADO_DB") or (AQUI / "despliegue" / "estado" / "tuberia.db"))
+                if not db.exists():
+                    return [], None   # sin base de estado: no se crea una vacía solo por mirar
+            _SELLOS_N12["estado"] = TUBERIA_N12.abrir()
+        E_t = _SELLOS_N12["estado"]
+        with E_t.conexion() as con:
+            cur = con.cursor()
+            cur.execute("SELECT paso, ultimo_bueno, estado FROM sellos ORDER BY paso")
+            filas = cur.fetchall()
+            cur.execute(E_t.q("SELECT fin FROM ejecuciones WHERE fin IS NOT NULL AND estado <> ? ORDER BY id DESC LIMIT 1"), ("en_curso",))
+            ult = cur.fetchone()
+        modulos = _modulos_de_paso_n12()
+        sellos = []
+        for paso, bueno, est in filas:
+            ids = modulos.get(paso) or []
+            if ids and est != "bien":   # solo lo que va mal: lo que va bien no hace falta enseñarlo a nadie
+                sellos.append({"paso": paso, "modulo": ids[0], "modulos": ids, "estado": est, "ultimo_bueno": bueno})
+        return sellos, (ult[0] if ult else None)
+    except Exception:
+        return [], None
+
+
 def ahora():
     # L-22: hora de pared de Madrid (sin zona en el texto). RO_RELOJ no la congela: el rastro agruparía todo en un minuto.
     return (datetime.now(P.MADRID) if P.MADRID else datetime.now()).replace(tzinfo=None).isoformat(timespec="seconds")
@@ -2687,6 +2743,9 @@ class Manejador(SimpleHTTPRequestHandler):
             if solo_lectura:
                 registrar(real["id"], "sesion", "ver_como", persona["id"], {"detalle": f"{real['alias']} ve como {persona['alias']} (solo lectura)"}, como=persona["id"])
             datos = logos_a_direcciones(P.recortar(persona, E.crudo))
+            sellos_n12, generado_n12 = sellos_de_la_tuberia()   # N-12: el dato viejo de cada paso llega a su pantalla
+            if sellos_n12 or generado_n12:
+                datos = {**datos, "meta": {**(datos.get("meta") or {}), "sellos": sellos_n12, "generado_tuberia": generado_n12}}
             return self.responder(200, {
                 # Ronda 14 (causa 1): qué pantalla ve cada puesto, para pintar el menú sin bajar el código de las 46.
                 "modulos_puestos": PILOTO_LECTURA.modulos_disponibles(E.modulos),
