@@ -434,7 +434,15 @@
      "clientes"
     ]
    },
-   "errores_de_fuente": true
+   "errores_de_fuente": true,
+   "recuento": [
+    {
+     "fichero": "data/bandeja/por_cliente.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
   },
   {
    "id": "informes",
@@ -590,7 +598,23 @@
     "capa_e1",
     "lector_captacion"
    ],
-   "nota_ligero": "R16b: en ligero, --desde-crudo (la última lectura en vivo de GHL de _privado/ghl_vivo.json, con su hora) y no --sin-vivo, que dejaba la Salud del CRM sin leads sin tocar ni citas hasta la vuelta completa."
+   "nota_ligero": "R16b: en ligero, --desde-crudo (la última lectura en vivo de GHL de _privado/ghl_vivo.json, con su hora) y no --sin-vivo, que dejaba la Salud del CRM sin leads sin tocar ni citas hasta la vuelta completa.",
+   "claves_minimas": {
+    "data/crm/crm.json": [
+     "generado",
+     "resumen",
+     "fuentes",
+     "subcuentas"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/crm/crm.json",
+     "ruta": "subcuentas",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
   },
   {
    "id": "seo",
@@ -617,6 +641,32 @@
    "depende": [
     "capa_e1",
     "seranking"
+   ],
+   "claves_minimas": {
+    "data/seo/seo.json": [
+     "_meta",
+     "resumen",
+     "clientes"
+    ],
+    "data/seo/webs.json": [
+     "_meta",
+     "resumen",
+     "webs"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/seo/seo.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/seo/webs.json",
+     "ruta": "webs",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
    ]
   },
   {
@@ -642,6 +692,21 @@
    "timeout": 600,
    "depende": [
     "capa_e1"
+   ],
+   "claves_minimas": {
+    "data/redes/redes.json": [
+     "_meta",
+     "resumen",
+     "clientes"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/redes/redes.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
    ]
   },
   {
@@ -717,6 +782,29 @@
    "depende": [
     "capa_e1",
     "lector_clickup_equipo"
+   ],
+   "claves_minimas": {
+    "data/produccion/produccion.json": [
+     "generado",
+     "fuentes",
+     "cola",
+     "personas",
+     "proyectos"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/produccion/produccion.json",
+     "ruta": "personas",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/produccion/produccion.json",
+     "ruta": "proyectos",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
    ]
   },
   {
@@ -740,6 +828,22 @@
    "timeout": 300,
    "depende": [
     "produccion"
+   ],
+   "claves_minimas": {
+    "data/horas/horas.json": [
+     "generado",
+     "meses",
+     "fuentes",
+     "personas"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/horas/horas.json",
+     "ruta": "personas",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
    ]
   },
   {
@@ -909,7 +1013,42 @@
    "depende": [
     "base"
    ],
-   "nota": "GHL de la subcuenta de RO (GHL_PIT_NEW, no rota) y Zadarma (1 consulta). Snov solo en la completa."
+   "nota": "GHL de la subcuenta de RO (GHL_PIT_NEW, no rota) y Zadarma (1 consulta). Snov solo en la completa.",
+   "claves_minimas": {
+    "data/ventas_ro/ventas_ro.json": [
+     "generado",
+     "meses",
+     "propuestas",
+     "contratos",
+     "dias"
+    ],
+    "data/ventas_ro/outreach.json": [
+     "generado",
+     "clientes",
+     "snov",
+     "respuestas"
+    ],
+    "data/ventas_ro/setters.json": [
+     "generado",
+     "setters",
+     "leads",
+     "citas"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/ventas_ro/ventas_ro.json",
+     "ruta": "dias",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/ventas_ro/outreach.json",
+     "ruta": "respuestas",
+     "caida_max": 0.5,
+     "minimo_antes": 20
+    }
+   ]
   },
   {
    "id": "informe",
@@ -936,7 +1075,22 @@
    "depende": [
     "capa_e1"
    ],
-   "nota": "Como en recarga.json (--cache); su dueño decide si la completa va en vivo."
+   "nota": "Como en recarga.json (--cache); su dueño decide si la completa va en vivo.",
+   "claves_minimas": {
+    "data/informe/comun.json": [
+     "_meta",
+     "periodos",
+     "defecto"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/informe/comun.json",
+     "ruta": "periodos",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    }
+   ]
   },
   {
    "id": "agenda",
@@ -957,7 +1111,21 @@
    "depende": [
     "base"
    ],
-   "nota": "Zoho CRM (eventos) y GHL de la subcuenta de RO (GHL_PIT_NEW, no rota)."
+   "nota": "Zoho CRM (eventos) y GHL de la subcuenta de RO (GHL_PIT_NEW, no rota).",
+   "claves_minimas": {
+    "data/agenda/agenda.json": [
+     "_meta",
+     "eventos"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/agenda/agenda.json",
+     "ruta": "eventos",
+     "caida_max": 0.7,
+     "minimo_antes": 20
+    }
+   ]
   },
   {
    "id": "chat_equipo",
@@ -978,7 +1146,22 @@
    "depende": [
     "base"
    ],
-   "nota": "ClickUp con la llave propia (nunca el conector de Claude). Lee la llave del llavero directamente: en el servidor, pendiente de pasar a config.secreto()."
+   "nota": "ClickUp con la llave propia (nunca el conector de Claude). Lee la llave del llavero directamente: en el servidor, pendiente de pasar a config.secreto().",
+   "claves_minimas": {
+    "data/chat_equipo/p_tomas.json": [
+     "_meta",
+     "canales",
+     "menciones"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/chat_equipo/p_tomas.json",
+     "ruta": "canales",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
   },
   {
    "id": "dinero",
@@ -1006,6 +1189,34 @@
    "depende": [
     "capa_e1",
     "panel_v29"
+   ],
+   "claves_minimas": {
+    "data/dinero_cliente/dinero_cliente.json": [
+     "generado",
+     "fuentes",
+     "clientes",
+     "por_account"
+    ],
+    "data/finanzas/finanzas.json": [
+     "generado",
+     "mes",
+     "fuentes",
+     "admin"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/dinero_cliente/dinero_cliente.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/dinero_cliente/rentabilidad.json",
+     "ruta": "rentabilidad",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
    ]
   },
   {
@@ -1061,7 +1272,22 @@
    "depende": [
     "capa_e1"
    ],
-   "nota": "Ligera: desde _cache (0 llamadas). Completa: en vivo (GHL de agencia con la llave prestada y bloqueo)."
+   "nota": "Ligera: desde _cache (0 llamadas). Completa: en vivo (GHL de agencia con la llave prestada y bloqueo).",
+   "claves_minimas": {
+    "data/paneles/indice.json": [
+     "generado",
+     "periodos",
+     "filas"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/paneles/indice.json",
+     "ruta": "filas",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
   },
   {
    "id": "modular",
@@ -1098,7 +1324,21 @@
      "webs"
     ]
    },
-   "nota": "Cada hora (ligera, 7-23 h): webs, caídas, copias, vulnerabilidades, actualizaciones y malware (≈ 8-10 GET) + detalle por turnos de 8 webs (disponibilidad 1 d/7 d/30 d, salud, enlaces rotos, certificado: ≈ 32 GET con pausa); la completa (6:00 y 14:00), 17 webs. No llama a /sites/count (eso lo hace el vigía cada 10 min) y, si el vigía ve la clave rota, no llama a la API y deja la última lectura buena. Sin clave (modulards_api_key) escribe «sin_conectar» con la instrucción para Tomás. Solo GET: nada se escribe en Modular. Antes de «alertas» (vía «verdad»): las alertas de Modular van a #avisos-web."
+   "nota": "Cada hora (ligera, 7-23 h): webs, caídas, copias, vulnerabilidades, actualizaciones y malware (≈ 8-10 GET) + detalle por turnos de 8 webs (disponibilidad 1 d/7 d/30 d, salud, enlaces rotos, certificado: ≈ 32 GET con pausa); la completa (6:00 y 14:00), 17 webs. No llama a /sites/count (eso lo hace el vigía cada 10 min) y, si el vigía ve la clave rota, no llama a la API y deja la última lectura buena. Sin clave (modulards_api_key) escribe «sin_conectar» con la instrucción para Tomás. Solo GET: nada se escribe en Modular. Antes de «alertas» (vía «verdad»): las alertas de Modular van a #avisos-web.",
+   "recuento": [
+    {
+     "fichero": "data/modular/webs.json",
+     "ruta": "webs",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    },
+    {
+     "fichero": "data/modular/tablero.json",
+     "ruta": "webs",
+     "caida_max": 0.5,
+     "minimo_antes": 10
+    }
+   ]
   },
   {
    "id": "hostinger",
@@ -1123,7 +1363,25 @@
    ],
    "timeout": 600,
    "depende": [],
-   "nota": "Solo lectura (GET). Sin token (hostinger_api_token) el propio generador escribe «sin_conectar» con la instrucción para Tomás y sale bien: no es un fallo."
+   "nota": "Solo lectura (GET). Sin token (hostinger_api_token) el propio generador escribe «sin_conectar» con la instrucción para Tomás y sale bien: no es un fallo.",
+   "claves_minimas": {
+    "data/hostinger/hostinger.json": [
+     "_meta",
+     "clientes"
+    ],
+    "data/hostinger/cuenta.json": [
+     "_meta",
+     "vps"
+    ]
+   },
+   "recuento": [
+    {
+     "fichero": "data/hostinger/hostinger.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    }
+   ]
   },
   {
    "id": "gbp",
@@ -1156,7 +1414,15 @@
      "alertas"
     ]
    },
-   "nota": "Una vez al día (cada_min 1380): cuentas, fichas, estado (suspendida, cambios de Google), rendimiento diario, búsquedas del mes y reseñas. Solo GET (el permiso de Google no es de solo lectura). Sin llave o sin aprobación de Google escribe «pendiente_aprobacion» con los pasos de Tomás y sale bien: no es un fallo. Antes de «verdad» y «alertas»: las de la ficha van a SEO/ficha de Google con copia al account."
+   "nota": "Una vez al día (cada_min 1380): cuentas, fichas, estado (suspendida, cambios de Google), rendimiento diario, búsquedas del mes y reseñas. Solo GET (el permiso de Google no es de solo lectura). Sin llave o sin aprobación de Google escribe «pendiente_aprobacion» con los pasos de Tomás y sale bien: no es un fallo. Antes de «verdad» y «alertas»: las de la ficha van a SEO/ficha de Google con copia al account.",
+   "recuento": [
+    {
+     "fichero": "data/gbp/gbp.json",
+     "ruta": "clientes",
+     "caida_max": 0.5,
+     "minimo_antes": 4
+    }
+   ]
   },
   {
    "id": "panel_direccion",

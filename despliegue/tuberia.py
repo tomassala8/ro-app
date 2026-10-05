@@ -279,6 +279,18 @@ def _en_ruta(d, ruta):
     return d if isinstance(d, (int, float)) and not isinstance(d, bool) else None
 
 
+def _lectura():
+    """`fuentes.lectura` (N-01): el criterio de «todo a 0» vive solo ahí."""
+    from fuentes import lectura
+    return lectura
+
+
+def _hay_cifras_no_cero(x):
+    """True si hay alguna cifra y no todas son 0 (lo contrario de «a_cero» con cifras)."""
+    L = _lectura()
+    return next(L._numeros(x), None) is not None and not L.a_cero(x)
+
+
 def validar(salidas, antes_secretos, existia, p=None):
     """Salida mala = JSON roto, salida desaparecida, secreto nuevo (como siempre) y, desde la auditoría 35 (M3):
       · un JSON vacío ({}, null, "") o una lista que se queda vacía cuando antes tenía filas (salvo «vacio_ok»);
@@ -314,6 +326,13 @@ def validar(salidas, antes_secretos, existia, p=None):
             continue
         if ahora_n is None or ahora_n < antes * (1 - r.get("caida_max", 0.5)):
             return f"el recuento «{r.get('ruta') or _corto(q)}» de {_corto(q)} cae de {antes} a {ahora_n}"
+    # N-09 · todo a 0 donde antes había cifras: una API que «contesta» con ceros no es dato. Mismo criterio que
+    # fuentes/lectura.py (N-01, `a_cero`): un solo sitio. Salvo «vacio_ok» (el paso admite quedarse en cero).
+    if not p.get("vacio_ok"):
+        for f in ficheros_json(salidas):
+            antes_d, ahora_d = _previo(existia, f), _leer_json(f)
+            if antes_d is not None and ahora_d is not None and _lectura().a_cero(ahora_d) and _hay_cifras_no_cero(antes_d):
+                return f"todo a 0 en {_corto(f)} donde antes no lo estaba (sospechoso)"
     despues = hallazgos_secretos(salidas)
     if despues > antes_secretos:
         return f"la puerta de secretos encuentra {despues - antes_secretos} hallazgos nuevos"
