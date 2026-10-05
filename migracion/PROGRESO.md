@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F1.7 (reabierto a las 06:47 por el mismo error). F1.6 cerrado otra vez a las 08:20.
+Siguiente: F2.1 (reabierto a las 06:47 por el mismo error). F1.7 cerrado otra vez a las 08:21.
 
 Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
 - candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
@@ -39,7 +39,7 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 - ✅ F1.4 · 08:11 · 2100 png (25 personas × 42 pantallas × 2 tamaños), 0 errores, 0 fotos < 15 KB, mediana 802 ms; 31 claves ≥ 15 s pintadas · puerta: ~/RO_MIGRACION/puertas/f1.md
 - ✅ F1.5 · 06:18 · 45 casos, 14 rutas, ensayo rc=0 contra la copia en 8780 · comprobado otra vez 08:19 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; la puerta f1 de 08:05 ya repitió los 45 casos). Plan B: ninguno; es imprescindible.
 - ✅ F1.6 · 06:31 · 169 verdes, 38 heredadas, pasada 2 rc=0 · comprobado otra vez 08:20 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; la puerta f1 de las 08:05 acabó a las 08:10 en Verdes: 169 · heredadas en rojo: 38 · ROJAS: 0). Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
-- 🔄 F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md. Push de la rama. Plan B: ninguno; repetir lo que falte. · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
+- ✅ F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md · comprobado otra vez 08:21 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; ~/RO_MIGRACION/puertas/f1.md de las 08:11 ya dice VERDE 9/9). Push de la rama. Plan B: ninguno; repetir lo que falte.
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
@@ -105,3 +105,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.4 · intento 3 (revisión 06:44) · hipótesis: texto estable 600 ms. `Date.now()` no avanza con el reloj fijo: la prueba de 18 fotos se fue a 15 s. Con 6 sondeos de 100 ms: 18 fotos, 0 errores, ninguna < 15 KB, máximo 4053 ms, operaciones y producción pintadas. Pasada 07:01–08:03: 2100 png, 0 errores, mediana 802 ms. Puerta f1 VERDE 08:11 (9/9). La de 2688 está en `viejo_espera_vieja`.
 - F1.5 · intento 2 · 08:19 · reabierto a las 06:47 por la nota genérica de Claude (notas_revisor/F1.5.md, solo habla de setsid); su nota para F2.2 dice que fue un error de la maquinaria y que no se rehaga. Comprobado: 45 casos, 14 rutas, «sin caso: ninguno»; la puerta f1 de 08:05 ejecutó los 45 casos (✔) y salió VERDE 9/9. Nada regrabado.
 - F1.6 · intento 2 · 08:20 · reabierto a las 06:47 por el mismo error. Comprobado: el log de la puerta f1 (08:05, acabado 08:10) termina en «Verdes: 169 · heredadas en rojo: 38 · ROJAS: 0». Nada rehecho.
+- F1.7 · intento 2 · 08:21 · reabierto a las 06:47 por el mismo error. Comprobado: ~/RO_MIGRACION/puertas/f1.md (cabecera 05-10-2026 08:05, fichero 08:11) dice VERDE, 9 de 9 con ✔. El push anterior (bf6c714) ya estaba en origin; este cierre sube otra vez la rama. Nada regrabado; huellas_referencia.txt la rehace noche.sh.
