@@ -162,6 +162,10 @@ def ruta_db():
 def conectar(db=None):
     if S is not None and db is None:
         return S.conectar()
+    if db is None and os.environ.get("DATABASE_URL"):   # N-17: un cron de la nube trabaja sobre la misma base que servir.py, no sobre una SQLite vacía
+        sys.path.insert(1, str(AQUI / "despliegue"))
+        import base as BASE_PG
+        return BASE_PG.conectar()
     con = sqlite3.connect(str(db or ruta_db()), timeout=20)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA busy_timeout=20000")
