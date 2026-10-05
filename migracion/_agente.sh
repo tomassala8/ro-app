@@ -12,7 +12,7 @@ fi
 
 # sin_saldo_en <registro> · ¿la vuelta acabó por falta de saldo del modelo? Solo se mira si Cursor salió con error,
 # y solo el final del registro (el agente puede hablar de «límites» en su trabajo).
-sin_saldo_en() { tail -15 "$1" 2>/dev/null | grep -qiE "usage limit|limit (reached|exceeded)|quota|out of (credits|usage)|insufficient (credits|balance|funds)|upgrade (your|to) |spend(ing)? limit|billing"; }
+sin_saldo_en() { tail -15 "$1" 2>/dev/null | grep -qiE "usage limit|limit (reached|exceeded)|quota|out of (credits|usage)|insufficient (credits|balance|funds)|upgrade (your|to) |spend(ing)? limit|billing|named models unavailable|upgrade plans?|free plans? can only"; }
 suma() { md5 -q "$1" 2>/dev/null || md5sum "$1" 2>/dev/null | cut -d' ' -f1; }
 
 # lanzar <modelo> <mensaje> <registro> <tope en segundos> [plantilla]   (si se corta por tiempo, deja <registro>.cortada)
