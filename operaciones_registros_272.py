@@ -9,6 +9,7 @@ from contextlib import closing
 from datetime import date,datetime,timezone
 import operaciones_registros_269 as O
 import mediciones_fotos_329 as MF329
+import bd_comun as bd
 
 RUTA='/api/operaciones/control'
 VERSION='272.1'
@@ -268,9 +269,8 @@ def enganchar(H,S):
         try:
             if q:raise O.ErrorRegistro(400,'Esta ruta no admite filtros de identidad.')
             rid,vid=real.get('id'),vista.get('id');O.autorizar(S,rid,vid,metodo=='POST')
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise O.ErrorRegistro(503,'Este registro requiere SQLite local verificado.')
             with closing(S.conectar()) as con:
-                if not isinstance(con,sqlite3.Connection):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
+                if not bd.conexion_valida(con):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
                 con.row_factory=sqlite3.Row
                 doc=listar(S,con,rid,vid) if metodo=='GET' else guardar(S,con,rid,vid,b)
             O.autorizar(S,rid,vid,metodo=='POST')
@@ -302,6 +302,6 @@ def enganchar(H,S):
                     else:raise
             return self.responder(200,doc)
         except O.ErrorRegistro as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Registro de control no disponible; no se confirma el cambio.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Registro de control no disponible; no se confirma el cambio.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

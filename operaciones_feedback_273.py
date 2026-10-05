@@ -11,6 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from uuid import UUID
 import piloto_lectura
+import bd_comun as bd
 from contexto_tarea import texto_operativo
 from operaciones_registros_269 import unica, ErrorRegistro
 
@@ -129,15 +130,16 @@ def enganchar(H,S):
     def responder(self,metodo,ruta,q,real,vista,b=None):
         if ruta!=RUTA:return original_get(self,ruta,q,real,vista) if metodo=='GET' else original_post(self,ruta,real,vista,b)
         try:
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise ErrorFeedback(503,'La persistencia local requiere SQLite verificado.')
             rid,vid=real.get('id'),vista.get('id')
             if metodo=='GET':
                 if not isinstance(q,dict) or set(q)!={'cliente_id'} or len(q['cliente_id'])!=1:raise ErrorFeedback(400,'Elige un solo cliente; no se admiten filtros de identidad.')
                 cid=q['cliente_id'][0];autorizar(S,rid,vid,cid)
                 # Un GET nunca crea la base ni una tabla: archivo configurado por el servidor.
                 db=getattr(S,'DB',None)
-                if db is None:raise ErrorFeedback(503,'Ruta de persistencia local no disponible.')
-                if not Path(db).exists():doc=leer(S,None,rid,vid,cid)
+                if bd.es_pg():
+                    with closing(S.conectar()) as con:doc=leer(S,con,rid,vid,cid)
+                elif db is None:raise ErrorFeedback(503,'Ruta de persistencia local no disponible.')
+                elif not Path(db).exists():doc=leer(S,None,rid,vid,cid)
                 else:
                     with closing(sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True)) as con:
                         con.row_factory=sqlite3.Row;doc=leer(S,con,rid,vid,cid)
@@ -145,11 +147,11 @@ def enganchar(H,S):
                 if q:raise ErrorFeedback(400,'No se admiten filtros de identidad.')
                 cid=b.get('cliente_id') if isinstance(b,dict) else None;autorizar(S,rid,vid,cid,True)
                 with closing(S.conectar()) as con:
-                    if not isinstance(con,sqlite3.Connection):raise ErrorFeedback(503,'Persistencia local no disponible.')
+                    if not bd.conexion_valida(con):raise ErrorFeedback(503,'Persistencia local no disponible.')
                     con.row_factory=sqlite3.Row;doc=guardar(S,con,rid,vid,b)
             autorizar(S,rid,vid,cid,metodo=='POST')
             return self.responder(200,doc)
         except ErrorFeedback as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el registro local. Reintenta la misma intención.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el registro local. Reintenta la misma intención.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

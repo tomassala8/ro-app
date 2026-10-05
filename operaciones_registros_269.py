@@ -8,6 +8,7 @@ import uuid
 from contextlib import closing
 from datetime import date, datetime, timedelta, timezone
 import piloto_lectura
+import bd_comun as bd
 
 RUTA = '/api/operaciones/registros'
 RITUALES = ('manana','cierre','lunes','viernes','mes')
@@ -155,14 +156,13 @@ def enganchar(H,S):
             if q:raise ErrorRegistro(400,'Esta ruta no admite filtros de identidad.')
             rid,vid=real.get('id'),vista.get('id')
             autorizar(S,rid,vid,metodo=='POST')
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise ErrorRegistro(503,'Este registro local requiere SQLite verificado.')
             with closing(S.conectar()) as con:
-                if not isinstance(con,sqlite3.Connection):raise ErrorRegistro(503,'Persistencia local no disponible.')
+                if not bd.conexion_valida(con):raise ErrorRegistro(503,'Persistencia local no disponible.')
                 con.row_factory=sqlite3.Row
                 doc=listar(S,con,rid,vid) if metodo=='GET' else guardar(S,con,rid,vid,b)
             autorizar(S,rid,vid,metodo=='POST',b.get('persona_id') if isinstance(b,dict) and b.get('tipo')=='avisado' else None)
             return self.responder(200,doc)
         except ErrorRegistro as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Registro local no disponible; no se ha confirmado el cambio.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Registro local no disponible; no se ha confirmado el cambio.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

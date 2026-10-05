@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from uuid import UUID
 import piloto_lectura
+import bd_comun as bd
 from contexto_tarea import texto_operativo
 from operaciones_registros_269 import unica, ErrorRegistro
 
@@ -119,20 +120,21 @@ def enganchar(H,S):
         if ruta!=RUTA:return original_get(self,ruta,q,real,vista) if metodo=='GET' else original_post(self,ruta,real,vista,b)
         try:
             if q:raise ErrorPrioridad(400,'No se admiten filtros de identidad.')
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise ErrorPrioridad(503,'Persistencia SQLite no disponible.')
             rid,vid=real.get('id'),vista.get('id');autorizar(S,rid,vid,metodo=='POST')
             if metodo=='GET':
                 db=getattr(S,'DB',None)
-                if db is None:raise ErrorPrioridad(503,'Persistencia no configurada.')
-                if not Path(db).exists():doc=leer(S,None,rid,vid)
+                if bd.es_pg():
+                    with closing(S.conectar()) as con:doc=leer(S,con,rid,vid)
+                elif db is None:raise ErrorPrioridad(503,'Persistencia no configurada.')
+                elif not Path(db).exists():doc=leer(S,None,rid,vid)
                 else:
                     with closing(sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True)) as con:con.row_factory=sqlite3.Row;doc=leer(S,con,rid,vid)
             else:
                 with closing(S.conectar()) as con:
-                    if not isinstance(con,sqlite3.Connection):raise ErrorPrioridad(503,'Persistencia no disponible.')
+                    if not bd.conexion_valida(con):raise ErrorPrioridad(503,'Persistencia no disponible.')
                     con.row_factory=sqlite3.Row;doc=guardar(S,con,rid,vid,b)
             autorizar(S,rid,vid,metodo=='POST');return self.responder(200,doc)
         except ErrorPrioridad as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el avance. Reintenta la misma intención.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el avance. Reintenta la misma intención.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 from uuid import UUID
 import piloto_lectura
+import bd_comun as bd
 from operaciones_registros_269 import unica,ErrorRegistro
 RUTA='/api/operaciones/pedidos-account';VERSION='294.1';TABLA='operaciones_pedidos_account_294';TIPOS={'responder_correo':'correos','devolver_llamada':'llamadas'};ESTADOS={'pedido','anulado','resuelto_declarado'}
 RUTA_RESUMEN=RUTA+'/resumen';VERSION_RESUMEN='343.1';AUTOR_RESUMEN='mili';MAX_HISTORIA_RESUMEN=20000
@@ -249,12 +250,13 @@ def enganchar(H,S):
   if ruta==RUTA_RESUMEN and metodo!='GET':return self.responder(405,{'error':'El resumen sólo permite lectura.'})
   if ruta not in (RUTA,RUTA_RESUMEN):return original_get(self,ruta,q,real,vista) if metodo=='GET' else original_post(self,ruta,real,vista,b)
   try:
-   if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise ErrorPedido(503,'Este registro requiere SQLite local verificado.')
    rid,vid=real.get('id'),vista.get('id')
    if ruta==RUTA_RESUMEN:
     if not isinstance(q,dict) or q:raise ErrorPedido(400,'El resumen no admite filtros de identidad, fechas ni cuerpo.')
     autorizar(S,rid,vid);db=getattr(S,'DB',None)
-    if db is None:d=leer_resumen(S,None,rid,vid)
+    if bd.es_pg():
+     with closing(S.conectar()) as con:d=leer_resumen(S,con,rid,vid)
+    elif db is None:d=leer_resumen(S,None,rid,vid)
     elif not Path(db).exists():d=leer_resumen(S,None,rid,vid)
     else:
      with closing(sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True)) as con:con.row_factory=sqlite3.Row;d=leer_resumen(S,con,rid,vid)
@@ -267,21 +269,23 @@ def enganchar(H,S):
     if not isinstance(q,dict) or set(q)-{'cliente_id'} or ('cliente_id' in q and (not isinstance(q['cliente_id'],list) or len(q['cliente_id'])!=1)):raise ErrorPedido(400,'No se admiten filtros de identidad.')
     cid=q['cliente_id'][0] if q else None
     autorizar(S,rid,vid,cid);db=getattr(S,'DB',None)
-    if db is None:raise ErrorPedido(503,'Persistencia no disponible.')
-    if not Path(db).exists():d=leer(S,None,rid,vid,cid)
+    if bd.es_pg():
+     with closing(S.conectar()) as con:d=leer(S,con,rid,vid,cid)
+    elif db is None:raise ErrorPedido(503,'Persistencia no disponible.')
+    elif not Path(db).exists():d=leer(S,None,rid,vid,cid)
     else:
      with closing(sqlite3.connect(Path(db).resolve().as_uri()+'?mode=ro',uri=True)) as con:con.row_factory=sqlite3.Row;d=leer(S,con,rid,vid,cid)
    else:
     if q:raise ErrorPedido(400,'No se admiten filtros de identidad.')
     validar(b);autorizar(S,rid,vid,b['cliente_id'],True)
     with closing(S.conectar()) as con:
-     if not isinstance(con,sqlite3.Connection):raise ErrorPedido(503,'Persistencia local no disponible.')
+     if not bd.conexion_valida(con):raise ErrorPedido(503,'Persistencia local no disponible.')
      con.row_factory=sqlite3.Row;d=guardar(S,con,rid,vid,b)
    autorizar(S,rid,vid,b['cliente_id'] if metodo=='POST' else cid,metodo=='POST')
    if metodo=='GET':
     for r in d.get('pedidos',[]):autorizar(S,rid,vid,r['cliente_id'])
    return self.responder(200,d)
   except ErrorPedido as e:return self.responder(e.codigo,{'error':str(e)})
-  except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el pedido. Conserva la misma intención para reintentar.'})
+  except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'No se ha confirmado el pedido. Conserva la misma intención para reintentar.'})
  H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
  H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

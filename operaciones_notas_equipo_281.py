@@ -7,6 +7,7 @@ import sqlite3
 from contextlib import closing
 from datetime import datetime,timezone
 import operaciones_registros_269 as O
+import bd_comun as bd
 import operaciones_registros_272 as C
 
 RUTA='/api/operaciones/notas-equipo'
@@ -99,14 +100,13 @@ def enganchar(H,S):
                 pid=q['persona_id'][0]
             else:pid=b.get('persona_id') if isinstance(b,dict) else None
             autorizar(S,rid,vid,pid,metodo=='POST')
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise O.ErrorRegistro(503,'Notas locales requieren SQLite verificado.')
             with closing(S.conectar()) as con:
-                if not isinstance(con,sqlite3.Connection):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
+                if not bd.conexion_valida(con):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
                 con.row_factory=sqlite3.Row
                 d=listar(S,con,rid,vid,pid) if metodo=='GET' else guardar(S,con,rid,vid,b)
             autorizar(S,rid,vid,pid,metodo=='POST')
             return self.responder(200,d)
         except O.ErrorRegistro as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Nota local no disponible; no se confirma el registro.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Nota local no disponible; no se confirma el registro.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

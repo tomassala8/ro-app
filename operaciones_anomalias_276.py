@@ -7,6 +7,7 @@ import sqlite3
 from contextlib import closing
 from datetime import datetime,timezone
 import operaciones_registros_269 as O
+import bd_comun as bd
 import operaciones_registros_272 as C
 
 RUTA='/api/operaciones/anomalias'
@@ -137,9 +138,8 @@ def enganchar(H,S):
                 aid=q['id'][0]
             else:aid=b.get('anomalia_id') if isinstance(b,dict) else None
             resolver(S,rid,vid,aid,metodo=='POST')
-            if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise O.ErrorRegistro(503,'La revisión local requiere SQLite verificado.')
             with closing(S.conectar()) as con:
-                if not isinstance(con,sqlite3.Connection):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
+                if not bd.conexion_valida(con):raise O.ErrorRegistro(503,'Persistencia local no disponible.')
                 con.row_factory=sqlite3.Row
                 doc=listar(S,con,rid,vid,aid) if metodo=='GET' else guardar(S,con,rid,vid,b)
             fresco=resolver(S,rid,vid,aid,metodo=='POST')
@@ -147,6 +147,6 @@ def enganchar(H,S):
             if any(fresco[k]!=esperado[k] for k in ('id','persona_id','huella_origen')):raise O.ErrorRegistro(409,'La entrada cambió antes de responder.')
             return self.responder(200,doc)
         except O.ErrorRegistro as e:return self.responder(e.codigo,{'error':str(e)})
-        except (sqlite3.Error,OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Revisión local no disponible; no se confirma el cambio.'})
+        except bd.ERRORES_BD+(OSError,ValueError,TypeError,KeyError,AttributeError):return self.responder(503,{'error':'Revisión local no disponible; no se confirma el cambio.'})
     H._api_get=lambda self,ruta,q,real,vista:responder(self,'GET',ruta,q,real,vista)
     H.api_post=lambda self,ruta,real,vista,b:responder(self,'POST',ruta,{},real,vista,b)

@@ -4,6 +4,7 @@ from datetime import datetime,timezone
 from contextlib import closing
 from uuid import UUID
 import piloto_lectura
+import bd_comun as bd
 from contexto_tarea import texto_operativo
 from operaciones_registros_269 import unica,ErrorRegistro
 RUTA='/api/operaciones/decisiones-locales';VERSION='382.1'
@@ -175,16 +176,15 @@ def enganchar(H,S):
   if ruta!=RUTA:return get_orig(self,ruta,q,real,vista) if metodo=='GET' else post_orig(self,ruta,real,vista,b)
   try:
    if q:raise ErrorDecision(400,'Esta ruta no admite filtros de identidad.')
-   if os.environ.get('DATABASE_URL') or os.environ.get('PGDATABASE_URL'):raise ErrorDecision(503,'Se requiere persistencia SQLite verificada.')
    rid,vid=real.get('id'),vista.get('id');ps=autorizar(S,rid,vid,escritura=metodo=='POST')
    for provided,canonical in zip((real,vista),ps):
     if provided.get('estado')!='activo' or provided.get('activo') is False or not isinstance(provided.get('puestos'),list) or sorted(provided['puestos'])!=sorted(canonical['puestos']):raise ErrorDecision(403,'Contexto actual incoherente.')
    with closing(S.conectar()) as con:
-    if not isinstance(con,sqlite3.Connection):raise ErrorDecision(503,'Persistencia local no disponible.')
+    if not bd.conexion_valida(con):raise ErrorDecision(503,'Persistencia local no disponible.')
     con.row_factory=sqlite3.Row;doc=listar(S,con,rid,vid) if metodo=='GET' else guardar(S,con,rid,vid,b)
    autorizar(S,rid,vid,escritura=metodo=='POST')
    return self.responder(200,doc)
   except ErrorDecision as e:return self.responder(e.codigo,{'error':str(e)})
-  except sqlite3.Error:return self.responder(503,{'error':'Persistencia local no disponible; conserva la intención.'})
+  except bd.ERRORES_BD:return self.responder(503,{'error':'Persistencia local no disponible; conserva la intención.'})
  H._api_get=lambda self,ruta,q,real,vista:handler(self,'GET',ruta,q,real,vista)
  H.api_post=lambda self,ruta,real,vista,b:handler(self,'POST',ruta,{},real,vista,b)
