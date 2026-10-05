@@ -245,7 +245,7 @@ function pintarInicio(cont, ctx, d) {
   const vis = vista(ctx, d);
   const S = sumar(vis.base);
   const casa = sumar(vis.reales);
-  ctx.titulo('Salud del CRM', `${vis.etiqueta} · ${vis.base.length} subcuentas de GoHighLevel · 30 días naturales cerrados · lectura GHL ${d.fuentes?.ghl?.hora || 'sin fecha'}`);
+  ctx.titulo('Salud del CRM', `${vis.etiqueta} · ${vis.base.length} subcuentas de GoHighLevel · 30 días naturales cerrados · lectura GHL ${d.fuentes?.ghl?.hora || 'sin fecha'}${d.fuentes?.ghl?.estado === 'parcial' || d.fuentes?.ghl?.estado === 'rota' ? ` · lectura ${d.fuentes.ghl.estado}: ${d.fuentes.ghl.parcial ? d.fuentes.ghl.parcial + ' subcuentas con dato viejo' : ''}${d.fuentes.ghl.parcial && d.fuentes.ghl.faltan ? ' y ' : ''}${d.fuentes.ghl.faltan ? 'faltan ' + d.fuentes.ghl.faltan : ''}` : ''}`);
 
   if (!vis.base.length) {
     cont.append(vacio({ icono: 'base', titulo: ctx.nivel === 'suyo' ? 'No tienes subcuentas de GoHighLevel a tu cargo' : 'No hay subcuentas que enseñar',
@@ -421,7 +421,7 @@ function pintarSubcuentas(zona, ctx, d, vis) {
       filas, buscar: { campos: ['nombre', 'especialista', 'account', 'nombre_sub'], placeholder: 'Buscar subcuenta, especialista o account' },
       filtros: vis.jefatura ? [{ clave: 'especialista', titulo: 'Especialista' }] : [],
       columnas: [
-        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli', style: { minWidth: 0 } }, logoCliente(f), h('span', { style: { display: 'grid', minWidth: 0 } }, f.nombre, f.tipo === 'sin_cliente' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, 'sin cliente en la app') : null)) },
+        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli', style: { minWidth: 0 } }, logoCliente(f), h('span', { style: { display: 'grid', minWidth: 0 } }, f.nombre, f.tipo === 'sin_cliente' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, 'sin cliente en la app') : null, f.lectura === 'viejo' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, `dato viejo (parcial) · desde ${f.dato_viejo_desde || 'fecha desconocida'}`) : f.lectura === 'sin_dato' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, 'sin lectura de GHL') : null)) },
         { clave: 'estado', titulo: 'Estado', valor: f => EST[f.estado].o, celda: f => puntoEstado(punto(f), EST[f.estado].t) },
         { clave: 'especialista', titulo: 'Especialista', celda: f => h('span', {title:f.especialista||'sin asignar'}, f.especialista || 'sin asignar') },
         { clave: 'leads_30d', titulo: 'GHL30d · Meta7d', tituloCompleto:'Leads observados en GHL: 30 días; eventos lead en Meta: 7 días. Recuentos independientes', num: true, celda: f => h('span',{style:{whiteSpace:'nowrap'},title:`GHL30d: ${f.leads_30d??'Sin dato'} · Meta7d: ${f.leads_meta_7d??'Sin dato'}. Recuentos independientes, no unión por lead ni tasa de conversión`,'aria-label':`GHL30d: ${f.leads_30d??'Sin dato'}; Meta7d: ${f.leads_meta_7d??'Sin dato'}`},f.leads_30d==null?'—':numFuerte(f.leads_30d),' · ',f.leads_meta_7d==null?'—':numFuerte(f.leads_meta_7d)) },
@@ -619,7 +619,7 @@ function pintarFlujos(zona, ctx, d, vis) {
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas, buscar: { campos: ['nombre', 'especialista'], placeholder: 'Buscar subcuenta' },
       columnas: [
-        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente(f), f.nombre) },
+        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente(f), f.nombre, f.lectura === 'viejo' ? ' · dato viejo (parcial)' : f.lectura === 'sin_dato' ? ' · sin lectura de GHL' : '') },
         { clave: 'auto', titulo: 'Automático en < 5 min', num: true, valor: f => automaticosCRM597(f).valida?f.velocidad.auto_5min:null, celda: f => {const a=automaticosCRM597(f);return h('span',{title:a.detalle,'aria-label':a.detalle},a.valida?`${a.numerador}/${a.denominador}`:'—');} },
         { clave: 'wa', titulo: 'WhatsApp fallido', num: true, valor: f => parejaMensajesCRM597(f,'whatsapp').pct, celda: f => celdaMensaje(f,'whatsapp') },
         { clave: 'sms', titulo: 'SMS fallido', num: true, valor: f => parejaMensajesCRM597(f,'sms').valida?f.sms.fallidos:null, celda: f => celdaMensaje(f,'sms') },

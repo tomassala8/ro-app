@@ -31,6 +31,7 @@ SALIDA = DATA / "crm"
 sys.path.insert(1, str(Path(__file__).resolve().parents[1]))  # C5: rutas y secretos en config.py
 import config  # noqa: E402
 sys.path.insert(0, str(config.HERRAMIENTAS / "ghl_agencia"))
+from fuentes.lectura import leer as leer_api, marcar  # noqa: E402  · N-01/N-04: toda lectura de API se guarda; si falla, la última buena
 
 import zoneinfo, re, math
 MAD = zoneinfo.ZoneInfo("Europe/Madrid")          # todo en hora de Madrid (regla 4 de la ronda)
@@ -327,6 +328,34 @@ def resumen_citas(citas, dias=30):
             "dias_sin_cita": round((AHORA_MS - ult) / 864e5) if ult else None}
 
 
+ERROR_LECTURA = {}    # sid → por qué no hay lectura (N-04)
+ESTADO_LECTURA = {}   # sid → ok | viejo | sin_dato (N-04): de aquí sale el estado de la fuente GHL
+
+
+def lectura_subcuenta(g, sid, pii_previo):
+    """N-04: una lectura por subcuenta que se guarda en la base. Si GHL no responde para esa subcuenta, vuelve su última lectura
+    buena (marcada «_viejo» y «_desde»), nunca una subcuenta a 0. Los datos de contacto de los leads NO van a la base: se quedan
+    en _privado/ (ghl_vivo.json); con dato viejo se recuperan de la lectura privada anterior."""
+    pii = {}
+
+    def cuerpo():
+        r = leer_subcuenta(g, sid)
+        if r.get("contactos_total") is None and r["errores"]:    # ni siquiera el recuento de contactos: la subcuenta no responde
+            raise RuntimeError("subcuenta sin respuesta: " + "; ".join(r["errores"])[:200])
+        for x in r["leads"]:
+            pii[x["contacto"]] = x.pop("privado", None) or {}
+        return r
+    l = leer_api("ghl", sid, cuerpo)
+    ESTADO_LECTURA[sid] = l.estado
+    r = marcar(l)
+    if r is None:
+        return None, l.error
+    fuente = pii if l.estado == "ok" else pii_previo
+    for x in r["leads"]:
+        x["privado"] = fuente.get(x["contacto"]) or {}
+    return r, l.error
+
+
 def main():
     vivo = "--sin-vivo" not in sys.argv and "--desde-crudo" not in sys.argv
     cap = leer(RAIZ / "20_FASE2_CAPTACION" / "captacion.json", {})
@@ -380,14 +409,22 @@ def main():
     log(f"subcuentas: {len(subs)}")
     vivo_por = {}
     if g:
+        previo = leer(AQUI / "_privado" / "ghl_vivo.json", {}) or {}
         def uno(s):
+            sid = s["id"]
+            pii = {x["contacto"]: x.get("privado") or {} for x in (((previo.get("vivo") or {}).get(sid)) or {}).get("leads", []) if x.get("contacto")}
             try:
-                return s["id"], leer_subcuenta(g, s["id"])
+                r, error = lectura_subcuenta(g, sid, pii)
             except Exception as e:
-                return s["id"], {"leads": [], "citas": [], "calendarios": [], "flujos": None, "errores": [f"excepción {type(e).__name__}"]}
+                ESTADO_LECTURA[sid] = "sin_dato"
+                r, error = None, f"excepción {type(e).__name__}"
+            if r is None:       # nunca hubo dato de esta subcuenta: sin lectura viva (la fila usa lo de captación), no una subcuenta a 0
+                ERROR_LECTURA[sid] = error
+            return sid, r
         with ThreadPoolExecutor(5) as ex:
             for i, (sid, r) in enumerate(ex.map(uno, subs)):
-                vivo_por[sid] = r
+                if r is not None:
+                    vivo_por[sid] = r
                 if i % 10 == 0:
                     log(f"  {i + 1}/{len(subs)} · llamadas {g.llamadas}")
 
@@ -540,11 +577,13 @@ def main():
             "embudo": {"cohorte_30d": len(opps30) if v else emb.get("cohorte_30d"), "estancados_72h": len(paradas) if v else emb.get("estancados_72h"),
                        "pct_estancado": pct(len(paradas), len(opps30)) if v else emb.get("pct_estancado"),
                        "horas_max_parado": emb.get("horas_max_parado"), "funnel": emb.get("funnel")} if emb else None,
-            "whatsapp": {"enviados": wa_env, "fallidos": wa_fallo, "pct_fallo": pct(wa_fallo, wa_env), "numero": "no medible"},
+            # N-04: sin lectura viva de la subcuenta, los envíos no se conocen: null, no 0
+            "whatsapp": {"enviados": wa_env if v else None, "fallidos": wa_fallo if v else None, "pct_fallo": pct(wa_fallo, wa_env) if v else None, "numero": "no medible"},
             "sms": {"enviados": sms_env, "fallidos": sms_fallo},
             "correo": {"enviados": mail_env, "fallidos": mail_fallo, "pct_fallo": pct(mail_fallo, mail_env)},
             "flujos": {"medible": False, "motivo": "Falta un permiso de GoHighLevel para leer los flujos (responde 401). Los errores de flujo («Needs Review») no salen por la API ni con ese permiso."},
-            "estado": estado, "motivos": mot, "errores_lectura": v.get("errores", []) if v else [],
+            "estado": estado, "motivos": mot, "errores_lectura": v.get("errores", []) if v else ([ERROR_LECTURA[sid]] if sid in ERROR_LECTURA else []),
+            **({"lectura": "viejo", "dato_viejo_desde": v.get("_desde")} if v.get("_viejo") else {"lectura": "sin_dato"} if ESTADO_LECTURA.get(sid) == "sin_dato" else {}),
             "enlaces": {"ghl": f"{GHL_WEB}/{sid}/dashboard", "flujos": f"{GHL_WEB}/{sid}/automation/workflows",
                         "calendarios": f"{GHL_WEB}/{sid}/calendars/view", "oportunidades": f"{GHL_WEB}/{sid}/opportunities/list",
                         "conversaciones": f"{GHL_WEB}/{sid}/conversations/conversations", "whatsapp": f"{GHL_WEB}/{sid}/settings/whatsapp",
@@ -648,7 +687,8 @@ def main():
         "despachos_cumplen_garantia": len(cumplen), "despachos_juzgables_garantia": len(despachos_vel),
         "citas_30d": tot_c30, "citas_14d": tot_c14, "asistencia_pct": pct(tot_c30["celebradas"], tot_c30["celebradas"] + tot_c30["no_presentadas"]),
         "estancados_72h": sum((f["embudo"] or {}).get("estancados_72h") or 0 for f in cli),
-        "whatsapp": {"enviados": sum(f["whatsapp"]["enviados"] for f in cli), "fallidos": sum(f["whatsapp"]["fallidos"] for f in cli)},
+        "whatsapp": {"enviados": sum(f["whatsapp"]["enviados"] for f in cli if f["whatsapp"]["enviados"] is not None) if any(f["whatsapp"]["enviados"] is not None for f in cli) else None,
+                     "fallidos": sum(f["whatsapp"]["fallidos"] for f in cli if f["whatsapp"]["fallidos"] is not None) if any(f["whatsapp"]["fallidos"] is not None for f in cli) else None},
         "integracion_rota": [f["nombre"] for f in cli if any(m["clave"] == "integracion" for m in f["motivos"])],
         "encendidas_sin_especialista": sin_esp,
     }
@@ -674,9 +714,16 @@ def main():
         hallazgos.append({"titulo": "Ningún despacho marca «se presentó»", "estado": "ambar",
                           "texto": f"En 30 días hay {tot_c30['agendadas']} citas pasadas y 0 marcadas como celebradas: la asistencia (el número que manda del especialista) no se puede calcular en ninguna subcuenta."})
 
+    # N-04: «bien» solo si TODAS las subcuentas se leyeron; «parcial» si alguna vuelve con dato viejo o sin dato; «rota» si ninguna
+    estados_lectura = ESTADO_LECTURA or {k: ("viejo" if x.get("_viejo") else "ok") for k, x in vivo_por.items()}   # con --desde-crudo, de lo guardado
+    n_ok = sum(1 for e in estados_lectura.values() if e == "ok")
+    n_viejo = sum(1 for e in estados_lectura.values() if e == "viejo")
+    n_sin = sum(1 for e in estados_lectura.values() if e == "sin_dato")
+    estado_ghl = "dato_viejo" if not hora_vivo else "bien" if not (n_viejo or n_sin) else "parcial" if n_ok else "rota"
+    resumen_lectura = {**({"parcial": n_viejo} if n_viejo else {}), **({"faltan": n_sin} if n_sin else {})}
     fuentes = {
         "ghl": {"fuente": "GoHighLevel · 66 subcuentas (app privada, lectura)", "hora": hora_vivo,
-                "estado": "bien" if hora_vivo else "dato_viejo", "llamadas": llamadas,
+                "estado": estado_ghl, "llamadas": llamadas, **resumen_lectura,
                 "permisos": "contacts, opportunities, calendars, calendars/events, conversations, conversations/message, users, locations (solo lectura)"},
         "captacion": {"fuente": "captacion.json (embudo 90 días y Meta)", "hora": cap.get("generado"), "estado": "bien"},
         "asignaciones": {"fuente": "Asignaciones fase 0 (silla CRM)", "hora": None, "estado": "bien", "nota": "Borrador de fase 0; las confirma Mili"},
