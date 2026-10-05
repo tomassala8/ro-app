@@ -16,13 +16,13 @@ import unicodedata
 from datetime import datetime
 from pathlib import Path
 
-HOME = Path.home()
 AQUI = Path(__file__).resolve().parent            # 30_APP_PROTOTIPO/fuentes
 APP = AQUI.parent                                  # 30_APP_PROTOTIPO
 RAIZ = APP.parent                                  # APP_RO_ROLES_Y_PERMISOS_2026-10-02
 import sys as _sys  # C5: rutas en config.py
 _sys.path.insert(1, str(APP))
 import config  # noqa: E402
+HOME = config.HOME   # L-27: la raíz de usuario sale de config.py
 PANEL = config.PANEL_OPERACIONES
 BUILD = PANEL / "build"
 HERRAMIENTA = config.HERRAMIENTA_RO

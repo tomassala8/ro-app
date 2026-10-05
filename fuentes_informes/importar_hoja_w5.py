@@ -32,9 +32,13 @@ AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
 sys.path.insert(0, str(APP / 'fuentes'))
 from comun import escanear, escribir, leer, norm, sanear, tokens  # noqa: E402
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 SALIDA = APP / 'data/informes/historico.json'
-ZH = Path.home() / 'RO_HERRAMIENTAS/zoho/zh.py'
+ZH = _cfg.HERRAMIENTAS / 'zoho/zh.py'
 LIBRO = 'h4owxade0a8fd840349be9d38b45d75ec0313'      # «CARTERA CLIENTES RO»
 HOJA = 'informes mensuales'                          # nombre normalizado de la ÚNICA hoja que se lee
 PROHIBIDAS = {'credenciales', 'credencial', 'contrasenas', 'passwords', 'accesos', 'claves'}

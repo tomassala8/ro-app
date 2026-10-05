@@ -23,10 +23,14 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 sys.path.insert(0, str(AQUI))
-sys.path.insert(0, str(Path.home() / "RO_HERRAMIENTAS/zoho"))
+sys.path.insert(0, str(_cfg.HERRAMIENTAS / "zoho"))
 sys.argv = sys.argv[:1] + [a for a in sys.argv[1:]]
 import zh  # noqa: E402
 from agenda_md import leer_agenda, es_generico  # noqa: E402
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 CACHE = AQUI / "_privado" / "roles.json"   # ronda 6 (M6): correos de contactos, solo en _privado/
 DESK = "https://desk.zoho.eu/api/v1"

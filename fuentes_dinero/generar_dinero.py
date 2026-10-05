@@ -26,11 +26,15 @@ AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
 sys.path.insert(0, str(APP / 'fuentes'))
 from comun import escribir, escanear, norm, leer   # noqa: E402
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 DATA = APP / 'data'
 CACHE = AQUI / '_privado' / '_cache'   # Holded en bruto (números de documento): fuera del escáner y de la subida
-ENT = Path.home() / 'Downloads/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA'
-HOLDED = Path.home() / 'RO_HERRAMIENTAS/holded'
+ENT = _cfg.PANEL_RESULTADOS
+HOLDED = _cfg.HERRAMIENTAS / 'holded'
 SIN_RED = '--sin-red' in sys.argv
 
 AHORA = dt.datetime.now()

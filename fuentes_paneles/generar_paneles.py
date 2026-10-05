@@ -40,9 +40,13 @@ import meta_mediciones_220 as META220  # noqa: E402
 if str(APP) not in sys.path:
     sys.path.insert(2, str(APP))
 from fuentes.lectura import leer as leer_api, marcar  # noqa: E402  · N-01/N-06: toda lectura de API se guarda; si falla, la última buena
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 for p in ("google", "meta", "metricool", "ghl_agencia", "zoho", "zadarma"):
-    sys.path.insert(0, os.path.expanduser(f"~/RO_HERRAMIENTAS/{p}"))
+    sys.path.insert(0, str(_cfg.HERRAMIENTAS / p))
 
 CACHE = AQUI / "_cache"
 SALIDA = APP / "data" / "paneles"
@@ -598,13 +602,13 @@ class GHL:
     def __init__(self):
         import app  # ~/RO_HERRAMIENTAS/ghl_agencia/app.py
         self.app = app
-        c = C.leer(Path.home() / ".cache" / "ro_tokens" / "paneles_ghl.json")
+        c = C.leer(_cfg.HOME / ".cache" / "ro_tokens" / "paneles_ghl.json")
         if c and time.time() - c.get("t", 0) < 12 * 3600:
             self.tk, self.co = c["tk"], c["co"]
         else:
             self.tk, est = app.acceso()          # rota la llave y la guarda sola en el llavero (no se imprime)
             self.co = est["companyId"]
-            ruta = Path.home() / ".cache" / "ro_tokens" / "paneles_ghl.json"
+            ruta = _cfg.HOME / ".cache" / "ro_tokens" / "paneles_ghl.json"
             ruta.parent.mkdir(parents=True, exist_ok=True)
             fd = os.open(ruta, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
             with os.fdopen(fd, "w") as f:

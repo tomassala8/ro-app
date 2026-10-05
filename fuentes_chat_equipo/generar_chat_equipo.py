@@ -40,6 +40,10 @@ LIMITE_DIAS = 120
 sys.path.insert(0, AQUI)
 from tapado import TAPADA, tapar, tapar_todo  # noqa: E402,F401
 from partir_chat import partir  # noqa: E402  (N15 · velocidad: índice ligero por persona + un fichero por canal)
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 
 if __name__ == '__main__' and '--solo-tapar' in sys.argv:
@@ -153,7 +157,7 @@ VARIANTES = {cid: [t for t in (toks(n) for n in ns) if t and len(t) <= 3] for ci
 EXTRA_CLIENTES = {'taller del patinete', 'cromomedia', 'pummba', 'qualityconta', 'medalva', 'gemap', 'clcripto', 'cl cripto', 'uhy',
                   'tributaley', 'ocps', 'ennumera', 'j d consulting', 'plan marzo a marzo', 'planmarzoamarzo', 'consulting f'}
 try:
-    POR_CLIENTE_M4 = set(json.load(open(os.path.expanduser('~/Downloads/HERRAMIENTA_RO_2026-10-02/chat.json')))['porcliente'].values())
+    POR_CLIENTE_M4 = set(json.load(open(str(_cfg.HERRAMIENTA_RO / 'chat.json')))['porcliente'].values())
 except Exception:
     POR_CLIENTE_M4 = set()
 

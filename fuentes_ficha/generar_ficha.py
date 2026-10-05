@@ -35,9 +35,9 @@ AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
 DATA = APP / "data"
 SALIDA = DATA / "ficha"
-HOME = Path.home()
 sys.path.insert(1, str(Path(__file__).resolve().parents[1]))  # C5: rutas y secretos en config.py
 import config  # noqa: E402
+HOME = config.HOME   # L-27: la raíz de usuario sale de config.py
 BUILD = config.PANEL_BUILD
 HERR = config.HERRAMIENTA_RO
 AGENDA_MD = config.MOVILES_CORREOS

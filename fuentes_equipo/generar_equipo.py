@@ -26,13 +26,17 @@ import sys
 import unicodedata
 from datetime import date, datetime
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
-PLANTILLA = Path.home() / "Downloads/Plantilla actual 2026.xlsx"
-SALARIOS = Path.home() / "Downloads/SALARIOS EQUIPO (4).xlsx"
+PLANTILLA = _cfg.CRUDOS / "Plantilla actual 2026.xlsx"
+SALARIOS = _cfg.SALARIOS_XLSX
 FASE0 = APP.parent / "20_FASE0_DATOS/personas.json"
-CORREOS = Path.home() / "Downloads/Equipo - nombres y correos.xlsx"   # Tomás, 2-oct: correo de entrada (Cloudflare Access)
+CORREOS = _cfg.CRUDOS / "Equipo - nombres y correos.xlsx"   # Tomás, 2-oct: correo de entrada (Cloudflare Access)
 ZONAS = {"Argentina": "America/Argentina/Buenos_Aires", "Venezuela": "America/Caracas", "España": "Europe/Madrid"}
 # Casos que Tomás ha explicado a mano (2-oct).
 A_MANO = {"valeria": {"pais": "Venezuela", "zona": "America/Caracas", "a_confirmar": False,
@@ -134,7 +138,7 @@ def main():
     # 3 · Miembros de ClickUp (1 petición de lectura)
     clickup, error_cu = set(), None
     try:
-        sys.path.insert(0, str(Path.home() / "RO_HERRAMIENTAS/clickup_api"))
+        sys.path.insert(0, str(_cfg.HERRAMIENTAS / "clickup_api"))
         import cu
         equipo_cu = next((t for t in cu.get("/team").get("teams", []) if str(t.get("id")) == cu.TEAM), None) or {}
         por_correo = {}

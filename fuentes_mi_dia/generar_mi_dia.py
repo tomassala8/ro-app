@@ -24,12 +24,16 @@ import re
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent.parent
 DATA = AQUI / "data"
 HISTORIA = AQUI / "historia"
 SALIDA = DATA / "mi_dia"
-ROL_MILI = Path.home() / "Downloads/PANEL_OPERACIONES_2026-10-01/build/rol_mili.json"
+ROL_MILI = _cfg.PANEL_BUILD / "rol_mili.json"
 
 
 def leer(rel):

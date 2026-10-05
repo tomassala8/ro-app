@@ -24,6 +24,10 @@ Privacidad:
 """
 import datetime as dt, json, os, re, sys, unicodedata, urllib.request
 from zoneinfo import ZoneInfo
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 try:
     from .crosswalk_runtime_199 import identidad_observada, integrar as integrar_crosswalk
 except ImportError:
@@ -34,7 +38,7 @@ RAIZ = os.path.dirname(AQUI)
 DATA = os.path.join(RAIZ, 'data')
 SAL = os.path.join(DATA, 'agenda')
 PRIV = os.path.join(SAL, '_privado')
-HOME = os.path.expanduser('~')
+HOME = str(_cfg.HOME)
 MAD = ZoneInfo('Europe/Madrid')
 AHORA = dt.datetime.now(MAD)
 # 30 días atrás (antes 14): el riesgo de baja cuenta las reuniones de un mes (OK de Tomás, 4-oct-2026)

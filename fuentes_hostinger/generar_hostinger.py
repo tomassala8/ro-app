@@ -31,10 +31,14 @@ APP = os.path.dirname(AQUI)
 if APP not in sys.path:
     sys.path.insert(0, APP)
 from fuentes.lectura import leer as leer_api, marcar  # noqa: E402  · N-01/N-05: toda lectura de API se guarda; si falla, la última buena
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 SALIDA = os.path.join(APP, 'data', 'hostinger', 'hostinger.json')   # webs, certificados y dominios por cliente (SEO, ficha y webs)
 CUENTA = os.path.join(APP, 'data', 'hostinger', 'cuenta.json')        # VPS y renovaciones: solo dirección, operaciones y técnico
 CACHE = os.path.join(AQUI, '_cache', 'volcado.json')
-HERR = os.path.expanduser('~/RO_HERRAMIENTAS/hostinger')
+HERR = str(_cfg.HERRAMIENTAS / 'hostinger')
 ENLACE = 'https://hpanel.hostinger.com/'
 DOC_API = 'https://docs.hostinger.com/api-reference/overview'
 QUE_HACER = ('Lo hace Tomás: hPanel → Perfil → API → crear token (con caducidad) y '

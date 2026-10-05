@@ -16,9 +16,13 @@ import json
 import os
 import re
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[2]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[2]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
-REPO_LOCAL = Path.home() / "RO_EQUIPO"
+REPO_LOCAL = _cfg.HOME / "RO_EQUIPO"
 REPO_URL = "https://github.com/tomassala8/ro-equipo/blob/main/"
 
 ALIAS = {   # id del motor → id minado

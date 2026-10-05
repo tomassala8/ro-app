@@ -25,13 +25,17 @@ import os
 import re
 import sys
 import unicodedata
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(AQUI)
 SALIDA = os.path.join(APP, 'data', 'gbp', 'gbp.json')
 CACHE = os.path.join(AQUI, '_cache', 'volcado.json')          # crudo: no se sirve (el escáner salta _cache)
 MANUAL = os.path.join(AQUI, 'emparejar.json')
-HERR = os.path.expanduser('~/RO_HERRAMIENTAS/google')
+HERR = str(_cfg.HERRAMIENTAS / 'google')
 ENLACE = 'https://business.google.com/locations'
 DOC_API = 'https://developers.google.com/my-business/content/prereqs'
 FORMULARIO = 'https://support.google.com/business/contact/api_default'

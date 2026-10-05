@@ -25,12 +25,16 @@ import re
 import unicodedata
 from datetime import date
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent.parent
 DATA = AQUI / "data"
 ESTADO = DATA / "verdad" / "estado_clientes.json"
 TAREAS_BAJA = DATA / "verdad" / "bajas_tareas.json"
-LIBRO = Path.home() / "Downloads" / "BAJAS_LTV_CHURN_2026-10-01" / "clientes.json"
+LIBRO = _cfg.LIBRO_CLIENTES
 
 # Ficheros de datos donde el histórico de un cliente de baja SÍ se queda (finanzas e informes pasados) y los de limpieza.
 HISTORICO = ("finanzas/", "informes/", "informe/", "dinero_cliente/", "ventas_ro", "verdad/estado_clientes",

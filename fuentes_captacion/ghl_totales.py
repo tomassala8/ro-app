@@ -13,8 +13,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-sys.path.insert(0, os.path.expanduser('~/RO_HERRAMIENTAS/ghl_agencia'))
+sys.path.insert(0, str(_cfg.HERRAMIENTAS / 'ghl_agencia'))
 import app  # noqa: E402
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
 CAPTACION = AQUI.parent.parent / '20_FASE2_CAPTACION' / 'captacion.json'

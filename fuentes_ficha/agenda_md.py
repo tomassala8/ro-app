@@ -7,8 +7,12 @@ Cada línea del documento se lee una vez y se cuenta: si algo no se entiende, va
 import re
 import unicodedata
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
-MD = Path.home() / "Downloads/MOVILES_Y_CORREOS_CLIENTES_RO_2026-10-02.md"
+MD = _cfg.MOVILES_CORREOS
 
 GENERICOS = {"info", "hello", "hola", "clientes", "cliente", "admin", "administracion", "administración", "contabilidad", "oficina",
              "general", "bookings", "recepcion", "laboral", "fiscal", "despacho", "contacto", "comercial", "facturacion", "gestion",

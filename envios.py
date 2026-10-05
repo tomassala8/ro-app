@@ -42,6 +42,10 @@ import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[0]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[0]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
 DATA = AQUI / "data"
@@ -560,7 +564,7 @@ def token_escritura():
     (~/RO_HERRAMIENTAS/cache_tokens.py) para no gastar el cupo de tokens de Zoho. Nunca se imprime ni se guarda."""
     import urllib.parse
     import urllib.request
-    herr = Path(os.environ.get("RO_HERRAMIENTAS") or Path.home() / "RO_HERRAMIENTAS")
+    herr = Path(os.environ.get("RO_HERRAMIENTAS") or _cfg.HERRAMIENTAS)
     for d in (herr, herr / "zoho"):
         if str(d) not in sys.path:
             sys.path.append(str(d))

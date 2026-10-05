@@ -125,7 +125,7 @@ def prueba_simulada(n=24):
     os.environ["RO_GHL_BLOQUEO"] = str(tmp / "ghl.lock")     # el bloqueo de app.py, también en la carpeta de la prueba
     E.guardar_llave(NOMBRE, "falsa-0", origen="siembra")
     # Un «paso» que hace lo mismo que app.acceso(): lee la llave con llave() y escribe la nueva con guarda().
-    paso = ("import os,sys; sys.path.insert(0, os.path.expanduser('~/RO_HERRAMIENTAS/ghl_agencia')); import app; "
+    paso = ("import os,sys; sys.path.insert(0, " + repr(str(config.HERRAMIENTAS / 'ghl_agencia')) + "); import app; "
             "v = app.llave('ghl_app_refresh_token'); n = int(v.split('-')[1]) + 1; app.guarda('ghl_app_refresh_token', f'falsa-{n}')")
     for i in range(n):
         with prestar(E) as extra:

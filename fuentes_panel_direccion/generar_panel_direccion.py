@@ -39,10 +39,14 @@ import sys
 import tempfile
 from datetime import datetime
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
 APP = AQUI.parent
-ENTREGA = Path.home() / "Downloads/PANEL_RESULTADOS_RO_2026-09-18/ENTREGA"
+ENTREGA = _cfg.PANEL_RESULTADOS
 PANEL = ENTREGA / "panel_v2.html"
 SALIDA = APP / "data/panel_direccion"
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
@@ -131,7 +135,7 @@ def main():
     if fallos:
         sys.exit("panel_direccion · NO se escribe nada (se queda el dato anterior):\n  · " + "\n  · ".join(fallos))
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M")
-    origen = {"panel": str(PANEL).replace(str(Path.home()), "~"), "panel_modificado": datetime.fromtimestamp(PANEL.stat().st_mtime).strftime("%Y-%m-%d %H:%M"),
+    origen = {"panel": str(PANEL).replace(str(_cfg.HOME), "~"), "panel_modificado": datetime.fromtimestamp(PANEL.stat().st_mtime).strftime("%Y-%m-%d %H:%M"),
               "sha256": hashlib.sha256(PANEL.read_bytes()).hexdigest()[:16], "artefacto": "https://claude.ai/artifact/WeCVRWFTxD3MMdU2jb9siH"}
     base = {"formato": 1, "modulo": "panel-direccion", "generado": ahora, "origen": origen}
     indice = {**base, "foto_panel": ex["generado"], "ventana": ex["ventana"], "fuentes": ex["fres"], "etiquetas": ex["etiquetas"],

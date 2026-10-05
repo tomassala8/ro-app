@@ -32,12 +32,16 @@ sys.path.insert(0, str(APP / "fuentes"))
 import comun as C  # noqa: E402
 sys.path.insert(0, str(APP))
 from fuentes_informe import meta_productor_298 as META298  # noqa: E402
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
-sys.path[:0] = [os.path.expanduser(p) for p in ("~/RO_HERRAMIENTAS/google", "~/RO_HERRAMIENTAS/snov", "~/RO_HERRAMIENTAS/meta")]
+sys.path[:0] = [str(_cfg.HERRAMIENTAS / p) for p in ("google", "snov", "meta")]
 
 CACHE = AQUI / "_cache"
 SALIDA = APP / "data" / "informe"
-HERR = Path.home() / "Downloads/HERRAMIENTA_RO_2026-10-02"
+HERR = _cfg.HERRAMIENTA_RO
 AHORA = datetime.now().strftime("%Y-%m-%d %H:%M")
 ARGS = sys.argv[1:]
 SOLO_CACHE = "--cache" in ARGS

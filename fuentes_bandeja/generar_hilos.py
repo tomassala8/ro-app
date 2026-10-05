@@ -35,6 +35,10 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent
@@ -169,7 +173,7 @@ class Desk:
     """Lectura de Zoho Desk (solo GET) con un contador de llamadas que corta la vuelta al llegar al tope."""
 
     def __init__(self, max_llamadas):
-        sys.path.insert(0, str(Path.home() / 'RO_HERRAMIENTAS' / 'zoho'))
+        sys.path.insert(0, str(_cfg.HERRAMIENTAS / 'zoho'))
         try:
             import config  # noqa: E402
             sys.path.insert(0, str(config.HERRAMIENTAS / 'zoho'))

@@ -32,6 +32,10 @@ import os
 import re
 import sys
 import time
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(AQUI)
@@ -40,7 +44,7 @@ TABLERO = os.path.join(APP, 'data', 'modular', 'tablero.json')
 CACHE = os.path.join(AQUI, '_cache', 'volcado.json')
 CACHE_DET = os.path.join(AQUI, '_cache', 'detalle.json')
 VIGIA = os.path.join(APP, 'data', 'vigia', 'estado.json')
-HERR = os.path.expanduser('~/RO_HERRAMIENTAS/modular')
+HERR = str(_cfg.HERRAMIENTAS / 'modular')
 ENLACE_MODULAR = 'https://app.modulards.com/'
 DOC_API = 'https://api.docs.modulards.com/'
 # El contrato público (openapi.json, 3-oct) no trae la dirección de cada web dentro del panel de Modular: «Abrir en

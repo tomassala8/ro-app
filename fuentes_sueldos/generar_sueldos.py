@@ -19,9 +19,13 @@ import sys
 import unicodedata
 from datetime import datetime
 from pathlib import Path
+import pathlib as _pl_l27, sys as _sys_l27  # L-27: rutas del Mac por config.py
+if str(_pl_l27.Path(__file__).resolve().parents[1]) not in _sys_l27.path:
+    _sys_l27.path.append(str(_pl_l27.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 AQUI = Path(__file__).resolve().parent.parent
-ORIGEN = Path.home() / "Downloads/SALARIOS EQUIPO (4).xlsx"
+ORIGEN = _cfg.SALARIOS_XLSX
 SALIDA = AQUI / "data/sueldos/_privado/sueldos.json"
 MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
 HOJAS_PROHIBIDAS = re.compile(r"banc", re.I)
