@@ -44,6 +44,9 @@ PATRONES = [
     # Solo con «:» o «=» detrás; lo ya tapado («•••• (tapada)», «…», «[oculto]») no cuenta.
     ("contrasena", re.compile(r"(?i)\b(?:contrase(?:ñ|n)as?|password|passw(?:or)?d|pass|clave|pwd)\s*\**\s*[:=][\s|*`\"']*(?!…|•|\[|\(|\{|\$|os\.|None\b|null\b|true\b|false\b)[^\s|*`\"'<>,;)\]}]{4,}")),
     ("telefono", re.compile(r"(?<![\w.\-/=#])(?:\+34[\s.-]?|0034[\s.-]?)?[6789]\d{2}[\s.-]?\d{3}[\s.-]?\d{3}(?![\w.\-/])")),
+    # L-04: IBAN español (ES + 22 cifras, con o sin espacios). El DNI/NIE NO está: con «NIF/DNI» delante ya casan 2 tareas de
+    # data/mi_trabajo (núcleo) y bloquearían la app entera; va a «Preguntas para Tomás» (NOTAS_NOCHE.md).
+    ("iban", re.compile(r"(?<![\w.\-/=#])ES\d{2}(?:[\s-]?\d{4}){5}(?![\w.\-/])")),
 ]
 # Campos cuyo NOMBRE delata un secreto si tienen valor
 CAMPOS_SECRETOS = re.compile(r"(?i)^(password|passwd|contrase(ñ|n)a|clave|secret|api_?key|token|access_token|refresh_token|pin|codigo_verificacion)$")
