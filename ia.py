@@ -44,6 +44,14 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+import permisos as P  # noqa: E402  · L-22: la hora de Madrid (`P.MADRID`)
+
+
+def _ahora():
+    """L-22: hora de pared de Madrid, sin zona; igual en el Mac que en Render (UTC). No usa RO_RELOJ (como `servir.ahora`)."""
+    return (datetime.now(P.MADRID) if P.MADRID else datetime.now()).replace(tzinfo=None)
+
+
 AQUI = Path(__file__).resolve().parent
 DATA = AQUI / "data"
 PRIV = DATA / "ia" / "_privado"
@@ -331,7 +339,7 @@ def cliente_para_borrador(persona, cp, cid):
     cartera = _bloque(ficha, "cartera", ["semaforo", "rojo_manual"])
     if cartera and isinstance((cartera["datos"] or {}).get("rojo_manual"), dict):
         cartera["datos"]["rojo_manual"] = {"motivo": cartera["datos"]["rojo_manual"].get("motivo")}   # sin notas internas de dirección
-    hoy = datetime.now().strftime("%Y-%m-%d")
+    hoy = _ahora().strftime("%Y-%m-%d")
     cola = [t for t in ((_j("produccion/produccion.json", {}) or {}).get("cola") or []) if t.get("cli") == cid]
     vistos, tareas = set(), []
     for t in cola:
@@ -372,7 +380,7 @@ def contexto_borrador(persona, cp, ticket, firma_de=None):
     firma = firma or persona
     hilo = limpiar(hilo_d.get("mensajes") or [])
     return {
-        "hoy": datetime.now().strftime("%Y-%m-%d"),
+        "hoy": _ahora().strftime("%Y-%m-%d"),
         "correo": {"numero": fila.get("numero"), "asunto": fila.get("asunto"), "cliente": fila.get("cliente"),
                    "es_queja": bool(fila.get("queja")), "dias_laborables_sin_contestar": fila.get("dias_laborables"),
                    "estado_desk": fila.get("estado_desk")},
@@ -444,7 +452,7 @@ def contexto_copiloto(persona, cp, cid):
     bandeja = [{"asunto": f.get("asunto"), "dias": f.get("dias_laborables"), "queja": f.get("queja")}
                for f in ((_j("bandeja/bandeja.json", {}) or {}).get("correos") or []) if f.get("cliente_id") == cid and not f.get("auto")][:10]
     return {
-        "hoy": datetime.now().strftime("%Y-%m-%d"),
+        "hoy": _ahora().strftime("%Y-%m-%d"),
         "cliente": {"id": cid, "nombre": doc.get("nombre"), "web": doc.get("web")},
         "verdad_unica": verdad_para(persona, cp, cid),
         "alertas": recortar_dinero(persona, cp, cid, limpiar(ficha.get("alertas") or [])),
@@ -635,7 +643,7 @@ def borrador(real, persona, cp, ticket, nuevo=False):
             salida, modelo, ctx, _cal = redactar_vivo(persona, cp, ticket, cid)
         except RuntimeError as e:
             return {"ok": False, "motivo": str(e), "conectada": True}
-        res = {**salida, "origen": "vivo", "modelo": modelo, "generado": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        res = {**salida, "origen": "vivo", "modelo": modelo, "generado": _ahora().strftime("%Y-%m-%d %H:%M"),
                "firma_de": persona["id"], "voz": "tomas" if persona["id"] == "tomas" else "ro", "cerebro": "cerebro_respuestas 3-oct",
                "contexto_usado": {"hilo": ctx["hilo_disponible"], "mensajes": len(ctx["hilo"]), "verdad": bool(ctx["cliente_verdad_unica"]),
                                   "cliente": sorted((ctx.get("cliente") or {}).keys())}}
@@ -679,7 +687,7 @@ def copiloto(real, persona, cp, cid, nuevo=False):
             salida, modelo = llamar(SISTEMA_COPILOTO, ctx, ESQ_COPILOTO, effort="high")
         except RuntimeError as e:
             return {"ok": False, "motivo": str(e), "conectada": True}
-        pre = {**salida, "origen": "vivo", "modelo": modelo, "generado": datetime.now().strftime("%Y-%m-%d %H:%M")}
+        pre = {**salida, "origen": "vivo", "modelo": modelo, "generado": _ahora().strftime("%Y-%m-%d %H:%M")}
         _guardar_vivo("copiloto", f"{cid}|{persona['id']}", pre)
     if not pre:
         # 3-oct · cerebro v2: sin clave (o sin nada precalculado), el «Qué haría hoy» sale por REGLAS: diagnóstico en 3
@@ -713,7 +721,7 @@ def copiloto_reglas(real, persona, cp, cid):
     """Copiloto por reglas: los candidatos de ESE cliente (de cualquier dueño del equipo, recortados para quien pide)."""
     base = candidatos_de(real, persona)
     xs = [x for x in (_limpio_consejo(persona, real, cp, c) for c in (base.get("candidatos") or []) if c.get("cliente_id") == cid) if x]
-    return {**CD.copiloto_reglas(cid, ctx_cerebro(), xs), "generado": datetime.now().strftime("%Y-%m-%d %H:%M")}
+    return {**CD.copiloto_reglas(cid, ctx_cerebro(), xs), "generado": _ahora().strftime("%Y-%m-%d %H:%M")}
 
 
 def lista(persona, cp):
@@ -849,7 +857,7 @@ def candidatos_vivos(real, persona):
     except Exception as e:                       # el cerebro nunca tumba el consejo: quedan las reglas de siempre
         print(f"[cerebro] {persona['id']}: {type(e).__name__}: {e}", file=sys.stderr)
     al = (_j(f"alertas/p_{persona['id']}.json") or {}).get("generado")       # la hora de los datos, no la del cálculo
-    return {"generado": al or datetime.now().strftime("%Y-%m-%d %H:%M"), "calculado": datetime.now().strftime("%Y-%m-%d %H:%M"),
+    return {"generado": al or _ahora().strftime("%Y-%m-%d %H:%M"), "calculado": _ahora().strftime("%Y-%m-%d %H:%M"),
             "persona_id": persona["id"], "candidatos": cands,
             "que_hacer": tabla, "origen": "reglas"}
 
@@ -869,7 +877,7 @@ def candidatos_de(real, persona):
     pre, mt = _precalculado(persona["id"])
     if real["id"] != persona["id"]:
         return pre or {"candidatos": [], "origen": "reglas",
-                       "que_hacer": MC.tabla_fuentes(_j("fuentes.json"), _j("conexiones/salud.json"), None, datetime.now())}
+                       "que_hacer": MC.tabla_fuentes(_j("fuentes.json"), _j("conexiones/salud.json"), None, _ahora())}
     alertas_f = DATA / "alertas" / f"p_{persona['id']}.json"
     viejo = not pre or (time.time() - mt > FRESCO_PRECALC_H * 3600) or (alertas_f.exists() and alertas_f.stat().st_mtime > mt)
     return candidatos_vivos(real, persona) if viejo else pre
@@ -980,7 +988,7 @@ def candidatos_al_momento(real, persona):
         if "proyectos" in (persona.get("puestos") or []):
             out += MC.de_visto(persona, leer_como(real, persona, "verdad/clientes"), _vistos(persona), _ve_equipo(persona))
         if "outreach" in (persona.get("puestos") or []) and S.ve_alguno(persona, ["prospeccion"]):
-            out += MC.de_outreach(persona, leer_como(real, persona, "ventas_ro/outreach"), _respuestas_hechas(), datetime.now())
+            out += MC.de_outreach(persona, leer_como(real, persona, "ventas_ro/outreach"), _respuestas_hechas(), _ahora())
         if out:
             out = CD.enriquecer(persona, out, ctx_cerebro(), _nombre, completo=False)
     except Exception:
@@ -1109,13 +1117,13 @@ def _con_ia(real, persona, pantalla, cid, elegidos_8, nuevo):
     vivo = _vivo("consejos", clave_c)
     if vivo and not nuevo and vivo.get("refs") == refs:
         try:
-            if (datetime.now() - datetime.strptime(vivo["generado"], "%Y-%m-%d %H:%M")).total_seconds() < FRESCO_VIVO_H * 3600:
+            if (_ahora() - datetime.strptime(vivo["generado"], "%Y-%m-%d %H:%M")).total_seconds() < FRESCO_VIVO_H * 3600:
                 return vivo, False
         except ValueError:
             pass
     if not _tope(real["id"]):
         raise Denegado(f"Has pedido {TOPE_HORA} sugerencias en la última hora: espera un poco.")
-    ctx = {"hoy": datetime.now().strftime("%Y-%m-%d %H:%M"), "pantalla": (S.E.modulos.get(pantalla) or {}).get("titulo") or pantalla,
+    ctx = {"hoy": _ahora().strftime("%Y-%m-%d %H:%M"), "pantalla": (S.E.modulos.get(pantalla) or {}).get("titulo") or pantalla,
            "persona": {"nombre": persona.get("nombre"), "puestos": persona.get("puestos")},
            "candidatos": [{"ref": c["id"], "que": c["que"], "porque": c["porque"], "cifra": c.get("cifra"), "umbral": c.get("umbral"),
                            "quien": c.get("quien"), "cuando": c.get("cuando"), "gravedad": c.get("gravedad"),
@@ -1138,7 +1146,7 @@ def _con_ia(real, persona, pantalla, cid, elegidos_8, nuevo):
                 "crític" in (que + porque).lower() and "crític" not in (base["que"] + base["porque"]).lower()):
             que, porque = base["que"], base["porque"]      # prudencia: lo prohibido o un «crítico» inventado no pasa
         out.append({"ref": x["ref"], "que": que, "porque": porque[:400]})
-    res = {"generado": datetime.now().strftime("%Y-%m-%d %H:%M"), "refs": refs, "consejos": out, "modelo": modelo}
+    res = {"generado": _ahora().strftime("%Y-%m-%d %H:%M"), "refs": refs, "consejos": out, "modelo": modelo}
     _guardar_vivo("consejos", clave_c, res)
     return res, True
 
@@ -1375,7 +1383,7 @@ def cerebro_post(real, persona, cp, b):
         return dict(base, motivo=est["motivo"] if not est["conectada"] else "En «ver como» no se genera nada nuevo.")
     if not _tope(real["id"]):
         raise Denegado(f"Has pedido {TOPE_HORA} sugerencias en la última hora: espera un poco.")
-    ctx = {"hoy": datetime.now().strftime("%Y-%m-%d"), "ficha": CB.para_ia(f),
+    ctx = {"hoy": _ahora().strftime("%Y-%m-%d"), "ficha": CB.para_ia(f),
            "pregunta": limpiar(str(b.get("pregunta") or "")[:400]),
            "pide": {"nombre": persona.get("nombre"), "puestos": persona.get("puestos")},
            "cliente": verdad_para(persona, cp, cid) if cid else None}

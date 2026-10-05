@@ -252,7 +252,8 @@ def logos_a_direcciones(datos):
 
 
 def ahora():
-    return datetime.now().isoformat(timespec="seconds")
+    # L-22: hora de pared de Madrid (sin zona en el texto). RO_RELOJ no la congela: el rastro agruparía todo en un minuto.
+    return (datetime.now(P.MADRID) if P.MADRID else datetime.now()).replace(tzinfo=None).isoformat(timespec="seconds")
 
 
 def hoy():
@@ -434,7 +435,7 @@ _CANDADO_AGRUPADO = threading.Lock()
 
 
 def registrar_agrupado(quien, coleccion, accion, clave=None, datos=None, motivo=None, como=None):
-    minuto = datetime.now().strftime("%Y-%m-%d %H:%M")
+    minuto = ahora()[:16].replace("T", " ")
     k = (quien, como, coleccion, accion, clave, minuto)
     with _CANDADO_AGRUPADO:
         if len(_AGRUPADOS) > 20000:
@@ -456,7 +457,7 @@ def registrar_agrupado(quien, coleccion, accion, clave=None, datos=None, motivo=
 
 def tope_rastro_navegador(quien):
     """Ronda 11 (M7): el navegador escribe como mucho TOPE_RASTRO_MINUTO * 2 filas por persona y minuto en /api/rastro."""
-    minuto = datetime.now().strftime("%Y-%m-%d %H:%M")
+    minuto = ahora()[:16].replace("T", " ")
     with _CANDADO_AGRUPADO:
         n = _POR_MINUTO.get((quien, "nav", minuto), 0)
         _POR_MINUTO[(quien, "nav", minuto)] = n + 1
@@ -1277,7 +1278,7 @@ def nombres_para_su_dueno(persona, real, reglas, salida, rel, cp=None):
                     abiertos += 1
             fila["nombre_completo"] = True
     if abiertos:
-        clave = (persona["id"], rel, datetime.now().strftime("%Y-%m-%d %H:%M"))
+        clave = (persona["id"], rel, ahora()[:16].replace("T", " "))
         if clave not in _LECTURAS_VISTAS:
             try:
                 registrar(real["id"], "leads", "nombres_propios", rel, {"campos": abiertos, "detalle": "nombres de sus propios leads (D-88)"})
@@ -2062,7 +2063,7 @@ def ruta_lectura_ver_como585(ruta):
 def apuntar_lectura_ver_como(real, vista, ruta):
     """Solicitud autenticada de lectura, agrupada sólo después de persistir."""
     ruta = ruta_lectura_ver_como585(ruta)
-    clave = (real["id"], vista["id"], ruta, datetime.now().strftime("%Y-%m-%d %H:%M"))
+    clave = (real["id"], vista["id"], ruta, ahora()[:16].replace("T", " "))
     with _CANDADO_LECTURAS_VISTAS:
         if clave in _LECTURAS_VISTAS:
             return
