@@ -1,7 +1,0 @@
-# despliegue/servidor/crontab.ejemplo · si se prefiere cron a systemd (servidor propio) o para probar en el Mac.
-# En el Mac NO se recomienda dejarlo puesto (riesgo R1 del estudio 23: el Mac duerme y viaja).
-CRON_TZ=Europe/Madrid
-APP=/srv/ro/Downloads/APP_RO_ROLES_Y_PERMISOS_2026-10-02/30_APP_PROTOTIPO
-30 7-23 * * *  cd $APP && despliegue/entrada.sh ligera   >> despliegue/estado/cron.log 2>&1
-0 6,14 * * *   cd $APP && despliegue/entrada.sh completa >> despliegue/estado/cron.log 2>&1
-0 3 * * *      cd $APP && despliegue/entrada.sh noche    >> despliegue/estado/cron.log 2>&1

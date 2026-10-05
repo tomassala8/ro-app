@@ -1,0 +1,7 @@
+/* Sin el «preflight» de Tailwind a propósito: la base (márgenes, tipografía, botones) la pone estilos.css, igual que hoy.
+   Así la carcasa y las pantallas del puente salen idénticas. Si una pieza de shadcn necesita algo del preflight,
+   se añade aquí, acotado a esa pieza, y se comprueba con las fotos (v2/tools/capturas). */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "../styles/ro-tema.css";

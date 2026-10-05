@@ -2,6 +2,8 @@
 data/
 historia/
 capturas/
+# …salvo la herramienta de fotos de la migración (código, sin fotos: las fotos van a ~/RO_MIGRACION)
+!v2/tools/capturas/
 *.db
 *.db-journal
 *.db-wal
@@ -40,6 +42,10 @@ despliegue/lista_access.txt
 **/secretos*
 !escaner_secretos.py
 
+# Migración: notas y plan de vuelta de cada noche, solo en el Mac (PLAN_NOCHE.md sí va al repositorio)
+migracion/PLAN_VUELTA.md
+migracion/NOTAS_NOCHE.md
+
 # Dinero por cliente y rastro de operaciones: nunca a GitHub (3-oct)
 fuentes_dinero/cuotas.json
 fuentes_dinero/impagos_estado.json
@@ -64,3 +70,43 @@ fuentes_dinero/*.json
 **/_cache_*.json
 fuentes/_muestras/
 fuentes_captacion/anuncios.json
+fuentes_consejos/cerebros/indice.json
+
+# Entrega del 4-oct: fuera del repositorio a propósito (privados o solo del Mac). Viven en el Mac; nunca se vuelven a añadir.
+/_ESTADO_*.md
+fuentes/_ESTADO_*.md
+/despliegue/CLOUD_RUN.md
+/despliegue/emergencia_enlaces.json
+/despliegue/servidor/crontab.ejemplo
+/despliegue/servidor/ro-completa.timer
+/despliegue/servidor/ro-ligera.timer
+/despliegue/servidor/ro-noche.timer
+/despliegue/servidor/ro-tarea@.service
+/escaner_permitidos.json
+/fuentes/FORMATO.md
+/fuentes/_comprobacion_E1.json
+/fuentes/dudas_emparejamiento.md
+/fuentes/emparejamientos_manual.json
+/fuentes_alertas/estado_alertas.json
+/fuentes_captacion/ghl_totales.json
+/fuentes_consejos/conocimiento/puestos.json
+/fuentes_consejos/conocimiento/reglas.json
+/fuentes_consejos/conocimiento/reglas_minadas.json
+/fuentes_consejos/conocimiento/tipos.json
+/fuentes_crm/exclusiones.json
+/fuentes_equipo/correcciones_equipo.json
+/fuentes_equipo/dudas_roles.json
+/fuentes_horas/zonas.json
+/fuentes_ia/cerebro_respuestas/ejemplos.json
+/fuentes_ia/cerebro_respuestas/patrones.json
+/fuentes_ia/pegar.sh
+/fuentes_incidencias/primera_vez.json
+/fuentes_informes/emparejamiento_hoja.json
+/fuentes_modular/FORMATO.md
+/fuentes_nuevos/estado_altas_manual_2026-10-02.json
+/indicadores.json
+
+# F1.3 (5-oct-2026): configuración de data/ que la entrega del 4-oct sacó de git; se queda en el Mac
+data/departamentos.json
+data/mi_dia/config.json
+data/envios/interruptor.json

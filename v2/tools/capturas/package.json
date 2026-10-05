@@ -1,0 +1,14 @@
+{
+  "name": "@ro/capturas",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "capturar": "node capturar.mjs",
+    "comparar": "node comparar.mjs"
+  },
+  "devDependencies": {
+    "pixelmatch": "^7.2.0",
+    "playwright": "1.63.0",
+    "pngjs": "^7.0.0"
+  }
+}

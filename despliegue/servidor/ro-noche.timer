@@ -1,8 +1,0 @@
-[Unit]
-Description=App RO · copia de la base y batería nocturna (3:00)
-[Timer]
-OnCalendar=*-*-* 03:00:00 Europe/Madrid
-Unit=ro-tarea@noche.service
-Persistent=true
-[Install]
-WantedBy=timers.target

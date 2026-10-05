@@ -1,0 +1,12 @@
+---
+description: Seguridad y datos de personas y clientes
+alwaysApply: true
+---
+# Seguridad
+
+- Lo que hoy protege `servir.py` se protege igual o más, nunca menos: recorte por persona, 403 a clientes ajenos, `_privado/` solo por `ver_dato` y con rastro, sueldos solo dirección y RRHH, puerta de secretos (503), «ver como» solo lectura.
+- Antes de dar por buena una ruta o pantalla: pruébala con tres personas de puestos distintos (una de dirección, un account y un setter) y con «ver como».
+- `pruebas_seguridad.py` reproduce cada fallo de las auditorías. Tiene que pasar contra la app nueva. No quites ni relajes ninguna comprobación para que pase.
+- Nunca correos o teléfonos de leads o contactos fuera de `_privado/`. `python3 escaner_secretos.py --proyecto` limpio antes de cada commit que toque datos.
+- Nada de datos reales en tests, fixtures, capturas versionadas ni mensajes de commit.
+- Los ficheros privados que la entrega del 4-oct sacó de git (`_ESTADO_*.md`, `fuentes_consejos/conocimiento/*.json`, `indicadores.json`, `escaner_permitidos.json`, cachés y logs de `fuentes_*/`…; lista: `git diff --name-status main origin/codex/ro-entrega-cursor-2026-10-04 | grep ^D`) se quedan en el Mac y están en `.gitignore`. **Nunca se vuelven a añadir**: ni con `git add -f`, ni para que pase una prueba. Lo mismo el paquete de fuentes privadas de `despliegue/empaquetado.py` (vive en `~/RO_MIGRACION/paquete/`).
