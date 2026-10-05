@@ -1,4 +1,5 @@
 import {celdaImputa390,imputaVigente390} from './_imputa_personal_390.js';
+import { instanteRO, diaRO, horaRO } from '../_fechas_ro.js';   // L-18: los textos sin zona son Madrid, no la zona del navegador
 // modulos/mi_dia.js · M1 «Mi día» (2-oct-2026): la pantalla de inicio de cada uno de los 21 puestos.
 //
 // Es un ORQUESTADOR. No recalcula nada que ya calcule otro módulo: pide a servir.py los datos que la persona ya
@@ -62,9 +63,12 @@ function vigilarCortes(raiz) {
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+// L-18: el día y la hora salen de Madrid (`_fechas_ro.js`), no de la zona del navegador; el formato no cambia.
+const _instDe = t => { if (!t) return null; if (t instanceof Date) return t; const d = instanteRO(String(t)); if (d) return d; return /\d{2}:\d{2}/.test(String(t)) ? null : new Date(String(t).replace(' ', 'T')); };
+const _sumaDia = (dia, n) => { const d = new Date(`${dia}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const _diaSem = dia => new Date(`${dia}T12:00:00Z`).getUTCDay();
+const fDiaRO = iso => { if (!iso) return '—'; const dia = diaRO(String(iso)); return !dia ? String(iso) : `${Number(dia.slice(8))}-${_MES3[Number(dia.slice(5, 7)) - 1]}`; };
+const fDiaHoraRO = iso => { if (!iso) return '—'; const dia = diaRO(String(iso)); return !dia ? String(iso) : `${Number(dia.slice(8))}-${_MES3[Number(dia.slice(5, 7)) - 1]}, ${String(iso).length <= 10 ? '12:00' : horaRO(String(iso))}`; };
 
 const scopeDia = ctx => JSON.stringify([ctx.real?.id || '', ctx.persona?.id || '', !!ctx.soloLectura, !!ctx.servidor]);
 const CACHE = new Map();          // persona|fichero → { t, ok, datos, motivo }
@@ -72,7 +76,7 @@ const VIDA_CACHE_MS = 5 * 60 * 1000;
 let CONFIG = null;
 
 const PALABRAS_DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-const saludo = () => { const hh = new Date().getHours(); return hh < 14 ? 'Buenos días' : hh < 21 ? 'Buenas tardes' : 'Buenas noches'; };
+const saludo = () => { const hh = Number(horaRO(new Date()).slice(0, 2)); return hh < 14 ? 'Buenos días' : hh < 21 ? 'Buenas tardes' : 'Buenas noches'; };
 const fechaLarga = () => { const d = new Date(`${hoyMadrid()}T12:00:00`); return `${PALABRAS_DIA[d.getDay()]} ${d.getDate()} de ${MESES[d.getMonth()]}`; };
 // ---- maquetación en línea (solo tokens): rejillas que se pliegan solas, sin hoja propia ni media queries
 const REJILLA = min => ({ display: 'grid', gridTemplateColumns: `repeat(auto-fit, minmax(min(100%, ${min}px), 1fr))`, gap: 'var(--s-4)', alignItems: 'start' });
@@ -721,7 +725,7 @@ function ordenarPorPuesto(filas, puesto) {
     .sort((a, b) => ((a.p === null) - (b.p === null)) || (a.p !== null && b.p !== null ? b.p - a.p : 0) || a.r - b.r || a.i - b.i)
     .map(o => o.x);
 }
-const finDeHoy = ahora => { const d = new Date(ahora); d.setHours(23, 59, 0, 0); return d; };
+const finDeHoy = ahora => instanteRO(`${diaRO(ahora)} 23:59`) || (() => { const d = new Date(ahora); d.setHours(23, 59, 0, 0); return d; })();   // L-18: las 23:59 de Madrid
 const nombreCli = (ctx, id) => (id ? ctx.clientes?.find(c => c.id === id)?.nombre || ctx.verdad?.(id)?.nombre || null : null);
 const gravDePeso = p => (p >= 3 ? 'alta' : p >= 2.5 ? 'media' : 'baja');
 
@@ -823,7 +827,7 @@ function filasLoMio(lm, ahora) {
   for (const x of decisionesMias(ctx, D).filter(al.decision).filter(y => !lm.contestadas?.has(String(y.id)))) {
     const ir = ctx.veModulo('decisiones') ? `#/decisiones/reloj/${encodeURIComponent(x.id)}` : null;
     f.push({ tipo: 'decision', clave: `dec:${x.id}`, que: `Decidir: ${x.titulo}`, quien: `subida por ${ctx.nombre ? ctx.nombre(x.quien) : x.quien}`, decision: decisionDe(D, x.id) || x,
-      porque: `Recomendación: ${x.recomendacion || '—'}`, plazo: x.vence ? new Date(String(x.vence).replace(' ', 'T')) : null, grav: x.estado === 'en plazo' ? 'media' : 'alta',
+      porque: `Recomendación: ${x.recomendacion || '—'}`, plazo: x.vence ? _instDe(x.vence) : null, grav: x.estado === 'en plazo' ? 'media' : 'alta',
       ir, verbo: 'Abrir la decisión', objeto: objetoDe(ir) || `dec:${x.id}`, grupos: [`dec:${x.id}`], prioridad: x.prioridad ?? null });
   }
   // 6 · lo urgente de los bloques (antes «Lo primero hoy»), los avisos de fuentes caídas y los avisos de persona
@@ -831,7 +835,7 @@ function filasLoMio(lm, ahora) {
     const ir = c.ruta ? `#/${c.ruta}` : null;
     const cli = nombreCli(ctx, c.cliente_id);
     // V2 (C-10): si la cosa trae su fecha (una tarea vencida), el plazo es ESA fecha («Vencido hace 4 días»), nunca «Sin fecha»
-    const pz = c.plazo ? new Date(String(c.plazo).length <= 10 ? `${c.plazo}T23:59:00` : String(c.plazo).replace(' ', 'T')) : null;
+    const pz = c.plazo ? _instDe(String(c.plazo).length <= 10 ? `${c.plazo} 23:59` : c.plazo) : null;
     f.push({ tipo: 'bloque', clave: c.clave, cliente_id: c.cliente_id || null, que: c.motivo, quien: cli && String(c.motivo).includes(cli) ? null : cli || b.titulo, porque: c.detalle || '', icono: c.icono, peso: c.peso, prioridad: c.prioridad ?? null,
       plazo: pz && !Number.isNaN(+pz) ? pz : c.peso >= 3 ? finDeHoy(ahora) : null, grav: gravDePeso(c.peso), ir, href: c.href || null, abrirEn: c.abrirEn, verbo: null,
       objeto: objetoDe(ir) || (c.href ? `ext:${c.href}` : null), grupos: [c.clave, c.grupo] });
@@ -879,13 +883,13 @@ const avisoLlano = t => L(String(t || ''));
 /** Texto del plazo: «Vencido hace 3 h» · «Vence hoy a las 17:53» · «Vence mañana a las 17:53» · «Vence el vie 9-oct» · «Sin fecha». */
 function plazoTxt(plazo, ahora, tramo) {
   if (!plazo) return 'Sin fecha';
-  const hora = plazo.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const hora = horaRO(plazo);
   if (tramo === 0) { const hh = (ahora - plazo) / 36e5; return hh < 1 ? 'Vencido hace menos de 1 h' : hh < 48 ? `Vencido hace ${Math.round(hh)} h` : `Vencido hace ${Math.round(hh / 24)} días`; }
   // D1: es el plazo, no la hora del aviso: «Vence hoy a las 17:53» (como En rojo y Bandeja), nunca «Hoy, 17:53».
   if (tramo === 1) return hora === '23:59' ? 'Vence hoy' : `Vence hoy a las ${hora}`;
-  const man = new Date(ahora); man.setDate(man.getDate() + 1);
-  if (plazo.toDateString() === man.toDateString()) return hora === '23:59' ? 'Vence mañana' : `Vence mañana a las ${hora}`;
-  return `Vence el ${PALABRAS_DIA[plazo.getDay()].slice(0, 3)} ${plazo.getDate()}-${MESES[plazo.getMonth()].slice(0, 3)}`;
+  const dp = diaRO(plazo);
+  if (dp === _sumaDia(diaRO(ahora), 1)) return hora === '23:59' ? 'Vence mañana' : `Vence mañana a las ${hora}`;
+  return `Vence el ${PALABRAS_DIA[_diaSem(dp)].slice(0, 3)} ${Number(dp.slice(8))}-${MESES[Number(dp.slice(5, 7)) - 1].slice(0, 3)}`;
 }
 const COLOR_TRAMO = ['rojo', 'ambar', 'azul', 'gris'];
 
@@ -1007,8 +1011,9 @@ function puedeDecidir(ctx, d) {
 function botonPosponer(alElegir, soloIcono = false) {
   const caja = h('span', { class: 'confirmar' });
   const dos = n => String(n).padStart(2, '0');
-  const texto = d => `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())} ${dos(d.getHours())}:${dos(d.getMinutes())}`;
-  const vuelta = cuando => { const d = new Date(); d.setSeconds(0, 0); if (cuando === 'manana') d.setDate(d.getDate() + 1); else d.setDate(d.getDate() + (((8 - d.getDay()) % 7) || 7)); d.setHours(9, 0); return d; };
+  // L-18: «mañana» y «el lunes» a las 9:00 de Madrid, en texto sin zona (como lo guarda el servidor)
+  const texto = dia => `${dia} 09:00`;
+  const vuelta = cuando => { const hoy = diaRO(new Date()); return cuando === 'manana' ? _sumaDia(hoy, 1) : _sumaDia(hoy, ((8 - _diaSem(hoy)) % 7) || 7); };
   // en el móvil, solo el reloj (con su nombre para lectores de pantalla): la fila cabe en una línea de botones
   const inicial = () => caja.replaceChildren(h('button', { type: 'button', class: soloIcono ? 'bt mini icono' : 'bt mini', title: 'Posponer: vuelve sola mañana o el lunes', 'aria-label': 'Posponer', on: { click: elegir } }, icono('clock'), soloIcono ? null : 'Posponer'));
   function elegir() {

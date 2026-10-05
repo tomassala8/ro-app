@@ -18,6 +18,7 @@ import { REGLAS } from '../permisos.js';
 import { alDia, revisionesDelAccount } from './produccion_comun.js';
 import { clientesDia314, metaDia314, totalMetaDia314, resultadosFilaDia314, crmDia314, fuenteCrmDia314 } from './_resultados_dia_314.js';
 import { normalizarPaid } from './_paid_mediciones.js';
+import { instanteRO, diaRO, horaRO } from '../_fechas_ro.js';   // L-18: los textos sin zona son Madrid, no la zona del navegador
 
 // ------------------------------------------------------------------ utilidades
 // V2 · «hoy» = el día de la agencia en Madrid (helper común de fechas, V2-E), nunca el reloj del Mac (Tomás en Bali)
@@ -40,11 +41,12 @@ export function textoLlano(t) {
     .replace(/([\p{L}\d])«/gu, '$1 «').replace(/»([\p{L}\d])/gu, '» $1')
     .replace(/\s+([.,;:])/g, '$1').replace(/\s{2,}/g, ' ').trim();
 }
-const fecha = s => { if (!s) return null; const d = new Date(String(s).replace(' ', 'T')); return Number.isNaN(+d) ? null : d; };
+// L-18: instante en Madrid si el texto no trae zona (antes, en la zona del navegador). Un día sin hora no depende de la zona.
+const fecha = s => { if (!s) return null; const d = instanteRO(s); if (d) return d; if (/\d{2}:\d{2}/.test(String(s))) return null; const l = new Date(String(s).replace(' ', 'T')); return Number.isNaN(+l) ? null : l; };
 export const edadH = s => { const d = fecha(s); return d ? Math.max(0, (Date.now() - d) / 36e5) : null; };
-export const diaCorto = s => { const d = fecha(String(s).length <= 10 ? `${s}T12:00` : s); return d ? `${d.getDate()}-${MESES[d.getMonth()].slice(0, 3)}` : (s || '—'); };
-const horaCorta = s => { const d = fecha(s); return d ? d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : ''; };
-const cuandoTxt = s => { const d = fecha(s); if (!d) return s || '—'; const hoy = hoyISO(); const iso = String(s).slice(0, 10); return iso === hoy ? `hoy, ${horaCorta(s)}` : `${diaCorto(iso)}, ${horaCorta(s)}`; };   // «2-oct, 17:34» (44 §2.3)
+export const diaCorto = s => { const dia = s ? diaRO(String(s)) : null; return dia ? `${Number(dia.slice(8))}-${MESES[Number(dia.slice(5, 7)) - 1].slice(0, 3)}` : (s || '—'); };
+const horaCorta = s => { const d = fecha(s); return d ? horaRO(d) : ''; };
+const cuandoTxt = s => { const d = fecha(s); if (!d) return s || '—'; const hoy = hoyISO(); const iso = diaRO(String(s)) || String(s).slice(0, 10); return iso === hoy ? `hoy, ${horaCorta(s)}` : `${diaCorto(iso)}, ${horaCorta(s)}`; };   // «2-oct, 17:34» (44 §2.3)
 const n0 = v => Number(v) || 0;
 /** Euros con el formateador común (punto de miles siempre y «−»): 3.860 € · 3.859,87 €. */
 const eurG = n => fmt.eur(n);
@@ -1930,7 +1932,7 @@ function cumpleTodas(defs, nombres, H, yo) { return nombres.every(d => cumpleDef
 // </contar>
 const LM_DE_ACCION = { alerta_vista: 'vista', alerta_lo_tengo: 'lo_tengo', alerta_resuelta: 'resuelta', alerta_no_aplica: 'no_aplica', alerta_reabrir: 'nueva', alerta_posponer: 'pospuesta' };
 const LM_DE_LOTE = { lo_tengo: 'lo_tengo', resuelta: 'resuelta', no_aplica: 'no_aplica', posponer: 'pospuesta' };
-const lmFecha = s => (s ? (s instanceof Date ? s : new Date(String(s).replace(' ', 'T'))) : null);
+const lmFecha = s => (s ? (s instanceof Date ? s : (instanteRO(String(s)) || (/\d{2}:\d{2}/.test(String(s)) ? new Date(NaN) : new Date(String(s).replace(' ', 'T'))))) : null);   // L-18: sin zona = Madrid
 /** Quién puede posponer o despachar en lote (la regla de Alertas y del generador): su cadena, su jefe, dirección u operaciones. */
 function lmPuedeActuar(pid, a, personas) {
   const p = (personas || []).find(x => x.id === pid);
@@ -2034,7 +2036,7 @@ const objetoDe = ir => { if (!ir || !String(ir).startsWith('#/')) return null; t
 function tramoPlazo(plazo, ahora) {
   if (!plazo) return 3;
   if (plazo <= ahora) return 0;
-  const fin = new Date(ahora); fin.setHours(23, 59, 59, 999);
+  const fin = instanteRO(`${diaRO(ahora)} 23:59:59.999`) || (() => { const d = new Date(ahora); d.setHours(23, 59, 59, 999); return d; })();   // L-18: el fin del día de Madrid
   if (plazo <= fin) return 1;
   return plazo - ahora <= 7 * 864e5 ? 2 : 3;
 }
