@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F2.4. F2.3 cerrado a las 08:39.
+Siguiente: F2.4 (intento 2/3: el contrato en rojo no es traducción SQL; escrituras 0 diferencias si `DATABASE_URL` no se cuela). F2.3 cerrado a las 08:39 (`4af065b`).
 
 Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
 - candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
@@ -46,7 +46,7 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 - ✅ F2.1 · 06:42 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6 · comprobado otra vez 08:21 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; commit a74fd94; grep residual de avisos 0; py_compile limpio). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
 - ✅ F2.2 · 08:23 · 67 modelos; tuberia_avisos en schema.prisma y 0_base; 0 ✘ de crear_base_pg.py; el diff solo añade. Plan B: ninguno; sin esto se pierden columnas.
 - ✅ F2.3 · 08:39 · 68 tablas en ro_app, 32 con datos (7261 filas), data vigente v1 · F23_OK
-- ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
+- 🔄 F2.4 · 09:06 · intento 2/3 · puerta f2 en rojo por guardas SQLite y reloj; no hay fallo de `traducir()`.
 
 ## Fase 3 · La app nueva entera (por el proxy)
 
@@ -110,3 +110,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F2.2 · intento 1 · 08:23 · inventario: 1 tabla nueva (`tuberia_avisos`), 0 quitadas, sin sección Columnas. `rehacer_base.sh` rc=0, 67 modelos, 0 ✘. Diff: solo `+model tuberia_avisos` y `+CREATE TABLE public.tuberia_avisos` (más secuencia y clave). `prisma validate` válido; `pnpm --filter @ro/db build` rc=0. `ro_app` seguía en 0 tablas.
 - F2.3 · intento 1 · 08:24 · hipótesis: `pnpm db:deploy` con `DATABASE_URL=postgresql://127.0.0.1:5432/ro_app?user=ro&password=ro` aplica `0_base` y `1_sin_truncate`. Resultado: no. `psql` con esa URL cuenta 0 tablas (la conexión libpq vale). Prisma responde `P1010: User was denied access on the database (not available)` y sale 1. `prisma.config.ts` por defecto usa `postgresql://ro:ro@127.0.0.1:5432/ro_app` (usuario delante del host); el plan de F2.3 manda la forma con `?user=`. Tras el fallo, `pg_tables` sigue en 0 y `_prisma_migrations` no existe. No se tocó `local.db.antes`.
 - F2.3 · intento 2 · 08:39 · hipótesis: Prisma no lee `user`/`password` de la query; la URL `ro:ro@127.0.0.1` aplica las dos migraciones. Resultado: sí. «2 migrations found», `0_base` y `1_sin_truncate` aplicadas, 68 tablas, vista `fuente_ultimo_bueno` = 1, diff de esquema 0. Validación 0 ✘ y 0 ⚠. Copia de `local.db.antes` «cuadrada» (32 tablas, 7261 filas, 0 ✘ en el recuento). Tubería «cuadrada» (`tuberia_avisos` = 0). Secuencias `registro` 3564 e `acciones` 22 (is_called falso: el siguiente id es max+1); `decisiones` y `opiniones` en 1. `data` versión 1 vigente (2026-10-05T08:37:57). Collation `en_US.utf8`. `F23_OK`.
+- F2.4 · intento 1 · 09:06 · hipótesis: las diferencias de la puerta f2 son reglas de `traducir()` en `base.py`. Resultado: no. `bash migracion/puerta.sh f2` (08:42–08:48) ROJO 3/5: contrato, escrituras, velocidad. Cero líneas `psycopg.errors` en `legado.log`. Las escrituras de esa pasada no valen: el shell tenía `DATABASE_URL` y `servir.py` lo prefiere a `RO_DB`, así que el 8780 escribió en `ro_app` y el volcado leyó `esc_viejo.db` intacto. Repetido sin esa variable: 45 casos, 40 tablas, 0 diferencias (`COMPARAR_RC=0`). El contrato (13 rutas) son guardas `if DATABASE_URL` (503 y `capacidad_*`), `hoy` de `mi_trabajo.hoy_de` (reloj real, no `RO_RELOJ`), `avisos.creado` (hora de arranque) y `altas` guía (el fichero existe junto al repo y no junto a `ref/`). Velocidad: los mismos 503. No se tocó `base.py`. `ro_app` quedó con filas de más por el 8780 contaminado (registro 3563→5421, asignaciones 387→380 con ids distintos, canal_mensajes 293→467). Detalle en NOTAS «Fase 2 · diferencias».
