@@ -8,6 +8,7 @@ import { PUESTOS, PUESTO } from '../permisos.js';
 import { vistaConexiones } from './ajustes_conexiones.js';
 import { h, campo, elegir } from './personas_comun.js';
 import { llevarA, filaConTexto } from './_ir.js';
+import { HORAS_MES_REFERENCIA } from './_constantes_ro.js';   // L-34
 import { altaNueva, puedeVer as puedeVerPrimera, pasosHechos, DIAS_VENTANA } from './primera_semana.js';
 
 const PESTANAS = [
@@ -219,7 +220,7 @@ function vistaPersonas(A, ctx, editar, nombre) {
     etiquetaFila: p => `${p.alias}, ${p.puestos_txt}. Abrir`,
   });
   const alta = ctx.nivel === 'todo' ? h('a', { class: 'bt pri', href: '#/ajustes/altas' }, icono('mas'), 'Añadir persona') : null;
-  return [panel({ titulo: 'Personas', icono: 'eq', sub: 'Varios puestos por persona · 128 h al mes para medir la carga · los sueldos no se ven aquí', acciones: alta }, resumen, tabla), editor];
+  return [panel({ titulo: 'Personas', icono: 'eq', sub: `Varios puestos por persona · ${HORAS_MES_REFERENCIA} h al mes para medir la carga · los sueldos no se ven aquí`, acciones: alta }, resumen, tabla), editor];
 }
 
 function editorPersona(p, A, ctx, editar, nombre) {
@@ -238,7 +239,7 @@ function editorPersona(p, A, ctx, editar, nombre) {
         on: { change: e => (e.target.checked ? marcados.add(x.id) : marcados.delete(x.id)) } }), ' ', x.nombre))));
   const jefe = h('select', { disabled: !editar || blindada }, h('option', { value: '' }, '— sin jefe —'),
     A.personas.filter(x => x.id !== p.id && x.estado !== 'baja').map(x => h('option', { value: x.id, selected: x.id === p.jefe }, nombre[x.id])));
-  const horas = h('input', { type: 'number', min: '0', max: '200', value: p.horas_mes ?? 128, disabled: !editar, style: { width: 'calc(var(--s-16) + var(--s-6))', minHeight: 'var(--s-8)' } });
+  const horas = h('input', { type: 'number', min: '0', max: '200', value: p.horas_mes ?? HORAS_MES_REFERENCIA, disabled: !editar, style: { width: 'calc(var(--s-16) + var(--s-6))', minHeight: 'var(--s-8)' } });
   const imputa = elegir([{ valor: 'sí', texto: 'Sí' }, { valor: 'no', texto: 'No' }], { valor: p.imputa_horas === 'no' ? 'no' : 'sí', desactivado: !editar });
   const est = elegir(['activo', 'dudoso', 'por_incorporar', 'baja'].map(v => ({ valor: v, texto: v[0].toUpperCase() + v.slice(1).replace('_', ' ') })), { valor: p.estado || 'activo', desactivado: !editar || blindada });
   return h('div', { class: 'pila' }, tarjetaPrimeraSemana(ctx, p), panel({ titulo: `${p.alias} · ${p.nombre}`, icono: 'editar', sub: p.nota || (p.puestos_sin_equivalencia?.length ? `Sin equivalencia: ${p.puestos_sin_equivalencia.join(', ')}` : 'Cada cambio queda en el historial con el antes y el después.') },

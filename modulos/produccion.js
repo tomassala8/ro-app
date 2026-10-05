@@ -11,6 +11,7 @@ import { resumirAccountsProduccion237, textoRevisionAccount237 } from './_produc
 // proyectos y revisiones por cliente (quien ve ese cliente). Botones: ctx.accion() → cola «simulada»; nada se escribe en ClickUp.
 
 import { llevarA } from './_ir.js';
+import { TOPE_CARTERA } from './_constantes_ro.js';   // L-34
 import { prepararRevisionProduccion206, crearIntencionRevision206, validarReciboRevision206 } from './_transicion_produccion_206.js';
 import {
   h, fmt, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, panel, frescura, icono, iniciales,
@@ -874,7 +875,7 @@ export default {
       const sobre = ps.filter(p => p.tope && p.en_cartera > p.tope);
       const cerca = ps.filter(p => p.tope && p.en_cartera <= p.tope && p.en_cartera >= p.tope - (p.silla_tope === 'account' ? 1 : 2));
       const tl = tiles([
-        tile({ icono: 'eq', etiqueta: 'Por encima del tope', valor: sobre.length, estado: semaforo(sobre.length, { verde: 0, ambar: 1, mejorSi: 'bajo' }), contexto: 'Tope: 12 por account, 16 en publicidad y CRM', medible: 'hoy' }),
+        tile({ icono: 'eq', etiqueta: 'Por encima del tope', valor: sobre.length, estado: semaforo(sobre.length, { verde: 0, ambar: 1, mejorSi: 'bajo' }), contexto: `Tope: ${TOPE_CARTERA.account} por account, ${TOPE_CARTERA.trafficker} en publicidad y CRM`, medible: 'hoy' }),
         tile({ icono: 'alert', etiqueta: 'Con tareas vencidas', valor: ps.filter(p => p.vencidas).length, unidad: `de ${ps.length}`, estado: ps.some(p => p.vencidas > 5) ? 'rojo' : ps.some(p => p.vencidas) ? 'ambar' : 'verde', contexto: 'Vencidas en su mano, sin entregar (la misma cifra que su Mi día)' }),
         tile({ icono: 'volver', etiqueta: 'Piezas devueltas', valor: ps.reduce((s, p) => s + p.devueltas, 0), contexto: 'Volvieron de revisión a trabajo', medible: 'medias', medibleDetalle: D.notas?.devueltas }),
         dir ? tile({ icono: 'persona', etiqueta: 'Tareas sin nadie', valor: D.sin_asignar, estado: D.sin_asignar ? 'ambar' : 'verde', contexto: 'En ClickUp, sin persona asignada' }) : null,

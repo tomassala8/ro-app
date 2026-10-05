@@ -16,6 +16,7 @@ import {
 } from '../componentes.js';
 import { fechaControl227, ventanasHoras227 } from './_control_periodos_227.js';
 import { plegarConsejo } from './_plegar_consejo.js';
+import { HORAS_MES_REFERENCIA } from './_constantes_ro.js';   // L-34
 import { botonDeshacer } from './_deshacer.js';   // Ronda U (50 #4)
 import { selectorPersona, barras, barraMini, S, R, punto, estadoTexto, lineaFuentes, zonaTxt, ancharBuscador, dosColumnas, esMovil } from './produccion_comun.js';
 
@@ -137,7 +138,7 @@ export function panoramaHoras(ctx, personasAutorizadas, mes, datos, { alAbrir } 
           celda:r=>{const d=r.serie?.dias[i];return h('span',{title:r.serie?`${f} · ${r.serie.zona} · ${d?.entradas??'sin'} registros válidos · fuente ${r.serie.fecha_fuente}`:'Sin serie diaria tipada o zona confirmada',style:{fontWeight:'600',whiteSpace:'nowrap'}},d?.estado==='observado'?valor(d.horas):'—');}})),
         {clave:'total5',titulo:'Total 5 fechas',num:true,celda:r=>h('span',{title:'Suma parcial de fechas con registros; no rellena huecos'},r.total5===null?'—':valor(r.total5))},
         {clave:'horas',titulo:'Rango elegido',num:true,celda:r=>h('span',{title:r.detalle},r.horas===null?'—':valor(r.horas))},
-        {clave:'porcentaje',titulo:'% imputado',num:true,celda:r=>h('span',{title:'Pendiente de jornada, calendario y ausencias confirmados para el mismo período; no se usa 8 h/40 h/128 h por defecto'},'—')},
+        {clave:'porcentaje',titulo:'% imputado',num:true,celda:r=>h('span',{title:`Pendiente de jornada, calendario y ausencias confirmados para el mismo período; no se usa 8 h/40 h/${HORAS_MES_REFERENCIA} h por defecto`},'—')},
         {clave:'ultima',titulo:'Último registro',celda:r=>h('span',{class:'sub',title:'Última fecha observada en las cinco fechas; no es la última de todo el histórico'},r.ultima?fDiaRO(r.ultima):'—')}],
       alPulsar:r=>{if(vivo() && cajaTabla.isConnected)alAbrir?.(r.persona_id);},etiquetaFila:r=>`Ver registros de ${r.nombre}`,
       vacio:{titulo:'Sin registros diarios autorizados',porque:'Contrasta la cobertura de la copia.'}}));
@@ -415,7 +416,7 @@ export default {
         dentro.append(dosColumnas(
           panel({ titulo: 'Horas por mes', icono: 'grafico', sub: 'Barra: registros en la copia. Raya: referencia estimada del generador anterior; no es jornada ni capacidad confirmada.' },
             h('div', { class: 'cuerpo pila' }, barras({ puntos: pts, formato: v => fmt.num(v), titulo: `Horas registradas por mes de ${p.nombre}`,nombreBarras:'Horas registradas en la copia',nombreRef:'Referencia estimada anterior',textoRef:'Referencia estimada anterior; no es jornada confirmada' }),
-              h('p', { class: 'sub' }, 'La referencia anterior usa 128 h mensuales y ausencias no registradas como cero. No permite evaluar cumplimiento; contrasta calendario, ausencias y cobertura antes de interpretar diferencias.'))),
+              h('p', { class: 'sub' }, `La referencia anterior usa ${HORAS_MES_REFERENCIA} h mensuales y ausencias no registradas como cero. No permite evaluar cumplimiento; contrasta calendario, ausencias y cobertura antes de interpretar diferencias.`))),
           panel({ titulo: `En qué se fueron las horas · ${nomMes(mes)}`, icono: 'capas', sub: 'Por tipo de tarea (sin el cliente), como el detector de horas raras.' },
             h('div', { class: 'cuerpo' }, (m.tipos || []).length ? h('div', { style: { display: 'grid', gap: S[2] } }, m.tipos.map(t => h('div', { style: { display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(56px,128px) auto', gap: S[3], alignItems: 'center' } },
               h('span', { title: t.tipo, style: { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, t.tipo === 'sin tarea' ? h('b', {}, 'Sin tarea') : t.tipo[0].toUpperCase() + t.tipo.slice(1)),

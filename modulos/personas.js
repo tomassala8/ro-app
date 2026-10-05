@@ -14,6 +14,7 @@ import { panoramaHoras } from './horas.js';
 import { PUESTO } from '../permisos.js';
 import { h, elegir, estilosLocales, cabPersona, campo, dias, leerCola, vp } from './personas_comun.js';
 import { llevarA } from './_ir.js';
+import { TOPE_CARTERA, HORAS_MES_REFERENCIA } from './_constantes_ro.js';   // L-34
 import { lineaZona } from './mi_perfil.js';
 // Ronda U (50 #4, #14): «Guardar» al primer clic con «Deshacer» 8 s (antes «¿Guardar? Sí, guardar»: todo es interno), la
 // nota del mes como TABLA (persona · nota · hecho · acción · Guardar en la fila; antes un formulario a 2.624 px) y
@@ -25,7 +26,7 @@ const TABS_PERSONAS = ['alerta', 'imputa', 'ausencias', 'carga', '1a1', 'notas',
 const guardarU = ({ texto, hecho = 'Guardado', ctx, validar, hacer, mini = false, pri = true }) =>
   botonDeshacer({ texto, hecho, mini, pri, soloLectura: ctx.soloLectura, validar, alHacer: hacer });   // V3a: zona y hora local de cada persona («Caracas · 21:14 ahora»)
 
-const CAP = { account: 12, trafficker: 16, crm: 16 };
+const CAP = TOPE_CARTERA;   // L-34
 let CARTERAS = [];
 /** R12 · fila de la verdad única para persona y silla, o null. */
 const carteraV = (pid, silla) => CARTERAS.find(c => c.persona_id === pid && c.silla === silla) || null;
@@ -158,7 +159,7 @@ export default {
     const franja = franjaCifras([
       { etiqueta: 'En alerta sin plan (+7 días)', valor: vencidas.length, estado: vencidas.length ? 'rojo' : '', alPulsar: ir('alerta'),
         titulo: sinPlan.length ? `${enAlerta.length} en alerta: ${sinPlan.length} sin plan todavía y ${enAlerta.length - sinPlan.length} con plan` : 'Todas con conversación y plan' },
-      { etiqueta: 'Carteras sobre la referencia', valor: sobre.length, estado: sobre.length > 1 ? 'rojo' : '', alPulsar: ir('carga'), titulo: 'Referencia de cartera: accounts > 12 proyectos · trafficker y CRM > 16. No acredita capacidad horaria ni sobrecarga individual.' },
+      { etiqueta: 'Carteras sobre la referencia', valor: sobre.length, estado: sobre.length > 1 ? 'rojo' : '', alPulsar: ir('carga'), titulo: `Referencia de cartera: accounts > ${TOPE_CARTERA.account} proyectos · trafficker y CRM > ${TOPE_CARTERA.trafficker}. No acredita capacidad horaria ni sobrecarga individual.` },
       { etiqueta: 'Con 0 h en el registro', valor: ceroAyer.length, estado: '', alPulsar: ir('imputa'), titulo: `${noAyer.length} con registro menor de 8 h (filtro de revisión, no jornada exigible). Ver fecha y corte; calendario y ausencias sin conciliar.` },
       { etiqueta: 'Registro de ausencias (14 días)', valor: ausProx.length ? ausProx.length : 'Sin registros', alPulsar: ir('ausencias'), titulo: `${ausProx.filter(a => !a.suplente).length} sin suplente en los registros disponibles. Cobertura no acreditada: no confirma disponibilidad ni ausencia de vacaciones o permisos.` },
       { etiqueta: `Nota de ${mesTxt(mesNota)}`, valor: `${conNota.length}/${activas.length}`, estado: conNota.length < activas.length && diaMes > 5 ? 'rojo' : '', alPulsar: ir('notas'), titulo: `100 % el día 5 · 1:1 del ${trimTxt(trimestre)}: ${con1a1.length} de ${activas.length}` },
@@ -397,7 +398,7 @@ function vistaCarga(ctx, P, fr) {
     return { ...p, silla, n: silla ? p.cartera[silla] : 0, cap: CAP[silla] || null, h: p.imputa ? horasRegistradas(p.horas?.mes_anterior) : null, pct: p.imputa ? horasRegistradas(p.horas?.pct_128) : null };
   }).sort((a, b) => (b.sobre_capacidad.length - a.sobre_capacidad.length) || ((b.cap ? b.n / b.cap : 0) - (a.cap ? a.n / a.cap : 0)) || (b.pct ?? -1) - (a.pct ?? -1));
   const mes = mesTxt(P.find(p => p.imputa)?.horas?.mes_anterior_txt);
-  return [panel({ titulo: 'Carga frente a capacidad', icono: 'capas', sub: `Proyectos frente a 12 (account) y 16 (trafficker y CRM) · registros de horas de ${mes}; jornada y disponibilidad sin conciliar`, acciones: frescura(fr) },
+  return [panel({ titulo: 'Carga frente a capacidad', icono: 'capas', sub: `Proyectos frente a ${TOPE_CARTERA.account} (account) y ${TOPE_CARTERA.trafficker} (trafficker y CRM) · registros de horas de ${mes}; jornada y disponibilidad sin conciliar`, acciones: frescura(fr) },
     tablaApilable({ filas, etiquetaFila: p => p.alias, columnas: [
       { clave: 'alias', titulo: 'Persona', principal: true, celda: p => celdaPersona(ctx, p) },
       { clave: 'n', titulo: 'Cartera', celda: p => !p.silla ? h('span', { class: 'sub' }, 'sin cartera asignada') : h('div', { class: 'pm-barra' },
@@ -408,7 +409,7 @@ function vistaCarga(ctx, P, fr) {
       // La señal de cartera se mantiene separada del registro de horas.
       { clave: 'aviso', titulo: 'Revisión de cartera', celda: p => p.sobre_capacidad.length || (p.cap && p.n > p.cap) ? chipEstado('rojo', `por encima · ${p.n} de ${p.cap}`) : p.cerca_capacidad.length ? chipEstado('ambar', 'cerca del tope') : chipEstado('gris', 'sin señal de cartera') },
     ] }),
-    h('p', { class: 'sub' }, 'Los topes de cartera son referencias operativas distintas del registro de horas. Sin cobertura completa, calendario y ausencias conciliados, las horas registradas no acreditan capacidad disponible, sobrecarga ni rendimiento. La referencia histórica de 128 h no se usa para evaluar jornadas.'))];
+    h('p', { class: 'sub' }, `Los topes de cartera son referencias operativas distintas del registro de horas. Sin cobertura completa, calendario y ausencias conciliados, las horas registradas no acreditan capacidad disponible, sobrecarga ni rendimiento. La referencia histórica de ${HORAS_MES_REFERENCIA} h no se usa para evaluar jornadas.`))];
 }
 
 // ======================================================================== 1:1 y ronda

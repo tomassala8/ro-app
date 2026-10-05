@@ -19,6 +19,7 @@ import { alDia, revisionesDelAccount } from './produccion_comun.js';
 import { clientesDia314, metaDia314, totalMetaDia314, resultadosFilaDia314, crmDia314, fuenteCrmDia314 } from './_resultados_dia_314.js';
 import { normalizarPaid } from './_paid_mediciones.js';
 import { instanteRO, diaRO, horaRO } from '../_fechas_ro.js';   // L-18: los textos sin zona son Madrid, no la zona del navegador
+import { TOPE_CARTERA, HORAS_MES_REFERENCIA } from './_constantes_ro.js';   // L-34
 
 // ------------------------------------------------------------------ utilidades
 // V2 · «hoy» = el día de la agencia en Madrid (helper común de fechas, V2-E), nunca el reloj del Mac (Tomás en Bali)
@@ -679,8 +680,7 @@ function alertaPersonas(e) {
   return { en, sin, vencidas: sin.filter(p => (FECHAS.diasDesde(p.alerta.desde) ?? 0) >= 7) };
 }
 /** Tope por silla (D-07): 12 proyectos por account, 16 por trafficker y CRM. */
-const TOPE_SILLA = { account: 12, trafficker: 16, crm: 16 };
-const cargaTxt = p => (p.sobre_capacidad || []).map(x => { const k = txtCap(x); const n = p.cartera?.[k]; return n !== undefined && TOPE_SILLA[k] ? `${n} de ${TOPE_SILLA[k]} como ${k === 'crm' ? 'CRM' : k}` : k; }).join(' · ');
+const cargaTxt = p => (p.sobre_capacidad || []).map(x => { const k = txtCap(x); const n = p.cartera?.[k]; return n !== undefined && TOPE_CARTERA[k] ? `${n} de ${TOPE_CARTERA[k]} como ${k === 'crm' ? 'CRM' : k}` : k; }).join(' · ');
 def('personas_alerta', ['personas_m20/equipo'], (ctx, D) => {
   const e = equipo(D); const { en, sin } = alertaPersonas(e);
   return {
@@ -699,7 +699,7 @@ def('carga_personas', ['personas_m20/equipo'], (ctx, D) => {
   const cerca = (e.personas || []).filter(p => !(p.sobre_capacidad || []).length && (p.cerca_capacidad || []).length);
   return {
     valor: sobre.length, unidad: 'por encima de su capacidad', estado: sobre.length ? 'rojo' : cerca.length ? 'ambar' : 'verde',
-    motivo: `12 proyectos por account, 16 por trafficker y CRM, 128 h al mes (D-07, D-25).${cerca.length ? ` Cerca del tope, sin pasarlo: ${cerca.map(p => p.alias).join(', ')} (por eso Contratación no pide más accounts).` : ''}`,
+    motivo: `${TOPE_CARTERA.account} proyectos por account, ${TOPE_CARTERA.trafficker} por trafficker y CRM, ${HORAS_MES_REFERENCIA} h al mes (D-07, D-25).${cerca.length ? ` Cerca del tope, sin pasarlo: ${cerca.map(p => p.alias).join(', ')} (por eso Contratación no pide más accounts).` : ''}`,
     filas: sobre.map(p => ({ texto: p.alias, extra: cargaTxt(p), estado: 'rojo', icono: 'medidor', href: hrefPersona(ctx, p.persona_id) })),
     vacio: { titulo: 'Nadie por encima de su capacidad', tono: 'celebrar' }, frescura: fresco('Asignaciones + horas', e), medible: 'hoy',
     primero: sobre.slice(0, 1).map(p => ({ peso: 2.5, icono: 'medidor', motivo: `${p.alias} por encima de su capacidad`, detalle: cargaTxt(p), ruta: sinAlmohadilla(hrefPersona(ctx, p.persona_id)), clave: `carga:${p.persona_id}` })),

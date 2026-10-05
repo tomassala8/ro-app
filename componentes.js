@@ -11,6 +11,7 @@
 import { diaRO, horaRO, instanteRO, horasDesdeRO, horasHastaRO, fechaCivilRO, mesRO, nombreMesRO, zonaFechaRO } from './_fechas_ro.js';
 
 import { telefono as telefonoComun } from './modulos/_telefono.js';   // regla común de teléfonos (3-oct)
+import { SALUD } from './modulos/_constantes_ro.js';   // L-34 (hoja sin imports: no hay ciclo)
 
 /**
  * h(etiqueta, atributos, ...hijos) · crea elementos.
@@ -379,7 +380,7 @@ export function logoCliente({ nombre = '', logo }, clase = 'logo-cli') {
 
 /** saludCliente(0-100) · barra + número; verde ≥ 60, ámbar 40-59, rojo < 40 (D-02 provisional). */
 export function saludCliente(valor, { etiqueta = 'Salud' } = {}) {
-  const est = semaforo(valor, { verde: 60, ambar: 40 });
+  const est = semaforo(valor, SALUD);
   return h('span', { class: `salud ${est}`, title: `${etiqueta} ${valor ?? '—'} de 100` },
     h('span', {}, etiqueta + ' ', h('b', {}, valor ?? '—')),
     h('span', { class: 'barra', 'aria-hidden': 'true' }, h('i', { style: { width: `${Math.max(0, Math.min(100, valor || 0))}%` } })));
@@ -1858,7 +1859,7 @@ export function selectorCliente(o) {
   const lista = o.clientes || [];
   const det = o.detalle || (c => c.responsable || c.responsable_texto || 'sin account');
   const insignia = o.insignia || (c => (c.salud === null || c.salud === undefined) ? null
-    : chipEstado(semaforo(c.salud, { verde: 60, ambar: 40 }), String(c.salud)));
+    : chipEstado(semaforo(c.salud, SALUD), String(c.salud)));
   let actual = lista.find(c => c.id === o.actual) || lista[0] || null;
   const logo = o.logo || (c => logoCliente(c));
   const base = uid('sc');

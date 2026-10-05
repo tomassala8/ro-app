@@ -1,4 +1,5 @@
 import { pintarCierre253 } from './_cierre_artifact_253.js';
+import { TARIFA_HORA_EUR, TARIFA_HORA_TXT } from './_constantes_ro.js';   // L-34
 // modulos/dinero_cliente.js · M18 «Dinero por cliente» (E10).
 // Cuota, horas consumidas frente a pautadas y rentabilidad, cliente a cliente. Cuota: UNA fuente (Airtable de octubre; si no, factura de
 // octubre en Holded), la misma de fuentes_dinero/cuotas.json. Pautadas = cuota ÷ 31,47 €/h y solo llegan a quien ve la cuota (claves cuota_*).
@@ -66,7 +67,7 @@ async function pintar(cont, ctx) {
   const cohD = todo && tiene(['direccion', 'finanzas_direccion', 'operaciones', 'proyectos']) ? (await cargarDatos(ctx, 'dinero_cliente/cohortes')).d : null;
   const ventasD = dirD && ctx.veModulo?.('ventas-ro') ? (await cargarDatos(ctx, 'ventas_ro/ventas_ro')).d : null;
 
-  const quien = veRent ? (real ? 'Tú ves la rentabilidad a tarifa y con el coste real.' : 'Rentabilidad con la tarifa de 31,47 €/h.')
+  const quien = veRent ? (real ? 'Tú ves la rentabilidad a tarifa y con el coste real.' : `Rentabilidad con la tarifa de ${TARIFA_HORA_TXT} €/h.`)
     : veCuota && !veHoras ? 'Cuota de cada cliente y si tiene línea en facturación.'
       : veCuota ? 'La cuota y las horas de tus clientes.' : 'Horas consumidas por cliente, sin euros.';
   ctx.titulo('Dinero por cliente', `${filas.length} clientes · ${quien}`);
@@ -106,8 +107,8 @@ async function pintar(cont, ctx) {
     const base = rent.reduce((a, r) => a + r.coste.cuota_mes, 0), marg = rent.reduce((a, r) => a + r.coste.margen, 0);
     const pm = base ? Math.round((100 * marg) / base) : null;
     const perdida = rent.filter(r => r.coste.margen < 0);
-    lista.push(tile({ icono: 'grafico', etiqueta: 'Rentabilidad a 31,47 €/h', valor: pctS(pm), unidad: `${eurS(marg)} al mes`, estado: estadoMargen(pm),
-      contexto: '(Cuota − horas × 31,47 €) ÷ cuota · verde ≥ 30 % · rojo < 10 %', medible: 'medias', medibleDetalle: 'Septiembre; con horas incompletas sale inflada', frescura: fHoras }));
+    lista.push(tile({ icono: 'grafico', etiqueta: `Rentabilidad a ${TARIFA_HORA_TXT} €/h`, valor: pctS(pm), unidad: `${eurS(marg)} al mes`, estado: estadoMargen(pm),
+      contexto: `(Cuota − horas × ${TARIFA_HORA_TXT} €) ÷ cuota · verde ≥ 30 % · rojo < 10 %`, medible: 'medias', medibleDetalle: 'Septiembre; con horas incompletas sale inflada', frescura: fHoras }));
     lista.push(tile({ icono: 'baja', etiqueta: 'Clientes en pérdida a tarifa', valor: perdida.length, unidad: `de ${rent.length}`,
       estado: perdida.length === 0 ? 'verde' : perdida.length <= 2 ? 'ambar' : 'rojo', contexto: 'Verde 0 · rojo 3 o más (2 meses seguidos; umbral propuesto)',
       medible: 'medias', medibleDetalle: 'Un solo mes medido: falta el segundo para la alarma', frescura: fHoras }));
@@ -164,7 +165,7 @@ async function pintar(cont, ctx) {
       ? rent.filter(r => r.coste.margen_pct < 10).slice(0, 7).map(r => {
         const f = filas.find(x => x.cliente_id === r.cid);
         return { estado: r.coste.margen < 0 ? 'rojo' : 'ambar', icono: 'baja', motivo: `${r.nombre} · ${pctS(r.coste.margen_pct)} a tarifa`,
-          detalle: `${fmt.num(r.coste.horas)} h en septiembre × 31,47 € = ${fmt.eur(r.coste.eur)} frente a ${fmt.eur(r.coste.cuota_mes)} de cuota${r.account ? ` · ${r.account}` : ''}${real?.porCliente.get(r.cid) ? ` · con coste real ${pctS(real.porCliente.get(r.cid).margen_real_pct)}` : ''}`,
+          detalle: `${fmt.num(r.coste.horas)} h en septiembre × ${TARIFA_HORA_TXT} € = ${fmt.eur(r.coste.eur)} frente a ${fmt.eur(r.coste.cuota_mes)} de cuota${r.account ? ` · ${r.account}` : ''}${real?.porCliente.get(r.cid) ? ` · con coste real ${pctS(real.porCliente.get(r.cid).margen_real_pct)}` : ''}`,
           botones: [f && ctx.veModulo?.('ficha') ? h('a', { class: 'bt mini', href: `#/ficha/${r.cid}/trabajo` }, icono('clock'), 'Ver el trabajo') : null,
             botonConfirmar({ texto: 'Pedir revisión a Coti', pregunta: '¿Pedir a Coti que revise la oferta de este cliente?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
               alConfirmar: async () => { await encolar(ctx, { herramienta: 'app', tipo: 'revisar_oferta', objeto: r.cid, cliente_id: r.cid, texto: `Revisar la oferta de ${r.nombre}: ${pctS(r.coste.margen_pct)} a tarifa`, vista_previa: { para: 'Coti', aviso: 'en su Mi día' } }); return 'En la cola (simulado)'; } })].filter(Boolean) };
@@ -262,11 +263,11 @@ async function pintar(cont, ctx) {
         filas: (todos || ord.length <= 20 ? ord : [...ord.slice(0, 10), ...ord.slice(-10)]).map(filaDe) }),
       !todos && ord.length > 20 ? h('button', { type: 'button', class: 'bt', on: { click: () => pintarRank(true) } }, `Ver los ${ord.length} clientes (aquí, los 10 que menos dejan y los 10 que más)`) : null);
     pintarRank(false);
-    const chipsR = real ? chipsFiltro({ opciones: [{ valor: 'tarifa', texto: 'A la tarifa (31,47 €/h)', icono: 'clock' }, { valor: 'real', texto: `Con el coste real (${fmt.num(real.hora, 2)} €/h)`, icono: 'cartera' }],
+    const chipsR = real ? chipsFiltro({ opciones: [{ valor: 'tarifa', texto: `A la tarifa (${TARIFA_HORA_TXT} €/h)`, icono: 'clock' }, { valor: 'real', texto: `Con el coste real (${fmt.num(real.hora, 2)} €/h)`, icono: 'cartera' }],
       clave: 'dinero-ranking-modo', etiqueta: 'Coste de la hora', alCambiar: v => { modoR = v; ord = ordDe(v); pintarRank(false); } }) : null;
     if (chipsR && chipsR.valor() !== 'tarifa') { modoR = chipsR.valor(); ord = ordDe(modoR); pintarRank(false); }
     cont.append(panel({ titulo: 'Margen por cliente, del que menos deja al que más', icono: 'grafico',
-      sub: real ? 'Cuota − horas de septiembre × el coste de la hora: a la tarifa (31,47 €/h) o con el coste real (solo lo ves tú). Negativo: cuesta más de lo que paga.' : 'Cuota − horas de septiembre × 31,47 € (la tarifa). Negativo: cuesta más de lo que paga.' },
+      sub: real ? `Cuota − horas de septiembre × el coste de la hora: a la tarifa (${TARIFA_HORA_TXT} €/h) o con el coste real (solo lo ves tú). Negativo: cuesta más de lo que paga.` : `Cuota − horas de septiembre × ${TARIFA_HORA_TXT} € (la tarifa). Negativo: cuesta más de lo que paga.` },
       h('div', { class: 'cuerpo pila' }, chipsR, zonaRank,
         h('p', { class: 'kpi-umbral ref' }, h('span', {}, `Referencia, no colorea al cliente: ${UMBRALES.horas_imputadas.texto}. Solo se imputa el ${fmt.pct(d.imputacion?.pct, 1)} de la jornada.`)),
         h('p', { class: 'kpi-pie' }, h('span', {}, 'Cómo se dibuja: rentabilidad por cliente como Scoro y Productive · '), enlaceFuente(FUENTES.productive.href, FUENTES.productive.fuente)))));
@@ -322,11 +323,11 @@ function cabezaV4({ ctx, d, filas, rent, real, dirD, fHoras, tileFact, cuotaTota
   }
   const tarifa = horas ? base / horas : null;
   const cifra = panel({ titulo: 'Margen de la cartera al mes · la cifra que manda', icono: 'cartera',
-    sub: real ? `Cuota − horas de septiembre × coste real por hora (${fmt.num(real.hora, 2)} €/h). Solo lo ves tú.` : 'Cuota − horas de septiembre × 31,47 € (la tarifa). Sin caja ni beneficio de la empresa.' },
+    sub: real ? `Cuota − horas de septiembre × coste real por hora (${fmt.num(real.hora, 2)} €/h). Solo lo ves tú.` : `Cuota − horas de septiembre × ${TARIFA_HORA_TXT} € (la tarifa). Sin caja ni beneficio de la empresa.` },
     h('div', { class: 'cuerpo pila' },
       cifraPrincipal({ etiqueta: `${rent.length} clientes con horas en septiembre · ${fmt.eur(base)} de cuota`, valor: eurS(v), estado: colorCifra('beneficio', v),
         comparacion: h('span', { class: 'tc' }, h('em', {}, 'Un solo mes con horas imputadas (septiembre): la comparación llega con octubre')) }),
-      real ? h('p', { class: 'cifra-gris' }, `A la tarifa de 31,47 €/h: ${eurS(margenT)} al mes (${pctS(base ? (100 * margenT) / base : null)}).`) : null,
+      real ? h('p', { class: 'cifra-gris' }, `A la tarifa de ${TARIFA_HORA_TXT} €/h: ${eurS(margenT)} al mes (${pctS(base ? (100 * margenT) / base : null)}).`) : null,
       h('p', { class: 'kpi-pie' }, h('span', {}, `Con el ${fmt.pct(d.imputacion?.pct, 1)} de las horas imputadas: el margen sale inflado. Aviso, no prueba.`),
         h('span', {}, 'Dato: '), enlaceFuente(ctx.veModulo?.('horas') ? '#/horas' : null, 'horas de ClickUp y cuota de Airtable'))));
   const tarjetas = h('div', { class: 'tiles' },
@@ -334,10 +335,10 @@ function cabezaV4({ ctx, d, filas, rent, real, dirD, fHoras, tileFact, cuotaTota
       serie: serieMedia, serieX: xMedia, formatoSerie: x => fmt.eur(x), comparaciones: compMedia,
       contexto: `Cuota de octubre ${fmt.eur(cuotaTotal)} entre ${conCuota.length} clientes${serieMedia ? ' · línea: cuota facturada ÷ clientes activos de cada mes' : ''}`, fuente: { texto: 'Airtable de Sofía y Holded' } }),
     tarjetaKpi({ icono: 'clock', etiqueta: 'Tarifa efectiva por hora', valor: tarifa === null ? null : fmt.num(tarifa, 2), unidad: '€/h', num: tarifa, mejorSi: 'alto',
-      comparaciones: { objetivo: { ref: 31.47, texto: 'frente a la tarifa de 31,47 €/h', modo: 'pct' } }, comparar: 'objetivo',
+      comparaciones: { objetivo: { ref: TARIFA_HORA_EUR, texto: `frente a la tarifa de ${TARIFA_HORA_TXT} €/h`, modo: 'pct' } }, comparar: 'objetivo',
       contexto: `Cuota ÷ horas de septiembre de los ${rent.length} clientes con horas (${fmt.num(horas)} h)`, medible: 'medias', medibleDetalle: 'Con las horas a medias, sale alta', fuente: { texto: 'ClickUp' }, frescura: fHoras }),
     tarjetaKpi({ icono: 'baja', etiqueta: 'Clientes en pérdida a tarifa', valor: enPerdida, unidad: `de ${rent.length}`, estado: '',
-      contexto: 'Cuestan más horas × 31,47 € de lo que pagan · aviso, no prueba (un solo mes)', medible: 'medias', medibleDetalle: 'Un solo mes medido: falta el segundo para la alarma',
+      contexto: `Cuestan más horas × ${TARIFA_HORA_TXT} € de lo que pagan · aviso, no prueba (un solo mes)`, medible: 'medias', medibleDetalle: 'Un solo mes medido: falta el segundo para la alarma',
       alPulsar: verPerdida, ir: 'Ver cuáles' }),
     tarjetaKpi({ icono: 'medidor', etiqueta: 'Horas imputadas', valor: fmt.pct(d.imputacion?.pct, 1), num: d.imputacion?.pct, estado: 'gris', mejorSi: 'alto',
       contexto: `${d.imputacion?.periodo || ''} · por debajo del 70 % el margen no es fiable`, umbral: UMBRALES.horas_imputadas, fuente: { texto: 'ClickUp' } }),
