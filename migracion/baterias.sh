@@ -54,6 +54,7 @@ bateria L-32 300 python3 migracion/pruebas_L-32.py --puerto "$PUERTO"
 bateria L-33 300 python3 migracion/pruebas_L-33.py --puerto "$PUERTO"
 bateria L-34 60 python3 migracion/pruebas_L-34.py
 bateria N-01 300 python3 despliegue/pruebas_solidez_N-01.py
+bateria N-02 120 python3 despliegue/pruebas_solidez_N-02.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos

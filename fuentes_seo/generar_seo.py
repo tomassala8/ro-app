@@ -54,6 +54,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(
 if APP not in sys.path: sys.path.insert(0, APP)
 from fuentes_seo.posiciones import preparar_motores, comparar, posicion, reparto_observado, top, suma_medida, fecha as fecha_posiciones
 from fuentes_seo.motores_contexto import contexto_desde_cache  # noqa: E402
+from fuentes.lectura import leer, marcar  # noqa: E402  · N-01/N-02: toda lectura de API se guarda; si falla, la última buena
 from comun import consulta_basura  # noqa: E402  · barrido v1 (N14): filas de exportación de Google Ads no son búsquedas
 
 
@@ -68,12 +69,15 @@ def leer_gsc(cls):
         req = urllib.request.Request(u, data=json.dumps(body).encode(), method='POST', headers={'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json'})
         try:
             return json.load(urllib.request.urlopen(req, timeout=60))
-        except urllib.error.HTTPError as e:
-            return {'_error': e.code}
+        except urllib.error.HTTPError as e:    # N-02: un error de la API lanza; leer() sirve entonces la última lectura buena
+            err = RuntimeError(f'GSC {e.code}')
+            err.code = e.code   # leer() lo apunta como código de la lectura fallida
+            raise err from e
 
     def tot(site, a, b):
         x = (q(site, {'startDate': str(a), 'endDate': str(b)}).get('rows') or [{}])[0]
-        return {'clics': x.get('clicks', 0), 'impresiones': x.get('impressions', 0), 'ctr': x.get('ctr', 0), 'posicion': x.get('position')}
+        # N-02: sin fila no hay cifra (None), nunca un 0 inventado
+        return {'clics': x.get('clicks'), 'impresiones': x.get('impressions'), 'ctr': x.get('ctr'), 'posicion': x.get('position')}
 
     def dim(site, d, a, b, n):
         return {r['keys'][0]: [r['clicks'], r['impressions'], round(r['position'], 1)]
@@ -87,7 +91,7 @@ def leer_gsc(cls):
         site = (g.get('emparejado') or {}).get('id')
         if not site:
             continue
-        try:
+        def cuerpo(site=site):
             dias = [r['keys'][0] for r in q(site, {'startDate': str(HOY - dt.timedelta(days=10)), 'endDate': str(HOY - dt.timedelta(days=1)), 'dimensions': ['date']}).get('rows', [])]
             L = dt.date.fromisoformat(max(dias)) if dias else HOY - dt.timedelta(days=3)
             s1, s0 = (L - dt.timedelta(days=6), L), (L - dt.timedelta(days=13), L - dt.timedelta(days=7))
@@ -95,17 +99,26 @@ def leer_gsc(cls):
             serie = [[r['keys'][0], r['clicks'], r['impressions']] for r in q(site, {'startDate': str(m1[0]), 'endDate': str(m1[1]), 'dimensions': ['date']}).get('rows', [])]
             pag1, pag0 = dim(site, 'page', *m1, 12), dim(site, 'page', *m0, 250)
             bus1, bus0 = dim(site, 'query', *m1, 12), dim(site, 'query', *m0, 250)
-            out['clientes'][c['id']] = {'site': site, 'hasta': str(L), 'ventanas': {'semana': [str(x) for x in s1], 'semana_ant': [str(x) for x in s0], 'mes': [str(x) for x in m1], 'mes_ant': [str(x) for x in m0]},
-                                        'semana': tot(site, *s1), 'semana_ant': tot(site, *s0), 'mes': tot(site, *m1), 'mes_ant': tot(site, *m0),
-                                        'serie': serie,
-                                        'paginas': [[k, v[0], v[1], v[2], (pag0.get(k) or [None])[0]] for k, v in pag1.items()],
-                                        'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()],
-                                        # diagnósticos de calidad (fuentes_diagnosticos): reparto blog/servicio y marca/informativa/compra
-                                        'paginas_todas': [[k, *v] for k, v in dim(site, 'page', *m1, 250).items()],
-                                        'busquedas_todas': [[k, *v] for k, v in dim(site, 'query', *m1, 250).items()]}
-            print(f"GSC {c['id'][:26]:26} hasta {L} {out['clientes'][c['id']]['semana']['clics']:>6} clics semana", flush=True)
-        except Exception as e:
-            out['clientes'][c['id']] = {'site': site, '_error': str(e)[:120]}
+            return {'site': site, 'hasta': str(L), 'ventanas': {'semana': [str(x) for x in s1], 'semana_ant': [str(x) for x in s0], 'mes': [str(x) for x in m1], 'mes_ant': [str(x) for x in m0]},
+                    'semana': tot(site, *s1), 'semana_ant': tot(site, *s0), 'mes': tot(site, *m1), 'mes_ant': tot(site, *m0),
+                    'serie': serie,
+                    'paginas': [[k, v[0], v[1], v[2], (pag0.get(k) or [None])[0]] for k, v in pag1.items()],
+                    'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()],
+                    # diagnósticos de calidad (fuentes_diagnosticos): reparto blog/servicio y marca/informativa/compra
+                    'paginas_todas': [[k, *v] for k, v in dim(site, 'page', *m1, 250).items()],
+                    'busquedas_todas': [[k, *v] for k, v in dim(site, 'query', *m1, 250).items()]}
+
+        def todo_a_cero(nuevo, viejo):   # N-02: un mes entero a 0 tras un mes con clics no es una caída: es una lectura rota
+            if viejo and (nuevo.get('mes') or {}).get('clics') == 0 and ((viejo.get('mes') or {}).get('clics') or 0) > 0:
+                return 'todo a 0 tras un mes con clics'
+            return None
+
+        l = leer('gsc', c['id'], cuerpo, sospechoso=todo_a_cero)
+        out['clientes'][c['id']] = marcar(l) or {'site': site, 'estado': 'sin_dato', '_error': l.error}
+        if l.estado == 'ok':
+            print(f"GSC {c['id'][:26]:26} hasta {l.datos['hasta']} {(l.datos['semana']['clics'] if l.datos['semana']['clics'] is not None else '—'):>6} clics semana", flush=True)
+        else:
+            print(f"GSC {c['id'][:26]:26} {l.estado}: {l.error}", flush=True)
     guardar(C('gsc.json'), out)
     return out
 
@@ -343,6 +356,8 @@ def construir(cls, sr, gsc, mon):
                          'var_impr': pct(g['mes']['impresiones'], g['mes_ant']['impresiones']),
                          'posicion': round(g['mes']['posicion'], 1) if g['mes']['posicion'] else None,
                          'ctr': round(100 * g['mes']['ctr'], 2) if g['mes']['ctr'] else 0, 'hasta': g.get('hasta'), 'ventanas': g.get('ventanas')}
+                if g.get('_viejo'):   # N-02: la API de Search Console falló; son los últimos datos buenos
+                    clics['dato_viejo_desde'] = g.get('_desde')
                 if clics['var_sem'] is not None and clics['var_sem'] <= -25 and clics['semana_ant'] >= 10:
                     alertas.append({'tipo': 'clics', 'gravedad': 'rojo', 'texto': f"Clics {fes(clics['var_sem'])} % semana contra semana ({fes(clics['semana_ant'], 0)} → {fes(clics['semana'], 0)})"})
                 elif clics['var_sem'] is not None and clics['var_sem'] <= -10 and clics['semana_ant'] >= 10:
