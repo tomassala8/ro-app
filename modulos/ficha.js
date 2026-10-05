@@ -299,8 +299,7 @@ export default {
 
     const zona = h('div', { class: 'pila' }, h('div', { class: 'fila' }, selector), esqueleto({ tarjetas: 4, lineas: 3 }));
     raiz.append(zona);
-    const accVerdad = ctx.verdad ? ctx.verdad(id)?.account : undefined;
-    ctx.titulo(TITULO_CORTO() ? 'Ficha' : 'Ficha del cliente', `Lleva el cliente ${accVerdad ? ctx.nombre(accVerdad) : (c.responsable || 'sin account')}`);
+    ctx.titulo(TITULO_CORTO() ? 'Ficha' : 'Ficha del cliente', `Lleva el cliente ${quienLleva(ctx, id, c.responsable)}`);
 
     let doc, portal, web, contactos, correos, porCliente, objetivos, hallazgos;
     const admin = perfil(ctx) === 'admin';
@@ -813,10 +812,18 @@ function cuotaFicha(F) {
   return null;
 }
 
+/** L-32: quién lleva el cliente según la verdad única. Sin account en la verdad (`sin_account`) se dice así, no se pinta el responsable
+ *  de la Cartera; el respaldo a la Cartera es solo para un cliente que la verdad no trae o cuya línea no dice nada del account. */
+function quienLleva(ctx, id, respaldo) {
+  const v = ctx.verdad ? ctx.verdad(id) : null;
+  if (v?.account) return ctx.nombre(v.account);
+  if (v?.sin_account) return /confirmar/i.test(v.sin_account) ? v.sin_account : `${v.sin_account} · para confirmar`;
+  return respaldo || 'sin account';
+}
+
 /** Segunda línea del selector: «Account: Lucía · tú llevas la publicidad» (nunca «Lucía · tuyo» para quien no es su account). */
 function detalleSelector(ctx, x) {
-  const v = ctx.verdad ? ctx.verdad(x.id) : null;
-  const acc = v?.account ? ctx.nombre(v.account) : (x.responsable || 'sin account');
+  const acc = quienLleva(ctx, x.id, x.responsable);
   const SILLA = { account: 'eres su account', trafficker: 'tú llevas la publicidad', crm: 'tú llevas el CRM', seo: 'tú llevas el SEO', web: 'tú llevas la web', redes: 'tú llevas las redes', outreach: 'tú llevas el outreach' };
   const mias = Object.entries(ctx.carteraPorSilla || {}).filter(([, set]) => set?.has?.(x.id)).map(([s]) => SILLA[s]).filter(Boolean);
   return `Account: ${acc}${mias.length ? ' · ' + mias.join(', ') : ''}`;
