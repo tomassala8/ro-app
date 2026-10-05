@@ -48,7 +48,8 @@ export function soloFilasDe(o: unknown, ids: Set<string>): unknown {
 function filaAjena(x: unknown, ids: Set<string>): boolean {
   if (!x || typeof x !== 'object' || Array.isArray(x)) return false;
   const cid = (x as Record<string, unknown>).cliente_id;
-  return typeof cid === 'string' && cid !== '' && !ids.has(cid);
+  if (!cid || (typeof cid === 'object' && Object.keys(cid).length === 0)) return false;
+  return !(typeof cid === 'string' && ids.has(cid));
 }
 
 function quitaDe(persona: Persona, clienteId: string | undefined, cp: ReturnType<typeof contexto>): string[] {

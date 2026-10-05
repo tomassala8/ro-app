@@ -1,11 +1,14 @@
 /** Traducción de clasificacion_importes_580.py. Misma clasificación, sin IO. */
+import { py } from './regex-py.js';
+
+const marca = (src: string): RegExp => new RegExp(py(src), 'iu');
 
 const MARCAS: readonly [string, RegExp][] = [
-  ['dinero_empresa', /\b(?:beneficio\s+(?:de\s+la\s+)?empresa|margen\s+(?:de\s+la\s+)?empresa|coste\s+(?:del?\s+)?equipo|agency\s+(?:profit|margin|cost))\b/iu],
-  ['cobros', /\b(?:cobros?|cobrad[oa]s?|impagos?|revenue|invoice\s+total)\b/iu],
-  ['cuota', /\b(?:cuotas?|fee|honorarios|mantenimiento|factur\w*|recurrente|mensual|al\s+mes)\b|\/\s*mes\b/iu],
-  ['inversion', /\b(?:inversi[oó]n|publicidad|gasto|Meta|Ads|CPL|CPM|coste\s+por\s+(?:lead|cita)|presupuesto\s+(?:ads|publicitario))\b/iu],
-  ['regla', /\btecho\b/iu],
+  ['dinero_empresa', marca(String.raw`\b(?:beneficio\s+(?:de\s+la\s+)?empresa|margen\s+(?:de\s+la\s+)?empresa|coste\s+(?:del?\s+)?equipo|agency\s+(?:profit|margin|cost))\b`)],
+  ['cobros', marca(String.raw`\b(?:cobros?|cobrad[oa]s?|impagos?|revenue|invoice\s+total)\b`)],
+  ['cuota', marca(String.raw`\b(?:cuotas?|fee|honorarios|mantenimiento|factur[\p{L}\p{N}_]*|recurrente|mensual|al\s+mes)\b|/\s*mes\b`)],
+  ['inversion', marca(String.raw`\b(?:inversi[oó]n|publicidad|gasto|Meta|Ads|CPL|CPM|coste\s+por\s+(?:lead|cita)|presupuesto\s+(?:ads|publicitario))\b`)],
+  ['regla', marca(String.raw`\btecho\b`)],
 ];
 
 const FAMILIAS = new Set(['cuota', 'inversion', 'cobros', 'dinero_empresa']);

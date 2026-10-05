@@ -1,4 +1,5 @@
 import { clasificarImporte580, fueraImporte580 } from './clasificacion-importes-580.js';
+import { py } from './regex-py.js';
 
 const NUM_LETRA =
   String.raw`(?:(?:un|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|quince|veinte|veinti[\p{L}\p{N}_]+|treinta|` +
@@ -7,15 +8,16 @@ const NUM_LETRA =
   String.raw`(?:mil|cien|ciento|[\p{L}\p{N}_]+cient[oa]s|millón|millones|veinte|treinta|cuarenta|cincuenta|sesenta|setenta|ochenta|noventa)\s+(?:de\s+)?`;
 
 /** Mismo texto que RE_IMPORTE de permisos.py: (?i:…) envuelve los tres alternativos. */
-export const RE_IMPORTE_SRC =
+export const RE_IMPORTE_SRC = py(
   String.raw`(?i:~?\d[\d.,]*(?:\s*[-–]\s*\d[\d.,]*)?\s*(?:k\s*€|€|mil\s+euros?|millones\s+de\s+euros?|euros?\b|eur\b|\$|usd\b)|` +
-  String.raw`(?:€|\$|\beur\b)\s*\d[\d.,]*(?:\s*k\b)?|\b` +
-  NUM_LETRA +
-  String.raw`euros?\b)`;
+    String.raw`(?:€|\$|\beur\b)\s*\d[\d.,]*(?:\s*k\b)?|\b` +
+    NUM_LETRA +
+    String.raw`euros?\b)`,
+);
 
-const CONECTOR = String.raw`(?:\s*(?:[:=]|\bde\b|\ba\b|\bcon\b|\bpor\b|\ben\b|\bsobre\b))?`;
-const COLA = String.raw`(?:\s*(?:/\s*(?:mes|día|dia|lead|cita|mes\b)|al mes|cada uno|cada una|por lead|por cita))?`;
-const RE_IMPORTE_SIMBOLO = /\d[\d.,]*\s*(?:€|\$)|(?:€|\$)\s*\d[\d.,]*/;
+const CONECTOR = py(String.raw`(?:\s*(?:[:=]|\bde\b|\ba\b|\bcon\b|\bpor\b|\ben\b|\bsobre\b))?`);
+const COLA = py(String.raw`(?:\s*(?:/\s*(?:mes|día|dia|lead|cita|mes\b)|al mes|cada uno|cada una|por lead|por cita))?`);
+const RE_IMPORTE_SIMBOLO = new RegExp(py(String.raw`\d[\d.,]*\s*(?:€|\$)|(?:€|\$)\s*\d[\d.,]*`), 'u');
 const CLAVES_TEXTO_LIBRE =
   /^(consultas?|b[uú]squedas?|keywords?|palabras?_?clave|palabras?|t[eé]rminos?(_b[uú]squeda)?|search_?terms?|quer(y|ies)|top_consultas|consultas_.*|busquedas_.*|keywords_.*)$/i;
 
@@ -94,7 +96,7 @@ export function sinImportesLibre(o: unknown, quitar: Set<string> = new Set(QUITA
     return Object.fromEntries(Object.entries(o).map(([k, x]) => [k, sinImportesLibre(x, quitar)]));
   }
   if (typeof o !== 'string' || !RE_IMPORTE_SIMBOLO.test(o)) return o;
-  const re = new RegExp(RE_IMPORTE_SIMBOLO.source, 'g');
+  const re = new RegExp(RE_IMPORTE_SIMBOLO.source, 'gu');
   const t = o.replace(re, (coincidencia, offset: number, cadena: string) =>
     fuera(tipoImporte(cadena, offset, offset + coincidencia.length), quitar) ? '' : coincidencia,
   );
@@ -127,7 +129,7 @@ export function importesAQuitar(
   return out;
 }
 
-const ESQUEMAS_OK = /^(https?:\/\/|mailto:|tel:|sip:|#|\/(?!\/)|\.\/|\.\.\/|[\w\-]+\.html)/i;
+const ESQUEMAS_OK = /^(https?:\/\/|mailto:|tel:|sip:|#|\/(?!\/)|\.\/|\.\.\/|[\p{L}\p{N}_\-]+\.html)/iu;
 
 export function enlaceSeguro(u: unknown): unknown {
   if (typeof u !== 'string' || !u.trim()) return u;
@@ -139,7 +141,7 @@ export function enmascarar(texto = ''): string {
   const t = texto || '';
   const arroba = t.indexOf('@');
   if (arroba >= 0) return `${t.slice(0, arroba).slice(0, 1)}···@${t.slice(arroba + 1)}`;
-  if (t.replace(/\D/g, '').length >= 6) return t.replace(/\d(?=(?:\D*\d){3})/g, '·');
+  if (t.replace(/\P{Nd}/gu, '').length >= 6) return t.replace(/\p{Nd}(?=(?:\P{Nd}*\p{Nd}){3})/gu, '·');
   return t
     .trim()
     .split(/\s+/)
