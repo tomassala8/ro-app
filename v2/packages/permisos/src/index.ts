@@ -7,57 +7,30 @@
  *
  * Contrato: para cada persona, tipo de dato y objeto, ver() responde lo mismo que permisos.py. Lo comprueba
  * test/paridad.test.ts con los vectores de migracion/vectores_permisos.py (RO_VECTORES=~/RO_MIGRACION/vectores).
- *
- * Fase 2 del plan (migracion/PLAN_MAESTRO.md): portar aquí, función a función y con el mismo nombre,
- * cartera_por_silla, cartera, ambito, ver (con «ver como» = mínimo de las dos personas), contexto, recortar,
- * nivel_modulo, sin_importes, importes_a_quitar, enlace_seguro.
  */
-import { readFileSync } from 'node:fs';
+export type {
+  Alarma,
+  Ambito,
+  Asignacion,
+  Caso,
+  Cliente,
+  Contexto,
+  ContextoParcial,
+  Crudo,
+  Dato,
+  Nivel,
+  Persona,
+  ReglaTipo,
+  Reglas,
+  Respuesta,
+  Sesion,
+} from './tipos.js';
 
-export type Nivel = 'todo' | 'suyo' | 'resumen';
-export type Ambito = 'todos' | 'disciplina' | 'cartera' | 'tareas' | 'ninguno';
-
-export interface Persona {
-  id: string;
-  nombre: string;
-  alias?: string | null;
-  puestos: string[];
-  estado?: 'activo' | 'dudoso' | 'por_incorporar' | 'baja';
-  jefe?: string | null;
-  [clave: string]: unknown;
-}
-
-export interface Asignacion {
-  cliente_id: string;
-  persona_id: string;
-  silla: string;
-  principal?: number;
-  suplencia?: number;
-  titular_id?: string | null;
-  desde?: string | null;
-  hasta?: string | null;
-}
-
-export interface Dato {
-  tipo: string;
-  cliente_id?: string;
-  persona_id?: string;
-  [clave: string]: unknown;
-}
-
-export interface Respuesta {
-  ok: boolean;
-  nivel: string;
-  motivo?: string;
-  desenmascarable?: boolean;
-}
-
-export type Reglas = Record<string, unknown> & {
-  puestos: { id: string; nombre: string; nivel: number; ambito: Ambito; grupo: string }[];
-  tipos: Record<string, unknown>;
-};
-
-/** Lee reglas_permisos.json (por defecto, el de la raíz del repositorio). */
-export function cargarReglas(ruta = new URL('../../../../reglas_permisos.json', import.meta.url)): Reglas {
-  return JSON.parse(readFileSync(ruta, 'utf8')) as Reglas;
-}
+export { cargarReglas, hoyIso, recargarReglas, reglas } from './reglas.js';
+export { ambito, cartera, carteraPorSilla } from './cartera.js';
+export { clasificarImporte580, fueraImporte580 } from './clasificacion-importes-580.js';
+export { enmascarar, enlaceSeguro, importesAQuitar, sinImportes, sinImportesLibre } from './importes.js';
+export { cargarModulos, nivelModulo } from './modulos.js';
+export { directorio, recortar, soloFilasDe } from './recortar.js';
+export { contexto, soloSuCartera, ver } from './ver.js';
+export { conVista, mirandoComo, puestosDe, vistaActiva } from './vista.js';
