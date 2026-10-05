@@ -39,6 +39,11 @@ import estado as ES  # noqa: E402
 
 GUARDAR = 10
 MAX_BYTES = 60_000_000
+# N-08 · una versión que trae mucho menos que la vigente no se publica sola: queda «sospechosa» y la vigente sigue.
+# Una fuente que se cae no tiene que bloquear la publicación (de ahí 80 %: se admite perder hasta un 20 % de ficheros),
+# pero una vuelta casi vacía borraría la web (de ahí 50 % de bytes). Se promueve a mano con `volver <id>` o con --forzar.
+MIN_FICHEROS_PCT = 80
+MIN_BYTES_PCT = 50
 TABLAS = """
 CREATE TABLE IF NOT EXISTS datos_blob (sha TEXT PRIMARY KEY, contenido {blob});
 CREATE TABLE IF NOT EXISTS datos_version (id {pk}, espacio TEXT, creada TEXT, origen TEXT, estado TEXT, ficheros INTEGER, bytes INTEGER);
@@ -104,7 +109,7 @@ def _tablas(E):
                 cur.execute(s)
 
 
-def publicar(espacio="data", origen="tuberia", E=None, destino=None):
+def publicar(espacio="data", origen="tuberia", E=None, destino=None, forzar=False):
     E = E or ES.abrir()
     _tablas(E)
     q = E.q
@@ -127,17 +132,38 @@ def publicar(espacio="data", origen="tuberia", E=None, destino=None):
         vid = cur.fetchone()[0] if E.motor == "postgres" else cur.lastrowid
         for ruta, sha in filas:
             cur.execute(q("INSERT INTO datos_fichero (version, ruta, sha) VALUES (?,?,?)"), (vid, ruta, sha))
-        # el cambio de vigente va en la MISMA transacción: o se ve la versión entera o la anterior
-        cur.execute(q("UPDATE datos_version SET estado='anterior' WHERE estado='vigente' AND espacio=?"), (espacio,))
-        cur.execute(q("UPDATE datos_version SET estado='vigente' WHERE id=?"), (vid,))
-        cur.execute(q("SELECT id FROM datos_version WHERE espacio=? ORDER BY id DESC"), (espacio,))
-        viejas = [r[0] for r in cur.fetchall()][GUARDAR:]
+        cur.execute(q("SELECT id, ficheros, bytes FROM datos_version WHERE estado='vigente' AND espacio=? AND id<>? ORDER BY id DESC LIMIT 1"), (espacio, vid))
+        previa = cur.fetchone()
+        motivo = None
+        if previa and not forzar:
+            if len(filas) < previa[1] * MIN_FICHEROS_PCT / 100:
+                motivo = f"trae {len(filas)} ficheros y la vigente (versión {previa[0]}) {previa[1]}: menos del {MIN_FICHEROS_PCT} %"
+            elif total < previa[2] * MIN_BYTES_PCT / 100:
+                motivo = f"pesa {total} bytes y la vigente (versión {previa[0]}) {previa[2]}: menos del {MIN_BYTES_PCT} %"
+        if motivo:
+            # N-08: no se toca la vigente; la nueva queda aparte, «sospechosa»
+            cur.execute(q("UPDATE datos_version SET estado='sospechosa' WHERE id=?"), (vid,))
+            print(f"[publicacion] versión {vid} de «{espacio}» SOSPECHOSA, no se publica: {motivo}. "
+                  f"Para promoverla: python3 despliegue/publicacion.py volver {vid}", file=sys.stderr, flush=True)
+        else:
+            # el cambio de vigente va en la MISMA transacción: o se ve la versión entera o la anterior
+            cur.execute(q("UPDATE datos_version SET estado='anterior' WHERE estado='vigente' AND espacio=?"), (espacio,))
+            cur.execute(q("UPDATE datos_version SET estado='vigente' WHERE id=?"), (vid,))
+        cur.execute(q("SELECT id, estado FROM datos_version WHERE espacio=? ORDER BY id DESC"), (espacio,))
+        viejas = [r[0] for r in cur.fetchall()[GUARDAR:] if r[1] != "vigente"]    # la vigente no se poda nunca
         for v in viejas:
             cur.execute(q("DELETE FROM datos_fichero WHERE version=?"), (v,))
             cur.execute(q("DELETE FROM datos_version WHERE id=?"), (v,))
         if viejas:
             cur.execute(q("DELETE FROM datos_blob WHERE sha NOT IN (SELECT DISTINCT sha FROM datos_fichero)"))
     return vid, len(filas), total
+
+
+def estado_version(vid, E=None):
+    E = E or ES.abrir()
+    _tablas(E)
+    r = E.ejecutar("SELECT estado FROM datos_version WHERE id=?", (vid,))
+    return r[0][0] if r else None
 
 
 def vigente(espacio="data", E=None):
@@ -223,8 +249,9 @@ if __name__ == "__main__":
     a = sys.argv[1:] or ["versiones"]
     if a[0] == "publicar":
         esp = a[1] if len(a) > 1 else "data"
-        v, n, b = publicar(esp, a[2] if len(a) > 2 else "a_mano")
-        print(f"Publicada la versión {v} de «{esp}»: {n} ficheros, {round(b / 1e6, 1)} MB")
+        resto = [x for x in a[2:] if x != "--forzar"]
+        v, n, b = publicar(esp, resto[0] if resto else "a_mano", forzar="--forzar" in a)
+        print(f"Publicada la versión {v} de «{esp}» ({estado_version(v)}): {n} ficheros, {round(b / 1e6, 1)} MB")
     elif a[0] == "bajar":
         esp = a[1] if len(a) > 1 else "data"
         dest = Path(a[2]) if len(a) > 2 else None

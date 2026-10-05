@@ -588,6 +588,26 @@ def escribir_salud(E):
     tmp.replace(f)
 
 
+class _NoPublicar(Exception):
+    pass
+
+
+def bajar_antes(E, registro):
+    """Render: cada vuelta arranca con el disco vacío. Primero se baja lo último bueno de la base: los datos a mano (crudos),
+    las cachés de los lectores y data/ (para «último dato bueno»). N-08: si no se pudo bajar `cache` o `data`, esta vuelta
+    NO publica (publicaría un disco vacío encima de la web): los pasos corren y sus salidas esperan a la siguiente vuelta."""
+    import publicacion as PUB
+    for esp in ("crudos", "cache", "data"):
+        try:
+            v = PUB.bajar(esp, E=E)
+            registro.setdefault("bajado", {})[esp] = v
+        except Exception as e:
+            print(f"  ✘ no pude bajar «{esp}» de la base: {sanear(str(e))}")
+            registro.setdefault("bajado", {})[esp] = None
+            if esp in ("cache", "data"):
+                registro["sin_publicar"] = f"no se bajó {esp}"
+
+
 def main():
     ap = argparse.ArgumentParser(description="Tubería única de la app de RO (C5)")
     g = ap.add_mutually_exclusive_group()
@@ -641,15 +661,7 @@ def main():
     bloquean = set()      # lo que además deja sin correr a sus dependientes
     try:
         if os.environ.get("DATABASE_URL") or os.environ.get("RO_PUBLICAR_BASE") == "1":
-            # Render: cada vuelta arranca con el disco vacío. Primero se baja lo último bueno de la base:
-            # los datos a mano (crudos), las cachés de los lectores y data/ (para «último dato bueno»).
-            import publicacion as PUB
-            for esp in ("crudos", "cache", "data"):
-                try:
-                    v = PUB.bajar(esp, E=E)
-                    registro.setdefault("bajado", {})[esp] = v
-                except Exception as e:
-                    print(f"  ✘ no pude bajar «{esp}» de la base: {sanear(str(e))}")
+            bajar_antes(E, registro)
         print(f"Tubería · vuelta {eid} · modo {modo}{' · desde crudo' if a.desde_crudo else ''} · {inicio}")
         for p, cmd, motivo in orden:
             if not cmd:
@@ -717,10 +729,22 @@ def main():
             # los pasos que fallaron ya restauraron su versión anterior, así que lo publicado es siempre «dato bueno».
             try:
                 import publicacion as PUB
+                if registro.get("sin_publicar"):     # N-08: sin bajar no se publica
+                    print(f"  ✘ esta vuelta no publica: {registro['sin_publicar']}")
+                    fallidos.add("publicar")
+                    AV.avisar("publicar", inicio[:10], f"La tubería no publica data/ esta vuelta: {registro['sin_publicar']}", E)
+                    raise _NoPublicar()
                 vc, _, _ = PUB.publicar("cache", origen=f"vuelta {eid} · {modo}", E=E)
                 v, n, b = PUB.publicar("data", origen=f"vuelta {eid} · {modo}", E=E)
                 registro["publicada"] = {"version": v, "ficheros": n, "bytes": b, "version_cache": vc}
                 print(f"  ⇪ publicada la versión {v} de data/ ({n} ficheros) y la {vc} de las cachés")
+                for esp_, vid_ in (("cache", vc), ("data", v)):    # N-08: una versión mucho más pequeña queda aparte
+                    if PUB.estado_version(vid_, E) == "sospechosa":
+                        registro.setdefault("sospechosas", []).append(vid_)
+                        fallidos.add("publicar")
+                        AV.avisar("publicacion_sospechosa", inicio[:10], f"La versión {vid_} de {esp_} trae mucho menos que la vigente y no se ha publicado (volver {vid_} la promueve)", E)
+            except _NoPublicar:
+                pass
             except Exception as e:
                 print(f"  ✘ no se pudo publicar data/: {sanear(str(e))}")
                 fallidos.add("publicar")

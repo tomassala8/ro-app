@@ -57,6 +57,8 @@ try:
 
     carpeta = Path(tempfile.mkdtemp(prefix="n04_"))
     (carpeta / "data").mkdir()
+    # el generador anota teléfonos dudosos con `telefono.py`: a un fichero de la carpeta temporal, nunca a data/ real
+    os.environ["RO_TELEFONOS_DUDOSOS"] = str(carpeta / "dudosos.json")
     (carpeta / "fuentes_crm" / "_privado").mkdir(parents=True)
     G.AQUI, G.APP, G.DATA, G.RAIZ, G.SALIDA = carpeta / "fuentes_crm", carpeta, carpeta / "data", carpeta, carpeta / "data" / "crm"
     (carpeta / "data" / "personas.json").write_text("[]")
