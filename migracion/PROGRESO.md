@@ -19,7 +19,16 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F2.2. F2.1 cerrado a las 06:42 (`tuberia_avisos`).
+Siguiente: F1.5 (reabierto a las 06:47). F1.4 cerrado a las 08:11.
+
+Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
+- candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
+- gustavo (especialista_ghl, 13 clientes) y miguel_vargas (especialista_ghl, 0): carteras distintas.
+- alejandro_montalvo por producción (camilo, emanuel, manuel: mismo rol, ámbito, módulos y clientes).
+- anderson por redes+producción (belen, kimberlyn).
+- setter_ana por setters (setter_javier).
+- carlos_viur por web (macarena).
+- Únicos: sofia (administración), tomas (dirección), yessica (jefa crm), valeria (jefa publicidad), jeronimo (jefa seo), mili (operaciones), eulimar (outreach), constanza (proyectos+account), lara (redes+outreach), cecilia (rrhh), agustina (técnico altas), lina (trafficker).
 
 ## Fase 1 · Referencia
 
@@ -27,14 +36,14 @@ Siguiente: F2.2. F2.1 cerrado a las 06:42 (`tuberia_avisos`).
 - ✅ F1.2 · 02:05 · escáner salida 1, 38 ficheros, 0 en v2/; commit 5d007f1 (solo CARPETAS_FUERA). Plan B: dejarlo como estaba y apuntar los falsos positivos.
 - ✅ F1.3 · 02:12 · instantánea `006bc44` (1056 ficheros); privados `595fa97` (64 fuera, siguen en el disco); plan juntado `f8bb955` + `8dc3667`; merge `b542cae` (árbol intacto); inventario `e4b0e08`; copias ok; `ref/` 306M. Puerta f1 en F1.7. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
 - ⬜ F1.3 Instantánea del código del Mac en la rama `migracion/v2` (tras el escáner; el código hasta el corte 675 de la entrega ya está en la rama: solo lo cambiado en el Mac después, fichero a fichero; los privados que la entrega sacó de git no se vuelven a añadir nunca), las ramas de `migracion/RAMAS_A_JUNTAR.txt` juntadas (PR #2, #3 y #4 del 4-oct), copia de la base y copia congelada de la app de hoy en `~/RO_MIGRACION/ref`. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
-- ✅ F1.4 · 06:10 · intento 3 · plan B · fotos en carga: ver NOTAS_NOCHE · referencia 2688 png, 7 < 15 KB fuera de la comparación de fotos. Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
-- ✅ F1.5 · 06:18 · intento 1 · 45 casos, 14 rutas, ensayo rc=0 contra la copia en 8780. Plan B: ninguno; es imprescindible.
-- ✅ F1.6 · 06:31 · intento 1 · 169 verdes, 38 heredadas, pasada 2 rc=0. `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes), más el carril de seguridad aislado de la entrega (`python3 pruebas_seguridad.py --aisladas`, 29 suites) y las pruebas DOM portables (`node pruebas_*.cjs`), verde contra la app de hoy (8770) y el checkout. La entrega no certifica verdes las baterías globales. Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
-- ✅ F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md. Push de la rama. Plan B: ninguno; repetir lo que falte.
+- ✅ F1.4 · 08:11 · 2100 png (25 personas × 42 pantallas × 2 tamaños), 0 errores, 0 fotos < 15 KB, mediana 802 ms; 31 claves ≥ 15 s pintadas · puerta: ~/RO_MIGRACION/puertas/f1.md
+- 🔄 F1.5 · 06:18 · intento 1 · 45 casos, 14 rutas, ensayo rc=0 contra la copia en 8780. Plan B: ninguno; es imprescindible. · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
+- 🔄 F1.6 · 06:31 · intento 1 · 169 verdes, 38 heredadas, pasada 2 rc=0. `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes), más el carril de seguridad aislado de la entrega (`python3 pruebas_seguridad.py --aisladas`, 29 suites) y las pruebas DOM portables (`node pruebas_*.cjs`), verde contra la app de hoy (8770) y el checkout. La entrega no certifica verdes las baterías globales. Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche). · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
+- 🔄 F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md. Push de la rama. Plan B: ninguno; repetir lo que falte. · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
-- ✅ F2.1 · 06:42 · intento 1 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6. Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
+- 🔄 F2.1 · 06:42 · intento 1 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6. Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo. · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
 - ⬜ F2.2 Si el inventario trae tablas o columnas nuevas: `rehacer_base.sh` y revisar el diff de `schema.prisma`. Plan B: ninguno; sin esto se pierden columnas.
 - ⬜ F2.3 Postgres arriba, `pnpm db:deploy`, copia «cuadrada» de `local.db.antes` (y `tuberia.db.antes`), `publicacion.py publicar data`.
 - ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
@@ -93,3 +102,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.6 · intento 1 · 06:31 · pasada 1: 169 verdes, 38 rojas, 5 min 9 s. Ninguna es de entorno. Pasada 2 con `baterias_heredadas.txt`: rc=0, ROJAS 0, 38 heredadas. `seguridad_aisladas` ✔. `solidez_tuberia` heredada (69/95). `.cjs` con ruta local: 18, no 21.
 - F1.7 · intento 1 · 06:39 · puerta f1 VERDE. Salida: ✔ copia de seguridad (local.db.antes); ✔ contrato de la app de hoy grabado; ✔ vectores de permisos grabados; ✔ fotos de la app de hoy; ✔ casos de escritura cubren todos los POST; ✔ escrituras de referencia (SQLite); ✔ notas de la noche; ✔ baterías verdes contra la app de hoy; ✔ velocidad de la app de hoy medida; VERDE · puerta f1.
 - F2.1 · intento 1 · 06:42 · 6 apariciones a `tuberia_avisos`, `py_compile` limpio, base temporal sqlite con count 1 y sin tabla `avisos`. Solidez rc=1, 69 de 95, el mismo `KeyError: 'valor'` que F1.6.
+- F1.4 · intento 3 (revisión 06:44) · hipótesis: texto estable 600 ms. `Date.now()` no avanza con el reloj fijo: la prueba de 18 fotos se fue a 15 s. Con 6 sondeos de 100 ms: 18 fotos, 0 errores, ninguna < 15 KB, máximo 4053 ms, operaciones y producción pintadas. Pasada 07:01–08:03: 2100 png, 0 errores, mediana 802 ms. Puerta f1 VERDE 08:11 (9/9). La de 2688 está en `viejo_espera_vieja`.

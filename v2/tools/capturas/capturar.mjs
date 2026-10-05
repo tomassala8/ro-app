@@ -37,8 +37,23 @@ const tamanos = args['solo-escritorio'] ? [['escritorio', 1440, 900]] : [['escri
 // Misma hora en las dos pasadas: los «hace 5 min» y el «hoy» salen iguales.
 const HORA_FIJA = new Date(args.hora ?? '2026-10-05T07:30:00+02:00');
 
+function personasDeLaLista() {
+  // Decisión de Tomás (5-oct-2026 06:12): una persona por combinación de rol,
+  // permisos y ámbito. La escriben F1.4 y la usan las fotos de las fases 6 y 7.
+  const lista = join(homedir(), 'RO_MIGRACION', 'capturas', 'personas_fotos.txt');
+  if (!existsSync(lista)) return null;
+  const ids = readFileSync(lista, 'utf8').split('\n')
+    .map((l) => l.split('#')[0].trim())
+    .filter(Boolean)
+    .map((l) => l.split(/\s+/)[0])
+    .filter(Boolean);
+  return ids.length ? ids : null;
+}
+
 async function personas() {
-  if (args.personas) return String(args.personas).split(',');
+  if (args.personas) return String(args.personas).split(',').map((s) => s.trim()).filter(Boolean);
+  const deLista = personasDeLaLista();
+  if (deLista) return deLista;
   const r = await fetch(`${base}/api/elegir`);
   if (!r.ok) throw new Error(`/api/elegir respondió ${r.status}: arranca la app en local, sin Cloudflare Access`);
   return (await r.json()).personas.map((p) => p.id);
@@ -63,7 +78,8 @@ for (const [nombreTam, ancho, alto] of tamanos) {
         const t0 = Date.now();
         await pagina.goto(url(persona, pantalla), { waitUntil: 'load', timeout: 45_000 });
         // Espera a que la pantalla esté pintada (misma regla que LISTO de despliegue/barrido_total.py): #titulo ya puesto,
-        // sin esqueleto y #main con contenido que no sea un texto de carga («Cargando…», «Leyendo…», «Pidiendo…»).
+        // sin esqueleto y #main con contenido que no sea un texto de carga («Cargando…», «Leyendo…», «Pidiendo…»),
+        // y el texto estable 600 ms (si no, operaciones se retrataba antes de escribir «Leyendo…»).
         // Como mucho 15 s; si no llega, la foto enseñará la carga y _tiempos.json marcará ≥ 15000.
         await pagina.waitForFunction(() => {
           const m = document.querySelector('#main') || document.body;
@@ -71,8 +87,14 @@ for (const [nombreTam, ancho, alto] of tamanos) {
           if (m.querySelector('.esqueleto, [aria-busy="true"]')) return false;
           const texto = (m.innerText || '').trim();
           if (!texto && !m.querySelector('img, svg, canvas, table')) return false;
-          return !/(Cargando|Leyendo|Pidiendo)[^\n]*(…|\.\.\.)/.test(texto);
-        }, null, { timeout: 15_000 }).catch(() => {});
+          if (/(Cargando|Leyendo|Pidiendo)[^\n]*(…|\.\.\.)/.test(texto)) return false;
+          // El reloj de la foto está fijo (setFixedTime): Date.now() no avanza y 600 ms no llegarían nunca.
+          // polling es 100 ms de reloj real: 6 sondeos con el mismo texto son los 600 ms.
+          const w = window.__roEstable || (window.__roEstable = { texto: '', n: 0 });
+          if (w.texto !== texto) { w.texto = texto; w.n = 0; return false; }
+          w.n += 1;
+          return w.n >= 6;
+        }, null, { timeout: 15_000, polling: 100 }).catch(() => {});
         tiempos[`${nombreTam}/${persona}/${pantalla}`] = Date.now() - t0;
         await pagina.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
         await pagina.waitForTimeout(400);
