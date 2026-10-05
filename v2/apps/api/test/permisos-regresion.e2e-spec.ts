@@ -245,9 +245,21 @@ describe.skipIf(!LISTO)('regresión de permisos (anexo punto 8)', () => {
     expect([...new Set(malas)].sort()).toEqual([]);
   }, 600_000);
 
-  // L-02, al cerrarlo: en «ver como», /api/acciones debe ser { modulo: null, acciones: [] }
-  // (servir.py:2824) y /api/rastro solo filas con como === persona vista (servir.py:2797).
-  it.todo('L-02 /api/acciones en «ver como» vacías y /api/rastro solo de esta inspección');
+  // L-02 (servir.py: `/api/rastro` con `mirando`, `/api/acciones` sin ?modulo=): en «ver como», el rastro es solo
+  // el de ESTA inspección y las acciones personales de la persona vista no se leen. Sin 403.
+  it('L-02 /api/acciones en «ver como» vacías y /api/rastro solo de esta inspección', async () => {
+    expect(account, 'falta un account activo').toBeTruthy();
+    const r = await pedir('GET', '/api/rastro', { yo: tomas, como: account });
+    expect(r.status).toBe(200);
+    const cuerpo = r.json as { todo?: boolean; registro?: { quien?: string; como?: string }[]; acciones?: unknown[] };
+    expect(cuerpo.todo).toBe(false);
+    expect(cuerpo.acciones).toEqual([]);
+    const ajenas = (cuerpo.registro ?? []).filter((f) => !(f.quien === tomas && f.como === account));
+    expect(ajenas.length, 'filas del rastro que no son de esta inspección').toBe(0);
+    const a = await pedir('GET', '/api/acciones', { yo: tomas, como: account });
+    expect(a.status).toBe(200);
+    expect(a.json).toEqual({ modulo: null, acciones: [] });
+  });
   it.todo('L-50 /api/indicadores en «ver como» trae textos que no están en ninguna de las dos respuestas solas');
 
   it('8.4 las claves de dinero y de leads solo salen si el puesto las ve', async () => {
