@@ -62,8 +62,17 @@ for (const [nombreTam, ancho, alto] of tamanos) {
         await pagina.goto('about:blank');   // si no, cambiar solo el #/ no recarga la app vieja
         const t0 = Date.now();
         await pagina.goto(url(persona, pantalla), { waitUntil: 'load', timeout: 45_000 });
-        // Espera a que la pantalla deje de decir «Cargando…» (como mucho 15 s; si no, la foto lo enseñará).
-        await pagina.waitForFunction(() => !document.body.innerText.includes('Cargando…'), null, { timeout: 15_000 }).catch(() => {});
+        // Espera a que la pantalla esté pintada (misma regla que LISTO de despliegue/barrido_total.py): #titulo ya puesto,
+        // sin esqueleto y #main con contenido que no sea un texto de carga («Cargando…», «Leyendo…», «Pidiendo…»).
+        // Como mucho 15 s; si no llega, la foto enseñará la carga y _tiempos.json marcará ≥ 15000.
+        await pagina.waitForFunction(() => {
+          const m = document.querySelector('#main') || document.body;
+          if (document.querySelector('#titulo')?.textContent === 'Cargando…') return false;
+          if (m.querySelector('.esqueleto, [aria-busy="true"]')) return false;
+          const texto = (m.innerText || '').trim();
+          if (!texto && !m.querySelector('img, svg, canvas, table')) return false;
+          return !/(Cargando|Leyendo|Pidiendo)[^\n]*(…|\.\.\.)/.test(texto);
+        }, null, { timeout: 15_000 }).catch(() => {});
         tiempos[`${nombreTam}/${persona}/${pantalla}`] = Date.now() - t0;
         await pagina.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}' });
         await pagina.waitForTimeout(400);
