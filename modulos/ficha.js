@@ -222,6 +222,15 @@ async function cargarPrivado(ctx, cual, id) {
   return r;
 }
 
+/** L-32: quién lleva el cliente según la verdad única. Sin account en la verdad (`sin_account`) se dice así, no se pinta el responsable
+ *  de la Cartera; el respaldo a la Cartera es solo para un cliente que la verdad no trae o cuya línea no dice nada del account. */
+function quienLleva(ctx, id, respaldo) {
+  const v = ctx.verdad ? ctx.verdad(id) : null;
+  if (v?.account) return ctx.nombre(v.account);
+  if (v?.sin_account) return /confirmar/i.test(v.sin_account) ? v.sin_account : `${v.sin_account} · para confirmar`;
+  return respaldo || 'sin account';
+}
+
 // =================================================================== render
 export default {
   id: 'ficha',
@@ -810,15 +819,6 @@ function cuotaFicha(F) {
   if (F.portal?.cuota != null) return { valor: F.portal.cuota, fuente: F.portal.cuota_fuente || 'Airtable' };
   if (F.c.cuota != null) return { valor: F.c.cuota, fuente: 'libro de clientes (sin línea en Airtable)' };
   return null;
-}
-
-/** L-32: quién lleva el cliente según la verdad única. Sin account en la verdad (`sin_account`) se dice así, no se pinta el responsable
- *  de la Cartera; el respaldo a la Cartera es solo para un cliente que la verdad no trae o cuya línea no dice nada del account. */
-function quienLleva(ctx, id, respaldo) {
-  const v = ctx.verdad ? ctx.verdad(id) : null;
-  if (v?.account) return ctx.nombre(v.account);
-  if (v?.sin_account) return /confirmar/i.test(v.sin_account) ? v.sin_account : `${v.sin_account} · para confirmar`;
-  return respaldo || 'sin account';
 }
 
 /** L-33: estado del tile de reunión con el criterio de la verdad única («sin reunión el mes pasado», CRM + Fathom + Zoom), el mismo

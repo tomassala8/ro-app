@@ -46,7 +46,8 @@ export function textoLlano(t) {
 // L-18: instante en Madrid si el texto no trae zona (antes, en la zona del navegador). Un día sin hora no depende de la zona.
 const fecha = s => { if (!s) return null; const d = instanteRO(s); if (d) return d; if (/\d{2}:\d{2}/.test(String(s))) return null; const l = new Date(String(s).replace(' ', 'T')); return Number.isNaN(+l) ? null : l; };
 export const edadH = s => { const d = fecha(s); return d ? Math.max(0, (Date.now() - d) / 36e5) : null; };
-export const diaCorto = s => { const dia = s ? diaRO(String(s)) : null; return dia ? `${Number(dia.slice(8))}-${MESES[Number(dia.slice(5, 7)) - 1].slice(0, 3)}` : (s || '—'); };
+// Sin `diaRO` (las pruebas `.cjs` cargan este trozo sin imports) queda el día del propio texto.
+export const diaCorto = s => { const dia = s ? (typeof diaRO === 'function' ? diaRO(String(s)) : String(s).slice(0, 10)) : null; return dia ? `${Number(dia.slice(8))}-${MESES[Number(dia.slice(5, 7)) - 1].slice(0, 3)}` : (s || '—'); };
 const horaCorta = s => { const d = fecha(s); return d ? horaRO(d) : ''; };
 const cuandoTxt = s => { const d = fecha(s); if (!d) return s || '—'; const hoy = hoyISO(); const iso = diaRO(String(s)) || String(s).slice(0, 10); return iso === hoy ? `hoy, ${horaCorta(s)}` : `${diaCorto(iso)}, ${horaCorta(s)}`; };   // «2-oct, 17:34» (44 §2.3)
 const n0 = v => Number(v) || 0;

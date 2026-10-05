@@ -95,7 +95,10 @@ const diaDe = f => String(f || '').slice(0, 10);
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 function diaTxt(iso) {
   const d = new Date(iso + 'T12:00:00');
-  const dif = FECHAS_MADRID.diasDesde(iso);   // L-19: días naturales hasta el «hoy» de Madrid, no del reloj del navegador
+  // L-19: días naturales hasta el «hoy» de Madrid, no del reloj del navegador. Sin `FECHAS_MADRID` (las pruebas `.cjs` cargan el fichero
+  // sin imports) queda la cuenta de antes con el reloj local.
+  const dif = typeof FECHAS_MADRID !== 'undefined' ? FECHAS_MADRID.diasDesde(iso)
+    : Math.round((new Date(new Date().toDateString()) - new Date(d.toDateString())) / 864e5);
   if (dif === 0) return 'Hoy';
   if (dif === 1) return 'Ayer';
   return `${d.getDate()} de ${MESES[d.getMonth()]}`;

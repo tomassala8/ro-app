@@ -806,7 +806,7 @@ E = Estado()
 
 # =============================================================== recortes de datos de módulos
 # Importes numéricos también llegan como importe/importe_*; el saneado de textos no los quita.
-CLAVES_CUOTA = re.compile(r"(?:^|[_\-.])(?:cuota(?![_\-.]horas(?:$|[_\-.]))|fee|importe|mrr|precio\w*|tarifa(?![_\-.]hora(?:$|[_\-.])))(?:$|[_\-.])", re.I)  # L-04: + mrr, precio*, tarifa
+CLAVES_CUOTA = re.compile(r"(?:^|[_\-.])(?:cuota(?![_\-.]horas(?:$|[_\-.]))|fee|importe|mrr|precio\w*|tarifa(?![_\-.](?:hora|ruta|busqueda)(?:$|[_\-.])))(?:$|[_\-.])", re.I)  # L-04: + mrr, precio*, tarifa
 # Ronda 5 (I-01): horas pautadas = cuota ÷ 31,47 €/h, así que revelan la cuota. A quien no ve la cuota no le llegan
 # ni las pautadas ni los porcentajes sobre ellas ni el segmento: solo «dentro / fuera de lo pautado».
 CLAVES_DERIVADAS_CUOTA = re.compile(r"^(pautadas|horas_pautadas|horas_presup.*|pct_sep|pct_oct|pct_horas|pct_cuota.*|segmento|valor_vida.*)$")

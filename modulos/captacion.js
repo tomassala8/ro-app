@@ -38,6 +38,7 @@ import {
 } from '../componentes.js';
 /** L-20: el nombre del mes anterior al «hoy» de Madrid («septiembre» si hoy es octubre), no un mes fijo. */
 const MES_ANT = () => FECHAS_MADRID.nombreMes(sumarDias(hoyMadrid().slice(0, 8) + '01', -1));
+// Las pruebas `.cjs` cargan trozos de este fichero sin sus imports: allí `MES_ANT` no existe y el rótulo cae a «mes anterior».
 import { franjaCifras, barraAcciones } from './_trabajo.js';
 import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
 import { conDeshacer, botonDeshacer } from './_deshacer.js';
@@ -794,7 +795,7 @@ function pEquipo(el, ctx, d, filas) {
     tile({ icono: 'eq', etiqueta: 'Traffickers con 5 o más cuentas en rojo', valor: observado648.gravedad ? filasT.filter(x => x.id !== '—' && x.rojos >= ambar + 1).length : null, unidad: `de ${filasT.filter(x => x.id !== '—').length}`,
       estado: filasT.some(x => x.id !== '—' && x.rojos > ambar) ? 'rojo' : filasT.some(x => x.id !== '—' && x.rojos > verde) ? 'ambar' : 'gris',
       contexto: `Señales observadas en ${observado648.gravedad} de ${filas.length} cuentas; referencia ámbar ${verde + 1}-${ambar} y rojo ≥ ${ambar + 1}. Cobertura no exhaustiva; cero no acredita ausencia de críticos.`, medible: 'medias', frescura: fuenteDe(d, 'meta') }),
-    total.conDinero.length ? tile({ icono: 'cartera', etiqueta: `Inversión gestionada · ${MES_ANT()}`, valor: eur(total.gastoMesAnt), comparacion: { texto: `${eur(total.gasto7)} en los últimos 7 días` },
+    total.conDinero.length ? tile({ icono: 'cartera', etiqueta: `Inversión gestionada · ${typeof MES_ANT === 'function' ? MES_ANT() : 'mes anterior'}`, valor: eur(total.gastoMesAnt), comparacion: { texto: `${eur(total.gasto7)} en los últimos 7 días` },
       contexto: 'Solo Meta. Google Ads va aparte (muestra manual) hasta la clave de Windsor.', medible: 'medias', medibleDetalle: 'Falta Google Ads y TikTok', frescura: fuenteDe(d, 'meta') }) : null,
     tile({ icono: 'flag', etiqueta: 'Señales de cuentas paradas', valor: observado648.paradas, unidad: `en ${observado648.paradasConDato} de ${total.activas.length} activas con dato`,
       estado: observado648.paradas > 0 ? 'rojo' : 'gris', contexto: 'Gasto ayer cero o último gasto anterior al corte: señal guardada por contrastar. Cobertura no exhaustiva; no confirma campañas paradas.', medible: 'medias', frescura: fuenteDe(d, 'meta') }),
@@ -1146,7 +1147,7 @@ function pintarTarjeta(cont, ctx, d, id) {
   }
   t.push(tile({ icono: 'users', etiqueta: lecturaCpl.unidadAcreditada ? 'Eventos lead Meta · 7 días' : 'Contador Meta · 7 días', valor: c.leads ? num(c.leads['7d']) : null, estado: c.leads ? '' : 'gris',
     comparacion: c.leads ? { delta: variacion(c.leads['7d'], c.leads['7d_prev']), pct: true, texto: `frente a ${num(c.leads['7d_prev'])} los 7 anteriores` } : null,
-    contexto: c.leads ? `Ayer ${num(c.leads.ayer)} · ${MES_ANT()} ${num(c.leads.mes_anterior)}` : 'Sin cuenta de Meta', medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
+    contexto: c.leads ? `Ayer ${num(c.leads.ayer)} · ${typeof MES_ANT === 'function' ? MES_ANT() : 'mes anterior'} ${num(c.leads.mes_anterior)}` : 'Sin cuenta de Meta', medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
   if (c.despacho) {
     t.push(tile({ icono: 'plug', etiqueta: 'Meta y CRM · 7 días', valor: c.ghl?.conectado ? num(c.despacho.leads_ghl_7d ?? null) : null,
       unidad: 'contactos CRM leídos', estado: 'gris',
