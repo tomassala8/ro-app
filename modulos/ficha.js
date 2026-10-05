@@ -821,6 +821,15 @@ function quienLleva(ctx, id, respaldo) {
   return respaldo || 'sin account';
 }
 
+/** L-33: estado del tile de reunión con el criterio de la verdad única («sin reunión el mes pasado», CRM + Fathom + Zoom), el mismo
+ *  color que el detalle de En rojo (ámbar si falta, verde si hay, sin color si no hay dato). Si la verdad no trae el campo, queda el
+ *  criterio de antes (30/35 días) como respaldo. `null` = el respaldo decide. */
+function estadoReunionVerdad(F) {
+  const v = F.verdad;
+  if (!v || v.sin_reunion_mes_pasado === undefined) return null;
+  return v.sin_reunion_mes_pasado ? 'ambar' : v.ultima_reunion ? 'verde' : '';
+}
+
 /** Segunda línea del selector: «Account: Lucía · tú llevas la publicidad» (nunca «Lucía · tuyo» para quien no es su account). */
 function detalleSelector(ctx, x) {
   const acc = quienLleva(ctx, x.id, x.responsable);
@@ -896,8 +905,14 @@ const PINTAR = {
     L.push(tile({ icono: 'clock', etiqueta: 'Revisiones de más de 48 h', valor: pintable(tar) ? fmt.num(td.revision_mas_48h || 0) : null, unidad: td.revision_total ? `de ${td.revision_total} en revisión` : '',
       estado: semaforo(td.revision_mas_48h || 0, { verde: 0, ambar: 3, mejorSi: 'bajo' }), contexto: `${fmt.num(td.vencidas)} tareas vencidas`, frescura: frescuraDe(tar), ir: 'Ver trabajo', alPulsar: () => irA('trabajo') }));
     const rd = reu?.datos || {};
-    L.push(tile({ icono: 'video', etiqueta: 'Días sin reunión', valor: rd.dias_sin_reunion ?? null, estado: rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }),
-      contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · rojo > 35 días` : 'Sin reuniones registradas', frescura: frescuraDe(reu), ir: 'Preparar la reunión', alPulsar: () => irA('reunion') || irA('comunicacion') }));
+    const estReu = estadoReunionVerdad(F);   // L-33
+    const sinReuMes = F.verdad?.sin_reunion_mes_pasado === true;
+    L.push(tile({ icono: 'video', etiqueta: 'Días sin reunión', valor: rd.dias_sin_reunion ?? null,
+      estado: estReu !== null ? estReu : rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }),
+      contexto: estReu === null
+        ? (rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · rojo > 35 días` : 'Sin reuniones registradas')
+        : sinReuMes ? `Sin reunión el mes pasado (CRM, Fathom y Zoom)${rd.ult_reunion ? ` · Última: ${fDiaRO(rd.ult_reunion)}` : ''}`
+          : (rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · con reunión el mes pasado` : 'Sin reuniones registradas'), frescura: frescuraDe(reu), ir: 'Preparar la reunión', alPulsar: () => irA('reunion') || irA('comunicacion') }));
     if (pintable(ga)) L.push(tile({ icono: 'users', etiqueta: 'Visitas a la web · 30 días', valor: fmt.num(ga.datos.actual?.usuarios), unidad: 'usuarios',
       comparacion: { delta: variacion(ga.datos.actual?.usuarios, ga.datos.anterior?.usuarios), pct: true, texto: 'frente a los 30 anteriores' }, frescura: frescuraDe(ga), alPulsar: () => irA('web') }));
     if (F.ve.horas.ok && hor?.datos && F.ve.horas.nivel !== 'resumen') {
@@ -1178,7 +1193,7 @@ const PINTAR = {
       tileCorreos(cc),
       tile({ icono: 'send', etiqueta: 'Último correo nuestro', valor: dd.ult_correo_saliente ? fDiaRO(dd.ult_correo_saliente) : null, estado: dd.ult_correo_saliente ? (dd.correo_esta_semana ? 'verde' : 'ambar') : 'gris', contexto: dd.ult_correo_saliente ? (dd.correo_esta_semana ? 'Ya hay correo esta semana' : 'Sin correo nuestro esta semana') : 'Sin dato', frescura: frescuraDe(desk) }),
       tile({ icono: 'phone', etiqueta: 'Llamadas · octubre', valor: pintable(zad) ? fmt.num(oct.contestadas) : null, unidad: 'contestadas', contexto: `${fmt.num(oct.contestadas_30s_o_mas)} de 30 s o más · ${fmt.num(oct.intentos_sin_contestar)} sin contestar · septiembre: ${fmt.num(sep.contestadas)}${oct.confianza_cruce && oct.confianza_cruce !== 'seguro' ? ' · cruce del número con el cliente probable, sin confirmar' : ''}`, frescura: frescuraDe(zad) }),
-      tile({ icono: 'video', etiqueta: `Reuniones · ${MES_ANT()}`, valor: rd.reuniones_mes_anterior ?? null, contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · hace ${rd.dias_sin_reunion} días` : 'Sin reuniones registradas', estado: rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' }), medible: reu?.medicion, medibleDetalle: reu?.nota, frescura: frescuraDe(reu) }),
+      tile({ icono: 'video', etiqueta: `Reuniones · ${MES_ANT()}`, valor: rd.reuniones_mes_anterior ?? null, contexto: rd.ult_reunion ? `Última: ${fDiaRO(rd.ult_reunion)} · hace ${rd.dias_sin_reunion} días` : 'Sin reuniones registradas', estado: estadoReunionVerdad(F) ?? (rd.dias_sin_reunion == null ? 'gris' : semaforo(rd.dias_sin_reunion, { verde: 30, ambar: 35, mejorSi: 'bajo' })), medible: reu?.medicion, medibleDetalle: reu?.nota, frescura: frescuraDe(reu) }),
     ]));
     // Cada correo con «Sugerir respuesta» (IA): el borrador se revisa y se copia o se contesta en la Bandeja; nunca sale solo.
     const veIA = F.ve.responder && !F.admin;
