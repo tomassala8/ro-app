@@ -1362,7 +1362,7 @@
   },
   {
     "fichero": "modulos/_operaciones_accounts_263.js",
-    "lineas": 460,
+    "lineas": 458,
     "es_pantalla": false,
     "pieza_comun": true,
     "imports": [
@@ -2995,7 +2995,7 @@
   },
   {
     "fichero": "modulos/asistente_ia.js",
-    "lineas": 210,
+    "lineas": 216,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
@@ -3071,14 +3071,13 @@
   },
   {
     "fichero": "modulos/captacion.js",
-    "lineas": 1602,
+    "lineas": 1601,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
       "./_coste_cita_299.js",
       "./_crm_mediciones.js",
-      "./_ctr_paid_682.js",
       "./_deshacer.js",
       "./_intencion_paid_516.js",
       "./_matriz_paid_508.js",
@@ -3202,7 +3201,7 @@
   },
   {
     "fichero": "modulos/control_cartera.js",
-    "lineas": 183,
+    "lineas": 180,
     "es_pantalla": false,
     "pieza_comun": false,
     "imports": [],
@@ -3216,12 +3215,11 @@
   },
   {
     "fichero": "modulos/crm.js",
-    "lineas": 842,
+    "lineas": 841,
     "es_pantalla": true,
     "pieza_comun": false,
     "imports": [
       "../componentes.js",
-      "./_contacto_observado_677.js",
       "./_crm_mediciones.js",
       "./_deshacer.js",
       "./_embudo_observado_469.js",

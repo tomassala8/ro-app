@@ -6,7 +6,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 |---|---|
 | Pantallas en el menú (`modulos/indice.js`) | 42 (42 hechas) |
 | Ficheros en `modulos/` | 196 (44 pantallas, 137 piezas comunes) |
-| Líneas de front (módulos + carcasa + estilos) | 48567 |
+| Líneas de front (módulos + carcasa + estilos) | 48566 |
 | Rutas de API en `servir.py` | 37 (22 GET, 15 POST) |
 | Ficheros que enchufan rutas a servir.py | 49 (125 rutas más; 5 con bucle propio) |
 | Rutas distintas que llama el front (`ctx.api`) | 86 |
