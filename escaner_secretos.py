@@ -161,7 +161,7 @@ def escanear(raiz=DATA, incluir_privado=False):
 
 # Ronda 7 (auditoría final, M6): el barrido del proyecto mira todo el texto que viajaría en una copia o un despliegue.
 EXT_PROYECTO = {".json", ".md", ".js", ".py", ".txt", ".html", ".csv"}
-CARPETAS_FUERA = {"_privado", "_cache", "_crudo", "capturas", "historia", "__pycache__", "node_modules", ".git"}
+CARPETAS_FUERA = {"_privado", "_cache", "_crudo", "capturas", "historia", "__pycache__", "node_modules", ".git", ".next", "dist", "generated", "legacy"}
 
 
 def ficheros_proyecto(raiz=AQUI):
