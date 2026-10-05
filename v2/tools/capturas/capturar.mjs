@@ -61,7 +61,7 @@ for (const [nombreTam, ancho, alto] of tamanos) {
       try {
         await pagina.goto('about:blank');   // si no, cambiar solo el #/ no recarga la app vieja
         const t0 = Date.now();
-        await pagina.goto(url(persona, pantalla), { waitUntil: 'networkidle', timeout: 45_000 });
+        await pagina.goto(url(persona, pantalla), { waitUntil: 'load', timeout: 45_000 });
         // Espera a que la pantalla deje de decir «Cargando…» (como mucho 15 s; si no, la foto lo enseñará).
         await pagina.waitForFunction(() => !document.body.innerText.includes('Cargando…'), null, { timeout: 15_000 }).catch(() => {});
         tiempos[`${nombreTam}/${persona}/${pantalla}`] = Date.now() - t0;

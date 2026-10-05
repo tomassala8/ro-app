@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-(nada)
+(siguiente: F1.5)
 
 ## Fase 1 · Referencia
 
@@ -27,7 +27,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 - ✅ F1.2 · 02:05 · escáner salida 1, 38 ficheros, 0 en v2/; commit 5d007f1 (solo CARPETAS_FUERA). Plan B: dejarlo como estaba y apuntar los falsos positivos.
 - ✅ F1.3 · 02:12 · instantánea `006bc44` (1056 ficheros); privados `595fa97` (64 fuera, siguen en el disco); plan juntado `f8bb955` + `8dc3667`; merge `b542cae` (árbol intacto); inventario `e4b0e08`; copias ok; `ref/` 306M. Puerta f1 en F1.7. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
 - ⬜ F1.3 Instantánea del código del Mac en la rama `migracion/v2` (tras el escáner; el código hasta el corte 675 de la entrega ya está en la rama: solo lo cambiado en el Mac después, fichero a fichero; los privados que la entrega sacó de git no se vuelven a añadir nunca), las ramas de `migracion/RAMAS_A_JUNTAR.txt` juntadas (PR #2, #3 y #4 del 4-oct), copia de la base y copia congelada de la app de hoy en `~/RO_MIGRACION/ref`. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
-- ⬜ F1.4 Servicios de referencia y grabaciones: contrato, vectores, fotos (con sus tiempos), y `excepciones_solidez.txt` con los fallos heredados conocidos (N-13). Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
+- ✅ F1.4 · 05:27 · 2688 fotos (42 pantallas × 32 personas × 2 tamaños), 0 errores de página; 7 móviles de mi-trabajo, produccion y operaciones siguen en carga (NOTAS, fuera de la comparación de fotos, no de excepciones.txt); tiempos 2688. Comprobación: contrato/viejo, vectores, capturas/viejo y excepciones_solidez.txt. Puerta f1 en F1.7. Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
 - ⬜ F1.5 Casos de escritura (todos los POST de servir.py: uno que funciona y uno que se deniega). Plan B: ninguno; es imprescindible.
 - ⬜ F1.6 `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes), más el carril de seguridad aislado de la entrega (`python3 pruebas_seguridad.py --aisladas`, 29 suites) y las pruebas DOM portables (`node pruebas_*.cjs`), verde contra la app de hoy (8770) y el checkout. La entrega no certifica verdes las baterías globales. Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
 - ⬜ F1.7 `bash migracion/puerta.sh f1` en VERDE. Push de la rama. Plan B: ninguno; repetir lo que falte.
@@ -85,4 +85,5 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 
 ## Intentos y notas
 
-(aquí, por paso: «F2.4 · intento 1 · hipótesis → resultado»)
+- F1.4 · intento 1 · 8770 responde 200; contrato (64 entradas, 63 carpetas) y vectores (32) ya estaban y cumplen el «sale bien» de los pasos 2 y 3; cerebro 200 en dirección; riesgo 404 en dirección (setters 403: la ruta existe; no es «todo 404»; no se arregla aquí). Fotos: `capturar.mjs` espera `networkidle` (45 s) y, si salta el plazo, el `catch` no guarda la png. Tres `POST /api/uso` con `keepalive: true` (`app.js`) se quedan en vuelo aunque el servidor ya respondió 200: `networkidle` no llega nunca. A los ~6 min, 0 png. No se tocó el repo (F1.4 solo permite L-01). `excepciones_solidez.txt` escrito (N-13). 8770 sigue en una sesión larga (el `nohup` de `servicios.sh` muere al cerrar la orden). El Intento 2 del plan (puerto ocupado / módulo que falta) no cubre este fallo.
+- F1.4 · intento 2 · 04:01 una persona: 84 png en 2 min 14 s (mediana 0,7 s, ninguna a 45 s). 04:05–04:44 pasada completa: 2688 png en 38 min 54 s, 0 errores, mediana 93 ms. 14 png < 15 KB; reintento de mi-trabajo, produccion y operaciones dejó 7 móviles en carga (el texto no es «Cargando…»). Ese reintento reescribió `_tiempos.json`; segunda pasada 04:50–05:26 (36 min 21 s) repuso 2688 tiempos y 0 errores. Repo: `capturar.mjs` `waitUntil: 'load'`.
