@@ -21,7 +21,7 @@
 // Diseño estricto: clases comunes (panel, pila, fila, dos, bt, chip, campo, sub, lista-i, titulo-seccion) y tokens.
 
 import {
-  h, fmt, icono, chipEstado, chipsFiltro, vacioLinea, avisoFlotante, copiar, campoTexto, menuMas, tile, tiles, panel,
+  h, fmt, icono, chipEstado, chipsFiltro, vacioLinea, avisoFlotante, copiar, campoTexto, menuMas, tile, tiles, panel, hoyMadrid,
 } from '../componentes.js';
 import { botonDeshacer } from './_deshacer.js';
 
@@ -214,11 +214,11 @@ async function leerOpcional(ctx, modulo, nombre) {
 }
 
 /** Resultados del mes cerrado (y el que va) frente al objetivo del cliente. */
-function resultadosMes(F) {
+function resultadosMes(F, ctx) {
   const meta = fuente(F.doc, 'meta')?.datos || {};
   const capt = fuente(F.doc, 'captacion_ghl')?.datos || {};
   const o = F.obj?.objetivo || {};
-  const mesAnt = MES[(new Date().getMonth() + 11) % 12];
+  const mesAnt = MES[(Number((ctx?.hoy || hoyMadrid()).slice(5, 7)) + 10) % 12];   // L-19: el mes de Madrid, no el del navegador
   const T = [];
   T.lineas = [];
   if (meta.leads) {
@@ -340,7 +340,7 @@ export async function pintarReunion(z, ctx, F) {
   const zoom = ultimaZoom ? { fecha: ultimaZoom.fecha, pasos: ultimaZoom.resumen.pasos.slice(0, 5) } : null;
   const fathom = (reu?.clientes || []).find(x => x.cliente_id === c.id)?.enlaces?.find(e => e.fuente === 'Fathom');
   const items = pendientes(ctx, F, A, zoom);
-  const T = resultadosMes(F);
+  const T = resultadosMes(F, ctx);
 
   // ---- barra de la reunión (arriba, a la vista): última, próxima, copiar guion, informe ----
   const ult = rd.ult_reunion || F.verdad?.ultima_reunion;

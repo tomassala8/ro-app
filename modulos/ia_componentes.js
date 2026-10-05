@@ -18,7 +18,7 @@
 //
 // Enganche en 1 línea (dueños de Bandeja, Ficha y Mi día): ver _ESTADO_ia.md.
 
-import { h, icono, chipEstado, vacio, avisoFlotante, copiar, iniciales, panel, fechaCorta as diaMes } from '../componentes.js';
+import { h, icono, chipEstado, vacio, avisoFlotante, copiar, iniciales, panel, fechaCorta as diaMes, fechas as FECHAS_MADRID } from '../componentes.js';
 import { conTickets } from './_legible.js';   // R15a: los RO-xxxx de Desk dentro de un consejo, como enlace a ese correo
 
 // Ronda 10 (E0): la hoja de este fichero vive en estilos.css («IA · ia_componentes.js»). estilos() se queda vacía para no
@@ -510,8 +510,8 @@ export function horaDatos(t) {
   const d = new Date(s.replace(' ', 'T'));
   if (!s || isNaN(d)) return '';
   const hm = s.slice(11, 16);
-  const hoy = new Date();
-  return d.toDateString() === hoy.toDateString() ? `de las ${hm}` : `del ${DIA_CORTO[d.getDay()]} ${diaMes(s.slice(0, 10))}, ${hm}`;
+  const dia = s.slice(0, 10);   // L-19: el día del texto contra el «hoy» de Madrid, no contra el reloj del navegador
+  return dia === FECHAS_MADRID.hoy() ? `de las ${hm}` : `del ${DIA_CORTO[d.getDay()]} ${diaMes(dia)}, ${hm}`;
 }
 
 /** El bloque «Qué haría yo hoy aquí». Devuelve null si no hay consejos (nunca relleno). */

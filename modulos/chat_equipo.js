@@ -22,7 +22,7 @@
 
 import {
   h, fmt, icono, chipEstado, chipsFiltro, vacio, vacioLinea, avisoParcial, frescura, iniciales, avisoFlotante,
-  selectorPersona,
+  selectorPersona, fechas as FECHAS_MADRID,
 } from '../componentes.js';
 import { abrirPedirAyuda } from './_escalar.js';
 
@@ -94,8 +94,8 @@ const guardar = (k, v) => { try { localStorage.setItem(k, v); } catch { /* sin a
 const diaDe = f => String(f || '').slice(0, 10);
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 function diaTxt(iso) {
-  const hoy = new Date(); const d = new Date(iso + 'T12:00:00');
-  const dif = Math.round((new Date(hoy.toDateString()) - new Date(d.toDateString())) / 864e5);
+  const d = new Date(iso + 'T12:00:00');
+  const dif = FECHAS_MADRID.diasDesde(iso);   // L-19: días naturales hasta el «hoy» de Madrid, no del reloj del navegador
   if (dif === 0) return 'Hoy';
   if (dif === 1) return 'Ayer';
   return `${d.getDate()} de ${MESES[d.getMonth()]}`;

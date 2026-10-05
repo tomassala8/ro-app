@@ -25,6 +25,8 @@ import { instanteRO, diaRO, horaRO } from '../_fechas_ro.js';   // L-18: los tex
 const hoyISO = () => hoyMadrid();
 export const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 const mesActual = () => hoyISO().slice(0, 7);
+/** L-19: el nombre del mes en curso sale del «hoy» de Madrid, no del reloj del navegador. */
+const nombreMesActual = () => MESES[Number(mesActual().slice(5)) - 1];
 /** Día de la semana (0 = domingo) y día del mes de HOY en Madrid (no del reloj del Mac). */
 const hoyDia = () => new Date(`${hoyISO()}T12:00:00`);
 const mesAnterior = () => { const [a, m] = hoyISO().split('-').map(Number); return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, '0')}`; };
@@ -191,7 +193,7 @@ def('captacion_ro', ['ventas_ro/ventas_ro', 'finanzas/finanzas', 'finanzas/direc
   const costeA = a.firmados && a.inversion !== undefined ? a.inversion / a.firmados : null;
   const est = c => colorCifra('coste_cliente', c);
   const filas = [
-    { texto: `${MESES[new Date().getMonth()][0].toUpperCase() + MESES[new Date().getMonth()].slice(1)}: ${fmt.num(m.citas)} citas, ${fmt.num(m.celebradas)} celebradas, ${fmt.num(m.propuestas)} propuestas, ${fmt.num(m.firmados)} firmados`, extra: coste !== null ? `${eurG(coste)} por cliente` : 'sin firmados aún', estado: est(coste), icono: 'megafono', href: '#/ventas-ro' },
+    { texto: `${nombreMesActual()[0].toUpperCase() + nombreMesActual().slice(1)}: ${fmt.num(m.citas)} citas, ${fmt.num(m.celebradas)} celebradas, ${fmt.num(m.propuestas)} propuestas, ${fmt.num(m.firmados)} firmados`, extra: coste !== null ? `${eurG(coste)} por cliente` : 'sin firmados aún', estado: est(coste), icono: 'megafono', href: '#/ventas-ro' },
     { texto: `${MESES[Number(mesAnterior().slice(5)) - 1]}: ${fmt.num(a.firmados)} firmados de ${fmt.num(a.celebradas)} celebradas`, extra: costeA !== null ? `${eurG(costeA)} por cliente` : '', estado: est(costeA), icono: 'hist', href: '#/ventas-ro' },
   ];
   if (m.sin_marcar) filas.push({ texto: `${plural(m.sin_marcar, 'cita')} pasada${m.sin_marcar === 1 ? '' : 's'} sin marcar si vino`, estado: 'ambar', icono: 'flag', href: '#/ventas-ro' });
@@ -1632,8 +1634,8 @@ def('vro_contratos', ['ventas_ro/ventas_ro'], (ctx, D) => {
 });
 def('vro_embudo', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const v = vro(D); const m = v.meses?.[mesActual()] || {};
-  const d = new Date(); const dias = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-  const ritmo = Math.round((n0(v.objetivo_firmados_mes) * d.getDate()) / dias * 10) / 10;
+  const [aH, mH, dH] = hoyISO().split('-').map(Number); const dias = new Date(Date.UTC(aH, mH, 0)).getUTCDate();   // L-19: hoy de Madrid
+  const ritmo = Math.round((n0(v.objetivo_firmados_mes) * dH) / dias * 10) / 10;
   return {
     valor: fmt.num(m.firmados), unidad: `firmados · ritmo ${fmt.num(ritmo, 1)} de ${v.objetivo_firmados_mes}`, estado: n0(m.firmados) >= ritmo ? 'verde' : n0(m.firmados) >= ritmo * 0.85 ? 'ambar' : 'rojo',
     motivo: 'Citas → celebradas → propuesta → firmado, frente al objetivo del mes. Bien ≥ 100 % del ritmo · vigilar 85-99 %.',
@@ -1644,7 +1646,7 @@ def('vro_embudo', ['ventas_ro/ventas_ro'], (ctx, D) => {
 def('vro_costes', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const v = vro(D);
   const fila = (k, nombre) => { const m = v.meses?.[k] || {}; const cc = m.citas ? m.inversion / m.citas : null; const cf = m.firmados ? m.inversion / m.firmados : null; return { m, cc, cf, nombre }; };
-  const a = fila(mesActual(), MESES[new Date().getMonth()]), b2 = fila(mesAnterior(), MESES[Number(mesAnterior().slice(5)) - 1]);
+  const a = fila(mesActual(), nombreMesActual()), b2 = fila(mesAnterior(), MESES[Number(mesAnterior().slice(5)) - 1]);
   const ref = a.cf !== null ? a : b2;
   return {
     valor: eurG(ref.cf), unidad: `por cliente (${ref.nombre})`, estado: colorCifra('coste_cliente', ref.cf),
@@ -1892,7 +1894,7 @@ num('setter_celebradas', ['ventas_ro/setters'], (ctx, D) => {
 });
 num('cierre_celebradas', ['ventas_ro/ventas_ro'], (ctx, D) => {
   const v = vro(D); const m = v.meses?.[mesActual()] || {}; const a = v.meses?.[mesAnterior()] || {};
-  const usar = n0(m.celebradas) >= 5 ? m : a; const nombre = usar === m ? MESES[new Date().getMonth()] : MESES[Number(mesAnterior().slice(5)) - 1];
+  const usar = n0(m.celebradas) >= 5 ? m : a; const nombre = usar === m ? nombreMesActual() : MESES[Number(mesAnterior().slice(5)) - 1];
   const p = pct(n0(usar.firmados), n0(usar.celebradas));
   return { valor: fmt.pct(p), unidad: `${usar.firmados ?? 0} de ${usar.celebradas ?? 0} en ${nombre}`, estado: p === null ? 'gris' : semaforo(p, { verde: 33, ambar: 20 }),
     contexto: usar === m ? 'Bien ≥ 33 % · vigilar 20-32 % (D-63).' : `Este mes aún no hay 5 celebradas: se enseña ${nombre}. Bien ≥ 33 % · vigilar 20-32 % (D-63).`, frescura: fresco('GoHighLevel de RO', v) };
