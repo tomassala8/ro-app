@@ -18,6 +18,30 @@ if (!LISTO) console.warn('regresión de permisos SALTADA: falta RO_VECTORES');
 
 const TEXTO_VER_COMO = 'Estás en «ver como»: es solo lectura. No se escribe nada.';
 const LECTURA_POR_POST = ['/api/ver_dato'];
+/**
+ * N-25 · Rutas POST que este spec NUNCA llama. Si una no bloqueara «ver como», un POST con `{}` sería una
+ * escritura real contra la app de hoy (12:58 del 5-oct: un POST a `/api/recarga` tocó `data/`, 16 avisos y
+ * dejó la tubería suelta 33 minutos). Cualquier ruta cuyo nombre contenga uno de estos trozos queda fuera del
+ * bucle de 8.2; su guarda se comprueba en 8.2b con el código de la guarda, sin llamarla.
+ */
+const NO_SE_LLAMAN = [
+  '/api/recarga',
+  '/api/altas/',
+  'recarga',
+  'alta',
+  'envio',
+  'correo',
+  'publicar',
+  'tuberia',
+  'importar',
+  'sincron',
+  'exportar',
+  'llave',
+];
+function noSeLlama(ruta: string): boolean {
+  const r = ruta.toLowerCase();
+  return NO_SE_LLAMAN.some((trozo) => r.includes(trozo));
+}
 const GET_FIJAS = [
   '/api/sesion',
   '/api/indicadores',
@@ -154,14 +178,38 @@ describe.skipIf(!LISTO)('regresión de permisos (anexo punto 8)', () => {
 
   it('8.2 toda escritura en «ver como» es 403, salvo ver_dato', async () => {
     expect(account, 'falta un account activo').toBeTruthy();
-    const noBloqueadas: string[] = [];
+    // N-25: si una ruta no bloquea «ver como», este POST ya es una escritura real. Se corta en la primera.
+    let primeraNoBloqueada: string | null = null;
     for (const ruta of rutasPost()) {
+      if (noSeLlama(ruta)) continue; // N-25: su guarda se comprueba en 8.2b, sin llamarla
       const r = await pedir('POST', rutaProbada(ruta), { yo: tomas, como: account, cuerpo: {} });
       const bloqueada = r.status === 403 && errorDe(r.json) === TEXTO_VER_COMO;
-      if (!bloqueada) noBloqueadas.push(ruta);
+      if (LECTURA_POR_POST.includes(ruta)) {
+        if (bloqueada) {
+          primeraNoBloqueada = `${ruta} (debía dejar pasar «ver como»)`;
+          break;
+        }
+        continue;
+      }
+      if (!bloqueada) {
+        primeraNoBloqueada = ruta;
+        break;
+      }
     }
-    expect(noBloqueadas.sort()).toEqual([...LECTURA_POR_POST].sort());
+    expect(primeraNoBloqueada, 'primera ruta POST que no da 403 en «ver como»').toBeNull();
   }, 600_000);
+
+  it('8.2b las rutas con efecto fuera de la base no se llaman: la guarda de «ver como» es global', () => {
+    const sinLlamar = rutasPost().filter(noSeLlama);
+    expect(sinLlamar, 'el inventario debe traer al menos /api/recarga entre las que no se llaman').toContain('/api/recarga');
+    const raiz = new URL('../../../../', import.meta.url);
+    const guarda = readFileSync(new URL('v2/apps/api/src/permisos/permisos.guard.ts', raiz), 'utf8');
+    expect(guarda).toContain("const escribe = metodo !== 'GET' && !declaracion.lecturaPorPost;");
+    expect(guarda).toContain('if (escribe && req.vista?.como) throw new ForbiddenException(');
+    const servir = readFileSync(new URL('servir.py', raiz), 'utf8');
+    expect(servir).toContain('if solo_lectura and ruta != "/api/ver_dato":');
+    expect(servir).toContain(TEXTO_VER_COMO);
+  });
 
   it('8.3 «ver como» no enseña lo que no verían las dos personas', async () => {
     const malas: string[] = [];
