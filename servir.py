@@ -829,7 +829,7 @@ def sin_cuota(o, deja_pautadas=False):
 # Holded/cuadres usan facturado_mes, facturado_holded, facturado_panel, etc.
 CLAVES_COBROS = re.compile(r"(?:^|[_\-.])(?:facturas?\w*|facturado\w*|cobrad\w*|impag\w*|pendiente_cobro|revenue|invoice_total)(?:$|[_\-.])", re.I)
 CLAVES_INVERSION = re.compile(r"(?:^|[_\-.])(?:gasto\w*|coste(?![_\-.]horas(?:$|[_\-.]))\w*|cpl\w*|cpc\w*|cpm\w*|inversion\w*|spend|budget_ads|presupuesto_ads|ad_spend|cost_per_lead|cost_per_click|importe_publicidad)(?:$|[_\-.])", re.I)
-CLAVES_LEAD = re.compile(r"(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban|email)(?:$|[_\-.])", re.I)  # L-04: + email
+CLAVES_LEAD = re.compile(r"(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban)(?:$|[_\-.])|^email$", re.I)  # L-04: + «email» solo como clave entera (email_opens y email_replies son métricas)
 
 
 class ClaveValor:

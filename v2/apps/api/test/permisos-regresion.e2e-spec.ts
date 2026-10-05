@@ -66,7 +66,7 @@ const SOLO_FORMA = new Set(['/api/rastro', '/api/rastro/verificar', '/api/salud'
 const CLAVES_CUOTA = /(?:^|[_\-.])(?:cuota(?![_\-.]horas(?:$|[_\-.]))|fee|importe|mrr|precio\w*|tarifa(?![_\-.]hora(?:$|[_\-.])))(?:$|[_\-.])/i;
 const CLAVES_COBROS = /(?:^|[_\-.])(?:facturas?\w*|facturado\w*|cobrad\w*|impag\w*|pendiente_cobro|revenue|invoice_total)(?:$|[_\-.])/i;
 const CLAVES_INVERSION = /(?:^|[_\-.])(?:gasto\w*|coste(?![_\-.]horas(?:$|[_\-.]))\w*|cpl\w*|cpc\w*|cpm\w*|inversion\w*|spend|budget_ads|presupuesto_ads|ad_spend|cost_per_lead|cost_per_click|importe_publicidad)(?:$|[_\-.])/i;
-const CLAVES_LEAD = /(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban|email)(?:$|[_\-.])/i;
+const CLAVES_LEAD = /(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban)(?:$|[_\-.])|^email$/i;
 
 interface FilaPermiso {
   ver: Record<string, { ok?: boolean }>;

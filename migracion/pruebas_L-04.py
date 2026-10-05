@@ -5,7 +5,7 @@ Uso: python3 migracion/pruebas_L-04.py
 Importa `servir` en un proceso aparte con una COPIA de `local.db.antes` (nunca `local.db`) y con `data/` solo en lectura.
 (1) Persona sin cuota, cobros ni inversión (puesto produccion): de una fila con `Cuota`, `importe`, `facturado_mes`,
     `cobrado`, `Gasto`, `CPL`, `email`, `movil`, `nombre_lead`, `dni`, `iban`, `mrr`, `precio_mes`, `tarifa`, `fee`,
-    `whatsapp`, `facturacion` solo quedan `hotel`, `cuota_horas` y `presupuesto` (en los datos es la fase del embudo, no dinero).
+    `whatsapp`, `facturacion` solo quedan `hotel`, `cuota_horas`, `presupuesto` (fase del embudo, no dinero) y las métricas `email_opens`, `email_replies` y `acumulado_email_snov_*` (el recorte de `email` es solo de la clave entera).
 (2) Dirección (ve cuota, cobros e inversión): las cifras que hoy ve siguen; los datos de lead siguen fuera.
 (3) Escáner: un IBAN inventado da hallazgo; fechas, puertos y «ES» sueltos no (el DNI no se añade: ver NOTAS_NOCHE.md).
 Sale 0 si pasa. Sin datos reales.
@@ -33,14 +33,14 @@ P = S.P
 fallos = []
 fila = {"Cuota": 1, "importe": 2, "facturado_mes": 3, "cobrado": 4, "Gasto": 5, "CPL": 6, "email": "a@ejemplo.test",
         "movil": "600000000", "nombre_lead": "x", "dni": "00000000T", "iban": "ES00", "hotel": "sí", "cuota_horas": 10,
-        "mrr": 7, "precio_mes": 8, "tarifa": 9, "fee": 10, "whatsapp": "1", "facturacion": 11, "presupuesto": 12,
+        "mrr": 7, "precio_mes": 8, "tarifa": 9, "fee": 10, "whatsapp": "1", "facturacion": 11, "presupuesto": 12, "email_opens": 3, "email_replies": 4, "acumulado_email_snov_hasta_2026-10-01": 5,
         "anidado": {"IMPORTE": 1, "Email": "b@ejemplo.test", "lista": [{"Tarifa": 2, "ok": True}]}}
 def quedan(puestos):
     persona = {"id": "p_l04", "puestos": puestos, "estado": "activo"}
     cp = P.contexto(persona, S.E.crudo)
     return S.recortar_doc(fila, S.quitar_para(persona, cp, None)), persona, cp
 salida, _, _ = quedan(["produccion"])
-if set(salida) - {"anidado"} != {"hotel", "cuota_horas", "presupuesto"}:
+if set(salida) - {"anidado"} != {"hotel", "cuota_horas", "presupuesto", "email_opens", "email_replies", "acumulado_email_snov_hasta_2026-10-01"}:
     fallos.append("sin cuota ni inversión quedan: " + ",".join(sorted(set(salida) - {"anidado"})))
 if salida.get("anidado") != {"lista": [{"ok": True}]}:
     fallos.append("el recorte anidado no quita IMPORTE/Email/Tarifa: " + json.dumps(salida.get("anidado")))
