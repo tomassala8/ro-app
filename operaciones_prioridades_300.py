@@ -69,15 +69,24 @@ def dto(row):
     return {k:d[k] for k in ('intencion_id','actor','prioridad_id','fuente_revision','dia','revision','estado','nota','registrado_en')}|{'declarado':True,'origen':'local','envio_realizado':False,'ejecucion_verificada':False}
 def tabla_existe(con):return con is not None and con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",(TABLA,)).fetchone() is not None
 
+def _filas_por_ref(con,vid,refs):
+    """Una consulta por tandas (no dos por prioridad): en Postgres cada ida y vuelta cuesta."""
+    por={};ids=list(refs)
+    for i in range(0,len(ids),400):
+        lote=ids[i:i+400]
+        for r in con.execute('SELECT * FROM operaciones_prioridades_300 WHERE actor=? AND prioridad_id IN (%s) ORDER BY registrado_en DESC,revision DESC'%','.join('?'*len(lote)),(vid,*lote)).fetchall():
+            por.setdefault((r['prioridad_id'],r['fuente_revision']),[]).append(r)
+    return por
+
 def leer(S,con,rid,vid):
-    refs=referencias(S,rid,vid);dia=S.P.hoy_iso();out=[]
+    refs=referencias(S,rid,vid);dia=S.P.hoy_iso();out=[];hay=tabla_existe(con)
+    por=_filas_por_ref(con,vid,refs) if hay and refs else {}
     for ref in refs.values():
-        rows=[]
-        if tabla_existe(con):rows=con.execute('SELECT * FROM operaciones_prioridades_300 WHERE actor=? AND prioridad_id=? AND fuente_revision=? ORDER BY registrado_en DESC,revision DESC LIMIT 21',(vid,ref['prioridad_id'],ref['fuente_revision'])).fetchall()
+        todas=por.get((ref['prioridad_id'],ref['fuente_revision']),[])
+        rows=todas[:21]
         historial=[dto(r) for r in rows[:20]]
-        actual=None
-        if tabla_existe(con):
-            r=con.execute('SELECT * FROM operaciones_prioridades_300 WHERE actor=? AND prioridad_id=? AND fuente_revision=? AND dia=? ORDER BY revision DESC LIMIT 1',(vid,ref['prioridad_id'],ref['fuente_revision'],dia)).fetchone();actual=dto(r) if r else None
+        hoy=[r for r in todas if r['dia']==dia]
+        actual=dto(max(hoy,key=lambda r:r['revision'])) if hoy else None
         out.append({**ref,'revision':actual['revision'] if actual else 0,'actual':actual,'historial':historial,'historial_truncado':len(rows)>20})
     # No devolver datos antiguos si el ámbito/catálogo cambió durante la lectura.
     final=referencias(S,rid,vid)
