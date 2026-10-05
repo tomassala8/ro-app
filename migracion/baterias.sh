@@ -47,6 +47,8 @@ bateria L-21 120 python3 migracion/pruebas_L-21.py --puerto "$PUERTO"
 bateria N-24 300 python3 migracion/pruebas_N-24.py
 bateria L-18 600 node migracion/pruebas_L-18.mjs --base "http://127.0.0.1:$PUERTO"
 bateria L-19 600 python3 migracion/pruebas_L-19.py --base "http://127.0.0.1:$PUERTO"
+bateria L-20 900 python3 migracion/pruebas_L-20.py --base "http://127.0.0.1:$PUERTO"
+bateria L-22 300 python3 migracion/pruebas_L-22.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos
