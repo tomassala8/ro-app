@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-✅ F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md
+Siguiente: F2.2. F2.1 cerrado a las 06:42 (`tuberia_avisos`).
 
 ## Fase 1 · Referencia
 
@@ -34,7 +34,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
-- ⬜ F2.1 Tabla `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py` (commit propio; `despliegue/pruebas_noche.py` ya lee los dos nombres: no lo toques). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
+- ✅ F2.1 · 06:42 · intento 1 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6. Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
 - ⬜ F2.2 Si el inventario trae tablas o columnas nuevas: `rehacer_base.sh` y revisar el diff de `schema.prisma`. Plan B: ninguno; sin esto se pierden columnas.
 - ⬜ F2.3 Postgres arriba, `pnpm db:deploy`, copia «cuadrada» de `local.db.antes` (y `tuberia.db.antes`), `publicacion.py publicar data`.
 - ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
@@ -92,3 +92,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.5 · intento 1 · 06:18 · 45 casos, 14 rutas, «sin caso: ninguno», ensayo rc=0. El primer id de account coincide con dirección: los casos «ver como» usan el primer account que no es dirección (si no, `/api/recarga` con cuerpo vacío se ejecutaría). El 200 de `/api/acciones` lleva módulo `agenda` (`app` no es un módulo; `mi-trabajo` rechaza el tipo `nota`). El caso sin `objeto` sale 403 (la referencia se mira antes), y la ruta igual tiene 4xx. 8780 parado; 8770 vivo.
 - F1.6 · intento 1 · 06:31 · pasada 1: 169 verdes, 38 rojas, 5 min 9 s. Ninguna es de entorno. Pasada 2 con `baterias_heredadas.txt`: rc=0, ROJAS 0, 38 heredadas. `seguridad_aisladas` ✔. `solidez_tuberia` heredada (69/95). `.cjs` con ruta local: 18, no 21.
 - F1.7 · intento 1 · 06:39 · puerta f1 VERDE. Salida: ✔ copia de seguridad (local.db.antes); ✔ contrato de la app de hoy grabado; ✔ vectores de permisos grabados; ✔ fotos de la app de hoy; ✔ casos de escritura cubren todos los POST; ✔ escrituras de referencia (SQLite); ✔ notas de la noche; ✔ baterías verdes contra la app de hoy; ✔ velocidad de la app de hoy medida; VERDE · puerta f1.
+- F2.1 · intento 1 · 06:42 · 6 apariciones a `tuberia_avisos`, `py_compile` limpio, base temporal sqlite con count 1 y sin tabla `avisos`. Solidez rc=1, 69 de 95, el mismo `KeyError: 'valor'` que F1.6.

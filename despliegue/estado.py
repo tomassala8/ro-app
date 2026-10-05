@@ -5,7 +5,7 @@ Qué guarda (y nada más):
   · ejecuciones   una fila por vuelta (modo, inicio, fin, estado, resumen JSON)
   · pasos         una fila por paso e intento (duración, salida saneada, error)
   · llaves        las llaves que ROTAN (hoy solo ghl_app_refresh_token), con su número de rotaciones
-  · avisos        solo en el servidor sin local.db: misma regla que E0 (≤3 «para avisar» al día, sin repetir)
+  · tuberia_avisos  solo en el servidor sin local.db: misma regla que E0 (≤3 «para avisar» al día, sin repetir). Antes «avisos» (F2.1, 5-oct-2026: chocaba con la «avisos» de la app en Postgres)
   · sellos        «último dato bueno» por paso: cuándo fue bien por última vez y por qué es viejo
 
 Dónde vive:
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS ejecuciones (id {pk}, modo TEXT, quien TEXT, inicio T
 CREATE TABLE IF NOT EXISTS pasos (id {pk}, ejecucion INTEGER, paso TEXT, intento INTEGER, inicio TEXT, segundos REAL,
                                   estado TEXT, salida TEXT, error TEXT);
 CREATE TABLE IF NOT EXISTS llaves (nombre TEXT PRIMARY KEY, valor TEXT, rotada TEXT, rotaciones INTEGER DEFAULT 0, origen TEXT);
-CREATE TABLE IF NOT EXISTS avisos (id {pk}, dia TEXT, tipo TEXT, clave TEXT, texto TEXT, estado TEXT, creado TEXT);
+CREATE TABLE IF NOT EXISTS tuberia_avisos (id {pk}, dia TEXT, tipo TEXT, clave TEXT, texto TEXT, estado TEXT, creado TEXT);
 CREATE TABLE IF NOT EXISTS sellos (paso TEXT PRIMARY KEY, ultimo_bueno TEXT, ultimo_intento TEXT, estado TEXT, motivo TEXT);
 """
 
@@ -122,14 +122,14 @@ class _Base:
             self.ejecutar("INSERT INTO llaves (nombre, valor, rotada, rotaciones, origen) VALUES (?,?,?,?,?)",
                           (nombre, valor, ahora(), 0, origen))
 
-    # ---------------- avisos (servidor sin local.db): misma regla que servir.calcular_avisos()
+    # ---------------- tuberia_avisos (servidor sin local.db): misma regla que servir.calcular_avisos()
     def avisar(self, tipo, clave, texto):
         hoy = datetime.now(ZoneInfo("Europe/Madrid")).date().isoformat()   # día de Madrid, como E0 (R16)
-        if self.ejecutar("SELECT 1 FROM avisos WHERE dia=? AND tipo=? AND clave=?", (hoy, tipo, clave)):
+        if self.ejecutar("SELECT 1 FROM tuberia_avisos WHERE dia=? AND tipo=? AND clave=?", (hoy, tipo, clave)):
             return None
-        n = self.ejecutar("SELECT count(*) FROM avisos WHERE dia=? AND estado='para_avisar'", (hoy,))[0][0]
+        n = self.ejecutar("SELECT count(*) FROM tuberia_avisos WHERE dia=? AND estado='para_avisar'", (hoy,))[0][0]
         estado = "para_avisar" if n < TOPE_AVISOS_DIA else "retenido"
-        self.insertar("INSERT INTO avisos (dia, tipo, clave, texto, estado, creado) VALUES (?,?,?,?,?,?)",
+        self.insertar("INSERT INTO tuberia_avisos (dia, tipo, clave, texto, estado, creado) VALUES (?,?,?,?,?,?)",
                       (hoy, tipo, clave, texto, estado, ahora()))
         return estado
 
