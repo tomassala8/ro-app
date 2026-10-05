@@ -1616,25 +1616,45 @@ export function leerPeriodo(persona) {
 }
 export function guardarPeriodo(persona, v) { try { localStorage.setItem(_clavePeriodo(persona), JSON.stringify({ id: v.id, comparar: v.comparar, desde: v.id === 'medida' ? v.desde : undefined, hasta: v.id === 'medida' ? v.hasta : undefined })); } catch { /* sin almacenamiento */ } }
 
-/** sumarSerie({ 'AAAA-MM-DD': n | [n…] }, p, idx?) → suma del periodo (número o lista); null si no hay datos. */
+/** sumarSerie({ 'AAAA-MM-DD': n | [n…] }, p, idx?) → suma del periodo (número o lista); null si no hay datos.
+ *  N-11: un día sin dato (o un hueco `null` dentro de la lista) se SALTA, no suma 0; un día con 0 sí suma 0.
+ *  Si una columna de la lista no tiene ningún dato en todo el periodo, esa columna sale null (no 0). */
 export function sumarSerie(serie, p, idx = null) {
   if (!serie || !p) return null;
   let tot = null;
   for (const [d, v] of Object.entries(serie)) {
     if (d < p.desde || d > p.hasta) continue;
     const x = idx === null ? v : v?.[idx];
-    if (Array.isArray(x)) tot = tot ? tot.map((t, i) => t + (x[i] || 0)) : x.map(n => n || 0);
+    const suma = (a, b) => (a === null || a === undefined ? (typeof b === 'number' ? b : null) : (typeof b === 'number' ? a + b : a));
+    if (Array.isArray(x)) tot = tot ? tot.map((t, i) => suma(t, x[i])) : x.map(n => (typeof n === 'number' ? n : null));
     else if (typeof x === 'number') tot = (tot || 0) + x;
   }
   return tot;
 }
-/** serieDelPeriodo(serie, p, idx?) → [{ x: 'AAAA-MM-DD', y }] día a día (0 si no hay dato), para grafico(). */
-export function serieDelPeriodo(serie, p, idx = null) {
+/** sumarSerieDetalle(serie, p, idx?) → { total, dias, faltan, completo } (N-11): `total` es el de sumarSerie; `dias` son los del
+ *  periodo; `faltan` los días del periodo sin dato (ni número ni lista); `completo` = faltan === 0. */
+export function sumarSerieDetalle(serie, p, idx = null) {
+  const total = sumarSerie(serie, p, idx);
+  if (!serie || !p) return { total, dias: 0, faltan: 0, completo: true };
+  let dias = 0, faltan = 0;
+  for (let d = p.desde, i = 0; d <= p.hasta && i < 800; d = sumarDias(d, 1), i++) {
+    dias++;
+    const v = serie[d];
+    const x = idx === null ? v : v?.[idx];
+    if (!(typeof x === 'number' || (Array.isArray(x) && x.some(n => typeof n === 'number')))) faltan++;
+  }
+  return { total, dias, faltan, completo: faltan === 0 };
+}
+/** serieDelPeriodo(serie, p, idx?, { huecos }) → [{ x: 'AAAA-MM-DD', y }] día a día, para grafico().
+ *  Sin `huecos` (series de sucesos: un día sin filas es 0 sucesos) un día sin dato vale 0, como siempre.
+ *  Con `huecos: true` (series diarias medidas: Analytics) un día sin dato es null: hueco en el gráfico, no un 0 (N-11). */
+export function serieDelPeriodo(serie, p, idx = null, { huecos = false } = {}) {
   if (!serie || !p) return [];
   const out = [];
   for (let d = p.desde, i = 0; d <= p.hasta && i < 800; d = sumarDias(d, 1), i++) {
     const v = serie[d];
-    out.push({ x: d, y: v === undefined ? 0 : idx === null ? v : v?.[idx] ?? 0 });
+    const y = v === undefined ? (huecos ? null : 0) : idx === null ? v : (v?.[idx] ?? (huecos ? null : 0));
+    out.push({ x: d, y });
   }
   return out;
 }

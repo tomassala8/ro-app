@@ -19,7 +19,7 @@
 // Diseño (N6, auditoría 30): sin hoja propia; solo tokens y componentes comunes; gráficos con grafico().
 import {
   h, fmt, icono, tile, tiles, panel, pestanas, chipsFiltro, selectorCliente, vacio, vacioLinea, frescura, tablaApilable, avisoParcial,
-  chipEstado, variacion, grafico, embudoBarras, colorCifra, sumarSerie, serieDelPeriodo, fechaCorta,
+  chipEstado, variacion, grafico, embudoBarras, colorCifra, sumarSerie, sumarSerieDetalle, serieDelPeriodo, fechaCorta,
   rangoPeriodo, hoyMadrid, periodoCompleto, leerPeriodo, sumarDias, menuMas,
 } from '../componentes.js';
 import { filaMeta216, numeroMeta216, fuenteMeta216, compararMeta216, sumaCampanasMeta216, totalMeta216, razonMeta216, serieMeta216 } from './_meta_mediciones_216.js';
@@ -113,6 +113,12 @@ function celda(a, b, f = n0, mejorSi) {
 }
 
 /** gráfico del periodo (azul) con la comparación (gris discontinuo), con el motor común grafico(). */
+// N-11 · un día sin dato es un hueco, no un 0: si en el periodo faltan días, se dice (debajo del gráfico).
+function avisoHuecosN11(z, serie, P) {
+  const r = sumarSerieDetalle(serie, P);
+  if (r.faltan > 0 && r.faltan < r.dias) z.append(avisoParcial(`Periodo incompleto: ${r.faltan === 1 ? 'falta 1 día' : `faltan ${r.faltan} días`} de datos`, { tipo: 'info' }));
+}
+
 function graficoDoble({ actual, comp, formato = n0, P, titulo }) {
   if (!actual?.length) return vacioLinea('Sin días en este periodo: elige uno más largo.', { icono: 'grafico' });
   if (actual.length === 1) return vacioLinea(`Un solo día: ${formato(actual[0].y)}${comp?.length ? ` · ${ante(P)}: ${formato(comp[0].y)}` : ''}. El gráfico diario sale con 2 días o más.`, { icono: 'grafico' });
@@ -184,7 +190,8 @@ function pintarGA(z, f, P, vista, ctx, estado) {
     z.append(tiles(tl));
     const idx = GA_DIA[sel];
     z.append(panel({ titulo: `${metricas.find(m => m[0] === sel)[1]} por día`, icono: 'grafico', sub: 'Pulsa una tarjeta de arriba para cambiar la línea' },
-      enCuerpo(graficoDoble({ actual: serieDelPeriodo(f.serie, P, idx), comp: P.comp ? serieDelPeriodo(f.serie, P.comp, idx) : null, P }))));
+      enCuerpo(graficoDoble({ actual: serieDelPeriodo(f.serie, P, idx, { huecos: true }), comp: P.comp ? serieDelPeriodo(f.serie, P.comp, idx, { huecos: true }) : null, P }))));
+    avisoHuecosN11(z, f.serie, P);
     // canales por día del periodo (sesiones): tabla resumen a partir de la serie por canal (sirve también con «A medida»)
     const filas = Object.entries(f.serie_canal || {}).map(([canal, s]) => ({ nombre: canal, a: sumarSerie(s, P), c: P.comp ? sumarSerie(s, P.comp) || [0, 0, 0, 0] : undefined }))
       .filter(r => r.a && r.a[0]).sort((x, y) => y.a[0] - x.a[0]);
@@ -257,7 +264,8 @@ function pintarGSC(z, f, P, vista, ctx, estado) {
   if (P.hasta > hasta || P.id === 'hoy' || P.id === 'ayer') z.append(vacioLinea(`Search Console va 2-3 días por detrás: hay datos hasta el ${fechaCorta(hasta, true)} (datos definitivos, como en Looker y el Informe del cliente).`, { icono: 'clock' }));
   const idx = sel === 'impresiones' ? 1 : 0;
   z.append(panel({ titulo: `${sel === 'impresiones' ? 'Impresiones' : 'Clics'} por día`, icono: 'grafico', sub: 'Pulsa «Clics» o «Impresiones» para cambiar la línea' },
-    enCuerpo(graficoDoble({ actual: serieDelPeriodo(f.serie, Pc, idx), comp: P.comp ? serieDelPeriodo(f.serie, P.comp, idx).slice(0, serieDelPeriodo(f.serie, Pc, idx).length) : null, P }))));
+    enCuerpo(graficoDoble({ actual: serieDelPeriodo(f.serie, Pc, idx, { huecos: true }), comp: P.comp ? serieDelPeriodo(f.serie, P.comp, idx, { huecos: true }).slice(0, serieDelPeriodo(f.serie, Pc, idx, { huecos: true }).length) : null, P }))));
+  avisoHuecosN11(z, f.serie, Pc);
   const per = PRESET.has(P.id) ? f.periodos?.[P.id] : null;
   if (!per) { z.append(PRESET.has(P.id) ? vacioLinea('Hoy y ayer todavía no tienen datos en Search Console: elige 7 días o más.', { icono: 'clock' }) : avisoPeriodoTablas(P)); return; }
   const k = claveComp(P);
