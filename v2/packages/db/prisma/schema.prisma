@@ -798,6 +798,16 @@ model tareas_vistas_privadas {
   @@id([propietario, id])
 }
 
+model tuberia_avisos {
+  id     BigInt  @id @default(autoincrement())
+  dia    String?
+  tipo   String?
+  clave  String?
+  texto  String?
+  estado String?
+  creado String?
+}
+
 model uso_eventos {
   id        Int    @id
   instante  Float  @db.Real

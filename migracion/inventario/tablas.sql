@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS pasos (id {pk}, ejecucion INTEGER, paso TEXT, intento
 CREATE TABLE IF NOT EXISTS llaves (nombre TEXT PRIMARY KEY, valor TEXT, rotada TEXT, rotaciones INTEGER DEFAULT 0, origen TEXT);
 
 -- despliegue/estado.py
-CREATE TABLE IF NOT EXISTS avisos (id {pk}, dia TEXT, tipo TEXT, clave TEXT, texto TEXT, estado TEXT, creado TEXT);
+CREATE TABLE IF NOT EXISTS tuberia_avisos (id {pk}, dia TEXT, tipo TEXT, clave TEXT, texto TEXT, estado TEXT, creado TEXT);
 
 -- despliegue/estado.py
 CREATE TABLE IF NOT EXISTS sellos (paso TEXT PRIMARY KEY, ultimo_bueno TEXT, ultimo_intento TEXT, estado TEXT, motivo TEXT);

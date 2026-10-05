@@ -59,7 +59,7 @@
   "despliegue/emergencia.py": "b7e59645def24aa6",
   "despliegue/empaquetado.py": "ab707a374e583bca",
   "despliegue/entrada.sh": "d7ddd51042ca18e8",
-  "despliegue/estado.py": "1cfab2db837888ea",
+  "despliegue/estado.py": "62e15d0cbc370b2a",
   "despliegue/hidratar_privado.py": "802a642e4601d7a6",
   "despliegue/llave_ghl.py": "f64bf3910724c9fd",
   "despliegue/pasos.json": "adb2bfba9d6795aa",

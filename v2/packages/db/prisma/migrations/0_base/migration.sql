@@ -1030,6 +1030,25 @@ CREATE TABLE public.tareas_vistas_privadas (
     revision integer NOT NULL
 );
 
+CREATE TABLE public.tuberia_avisos (
+    id bigint NOT NULL,
+    dia text,
+    tipo text,
+    clave text,
+    texto text,
+    estado text,
+    creado text
+);
+
+CREATE SEQUENCE public.tuberia_avisos_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.tuberia_avisos_id_seq OWNED BY public.tuberia_avisos.id;
+
 CREATE TABLE public.uso_eventos (
     id integer NOT NULL,
     instante real NOT NULL,
@@ -1125,6 +1144,8 @@ ALTER TABLE ONLY public.registro ALTER COLUMN id SET DEFAULT nextval('public.reg
 ALTER TABLE ONLY public.sinc_cambios ALTER COLUMN id SET DEFAULT nextval('public.sinc_cambios_id_seq'::regclass);
 
 ALTER TABLE ONLY public.sinc_pasos ALTER COLUMN id SET DEFAULT nextval('public.sinc_pasos_id_seq'::regclass);
+
+ALTER TABLE ONLY public.tuberia_avisos ALTER COLUMN id SET DEFAULT nextval('public.tuberia_avisos_id_seq'::regclass);
 
 ALTER TABLE ONLY public.acciones
     ADD CONSTRAINT acciones_pkey PRIMARY KEY (id);
@@ -1374,6 +1395,9 @@ ALTER TABLE ONLY public.sinc_pasos
 
 ALTER TABLE ONLY public.tareas_vistas_privadas
     ADD CONSTRAINT tareas_vistas_privadas_pkey PRIMARY KEY (propietario, id);
+
+ALTER TABLE ONLY public.tuberia_avisos
+    ADD CONSTRAINT tuberia_avisos_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY public.uso_eventos
     ADD CONSTRAINT uso_eventos_pkey PRIMARY KEY (id);

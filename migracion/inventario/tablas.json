@@ -555,7 +555,7 @@
       ]
     }
   ],
-  "avisos": [
+  "tuberia_avisos": [
     {
       "fichero": "despliegue/estado.py",
       "linea": "creado TEXT",
@@ -582,48 +582,6 @@
         },
         {
           "columna": "creado",
-          "tipo": "TEXT"
-        }
-      ]
-    },
-    {
-      "fichero": "schema_v2.sql",
-      "linea": "UNIQUE (dia, tipo, clave)",
-      "columnas": [
-        {
-          "columna": "id",
-          "tipo": "INTEGER"
-        },
-        {
-          "columna": "creado",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "dia",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "tipo",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "clave",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "texto",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "estado",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "visto",
-          "tipo": "TEXT"
-        },
-        {
-          "columna": "visto_por",
           "tipo": "TEXT"
         }
       ]
@@ -2142,6 +2100,50 @@
         },
         {
           "columna": "pasos",
+          "tipo": "TEXT"
+        }
+      ]
+    }
+  ],
+  "avisos": [
+    {
+      "fichero": "schema_v2.sql",
+      "linea": "UNIQUE (dia, tipo, clave)",
+      "columnas": [
+        {
+          "columna": "id",
+          "tipo": "INTEGER"
+        },
+        {
+          "columna": "creado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "dia",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "tipo",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "clave",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "texto",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "estado",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "visto",
+          "tipo": "TEXT"
+        },
+        {
+          "columna": "visto_por",
           "tipo": "TEXT"
         }
       ]

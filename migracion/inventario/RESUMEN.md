@@ -10,7 +10,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 | Rutas de API en `servir.py` | 37 (22 GET, 15 POST) |
 | Ficheros que enchufan rutas a servir.py | 49 (125 rutas más; 5 con bucle propio) |
 | Rutas distintas que llama el front (`ctx.api`) | 86 |
-| Tablas | 66 |
+| Tablas | 67 |
 | Puestos | 21 |
 | Tipos de dato con regla | 41 |
 | Ficheros de datos con permiso (`datos_de_modulo`) | 100 |
@@ -177,7 +177,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 - `altas_recibos` (altas_personas.py)
 - `altas_tareas` (altas_personas.py)
 - `asignaciones` (schema_v2.sql)
-- `avisos` (despliegue/estado.py, schema_v2.sql)
+- `avisos` (schema_v2.sql)
 - `avisos_prog_cambios` (avisos_programados.py)
 - `avisos_prog_hechos` (avisos_programados.py)
 - `canal_campana` (avisos.py)
@@ -234,6 +234,7 @@ Lo genera `python3 migracion/inventario.py`. No edites a mano: vuelve a generarl
 - `sinc_cambios` (sincronia.py)
 - `sinc_pasos` (sincronia.py)
 - `tareas_vistas_privadas` (vistas_tareas.py)
+- `tuberia_avisos` (despliegue/estado.py)
 - `uso_eventos` (uso_local.py)
 - `uso_sesiones` (uso_local.py)
 - `uso_ventanas` (uso_local.py)
