@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F2.1 (reabierto a las 06:47 por el mismo error). F1.7 cerrado otra vez a las 08:21.
+Siguiente: F2.2. F2.1 cerrado otra vez a las 08:21.
 
 Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
 - candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
@@ -43,7 +43,7 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
-- 🔄 F2.1 · 06:42 · intento 1 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6. Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo. · 06:47 · intento 2/3 · revisión: rehacer con migracion/PLAN_VUELTA.md
+- ✅ F2.1 · 06:42 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6 · comprobado otra vez 08:21 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; commit a74fd94; grep residual de avisos 0; py_compile limpio). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
 - ⬜ F2.2 Si el inventario trae tablas o columnas nuevas: `rehacer_base.sh` y revisar el diff de `schema.prisma`. Plan B: ninguno; sin esto se pierden columnas.
 - ⬜ F2.3 Postgres arriba, `pnpm db:deploy`, copia «cuadrada» de `local.db.antes` (y `tuberia.db.antes`), `publicacion.py publicar data`.
 - ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
@@ -106,3 +106,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.5 · intento 2 · 08:19 · reabierto a las 06:47 por la nota genérica de Claude (notas_revisor/F1.5.md, solo habla de setsid); su nota para F2.2 dice que fue un error de la maquinaria y que no se rehaga. Comprobado: 45 casos, 14 rutas, «sin caso: ninguno»; la puerta f1 de 08:05 ejecutó los 45 casos (✔) y salió VERDE 9/9. Nada regrabado.
 - F1.6 · intento 2 · 08:20 · reabierto a las 06:47 por el mismo error. Comprobado: el log de la puerta f1 (08:05, acabado 08:10) termina en «Verdes: 169 · heredadas en rojo: 38 · ROJAS: 0». Nada rehecho.
 - F1.7 · intento 2 · 08:21 · reabierto a las 06:47 por el mismo error. Comprobado: ~/RO_MIGRACION/puertas/f1.md (cabecera 05-10-2026 08:05, fichero 08:11) dice VERDE, 9 de 9 con ✔. El push anterior (bf6c714) ya estaba en origin; este cierre sube otra vez la rama. Nada regrabado; huellas_referencia.txt la rehace noche.sh.
+- F2.1 · intento 2 · 08:21 · reabierto a las 06:47 por el mismo error. Comprobado: `a74fd94` toca `despliegue/estado.py` (avisos → tuberia_avisos); `grep -w avisos` residual 0; `py_compile` limpio. La nota del intento 1 (06:42) sigue en este cuaderno. Nada rehecho.
