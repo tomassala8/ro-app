@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-✅ F1.6 · 06:31 · intento 1 · 169 verdes, 38 heredadas, pasada 2 rc=0
+✅ F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md
 
 ## Fase 1 · Referencia
 
@@ -30,7 +30,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 - ✅ F1.4 · 06:10 · intento 3 · plan B · fotos en carga: ver NOTAS_NOCHE · referencia 2688 png, 7 < 15 KB fuera de la comparación de fotos. Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
 - ✅ F1.5 · 06:18 · intento 1 · 45 casos, 14 rutas, ensayo rc=0 contra la copia en 8780. Plan B: ninguno; es imprescindible.
 - ✅ F1.6 · 06:31 · intento 1 · 169 verdes, 38 heredadas, pasada 2 rc=0. `migracion/baterias.sh` con todas las baterías que admiten puerto, más `despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos` (último dato bueno de las fuentes), más el carril de seguridad aislado de la entrega (`python3 pruebas_seguridad.py --aisladas`, 29 suites) y las pruebas DOM portables (`node pruebas_*.cjs`), verde contra la app de hoy (8770) y el checkout. La entrega no certifica verdes las baterías globales. Plan B: las que fallan ya contra la app de hoy se apuntan y se quedan fuera (no se arreglan esta noche).
-- ⬜ F1.7 `bash migracion/puerta.sh f1` en VERDE. Push de la rama. Plan B: ninguno; repetir lo que falte.
+- ✅ F1.7 · 06:39 · puerta f1 VERDE (9/9) · puerta: ~/RO_MIGRACION/puertas/f1.md. Push de la rama. Plan B: ninguno; repetir lo que falte.
 
 ## Fase 2 · Base Postgres y la app de hoy sobre ella
 
@@ -91,3 +91,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.4 · intento 3 · 06:09 · la condición de presencia tampoco retiene: móvil mi-trabajo 121751 B / 1953 ms (pintada), produccion 139766 B / 2212 ms (pintada), operaciones 13954 B / 204 ms (sigue «Leyendo las fuentes autorizadas…»). Escritorio operaciones 72458 B / 130 ms, el mismo texto: `#main` ya tiene «Cambiar apartado» y la espera da por pintada la pantalla. No se regrabó `capturas/viejo` (2688 png, 7 < 15 KB). Plan B.
 - F1.5 · intento 1 · 06:18 · 45 casos, 14 rutas, «sin caso: ninguno», ensayo rc=0. El primer id de account coincide con dirección: los casos «ver como» usan el primer account que no es dirección (si no, `/api/recarga` con cuerpo vacío se ejecutaría). El 200 de `/api/acciones` lleva módulo `agenda` (`app` no es un módulo; `mi-trabajo` rechaza el tipo `nota`). El caso sin `objeto` sale 403 (la referencia se mira antes), y la ruta igual tiene 4xx. 8780 parado; 8770 vivo.
 - F1.6 · intento 1 · 06:31 · pasada 1: 169 verdes, 38 rojas, 5 min 9 s. Ninguna es de entorno. Pasada 2 con `baterias_heredadas.txt`: rc=0, ROJAS 0, 38 heredadas. `seguridad_aisladas` ✔. `solidez_tuberia` heredada (69/95). `.cjs` con ruta local: 18, no 21.
+- F1.7 · intento 1 · 06:39 · puerta f1 VERDE. Salida: ✔ copia de seguridad (local.db.antes); ✔ contrato de la app de hoy grabado; ✔ vectores de permisos grabados; ✔ fotos de la app de hoy; ✔ casos de escritura cubren todos los POST; ✔ escrituras de referencia (SQLite); ✔ notas de la noche; ✔ baterías verdes contra la app de hoy; ✔ velocidad de la app de hoy medida; VERDE · puerta f1.
