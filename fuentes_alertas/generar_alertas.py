@@ -34,6 +34,7 @@ from zoneinfo import ZoneInfo
 AQUI = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(AQUI))
 import permisos as P  # noqa: E402
+import escalado as ESC  # noqa: E402  (3-oct: orden de escalado oficial, data/escalado.json)
 
 DATA = AQUI / "data"
 # Pruebas (fuentes_alertas/probar_alertas.py): RO_DB = copia de la base, RO_ALERTAS_SALIDA/_ESTADO = carpeta temporal,
@@ -246,6 +247,7 @@ NO_MEDIBLE = [
 # =================================================================== datos base
 PERSONAS = leer("personas") or []
 ASIG = leer("asignaciones") or []
+CLIENTES_CONTRATO = leer("clientes") or []
 PER = {p["id"]: p for p in PERSONAS}
 VERDAD = leer("verdad/clientes") or {"clientes": [], "comun": [], "resumen": {}}
 VC = {c["cliente_id"]: c for c in VERDAD.get("clientes", [])}
@@ -288,16 +290,15 @@ def puede_abrir(pid, cid):
     if not p:
         return False
     if pid not in _CTX:
-        _CTX[pid] = P.contexto(p, {"asignaciones": ASIG, "personas": PERSONAS})
+        _CTX[pid] = P.contexto(p, {"asignaciones": ASIG, "personas": PERSONAS, "clientes": CLIENTES_CONTRATO})
     return P.ver(p, {"tipo": "cliente_detalle", "cliente_id": cid}, _CTX[pid])["ok"]
 
 
 def cadena_escalado(dep, dueno):
-    c = [dueno]
-    for x in (DEPTOS[dep]["jefe"], "mili", "tomas"):
-        if x not in c:
-            c.append(x)
-    return c[:3]
+    """3-oct · orden de escalado oficial (data/escalado.json → escalado.py): dueño → responsable del área → Mili → Tomás.
+    Dinero y RRHH (su responsable ya es Tomás) quedan dueño → Tomás. Antes se cortaba en 3 y Tomás no llegaba nunca
+    cuando el jefe no era Mili (CRM, publicidad, SEO, web, redes)."""
+    return [x for x in ESC.cadena_alertas(dep, dueno, DEPTOS[dep]["jefe"]) if x][:4]
 
 
 def abrir(cid, k, url=None, texto=None):
@@ -1086,16 +1087,20 @@ def aplicar_estados(memoria, estados):
         a["estado"] = estado
         if ult:
             a["estado_por"] = {"quien": ult["quien"], "hora": ult["hora"], "texto": ult.get("texto")}
-        # Escalado (la misma regla que la pantalla): pasado el plazo sin «Lo tengo» → jefe; pasado otro plazo igual →
-        # Mili (o Tomás si Mili ya estaba). Ni las cerradas ni las pospuestas escalan.
+        # Escalado (la misma regla que la pantalla): pasado el plazo sin «Lo tengo» → responsable del área; cada plazo
+        # igual que pasa, un escalón más de la cadena (… → Mili → Tomás). Ni las cerradas ni las pospuestas escalan.
         v = fecha(a.get("vence"))
         nivel = 0
         if v and estado in ("nueva", "vista", "reabierta"):
             plazo = timedelta(hours=a.get("plazo_h") or 24)
             if AHORA >= v:
-                nivel = 1
-            if AHORA >= v + plazo:
-                nivel = 2
+                nivel = 1 + int((AHORA - v) / plazo)
+        if not a.get("escalado_cadena"):
+            a["escalado"] = {"nivel": 0, "a_id": None, "texto": "Responsable actual por confirmar."}
+            a["responsable_ahora"] = None
+            a["escalado_bloqueado"] = True
+            continue
+        a.pop("escalado_bloqueado", None)
         nivel = min(nivel, len(a["escalado_cadena"]) - 1)
         a["escalado"] = {"nivel": nivel, "a_id": a["escalado_cadena"][nivel], "texto": None if not nivel else
                          f"Pasó el plazo sin «Lo tengo»: sube a {corto(a['escalado_cadena'][nivel])}"}
@@ -1117,7 +1122,7 @@ DEFINICIONES = {
     "urgente": {"texto": "Urgente: gravedad alta.", "si": [["gravedad", "=", "alta"]]},
     "plazo_pasado": {"texto": "Plazo pasado: abierta, sin «Lo tengo» y con el vencimiento ya pasado.",
                      "si": [["abierta"], ["estado", "!=", "lo_tengo"], ["vencida", "=", True]]},
-    "escalada": {"texto": "Escalada: abierta y ha subido al jefe (o a Mili) porque pasó el plazo sin «Lo tengo».",
+    "escalada": {"texto": "Escalada: abierta y ha subido al responsable del área, a Mili o a Tomás porque pasó el plazo sin «Lo tengo».",
                  "si": [["abierta"], ["nivel", ">", 0]]},
     "escalada_a_mi": {"texto": "Escalada a ti: te ha llegado a ti y no eres su dueño.",
                       "si": [["escalada"], ["responsable", "=", "yo"], ["dueno", "!=", "yo"]]},
@@ -1135,7 +1140,7 @@ CONTADORES = {
 def hechos(a):
     v = fecha(a.get("vence"))
     return {"estado": a.get("estado") or "nueva", "gravedad": a.get("gravedad"), "dueno": a.get("dueno_id"),
-            "responsable": a.get("responsable_ahora") or a.get("dueno_id"), "nivel": (a.get("escalado") or {}).get("nivel") or 0,
+            "responsable": None if a.get("escalado_bloqueado") else a.get("responsable_ahora") or a.get("dueno_id"), "nivel": (a.get("escalado") or {}).get("nivel") or 0,
             "vencida": bool(v and v <= AHORA)}
 
 
@@ -1163,7 +1168,7 @@ def contadores(lista, yo):
 
 
 # =================================================================== visibilidad por persona
-CRUDO = {"asignaciones": ASIG, "personas": PERSONAS}
+CRUDO = {"asignaciones": ASIG, "personas": PERSONAS, "clientes": CLIENTES_CONTRATO}
 
 
 def es_todo(p):
@@ -1297,7 +1302,7 @@ def main():
         "formato": 1, "modulo": "alertas", "generado": f2s(AHORA), "hoy": HOY.isoformat(),
         "reglas": [{**{k: v for k, v in r.items()}, "departamento": DEPTOS[r["dep"]]["nombre"]} for r in REGLAS],
         "departamentos": por_dep, "no_medible": NO_MEDIBLE, "fuentes": FUENTES,
-        "escalado": "Si pasa el plazo sin «Lo tengo», sube al jefe del departamento; si pasa otro plazo igual, a Mili (y de Mili a Tomás).",
+        "escalado": ESC.config().get("cadena_alertas_texto") or "Si pasa el plazo sin «Lo tengo», sube al responsable del área; si pasa otro plazo igual, a Mili; y si pasa otro más, a Tomás.",
         "estados": {"nueva": "Nadie la ha mirado", "vista": "Alguien la ha visto", "lo_tengo": "Su dueño se encarga (para el escalado)",
                     "resuelta": "Marcada resuelta: se comprueba con el dato siguiente", "reabierta": "Se marcó resuelta y el dato nuevo dice que sigue",
                     "no_aplica": "No aplica, con motivo", "pospuesta": "Pospuesta hasta una fecha: no cuenta ni escala; vuelve sola con el plazo de nuevo"},

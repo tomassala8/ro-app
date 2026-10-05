@@ -1,0 +1,86 @@
+{
+  "proyectos": [
+    {
+      "cliente_id": "clientFixture",
+      "no_planificadas": 99,
+      "_planning_transiciones_681": {
+        "version": "681.1",
+        "fuente": "eventos_clickup_observados",
+        "desde": "2026-09-27T22:00:00Z",
+        "hasta": "2026-10-03T12:00:00Z",
+        "corte": "2026-10-03T12:00:00Z",
+        "cobertura": "parcial",
+        "inventario_completo": false,
+        "cumplimiento": null,
+        "atribucion": "creador_explicito_no_asignado_actual",
+        "cliente_id": "clientFixture",
+        "metricas": {
+          "al_planning": 1,
+          "fuegos_directos": null,
+          "rompen_semanal": null
+        },
+        "tareas_observadas": 1,
+        "creadas_observadas": 1
+      }
+    }
+  ],
+  "personas": [
+    {
+      "persona_id": "creatorFixture",
+      "creadas": 7,
+      "_planning_transiciones_681": {
+        "version": "681.1",
+        "fuente": "eventos_clickup_observados",
+        "desde": "2026-09-27T22:00:00Z",
+        "hasta": "2026-10-03T12:00:00Z",
+        "corte": "2026-10-03T12:00:00Z",
+        "cobertura": "parcial",
+        "inventario_completo": false,
+        "cumplimiento": null,
+        "atribucion": "creador_explicito_no_asignado_actual",
+        "persona_id": "creatorFixture",
+        "cliente_ids_scope": [
+          "clientFixture"
+        ],
+        "metricas": {
+          "al_planning": 1,
+          "fuegos_directos": null,
+          "rompen_semanal": null
+        },
+        "tareas_observadas": 1,
+        "creadas_observadas": 1
+      }
+    },
+    {
+      "persona_id": "actorFixture",
+      "creadas": 4,
+      "_planning_transiciones_681": {
+        "version": "681.1",
+        "fuente": "eventos_clickup_observados",
+        "desde": "2026-09-27T22:00:00Z",
+        "hasta": "2026-10-03T12:00:00Z",
+        "corte": "2026-10-03T12:00:00Z",
+        "cobertura": "parcial",
+        "inventario_completo": false,
+        "cumplimiento": null,
+        "atribucion": "creador_explicito_no_asignado_actual",
+        "persona_id": "actorFixture",
+        "cliente_ids_scope": [
+          "clientFixture"
+        ],
+        "metricas": {
+          "al_planning": null,
+          "fuegos_directos": null,
+          "rompen_semanal": null
+        },
+        "tareas_observadas": 0,
+        "creadas_observadas": null
+      }
+    }
+  ],
+  "fuentes": {
+    "flujo": {
+      "hora": "2026-10-02 10:00"
+    }
+  }
+}

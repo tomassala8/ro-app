@@ -327,7 +327,12 @@
       ],
       "vacio_para_puestos": {
         "puestos": [
-          "setters"
+          "setters",
+          "web",
+          "redes",
+          "produccion",
+          "administracion",
+          "outreach"
         ],
         "deja": [
           "generado",
@@ -570,6 +575,7 @@
       "ficha"
     ],
     "ficha/correos": {
+      "textos_del_cliente": true,
       "modulos": [
         "ficha"
       ],
@@ -584,6 +590,26 @@
       "modulos": [
         "ficha",
         "clientes-nuevos"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "contexto/contexto_clientes": {
+      "_4oct": "Contexto del cliente para la Ficha (fuentes_contexto/generar_contexto.py): quién es, qué quiere y cómo trabajar con él. Sin personas ni datos de contacto. Filas con cliente_id: cada uno ve solo sus clientes. Administración no, como el riesgo de baja.",
+      "modulos": [
+        "ficha"
+      ],
+      "excluir_puestos": [
+        "administracion"
+      ]
+    },
+    "riesgo/riesgo_baja": {
+      "_4oct": "Semáforo del cliente en tres ejes (resultados, silencio, quejas) y riesgo de baja (fuentes_riesgo/riesgo_baja.py). Filas con cliente_id: cada uno ve solo sus clientes. Administración no, como los correos (I-02).",
+      "modulos": [
+        "ficha",
+        "mi-dia",
+        "en-rojo"
       ],
       "excluir_puestos": [
         "administracion"
@@ -634,6 +660,7 @@
       ]
     },
     "bandeja/bandeja": {
+      "textos_del_cliente": true,
       "modulos": [
         "bandeja"
       ],
@@ -644,6 +671,7 @@
       ]
     },
     "bandeja/hilos": {
+      "textos_del_cliente": true,
       "modulos": [
         "bandeja"
       ],
@@ -652,6 +680,7 @@
       ]
     },
     "bandeja/por_cliente": {
+      "textos_del_cliente": true,
       "modulos": [
         "bandeja",
         "ficha",
@@ -904,6 +933,12 @@
     "produccion/produccion": [
       "produccion"
     ],
+    "mi_trabajo/mi_trabajo": {
+      "modulos": [
+        "mi-trabajo"
+      ],
+      "_que_es": "Mi trabajo (3-oct): tareas, horas por día, jornada y horas raras de cada persona. Filas con persona_id → la persona, su jefe, operaciones, RRHH y dirección (horas_persona). raras_cliente lleva cliente_id: solo quien ve ese cliente."
+    },
     "produccion/marca": [
       "produccion"
     ],
@@ -1080,6 +1115,37 @@
     "ajustes/conexiones": [
       "ajustes"
     ],
+    "verdad/estado_clientes": {
+      "_clientes_activos": "Tomás 3-oct: la lista única de clientes activos, bajas y dudosos (fuentes_verdad/clientes_activos.py). Solo operaciones (Agus y Mili) y dirección.",
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "tecnico_altas"
+      ]
+    },
+    "verdad/bajas_tareas": {
+      "_clientes_activos": "Tomás 3-oct: «Tareas de clientes de baja por cerrar» (ClickUp), subcuentas de GoHighLevel y correos de Desk de clientes que ya no lo son. Solo para limpiarlas: operaciones (Agus y Mili) y dirección; nunca en Mi día ni en Mi trabajo.",
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "tecnico_altas"
+      ]
+    },
+    "agus/agus": {
+      "_agus": "Tomás 3-oct: panel de sistemas, procesos e IA de Agus (horas por tipo de tarea y área, licencias sin coste, conexiones, avance de todos los clientes). Para Agus, operaciones y dirección. Sin sueldos ni datos de rendimiento de personas.",
+      "puestos": [
+        "direccion",
+        "operaciones",
+        "tecnico_altas"
+      ]
+    },
+    "agus/licencias_coste": {
+      "_decision_tomas": "PENDIENTE DE TOMÁS: ¿Agus (y Mili) pueden ver el coste mensual de las herramientas (gasto de empresa)? Mientras no lo diga, solo dirección.",
+      "puestos": [
+        "direccion"
+      ],
+      "solo_real": true
+    },
     "conexiones/salud": {
       "puestos": [
         "direccion",
@@ -1180,12 +1246,55 @@
         "ficha",
         "finanzas"
       ]
+    },
+    "verdad/objetivos_clientes": {
+      "_p1": "Objetivo de cada cliente y semáforo estratégico (3-oct, fuentes_verdad/generar_objetivos_clientes.py). Lo leen Dirección de producto, la ficha, Mi día e informes: basta con ver «En rojo» (todos menos setters). Cada fila con cliente_id solo llega a quien ve ese cliente. Sin importes.",
+      "modulos": [
+        "en-rojo",
+        "producto"
+      ],
+      "vacio_para_puestos": {
+        "puestos": [
+          "setters"
+        ],
+        "deja": [
+          "generado",
+          "definiciones"
+        ]
+      }
     }
   },
   "_modulos_sin_puesto": "R16c (3-oct): puestos que NO ven un módulo aunque el índice diga «*» (o el fichero del módulo diga otra cosa). Lo aplican permisos.py (cargar_modulos, y con él el menú que manda servir.py) y permisos.js (nivelModulo).",
+  "_modulos_sin_puesto_3oct": "Auditoría del menú (Tomás 3-oct, 58_FEEDBACK_TOMAS_03OCT.md): cada puesto solo ve las pantallas que usa en su día a día. «En rojo» (salud de clientes para empujar) fuera para web, redes, producción, administración y outreach: no llevan la relación con el cliente; web tiene su tablero en SEO › Webs (RRHH lo conserva: Personas cruza la carga de cada persona con las carteras de la verdad única). «Reuniones» (Zoom con clientes y horas de reunión) fuera para web, redes, producción y setters: no se reúnen con clientes. El servidor sigue la misma tabla (cargar_modulos) y la verdad única les llega vacía, como a la setter.",
   "modulos_sin_puesto": {
     "en-rojo": [
+      "setters",
+      "web",
+      "redes",
+      "produccion",
+      "administracion",
+      "outreach"
+    ],
+    "reuniones": [
+      "web",
+      "redes",
+      "produccion",
       "setters"
+    ]
+  },
+  "_sillas_de_equipo": "Feedback de Tomás 3-oct: los equipos transversales (web, redes) llevan TODOS los proyectos de su servicio, no un trozo de cartera. Para quien tiene una de estas sillas por su puesto, «mis clientes» de esa silla = todos los clientes con esa silla asignada a alguien (el servicio activo), no solo las filas a su nombre. Así «Solo mis clientes» deja de partir el trabajo del equipo en dos. Producción no tiene silla: sus clientes salen de sus tareas.",
+  "sillas_de_equipo": [
+    "web",
+    "redes"
+  ],
+  "_solo_su_cartera": "Feedback de Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT.md): cada account ve SOLO sus clientes en todas partes (En rojo, informes, paneles, alertas, Mi día, buscador, webs…). Quien tenga uno de estos puestos y ningún ámbito mayor («todos» o «disciplina») no recibe del servidor ni un cliente fuera de su cartera: ni la lista común de clientes, ni alarmas, ni filas por nombre o por clave de otro cliente. Jefaturas, operaciones y dirección siguen viendo todo.",
+  "solo_su_cartera": {
+    "puestos": [
+      "account"
+    ],
+    "salvo_ambitos": [
+      "todos",
+      "disciplina"
     ]
   },
   "_almacenes_privados": "Datos completos de leads (carpetas _privado/). Solo con /api/ver_dato y rastro. tipo = regla de «tipos» que decide; modulos = hay que ver alguno; dueno_setter = un fichero setter_<x> solo lo abre esa setter (o dirección y ventas de RO).",
@@ -1287,7 +1396,11 @@
             "rrhh"
           ],
           "desenmascarable": true,
-          "motivo": "Sueldos: solo dirección y RRHH; abrirlos queda en el rastro."
+          "motivo": "Sueldos: sólo Tomás y Cecilia con su puesto autorizado; abrirlos queda en el rastro.",
+          "identidades": [
+            "tomas",
+            "cecilia"
+          ]
         }
       ],
       "no": "Los sueldos solo los ven dirección (Tomás) y RRHH (Cecilia).",
@@ -1301,7 +1414,11 @@
             "rrhh"
           ],
           "desenmascarable": true,
-          "motivo": "Sueldos: solo dirección y RRHH; abrirlos queda en el rastro."
+          "motivo": "Sueldos: sólo Tomás y Cecilia con su puesto autorizado; abrirlos queda en el rastro.",
+          "identidades": [
+            "tomas",
+            "cecilia"
+          ]
         }
       ],
       "no": "Los sueldos solo los ven dirección (Tomás) y RRHH (Cecilia).",
@@ -1315,7 +1432,7 @@
       "si": [
         {}
       ],
-      "origen": "D-90: todos ven la lista en rojo con motivo y responsable, sin dinero ni datos de leads"
+      "origen": "D-90: todos ven la lista en rojo con motivo y responsable, sin dinero ni datos de leads · Tomás 3-oct: salvo los puestos de «solo_su_cartera» (accounts), que solo reciben sus clientes en todas partes"
     },
     "cliente_detalle": {
       "si": [
@@ -1362,16 +1479,31 @@
             "operaciones",
             "administracion"
           ]
+        }
+      ],
+      "no": "La cuota solo la ven dirección, operaciones y administración. Los accounts no ven dinero (Tomás, 3-oct): ven las horas pactadas frente a las imputadas.",
+      "origen": "00 §3 · D-80 · D-87 (la jefa de SEO no ve euros) · feedback de Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT): los accounts no ven cuota, facturado ni importes"
+    },
+    "horas_pautadas": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion",
+            "operaciones",
+            "administracion"
+          ]
         },
         {
           "puestos": [
             "account"
           ],
-          "cartera": "account"
+          "cartera": "account",
+          "motivo": "Eres su account: ves las horas pactadas frente a las imputadas, sin euros."
         }
       ],
-      "no": "La cuota solo la ven dirección, operaciones, administración y el account del cliente.",
-      "origen": "00 §3 · D-80 · D-87 (la jefa de SEO no ve euros)"
+      "no": "Las horas pactadas de un cliente las ven su account, operaciones, administración y dirección (sin euros).",
+      "origen": "Feedback de Tomás 3-oct: los accounts no ven dinero, pero SÍ las horas pactadas frente a las imputadas de sus clientes (excepción a la ronda 5 I-01 solo para el account del cliente)."
     },
     "inversion": {
       "si": [
@@ -1385,19 +1517,13 @@
         },
         {
           "puestos": [
-            "account"
-          ],
-          "cartera": "account"
-        },
-        {
-          "puestos": [
             "trafficker"
           ],
           "cartera": "trafficker"
         }
       ],
-      "no": "La inversión publicitaria solo la ven publicidad, operaciones y quien lleva el cliente.",
-      "origen": "00 §3 · D-81 · D-87"
+      "no": "La inversión publicitaria solo la ven publicidad (su trafficker y la jefa), operaciones y dirección. Los accounts no ven dinero (Tomás, 3-oct).",
+      "origen": "00 §3 · D-81 · D-87 · feedback de Tomás 3-oct: los accounts no ven importes de sus clientes (ni gasto ni coste por lead)"
     },
     "rentabilidad_cliente": {
       "si": [
@@ -1933,6 +2059,19 @@
       "no": "Proponen y guardan la respuesta a una reseña de Google la persona de SEO/ficha de Google del cliente, su account, el jefe de SEO, operaciones y dirección.",
       "origen": "Encargo de Tomás 3-oct: «Google Business Profile sería bestial». Lo da el servidor (fuentes_gbp/servidor_gbp.py), con rastro; responder va en simulación."
     },
+    "coste_herramientas": {
+      "si": [
+        {
+          "puestos": [
+            "direccion",
+            "finanzas_direccion"
+          ]
+        }
+      ],
+      "no": "El coste de las herramientas es gasto de la empresa: de momento solo dirección (decisión pendiente de Tomás para Agus y Mili).",
+      "origen": "Tomás 3-oct · panel de Agus · decisión pendiente",
+      "_decision_tomas": "¿Agus puede ver el coste mensual de cada herramienta? Si dice sí, añadir operaciones y tecnico_altas aquí y en datos_de_modulo «agus/licencias_coste»."
+    },
     "probar_conexiones": {
       "si": [
         {
@@ -1962,6 +2101,17 @@
   "_almacenes_cliente": "Ronda 6 (C4): «cliente» dice de dónde saca el SERVIDOR el cliente del dato: \"ref\" (el ref es el cliente) o {desde, listas, clave} (la fila con ese ref en un fichero del módulo). El cliente_id que manda el navegador no cuenta.",
   "_datos_de_modulo_r6": "Ronda 6: «filas_solo_tipo» (filas de una lista solo para quien ve un tipo), «textos_sin_importes_salvo» (tapa importes en todos los textos salvo para quien ve ese tipo), «claves_solo_tipo» (una clave entera solo para un tipo) y «resumen» (claves que llegan con nivel resumen).",
   "acciones_permitidas": {
+    "informe-cliente": [
+      "borrador_informe"
+    ],
+    "mi-trabajo": [
+      "cambiar_estado",
+      "cambiar_fecha",
+      "marcar_hecha",
+      "imputar_horas",
+      "comentario"
+    ],
+    "_mi_trabajo": "Mi trabajo (3-oct): actuar en sus tareas de ClickUp sin salir de la app. Todo va a la copia segura de sincronia.py (sinc_cambios) con ClickUp apagado; mi_trabajo.py valida estado, fecha y minutos antes.",
     "primera-semana": [
       "primera_semana_paso"
     ],
@@ -1985,7 +2135,8 @@
       "confirmacion_cita",
       "llamada_iniciada",
       "whatsapp_abierto",
-      "correo_abierto"
+      "correo_abierto",
+      "crear_cita_ghl"
     ],
     "ventas-ro": [
       "llamada_iniciada",
@@ -2230,22 +2381,63 @@
   "zona_horaria": {
     "propia": true,
     "jefe_directo": true,
-    "puestos": ["direccion", "operaciones"],
-    "mando_solo": ["direccion"],
+    "puestos": [
+      "direccion",
+      "operaciones"
+    ],
+    "mando_solo": [
+      "direccion"
+    ],
     "ver_como": false,
     "zonas_equipo": [
-      ["Europe/Madrid", "España (Madrid)"],
-      ["Atlantic/Canary", "Canarias"],
-      ["America/Caracas", "Venezuela (Caracas)"],
-      ["America/Bogota", "Colombia (Bogotá)"],
-      ["America/Argentina/Buenos_Aires", "Argentina (Buenos Aires)"],
-      ["America/Mexico_City", "México (Ciudad de México)"],
-      ["America/Lima", "Perú (Lima)"],
-      ["America/Santiago", "Chile (Santiago)"],
-      ["America/Montevideo", "Uruguay (Montevideo)"],
-      ["America/Asuncion", "Paraguay (Asunción)"],
-      ["America/Santo_Domingo", "República Dominicana (Santo Domingo)"],
-      ["Asia/Makassar", "Bali (Indonesia)"]
+      [
+        "Europe/Madrid",
+        "España (Madrid)"
+      ],
+      [
+        "Atlantic/Canary",
+        "Canarias"
+      ],
+      [
+        "America/Caracas",
+        "Venezuela (Caracas)"
+      ],
+      [
+        "America/Bogota",
+        "Colombia (Bogotá)"
+      ],
+      [
+        "America/Argentina/Buenos_Aires",
+        "Argentina (Buenos Aires)"
+      ],
+      [
+        "America/Mexico_City",
+        "México (Ciudad de México)"
+      ],
+      [
+        "America/Lima",
+        "Perú (Lima)"
+      ],
+      [
+        "America/Santiago",
+        "Chile (Santiago)"
+      ],
+      [
+        "America/Montevideo",
+        "Uruguay (Montevideo)"
+      ],
+      [
+        "America/Asuncion",
+        "Paraguay (Asunción)"
+      ],
+      [
+        "America/Santo_Domingo",
+        "República Dominicana (Santo Domingo)"
+      ],
+      [
+        "Asia/Makassar",
+        "Bali (Indonesia)"
+      ]
     ]
   },
   "_revision_piezas": "R14 (2-oct, idea B2): quién puede «Aprobar» o «Pedir cambios» en una pieza que espera revisión (Producción › Por revisar). Lo comprueban servir.py (al recibir la acción) y produccion.js (para enseñar los botones). Hoy solo deja la acción en la cola «acciones» en SIMULACIÓN con su rastro; escribir en ClickUp lo activa Tomás (B2, con el despliegue). Nadie se aprueba a sí mismo. «siempre» = puestos que pueden decidir en cualquier revisión interna. por_estado: revisa «account» = quien lleva el cliente en su silla de account; «puestos» = esos puestos; «persona» = esa persona. «a» = estado al que pasaría en ClickUp (propuesta; lo confirma Tomás). Los estados que esperan al cliente no se aprueban desde la app. R16 (N11): en «revisión técnica» cada jefa revisa solo las piezas de su área (areas_tecnica: puesto del autor, o que el autor la tenga de jefa directa).",
@@ -2433,7 +2625,10 @@
       "mover_estado",
       "mover_tarjeta",
       "mover",
-      "comentario"
+      "comentario",
+      "cambiar_estado",
+      "cambiar_fecha",
+      "marcar_hecha"
     ],
     "lleva_puestos": [
       "direccion",

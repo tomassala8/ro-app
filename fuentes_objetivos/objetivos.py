@@ -7,7 +7,9 @@ Dónde vive el dato (no hay otro sitio):
                                    la ficha escribe el mismo tipo. Campos: leads_mes, coste_lead, coste_cita, ventas_mes
                                    (ficha) y citas_mes, presupuesto (Clientes nuevos). Un campo que no viene en una fila se
                                    hereda de la anterior; uno que viene vacío (null) se borra.
-      - tipo «semaforo_semanal»  → semáforo del lunes: color (verde | ambar | rojo) y una línea de nota. La semana es la del
+      - tipo «semaforo_semanal»  → semáforo del lunes: color (verde | ambar | rojo), una línea de nota y, desde el 4-oct,
+                                   «queja» (true si el account marca que el cliente se ha quejado esa semana) y «tono»
+                                   (calido | normal | frio: cómo estuvo en la reunión o la llamada). La semana es la del
                                    momento en que se guardó (lunes, hora de Madrid): no la pone el navegador.
   · nada se escribe aquí: escribe el servidor (POST /api/acciones, con rastro y la regla «editar_objetivo_cliente»).
 
@@ -39,6 +41,7 @@ CAMPOS = ('leads_mes', 'coste_lead', 'coste_cita', 'ventas_mes', 'citas_mes', 'i
 ALIAS = {'presupuesto': 'inversion_mes'}
 PRINCIPALES = ('leads_mes', 'coste_lead', 'coste_cita', 'ventas_mes')   # «cargado» = al menos uno de estos
 COLORES = ('verde', 'ambar', 'rojo')
+TONOS = ('calido', 'normal', 'frio')
 SEMANAS_HISTORIAL = 12
 # La nota del semáforo la ve todo el que abre la ficha: sin importes (la ficha tampoco deja escribirlos).
 RE_IMPORTE = re.compile(r"\d[\d.,]*\s*(?:€|euros?|EUR\b)|€\s*\d[\d.,]*")
@@ -114,6 +117,9 @@ def normalizar(fila):
         color = str(vp.get('color') or '').strip().lower().replace('á', 'a')
         out['color'] = color if color in COLORES else None
         out['nota'] = re.sub(r'\s{2,}', ' ', RE_IMPORTE.sub('', str(vp.get('nota') or ''))).strip().replace('\n', ' ')[:200]
+        out['queja'] = vp.get('queja') is True        # 4-oct: «se ha quejado esta semana» (eje de quejas, fuentes_riesgo)
+        tono = str(vp.get('tono') or '').strip().lower().replace('á', 'a').replace('í', 'i')
+        out['tono'] = tono if tono in TONOS else None  # 4-oct: calidez en la reunión (eje de relación, fuentes_riesgo)
     return out
 
 
@@ -132,7 +138,8 @@ def reducir(filas):
             c['historial_objetivo'].insert(0, {'accion_id': f['id'], 'quien': f.get('quien'), 'cuando': f.get('cuando'), 'desde': f.get('modulo'),
                                                'campos': f.get('campos') or {}})
         elif f.get('color'):
-            s = {'color': f['color'], 'nota': f.get('nota') or '', 'quien': f.get('quien'), 'cuando': f.get('cuando'), 'semana': f.get('semana'), 'accion_id': f['id']}
+            s = {'color': f['color'], 'nota': f.get('nota') or '', 'queja': bool(f.get('queja')), 'tono': f.get('tono'), 'quien': f.get('quien'), 'cuando': f.get('cuando'),
+                 'semana': f.get('semana'), 'accion_id': f['id']}
             c['semaforo'] = s
             c['semanas'] = [x for x in c['semanas'] if x['semana'] != s['semana']]
             c['semanas'].insert(0, s)

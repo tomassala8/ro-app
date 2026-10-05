@@ -10,8 +10,8 @@ Qué junta (2-oct-2026), de hace 14 días a dentro de 21:
   3. Zoom (data/reuniones/reuniones.json de M15): las reuniones grabadas de los últimos 14 días, para la vista semana.
   4. Zoho Bookings (todas las citas del personal) y Zoho Calendar (el calendario de Tomás, dueño de la llave) con
      ~/RO_HERRAMIENTAS/zoho/zbookings.py, desde el 2-oct 17:10 (Tomás canjeó la llave con sus permisos).
-  Una cita que llega por varias puertas (GHL → Zoho, Bookings → CRM y Calendar) se junta en una sola con todos sus atajos;
-  la grabación de Zoom se pega a su cita.
+  Sólo citas con referencia compartida explícita o identidad canónica confirmada se consolidan.
+  Grabaciones de Zoom sin vínculo confirmado permanecen independientes; la hora no prueba celebración.
 
 Privacidad:
   · Cada fila lleva persona_id (dueño del calendario) → servir.py la manda a esa persona, su jefe, operaciones, RRHH y
@@ -24,6 +24,10 @@ Privacidad:
 """
 import datetime as dt, json, os, re, sys, unicodedata, urllib.request
 from zoneinfo import ZoneInfo
+try:
+    from .crosswalk_runtime_199 import identidad_observada, integrar as integrar_crosswalk
+except ImportError:
+    from crosswalk_runtime_199 import identidad_observada, integrar as integrar_crosswalk
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 RAIZ = os.path.dirname(AQUI)
@@ -155,7 +159,7 @@ def privado_de(pid):
 
 def alta(ev, titulo_real=None, con_quien_real=None):
     """Una fila por persona y evento. Lo sensible al almacén privado de esa persona."""
-    if ev['tipo'] in ('prospecto', 'fuera'):
+    if ev['tipo'] in ('prospecto', 'fuera', 'evento'):
         priv = privado_de(ev['persona_id'])
         if titulo_real: priv['titulos'][ev['id']] = limpio(titulo_real)
         if con_quien_real: priv['con_quien'][ev['id']] = limpio(con_quien_real)
@@ -219,6 +223,7 @@ try:
         venue = limpio(e.get('Venue') or '')
         ev = {'id': f"crm-{e['id']}", 'persona_id': pid, 'fuente': 'crm', 'inicio': iso(ini), 'fin': iso(fin),
               'todo_el_dia': bool(e.get('All_day')), 'tipo': tipo,
+              'identidad_fuente': identidad_observada('crm',str(e['id']),e.get('Start_DateTime'),e.get('End_DateTime'),str((e.get('Owner') or {}).get('id') or '')), 
               'titulo': limpio(titulo) if tipo in ('cliente', 'interna') else mascara_titulo(titulo),
               'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None,
               'con_quien_m': mascara(persona_fuera) if persona_fuera else None,
@@ -255,6 +260,7 @@ try:
             setters = [t.split(':', 1)[1] for t in (c.get('tags') or []) if t.startswith('setter:')]
             base = {'fuente': 'ghl', 'inicio': iso(ts(e.get('startTime'))), 'fin': iso(ts(e.get('endTime'))), 'tipo': tipo,
                     'calendario': nom, 'estado_cita': e.get('appointmentStatus'),
+                    'identidad_fuente': identidad_observada('ghl',str(e['id']),e.get('startTime'),e.get('endTime')),
                     'titulo': (f'{nom} · {CLI[cref]["nombre"]}' if cref else f'{nom} · {mascara(empresa or nombre)}'),
                     'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None,
                     'con_quien_m': mascara(nombre) if nombre else None, 'video': 'zoom',
@@ -291,6 +297,8 @@ try:
               'titulo': limpio(a.get('tema')) if tipo != 'fuera' else 'Reunión de Zoom con gente de fuera',
               'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None, 'video': 'zoom', 'celebrada': True,
               'con_ro': [x for x in (a.get('internos') or [])][:8],
+              # Fecha/hora y duración del cache histórico pueden contener defaults: no certificar ventana.
+              'identidad_fuente': identidad_observada('zoom',str(a['reunion']),None,None),
               'atajos': [{'h': 'zoom', 'url': (a.get('acta') or {}).get('enlace_grabacion')}] if (a.get('acta') or {}).get('enlace_grabacion') else [],
               'origen': 'Zoom de RO · reuniones grabadas'},
              a.get('tema'))
@@ -316,6 +324,7 @@ try:
             tipo = 'cliente' if cref else 'prospecto'
             alta({'id': f"bk-{c['booking_id'].lstrip('#')}", 'persona_id': pid, 'fuente': 'bookings', 'inicio': c['inicio'], 'fin': c['fin'], 'tipo': tipo,
                   'titulo': f"{c.get('service_name') or 'Cita'} · " + (CLI[cref]['nombre'] if cref else mascara(c.get('customer_name'))),
+                  'identidad_fuente': identidad_observada('bookings',str(c['booking_id']),c.get('inicio'),c.get('fin'),zona=c.get('zona')),
                   'calendario': c.get('service_name'), 'estado_cita': {'upcoming': 'confirmed', 'yet_to_mark': 'sin_marcar', 'completed': 'showed', 'no_show': 'noshow'}.get(c.get('status'), c.get('status')),
                   'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None,
                   'con_quien_m': mascara(c.get('customer_name')), 'video': c.get('video'), 'reserva': c.get('booking_id'),
@@ -330,10 +339,12 @@ try:
             if not c.get('inicio'): continue
             cref = cliente_de(c.get('titulo'))
             interna = not cref and re.search(r'(?i)\b(equipo|daily|interna|1:1|coordinaci|retro|heads)', c['titulo'])
-            tipo = 'cliente' if cref else ('interna' if interna else 'prospecto')
+            tipo = 'cliente' if cref else ('interna' if interna else 'evento')
             alta({'id': 'cal-' + __import__('hashlib').sha1(f"{c['uid']}|{c['inicio']}".encode()).hexdigest()[:12], 'persona_id': 'tomas', 'fuente': 'calendar', 'inicio': c['inicio'], 'fin': c['fin'],
                   'todo_el_dia': c['todo_el_dia'], 'tipo': tipo,
-                  'titulo': limpio(c['titulo']) if tipo != 'prospecto' else mascara_titulo(c['titulo']),
+                  # UID puede contener correo; no exponerlo como ID original público.
+                  'identidad_fuente': identidad_observada('calendar',c.get('uid'),c.get('inicio'),c.get('fin')),
+                  'titulo': limpio(c['titulo']) if tipo in ('cliente', 'interna') else mascara_titulo(c['titulo']),
                   'cliente_ref': cref, 'cliente_nombre': CLI[cref]['nombre'] if cref else None,
                   'atajos': [{'h': 'calendar', 'url': c['enlace']}] if c.get('enlace') else [], 'origen': 'Zoho Calendar · calendario de Tomás'},
                  c['titulo'])
@@ -345,57 +356,33 @@ except Exception as e:
     fuente('bookings', 'Zoho Bookings · citas por persona', 'rota', f'{type(e).__name__}: {e}'[:200])
 
 # ------------------------------------------------------------------ salida
-# Una misma cita llega por varias puertas: GHL la copia al calendario de Zoho (CRM y Calendar), Bookings la crea en el CRM
-# («<cliente> and <servicio>») y en Calendar. Misma persona y misma hora de inicio = la misma cita: se queda una (por este
-# orden: GHL, Bookings, CRM, Calendar) y se le suman los atajos y el cliente de las demás.
-PRIORIDAD = {'ghl': 0, 'bookings': 1, 'crm': 2, 'calendar': 3}
-grupos = {}
-for e in eventos:
-    if e['fuente'] in PRIORIDAD:
-        grupos.setdefault((e['persona_id'], e['inicio']), []).append(e)
-quitadas = 0
-fuera = set()
-for clave, g in grupos.items():
-    if len(g) < 2: continue
-    g.sort(key=lambda e: PRIORIDAD[e['fuente']])
-    queda = g[0]
-    for otra in g[1:]:
-        if otra['fuente'] == queda['fuente'] or otra['fuente'] in queda.get('tambien_en', []):
-            continue        # dos citas de la misma herramienta a la misma hora son dos citas (doble reserva): no se juntan
-        hs = {x['h'] for x in queda.get('atajos', [])}
-        queda.setdefault('atajos', []).extend(x for x in otra.get('atajos', []) if x['h'] not in hs)
-        if not queda.get('cliente_ref') and otra.get('cliente_ref'):
-            for k in ('cliente_ref', 'cliente_nombre', 'en_rojo'):
-                if otra.get(k): queda[k] = otra[k]
-            queda['tipo'] = 'cliente'
-            queda['titulo'] = f"{queda.get('calendario') or 'Reunión'} · {otra['cliente_nombre']}"
-        queda.setdefault('tambien_en', []).append(otra['fuente'])
-        fuera.add(otra['id']); quitadas += 1
-# La grabación de Zoom se pega a la cita que empezó a la vez (±20 min) en la agenda de esa persona.
-pegadas = 0
-for z in [e for e in eventos if e['fuente'] == 'zoom']:
-    zi = dt.datetime.strptime(z['inicio'], '%Y-%m-%d %H:%M')
-    cand = [e for e in eventos if e['persona_id'] == z['persona_id'] and e['fuente'] != 'zoom' and e['id'] not in fuera and e['inicio']
-            and abs((dt.datetime.strptime(e['inicio'], '%Y-%m-%d %H:%M') - zi).total_seconds()) <= 1200]
-    if cand:
-        c = cand[0]
-        c.setdefault('atajos', []).extend(z.get('atajos', []))
-        c['celebrada'] = True
-        if z.get('con_ro'): c['con_ro'] = z['con_ro']
-        fuera.add(z['id']); pegadas += 1
-eventos = [e for e in eventos if e['id'] not in fuera]
+# Una cita se consolida sólo con referencia explícita o identidad canónica confirmada,
+# mismo dueño/duración y sin conflictos. El horario o nombre privado no bastan.
+try:
+    from .duplicados import deduplicar
+except ImportError:  # Ejecución como script, sin paquete.
+    from duplicados import deduplicar
+#199: ruta fija privada; ausencia/invalidación nunca autoriza coincidencias débiles.
+ids_antes_crosswalk = {e['id'] for e in eventos}
+eventos, resumen_crosswalk = integrar_crosswalk(eventos, os.path.join(AQUI,'_privado','crosswalk_confirmado.json'),AHORA.date().isoformat())
+retiradas_crosswalk = ids_antes_crosswalk - {e['id'] for e in eventos}
+eventos, fuera = deduplicar(eventos, privado)
+fuera = set(fuera) | retiradas_crosswalk
+quitadas = len(fuera)
+# Zoom permanece independiente salvo identidad estricta compartida. No enlazar ±20min
+# ni convertir una cita en celebrada por proximidad a una grabación.
 for pid_, d in privado.items():
     for i in fuera:
         d['titulos'].pop(i, None); d['con_quien'].pop(i, None)
-fuente('dedup', 'Citas repetidas entre GHL, Bookings, CRM y Calendar', 'bien',
-       f'{quitadas} copias juntadas en su cita (con todos sus atajos) y {pegadas} grabaciones de Zoom pegadas a la cita a la que pertenecen', quitadas)
+fuente('dedup', 'Citas con identidad compartida entre fuentes', 'bien',
+       f'{quitadas} copias consolidadas con identidad confirmada; manifest {resumen_crosswalk["manifest_estado"]}. Coincidencias de hora/nombre y grabaciones sin vínculo confirmado conservadas', quitadas)
 eventos.sort(key=lambda e: (e['inicio'] or '', e['persona_id']))
 # Las setters que aún no tienen citas reciben la agenda vacía con su explicación (no una caja en blanco)
 salida = {
     '_meta': {'generado': AHORA.strftime('%Y-%m-%d %H:%M'), 'hoy': AHORA.strftime('%Y-%m-%d'), 'desde': DESDE.strftime('%Y-%m-%d'),
               'hasta': HASTA.strftime('%Y-%m-%d'), 'jornada': {'inicio': '09:00', 'fin': '18:00', 'dias': [0, 1, 2, 3, 4]},
-              'fuentes': fuentes,
-              'nota': 'Una fila por persona y reunión. Prospectos enmascarados; los nombres, solo su dueño con «Ver nombres».'},
+              'fuentes': fuentes, 'crosswalk': resumen_crosswalk,
+              'nota': 'Fuentes parciales; pueden coexistir copias sin identidad compartida confirmada. Prospectos enmascarados; los nombres, sólo su dueño con «Ver nombres».'},
     'eventos': eventos,
 }
 os.makedirs(PRIV, exist_ok=True)

@@ -1,0 +1,110 @@
+[
+  {
+    "script": "outputs/pruebas_fechas_ro.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "pruebas_fechas_ro_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/fase4/pruebas_modulos_fechas.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "pruebas_modulos_fechas_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/fase2/regresiones_agenda_existentes.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "regresiones_agenda_existentes_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/fase3/pruebas_fechas_periodos.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "pruebas_fechas_periodos_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/fase3/regresiones_existentes.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "regresiones_existentes_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/fase6/pruebas_ventas.mjs",
+    "zona": "Europe/Madrid",
+    "exit": 0,
+    "log": "pruebas_ventas_Europe_Madrid.log"
+  },
+  {
+    "script": "outputs/pruebas_fechas_ro.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "pruebas_fechas_ro_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/fase4/pruebas_modulos_fechas.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "pruebas_modulos_fechas_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/fase2/regresiones_agenda_existentes.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "regresiones_agenda_existentes_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/fase3/pruebas_fechas_periodos.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "pruebas_fechas_periodos_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/fase3/regresiones_existentes.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "regresiones_existentes_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/fase6/pruebas_ventas.mjs",
+    "zona": "America/Argentina/Buenos_Aires",
+    "exit": 0,
+    "log": "pruebas_ventas_America_Argentina_Buenos_Aires.log"
+  },
+  {
+    "script": "outputs/pruebas_fechas_ro.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "pruebas_fechas_ro_Asia_Makassar.log"
+  },
+  {
+    "script": "outputs/fase4/pruebas_modulos_fechas.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "pruebas_modulos_fechas_Asia_Makassar.log"
+  },
+  {
+    "script": "outputs/fase2/regresiones_agenda_existentes.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "regresiones_agenda_existentes_Asia_Makassar.log"
+  },
+  {
+    "script": "outputs/fase3/pruebas_fechas_periodos.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "pruebas_fechas_periodos_Asia_Makassar.log"
+  },
+  {
+    "script": "outputs/fase3/regresiones_existentes.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "regresiones_existentes_Asia_Makassar.log"
+  },
+  {
+    "script": "outputs/fase6/pruebas_ventas.mjs",
+    "zona": "Asia/Makassar",
+    "exit": 0,
+    "log": "pruebas_ventas_Asia_Makassar.log"
+  }
+]

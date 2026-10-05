@@ -1,0 +1,23 @@
+// Candidato: sólo consume sidecar606 validado por hook posterior al recorte.
+const KEY681='_planning_transiciones_681',METRICAS681=['al_planning','fuegos_directos','rompen_semanal'];
+const id681=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,150}$/.test(x);
+function fecha681(s){if(typeof s!=='string')return null;const m=s.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(Z|[+-]\d{2}:\d{2})$/);if(!m)return null;const nums=m.slice(1,7).map(Number),d=new Date(Date.UTC(nums[0],nums[1]-1,nums[2],nums[3],nums[4],nums[5]));if(nums[0]<100||[d.getUTCFullYear(),d.getUTCMonth()+1,d.getUTCDate(),d.getUTCHours(),d.getUTCMinutes(),d.getUTCSeconds()].some((n,i)=>n!==nums[i]))return null;const zone=m[7];if(zone!=='Z'){const hh=Number(zone.slice(1,3)),mm=Number(zone.slice(4));if(hh>14||mm>59||hh===14&&mm!==0)return null;}const n=Date.parse(s);return Number.isFinite(n)?n:null;}
+function lunes681(hoy){if(typeof hoy!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(hoy))return null;const d=new Date(hoy+'T12:00:00Z');if(!Number.isFinite(+d)||d.toISOString().slice(0,10)!==hoy)return null;d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));const fecha=d.toISOString().slice(0,10);const z=new Intl.DateTimeFormat('en',{timeZone:'Europe/Madrid',timeZoneName:'shortOffset'}).formatToParts(d).find(p=>p.type==='timeZoneName')?.value;const m=z?.match(/^GMT([+-])(\d{1,2})(?::(\d{2}))?$/);if(!m)return null;const offset=(m[1]==='+'?1:-1)*(Number(m[2])*60+Number(m[3]||0));return Date.parse(fecha+'T00:00:00Z')-offset*60000;}
+export function metricaPlanning681(p,D,key,{hoy,vigente}={}){
+ if(typeof vigente!=='function'||!vigente()||!METRICAS681.includes(key)||!id681(p?.persona_id)||!Array.isArray(D?.personas)||D.personas.filter(q=>q?.persona_id===p.persona_id).length!==1)return null;
+ const m=p[KEY681],raw=D.personas.find(q=>q.persona_id===p.persona_id)?.[KEY681];if(!m||JSON.stringify(m)!==JSON.stringify(raw)||m.version!=='681.1'||m.fuente!=='eventos_clickup_observados'||m.persona_id!==p.persona_id||m.cobertura!=='parcial'||m.inventario_completo!==false||m.cumplimiento!==null||m.atribucion!=='creador_explicito_no_asignado_actual')return null;
+ const cids=Array.isArray(D.proyectos)?D.proyectos.map(q=>q?.cliente_id):[];
+ if(!cids.every(id681)||new Set(cids).size!==cids.length||!Array.isArray(m.cliente_ids_scope)||JSON.stringify([...cids].sort())!==JSON.stringify(m.cliente_ids_scope))return null;
+ const d=fecha681(m.desde),h=fecha681(m.hasta),c=fecha681(m.corte),lunes=lunes681(hoy);if(d===null||h===null||c===null||lunes===null||d!==lunes||h!==c||!(d<h))return null;
+ const dia=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(c));if(dia>hoy)return null;
+ if(!m.metricas||Object.keys(m.metricas).sort().join('|')!==[...METRICAS681].sort().join('|')||Object.values(m.metricas).some(n=>n!==null&&(!Number.isSafeInteger(n)||n<=0))||!Number.isSafeInteger(m.tareas_observadas)||m.tareas_observadas<0)return null;
+ const n=m.metricas[key];if(n===null||n>m.tareas_observadas||!vigente())return null;
+ const significado={al_planning:'Entrada observada a planning mensual',fuegos_directos:'Clasificación histórica de fuego directo; no urgencia actual',rompen_semanal:'Salto directo sin mensual, cadena desde creación y clasificación no fuego'}[key];
+ return {valor:n,detalle:`${significado}. Mínimo observado por creador explícito; ${m.desde} → ${m.hasta} (fin exclusivo), corte ${m.corte}. ${m.tareas_observadas} tareas observadas; cobertura parcial. No acredita inventario completo, cumplimiento ni asignado actual.`};
+}
+export function celdaPlanning681(p,D,key,{h,hoy,vigente}={}){
+ const m=metricaPlanning681(p,D,key,{hoy,vigente});if(!m)return h('span',{class:'oe-missing',title:'Sin historial autorizado compatible para esta métrica; no equivale a cero.'},'—');
+ let node;const revisar=()=>{if(!vigente()){node.replaceChildren();node.removeAttribute('title');node.removeAttribute('aria-label');}};
+ node=h('span',{title:m.detalle,'aria-label':`${m.valor} mínimo observado. ${m.detalle}`,tabIndex:0,on:{focus:revisar,mouseenter:revisar}},'≥'+m.valor);return node;
+}
+export function fuentePlanning681(personas,D,props){const models=personas.flatMap(p=>METRICAS681.map(k=>metricaPlanning681(p,D,k,props)).filter(Boolean));if(!models.length)return '';const cortes=[...new Set(personas.filter(p=>METRICAS681.some(k=>metricaPlanning681(p,D,k,props))).map(p=>p[KEY681].corte))];return cortes.length===1?`Transiciones observadas · corte ${cortes[0]} · mínimos parciales por creador`:'Transiciones observadas · cortes distintos; consulta cada celda';}

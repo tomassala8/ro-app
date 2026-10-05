@@ -55,6 +55,7 @@ import foto_diaria as FOTO                # noqa: E402
 from build_data import aplicar_respuestas  # noqa: E402
 sys.path.insert(1, str(AQUI / "despliegue"))
 import acceso_cf as ACCESO                # noqa: E402  (C5: en modo servidor solo vale el sello firmado de Cloudflare Access)
+from fuentes_verdad import clientes_activos as ACT   # noqa: E402  (Tomás 3-oct: un solo filtro «cliente activo»; bajas fuera de pantallas de trabajo)
 
 DATA = AQUI / "data"
 DB = Path(os.environ.get("RO_DB") or AQUI / "local.db")   # RO_DB=<ruta> para pruebas sin tocar el rastro real
@@ -68,6 +69,9 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
        "font-src 'self'; img-src 'self' data: https:; connect-src 'self'; object-src 'none'; "
        "frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
 ESTATICOS_PERMITIDOS = re.compile(r"^(index\.html|[\w\-]+\.(js|css)|reglas_permisos\.json|modulos/[\w\-/]+\.(js|css|svg|png)|fuentes_web/[\w\-]+\.woff2)$")
+from estaticos_seguro_234 import ruta_estatica, leer_estatico
+import panel_direccion_privado_249 as PANEL_PRIVADO_249
+import planes_fuegos_255 as PLANES_FUEGOS_255
 
 
 # ===================================================================== ronda 14 · velocidad (auditoría 37)
@@ -89,26 +93,28 @@ _CANDADO_SERVIDOS = threading.Lock()
 
 def _estado_fichero(p):
     st = p.stat()
-    return (st.st_mtime_ns, st.st_size)
+    return (st.st_dev, st.st_ino, st.st_ctime_ns, st.st_mtime_ns, st.st_size)
 
 
 def contenido_servido(rel):
-    """(bytes tal y como se sirven, huella de 12). estilos.css lleva las fuentes con su versión. Memoria por fecha y tamaño."""
-    p = AQUI / rel
-    marca = [_estado_fichero(p)]
+    """(bytes tal y como se sirven, huella de 12). estilos.css lleva las fuentes con su versión. Memoria por identidad y versión de cada archivo."""
+    p = ruta_estatica(AQUI, rel)
+    datos, estado_seguro = leer_estatico(AQUI, rel)
+    marca = [estado_seguro]
     fuentes = sorted((AQUI / "fuentes_web").glob("*.woff2")) if rel == "estilos.css" else []
-    marca += [_estado_fichero(f) for f in fuentes]
+    lecturas_fuentes = [(f, leer_estatico(AQUI, f.relative_to(AQUI).as_posix())) for f in fuentes]
+    marca += [lectura[1] for _, lectura in lecturas_fuentes]
     marca = tuple(marca)
     with _CANDADO_SERVIDOS:
         previo = _SERVIDOS.get(rel)
     if previo and previo[0] == marca:
         return previo[1], previo[2]
-    datos = p.read_bytes()
     if fuentes:
         texto = datos.decode()
-        for f in fuentes:
+        for f, (contenido_fuente, _) in lecturas_fuentes:
             r = f"fuentes_web/{f.name}"
-            texto = texto.replace(f'url("{r}")', f'url("{r}?v={contenido_servido(r)[1]}")')
+            version_fuente = hashlib.sha1(contenido_fuente).hexdigest()[:12]
+            texto = texto.replace(f'url("{r}")', f'url("{r}?v={version_fuente}")')
         datos = texto.encode()
     huella = hashlib.sha1(datos).hexdigest()[:12]
     with _CANDADO_SERVIDOS:
@@ -121,7 +127,16 @@ def ficheros_codigo():
     rels = [f.name for f in sorted(AQUI.glob("*.js"))]
     rels += [f.relative_to(AQUI).as_posix() for f in sorted((AQUI / "modulos").rglob("*.js"))]
     rels.append("reglas_permisos.json")
-    return [r for r in rels if ESTATICOS_PERMITIDOS.match(r)]
+    permitidos = []
+    for r in rels:
+        if not ESTATICOS_PERMITIDOS.fullmatch(r):
+            continue
+        try:
+            ruta_estatica(AQUI, r)
+            permitidos.append(r)
+        except (OSError, ValueError):
+            continue
+    return permitidos
 
 
 def mapa_versiones():
@@ -191,7 +206,7 @@ CACHE_RESP = CacheRespuestas()
 
 def version_datos():
     """Todo lo que cambia un recorte además del fichero: base (Ajustes), reglas, índice de módulos y el día (suplencias)."""
-    return (getattr(E, "version", 0), _MARCAS.get("reglas"), _MARCAS.get("modulos"), hoy())
+    return (getattr(E, "version", 0), _MARCAS.get("reglas"), _MARCAS.get("modulos"), hoy(), ACT._CACHE.get("marca"))   # + lista de bajas
 
 
 def etag_de(clave, cuerpo):
@@ -212,14 +227,15 @@ def logo_de(cid):
     m = re.match(r"data:(image/(?:jpeg|png|webp|gif));base64,(.+)$", uri or "", re.S)
     if not m:
         return None
+    marca_logo = hashlib.sha256(uri.encode()).hexdigest()
     with _CANDADO_SERVIDOS:
         previo = _SERVIDOS.get(("logo", cid))
-    if previo and previo[0] == uri[-64:] + str(len(uri)):
+    if previo and previo[0] == marca_logo:
         return previo[1]
     datos = base64.b64decode(m.group(2))
     r = (datos, m.group(1), hashlib.sha1(datos).hexdigest()[:12])
     with _CANDADO_SERVIDOS:
-        _SERVIDOS[("logo", cid)] = (uri[-64:] + str(len(uri)), r)
+        _SERVIDOS[("logo", cid)] = (marca_logo, r)
     return r
 
 
@@ -292,6 +308,7 @@ def conectar():
     con = sqlite3.connect(DB, timeout=10)
     con.row_factory = sqlite3.Row
     con.execute("PRAGMA foreign_keys = ON")
+    con.execute("PRAGMA recursive_triggers = ON")  # 569: DELETE interno de REPLACE también dispara la protección.
     return con
 
 
@@ -308,7 +325,11 @@ def iniciar_base():
         if "huella_previa" not in cols:
             con.execute("ALTER TABLE registro ADD COLUMN huella_previa TEXT")
         con.executescript(SEGURIDAD_SQL)
+        # 569: sólo SQLite; el traductor PG no soporta estos INSERT condicionales.
+        if isinstance(con, sqlite3.Connection):
+            con.executescript(SEGURIDAD_INSERT_SQLITE_569)
         con.executescript(R15_SQL)
+        PLANES_FUEGOS_255.iniciar(con)
 
 
 _CANDADO_RASTRO = threading.Lock()
@@ -355,6 +376,19 @@ CREATE TRIGGER IF NOT EXISTS acciones_solo_estado BEFORE UPDATE ON acciones
   WHEN NEW.quien IS NOT OLD.quien OR NEW.herramienta IS NOT OLD.herramienta OR NEW.tipo IS NOT OLD.tipo OR NEW.objeto IS NOT OLD.objeto
     OR NEW.cliente_id IS NOT OLD.cliente_id OR NEW.texto IS NOT OLD.texto OR NEW.vista_previa IS NOT OLD.vista_previa OR NEW.creada IS NOT OLD.creada
   BEGIN SELECT RAISE(ABORT, 'De una acción solo puede avanzar el estado'); END;
+"""
+
+
+# 569: append-only SQLite incluso con una conexión externa recursive_triggers=OFF.
+# NEW.id=-1 provisional de autoincremento no debe bloquear un INSERT normal.
+# PostgreSQL pendiente: no enviar este DDL al traductor heredado.
+SEGURIDAD_INSERT_SQLITE_569 = """
+CREATE TRIGGER IF NOT EXISTS registro_sin_reinsertar_569 BEFORE INSERT ON registro
+WHEN NEW.id > 0 AND NEW.id <= (SELECT MAX(id) FROM registro)
+BEGIN SELECT RAISE(ABORT, 'El rastro no reutiliza IDs: crea una anulación'); END;
+CREATE TRIGGER IF NOT EXISTS huellas_sin_reinsertar_569 BEFORE INSERT ON registro_huellas
+WHEN NEW.id > 0 AND NEW.id <= (SELECT MAX(id) FROM registro_huellas)
+BEGIN SELECT RAISE(ABORT, 'La huella del rastro no reutiliza IDs'); END;
 """
 
 
@@ -614,7 +648,10 @@ class Estado:
             crudo["para_confirmar"] = json.loads((DATA / "para_confirmar.json").read_text()) if (DATA / "para_confirmar.json").exists() else []
             ids = json.loads((DATA / "ids_clientes.json").read_text()) if (DATA / "ids_clientes.json").exists() else {}
             self.id_app = ids.get("portal_a_app") or {}
+            from fuentes_verdad.servicios_confirmados import aplicar as aplicar_servicios
+            aplicar_servicios(crudo['clientes'])
             self.aplicar_ajustes(crudo)
+            ACT.limpiar_nucleo(crudo)          # Tomás 3-oct: clientes de baja fuera de la base (data/verdad/estado_clientes.json)
             self.crudo = crudo
             self.sembrar_tablas()
             self.marcas_nucleo = self._marcas_nucleo()
@@ -653,7 +690,10 @@ class Estado:
             for n in self.PARCIAL:
                 crudo[n] = json.loads((DATA / f"{n}.json").read_text())
             crudo["para_confirmar"] = json.loads((DATA / "para_confirmar.json").read_text()) if (DATA / "para_confirmar.json").exists() else []
+            from fuentes_verdad.servicios_confirmados import aplicar as aplicar_servicios
+            aplicar_servicios(crudo['clientes'])
             self.aplicar_ajustes(crudo)
+            ACT.limpiar_nucleo(crudo)
             self.crudo = crudo
             self.sembrar_tablas()
             self.version += 1
@@ -681,20 +721,31 @@ class Estado:
                         else:
                             a["confianza"] = "confirmada"
         anuladas = {r["anula_a"] for r in decis if r["anula_a"]}
-        respuestas = [json.loads(r["respuesta"]) for r in decis if r["id"] not in anuladas and not r["anula_a"] and r["respuesta"]]
+        respuestas = []
+        for r in decis:
+            if r["id"] not in anuladas and not r["anula_a"] and r["respuesta"]:
+                try:
+                    respuesta = json.loads(r["respuesta"])
+                    if not isinstance(respuesta, (dict, list)):
+                        raise ValueError('formato no válido')
+                    respuestas.append(respuesta)
+                except (TypeError, ValueError):
+                    print('Confirmación histórica omitida: formato no válido.', flush=True)
         if respuestas:
             servicios = {c["id"]: c.get("servicios") or {} for c in crudo["clientes"]}
-            aplicar_respuestas(respuestas, crudo["personas"], crudo["asignaciones"], servicios, self.id_app, hoy())
-            hechas = {x.get("duda") for r in respuestas for x in (r if isinstance(r, list) else [r])}
+            aplicadas = aplicar_respuestas(respuestas, crudo["personas"], crudo["asignaciones"], servicios, self.id_app, hoy(), dudas=crudo.get("para_confirmar"))
+            if any(x.get('error') for x in aplicadas):
+                print('Confirmación histórica omitida: contrato no válido.', flush=True)
+            hechas = {x.get("duda") for x in aplicadas if not x.get("error")}
             for d in crudo["para_confirmar"]:
                 if d["id"] in hechas:
                     d["respondida"] = True
         # El account principal vigente manda como responsable del cliente
-        hoy = P.hoy_iso()
+        fecha_hoy = P.hoy_iso()
         for c in crudo["clientes"]:
             acc = [a for a in crudo["asignaciones"] if a["cliente_id"] == c["id"] and a["silla"] == "account"
                    and a.get("principal", True) and not a.get("suplencia")
-                   and (not a.get("desde") or a["desde"] <= hoy) and (not a.get("hasta") or a["hasta"] >= hoy)]
+                   and (not a.get("desde") or a["desde"] <= fecha_hoy) and (not a.get("hasta") or a["hasta"] >= fecha_hoy)]
             if acc:
                 c["responsable_id"], c["sin_account"] = acc[-1]["persona_id"], None
 
@@ -753,23 +804,32 @@ E = Estado()
 
 
 # =============================================================== recortes de datos de módulos
-CLAVES_CUOTA = re.compile(r"^(cuota|cuota_.*|importe_mensual)$")
+# Importes numéricos también llegan como importe/importe_*; el saneado de textos no los quita.
+CLAVES_CUOTA = re.compile(r"(?:^|[_\-.])(?:cuota(?![_\-.]horas(?:$|[_\-.]))|fee|importe)(?:$|[_\-.])", re.I)
 # Ronda 5 (I-01): horas pautadas = cuota ÷ 31,47 €/h, así que revelan la cuota. A quien no ve la cuota no le llegan
 # ni las pautadas ni los porcentajes sobre ellas ni el segmento: solo «dentro / fuera de lo pautado».
 CLAVES_DERIVADAS_CUOTA = re.compile(r"^(pautadas|horas_pautadas|horas_presup.*|pct_sep|pct_oct|pct_horas|pct_cuota.*|segmento|valor_vida.*)$")
 CONSUMIDAS = ("sep", "oct", "horas_mes", "horas_mes_ant", "consumidas")
 
 
-def sin_cuota(o):
-    """Sustituye las horas pautadas por «dentro_de_lo_pautado» y quita lo que permite deducir la cuota."""
+# Tomás 3-oct: el account ve las horas pactadas frente a las imputadas de SUS clientes (regla «horas_pautadas»), sin euros.
+CLAVES_HORAS_PAUTADAS = re.compile(r"^(pautadas|horas_pautadas|horas_presup.*|pct_sep|pct_oct|pct_horas)$")
+
+
+def sin_cuota(o, deja_pautadas=False):
+    """Sustituye las horas pautadas por «dentro_de_lo_pautado» y quita lo que permite deducir la cuota.
+    deja_pautadas (Tomás 3-oct, regla «horas_pautadas»): el account del cliente conserva las horas pactadas y su %."""
     pautadas = o.get("pautadas", o.get("horas_pautadas", o.get("horas_presup_mes")))
+    if deja_pautadas:
+        return {k: v for k, v in o.items() if not CLAVES_DERIVADAS_CUOTA.match(k) or CLAVES_HORAS_PAUTADAS.match(k)}
     out = {k: v for k, v in o.items() if not CLAVES_DERIVADAS_CUOTA.match(k)}
     if isinstance(pautadas, (int, float)) and pautadas > 0:
         out["dentro_de_lo_pautado"] = {k: o[k] <= pautadas for k in CONSUMIDAS if isinstance(o.get(k), (int, float))}
     return out
-CLAVES_COBROS = re.compile(r"^(facturas.*|cobrad.*|impag.*|pendiente_cobro)$")
-CLAVES_INVERSION = re.compile(r"^(gasto.*|ultimo_gasto|coste.*|cpl.*|inversion.*|spend|presupuesto_ads)$")
-CLAVES_LEAD = re.compile(r"^(nombre_lead|telefono|tel|correo_lead|email_lead)$")
+# Holded/cuadres usan facturado_mes, facturado_holded, facturado_panel, etc.
+CLAVES_COBROS = re.compile(r"(?:^|[_\-.])(?:facturas?\w*|facturado\w*|cobrad\w*|impag\w*|pendiente_cobro|revenue|invoice_total)(?:$|[_\-.])", re.I)
+CLAVES_INVERSION = re.compile(r"(?:^|[_\-.])(?:gasto\w*|coste(?![_\-.]horas(?:$|[_\-.]))\w*|cpl\w*|cpc\w*|cpm\w*|inversion\w*|spend|budget_ads|presupuesto_ads|ad_spend|cost_per_lead|cost_per_click|importe_publicidad)(?:$|[_\-.])", re.I)
+CLAVES_LEAD = re.compile(r"(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban)(?:$|[_\-.])", re.I)
 
 
 class ClaveValor:
@@ -788,15 +848,15 @@ def _es_num(x):
 
 
 DINERO_CUOTA_VALOR = ClaveValor("cuota_por_mes_y_ltv", lambda k, v: (
-    (k == "meses" and isinstance(v, dict) and bool(v) and all(_es_num(x) or x is None for x in v.values()))
-    or (re.match(r"^ltv(_eur|_media|_mediana|_total)?$", k) is not None and _es_num(v))))
+    (str(k).casefold() == "meses" and isinstance(v, dict) and bool(v) and all(_es_num(x) or x is None for x in v.values()))
+    or (re.match(r"^ltv(_eur|_media|_mediana|_total)?$", str(k), re.I) is not None and _es_num(v))))
 DINERO_INVERSION_VALOR = ClaveValor("presupuesto_e_invertido", lambda k, v: (
-    (k.startswith("presupuesto") and isinstance(v, dict)) or k.startswith("invertido")))
+    (str(k).casefold().startswith("presupuesto") and isinstance(v, dict)) or str(k).casefold().startswith("invertido")))
 SERIES_CON_GASTO = ("serie", "serie_ant", "serie_anio")     # en un bloque «meta»: [día, gasto, leads] o {d, meta: [gasto, leads]}
 
 
 def _quita(rx, k, v):
-    return rx.match(k, v) if isinstance(rx, ClaveValor) else rx.match(k)
+    return rx.match(k, v) if isinstance(rx, ClaveValor) else rx.search(str(k))
 
 
 def serie_sin_gasto(serie):
@@ -808,32 +868,35 @@ def serie_sin_gasto(serie):
         if isinstance(x, list) and len(x) >= 3 and isinstance(x[0], str):
             out.append([x[0], None, *x[2:]])
         elif isinstance(x, dict):
-            y = {k: w for k, w in x.items() if not CLAVES_INVERSION.match(k)}
-            if isinstance(y.get("meta"), list) and y["meta"]:
-                y["meta"] = [None, *y["meta"][1:]]
+            y = {k: w for k, w in x.items() if not CLAVES_INVERSION.search(str(k))}
+            meta_key = next((k for k in y if str(k).casefold() == "meta"), None)
+            if meta_key is not None and isinstance(y[meta_key], list) and y[meta_key]:
+                y[meta_key] = [None, *y[meta_key][1:]]
             out.append(y)
         else:
             out.append(x)
     return out
 
 
-def recortar_doc(obj, quitar):
+def recortar_doc(obj, quitar, _lead=False):
     """Quita, a cualquier profundidad, las claves que no tocan (y, sin inversión, el gasto de las series de Meta)."""
     if isinstance(obj, dict):
         sin_inv = CLAVES_INVERSION in quitar
-        return {k: (serie_sin_gasto(recortar_doc(v, quitar)) if sin_inv and k in SERIES_CON_GASTO and _serie_de_meta(obj) else recortar_doc(v, quitar))
-                for k, v in obj.items() if not any(_quita(rx, k, v) for rx in quitar)}
+        return {k: (serie_sin_gasto(recortar_doc(v, quitar, _lead or str(k).casefold() in ("leads", "leads_detalle", "contactos_lead"))) if sin_inv and str(k).casefold() in SERIES_CON_GASTO and _serie_de_meta(obj) else recortar_doc(v, quitar, _lead or str(k).casefold() in ("leads", "leads_detalle", "contactos_lead")))
+                for k, v in obj.items() if not any(_quita(rx, k, v) for rx in quitar)
+                and not (_lead and str(k).casefold() in ("nombre", "name", "email", "correo", "phone"))}
     if isinstance(obj, list):
-        return [recortar_doc(v, quitar) for v in obj]
+        return [recortar_doc(v, quitar, _lead) for v in obj]
     return obj
 
 
 def _serie_de_meta(bloque):
     """¿Es un bloque de Meta? (tiene leads/gasto/campañas o su serie lleva «meta»). GA4 y Search Console no se tocan."""
-    ser = bloque.get("serie")
-    if isinstance(ser, list) and ser and isinstance(ser[0], dict) and "meta" in ser[0]:
+    normal = {str(k).casefold(): v for k, v in bloque.items()}
+    ser = normal.get("serie")
+    if isinstance(ser, list) and ser and isinstance(ser[0], dict) and "meta" in {str(k).casefold() for k in ser[0]}:
         return True
-    return bool({"campanas", "conjuntos", "gasto", "cpl", "actual", "presupuesto"} & set(bloque)) and not {"clics", "impresiones_web", "usuarios"} & set(bloque)
+    return bool({"campanas", "conjuntos", "gasto", "cpl", "actual", "presupuesto"} & set(normal)) and not {"clics", "impresiones_web", "usuarios"} & set(normal)
 
 
 def quitar_para(persona, cp, cliente_id=None):
@@ -845,6 +908,8 @@ def quitar_para(persona, cp, cliente_id=None):
         q.append(CLAVES_COBROS)
     if not v("inversion"):
         q += [CLAVES_INVERSION, DINERO_INVERSION_VALOR]
+    if not v("dinero_empresa"):
+        q.append(re.compile(r"(?:^|[_\-.])(?:agency_(?:profit|margin|cost)|beneficio\w*|margen\w*|rentabilidad\w*|tarifa_hora|coste_eur)(?:$|[_\-.])", re.I))
     return q
 
 
@@ -883,7 +948,7 @@ def recortar_ficha(persona, cp, cid, doc):
     if not v("cuota") and isinstance(fuentes.get("libro"), dict):
         fuentes["libro"] = recortar_doc(fuentes["libro"], [CLAVES_LIBRO_CUOTA])
     if not v("cuota") and isinstance((fuentes.get("horas") or {}).get("datos"), dict):
-        fuentes["horas"]["datos"] = sin_cuota(fuentes["horas"]["datos"])
+        fuentes["horas"]["datos"] = sin_cuota(fuentes["horas"]["datos"], v("horas_pautadas"))
     if not v("horas_cliente") and isinstance(fuentes.get("horas"), dict):
         fuentes["horas"] = {k: x for k, x in fuentes["horas"].items() if k != "datos"}
         fuentes["horas"]["nota"] = "Las horas por cliente las ven quien lo lleva, sus jefas, operaciones y dirección (D-84)."
@@ -914,7 +979,7 @@ def ficha_sin_importes(out, ve_cuota, ve_inversion):
 CLAVES_FILA_LEAD = {"nombre_lead", "telefono", "tel", "tel_m", "nombre_m", "correo_lead", "email_lead", "enlace_contacto", "contacto_id", "lead_id"}
 
 
-CLAVES_RENTABILIDAD = re.compile(r"^(tarifa_hora|vida_meses|en_facturacion|margen.*|rentabilidad.*|coste_eur)$")
+CLAVES_RENTABILIDAD = re.compile(r"(?:^|[_\-.])(?:tarifa_hora|vida_meses|en_facturacion|margen\w*|rentabilidad\w*|coste_eur|agency_(?:profit|margin|cost))(?:$|[_\-.])", re.I)
 CLAVES_ENLACE = re.compile(r"(?i)^(url|enlace.*|href|web|prueba|link.*|enlaces)$")
 
 
@@ -937,11 +1002,17 @@ def recortar_modulo(persona, cp, obj, nivel=None, solo_todo=(), filas_lead=(), c
     real_id = activo[0]["id"] if activo else None
     ve_rentabilidad = P.ver(persona, {"tipo": "rentabilidad_cliente"}, cp)["ok"]
     filas_tipo = {f["lista"]: f for f in conf.get("filas_solo_tipo", [])}
+    # Tomás 3-oct (58_FEEDBACK_TOMAS_03OCT): el account solo recibe SUS clientes en todas partes. Además de las filas con
+    # cliente_id (ya fuera por cliente_detalle), fuera las filas que nombran a otro cliente por «cliente», «cid» o
+    # «id»+«nombre» (seo/webs, la lista común de la verdad única), las claves que son otro cliente y las listas de nombres.
+    ajeno = clientes_ajenos(persona, cp) if P.solo_su_cartera(persona) else None
 
     def fila_ok(x):
         if not isinstance(x, dict):
             return True
         if x.get("cliente_id") and not P.ver(persona, {"tipo": "cliente_detalle", "cliente_id": x["cliente_id"]}, cp)["ok"]:
+            return False
+        if ajeno is not None and not x.get("cliente_id") and cliente_de_fila(x, ajeno):
             return False
         # Ronda 6 (M4): nivel «suyo» de verdad: solo los clientes de su cartera, aunque su ámbito vea más.
         if nivel == "suyo" and x.get("cliente_id") and x["cliente_id"] not in cartera:
@@ -959,25 +1030,38 @@ def recortar_modulo(persona, cp, obj, nivel=None, solo_todo=(), filas_lead=(), c
         return True
 
     cache = {}
+    cache_p = {}
+
+    def ve_pautadas(cid):
+        if cid not in cache_p:
+            cache_p[cid] = bool(cid) and P.ver(persona, {"tipo": "horas_pautadas", "cliente_id": cid}, cp)["ok"]
+        return cache_p[cid]
+
+    def deja_horas(k, cid):
+        """Tomás 3-oct: «cuota_horas» (las horas pactadas) y «coste_horas» (las horas consumidas, no euros) viajan al account
+        del cliente aunque no vea la cuota; dentro, sin_cuota() deja solo las horas."""
+        return (k == "cuota_horas" and ve_pautadas(cid)) or (k == "coste_horas" and ve_pautadas(cid))
 
     def quitar(cid):
         if cid not in cache:
             cache[cid] = quitar_para(persona, cp, cid)
         return cache[cid]
 
-    def paso(o, cid=None, lista=None, libre=False):
+    def paso(o, cid=None, lista=None, libre=False, lead_privado=False):
         # Ronda 12 (R13): dentro de una lista de búsquedas/consultas/palabras clave, el texto es del usuario: sin tocar importes.
         libre = libre or bool(lista and P.CLAVES_TEXTO_LIBRE.match(str(lista)))
         if isinstance(o, dict):
             cid = o.get("cliente_id") or o.get("cid") or cid    # el cliente de la fila manda para ella y sus hijos
             q = quitar(cid)
             if CLAVES_CUOTA in q:
-                o = sin_cuota(o)
+                o = sin_cuota(o, ve_pautadas(cid))
             if not ve_rentabilidad:                              # A3: tarifa, vida, márgenes = rentabilidad (D-85)
-                o = {k: v for k, v in o.items() if not CLAVES_RENTABILIDAD.match(k)}
-            sin_inv = CLAVES_INVERSION in q and lista in ("meta", "datos", "meta_ads") and _serie_de_meta(o)
-            return {k: (serie_sin_gasto(paso(v, cid, k, libre)) if sin_inv and k in SERIES_CON_GASTO else paso(v, cid, k, libre))
-                    for k, v in o.items() if not any(_quita(rx, k, v) for rx in q)}
+                o = {k: v for k, v in o.items() if not CLAVES_RENTABILIDAD.search(str(k))}
+            sin_inv = CLAVES_INVERSION in q and str(lista).casefold() in ("meta", "datos", "meta_ads") and _serie_de_meta(o)
+            return {k: (serie_sin_gasto(paso(v, cid, k, libre, lead_privado or str(k).casefold() in {str(x).casefold() for x in filas_lead})) if sin_inv and str(k).casefold() in SERIES_CON_GASTO else paso(v, cid, k, libre, lead_privado or str(k).casefold() in {str(x).casefold() for x in filas_lead}))
+                    for k, v in o.items() if (not any(_quita(rx, k, v) for rx in q) or deja_horas(k, cid))
+                    and not (ajeno is not None and str(k).strip().lower() in ajeno)
+                    and not (lead_privado and str(k).casefold() in ("nombre", "name", "email", "correo", "phone"))}
         if isinstance(o, str):
             if lista and CLAVES_ENLACE.match(lista):              # A4: nada de javascript: ni data: en enlaces
                 return P.enlace_seguro(o)
@@ -993,11 +1077,12 @@ def recortar_modulo(persona, cp, obj, nivel=None, solo_todo=(), filas_lead=(), c
                 o = [x for x in o if not (isinstance(x, dict) and x.get(ft["campo"]) in ft["valores"])]
             sin_cliente_fuera = lista in solo_todo and nivel != "todo"
             # Nivel «resumen» (p. ej. Valeria en Salud del CRM): fuera las listas de leads y cualquier fila de un lead concreto.
-            if nivel == "resumen" and lista in filas_lead:
+            if nivel == "resumen" and str(lista).casefold() in {str(k).casefold() for k in filas_lead}:
                 return []
-            return [paso(x, cid, None, libre) for x in o if fila_ok(x)
+            return [paso(x, cid, None, libre, lead_privado) for x in o if fila_ok(x)
+                    and not (ajeno is not None and isinstance(x, str) and x.strip().lower() in ajeno)
                     and not (sin_cliente_fuera and isinstance(x, dict) and not x.get("cliente_id"))
-                    and not (nivel == "resumen" and isinstance(x, dict) and CLAVES_FILA_LEAD & set(x))]
+                    and not (nivel == "resumen" and isinstance(x, dict) and {"nombre_lead", "lead_name", "telefono", "tel", "tel_m", "nombre_m", "correo_lead", "email_lead", "lead_email", "lead_phone", "enlace_contacto", "contacto_id", "lead_id"} & {str(k).casefold() for k in x})]
         return o
 
     out = paso(obj)
@@ -1015,7 +1100,37 @@ def recortar_modulo(persona, cp, obj, nivel=None, solo_todo=(), filas_lead=(), c
             out = _rama_sin_importes(out, ruta.split("."))
     if conf.get("solo_cartera_silla"):                                         # R16c: outreach, solo su cartera
         out = recorte_por_silla(persona, cp, out, conf["solo_cartera_silla"])
+    # Tomás 3-oct: los accounts no ven dinero en ninguna parte (cuota, facturado, gasto, coste por lead), tampoco escrito
+    # dentro de textos sin cliente (prioridades, chat, reglas). Solo se respetan las palabras del propio cliente en sus
+    # correos y mensajes («textos_del_cliente») y las búsquedas de la gente (consultas, palabras clave).
+    if ajeno is not None and "account" in persona.get("puestos", []) and not P.ver(persona, {"tipo": "cuota"}, cp)["ok"] and not conf.get("textos_del_cliente"):
+        out = P.sin_importes(out)
     return out
+
+
+def clientes_ajenos(persona, cp):
+    """Tomás 3-oct: ids y nombres (en minúsculas) de los clientes que NO son de la cartera de la persona. Solo se usa con
+    los puestos de «solo_su_cartera» (accounts)."""
+    mios = cp.get("cartera_ids") or set()
+    out = set()
+    for c in E.crudo["clientes"]:
+        if c["id"] in mios:
+            continue
+        out.add(c["id"].lower())
+        if (c.get("nombre") or "").strip():
+            out.add(c["nombre"].strip().lower())
+    return out
+
+
+def cliente_de_fila(x, ajeno):
+    """¿Esta fila (sin cliente_id) es de un cliente ajeno? Por «cid», por «cliente» (id o nombre exacto) o por «id» cuando
+    la fila es la de un cliente (lleva también su «nombre»)."""
+    for k in ("cid", "cliente", "cliente_slug"):
+        v = x.get(k)
+        if isinstance(v, str) and v.strip().lower() in ajeno:
+            return True
+    v = x.get("id")
+    return isinstance(v, str) and v.lower() in ajeno and isinstance(x.get("nombre"), str) and x["nombre"].strip().lower() in ajeno
 
 
 def recorte_vacio(obj, conf):
@@ -1091,8 +1206,12 @@ def ve_alguno(persona, modulos):
 
 def config_almacen(almacen):
     import fnmatch
+    if not isinstance(almacen, str) or any(s in ('', '.', '..') for s in almacen.split('/')):
+        return None
+    segmentos = almacen.split('/')
     for patron, conf in P.REGLAS.get("almacenes_privados", {}).items():
-        if fnmatch.fnmatch(almacen, patron):
+        if (len(patron.split('/')) == len(segmentos)
+                and all(fnmatch.fnmatchcase(s, p) for s, p in zip(segmentos, patron.split('/')))):
             return conf
     return None
 
@@ -1212,19 +1331,57 @@ class DatoRoto(Exception):
     pass
 
 
+class DatoSecreto(DatoRoto):
+    pass
+
+
+def _lectura_secreta_actual(fichero):
+    """Escanea exactamente el texto leído; política y fichero forman la versión."""
+    from types import SimpleNamespace
+    permitidos_f = AQUI / 'escaner_permitidos.json'
+    rel = fichero.relative_to(AQUI).as_posix()
+    for _ in range(2):
+        marca = _estado_fichero(fichero)
+        politica = _estado_fichero(permitidos_f) if permitidos_f.exists() else None
+        with _CANDADO_BUENO:
+            previo = _ULTIMO_BUENO.get(str(fichero))
+        sello = (marca, politica)
+        if previo and previo[0] == sello:
+            return previo[1], previo[2], sello
+        texto = fichero.read_text()
+        try:
+            permisos = json.loads(permitidos_f.read_text()) if politica is not None else {}
+            if not isinstance(permisos, dict) or not isinstance(permisos.get(rel, []), list) or not all(isinstance(x, str) for x in permisos.get(rel, [])):
+                raise ValueError('política inválida')
+        except (OSError, ValueError, TypeError):
+            raise DatoSecreto('La política de secretos no está disponible.')
+        captura = SimpleNamespace(name=fichero.name, parent=fichero.parent, suffix=fichero.suffix,
+                                  relative_to=fichero.relative_to, read_text=lambda **kw: texto)
+        hallazgos = ESC.escanear_fichero(captura, set(permisos.get(rel, [])))
+        if marca != _estado_fichero(fichero) or politica != (_estado_fichero(permitidos_f) if permitidos_f.exists() else None):
+            continue
+        with CANDADO:
+            if hallazgos:
+                E.bloqueados[rel] = hallazgos
+            else:
+                E.bloqueados.pop(rel, None)
+            E.nucleo_bloqueado = any(f'data/{n}.json' in E.bloqueados for n in NUCLEO)
+        if hallazgos:
+            raise DatoSecreto('La puerta de secretos ha encontrado algo en este fichero: no se sirve.')
+        obj = json.loads(texto)
+        return obj, datetime.fromtimestamp(fichero.stat().st_mtime).isoformat(timespec='seconds'), sello
+    raise DatoSecreto('El fichero cambió durante la comprobación de secretos: vuelve a probar.')
+
+
 def leer_json_bueno(fichero):
     """(objeto, aviso o None). aviso = {"dato_de": hora, "motivo": …} cuando se sirve el último bueno."""
     clave = str(fichero)
     try:
-        st = fichero.stat()
-        with _CANDADO_BUENO:
-            previo = _ULTIMO_BUENO.get(clave)
-        if previo and previo[0] == (st.st_mtime_ns, st.st_size):
-            return previo[1], None
-        texto = fichero.read_text()
-        obj = json.loads(texto)
+        obj, fecha, sello = _lectura_secreta_actual(fichero)
         if obj in ({}, [], None):
             raise ValueError("fichero vacío")
+    except DatoSecreto:
+        raise
     except (OSError, ValueError) as e:
         with _CANDADO_BUENO:
             previo = _ULTIMO_BUENO.get(clave)
@@ -1234,25 +1391,107 @@ def leer_json_bueno(fichero):
             return obj, {"dato_de": None, "motivo": "El fichero de datos está vacío y no hay un dato anterior en el servidor."}
         raise DatoRoto("El fichero de datos está roto o a medio escribir y no hay un dato anterior: vuelve a probar en un minuto.")
     with _CANDADO_BUENO:
-        _ULTIMO_BUENO[clave] = ((st.st_mtime_ns, st.st_size), obj, datetime.fromtimestamp(st.st_mtime).isoformat(timespec="seconds"))
+        _ULTIMO_BUENO[clave] = (sello, obj, fecha)
     return obj, None
 
 
 def entrada_datos_modulo(rel):
     """Entrada de datos_de_modulo: exacta o por patrón («chat_equipo/p_*»)."""
     import fnmatch
+    if not isinstance(rel, str) or any(s in ('', '.', '..') for s in rel.split('/')):
+        return None
     dm = P.REGLAS.get("datos_de_modulo", {})
     if rel in dm:
         return dm[rel]
-    return next((v for k, v in dm.items() if "*" in k and fnmatch.fnmatch(rel, k)), None)
+    segmentos = rel.split('/')
+    return next((v for k, v in dm.items() if '*' in k
+                 and len(k.split('/')) == len(segmentos)
+                 and all(fnmatch.fnmatchcase(s, patron) for s, patron in zip(segmentos, k.split('/')))), None)
+
+
+def ambito_datos_581(real, persona):
+    from acciones_lectura_544 import ambito
+    return ambito(E, P, ACT, real, persona)
+
+
+def cliente_url_581(rel):
+    partes = rel.split('/')
+    if len(partes) == 2 and partes[0] == 'clientes':
+        return partes[1]
+    if len(partes) == 3 and ((partes[0] == 'paneles' and partes[1] in ('ga4', 'gsc', 'meta', 'ghl', 'mc'))
+                            or (partes[0] == 'informe' and partes[1].startswith('c_'))):
+        return partes[2]
+    return None
+
+
+def cliente_datos_581(cid, ambito, niveles):
+    from acciones_lectura_544 import cliente_visible
+    if (ambito is None or not isinstance(cid, str) or not re.fullmatch(r'[\w\-]{1,100}', cid)
+            or not cliente_visible(cid, E, P, ACT, ambito[0], ambito[1])):
+        return False
+    return all(nivel != 'suyo' or cid in cp.get('cartera_ids', set())
+               for nivel, cp in zip(niveles, ambito[1]))
+
+
+def documento_raiz_581(doc, rel, ambito, niveles):
+    """Sólo autoridad de cliente explícito; no aplica reglas de filas/personas a la raíz."""
+    ids = [cliente_url_581(rel)] if cliente_url_581(rel) is not None else []
+    if isinstance(doc, dict):
+        ids += [doc[k] for k in ('cliente_id', 'cid', 'cli') if k in doc and doc[k] is not None]
+    return (not ids or (all(isinstance(cid, str) and cid == ids[0] for cid in ids)
+                        and cliente_datos_581(ids[0], ambito, niveles)))
+
+
+def modulo_vigente_581(real, persona, rel, previo, doc):
+    final = puerta_modulo(real, persona, rel, apuntar=False)
+    return (not final.get('error') and final.get('firma581') == previo.get('firma581')
+            and final.get('nivel') == previo.get('nivel')
+            and final.get('marca581') == previo.get('marca581')
+            and documento_raiz_581(doc, rel, final.get('ambito581'), final.get('niveles581', [])))
+
+
+def puerta_cliente_581(real, persona, cid):
+    ambito = ambito_datos_581(real, persona)
+    if ambito is None:
+        return None
+    niveles = [ve_alguno(p, ['ficha', 'bandeja', 'captacion', 'asistente-ia']) for p in ambito[0]]
+    if not all(niveles) or not cliente_datos_581(cid, ambito, niveles):
+        return None
+    return {'ambito': ambito, 'niveles': niveles,
+            'nivel': min(niveles, key={'resumen': 1, 'suyo': 2, 'todo': 3}.get)}
+
+
+def cliente_vigente_581(real, persona, cid, previo):
+    final = puerta_cliente_581(real, persona, cid)
+    if final is None or final['ambito'][2] != previo['ambito'][2]:
+        return False
+    if 'fichero581' in previo:
+        try:
+            marca = _estado_fichero(previo['fichero581'])
+        except OSError:
+            marca = None
+        if marca != previo['marca581']:
+            return False
+    return True
 
 
 def puerta_modulo(real, persona, rel, apuntar=True):
     """R15 (A5): la puerta de /api/modulo/<rel>, sacada a una función para que el índice del buscador pase por la MISMA.
     Devuelve {"error": (código, texto)} o {"fichero", "conf", "nivel"}. apuntar=False no deja «denegado» en el rastro
     (el índice prueba muchos ficheros a la vez; lo que no se puede leer, simplemente no entra)."""
+    ambito581 = ambito_datos_581(real, persona)
+    if ambito581 is None:
+        return {"error": (403, "El ámbito actual de estos datos no está disponible.")}
+    # 249: sólo este panel es nominal; todas sus rutas/cache/buscador pasan por
+    # esta puerta antes de leer. Una dirección nueva ni Vercomo sustituyen a Tomás.
+    if rel.split('/')[0] == 'panel_direccion' and not PANEL_PRIVADO_249.permitido(real, persona, E.crudo.get('personas')):
+        return {"error": (403, "El panel de dirección está reservado a Tomás, sin «ver como».")}
     solo_lectura = persona["id"] != real["id"]
     fichero = (DATA / f"{rel}.json").resolve()
+    try:
+        marca581 = _estado_fichero(fichero)
+    except OSError:
+        marca581 = None
     if "_privado" in rel or not str(fichero).startswith(str(DATA.resolve())) or rel.split("/")[0] in NUCLEO + ["clientes", "para_confirmar", "ids_clientes"]:
         return {"error": (403, "Ese fichero no se sirve por aquí.")}
     entrada = entrada_datos_modulo(rel)
@@ -1270,24 +1509,31 @@ def puerta_modulo(real, persona, rel, apuntar=True):
             registrar_agrupado(real["id"], "modulo", "denegado", rel, {"motivo": "fichero de otra persona"}, como=persona["id"] if solo_lectura else None)
         return {"error": (403, "Ese fichero es de otra persona.")}
     if puestos_ok:   # (C3) en «ver como», también la persona real tiene que tener el puesto
-        nivel = "todo" if set(persona.get("puestos", [])) & set(puestos_ok) and set(real.get("puestos", [])) & set(puestos_ok) else None
+        niveles581 = ['todo' if set(p.get('puestos', [])) & set(puestos_ok) else None for p in ambito581[0]]
+        nivel = "todo" if all(niveles581) else None
         if conf.get("solo_real") and not set(real.get("puestos", [])) & set(puestos_ok):   # D-P-C2
             nivel = None
     else:
-        nivel = ve_alguno(persona, modulos)
+        niveles581 = [ve_alguno(p, modulos) for p in ambito581[0]]
+        nivel = min(niveles581, key={'resumen': 1, 'suyo': 2, 'todo': 3}.get) if all(niveles581) else None
     # Ronda 5 (I-02): «excluir_puestos» = quien solo tiene esos puestos no recibe el fichero (Sofía y Reuniones).
-    if conf.get("excluir_puestos") and set(persona.get("puestos", [])) <= set(conf["excluir_puestos"]):
+    if conf.get("excluir_puestos") and any(set(p.get('puestos', [])) <= set(conf['excluir_puestos']) for p in ambito581[0]):
         nivel = None
     # R16c: «vacio_para_puestos» = quien solo tiene esos puestos y no ve el módulo recibe 200 con las listas vacías
     # (la setter y la verdad única: la carcasa la pide a todos). Nunca más que eso.
     vacio = (conf.get("vacio_para_puestos") or {}).get("puestos") or []
     if not nivel and vacio and persona.get("puestos") and set(persona["puestos"]) <= set(vacio):
-        return {"fichero": fichero, "conf": conf, "nivel": "vacio"}
+        return {"fichero": fichero, "conf": conf, "nivel": "vacio", 'firma581': ambito581[2],
+                'ambito581': ambito581, 'niveles581': niveles581, 'marca581': marca581}
     if not nivel:
         if apuntar:
             registrar_agrupado(real["id"], "modulo", "denegado", rel, {"modulos": modulos}, como=persona["id"] if solo_lectura else None)
         return {"error": (403, "Estos datos son de una pantalla que no es de tu puesto.")}
-    return {"fichero": fichero, "conf": conf, "nivel": nivel}
+    cid581 = cliente_url_581(rel)
+    if cid581 is not None and not cliente_datos_581(cid581, ambito581, niveles581):
+        return {"error": (403, "El cliente de estos datos no está autorizado.")}
+    return {"fichero": fichero, "conf": conf, "nivel": nivel, 'firma581': ambito581[2],
+            'ambito581': ambito581, 'niveles581': niveles581, 'marca581': marca581}
 
 
 # ===================================================================== R15 · buscador (A5), Mis clientes (A6) y «Algo va mal» (A7)
@@ -1295,14 +1541,21 @@ def modulo_recortado(real, persona, cp, rel):
     """El fichero data/<rel>.json ya recortado para esta persona, por la MISMA puerta que /api/modulo/<rel> (sin dejar
     «denegado» en el rastro: lo que no puede leer no entra en el índice). None si no puede o no existe."""
     pm = puerta_modulo(real, persona, rel, apuntar=False)
-    if pm.get("error") or not pm["fichero"].exists() or f"data/{rel}.json" in E.bloqueados:
+    if pm.get("error") or not pm["fichero"].exists():
         return None
     try:
-        doc, _ = leer_json_bueno(pm["fichero"])
+        doc, aviso_dato_287 = leer_json_bueno(pm["fichero"])
     except Exception:
         return None
+    if not modulo_vigente_581(real, persona, rel, pm, doc):
+        return None
     conf = pm["conf"]
-    return recortar_modulo(persona, cp, doc, pm["nivel"], tuple(conf.get("solo_todo_sin_cliente", [])), tuple(conf.get("filas_lead", [])), conf)
+    salida = ACT.quitar_bajas(recortar_modulo(persona, cp, doc, pm["nivel"], tuple(conf.get("solo_todo_sin_cliente", [])), tuple(conf.get("filas_lead", [])), conf), rel)
+    if rel == "produccion/produccion" and not aviso_dato_287:
+        salida = EVIDENCIA_PRODUCCION_287.enriquecer287(salida, sys.modules[__name__], real, persona)
+        import controlador_planning_681 as PLANNING_681
+        salida = PLANNING_681.enriquecer681(salida, sys.modules[__name__], real, persona)
+    return salida if modulo_vigente_581(real, persona, rel, pm, doc) else None
 
 
 def vencidas_al_dia(d, pid, hoy):
@@ -1528,6 +1781,73 @@ def cliente_de_objeto(herramienta, objeto):
     return None
 
 
+def referencia_accion603(herramienta, tipo, objeto):
+    """Referencia exacta: (cliente, conocida, ambigua/inválida); nunca CID del cuerpo."""
+    if isinstance(objeto, bool) or not isinstance(objeto, (str, int)):
+        return None, False, True
+    objeto = str(objeto)
+    clientes = [c for c in E.crudo.get("clientes") or [] if isinstance(c, dict) and c.get("id") == objeto]
+    if len(clientes) > 1:
+        return None, False, True
+    if herramienta == "desk" and tipo == "recordatorio_impago":
+        archivo, listas, campos = "finanzas/impagos.json", ("filas",), ("doc",)
+    elif herramienta in ("desk", "app"):
+        archivo, listas, campos = "bandeja/bandeja.json", ("correos", "triaje"), ("id", "numero")
+    elif herramienta == "whatsapp":
+        archivo, listas, campos = "whatsapp/whatsapp.json", ("clientes",), ("cliente_id",)
+    elif herramienta == "ghl":
+        archivo, listas, campos = "crm/crm.json", ("leads_sin_tocar", "citas_sin_estado", "oportunidades_paradas"), ("ref",)
+    else:
+        return None, False, False
+    refs = {objeto}
+    if herramienta == "ghl":
+        m = re.search(r"(?:lead|cita|oportunidad|contacto)\s+(\S+)$", objeto)
+        if m:
+            refs.add(m.group(1))
+    try:
+        doc = json.loads((DATA / archivo).read_text())
+        if not isinstance(doc, dict):
+            raise ValueError("Forma de fuente inválida")
+        filas = []
+        for lista in listas:
+            xs = doc.get(lista, [])
+            if not isinstance(xs, list):
+                raise ValueError("Forma de fuente inválida")
+            filas.extend(x for x in xs if isinstance(x, dict) and any(x.get(k) is not None and str(x[k]) in refs for k in campos))
+    except Exception:
+        # App conserva sus referencias globales; no se finge una referencia de proveedor.
+        if herramienta == "app" and len(clientes) == 1:
+            return objeto, True, False
+        return None, False, herramienta != "app"
+    if len(filas) > 1:
+        return None, False, True
+    if filas:
+        cid = filas[0].get("cliente_id")
+        if herramienta == "desk" and tipo == "recordatorio_impago" and not cid:
+            return None, False, True
+        if cid is not None and (not isinstance(cid, str) or not cid):
+            return None, False, True
+        if clientes and cid != objeto:
+            return None, False, True
+        return cid, True, False
+    if len(clientes) == 1 and (herramienta == "app" or herramienta == "desk" and tipo in ("pedir_accesos", "correo", "crear_reunion", "recordatorio_seguimiento")):
+        return objeto, True, False
+    return None, False, False
+
+
+def autoridad_decision607(real, clientes):
+    """Autoridad actual para una decisión nueva, incluida su lista de clientes."""
+    from acciones_lectura_544 import ambito, cliente_visible
+    inicial = ambito(E, P, ACT, real, real)
+    if inicial is None:
+        return None
+    ps, cps, firma = inicial
+    if not all(cliente_visible(cid, E, P, ACT, ps, cps) for cid in clientes):
+        return None
+    final = ambito(E, P, ACT, real, real)
+    return firma if final is not None and final[2] == firma else None
+
+
 _ACCIONES_RECIENTES = {}
 
 
@@ -1600,7 +1920,22 @@ def tarea_de_produccion(objeto):
             _TAREAS.update(mtime=mt, por_id=por_id)
     except Exception:
         return None
-    return _TAREAS["por_id"].get(str(objeto or ""))
+    t = _TAREAS["por_id"].get(str(objeto or ""))
+    if t is None:   # Mi trabajo (3-oct): lo de «planning mensual» o «backlog» que vence este mes (fuera de la cola de Producción)
+        try:
+            fm = DATA / "mi_trabajo" / "mi_trabajo.json"
+            mm = fm.stat().st_mtime
+            if _TAREAS.get("mt_mtime") != mm:
+                extra = {}
+                for r in json.loads(fm.read_text()).get("tareas") or []:
+                    if isinstance(r, dict) and r.get("id") and r.get("extra"):
+                        x = extra.setdefault(str(r["id"]), {"id": r["id"], "cli": r.get("cli"), "estado": r.get("estado"), "autores": set()})
+                        x["autores"].add(r.get("persona_id"))
+                _TAREAS.update(mt_mtime=mm, extra=extra)
+            t = _TAREAS.get("extra", {}).get(str(objeto or ""))
+        except Exception:
+            t = None
+    return t
 
 
 def lleva_cliente(persona, cid, cp):
@@ -1711,17 +2046,31 @@ def cliente_del_dato(conf, ref, almacen=None):
 
 # =============================================================== «ver como»: lecturas al rastro (ronda 6, M2)
 _LECTURAS_VISTAS = {}
+_CANDADO_LECTURAS_VISTAS = threading.Lock()
+
+
+def ruta_lectura_ver_como585(ruta):
+    """Familia pública del lector; nunca guarda segmentos dinámicos ni consultas."""
+    segmentos = str(ruta).split("?", 1)[0].split("/", 3)
+    familias = {"sesion", "modulo", "cliente", "buscar", "decisiones", "ajustes", "acciones", "rastro",
+                "ia", "avisos", "envios", "sincronia", "canales", "cerebro", "metodo", "mi_trabajo",
+                "tareas", "uso", "operaciones", "crm", "agenda", "recarga", "opiniones"}
+    familia = segmentos[2] if len(segmentos) >= 3 and segmentos[:2] == ["", "api"] else ""
+    return "/api/" + (familia if familia in familias else "otra")
 
 
 def apuntar_lectura_ver_como(real, vista, ruta):
-    """Cada lectura en «ver como» queda en el rastro, agrupada por minuto para no llenar la tabla."""
+    """Solicitud autenticada de lectura, agrupada sólo después de persistir."""
+    ruta = ruta_lectura_ver_como585(ruta)
     clave = (real["id"], vista["id"], ruta, datetime.now().strftime("%Y-%m-%d %H:%M"))
-    if clave in _LECTURAS_VISTAS:
-        return
-    _LECTURAS_VISTAS[clave] = True
-    if len(_LECTURAS_VISTAS) > 5000:
-        _LECTURAS_VISTAS.clear()
-    registrar(real["id"], "ver_como", "lectura", ruta, {"detalle": f"{real.get('alias')} leyó como {vista.get('alias')}"}, como=vista["id"])
+    with _CANDADO_LECTURAS_VISTAS:
+        if clave in _LECTURAS_VISTAS:
+            return
+        registrar(real["id"], "ver_como", "lectura", ruta,
+                  {"metodo": "GET", "evento": "solicitud", "agrupacion": "familia_minuto"}, como=vista["id"])
+        if len(_LECTURAS_VISTAS) >= 5000:
+            _LECTURAS_VISTAS.clear()
+        _LECTURAS_VISTAS[clave] = True
 
 
 # =============================================================== decisiones en vivo (ronda 4, D-P-PER1)
@@ -1731,6 +2080,48 @@ TIPOS_DECISION = ("para_tomas", "para_coti", "escalada")
 def puede_contestar(persona, tipo):
     pu = set(persona.get("puestos", []))
     return ("proyectos" in pu or "direccion" in pu) if tipo == "para_coti" else "direccion" in pu
+
+
+def recorte_importes_lectura588(filas, personas, contextos):
+    """Importes estructurados y texto según los cuatro grants de ambos actores.
+
+    vista_previa conserva su formato almacenado; si es JSON se examinan sus
+    textos decodificados, también para tipos no incluidos en el recorte estructural.
+    """
+    salida = []
+    for original in filas:
+        fila = dict(original)
+        cid = fila.get("cliente_id")
+        permisos = [all(P.ver(p, {"tipo": tipo, "cliente_id": cid}, cp).get("ok") is True
+                        for p, cp in zip(personas, contextos))
+                    for tipo in ("cuota", "inversion", "cobros", "dinero_empresa")]
+        quitar = P.importes_a_quitar(*permisos)
+        # 632: un número bajo fee/CPC/agency_profit no es texto monetario.
+        # Reutilizar los patrones económicos de 589, sin añadir aquí política
+        # de leads. La unión conserva la intersección de ambos grants.
+        patrones = []
+        for p, cp in zip(personas, contextos):
+            for patron in quitar_para(p, cp, cid):
+                if patron is not CLAVES_LEAD and patron not in patrones:
+                    patrones.append(patron)
+        fila = recortar_doc(fila, patrones)
+        if quitar:
+            vp = fila.pop("vista_previa", None)
+            tiene_vp = "vista_previa" in original.keys()
+            fila = P.sin_importes(fila, quitar)
+            if tiene_vp:
+                if isinstance(vp, str):
+                    try:
+                        valor = json.loads(vp)
+                    except (ValueError, TypeError):
+                        fila["vista_previa"] = P.sin_importes(vp, quitar)
+                    else:
+                        limpio = P.sin_importes(recortar_doc(valor, patrones), quitar)
+                        fila["vista_previa"] = vp if limpio == valor else json.dumps(limpio, ensure_ascii=False)
+                else:
+                    fila["vista_previa"] = P.sin_importes(recortar_doc(vp, patrones), quitar)
+        salida.append(fila)
+    return salida
 
 
 def decisiones_para(persona, cp):
@@ -1790,43 +2181,102 @@ def pedir_recarga(quien, modo="ligera"):
     return dict(fila), True
 
 
+def _validar_pasos_recarga575(cfg, modo):
+    if not isinstance(cfg, dict) or modo not in cfg or not isinstance(cfg[modo], list):
+        raise ValueError('Configuración de recarga inválida')
+    pasos = cfg[modo]
+    ids = set()
+    for paso in pasos:
+        if not isinstance(paso, dict):
+            raise ValueError('Paso inválido')
+        pid, cmd, limite = paso.get('id'), paso.get('cmd'), paso.get('timeout', 300)
+        if not isinstance(pid, str) or not pid or pid in ids:
+            raise ValueError('Identificador de paso inválido')
+        ids.add(pid)
+        if not ((isinstance(cmd, str) and bool(cmd.strip())) or (isinstance(cmd, list) and bool(cmd) and all(isinstance(x, str) and bool(x) for x in cmd))):
+            raise ValueError('Comando inválido')
+        if isinstance(limite, bool) or not isinstance(limite, (int, float)) or not 0 < limite <= 86400:
+            raise ValueError('Límite inválido')
+    return pasos
+
+
+def _fallo_recarga575(fila, pasos, fase, clase):
+    """Diagnóstico público genérico. Nunca texto de excepción, comando ni cuerpo privado."""
+    diagnostico = {'id': 'worker_error', 'ok': False, 'segundos': 0,
+                  'salida': ['fase: ' + fase, 'clase: ' + clase]}
+    salida = list(pasos) + [diagnostico]
+    with conectar() as con:
+        con.execute("UPDATE recargas SET estado='con_fallos', terminada=datetime('now'), pasos=? WHERE id=? AND estado IN ('en_curso','ok','con_fallos')",
+                    (json.dumps(salida, ensure_ascii=False), fila['id']))
+
+
 def trabajador_recargas():
-    """Hilo único: atiende la cola de recargas una a una (los generadores son solo lectura de sus herramientas)."""
+    """Atiende jobs una vez; errores recuperables no terminan el hilo ni reejecutan pasos."""
+    reparaciones = {}
+    errores = 0
     while True:
         COLA.wait(timeout=60)
         COLA.clear()
         while True:
-            with conectar() as con:
-                fila = con.execute("SELECT * FROM recargas WHERE estado='pendiente' ORDER BY id LIMIT 1").fetchone()
-                if not fila:
-                    break
-                # La tabla no admite borrar, pero sí avanzar de estado (no es rastro: el rastro va aparte).
-                # R16 (B5): se toma solo si sigue «pendiente» (dos servidores sobre la misma base no la cogen los dos).
-                if con.execute("UPDATE recargas SET estado='en_curso', empezada=datetime('now') WHERE id=? AND estado='pendiente'", (fila["id"],)).rowcount != 1:
-                    continue
-            cfg = json.loads(RECARGA_CFG.read_text())
-            pasos = []
-            for paso in cfg.get(fila["modo"], []):
-                t0 = time.time()
-                try:
-                    r = subprocess.run(paso["cmd"], cwd=AQUI, capture_output=True, text=True, timeout=paso.get("timeout", 300))
-                    ok, salida = r.returncode == 0, (r.stdout + r.stderr).strip().splitlines()[-3:]
-                except subprocess.TimeoutExpired:
-                    ok, salida = False, [f"se pasó de {paso.get('timeout', 300)} s"]
-                except Exception as e:
-                    ok, salida = False, [str(e)]
-                pasos.append({"id": paso["id"], "ok": ok, "segundos": round(time.time() - t0, 1), "salida": [ESC_linea(x) for x in salida]})
-                with conectar() as con:
-                    con.execute("UPDATE recargas SET pasos=? WHERE id=?", (json.dumps(pasos, ensure_ascii=False), fila["id"]))
-            estado = "ok" if all(p["ok"] for p in pasos) else "con_fallos"
-            with conectar() as con:
-                con.execute("UPDATE recargas SET estado=?, terminada=datetime('now') WHERE id=?", (estado, fila["id"]))
-            registrar(fila["quien"], "recarga", "recarga_terminada", str(fila["id"]), {"estado": estado, "fallos": [p["id"] for p in pasos if not p["ok"]]})
+            fila, tomada, pasos, fase = None, False, [], 'consulta'
             try:
+                # Fallos de persistencia previos se terminalizan, nunca vuelven a pendiente.
+                for jid, reparacion in list(reparaciones.items()):
+                    _fallo_recarga575(*reparacion)
+                    del reparaciones[jid]
+                with conectar() as con:
+                    fila = con.execute("SELECT * FROM recargas WHERE estado='pendiente' ORDER BY id LIMIT 1").fetchone()
+                    if not fila:
+                        break
+                    fase = 'claim'
+                    if con.execute("UPDATE recargas SET estado='en_curso', empezada=datetime('now') WHERE id=? AND estado='pendiente'", (fila['id'],)).rowcount != 1:
+                        continue
+                    tomada = True
+                fase = 'configuracion'
+                cfg = json.loads(RECARGA_CFG.read_text())
+                plan = _validar_pasos_recarga575(cfg, fila['modo'])
+                for paso in plan:
+                    fase = 'ejecucion'
+                    t0 = time.time()
+                    try:
+                        r = subprocess.run(paso['cmd'], cwd=AQUI, capture_output=True, text=True, timeout=paso.get('timeout', 300))
+                        ok, salida = r.returncode == 0, (r.stdout + r.stderr).strip().splitlines()[-3:]
+                    except subprocess.TimeoutExpired:
+                        ok, salida = False, ['Tiempo de ejecución agotado.']
+                    except Exception as exc:
+                        ok, salida = False, ['Fallo de ejecución: ' + type(exc).__name__]
+                    pasos.append({'id': paso['id'], 'ok': ok, 'segundos': round(time.time() - t0, 1), 'salida': [ESC_linea(x) for x in salida]})
+                    fase = 'progreso'
+                    with conectar() as con:
+                        con.execute('UPDATE recargas SET pasos=? WHERE id=?', (json.dumps(pasos, ensure_ascii=False), fila['id']))
+                fase = 'finalizacion'
+                estado = 'ok' if all(p['ok'] for p in pasos) else 'con_fallos'
+                with conectar() as con:
+                    con.execute("UPDATE recargas SET estado=?, terminada=datetime('now') WHERE id=?", (estado, fila['id']))
+                fase = 'registro'
+                registrar(fila['quien'], 'recarga', 'recarga_terminada', str(fila['id']), {'estado': estado, 'fallos': [p['id'] for p in pasos if not p['ok']]})
+                fase = 'carga'
                 E.cargar()
-            except Exception:
-                traceback.print_exc()
-            calcular_avisos()
+                fase = 'avisos'
+                calcular_avisos()
+                errores = 0
+            except Exception as exc:
+                clase = type(exc).__name__
+                print('Recarga: fallo controlado · fase=' + fase + ' · clase=' + clase, flush=True)
+                if tomada and fila is not None:
+                    reparacion = (dict(fila), list(pasos), fase, clase)
+                    try:
+                        _fallo_recarga575(*reparacion)
+                    except Exception as secundaria:
+                        reparaciones[fila['id']] = reparacion
+                        print('Recarga: terminalización pendiente · clase=' + type(secundaria).__name__, flush=True)
+                    try:
+                        registrar(fila['quien'], 'recarga', 'recarga_error', str(fila['id']), {'fase': fase, 'clase': clase})
+                    except Exception as secundaria:
+                        print('Recarga: registro de fallo no disponible · clase=' + type(secundaria).__name__, flush=True)
+                # La tabla sigue siendo autoridad; Event no es la única memoria de pendientes.
+                errores = min(errores + 1, 5)
+                time.sleep(errores)
 
 
 def ESC_linea(texto):
@@ -1934,10 +2384,11 @@ class Manejador(SimpleHTTPRequestHandler):
     def fichero_comprimido(self, rel):
         """Ronda 8: .js, .css y .json estáticos con gzip. Ronda 14 (causa 2): ETag con la huella del contenido y, si la
         dirección lleva ?v=<esa huella>, caché de un año (immutable): el navegador no vuelve a preguntar."""
-        p = (AQUI / rel).resolve()
-        if not str(p).startswith(str(AQUI)) or not p.is_file():
+        try:
+            p = ruta_estatica(AQUI, rel)
+            datos, huella = contenido_servido(rel)
+        except (OSError, ValueError):
             return self.responder(404, {"error": "No existe."})
-        datos, huella = contenido_servido(rel)
         etag = f'"{huella}"'
         v = (parse_qs(urlparse(self.path).query).get("v") or [None])[0]
         cache = INMUTABLE if v == huella else "no-cache"
@@ -1995,12 +2446,28 @@ class Manejador(SimpleHTTPRequestHandler):
 
     def _quien(self, q):
         """(real, persona_vista, error). Producción: correo de Cloudflare Access. Prototipo: ?yo= / X-RO-Yo."""
-        if ACCESO.activo():   # C5 · servidor: el correo sale SOLO del sello firmado de Access (E49); ?yo= y X-RO-Yo no valen
+        def canonica(pid):
+            # 259: la sesión nunca hereda roles de una persona retirada ni el
+            # primer registro de una identidad duplicada. Autoridad actual, sin alias.
+            personas = E.crudo.get("personas")
+            if not isinstance(pid, str) or not pid or not isinstance(personas, list):
+                return None
+            candidatas = [p for p in personas if isinstance(p, dict) and p.get("id") == pid]
+            if len(candidatas) != 1:
+                return None
+            actual = candidatas[0]
+            return actual if actual.get("estado") == "activo" and actual.get("activo") is not False else None
+
+        servidor = ACCESO.activo()
+        peer = getattr(self, 'client_address', None)
+        if not servidor and (not isinstance(peer, (tuple, list)) or not peer or peer[0] not in ('127.0.0.1', '::1')):
+            return None, None, (403, "El prototipo sólo admite conexiones locales.")
+        if servidor:   # C5 · servidor: el correo sale SOLO del sello firmado de Access (E49); ?yo= y X-RO-Yo no valen
             correo, motivo = ACCESO.correo_validado(self.headers)
             if not correo:
                 return None, None, (403, motivo)
         else:
-            correo = self.headers.get("Cf-Access-Authenticated-User-Email")
+            correo = None   # Local: una cabecera Access sin sello no acredita identidad.
         if correo:
             real = E.por_correo(correo)
             if not real:
@@ -2011,22 +2478,23 @@ class Manejador(SimpleHTTPRequestHandler):
             yo = self.headers.get("X-RO-Yo") or (q.get("yo") or [None])[0] or galleta.get("ro_yo")
             if not yo:
                 return None, None, (401, "Sin identificar. En el prototipo, elige quién eres; en el servidor, entra por Cloudflare Access.")
-            real = E.persona(yo)
+            real = canonica(yo)
             if not real:
                 return None, None, (403, "No existe esa persona.")
         # Ronda 6 (M7): solo entra quien está «activo». Dudosos, por incorporar y bajas, no, hasta que Mili los active.
-        if real.get("estado") != "activo":
+        real = canonica(real.get("id")) if isinstance(real, dict) else None
+        if real is None:
             return None, None, (403, "Esta persona no está activa: Mili la activa en Ajustes › Personas.")
         como = self.headers.get("X-RO-Como") or (q.get("como") or [None])[0]
         if como is None and not correo and not self.headers.get("X-RO-Yo") and not q.get("yo"):
             como = self.galletas().get("ro_como") or None
         if como and como != real["id"]:
+            vista = canonica(como)
+            if vista is None:
+                return None, None, (403, "La persona de esta vista no está activa o su identidad no es inequívoca.")
             cp = P.contexto(real, E.crudo)
             if not P.ver(real, {"tipo": "ver_como"}, cp)["ok"]:
                 return None, None, (403, "«Ver como» es solo para Mili y Tomás.")
-            vista = E.persona(como)
-            if not vista:
-                return None, None, (404, f"No existe la persona «{como}».")
             return real, vista, None
         return real, real, None
 
@@ -2043,6 +2511,9 @@ class Manejador(SimpleHTTPRequestHandler):
         """Ronda 6 (C2): en local solo se atiende a 127.0.0.1 / localhost con el puerto propio (contra «DNS rebinding»)."""
         if ACCESO.activo():
             return True
+        peer = getattr(self, 'client_address', None)
+        if not isinstance(peer, (tuple, list)) or not peer or peer[0] not in ('127.0.0.1', '::1'):
+            return False
         host = (self.headers.get("Host") or "").lower()
         puerto = self.server.server_address[1]
         return host in (f"127.0.0.1:{puerto}", f"localhost:{puerto}")
@@ -2064,6 +2535,15 @@ class Manejador(SimpleHTTPRequestHandler):
         return None
 
     # ---------------------------------------------------------------- GET
+    def do_HEAD(self):
+        # 558: SimpleHTTPRequestHandler.send_head no pasa las puertas de GET.
+        # Rechazo uniforme, sin resolver rutas ni abrir archivos y sin cuerpo HEAD.
+        self.send_response(405)
+        self.send_header("Allow", "GET, POST")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def do_GET(self):
         url = urlparse(self.path)
         ruta = unquote(url.path)
@@ -2089,7 +2569,10 @@ class Manejador(SimpleHTTPRequestHandler):
     def index_versionado(self):
         """Ronda 14 (causas 2 y 7): index.html con el mapa de versiones, cada fichero propio con ?v=<huella>, las fuentes
         precargadas y la sesión pedida a la vez que el código. Sin caché (no-cache + ETag): es lo único que se pregunta."""
-        html = (AQUI / "index.html").read_text()
+        try:
+            html = leer_estatico(AQUI, "index.html")[0].decode('utf-8')
+        except (OSError, ValueError):
+            return self.responder(404, {"error": "No existe."})
         mapa, sha = mapa_versiones()
 
         def ver(m):
@@ -2172,8 +2655,8 @@ class Manejador(SimpleHTTPRequestHandler):
             return self.responder(403, {"error": "No se sirve como fichero. Los datos salen recortados de /api/."})
         if rel.endswith((".js", ".css", ".json", ".woff2")):
             return self.fichero_comprimido(rel)
-        self.path = "/" + rel
-        return super().do_GET()
+        # También PNG/SVG usan la lectura segura, sin el lector de ficheros base.
+        return self.fichero_comprimido(rel)
 
     def api_get(self, ruta, q):
         real, persona, err = self.quien(q)
@@ -2182,8 +2665,10 @@ class Manejador(SimpleHTTPRequestHandler):
         if persona["id"] == real["id"]:
             return self._api_get(ruta, q, real, persona)
         # Ronda 6 (C3): «ver como» = lo que ven LAS DOS personas; (M2) y lo leído queda en el rastro.
-        if ruta.startswith(("/api/modulo/", "/api/cliente/", "/api/buscar")):
+        try:
             apuntar_lectura_ver_como(real, persona, ruta)
+        except Exception:
+            return self.responder(503, {"error": "No se ha podido registrar la lectura en ver como. Inténtalo de nuevo."})
         with P.mirando_como(real, E.crudo):
             return self._api_get(ruta, q, real, persona)
 
@@ -2193,17 +2678,22 @@ class Manejador(SimpleHTTPRequestHandler):
         cp = P.contexto(persona, E.crudo)
         solo_lectura = persona["id"] != real["id"]
 
+        if ruta == "/api/en-rojo/planes":
+            code, dto = PLANES_FUEGOS_255.responder(sys.modules[__name__], real, persona, query=q)
+            return self.responder(code, dto)
+
         if ruta == "/api/sesion":
             if solo_lectura:
                 registrar(real["id"], "sesion", "ver_como", persona["id"], {"detalle": f"{real['alias']} ve como {persona['alias']} (solo lectura)"}, como=persona["id"])
             datos = logos_a_direcciones(P.recortar(persona, E.crudo))
             return self.responder(200, {
                 # Ronda 14 (causa 1): qué pantalla ve cada puesto, para pintar el menú sin bajar el código de las 46.
-                "modulos_puestos": E.modulos,
+                "modulos_puestos": PILOTO_LECTURA.modulos_disponibles(E.modulos),
                 "servidor": True, "hora": ahora(),
                 "real": {k: real.get(k) for k in P.PERSONA_PUBLICA},
                 "persona": {k: persona.get(k) for k in P.PERSONA_PUBLICA},
-                "soloLectura": solo_lectura,
+                "soloLectura": solo_lectura or PILOTO_LECTURA.activo(),
+                "pilotoLectura": PILOTO_LECTURA.activo(),
                 "puedeVerComo": P.ver(real, {"tipo": "ver_como"}, P.contexto(real, E.crudo))["ok"],
                 "datos": datos,
                 "bloqueados": sorted(E.bloqueados) if P.ver(persona, {"tipo": "ver_como"}, cp)["ok"] else [],
@@ -2212,26 +2702,43 @@ class Manejador(SimpleHTTPRequestHandler):
         m = re.fullmatch(r"/api/cliente/([\w\-]+)", ruta)
         if m:
             cid = m.group(1)
-            base = next((c for c in E.crudo["clientes"] if c["id"] == cid), None)
-            if not base:
-                return self.responder(404, {"error": "Ese cliente no existe."})
-            v = P.ver(persona, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)
-            if not v["ok"]:
-                registrar_agrupado(real["id"], "cliente", "denegado", cid, {"motivo": v["motivo"]}, como=persona["id"] if solo_lectura else None)
-                return self.responder(403, {"error": v["motivo"]})
+            puerta581 = puerta_cliente_581(real, persona, cid)
+            if puerta581 is None:
+                return self.responder(403, {"error": "El cliente o el ámbito actual de Ficha no está autorizado."})
+            resumen = next((c for c in P.recortar(persona, E.crudo)["clientes"] if c["id"] == cid), None)
+            if resumen is None:
+                return self.responder(403, {"error": "El cliente no está disponible en este ámbito."})
+            administracion581 = any(set(p['puestos']) <= set(P.REGLAS.get('ficha_solo_contrato', {}).get('puestos', []))
+                                    for p in puerta581['ambito'][0])
+            if puerta581['nivel'] == 'resumen' and not administracion581:
+                if not cliente_vigente_581(real, persona, cid, puerta581):
+                    return self.responder(403, {"error": "El ámbito cambió durante la lectura."})
+                return self.responder(200, {"cliente": resumen, "fuentes": None, "nivel": "resumen"})
             fichero = DATA / "clientes" / f"{cid}.json"
+            try:
+                puerta581['marca581'] = _estado_fichero(fichero)
+            except OSError:
+                puerta581['marca581'] = None
+            puerta581['fichero581'] = fichero
             rel = f"data/clientes/{cid}.json"
-            if rel in E.bloqueados:
-                return self.responder(503, {"error": "La puerta de secretos ha encontrado algo en la ficha de este cliente: no se sirve."})
             aviso_dato = None
             try:
                 doc, aviso_dato = leer_json_bueno(fichero) if fichero.exists() else (None, None)
+            except DatoSecreto as e:
+                return self.responder(503, {"error": str(e)})
             except DatoRoto:
                 doc, aviso_dato = None, {"dato_de": None, "motivo": "La ficha de este cliente está a medio escribir: vuelve a probar en un minuto."}
-            resumen = next(c for c in P.recortar(persona, E.crudo)["clientes"] if c["id"] == cid)
+            if (not cliente_vigente_581(real, persona, cid, puerta581)
+                    or not documento_raiz_581(doc, 'clientes/' + cid, puerta581['ambito'], puerta581['niveles'])):
+                return self.responder(403, {"error": "El ámbito o la referencia del cliente cambió durante la lectura."})
             res = {"cliente": resumen, "fuentes": recortar_ficha(persona, cp, cid, doc) if doc else None}
+            if administracion581 and isinstance(res['fuentes'], dict):
+                permitidas581 = set(P.REGLAS['ficha_solo_contrato'].get('fuentes', []))
+                res['fuentes']['fuentes'] = {k: v for k, v in (res['fuentes'].get('fuentes') or {}).items() if k in permitidas581}
             if aviso_dato:
                 res["_ultimo_dato_bueno"] = aviso_dato
+            if not cliente_vigente_581(real, persona, cid, puerta581):
+                return self.responder(403, {"error": "El ámbito cambió durante la lectura."})
             return self.responder(200, res)
 
         if ruta == "/api/indicadores":
@@ -2278,20 +2785,57 @@ class Manejador(SimpleHTTPRequestHandler):
             })
 
         if ruta == "/api/rastro":
-            todo = P.ver(persona, {"tipo": "rastro_todo"}, cp)["ok"]
+            from acciones_lectura_544 import ambito as ambito_lectura544, fila_visible as fila_lectura544, recortar_vistas as recortar_vistas544
+            ambito_rastro = ambito_lectura544(E, P, ACT, real, persona)
+            if ambito_rastro is None:
+                return self.responder(403, {"error": "El ámbito actual del rastro no está disponible."})
+            actuales, contextos, firma_rastro = ambito_rastro
+            auditorias = [P.ver(p, {"tipo": "rastro_todo"}, c)["ok"] for p, c in zip(actuales, contextos)]
+            mirando = real["id"] != persona["id"]
+            todo = not mirando and all(auditorias)
             with conectar() as con:
-                if todo:
-                    filas = con.execute("SELECT * FROM registro ORDER BY id DESC LIMIT 500").fetchall()
+                if mirando:
+                    # 558.1: sólo el rastro de ESTA inspección, nunca la historia
+                    # personal de la vista, aunque el real tenga auditoría completa.
+                    filas = con.execute("SELECT * FROM registro WHERE quien=? AND como=? ORDER BY id DESC LIMIT 500",
+                                        (real["id"], persona["id"])).fetchall()
+                    acciones = []
                 else:
-                    filas = con.execute("SELECT * FROM registro WHERE quien=? OR como=? ORDER BY id DESC LIMIT 500", (persona["id"], persona["id"])).fetchall()
-                acciones = con.execute("SELECT * FROM acciones " + ("" if todo else "WHERE quien=? ") + "ORDER BY id DESC LIMIT 200",
-                                       () if todo else (persona["id"],)).fetchall()
+                    limitados = [p["id"] for p, auditora in zip(actuales, auditorias) if not auditora]
+                    clausulas = ["(quien=? OR como=?)" for _ in limitados]
+                    where = " WHERE " + " AND ".join(clausulas) if clausulas else ""
+                    parametros = tuple(pid for pid in limitados for _ in range(2))
+                    filas = con.execute("SELECT * FROM registro" + where + " ORDER BY id DESC LIMIT 500", parametros).fetchall()
+                    where_acciones = " WHERE " + " AND ".join("quien=?" for _ in limitados) if limitados else ""
+                    acciones = con.execute("SELECT * FROM acciones" + where_acciones + " ORDER BY id DESC LIMIT 200", tuple(limitados)).fetchall()
+            acciones = [r for r in acciones if fila_lectura544(r, E, P, ACT, ve_alguno,
+                                                               actuales, contextos, persona["id"])]
+            acciones = recortar_vistas544(acciones, P, lambda cid: quitar_para(actuales[1], contextos[1], cid),
+                                         lambda vp, q: recortar_doc(vp, q), lambda: CLAVES_INVERSION, lambda: CLAVES_DINERO_CAPTACION)
+            final_rastro = ambito_lectura544(E, P, ACT, real, persona)
+            if final_rastro is None or final_rastro[2] != firma_rastro:
+                return self.responder(403, {"error": "El ámbito del rastro cambió durante la lectura."})
             return self.responder(200, {"todo": todo, "registro": [dict(r) for r in filas], "acciones": [dict(r) for r in acciones]})
 
         if ruta == "/api/acciones":
             # Acciones de un módulo, para todos los que ven ese módulo (propuesta 4 de E6: el «dueño» que
             # pone Eulimar lo ve Fátima). Sin ?modulo=, solo las propias.
             mod = (q.get("modulo") or [None])[0]
+            if not mod and real["id"] != persona["id"]:
+                # La lista personal no es una cola de módulo compartida.
+                return self.responder(200, {"modulo": None, "acciones": []})
+            from acciones_lectura_544 import ambito as ambito_lectura544, fila_visible as fila_lectura544, recortar_vistas as recortar_vistas544
+            def ambito_acciones538():
+                return ambito_lectura544(E, P, ACT, real, persona)
+            ambito = ambito_acciones538()
+            if ambito is None:
+                return self.responder(403, {"error": "El ámbito actual de las acciones no está disponible."})
+            actuales, contextos, firma_acciones = ambito
+            cp = contextos[1]  # La privacidad económica también usa cartera actual, no el contexto previo al IO.
+            if mod and not all(ve_alguno(p, [mod]) for p in actuales):
+                return self.responder(403, {"error": "Esa pantalla no es de tu puesto."})
+            def fila_visible538(r):
+                return fila_lectura544(r, E, P, ACT, ve_alguno, actuales, contextos, persona["id"])
             with conectar() as con:
                 if mod:
                     if not ve_alguno(persona, [mod]):
@@ -2303,19 +2847,25 @@ class Manejador(SimpleHTTPRequestHandler):
                              or (not r["cliente_id"] and (nivel == "todo" or r["quien"] == persona["id"]))]
                 else:
                     filas = con.execute("SELECT * FROM acciones WHERE quien=? ORDER BY id DESC LIMIT 500", (persona["id"],)).fetchall()
+            # Autoría pasada no concede acceso actual al cliente ni a su contenido.
+            filas = [r for r in filas if fila_visible538(r)]
             # A4 (2-oct): el objetivo del cliente lleva costes; su vista previa sale recortada como cualquier dato del cliente.
-            recortar_vp = set(P.REGLAS.get("acciones_vista_previa_recortada") or [])
             filas = [dict(r) for r in filas]
-            for r in filas:
-                if r.get("tipo") in recortar_vp and r.get("vista_previa"):
-                    try:
-                        vp = json.loads(r["vista_previa"])
-                    except Exception:
-                        vp = None
-                    q = quitar_para(persona, cp, r.get("cliente_id"))
-                    if CLAVES_INVERSION in q:
-                        q.append(CLAVES_DINERO_CAPTACION)       # «presupuesto» del objetivo de Clientes nuevos
-                    r["vista_previa"] = json.dumps(recortar_doc(vp, q) if isinstance(vp, dict) else None, ensure_ascii=False)
+            # La acción en cola no demuestra entrega. Solo añadimos estado y fecha
+            # a las acciones que ya pasaron el recorte de permisos de arriba.
+            with conectar() as con:
+                hay_envios = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='envio_pasos'").fetchone()
+                if hay_envios:
+                    for r in filas:
+                        envio = con.execute("SELECT p.estado, p.hora FROM envios e JOIN envio_pasos p ON p.envio_id=e.id WHERE e.accion_id=? ORDER BY p.id DESC LIMIT 1", (r["id"],)).fetchone()
+                        if envio:
+                            r["envio_estado"], r["envio_fecha"] = envio["estado"], envio["hora"]
+            filas = recortar_vistas544(filas, P, lambda cid: quitar_para(persona, cp, cid),
+                                      lambda vp, q: recortar_doc(vp, q), lambda: CLAVES_INVERSION, lambda: CLAVES_DINERO_CAPTACION)
+            filas = recorte_importes_lectura588(filas, actuales, contextos)
+            final = ambito_acciones538()
+            if final is None or final[2] != firma_acciones:
+                return self.responder(403, {"error": "El ámbito de las acciones cambió durante la lectura."})
             return self.responder(200, {"modulo": mod, "acciones": filas})
 
         if ruta == "/api/recarga":
@@ -2336,7 +2886,17 @@ class Manejador(SimpleHTTPRequestHandler):
                                         "nota": "La notificación real (escritorio y móvil) llega con W1. En el prototipo se ven aquí."})
 
         if ruta == "/api/decisiones":
-            return self.responder(200, {"decisiones": decisiones_para(persona, cp), "hora": ahora()})
+            from acciones_lectura_544 import ambito as ambito_lectura588
+            ambito_decisiones = ambito_lectura588(E, P, ACT, real, persona)
+            if ambito_decisiones is None:
+                return self.responder(403, {"error": "El ámbito actual de las decisiones no está disponible."})
+            actuales, contextos, firma_decisiones = ambito_decisiones
+            decisiones = decisiones_para(actuales[1], contextos[1])
+            decisiones = recorte_importes_lectura588(decisiones, actuales, contextos)
+            final_decisiones = ambito_lectura588(E, P, ACT, real, persona)
+            if final_decisiones is None or final_decisiones[2] != firma_decisiones:
+                return self.responder(403, {"error": "El ámbito de las decisiones cambió durante la lectura."})
+            return self.responder(200, {"decisiones": decisiones, "hora": ahora()})
 
         # R15 (A5) · índice del buscador por persona: solo lo que ya le llega recortado por la puerta de cada fichero.
         if ruta in ("/api/buscar/indice", "/api/buscar"):
@@ -2392,7 +2952,14 @@ class Manejador(SimpleHTTPRequestHandler):
                     r = con.execute("SELECT * FROM opiniones WHERE id=?", (int(oid) if str(oid).isdigit() else 0,)).fetchone()
                     if not r or not (todas or r["quien"] == persona["id"]):
                         return self.responder(403 if r else 404, {"error": "Esa opinión no es tuya."})
-                    return self.responder(200, opinion_a_json(r, con_captura=True))
+                    from capturas_opiniones_565 import permiso as permiso_captura565
+                    autorizacion = permiso_captura565(E, P, ACT, PANEL_PRIVADO_249, real, persona, r)
+                    if autorizacion is None:
+                        return self.responder(403, {"error": "La captura no está disponible en tu ámbito actual."})
+                    salida = opinion_a_json(r, con_captura=True)
+                    if permiso_captura565(E, P, ACT, PANEL_PRIVADO_249, real, persona, r) != autorizacion:
+                        return self.responder(403, {"error": "La captura no está disponible en tu ámbito actual."})
+                    return self.responder(200, salida)
                 filas = con.execute("SELECT * FROM opiniones " + ("" if todas else "WHERE quien=? ") + "ORDER BY id DESC LIMIT 300",
                                     () if todas else (persona["id"],)).fetchall()
                 # R16 (primera semana): su jefe directo sabe SOLO si cada persona de su equipo ya mandó algún «Algo va mal»
@@ -2430,8 +2997,13 @@ class Manejador(SimpleHTTPRequestHandler):
             solo_todo, filas_lead = tuple(conf.get("solo_todo_sin_cliente", [])), tuple(conf.get("filas_lead", []))
             if not fichero.exists():
                 return self.responder(404, {"error": f"No existe data/{rel}.json"})
-            if f"data/{rel}.json" in E.bloqueados:
-                return self.responder(503, {"error": "La puerta de secretos ha encontrado algo en este fichero: no se sirve."})
+            # La puerta se ejecuta antes de la memoria HTTP, incluso tras un bloqueo anterior.
+            try:
+                doc_mod, aviso_dato = leer_json_bueno(fichero)
+            except DatoRoto as e:
+                return self.responder(503, {"error": str(e)})
+            if not modulo_vigente_581(real, persona, rel, pm, doc_mod):
+                return self.responder(403, {"error": "El ámbito o el cliente de estos datos no está autorizado."})
             # Ronda 14 (causas 4 y 8): lo ya recortado para ESTA persona real + vista, este fichero (fecha y tamaño) y esta
             # versión de reglas, base y módulos sale de la memoria, con su ETag. Los nombres de leads de su dueño (que dejan
             # rastro cada vez) y el «último dato bueno» no se guardan.
@@ -2439,20 +3011,29 @@ class Manejador(SimpleHTTPRequestHandler):
                 marca = _estado_fichero(fichero)
             except OSError:
                 marca = None
-            clave_mod = ("modulo", real["id"], persona["id"], rel, marca, nivel, version_datos())
-            guardable = marca is not None and not (conf.get("nombres_dueno") and not solo_lectura)
-            guardada = CACHE_RESP.leer(clave_mod) if guardable else None
+            clave_mod = ("modulo", real["id"], persona["id"], rel, marca, nivel, version_datos(),
+                         hashlib.sha256(pm['firma581'].encode()).hexdigest())
+            guardable = marca is not None and rel != 'agenda/agenda' and not (rel == 'produccion/produccion' and (os.environ.get('RO_EVIDENCIA_PRODUCCION_275') or os.environ.get('RO_COMPARACION_SEMANAL_296') or os.environ.get('RO_PLANNING_TRANSICIONES_681'))) and not (conf.get("nombres_dueno") and not solo_lectura)
+            guardada = CACHE_RESP.leer(clave_mod) if guardable and not aviso_dato else None
             if guardada:
+                if not modulo_vigente_581(real, persona, rel, pm, doc_mod):
+                    return self.responder(403, {"error": "El ámbito cambió durante la lectura."})
                 return responder_de_memoria(self, guardada)
-            try:
-                doc_mod, aviso_dato = leer_json_bueno(fichero)
-            except DatoRoto as e:
-                return self.responder(503, {"error": str(e)})
-            salida = recortar_modulo(persona, cp, doc_mod, nivel, solo_todo, filas_lead, conf)
+            salida = ACT.quitar_bajas(recortar_modulo(persona, cp, doc_mod, nivel, solo_todo, filas_lead, conf), rel)   # bajas solo en histórico
+            if rel == 'produccion/produccion' and not aviso_dato:
+                salida = EVIDENCIA_PRODUCCION_287.enriquecer287(salida, sys.modules[__name__], real, persona)
+                import controlador_planning_681 as PLANNING_681
+                salida = PLANNING_681.enriquecer681(salida, sys.modules[__name__], real, persona)
+            if rel == 'produccion/produccion' and salida is None:
+                return self.responder(403, {"error": "El ámbito cambió durante la lectura de planificación."})
+            if rel == 'agenda/agenda':
+                salida = AGENDA_ZOOM_API.disponibilidad(salida, real, persona)
             if conf.get("nombres_dueno") and not solo_lectura:   # F-10: quien trabaja el lead ve su nombre sin pulsar nada
                 salida = nombres_para_su_dueno(persona, real, conf["nombres_dueno"], salida, rel, cp)
             if aviso_dato and isinstance(salida, dict):
                 salida = {**salida, "_ultimo_dato_bueno": aviso_dato}
+            if not modulo_vigente_581(real, persona, rel, pm, doc_mod):
+                return self.responder(403, {"error": "El ámbito cambió durante la lectura."})
             if guardable and not aviso_dato:
                 cuerpo = json.dumps(salida, ensure_ascii=False).encode()
                 e = {"cuerpo": cuerpo, "etag": etag_de(clave_mod, cuerpo)}
@@ -2506,6 +3087,154 @@ class Manejador(SimpleHTTPRequestHandler):
             traceback.print_exc()
             self.responder(500, {"error": "Error interno (el detalle queda en el registro del servidor)."})
 
+    def validar_accion(self, real, persona, b):
+        """Permisos y forma de una acción; reutilizable por lotes sin escribir acciones ni despachar herramientas."""
+        if real["id"] != persona["id"]:
+            return None, (403, {"error": "Estás en «ver como»: es solo lectura. No se escribe nada."})
+        cp = P.contexto(persona, E.crudo)
+        tipo, herr = str(b.get("tipo") or ""), str(b.get("herramienta") or "")
+        # Ronda 8 (D-P-PER2 a): la acción va a nombre de un módulo y quien la manda tiene que ver ese módulo
+        # (en «ver como», el mínimo de las dos personas). Sin módulo, o con uno que no ve, no entra.
+        mod_acc = str(b.get("modulo") or "")
+        if not mod_acc or mod_acc not in E.modulos:
+            return None, (400, {"error": "Falta el módulo de la acción (o no existe)."})
+        if not ve_alguno(persona, [mod_acc]):
+            return None, (403, {"error": "No puedes mandar acciones desde una pantalla que no ves."})
+        # 536: la propuesta general de CRM es una intención local de su jefatura,
+        # no una acción de cartera ni una reasignación ejecutada.
+        if tipo == "proponer_reasignacion":
+            if (mod_acc != "salud-crm" or herr != "app" or b.get("objeto") != "Subcuentas sin especialista"
+                    or b.get("cliente_id") is not None or not b.get("intencion_id")):
+                return None, (403, {"error": "La propuesta general de CRM no corresponde a este contexto."})
+            for identidad in (real, persona):
+                filas = [p for p in E.crudo.get("personas") or []
+                         if isinstance(p, dict) and p.get("id") == identidad.get("id")]
+                roles = identidad.get("puestos")
+                if (len(filas) != 1 or filas[0].get("estado") != "activo"
+                        or filas[0].get("activo") is False
+                        or identidad.get("estado") != "activo" or identidad.get("activo") is False
+                        or not isinstance(roles, list) or not roles
+                        or not all(isinstance(r, str) and r in P.PUESTO for r in roles)
+                        or len(set(roles)) != len(roles)
+                        or not isinstance(filas[0].get("puestos"), list)
+                        or filas[0]["puestos"] != roles
+                        or P.nivel_modulo(filas[0], E.modulos.get("salud-crm", {})) != "todo"):
+                    return None, (403, {"error": "La propuesta general necesita la jefatura actual de CRM."})
+        permitidas = P.REGLAS.get("acciones_permitidas", {})
+        if herr not in permitidas.get("_herramientas", []) or tipo not in (permitidas.get("*", []) + permitidas.get(b.get("modulo") or "", [])):
+            return None, (400, {"error": f"Acción no permitida ({herr}/{tipo}). Se añade a «acciones_permitidas» de reglas_permisos.json."})
+        if tipo == "decision_nueva":
+            return None, (400, {"error": "Sube la decisión desde su formulario de Decisiones."})
+        for campo in ("prueba", "enlace", "url"):
+            if b.get(campo) and not P.enlace_seguro(b[campo]):
+                return None, (400, {"error": "Enlace no válido (solo http, https, mailto, tel o sip)."})
+        if isinstance(b.get("vista_previa"), (dict, list)) and _enlaces_malos(b["vista_previa"]):
+            return None, (400, {"error": "Enlace no válido en la vista previa (solo http, https, mailto, tel o sip)."})
+        if tipo == "decidir":                               # A5: solo el destinatario contesta
+            did = (b.get("vista_previa") or {}).get("decision_id") or b.get("objeto")
+            tipo_dec = tipo_de_decision(did)
+            if not tipo_dec or not puede_contestar(real, tipo_dec):
+                return None, (403, {"error": "Esta decisión la contesta su destinatario (Tomás o Coti)."})
+        # Ronda 11 (M1): además de la pantalla, algunos tipos exigen puesto (a la persona REAL): un account no encola
+        # bajas, cobros reclamados ni quitar accesos.
+        solo_puestos = (P.REGLAS.get("acciones_solo_puestos") or {}).get(tipo)
+        if solo_puestos and not (set(real.get("puestos", [])) & set(solo_puestos)):
+            registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "tipo de acción no permitido a su puesto"})
+            return None, (403, {"error": f"«{tipo}» no es de tu puesto."})
+        # A4 (2-oct): el objetivo del cliente y el semáforo del lunes, solo su account, operaciones y dirección (regla por cliente).
+        regla_cli = (P.REGLAS.get("acciones_regla_cliente") or {}).get(tipo)
+        cli_nuevo = any(x["id"] == b.get("cliente_id") and x.get("nuevo") for x in E.crudo["clientes"])   # en alta: lo dice la base, no el navegador
+        if regla_cli and (not b.get("cliente_id") or not P.ver(persona, {"tipo": regla_cli, "cliente_id": b.get("cliente_id"), "cliente_nuevo": cli_nuevo}, cp)["ok"]):
+            registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": f"regla {regla_cli}", "cliente_id": b.get("cliente_id")})
+            return None, (403, {"error": (P.REGLAS["tipos"].get(regla_cli) or {}).get("no") or "No puedes hacer esto en este cliente."})
+        # R14 (B2) · Aprobar / Pedir cambios en una pieza: la pieza y su cliente los saca el servidor de produccion.json;
+        # solo quien la revisa según revision_piezas (nunca su autor); pedir cambios exige decir qué cambiar.
+        if tipo in ("pieza_aprobar", "pieza_pedir_cambios"):
+            pieza = pieza_en_revision(b.get("objeto"))
+            if not pieza:
+                return None, (403, {"error": "Esa pieza no está esperando revisión (o no se puede leer Producción)."})
+            if not puede_revisar_pieza(real, pieza, P.contexto(real, E.crudo)):
+                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "no revisa esta pieza", "objeto": str(b.get("objeto"))[:40]})
+                return None, (403, {"error": "Esta pieza no la revisas tú (o es tuya: nadie se aprueba a sí mismo)."})
+            if tipo == "pieza_pedir_cambios" and len(str((b.get("vista_previa") or {}).get("comentario") or b.get("texto") or "").strip()) < 3:
+                return None, (400, {"error": "Pedir cambios necesita decir qué hay que cambiar."})
+            b["cliente_id"] = pieza["cli"] or None
+        # 603: referencias de proveedor exactas; desconocidas o ambiguas se deniegan.
+        # App conserva referencias globales, pero ticket/cliente reconocido decide
+        # el CID. El cuerpo no puede disfrazar una referencia ajena como propia.
+        if herr in ("app", "desk", "whatsapp", "ghl"):
+            cid_srv, conocido, invalido = referencia_accion603(herr, tipo, b.get("objeto"))
+            if invalido or herr != "app" and not conocido:
+                return None, (403, {"error": "La referencia no existe inequívocamente en su fuente actual."})
+            if conocido:
+                if b.get("cliente_id") not in (None, "") and b["cliente_id"] != cid_srv:
+                    return None, (403, {"error": "El cliente no corresponde a esta referencia."})
+                b["cliente_id"] = cid_srv
+        if tipo == "responder":
+            if herr not in ("desk", "whatsapp", "ghl"):
+                return None, (403, {"error": "Desde la app solo se contesta a un ticket de Desk, un grupo de WhatsApp o un contacto de GHL."})
+            if not b.get("cliente_id") or not P.ver(persona, {"tipo": "responder_cliente", "cliente_id": b["cliente_id"]}, cp)["ok"]:
+                return None, (403, {"error": P.REGLAS["tipos"]["responder_cliente"]["no"]})
+        cli_tarea = None
+        # R16 (N12): un paso de «Tu primera semana» solo de la propia persona.
+        if tipo == "primera_semana_paso" and not str(b.get("objeto") or "").startswith(f"{real['id']}:"):
+            return None, (403, {"error": "Los pasos de tu primera semana son tuyos: «<tu id>:<paso>»."})
+        # R16 (N4): lo que tiene efecto fuera (WhatsApp, correo, llamadas, GHL, Metricool, Zoom, chat de ClickUp…)
+        # exige un cliente que la persona LLEVE; el destinatario lo pone el servidor desde el cliente, nunca una
+        # dirección o un teléfono escritos en el navegador.
+        efecto = P.REGLAS.get("acciones_con_efecto_fuera") or {}
+        # 3-oct (setters_srv.py): un lead de la subcuenta de RO de ESA setter (comprobado allí, nunca por el navegador) no es un cliente.
+        if not b.get("_lead_ro") and (tipo in (efecto.get("tipos") or []) or herr in (efecto.get("herramientas") or [])):
+            motivo = None
+            if herr in ("whatsapp", "ghl") and cliente_de_objeto(herr, b.get("objeto")) is None and tipo in (efecto.get("tipos_destinatario") or []):
+                motivo = "No sé a quién va (no es un grupo de cliente ni un contacto del CRM): el destinatario lo pone el servidor."
+            elif tipo in (efecto.get("tipos_destinatario") or []) and RX_DIRECCION_CRUDA.search(str(b.get("objeto") or "").strip()):
+                motivo = "No se escribe a una dirección o un teléfono a mano: elige el cliente y el servidor pone el destinatario."
+            elif not b.get("cliente_id"):
+                motivo = "Esta acción sale fuera de la app: necesita el cliente."
+            elif not lleva_cliente(real, b["cliente_id"], P.contexto(real, E.crudo)):
+                motivo = "Solo lo hace quien lleva ese cliente (su account o su equipo), operaciones o dirección."
+            if motivo:
+                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": motivo[:80], "cliente_id": b.get("cliente_id")})
+                return None, (403, {"error": motivo})
+        # R16 (N4): en ClickUp, una tarea que espera revisión solo cambia con «Aprobar» o «Pedir cambios» (pieza_*), y una
+        # tarea se mueve o se comenta solo si es tuya (o de tu equipo, o eres operaciones o dirección).
+        if herr == "clickup" and tipo in (efecto.get("clickup_tarea") or []):
+            if tipo != "comentario" and pieza_en_revision(b.get("objeto")):
+                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "saltarse la revisión", "objeto": str(b.get("objeto"))[:40]})
+                return None, (403, {"error": "Esa pieza espera revisión: solo cambia con «Aprobar» o «Pedir cambios» de quien la revisa."})
+            t = tarea_de_produccion(b.get("objeto"))
+            if not t:
+                return None, (403, {"error": "No encuentro esa tarea en Producción: no se mueve desde la app."})
+            jefes = {(E.persona(a) or {}).get("jefe") for a in t["autores"] if a}
+            if not (real["id"] in t["autores"] or real["id"] in jefes or set(real.get("puestos", [])) & {"direccion", "operaciones"}):
+                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "tarea ajena", "objeto": str(b.get("objeto"))[:40]})
+                return None, (403, {"error": "Esa tarea no es tuya ni de tu equipo."})
+            cli_tarea = t["cli"]
+        cid = b.get("cliente_id")
+        if herr == "clickup" and tipo in (efecto.get("clickup_tarea") or []):
+            # La tarea decide el cliente ANTES de autorizarlo; el cuerpo no cambia su cartera.
+            if cid not in (None, "") and cid != cli_tarea:
+                return None, (403, {"error": "El cliente no corresponde a esta tarea."})
+            cid = cli_tarea
+        if cid:
+            actuales = []
+            for identidad in (real, persona):
+                filas = [p for p in E.crudo.get("personas") or [] if p.get("id") == identidad.get("id")]
+                if len(filas) != 1 or filas[0].get("estado") != "activo" or filas[0].get("activo") is False:
+                    return None, (403, {"error": "La identidad ya no está activa."})
+                actuales.append(filas[0])
+            clientes = [c for c in E.crudo.get("clientes") or [] if c.get("id") == cid]
+            if len(clientes) != 1 or ACT.es_activo_id(cid) is not True or not all(P.ver(p, {"tipo": "cliente_detalle", "cliente_id": cid}, P.contexto(p, E.crudo))["ok"] for p in actuales):
+                return None, (403, {"error": "No puedes actuar sobre un cliente que no llevas activo."})
+        b["cliente_id"] = cid  # La cola recibe exclusivamente la identidad autorizada por el servidor.
+        if b.get("tipo") == "responder" and cid and not P.ver(persona, {"tipo": "responder_cliente", "cliente_id": cid}, cp)["ok"]:
+            return None, (403, {"error": P.REGLAS["tipos"]["responder_cliente"]["no"]})
+        for campo in ("herramienta", "tipo", "objeto"):
+            if not b.get(campo):
+                return None, (400, {"error": f"Falta «{campo}»."})
+        return cid, None
+
     def api_post(self, ruta, real, persona, b):
         solo_lectura = persona["id"] != real["id"]
         cp = P.contexto(persona, E.crudo)
@@ -2513,6 +3242,10 @@ class Manejador(SimpleHTTPRequestHandler):
         # nada fuera del rastro y que Mili y Tomás necesitan para revisar lo que ve cada uno (D-P · M4).
         if solo_lectura and ruta != "/api/ver_dato":
             return self.responder(403, {"error": "Estás en «ver como»: es solo lectura. No se escribe nada."})
+
+        if ruta == "/api/en-rojo/planes":
+            code, dto = PLANES_FUEGOS_255.responder(sys.modules[__name__], real, persona, cuerpo=b)
+            return self.responder(code, dto)
 
         if ruta == "/api/rastro":
             if not tope_rastro_navegador(real["id"]):
@@ -2546,124 +3279,63 @@ class Manejador(SimpleHTTPRequestHandler):
             return self.responder(200, {"ok": True, "id": rid, "hora": ahora()})
 
         if ruta == "/api/acciones":
-            tipo, herr = str(b.get("tipo") or ""), str(b.get("herramienta") or "")
-            # Ronda 8 (D-P-PER2 a): la acción va a nombre de un módulo y quien la manda tiene que ver ese módulo
-            # (en «ver como», el mínimo de las dos personas). Sin módulo, o con uno que no ve, no entra.
-            mod_acc = str(b.get("modulo") or "")
-            if not mod_acc or mod_acc not in E.modulos:
-                return self.responder(400, {"error": "Falta el módulo de la acción (o no existe)."})
-            if not ve_alguno(persona, [mod_acc]):
-                return self.responder(403, {"error": "No puedes mandar acciones desde una pantalla que no ves."})
-            permitidas = P.REGLAS.get("acciones_permitidas", {})
-            if herr not in permitidas.get("_herramientas", []) or tipo not in (permitidas.get("*", []) + permitidas.get(b.get("modulo") or "", [])):
-                return self.responder(400, {"error": f"Acción no permitida ({herr}/{tipo}). Se añade a «acciones_permitidas» de reglas_permisos.json."})
-            for campo in ("prueba", "enlace", "url"):
-                if b.get(campo) and not P.enlace_seguro(b[campo]):
-                    return self.responder(400, {"error": "Enlace no válido (solo http, https, mailto, tel o sip)."})
-            if isinstance(b.get("vista_previa"), (dict, list)) and _enlaces_malos(b["vista_previa"]):
-                return self.responder(400, {"error": "Enlace no válido en la vista previa (solo http, https, mailto, tel o sip)."})
-            if tipo == "decidir":                               # A5: solo el destinatario contesta
-                did = (b.get("vista_previa") or {}).get("decision_id") or b.get("objeto")
-                tipo_dec = tipo_de_decision(did)
-                if not tipo_dec or not puede_contestar(real, tipo_dec):
-                    return self.responder(403, {"error": "Esta decisión la contesta su destinatario (Tomás o Coti)."})
-            # Ronda 11 (M1): además de la pantalla, algunos tipos exigen puesto (a la persona REAL): un account no encola
-            # bajas, cobros reclamados ni quitar accesos.
-            solo_puestos = (P.REGLAS.get("acciones_solo_puestos") or {}).get(tipo)
-            if solo_puestos and not (set(real.get("puestos", [])) & set(solo_puestos)):
-                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "tipo de acción no permitido a su puesto"})
-                return self.responder(403, {"error": f"«{tipo}» no es de tu puesto."})
-            # A4 (2-oct): el objetivo del cliente y el semáforo del lunes, solo su account, operaciones y dirección (regla por cliente).
-            regla_cli = (P.REGLAS.get("acciones_regla_cliente") or {}).get(tipo)
-            cli_nuevo = any(x["id"] == b.get("cliente_id") and x.get("nuevo") for x in E.crudo["clientes"])   # en alta: lo dice la base, no el navegador
-            if regla_cli and (not b.get("cliente_id") or not P.ver(persona, {"tipo": regla_cli, "cliente_id": b.get("cliente_id"), "cliente_nuevo": cli_nuevo}, cp)["ok"]):
-                registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": f"regla {regla_cli}", "cliente_id": b.get("cliente_id")})
-                return self.responder(403, {"error": (P.REGLAS["tipos"].get(regla_cli) or {}).get("no") or "No puedes hacer esto en este cliente."})
-            # R14 (B2) · Aprobar / Pedir cambios en una pieza: la pieza y su cliente los saca el servidor de produccion.json;
-            # solo quien la revisa según revision_piezas (nunca su autor); pedir cambios exige decir qué cambiar.
-            if tipo in ("pieza_aprobar", "pieza_pedir_cambios"):
-                pieza = pieza_en_revision(b.get("objeto"))
-                if not pieza:
-                    return self.responder(403, {"error": "Esa pieza no está esperando revisión (o no se puede leer Producción)."})
-                if not puede_revisar_pieza(real, pieza, P.contexto(real, E.crudo)):
-                    registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "no revisa esta pieza", "objeto": str(b.get("objeto"))[:40]})
-                    return self.responder(403, {"error": "Esta pieza no la revisas tú (o es tuya: nadie se aprueba a sí mismo)."})
-                if tipo == "pieza_pedir_cambios" and len(str((b.get("vista_previa") or {}).get("comentario") or b.get("texto") or "").strip()) < 3:
-                    return self.responder(400, {"error": "Pedir cambios necesita decir qué hay que cambiar."})
-                b["cliente_id"] = pieza["cli"] or None
-            # A6 + ronda 11 (A4): el cliente de lo que se contesta (ticket de Desk, grupo de WhatsApp, lead de GHL) lo saca
-            # SIEMPRE el servidor del propio objeto. «responder» falla cerrado: si no se sabe de quién es, o la fuente no se
-            # lee, 403. En las demás acciones de esas herramientas, si se sabe, manda el del servidor.
-            if herr in ("desk", "whatsapp", "ghl"):
-                cid_srv = cliente_de_objeto(herr, b.get("objeto"))
-                if cid_srv is not None:
-                    b["cliente_id"] = cid_srv or None
-                elif tipo == "responder":
-                    registrar_agrupado(real["id"], "acciones", "denegado", str(b.get("objeto"))[:80], {"motivo": "responder sin cliente reconocible", "herramienta": herr})
-                    return self.responder(403, {"error": "No sé de qué cliente es eso (no está en la Bandeja, el grupo o el CRM, o no se puede leer): no se contesta."})
-            if tipo == "responder":
-                if herr not in ("desk", "whatsapp", "ghl"):
-                    return self.responder(403, {"error": "Desde la app solo se contesta a un ticket de Desk, un grupo de WhatsApp o un contacto de GHL."})
-                if not b.get("cliente_id") or not P.ver(persona, {"tipo": "responder_cliente", "cliente_id": b["cliente_id"]}, cp)["ok"]:
-                    return self.responder(403, {"error": P.REGLAS["tipos"]["responder_cliente"]["no"]})
-            cli_tarea = None
-            # R16 (N12): un paso de «Tu primera semana» solo de la propia persona.
-            if tipo == "primera_semana_paso" and not str(b.get("objeto") or "").startswith(f"{real['id']}:"):
-                return self.responder(403, {"error": "Los pasos de tu primera semana son tuyos: «<tu id>:<paso>»."})
-            # R16 (N4): lo que tiene efecto fuera (WhatsApp, correo, llamadas, GHL, Metricool, Zoom, chat de ClickUp…)
-            # exige un cliente que la persona LLEVE; el destinatario lo pone el servidor desde el cliente, nunca una
-            # dirección o un teléfono escritos en el navegador.
-            efecto = P.REGLAS.get("acciones_con_efecto_fuera") or {}
-            if tipo in (efecto.get("tipos") or []) or herr in (efecto.get("herramientas") or []):
-                motivo = None
-                if herr in ("whatsapp", "ghl") and cliente_de_objeto(herr, b.get("objeto")) is None and tipo in (efecto.get("tipos_destinatario") or []):
-                    motivo = "No sé a quién va (no es un grupo de cliente ni un contacto del CRM): el destinatario lo pone el servidor."
-                elif tipo in (efecto.get("tipos_destinatario") or []) and RX_DIRECCION_CRUDA.search(str(b.get("objeto") or "").strip()):
-                    motivo = "No se escribe a una dirección o un teléfono a mano: elige el cliente y el servidor pone el destinatario."
-                elif not b.get("cliente_id"):
-                    motivo = "Esta acción sale fuera de la app: necesita el cliente."
-                elif not lleva_cliente(real, b["cliente_id"], P.contexto(real, E.crudo)):
-                    motivo = "Solo lo hace quien lleva ese cliente (su account o su equipo), operaciones o dirección."
-                if motivo:
-                    registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": motivo[:80], "cliente_id": b.get("cliente_id")})
-                    return self.responder(403, {"error": motivo})
-            # R16 (N4): en ClickUp, una tarea que espera revisión solo cambia con «Aprobar» o «Pedir cambios» (pieza_*), y una
-            # tarea se mueve o se comenta solo si es tuya (o de tu equipo, o eres operaciones o dirección).
-            if herr == "clickup" and tipo in (efecto.get("clickup_tarea") or []):
-                if tipo != "comentario" and pieza_en_revision(b.get("objeto")):
-                    registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "saltarse la revisión", "objeto": str(b.get("objeto"))[:40]})
-                    return self.responder(403, {"error": "Esa pieza espera revisión: solo cambia con «Aprobar» o «Pedir cambios» de quien la revisa."})
-                t = tarea_de_produccion(b.get("objeto"))
-                if not t:
-                    return self.responder(403, {"error": "No encuentro esa tarea en Producción: no se mueve desde la app."})
-                jefes = {(E.persona(a) or {}).get("jefe") for a in t["autores"] if a}
-                if not (real["id"] in t["autores"] or real["id"] in jefes or set(real.get("puestos", [])) & {"direccion", "operaciones"}):
-                    registrar_agrupado(real["id"], "acciones", "denegado", f"{herr}/{tipo}", {"motivo": "tarea ajena", "objeto": str(b.get("objeto"))[:40]})
-                    return self.responder(403, {"error": "Esa tarea no es tuya ni de tu equipo."})
-                cli_tarea = t["cli"]
-            cid = b.get("cliente_id")
-            if cid and not P.ver(persona, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)["ok"]:
-                return self.responder(403, {"error": "No puedes actuar sobre un cliente que no llevas."})
-            cid = cid or cli_tarea          # la tarea de ClickUp la conoce el servidor: su cliente va a la cola
-            if b.get("tipo") == "responder" and cid and not P.ver(persona, {"tipo": "responder_cliente", "cliente_id": cid}, cp)["ok"]:
-                return self.responder(403, {"error": P.REGLAS["tipos"]["responder_cliente"]["no"]})
-            for campo in ("herramienta", "tipo", "objeto"):
-                if not b.get(campo):
-                    return self.responder(400, {"error": f"Falta «{campo}»."})
-            clave_rep, previa = accion_repetida(real["id"], b) or (None, None)
+            cid, error = self.validar_accion(real, persona, b)
+            if error:
+                return self.responder(*error)
+            import triaje_guardia_445 as triaje445
+            es_triaje445 = triaje445.aplica(b)
+            if es_triaje445 and "intencion_id" not in b:
+                return self.responder(400, {"error": "El reparto necesita una intención UUID durable."})
+            if es_triaje445 and not triaje445.adaptador_disponible():
+                return self.responder(503, {"error": "La exclusión atómica de este adaptador de reparto no está validada."})
+            clave_rep, previa = (None, None) if "intencion_id" in b else (accion_repetida(real["id"], b) or (None, None))
             if previa:   # ronda 11 (M1): doble clic o bucle → la misma fila, sin otra
                 return self.responder(200, {"ok": True, "id": previa, "estado": "simulada", "repetida": True,
                                             "vista_previa": b.get("vista_previa"), "texto": b.get("texto")})
-            with conectar() as con:
+            from intenciones_acciones import guardar as guardar_intencion, iniciar as iniciar_intencion, ConflictoIntencion, PersistenciaNoDisponible, RechazoAccion
+            guardia_triaje445 = None
+            def insertar_accion(con):
+                triaje445.sin_previa(con, guardia_triaje445)
+                vp_transicion = b.get("vista_previa")
+                if isinstance(vp_transicion, dict) and vp_transicion.get("transicion_tablero") is True:
+                    import mi_trabajo as trabajo_transiciones
+                    error_transicion = trabajo_transiciones.validar_transicion_en_transaccion(con, real, b)
+                    if error_transicion:
+                        raise RechazoAccion(*error_transicion)
+                if isinstance(vp_transicion, dict) and vp_transicion.get("transicion_produccion") is True:
+                    import transiciones_produccion_208 as produccion_transiciones
+                    error_transicion = produccion_transiciones.validar_en_transaccion(con, real, b)
+                    if error_transicion:
+                        raise RechazoAccion(*error_transicion)
                 cur = con.execute("INSERT INTO acciones (quien, herramienta, tipo, objeto, cliente_id, modulo, texto, vista_previa, estado, detalle) VALUES (?,?,?,?,?,?,?,?, 'simulada', ?)",
                                   (real["id"], b["herramienta"], b["tipo"], str(b["objeto"]), cid, b.get("modulo"), b.get("texto"),
                                    json.dumps(b.get("vista_previa"), ensure_ascii=False), "Prototipo: no se ha llamado a ninguna API. Se ejecutará con W1."))
-                aid = cur.lastrowid
+                return cur.lastrowid
+            repetida_intencion = False
+            try:
+                with conectar() as con:
+                    if "intencion_id" in b:
+                        iniciar_intencion(con)
+                        if es_triaje445:
+                            guardia_triaje445 = triaje445.preparar(sys.modules[__name__], con, real, persona, b)
+                        aid, repetida_intencion = guardar_intencion(con, real["id"], b, insertar_accion)
+                        if es_triaje445:
+                            triaje445.revalidar(sys.modules[__name__], con, real, persona, b, guardia_triaje445)
+                    else:
+                        aid = insertar_accion(con)
+            except RechazoAccion as exc:
+                return self.responder(exc.codigo, {"error": str(exc)})
+            except PersistenciaNoDisponible as exc:
+                return self.responder(503, {"error": str(exc)})
+            except ConflictoIntencion as exc:
+                return self.responder(409, {"error": str(exc)})
+            except ValueError as exc:
+                return self.responder(400, {"error": str(exc)})
             if clave_rep:
                 with CANDADO_ACCIONES:
                     _ACCIONES_RECIENTES[clave_rep] = (time.time(), aid)
             registrar(real["id"], b.get("modulo") or "acciones", "accion_simulada", str(b["objeto"]), {"accion_id": aid, "tipo": b["tipo"], "herramienta": b["herramienta"]})
-            return self.responder(200, {"ok": True, "id": aid, "estado": "simulada", "vista_previa": b.get("vista_previa"), "texto": b.get("texto")})
+            return self.responder(200, {"ok": True, "id": aid, "estado": "simulada", "vista_previa": b.get("vista_previa"), "texto": b.get("texto"), **({"intencion_guardada": {"id": b["intencion_id"], "accion_id": aid, "repetida": repetida_intencion}} if "intencion_id" in b else {})})
 
         if ruta == "/api/ver_dato":
             # «Ver datos» de un lead (D-88): solo quien lo trabaja, y queda en el rastro.
@@ -2679,9 +3351,17 @@ class Manejador(SimpleHTTPRequestHandler):
             extra_como = {"detalle": f"visto como {persona.get('alias') or persona['id']} por {real.get('alias') or real['id']}"} if solo_lectura else {}
             # Ronda 6 (C4): el cliente lo decide el SERVIDOR desde el propio dato, nunca el cliente_id del navegador.
             cliente_real = cliente_del_dato(conf, ref, almacen)
-            if conf.get("cliente") and not cliente_real and "direccion" not in P.puestos_de(persona):
+            # Los datos operativos privados no recuperan clientes excluidos del núcleo
+            # ni ganan alcance porque el dato no tenga un cliente reconocible.
+            clientes_dato = [c for c in E.crudo.get("clientes", [])
+                             if isinstance(c, dict) and c.get("id") == cliente_real] if cliente_real else []
+            cliente_ok = (not conf.get("cliente") or
+                          (len(clientes_dato) == 1 and ACT.es_activo_id(cliente_real) is True
+                           and all(P.ver(p, {"tipo": "cliente_detalle", "cliente_id": cliente_real},
+                                         P.contexto(p, E.crudo)).get("ok") for p in (real, persona))))
+            if not cliente_ok:
                 registrar_agrupado(real["id"], coleccion_rastro, "ver_dato_denegado", f"{almacen}#{ref}", {"campo": campo, "motivo": "dato sin cliente", **extra_como}, como=como_rastro)
-                return self.responder(403, {"error": "Ese dato no tiene un cliente reconocible: solo dirección."})
+                return self.responder(403, {"error": "Ese dato no pertenece a un cliente activo que puedas consultar."})
             b["cliente_id"] = cliente_real
             dueno = almacen.split("/")[-1] if conf.get("dueno") == "fichero" else None   # «solo lo tuyo»: el fichero es de esa persona
             v = P.ver(persona, {"tipo": conf["tipo"], "cliente_id": cliente_real, "persona_id": dueno}, cp)
@@ -2820,22 +3500,37 @@ class Manejador(SimpleHTTPRequestHandler):
     def post_decision(self, real, cp, b):
         """Subir una decisión (para Tomás 48 h, para Coti 24 h, escalada) o contestarla. Nada se borra:
         contestar rellena la respuesta una sola vez; cambiarla es una decisión nueva."""
+        if not isinstance(b, dict):
+            return self.responder(400, {"error": "La decisión debe ser un objeto."})
         op = b.get("operacion") or "nueva"
         if op == "nueva":
             tipo = b.get("tipo") or "para_tomas"
             if tipo not in TIPOS_DECISION:
                 return self.responder(400, {"error": "Tipo no válido (para_tomas, para_coti o escalada)."})
-            if not (b.get("titulo") or "").strip() or not (b.get("problema") or "").strip():
+            if not all(isinstance(b.get(k), str) and b[k].strip() for k in ("titulo", "problema")):
                 return self.responder(400, {"error": "Falta qué hay que decidir o el problema."})
-            if not (b.get("recomendacion") or "").strip():
+            if not isinstance(b.get("recomendacion"), str) or not b["recomendacion"].strip():
                 return self.responder(400, {"error": "Falta tu recomendación (exigencia 48: sin recomendación no se sube)."})
             cid = b.get("cliente_id")
-            if cid and not P.ver(real, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)["ok"]:
-                return self.responder(403, {"error": "No puedes subir una decisión de un cliente que no llevas."})
+            if cid is not None and (not isinstance(cid, str) or not cid):
+                return self.responder(400, {"error": "Cliente no válido."})
+            otros = b.get("clientes")
+            if otros is not None and (not isinstance(otros, list)
+                    or not all(isinstance(x, str) and x for x in otros)
+                    or len(set(otros)) != len(otros)):
+                return self.responder(400, {"error": "La lista de clientes debe contener identidades únicas."})
+            clientes = sorted(set(([cid] if cid is not None else []) + (otros or [])))
+            firma = autoridad_decision607(real, clientes)
+            if firma is None:
+                return self.responder(403, {"error": "No puedes subir una decisión con ese ámbito actual."})
             if b.get("prueba") and not str(b["prueba"]).startswith(("https://", "#/")):
                 return self.responder(400, {"error": "La prueba tiene que ser un enlace https:// o una pantalla de la app (#/…)."})
             extra = {k: b.get(k) for k in ("opciones", "fecha", "prueba", "clientes") if b.get(k) is not None}
+            if otros is not None:
+                extra["clientes"] = list(otros)
             with conectar() as con:
+                if autoridad_decision607(real, clientes) != firma:
+                    return self.responder(403, {"error": "El ámbito de la decisión ha cambiado; no se ha guardado."})
                 cur = con.execute("INSERT INTO decisiones (quien, tipo, clave, titulo, problema, recomendacion, cliente_id, datos) VALUES (?,?,?,?,?,?,?,?)",
                                   (real["id"], tipo, b.get("clave"), b["titulo"].strip()[:200], b["problema"].strip(), b["recomendacion"].strip(), cid,
                                    json.dumps(extra, ensure_ascii=False)))
@@ -2900,7 +3595,11 @@ class Manejador(SimpleHTTPRequestHandler):
             # Tomás, como ya hace altas_personas.puede_tocar.
             if set(p.get("puestos", [])) & mando and cambia and not es_direccion:
                 return self.responder(403, {"error": "A una persona con un puesto de mando (operaciones, RRHH, administración, ventas de RO…) solo la cambia Tomás."})
+            if "estado" in cambios and cambios["estado"] != p.get("estado") and ('baja' in (cambios["estado"], p.get("estado"))):
+                return self.responder(400, {"error": "Las bajas y reincorporaciones se gestionan desde Altas y bajas."})
             if "correo" in cambios:
+                if cambios["correo"] is not None and not isinstance(cambios["correo"], str):
+                    return self.responder(400, {"error": "Correo no válido."})
                 correo = (cambios["correo"] or "").strip().lower()
                 if correo and not correo.endswith(("@rankingonline.com", "@rankingonlinemarketing.com")):
                     return self.responder(400, {"error": "El correo tiene que ser de RO."})
@@ -2908,7 +3607,9 @@ class Manejador(SimpleHTTPRequestHandler):
                          (correo == (x.get("correo") or "").lower() or correo in [c.lower() for c in x.get("otros_correos") or []])]
                 if otros:
                     return self.responder(409, {"error": "Ese correo ya es de otra persona: tiene que ser único."})
-                cambios["correo"] = correo or None
+                if correo != (p.get("correo") or "").strip().lower():
+                    return self.responder(400, {"error": "El correo de entrada se gestiona desde Altas y bajas; aquí no cambia Access."})
+                cambios["correo"] = p.get("correo")
             antes = {k: p.get(k) for k in cambios}
             with conectar() as con:
                 con.execute("INSERT INTO historial (quien, coleccion, id, operacion, antes, datos) VALUES (?,?,?,?,?,?)",
@@ -2918,20 +3619,16 @@ class Manejador(SimpleHTTPRequestHandler):
             return self.responder(200, {"ok": True})
 
         if ruta == "/api/ajustes/asignacion":
+            from ajustes_validacion_579 import asignacion as validar_asignacion579
             op = b.get("operacion")
-            d = {k: b.get(k) for k in ("cliente_id", "persona_id", "silla", "desde", "hasta", "principal", "suplencia", "titular_id")}
-            if not E.persona(d["persona_id"]) or d["silla"] not in P.REGLAS["sillas"] or not any(c["id"] == d["cliente_id"] for c in E.crudo["clientes"]):
-                return self.responder(400, {"error": "Cliente, persona o silla no válidos."})
-            if op == "crear":
-                if d.get("suplencia") and not d.get("hasta"):
-                    return self.responder(400, {"error": "Una suplencia necesita fecha de fin: caduca sola."})
-                d.update({"principal": bool(d.get("principal", True)), "suplencia": bool(d.get("suplencia")), "fuente": f"Ajustes · {real['alias']} · {ahora()}",
-                          "confianza": "confirmada", "desde": d.get("desde") or hoy()})
-            elif op == "cerrar":
-                d["hasta"] = d.get("hasta") or hoy()
-            elif op != "confirmar":
-                return self.responder(400, {"error": "Operación no válida (crear, cerrar o confirmar)."})
+            d = validar_asignacion579(P, ACT, E.crudo, b, hoy())
+            if d is None:
+                return self.responder(400, {"error": "Asignación no válida: revisa persona activa, silla, fechas y suplencia."})
+            if op == 'crear':
+                d.update({"fuente": f"Ajustes · {real['alias']} · {ahora()}", "confianza": "confirmada"})
             with conectar() as con:
+                if validar_asignacion579(P, ACT, E.crudo, b, hoy()) is None:
+                    return self.responder(403, {"error": "La asignación ha cambiado de ámbito."})
                 con.execute("INSERT INTO historial (quien, coleccion, id, operacion, datos) VALUES (?,?,?,?,?)",
                             (real["id"], "asignaciones", f"{d['cliente_id']}·{d['silla']}·{d['persona_id']}", op, json.dumps(d, ensure_ascii=False)))
             registrar(real["id"], "ajustes", f"asignacion_{op}", d["cliente_id"], d)
@@ -2941,11 +3638,20 @@ class Manejador(SimpleHTTPRequestHandler):
         if ruta == "/api/ajustes/confirmar":
             resp = b.get("respuesta") or {}
             lista = resp if isinstance(resp, list) else [resp]
-            if not lista or any(x.get("tipo") not in ("asignacion", "persona", "servicio", "nota") for x in lista):
-                return self.responder(400, {"error": "Respuesta no válida."})
+            from confirmar_personas_572 import validar_lista, actor_actual, permite_estados
+            if not actor_actual(P, E.crudo, real):
+                return self.responder(403, {"error": "No puedes confirmar en tu ámbito actual."})
+            if not validar_lista(resp, E.crudo):
+                return self.responder(400, {"error": "Respuesta no válida para la duda actual."})
+            if not permite_estados(P, E.crudo, real, resp):
+                return self.responder(403, {"error": "No puedes modificar el estado de esa persona."})
             duda = lista[0].get("duda")
             with conectar() as con:
+                if not actor_actual(P, E.crudo, real) or not validar_lista(resp, E.crudo) or not permite_estados(P, E.crudo, real, resp):
+                    return self.responder(403, {"error": "El ámbito de confirmación ha cambiado."})
                 previa = con.execute("SELECT id FROM decisiones WHERE tipo='para_confirmar' AND clave=? AND anula_a IS NULL ORDER BY id DESC LIMIT 1", (duda,)).fetchone()
+                if not actor_actual(P, E.crudo, real) or not validar_lista(resp, E.crudo) or not permite_estados(P, E.crudo, real, resp):
+                    return self.responder(403, {"error": "El ámbito de confirmación ha cambiado."})
                 if previa:   # contestar otra vez = anular la anterior (nada se borra)
                     con.execute("INSERT INTO decisiones (quien, tipo, clave, problema, respuesta, anula_a) VALUES (?,?,?,?,NULL,?)",
                                 (real["id"], "para_confirmar", duda, "anulada por una respuesta nueva", previa["id"]))
@@ -3014,6 +3720,16 @@ except ImportError:
 except Exception as _e:
     print("⚠️  Sincronía no cargada:", _e)
 
+# Mi trabajo (3-oct) · GET /api/mi_trabajo y POST /api/mi_trabajo/crono (mi_trabajo.py): tareas y horas sin salir de la app.
+# Valida las acciones del módulo «mi-trabajo» antes de la cola; todo va a la copia segura de sincronia.py. Sin él, nada cambia.
+try:
+    import mi_trabajo as MI_TRABAJO                        # noqa: E402
+    MI_TRABAJO.enganchar(Manejador, sys.modules[__name__])
+except ImportError:
+    pass
+except Exception as _e:
+    print("⚠️  Mi trabajo no cargado:", _e)
+
 # Vigía (3-oct) · GET /api/vigia y POST /api/vigia/probar (despliegue/vigia.py): «Salud del sistema». Sin él, nada cambia.
 try:
     import importlib.util as _ilu
@@ -3039,6 +3755,19 @@ except FileNotFoundError:
 except Exception as _e:
     print("⚠️  Acceso a Modular no cargado:", _e)
 
+# Proponer fecha (3-oct) · /api/reuniones/propuesta* (fuentes_reuniones/propuesta_reunion.py): correo de propuesta de reunión
+# ya redactado por reglas (huecos de la agenda, motivo, firma) y su nota de calidad. Enviar va por la cola y envios.py.
+try:
+    import importlib.util as _ilu
+    _spec = _ilu.spec_from_file_location("propuesta_reunion", AQUI / "fuentes_reuniones" / "propuesta_reunion.py")
+    PROPUESTA_REUNION = _ilu.module_from_spec(_spec)
+    _spec.loader.exec_module(PROPUESTA_REUNION)
+    PROPUESTA_REUNION.enganchar(Manejador, sys.modules[__name__])
+except FileNotFoundError:
+    pass
+except Exception as _e:
+    print("⚠️  Proponer fecha (correo de reunión) no cargado:", _e)
+
 # Ficha de Google (3-oct) · /api/gbp/* (fuentes_gbp/servidor_gbp.py): «Proponer respuesta» a una reseña con el cerebro de
 # reseñas y respuesta en SIMULACIÓN (cola de acciones, canal de Google apagado). Sin el fichero, nada cambia.
 try:
@@ -3060,6 +3789,105 @@ try:
     GUARDIA_ALERTAS.enganchar(Manejador, sys.modules[__name__])
 except ImportError:
     pass
+
+# Setters (3-oct, 58_FEEDBACK_TOMAS_03OCT) · setters_srv.py: cada setter solo actúa sobre SUS leads y citas (comprobado aquí),
+# «Agendar cita» en simulación (crear_cita_ghl, vista previa del servidor) y POST /api/setters/propuesta_cita. Va el último:
+# su guardia corre antes que las demás. Sin el fichero, nada cambia.
+try:
+    import setters_srv as SETTERS_SRV                      # noqa: E402
+    SETTERS_SRV.enganchar(Manejador, sys.modules[__name__])
+except ImportError:
+    pass
+except Exception as _e:
+    print("⚠️  Setters (servidor) no cargado:", _e)
+
+# Acta y acuerdos: un lote transaccional, idempotente y siempre simulado. No despacha APIs externas.
+try:
+    import actas as ACTAS
+    ACTAS.enganchar(Manejador, sys.modules[__name__])
+except ImportError:
+    pass
+except Exception as _e:
+    print("⚠️  Actas transaccionales no cargadas:", _e)
+
+# Analítica propia de uso: sin envío externo ni contenido de negocio.
+import uso_local as USO_LOCAL
+USO_LOCAL.enganchar(Manejador, sys.modules[__name__])
+
+# Cadencia operativa confirmada; sin agendar ni escribir fuera.
+import metodo_cuentas as METODO_CUENTAS
+METODO_CUENTAS.enganchar(Manejador, sys.modules[__name__])
+
+# Diagnóstico de lectura: cada fuente pasa por su puerta y recorte existentes.
+import cerebro_api as CEREBRO_API
+CEREBRO_API.enganchar(Manejador, sys.modules[__name__])
+import cerebro_seo_api as CEREBRO_SEO_API
+CEREBRO_SEO_API.enganchar(Manejador, sys.modules[__name__])
+import borradores_api as BORRADORES_API
+BORRADORES_API.enganchar(Manejador, sys.modules[__name__])
+import informes_tareas_api as INFORMES_TAREAS_API
+INFORMES_TAREAS_API.enganchar(Manejador, sys.modules[__name__])
+import agenda_zoom_api as AGENDA_ZOOM_API
+AGENDA_ZOOM_API.enganchar(Manejador, sys.modules[__name__])
+from fuentes_pagespeed import lectura_api as PAGESPEED_API
+PAGESPEED_API.enganchar(Manejador, sys.modules[__name__])
+import historial_reuniones_api as HISTORIAL_REUNIONES_API
+HISTORIAL_REUNIONES_API.enganchar(Manejador, sys.modules[__name__])
+
+# Última barrera: ninguna escritura de módulos elude el piloto de consulta.
+# Preferencias privadas de tareas: no activa el tablero experimental ni sus cambios.
+import informe_word_api as INFORME_WORD_API
+INFORME_WORD_API.enganchar(Manejador, sys.modules[__name__])
+import evidencias_kpi_api as EVIDENCIAS_KPI_API
+EVIDENCIAS_KPI_API.enganchar(Manejador, sys.modules[__name__])
+import evidencia_produccion_287 as EVIDENCIA_PRODUCCION_287
+import operaciones_registros_269 as OPERACIONES_REGISTROS_269
+OPERACIONES_REGISTROS_269.enganchar(Manejador, sys.modules[__name__])
+import operaciones_registros_272 as OPERACIONES_CONTROL_272
+OPERACIONES_CONTROL_272.enganchar(Manejador, sys.modules[__name__])
+import operaciones_feedback_273 as OPERACIONES_FEEDBACK_273
+OPERACIONES_FEEDBACK_273.enganchar(Manejador, sys.modules[__name__])
+import operaciones_pedidos_account as OPERACIONES_PEDIDOS_ACCOUNT_294
+OPERACIONES_PEDIDOS_ACCOUNT_294.enganchar(Manejador, sys.modules[__name__])
+import historico_llamadas_350 as HISTORICO_LLAMADAS_350
+HISTORICO_LLAMADAS_350.enganchar(Manejador, sys.modules[__name__])
+import planning_observado_api_356 as PLANNING_OBSERVADO_356
+PLANNING_OBSERVADO_356.enganchar(Manejador, sys.modules[__name__])
+import planning_observado_api_405 as PLANNING_OBSERVADO_405
+PLANNING_OBSERVADO_405.enganchar(Manejador, sys.modules[__name__])
+import historial_diario_api_362 as HISTORIAL_DIARIO_362
+HISTORIAL_DIARIO_362.enganchar(Manejador, sys.modules[__name__])
+import urgencias_observadas_api_402 as URGENCIAS_OBSERVADAS_402
+URGENCIAS_OBSERVADAS_402.enganchar(Manejador, sys.modules[__name__])
+import agrupaciones_tarea_api_376 as AGRUPACIONES_TAREA_376
+AGRUPACIONES_TAREA_376.enganchar(Manejador, sys.modules[__name__])
+import meta_diaria_api_385 as META_DIARIA_385
+META_DIARIA_385.enganchar(Manejador, sys.modules[__name__])
+import crm_embudo_api_467 as CRM_EMBUDO_467
+CRM_EMBUDO_467.enganchar(Manejador, sys.modules[__name__])
+import crm_ultima_valida_api_513 as CRM_ULTIMA_VALIDA_513
+CRM_ULTIMA_VALIDA_513.enganchar(Manejador, sys.modules[__name__])
+import operaciones_prioridades_300 as OPERACIONES_PRIORIDADES_300
+OPERACIONES_PRIORIDADES_300.enganchar(Manejador, sys.modules[__name__])
+import operaciones_anomalias_276 as OPERACIONES_ANOMALIAS_276
+OPERACIONES_ANOMALIAS_276.enganchar(Manejador, sys.modules[__name__])
+import operaciones_notas_equipo_281 as OPERACIONES_NOTAS_EQUIPO_281
+OPERACIONES_NOTAS_EQUIPO_281.enganchar(Manejador, sys.modules[__name__])
+import tareas_local as TAREAS_PREFERENCIAS
+TAREAS_PREFERENCIAS.enganchar(Manejador, sys.modules[__name__], solo_preferencias=True)
+
+import contratos_privados as CONTRATOS_PRIVADOS
+CONTRATOS_PRIVADOS.enganchar(Manejador, sys.modules[__name__])
+import transiciones_produccion_208 as PRODUCCION_TRANSICIONES_208
+PRODUCCION_TRANSICIONES_208.enganchar(Manejador, sys.modules[__name__])
+import decisiones_durables_382 as DECISIONES_DURABLES_382
+DECISIONES_DURABLES_382.enganchar(Manejador, sys.modules[__name__])
+import triaje_intenciones_437 as TRIAJE_INTENCIONES_437
+TRIAJE_INTENCIONES_437.enganchar(Manejador, sys.modules[__name__])
+import ejemplos_creador_api_438 as EJEMPLOS_CREADOR_438
+EJEMPLOS_CREADOR_438.enganchar(Manejador, sys.modules[__name__])
+import piloto_lectura as PILOTO_LECTURA
+PILOTO_LECTURA.enganchar(Manejador)
 
 def main():
     if "--help" in sys.argv or "-h" in sys.argv:   # ronda 14: la ayuda sale sin arrancar el servidor ni abrir la base
@@ -3114,23 +3942,26 @@ def main():
         if pedido not in ("127.0.0.1", "localhost"):
             sys.exit("⛔ Sin RO_MODO=servidor y Cloudflare Access solo escucho en 127.0.0.1.")
     iniciar_base()
-    if not FOTO.hay_foto_de_hoy():
+    if PILOTO_LECTURA.activo():
+        E.foto = {"nota": "Piloto de consulta: no se genera una foto nueva."}
+    elif not FOTO.hay_foto_de_hoy():
         E.foto = FOTO.hacer_foto()
     else:
         E.foto = {"fecha": hoy(), "nota": "ya había foto de hoy"}
     E.cargar()
-    calcular_avisos()
-    threading.Thread(target=trabajador_recargas, daemon=True).start()
-    with conectar() as con:   # una recarga que quedó a medias al cerrar el servidor se marca y no se repite sola
-        con.execute("UPDATE recargas SET estado='con_fallos', terminada=datetime('now') WHERE estado='en_curso'")
-    COLA.set()                # si quedó alguna pendiente, se atiende ya
+    if not PILOTO_LECTURA.activo():
+        calcular_avisos()
+        threading.Thread(target=trabajador_recargas, daemon=True).start()
+        with conectar() as con:   # una recarga que quedó a medias al cerrar el servidor se marca y no se repite sola
+            con.execute("UPDATE recargas SET estado='con_fallos', terminada=datetime('now') WHERE estado='en_curso'")
+        COLA.set()                # si quedó alguna pendiente, se atiende ya
     if E.bloqueados:
         print("⚠️  Puerta de secretos: no se sirven", ", ".join(E.bloqueados))
     if E.nucleo_bloqueado:
         print("⛔  Hay secretos en los datos comunes: la API responde 503 hasta que se limpien.")
     if ACCESO.activo():   # C5 · servidor (Render): escucha fuera, en el PORT que da Render; los datos llegan de la base
         puerto = int(os.environ.get("PORT") or puerto)
-        if os.environ.get("DATABASE_URL"):
+        if os.environ.get("DATABASE_URL") and not PILOTO_LECTURA.activo():
             import publicacion as PUB    # despliegue/publicacion.py: baja la versión vigente de data/ y recarga
             PUB.arrancar_sincronizacion(E.cargar)
     anfitrion = "0.0.0.0" if ACCESO.activo() else "127.0.0.1"

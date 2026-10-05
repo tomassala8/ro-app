@@ -1,8 +1,5 @@
-// sw.js · ronda 14 (velocidad, auditoría 37). Solo guarda la PÁGINA (index.html, sin datos): la enseña al momento y la
-// refresca detrás, para que la sesión salga en el primer viaje y no después de preguntar «¿ha cambiado la página?».
-// No toca /api/ (los datos van por persona en datos.js), ni el código (va con su huella y caché de un año), ni nada de fuera.
-// Si la página guardada es de otra versión, sus ficheros siguen sirviéndose bien (cada uno con su huella) y la siguiente
-// entrada ya usa la nueva. La carcasa borra esta caché al entrar otra persona (datos.js · olvidarTodo).
+// sw.js · La navegación consulta primero la página actual y su mapa de versiones.
+// La última página buena solo sirve de respaldo si falla la red; no almacena API, datos ni proveedores.
 const CACHE = 'ro-pagina-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
@@ -24,7 +21,7 @@ self.addEventListener('fetch', e => {
       return resp;
     });
     const guardada = await cache.match(r);
-    if (guardada) { e.waitUntil(red.catch(() => {})); return guardada; }
-    return red;
+    try { return await red; }
+    catch (error) { if (guardada) return guardada; throw error; }
   })());
 });

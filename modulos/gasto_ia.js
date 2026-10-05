@@ -161,6 +161,58 @@ async function cargar(ctx) {
   try { return await ctx.api('ia/gasto'); } catch (e) { return { error: e.message, status: e.status }; }
 }
 
+// La respuesta de Reabrir acredita un registro local, no un cambio en la Console.
+function ambitoReabrir601(ctx) {
+  if (ctx.vigente?.() !== true || ctx.real?.id !== 'tomas' || ctx.persona?.id !== 'tomas' || ctx.veModulo?.('gasto-ia') !== true) return null;
+  const filas = ctx.datos?.personas;
+  if (!Array.isArray(filas)) return null;
+  const encontrados = filas.filter(p => p?.id === 'tomas');
+  if (encontrados.length !== 1) return null;
+  const p = encontrados[0], roles = p.puestos;
+  if (p.estado !== 'activo' || p.activo === false || !Array.isArray(roles) || !roles.includes('direccion') ||
+      roles.some(r => typeof r !== 'string' || !/^[a-z][a-z0-9_-]{0,99}$/.test(r)) || new Set(roles).size !== roles.length) return null;
+  const canon = JSON.stringify([...roles].sort());
+  if ([ctx.real, ctx.persona].some(x => !Array.isArray(x.puestos) || JSON.stringify([...x.puestos].sort()) !== canon || x.estado !== 'activo' || x.activo === false)) return null;
+  return JSON.stringify([p.id, canon, !!ctx.soloLectura, !!ctx.pilotoLectura]);
+}
+
+function respuestaReabrir601(r) {
+  return !!r && r.ok === true && !r.error && ['ia', 'reglas'].includes(r.modo) &&
+    (r.motivo === null || typeof r.motivo === 'string') && r.topes && typeof r.topes === 'object' && !Array.isArray(r.topes) &&
+    r.gasto && typeof r.gasto === 'object' && r.llaves && typeof r.llaves === 'object';
+}
+
+function controlReabrir601(ctx, raiz, firma, pintar) {
+  const estado = h('span', { class: 'sub', role: 'status', 'aria-live': 'polite' });
+  let ocupado = false;
+  const valido = () => {
+    if (ambitoReabrir601(ctx) === firma && !ctx.soloLectura && !ctx.pilotoLectura) return true;
+    raiz.replaceChildren();
+    return false;
+  };
+  const boton = h('button', { type: 'button', class: 'bt', disabled: !!ctx.soloLectura || !!ctx.pilotoLectura, on: { click: async () => {
+    if (ocupado || !valido()) return;
+    ocupado = true; boton.disabled = true; estado.textContent = 'Registrando reapertura…';
+    try {
+      const r = await ctx.api('ia/gasto/reabrir', { metodo: 'POST', cuerpo: { motivo: 'Límite de la Console subido' } });
+      if (!valido()) return;
+      if (!respuestaReabrir601(r)) throw new Error('No se confirmó el registro de reapertura. Actualiza el gasto para comprobarlo antes de repetir.');
+      // No se deduce actividad del proveedor del ok de una escritura local.
+      const texto = r.modo === 'reglas' ? 'Reapertura registrada en la app. La IA sigue en modo reglas.' : 'Reapertura registrada en la app. El límite externo no se ha comprobado aquí.';
+      await pintar(texto);
+    } catch (e) {
+      if (!valido()) return;
+      if (e?.status === 401 || e?.status === 403) {
+        raiz.replaceChildren(vacio({ icono: 'candado', tono: 'aviso', titulo: 'No se permite reabrir la IA en esta vista', texto: 'Actualiza la vista para comprobar el acceso.' }));
+        return;
+      }
+      estado.textContent = `No se confirmó la reapertura. ${e?.message || 'Actualiza el gasto para comprobar el estado.'}`;
+      // Un error de transporte puede ocultar un registro aceptado: sin reenvío automático.
+    }
+  } } }, icono('recargar'), 'Reabrir (ya he subido el límite en la Console)');
+  return h('div', { class: 'fila', style: { gap: '12px', flexWrap: 'wrap' } }, boton, estado);
+}
+
 export default {
   id: 'gasto-ia',
   titulo: 'Gasto de IA',
@@ -170,18 +222,24 @@ export default {
     ctx.titulo?.('Gasto de IA', 'Lo que gasta la IA de la app, con tope duro: mes, día, previsión, por función y por persona');
     const raiz = h('div', { class: 'gasto-ia pila' });
     cont.append(raiz);
-    const pintar = async () => {
+    const firma = ambitoReabrir601(ctx);
+    let lectura = 0;
+    const vigente = () => firma !== null && ambitoReabrir601(ctx) === firma;
+    const pintar = async (confirmacion = '') => {
+      if (!vigente()) { raiz.replaceChildren(); return; }
+      const turno = ++lectura;
       const D = await cargar(ctx);
+      if (!vigente()) { raiz.replaceChildren(); return; }
+      if (turno !== lectura) return;
       if (D.error) {
         raiz.replaceChildren(vacio({ icono: 'candado', tono: 'aviso', titulo: D.status === 403 ? 'Solo lo ve Tomás' : 'No se pudo leer el gasto de la IA', texto: D.error }));
         return;
       }
       raiz.replaceChildren(...[
+        confirmacion ? h('p', { class: 'sub', role: 'status' }, confirmacion) : null,
         cartel(D),
         resumen(D),
-        D.motivo && /Console/.test(D.motivo) ? h('div', { class: 'fila', style: { gap: '12px' } },
-          h('button', { type: 'button', class: 'bt', on: { click: async () => { await ctx.api('ia/gasto/reabrir', { metodo: 'POST', cuerpo: { motivo: 'Límite de la Console subido' } }); pintar(); } } },
-            icono('recargar'), 'Reabrir (ya he subido el límite en la Console)')) : null,
+        D.motivo && /Console/.test(D.motivo) ? controlReabrir601(ctx, raiz, firma, pintar) : null,
         panel({ titulo: 'Por función', icono: 'spark', sub: 'Modelo barato para clasificar y consejos; el mejor solo para borradores. Cada función tiene su tope del mes.' }, porFuncion(D)),
         panel({ titulo: 'Por persona', icono: 'eq', sub: `Tope por persona: ${eur(D.topes.persona_dia_eur)} al día (Tomás, el doble). «Tubería» = lotes de noche.` }, porPersona(D)),
         panel({ titulo: 'Topes', icono: 'escudo', sub: 'Solo tú los cambias. Cada cambio queda en el rastro con el antes, el después y el motivo.' }, formTopes(ctx, D, pintar)),

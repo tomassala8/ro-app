@@ -365,11 +365,15 @@ function pintarMeta(z, f, P, vista, ctx, estado) {
     tarjeta({ icono: 'persona', etiqueta: 'Alcance', valor: a.alcance == null ? null : n0(a.alcance), contexto: a.frecuencia == null ? 'Frecuencia sin dato; alcance solo en agregado exacto' : `Frecuencia ${fmt.num(a.frecuencia, 2)}`, comparacion: compTile(a.alcance, b.alcance, PC, 'neutro') }),
     tarjeta({ icono: 'flecha', etiqueta: 'CTR (clics en el enlace)', valor: ctr(a) === null ? null : pc(ctr(a)), comparacion: compTile(ctr(a), ctr(b), PC, 'neutro') }),
   ].filter(Boolean);
-  z.append(tiles(cards));
-  z.append(h('p', { class: 'sub' }, `Copia leída: ${fDiaHoraRO(f.leido)} · periodo ${P.desde} — ${P.hasta}. ${exacto?.cuenta ? 'Agregado de Meta para estas fechas.' : 'Suma de días presentes; cobertura del periodo no acreditada.'} ${Array.isArray(f.errores) && f.errores.length ? 'La fuente registra errores: cobertura parcial.' : 'Ausencia de días o campos no equivale a cero.'} Los leads son resultados de Meta, sin unión al CRM ni cohorte cualificada. ${P.comp && !comparable ? 'Comparación no disponible: requiere dos ventanas completas, consecutivas, iguales y agregados exactos sin errores.' : ''}`));
+  const contexto4=h('details',{class:'que-es','data-paid-meta-contexto':'4'},
+    h('summary',{style:{minHeight:'44px',display:'flex',alignItems:'center',fontWeight:'600'}},'Resumen, gráfico y fuente'),
+    h('div',{class:'pila',style:{gap:'12px',padding:'12px 0'}},tiles(cards)));
+  const contenido4=contexto4.lastElementChild;
+  contenido4.append(h('p', { class: 'sub' }, `Copia leída: ${fDiaHoraRO(f.leido)} · periodo ${P.desde} — ${P.hasta}. ${exacto?.cuenta ? 'Agregado de Meta para estas fechas.' : 'Suma de días presentes; cobertura del periodo no acreditada.'} ${Array.isArray(f.errores) && f.errores.length ? 'La fuente registra errores: cobertura parcial.' : 'Ausencia de días o campos no equivale a cero.'} Los leads son resultados de Meta, sin unión al CRM ni cohorte cualificada. ${P.comp && !comparable ? 'Comparación no disponible: requiere dos ventanas completas, consecutivas, iguales y agregados exactos sin errores.' : ''}`));
   if (!verDinero) z.append(vacioLinea('Tu puesto no ve la inversión de este cliente: aquí van impresiones, clics y leads, sin euros.', { icono: 'candado' }));
-  z.append(panel({ titulo: `${{ gasto: 'Importe gastado', leads: 'Leads de Meta', impresiones: 'Impresiones' }[sel]} por día`, icono: 'grafico' },
+  contenido4.append(panel({ titulo: `${{ gasto: 'Importe gastado', leads: 'Leads de Meta', impresiones: 'Impresiones' }[sel]} por día`, icono: 'grafico' },
     enCuerpo(graficoDoble({ actual: serieMeta216(f, P, sel), comp: comparable ? serieMeta216(f, P.comp, sel) : null, formato: x => x == null ? 'Sin dato' : sel === 'gasto' ? `${fmt.num(x)} €` : n0(x), P: PC }))));
+  z.append(h('p',{class:'sub',style:{margin:'0 0 8px'}},`Meta · ${P.desde} — ${P.hasta} · lectura ${fDiaHoraRO(f.leido)} · ${Array.isArray(f.errores)&&f.errores.length?'La fuente registra errores: cobertura parcial.':'Cobertura de la copia; ausencia de campos no equivale a cero.'}`));
   // tabla del administrador de anuncios
   const nivel = { campanas: 'campaign', conjuntos: 'adset', anuncios: 'ad' }[vista];
   const meta = { campanas: f.campanas, conjuntos: f.conjuntos, anuncios: f.anuncios }[vista] || {};
@@ -380,23 +384,23 @@ function pintarMeta(z, f, P, vista, ctx, estado) {
   } else if (exacto) {
     const A = exacto[nivel] || {}, B = exactoC?.[nivel] || {};
     filas = Object.entries(A).map(([id, x]) => ({ id, x, y: P.comp ? B[id] || (exactoC ? null : undefined) : undefined }));
-  } else { z.append(vacioLinea('No hay agregado de conjuntos o anuncios para estas fechas. Elige un periodo fijo disponible; no se reconstruye alcance sumando días.', { icono: 'cal' })); return; }
+  } else { z.append(vacioLinea('No hay agregado de conjuntos o anuncios para estas fechas. Elige un periodo fijo disponible; no se reconstruye alcance sumando días.', { icono: 'cal' })); z.append(contexto4); return; }
   filas = filas.map(r => ({ ...r, x: filaMeta216(r.x), y: r.y ? filaMeta216(r.y) : null, m: meta[r.id] || {} }));
   const soloActivas = estado.metaActivas ?? false;
   const filtradas = soloActivas ? filas.filter(r => r.m.estado === 'ACTIVE') : filas;
   filtradas.sort((p, q) => (q.x.gasto ?? q.x.impresiones ?? -1) - (p.x.gasto ?? p.x.impresiones ?? -1));
   const conComp = comparable && filtradas.some(r => r.y);
-  const col = (titulo, fn, fm = n0, mejorSi) => ({ titulo, num: true, valor: r => fn(r.x) ?? null, celda: r => celda(fn(r.x), conComp ? (r.y ? fn(r.y) : null) : undefined, fm, 'neutro') });
+  const col = (titulo, fn, fm = n0, mejorSi, tituloCompleto = titulo) => ({ titulo, tituloCompleto, tituloMovil:titulo, num: true, valor: r => fn(r.x) ?? null, celda: r => celda(fn(r.x), conComp ? (r.y ? fn(r.y) : null) : undefined, fm, 'neutro') });
   const columnas = [
-    { titulo: { campanas: 'Campaña', conjuntos: 'Conjunto', anuncios: 'Anuncio' }[vista], principal: true, valor: r => r.m.nombre || '', celda: r => h('span', { style: { display: 'block', minWidth: 'min(220px, 100%)' } }, h('span', { style: { font: 'var(--t-h3)', overflowWrap: 'anywhere' } }, r.m.nombre || 'Sin nombre (borrada)'),
+    { titulo: { campanas: 'Campaña', conjuntos: 'Conjunto', anuncios: 'Anuncio' }[vista], tituloCompleto:{campanas:'Nombre de la campaña Meta',conjuntos:'Nombre del conjunto de anuncios Meta',anuncios:'Nombre del anuncio Meta'}[vista], principal: true, valor: r => r.m.nombre || '', celda: r => h('span', { style: { display: 'block', minWidth: 'min(220px, 100%)' } }, h('span', { style: { font: 'var(--t-h3)', overflowWrap: 'anywhere' } }, r.m.nombre || 'Sin nombre (borrada)'),
       vista !== 'campanas' && r.m.campana && f.campanas?.[r.m.campana] ? h('span', { style: { display: 'block', font: 'var(--t-meta)', color: 'var(--dim)' } }, f.campanas[r.m.campana].nombre) : null) },
-    { titulo: 'Estado en la copia', celda: r => { const e = ESTADO_META[r.m.estado] || ['gris', r.m.estado ? r.m.estado.toLowerCase() : 'sin dato']; return chipEstado(e[0], e[1]); } },
-    verDinero ? col('Importe gastado', x => x.gasto, eur) : null,
-    col('Leads', x => x.leads), verDinero ? col('Coste por lead', x => cpl(x), eur, 'bajo') : null,
-    col('Impresiones', x => x.impresiones),
-    exacto ? col('Alcance', x => x.alcance) : null, exacto ? col('Frecuencia', x => x.frecuencia, v => fmt.num(v, 2), 'bajo') : null,
-    col('Clics en el enlace', x => x.clics_enlace), col('CTR', x => ctr(x), pc),
-    verDinero && vista !== 'anuncios' ? { titulo: 'Presupuesto', num: true, celda: r => (numeroMeta216(r.m.inversion_diaria, 'gasto') !== null ? `${eur(r.m.inversion_diaria)}/día` : numeroMeta216(r.m.inversion_total, 'gasto') !== null ? `${eur(r.m.inversion_total)} total` : '—') } : null,
+    { titulo:'Estado',tituloCompleto:'Estado de Meta en la copia; no acredita estado actual',tituloMovil:'Estado', celda: r => { const e = ESTADO_META[r.m.estado] || ['gris', r.m.estado ? r.m.estado.toLowerCase() : 'sin dato']; return chipEstado(e[0], e[1]); } },
+    verDinero ? col('Gasto', x => x.gasto, eur, undefined, 'Importe gastado en Meta en el periodo seleccionado') : null,
+    col('Leads', x => x.leads, n0, undefined, 'Resultados registrados en Meta; no acredita cualificación RO ni unión al CRM'), verDinero ? col('CPL', x => cpl(x), eur, 'bajo', 'Coste por lead de Meta; no acredita cumplimiento de objetivo ni cualificación') : null,
+    col('Impr.', x => x.impresiones, n0, undefined, 'Impresiones de Meta en el periodo seleccionado'),
+    exacto ? col('Alcance', x => x.alcance, n0, undefined, 'Alcance de Meta; disponible sólo en agregado exacto') : null, exacto ? col('Frec.', x => x.frecuencia, v => fmt.num(v, 2), 'bajo', 'Frecuencia de impresión Meta en el agregado exacto; no acredita fatiga') : null,
+    col('Clics enl.', x => x.clics_enlace, n0, undefined, 'Clics en el enlace registrados en Meta; no clics totales'), col('CTR enl.', x => ctr(x), pc, undefined, 'Porcentaje de clics en el enlace sobre impresiones Meta; no CTR de clics totales'),
+    verDinero && vista !== 'anuncios' ? { titulo:'Presup.',tituloCompleto:'Presupuesto Meta registrado; diario o total según el dato disponible',tituloMovil:'Presup.', num: true, celda: r => (numeroMeta216(r.m.inversion_diaria, 'gasto') !== null ? `${eur(r.m.inversion_diaria)}/día` : numeroMeta216(r.m.inversion_total, 'gasto') !== null ? `${eur(r.m.inversion_total)} total` : '—') } : null,
   ].filter(Boolean);
   const activas = filas.filter(r => r.m.estado === 'ACTIVE').length;
   z.append(panel({ titulo: { campanas: 'Campañas', conjuntos: 'Conjuntos de anuncios', anuncios: 'Anuncios' }[vista], icono: { campanas: 'megafono', conjuntos: 'capas', anuncios: 'star' }[vista],
@@ -404,6 +408,8 @@ function pintarMeta(z, f, P, vista, ctx, estado) {
   enCuerpo(chipsFiltro({ etiqueta: 'Estado en la copia', valor: soloActivas ? 'activas' : '', opciones: [{ valor: '', texto: 'Todas', cuenta: filas.length }, { valor: 'activas', texto: 'Activas en la copia', cuenta: activas, icono: 'zap' }],
     alCambiar: v => { estado.metaActivas = v === 'activas'; estado.repintar(); } })),
   filtradas.length ? tabla({ porPagina: 15, columnas, filas: filtradas }) : enCuerpo(vacioLinea('Sin filas disponibles para este filtro y periodo. No acredita ausencia de actividad.', { icono: 'vacio' }))));
+  z.append(h('p',{class:'sub','data-paid-meta-leyenda':'5',style:{margin:'8px 0'}},'Estado: en la copia · Gasto: importe gastado · CPL: coste por lead Meta · Impr.: impresiones · Frec.: frecuencia · Clics enl.: clics en el enlace · CTR enl.: clics en el enlace / impresiones, en % · Presup.: diario o total según el dato. Leads: resultados Meta; no acredita cualificación RO ni unión al CRM.'));
+  z.append(contexto4);
 }
 
 // =========================================================================================== GoHighLevel

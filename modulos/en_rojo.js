@@ -14,6 +14,7 @@ import {
 // IA, plegado y debajo de «Lo primero hoy»; y, para Coti, «Visto» también en cada fila crítica de la lista.
 import { botonDeshacer } from './_deshacer.js';
 import { consejoCompacto, filasFlexibles } from './_trabajo.js';
+import { panelPlanFuego255 } from './_plan_fuego_255.js';
 const filasLP = (...a) => filasFlexibles(listaLoPrimero(...a));   // Ronda U: botones debajo cuando no caben, a cualquier ancho
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
@@ -57,6 +58,17 @@ function claseMotivo(t = '') {
 }
 // «Bloqueo callado: 50.8 días» → «Bloqueo callado: 51 días» (decimales con punto fuera; texto limpio de códigos).
 /** Quita las señales que ya están dentro de otra compuesta («Correos … y su account lo marca en crítico»). */
+export function contadoresMetaCrm290(v={},hoy) {
+  const positivo=x=>typeof x==='number'&&Number.isFinite(x)&&x>0?x:null;
+  const medido=v.meta_medicion_290;
+  const dia=x=>typeof x==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(x)&&Number.isFinite(Date.parse(x+'T00:00:00Z'))&&new Date(x+'T00:00:00Z').toISOString().slice(0,10)===x;
+  const typed=medido?.version==='290.1'&&dia(hoy)&&dia(medido.fecha_evaluacion)&&medido.fecha_evaluacion<=hoy&&dia(medido.desde)&&dia(medido.hasta)&&Date.parse(medido.hasta)-Date.parse(medido.desde)===6*864e5&&Date.parse(medido.fecha_evaluacion)-Date.parse(medido.hasta)===864e5&&['lead','onsite_conversion.lead_grouped','offsite_conversion.fb_pixel_lead','onsite_web_lead'].includes(medido.tipo_evento)&&medido.estado==='medido'&&medido.fuente==='meta_insights'&&medido.cohorte_crm_confirmada===false&&typeof medido.eventos_lead==='number'&&Number.isSafeInteger(medido.eventos_lead)&&medido.eventos_lead>=0;
+  const meta=typed?medido.eventos_lead:positivo(v.leads_meta_7d),crm=positivo(v.leads_ghl_7d);
+  return [tile({icono:'plug',etiqueta:typed?'Eventos lead Meta · 7 días':'Resultados Meta · 7 días',valor:meta,estado:'',
+    contexto:typed?'Eventos de la cuenta en siete días cerrados; no contactos únicos, cualificados ni ventas.':'Contador observado; unidad y periodo pendientes de acreditar. No son leads cualificados ni compras.',medible:'medias'}),
+    tile({icono:'plug',etiqueta:'Contador CRM · 7 días',valor:crm,estado:'',contexto:'Observación independiente. Sin unión documentada Meta→CRM no se calcula fuga ni porcentaje de llegada. Ausencia/cero heredado no acredita un censo vacío.',medible:'medias'})];
+}
+
 function senales(motivos = []) {
   const bajo = motivos.map(m => String(m).toLowerCase());
   return motivos.filter((m, i) => !bajo.some((o, j) => j !== i && o.length > bajo[i].length && o.includes(bajo[i])));
@@ -74,10 +86,14 @@ function fuente(ctx, nombre) {
 /** Atajos por cliente (solo llegan los de clientes que la persona puede abrir). */
 let ATAJOS = null, ATAJOS_DE = null;   // se recarga al cambiar de persona («ver como»): el servidor recorta por persona
 async function cargarAtajos(ctx) {
-  if (ATAJOS && ATAJOS_DE === ctx.persona.id) return ATAJOS;
-  try { const d = await ctx.datosModulo('en_rojo/atajos'); ATAJOS = new Map((d.filas || []).map(f => [f.cliente_id, f])); }
-  catch { ATAJOS = new Map(); }
-  ATAJOS_DE = ctx.persona.id;
+  const clave = `${ctx.real?.id || ''}|${ctx.persona.id}|${ctx.soloLectura ? 'lectura' : 'normal'}`;
+  if (ATAJOS && ATAJOS_DE === clave) return ATAJOS;
+  let atajos;
+  try { const d = await ctx.datosModulo('en_rojo/atajos'); atajos = new Map((d.filas || []).map(f => [f.cliente_id, f])); }
+  catch { atajos = new Map(); }
+  if (typeof ctx.vigente === 'function' && !ctx.vigente()) return atajos;
+  ATAJOS = atajos;
+  ATAJOS_DE = clave;
   return ATAJOS;
 }
 
@@ -115,6 +131,7 @@ function filasVerdad(ctx) {
 // ===================================================================== lista
 async function pintarLista(cont, ctx) {
   await cargarAtajos(ctx);
+  if (!cont.isConnected || (typeof ctx.vigente === 'function' && !ctx.vigente())) return;
   const filas = filasVerdad(ctx);
   const total = filas.length;
   const n = g => filas.filter(f => f.gravedad === g).length;
@@ -123,7 +140,7 @@ async function pintarLista(cont, ctx) {
   const operaciones = ctx.persona.puestos.some(p => ['direccion', 'operaciones', 'proyectos'].includes(p));
   const esCoti = ctx.persona.puestos.includes('proyectos');
 
-  ctx.titulo('En rojo', `${n('critico')} críticos · ${n('atencion')} a vigilar · ${n('bien')} bien, de ${total} clientes. La misma regla en toda la app.`);
+  ctx.titulo('En rojo', `${n('critico')} críticos · ${n('atencion')} a vigilar · ${n('sin_dato')} por confirmar, de ${total} ${ctx.soloSuCartera ? 'clientes tuyos' : 'clientes'}.`);
 
   if (!total) {
     cont.append(vacio({ icono: 'plug', titulo: 'Sin la verdad única de clientes', texto: 'No ha llegado la lista única de clientes, así que no se puede decir quién está en rojo. Hay que lanzar la recarga de datos.', quien: 'Agus', borde: true }));
@@ -135,23 +152,25 @@ async function pintarLista(cont, ctx) {
 
   // ---- 1 · cifras: la gravedad única (lo de cada día, arriba) ----
   let chips;
-  const ORDEN_CHIPS = ['critico', 'atencion', 'bien', ''];
+  const ORDEN_CHIPS = ['critico', 'atencion', 'bien', 'sin_dato', ''];
   const elegir = g => { const b = cont.querySelectorAll('#chips-grav button')[ORDEN_CHIPS.indexOf(g)]; if (b && b.getAttribute('aria-pressed') !== 'true') b.click(); cont.querySelector('#chips-grav')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
   const fichas = [];
   if (tieneCartera) {
     const mc = mias.filter(f => f.gravedad === 'critico').length;
     fichas.push(tile({ icono: 'persona', etiqueta: 'Mis clientes críticos', valor: mc, unidad: `de ${mias.length}`,
-      estado: mc === 0 ? 'verde' : 'rojo', contexto: mc ? 'Están en «Lo primero hoy»' : 'Ninguno crítico',
+      estado: mc === 0 ? '' : 'rojo', contexto: mc ? 'Están en «Lo primero hoy»' : 'Sin señales críticas en esta copia; no acredita cobertura completa',
       medible: 'hoy', ir: 'Ver mis clientes', alPulsar: () => { filtrarMios(cont); elegir('critico'); } }));
   }
-  fichas.push(tile({ icono: 'fire', etiqueta: 'Crítico · actúa hoy', valor: n('critico'), unidad: `de ${total}`, estado: n('critico') ? 'rojo' : 'verde',
-    contexto: 'Fuga de leads, alta sin encender o correos muy viejos', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => elegir('critico') }));
-  fichas.push(tile({ icono: 'ojo', etiqueta: 'Vigilar', valor: n('atencion'), unidad: `de ${total}`, estado: n('atencion') ? 'ambar' : 'verde',
+  fichas.push(tile({ icono: 'fire', etiqueta: 'Crítico · actúa hoy', valor: n('critico'), unidad: `de ${total}`, estado: n('critico') ? 'rojo' : '',
+    contexto: 'Señales observadas; integración Meta→CRM pendiente de acreditar', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => elegir('critico') }));
+  fichas.push(tile({ icono: 'ojo', etiqueta: 'Vigilar', valor: n('atencion'), unidad: `de ${total}`, estado: n('atencion') ? 'ambar' : '',
     contexto: 'Correos de más de 48 h, sin reunión o bloqueos callados', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => elegir('atencion') }));
-  fichas.push(tile({ icono: 'ok', etiqueta: 'Bien', valor: n('bien'), unidad: `de ${total}`, estado: 'verde',
-    contexto: 'Ninguna señal', medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => elegir('bien') }));
+  fichas.push(tile({ icono: 'info', etiqueta: 'Por confirmar', valor: n('sin_dato'), unidad: `de ${total}`, estado: '',
+    contexto: 'Sin señales acreditadas; no equivale a cumplimiento completo', medible: 'medias', ir: 'Ver cuáles', alPulsar: () => elegir('sin_dato') }));
   const cifras = h('div', { class: 'tiles', role: 'list', 'aria-label': 'Cifras' }, fichas.map(f => { f.setAttribute('role', 'listitem'); return f; }));
 
+  // La tabla es el puesto de trabajo. Resúmenes y recomendaciones quedan disponibles debajo.
+  const resumenSecundario = h('div', {});
   // ---- 2 · lo primero hoy: los críticos (como mucho 7) ----
   // Guía 30 (3.6): lo que pide acción va arriba. Quien lleva cartera y además dirige (Tomás, Mili, Coti) ve los críticos
   // de la casa cuando los suyos están a cero: nunca una caja vacía donde hay trabajo.
@@ -165,7 +184,7 @@ async function pintarLista(cont, ctx) {
     const quedan = (deCasa ? filas : mias).filter(f => f.gravedad === 'critico').length - primeras.length;
     const sub = !deCasa ? 'Tus clientes críticos, el más grave arriba (como mucho 7)'
       : `${tieneCartera ? 'Ninguno de tus clientes es crítico. ' : ''}Los críticos de la casa: a quién empujar hoy${quedan > 0 ? ` · ${quedan} más en la lista` : ''}`;
-    cont.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub },
+    resumenSecundario.append(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub },
       filasLP(primeras.map(f => {
         const motivo = f.det?.motivos?.[0] ? textoMotivo(senales(f.det.motivos)[0]) : f.motivo;
         const cl = claseMotivo(motivo);
@@ -176,17 +195,18 @@ async function pintarLista(cont, ctx) {
             f.detalle ? h('a', { class: 'bt mini pri', href: hrefFicha(ctx, f.id) }, icono('cli'), 'Abrir la ficha') : null,
             f.detalle ? atajo(ctx, f.id, cl.atajo) : null,
             f.detalle && ctx.veModulo('ficha') ? h('a', { class: 'bt mini', href: `#/en-rojo/${f.id}` }, icono('fire'), 'Por qué') : null,
-            botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', soloLectura: ctx.soloLectura,
-              alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Visto · queda en el rastro'; } }),
+            botonDeshacer({ texto: 'Señal vista', hecho: 'Señal vista', soloLectura: ctx.soloLectura,
+              alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Señal vista · no revisa el plan'; } }),
           ],
         };
-      }), { vacio: { titulo: 'Ningún cliente crítico', porque: tieneCartera ? 'Ninguno de tus clientes es crítico hoy. Repasa los de «Vigilar» cuando puedas.' : 'Hoy no hay ningún cliente crítico.', celebrar: true } })));
-    consejoCompacto(cont, cont.lastElementChild);
+      }), { vacio: { titulo: 'Sin señales críticas en esta copia', porque: 'Repasa los de «Vigilar» y la cobertura pendiente de confirmar.', celebrar: false } })));
+
   }
-  cont.append(cifras);
+  resumenSecundario.append(cifras);
 
   // ---- 3 · la lista común: chips de gravedad que se quedan (por defecto, crítico) ----
-  const soloMios = h('button', { type: 'button', class: 'bt', 'aria-pressed': 'false', id: 'solo-mios', hidden: !tieneCartera }, icono('persona'), 'Solo mis clientes');
+  // Tomás 3-oct: el account ya solo recibe sus clientes (recorte en el servidor): sin conmutador «Solo mis clientes».
+  const soloMios = h('button', { type: 'button', class: 'bt', 'aria-pressed': 'false', id: 'solo-mios', hidden: !tieneCartera || ctx.soloSuCartera }, icono('persona'), 'Solo mis clientes');
   const caja = h('div', { id: 'tabla-rojo' });
   chips = chipsFiltro({
     etiqueta: 'Gravedad', clave: 'en-rojo.gravedad', valor: 'critico',
@@ -194,6 +214,7 @@ async function pintarLista(cont, ctx) {
       { valor: 'critico', texto: 'Crítico', icono: 'fire', cuenta: n('critico'), cuentaEstado: 'rojo' },
       { valor: 'atencion', texto: 'Vigilar', icono: 'ojo', cuenta: n('atencion') },
       { valor: 'bien', texto: 'Bien', icono: 'ok', cuenta: n('bien') },
+      { valor: 'sin_dato', texto: 'Por confirmar', icono: 'info', cuenta: n('sin_dato') },
       { valor: '', texto: 'Todos', cuenta: total },
     ],
     alCambiar: () => pintarTabla(),
@@ -220,7 +241,7 @@ async function pintarLista(cont, ctx) {
         { clave: 'abrir', titulo: 'Abrir', ordenable: false, celda: f => f.detalle
           ? h('span', { class: 'fila', style: { gap: 'var(--s-1)', flexWrap: 'nowrap', justifyContent: 'flex-end' } },
               // Ronda U (50, En rojo): Coti da el «Visto» desde la propia lista, sin abrir la tarjeta
-              esCoti && f.gravedad === 'critico' ? botonDeshacer({ texto: 'Visto', hecho: 'Visto', soloLectura: ctx.soloLectura, alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Visto'; } }) : null,
+              esCoti && f.gravedad === 'critico' ? botonDeshacer({ texto: 'Señal vista', hecho: 'Señal vista', soloLectura: ctx.soloLectura, alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: f.id }); return 'Señal vista · no revisa el plan'; } }) : null,
               h('a', { class: 'bt mini', href: hrefFicha(ctx, f.id), title: `Abrir la ficha de ${f.nombre}` }, icono('cli'), 'Ficha'),
               ['desk', 'clickup', 'ghl'].filter(k => ATAJOS?.get(f.id)?.atajos.some(a => a.k === k)).map(k => atajo(ctx, f.id, k, { conTexto: false })))
           : candado('Lo ve quien lo lleva') },
@@ -228,13 +249,17 @@ async function pintarLista(cont, ctx) {
       alPulsar: f => ctx.navegar(`en-rojo/${f.id}`),
       puedePulsar: f => f.detalle,
       etiquetaFila: f => `${f.nombre}: ${grav(f.gravedad).texto}${f.motivo ? `, ${f.motivo}` : ''}, account ${f.responsable || 'sin asignar'}. Ver por qué`,
-      vacio: { titulo: mios ? 'Ninguno de tus clientes en esta gravedad' : 'Ningún cliente en esta gravedad', porque: 'Cambia de chip para ver el resto.', celebrar: g === 'critico' },
+      vacio: { titulo: mios ? 'Ninguno de tus clientes en esta gravedad' : 'Ningún cliente en esta gravedad', porque: 'Cambia de chip para ver el resto; una copia sin señales no acredita cobertura completa.', celebrar: false },
     }));
   };
   soloMios.addEventListener('click', () => { soloMios.setAttribute('aria-pressed', soloMios.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); pintarTabla(); });
   pintarTabla();
-  cont.append(panel({ titulo: 'Clientes por gravedad', icono: 'fire', sub: 'Lo ve todo el equipo: gravedad, motivo y account. Sin importes ni datos de contactos. Pulsa una fila para ver por qué.', acciones: soloMios },
+  cont.append(panel({ titulo: ctx.soloSuCartera ? 'Tus clientes por gravedad' : 'Clientes por gravedad', icono: 'fire', sub: ctx.soloSuCartera ? 'Solo los clientes de tu cartera: gravedad y motivo. Sin importes ni datos de contactos. Pulsa una fila para ver por qué.' : 'Lo ve todo el equipo: gravedad, motivo y account. Sin importes ni datos de contactos. Pulsa una fila para ver por qué.', acciones: soloMios },
     h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja));
+
+  consejoCompacto(cont, cont.lastElementChild);
+  cont.append(h('details', { class: 'panel' },
+    h('summary', { style: { padding: '12px 18px', cursor: 'pointer', minHeight: '44px', boxSizing: 'border-box' } }, 'Resumen y acciones recomendadas'), resumenSecundario));
 
   // ---- 4 · avisos de equipo (de persona, no de cliente; semanal, abajo y plegado) ----
   const dePersona = ctx.datos.alarmas.filter(a => a.ambito === 'persona' && a.gravedad === 'rojo');
@@ -273,6 +298,7 @@ const ESTADO_ENCENDIDO = {
 // =================================================================== detalle
 async function pintarDetalle(cont, ctx, id) {
   await cargarAtajos(ctx);
+  if (!cont.isConnected || (typeof ctx.vigente === 'function' && !ctx.vigente())) return;
   const c = ctx.clientes.find(x => x.id === id);
   const volver = h('a', { class: 'bt', href: '#/en-rojo' }, icono('volver'), 'Volver a En rojo');
   if (!c) { cont.append(vacio({ icono: 'buscar', titulo: 'No encuentro ese cliente', texto: 'No hay ningún cliente activo con ese identificador.', accion: volver, borde: true })); return; }
@@ -314,14 +340,17 @@ async function pintarDetalle(cont, ctx, id) {
           v.sin_account ? chipEstado('ambar', 'Sin account') : null)),
       h('div', { class: 'fila' },
         // V2 (A-M15): quien viene a dar el «Visto» a un crítico lo tiene en la cabecera, sin bajar a 995 px
-        v.gravedad === 'critico' ? botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', mini: false, pri: !ctx.veModulo('ficha'), soloLectura: ctx.soloLectura,
-          alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: id }); return 'Visto · queda en el rastro'; } }) : null,
+        v.gravedad === 'critico' ? botonDeshacer({ texto: 'Señal vista', hecho: 'Señal vista', mini: false, pri: !ctx.veModulo('ficha'), soloLectura: ctx.soloLectura,
+          alHacer: () => { ctx.rastro({ accion: 'critico_visto', objeto: id }); return 'Señal vista · no revisa el plan'; } }) : null,
         ctx.veModulo('ficha') ? h('a', { class: 'bt pri', href: `#/ficha/${id}` }, icono('cli'), 'Abrir la ficha') : null)),
     h('div', { class: 'fila', style: { gap: 'var(--s-2)' }, 'aria-label': 'Abrir en las herramientas' },
       h('span', { class: 'sub', style: { fontWeight: 600, marginRight: 'var(--s-1)' } }, 'Abrir en'),
       (fila?.atajos || []).map(a => atajo(ctx, id, a.k, { conTexto: true })),
       (fila?.faltan || []).map(k => atajo(ctx, id, k, { conTexto: true }))),
     e >= 0 ? barraEtapas(null, e) : null));
+
+  cont.append(panelPlanFuego255(ctx, id));
+  consejoCompacto(cont, cont.lastElementChild);
 
   // ---- cifras del detalle (de la verdad única; sin dato = gris, nunca un verde falso) ----
   const t = [];
@@ -336,13 +365,7 @@ async function pintarDetalle(cont, ctx, id) {
   t.push(tile({ icono: 'candado', etiqueta: 'Tareas bloqueadas', valor: bl.tareas ?? null, unidad: bl.tareas ? `la más antigua, ${fmt.num(bl.dias_max)} días` : null,
     estado: bl.tareas == null ? '' : v.bloqueo_callado ? 'ambar' : 'verde', contexto: v.bloqueo_callado ? 'Bloqueo callado: más de 5 días sin moverse' : bl.tareas ? 'Ninguna lleva más de 5 días' : 'Ninguna tarea en «bloqueado»',
     medible: 'hoy', frescura: fuente(ctx, 'ClickUp') }));
-  const fuga = v.fuga_integracion;
-  // V2 (A-M15): sin dato de GoHighLevel no se pinta «— de 104»: se dice
-  const sinGhl = v.leads_meta_7d && (v.leads_ghl_7d === null || v.leads_ghl_7d === undefined);
-  t.push(tile({ icono: 'plug', etiqueta: 'Leads de Meta que llegan al CRM · 7 días', valor: sinGhl ? 'Sin dato' : v.leads_meta_7d ? `${fmt.num(v.leads_ghl_7d)} de ${fmt.num(v.leads_meta_7d)}` : (v.campana_activa ? 0 : null),
-    unidad: sinGhl ? `de GHL · ${fmt.num(v.leads_meta_7d)} en Meta` : null,
-    estado: fuga?.grave ? 'rojo' : fuga ? 'ambar' : v.leads_meta_7d ? 'verde' : '', contexto: fuga?.grave ? 'Fuga grave: llega menos de la mitad' : fuga ? 'Fuga leve: llega menos del 80 %' : v.campana_activa ? 'Siete días cerrados, sin el de hoy' : 'Sin campaña de Meta activa',
-    medible: 'hoy', frescura: fuente(ctx, 'Meta') }));
+  t.push(...contadoresMetaCrm290(v,ctx.hoy));
   if (v.nuevo && v.encendido) {
     const [col, txt] = ESTADO_ENCENDIDO[v.encendido.estado] || ['gris', 'Sin dato'];
     t.push(tile({ icono: 'rocket', etiqueta: 'Encendido del alta', valor: v.encendido.dia ? `Día ${v.encendido.dia}` : txt, estado: col,
@@ -350,8 +373,8 @@ async function pintarDetalle(cont, ctx, id) {
   }
   t.push(tile({ icono: 'heart', etiqueta: 'Salud', valor: v.salud ?? null, unidad: v.salud != null ? 'de 100' : null,
     // V2 (A-M15): una salud «verde» junto a «Crítico» confunde: la gravedad la dan las señales; la salud no la pinta en verde
-    estado: v.salud == null ? '' : v.gravedad !== 'bien' && v.salud >= 60 ? '' : v.salud >= 60 ? 'verde' : v.salud >= 40 ? 'ambar' : 'rojo',
-    contexto: v.gravedad !== 'bien' && v.salud >= 60 ? `La gravedad («${g.texto.toLowerCase()}») la dan las señales de abajo, no la salud · 40 puntos de resultados, 30 de atención y 30 de arranque` : '40 puntos de resultados, 30 de atención y 30 de arranque',
+    estado: '',
+    contexto: v.salud == null ? 'Sin puntuación acreditada: faltan cohortes de resultados y ventas.' : 'Referencia provisional de una copia anterior; pendiente de revisar sus señales y cobertura.',
     medible: 'medias', medibleDetalle: 'Fórmula provisional, pendiente de validar' }));
   cont.append(tiles(t));
 
@@ -363,7 +386,7 @@ async function pintarDetalle(cont, ctx, id) {
           botones: [atajo(ctx, id, cl.atajo),
             botonDeshacer({ texto: 'Marcar visto', hecho: 'Visto', soloLectura: ctx.soloLectura,
               alHacer: () => { ctx.rastro({ accion: 'senal_vista', objeto: id, detalle: txt }); return 'Visto · queda en el rastro'; } })] };
-      }), { vacio: { titulo: 'Este cliente está bien', porque: 'No tiene ninguna de las señales de la regla única.', celebrar: true } })),
+      }), { vacio: { titulo: 'Sin señales acreditadas en esta copia', porque: 'Revisa la cobertura de las fuentes antes de confirmar cómo está el cliente.', celebrar: false } })),
     h('div', { class: 'pila' },
       panel({ titulo: 'Línea de tiempo', icono: 'hist' }, h('div', { class: 'cuerpo' }, lineaTiempo([
         c.prox_reunion ? { fecha: c.prox_reunion, titulo: 'Próxima reunión', estado: 'verde' } : null,
@@ -382,9 +405,11 @@ export default {
   // Lo manda el servidor (reglas_permisos.json › modulos «en-rojo»): pedido a R16 en dudas_pintura.md · V2.
   puestos_que_lo_ven: { '*': 'todo', setters: null },
   async render(contenedor, ctx) {
-    vigilarCortes(contenedor);
+    const raiz = h('div', { 'data-en-rojo-ruta': '255' });
+    contenedor.append(raiz);
+    vigilarCortes(raiz);
     const [id] = ctx.params;
-    if (id) await pintarDetalle(contenedor, ctx, id);
-    else await pintarLista(contenedor, ctx);
+    if (id) await pintarDetalle(raiz, ctx, id);
+    else await pintarLista(raiz, ctx);
   },
 };

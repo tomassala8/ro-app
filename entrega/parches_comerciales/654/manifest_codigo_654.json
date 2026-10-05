@@ -1,0 +1,18 @@
+{
+  "version": "654.1",
+  "solo_propuesta": true,
+  "fuentes": {
+    "cerebro_operativo.py": {
+      "baseline": "3291bd92f0fa6919d05329ac562f255052760049c928ed14295779de9582c3e3",
+      "candidato": "63378e62935d7ae388489ec8be88a837a0de7f8711d88c59a32a30977f114eae"
+    },
+    "meta_informe_291.py": {
+      "baseline": "3a074f5bf69ec3480dc75f76801b5f8efcd37a4cd9687aef827162e0b9982114",
+      "candidato": "a9b22a185f98504c033b335f9c768e08b0de85f5079f37640eae54fe77836258"
+    },
+    "paid_mediciones_331.py": {
+      "baseline": "1f5a298341f76e28e77a677e71755bbb330718ab9cf85c40347aea6d279721c5",
+      "candidato": "1f5a298341f76e28e77a677e71755bbb330718ab9cf85c40347aea6d279721c5"
+    }
+  }
+}

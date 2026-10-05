@@ -142,7 +142,7 @@ def construir(ag, portal_contactos, roles, nombre_cliente, cliente_id=None):
                 uf.u(k, por_tel[t])
             else: por_tel[t] = k
 
-    # 1b · la misma parte local en dos dominios del despacho (p. ej., inventado: ana.ruiz@ejemplo.es y ana.ruiz@ejemplo.com)
+    # 1b · la misma parte local en dos dominios del despacho (p. ej., inventado: contacto-2@example.invalid y contacto-1@example.invalid)
     por_local = {}
     for k, n in nodos.items():
         if n.get("correo") and not n.get("generico"):

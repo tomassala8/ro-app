@@ -1,0 +1,18 @@
+const fsB=require('node:fs');
+const originalB=fsB.readFileSync(__dirname+'/pruebas_objetivos_seo_374.cjs','utf8');
+const prefixB=originalB.slice(0,originalB.indexOf('let c=make(),d=carga(c)'));
+new Function('require','__dirname',prefixB+String.raw`
+let c=make(),src=dto();src.clientes[0].objetivos=[{...row,consulta_medida:'asesoria ciudad',fuente:'fixture',posicion:6},{...row,consulta_medida:'Asesoría Ciudad',fuente:'fixture',posicion:28}];let model=M.modeloObjetivos374(c,carga(c,src));let rendered=mount(c,carga(c,src));check(()=>{assert.equal(model.length,2);assert.deepEqual(model.map(x=>x.organico.valor),[6,28]);assert(rendered.textContent.includes('6'));assert(rendered.textContent.includes('28'));assert(model.every(x=>x.consulta_objetivo==='asesoria ciudad'));assert(model.every(x=>!x.organico.acreditada));});
+check(()=>{const d=dto();d.clientes[0].objetivos=[{...row,consulta_medida:'Asesoría Ciudad',posicion:6},{...row,consulta_medida:'  ASESORÍA   Ciudad ',posicion:28}];const r=M.modeloObjetivos374(c,carga(c,d));assert.equal(r.length,1);assert.equal(r[0].organico.valor,null);});
+check(()=>{const d=dto();d.clientes[0].objetivos=[{...row,consulta_medida:'Asesoría Ciudad',fuente:'snapshot A',posicion:6},{...row,consulta_medida:'Asesoría Ciudad',fuente:'snapshot B',posicion:28}];assert.equal(M.modeloObjetivos374(c,carga(c,d)).length,2)});
+check(()=>{for(const f of ['2026-02-30','2026-10-04']){const d=dto();d.clientes[0].objetivos[0].fecha=f;assert.equal(M.modeloObjetivos374(c,carga(c,d))[0].organico.valor,null)}});
+check(()=>{for(const value of [0,-1,1.5,true,'6',Infinity,NaN]){const d=dto();d.clientes[0].objetivos[0].posicion=value;assert.equal(M.modeloObjetivos374(c,carga(c,d))[0].organico.valor,null)}});
+check(()=>{const d=dto();d.clientes[0].objetivos[0].consulta_medida='token fixture-secret';assert(!mount(c,carga(c,d)).textContent.includes('fixture-secret'));});
+check(()=>{const d=dto();d.clientes[0].objetivos[0].objetivo_local_acreditado=true;const r=M.modeloObjetivos374(c,carga(c,d))[0];assert.equal(r.organico.acreditada,false);assert(!mount(c,carga(c,d)).textContent.includes('objetivo cumplido'));});
+for(const alter of [c=>c.clientesVisibles.push({...c.clientesVisibles[0]}),c=>c.datos.personas[0].activo=false,c=>c.persona.puestos=['account'],c=>c.veModulo=m=>m!=='seo-web']){const x=make(),data=carga(x);alter(x);check(()=>assert.equal(M.modeloObjetivos374(x,data).length,0));}
+let finish;c=make();c.api=()=>new Promise(r=>finish=r);const pending=M.cargarObjetivos374(c);c.datos.personas.push({...c.datos.personas[0]});finish(dto());const out=await pending;check(()=>{assert.equal(out.estado,'revocado');assert.equal(out.datos,null)});
+c=make();c.api=async()=>{throw Error('respuesta perdida')};const failed=await M.cargarObjetivos374(c);check(()=>{assert.equal(failed.estado,'no_disponible');assert.equal(M.modeloObjetivos374(c,failed).length,0)});
+c=make();let loaded=carga(c);rendered=mount(c,loaded);let details=all(rendered).filter(x=>x.tag==='details');check(()=>{assert.equal(details.length,1);assert.notEqual(details[0].attrs.open,true);assert(all(details[0]).some(x=>x.tag==='summary'&&x.textContent.includes('2026-10-02')));assert(details[0].textContent.includes('Ubicación/dispositivo por verificar'));assert(details[0].textContent.includes('no acreditan cumplimiento'));});details[0].events.toggle();check(()=>assert(rendered.textContent.includes('asesoria ciudad')));c.ver=()=>({ok:false});details[0].events.toggle();check(()=>{assert(!rendered.textContent.includes('asesoria ciudad'));assert(rendered.textContent.includes('contexto actual'));});
+console.log(n+' grupos revisión independiente374B PASS');
+})().catch(e=>{console.error(e);process.exitCode=1});
+`)(require,__dirname);

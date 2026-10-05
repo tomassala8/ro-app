@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const b={URL};vm.createContext(b);vm.runInContext(fs.readFileSync(__dirname+'/modulos/_seo_mediciones.js','utf8').replace(/export /g,''),b);
+const meta={gsc:{leido:'2026-10-03T08:00:00Z'}},hoy='2026-10-03';
+const f=(id,n=3,a=4,w=['2026-09-24','2026-09-30'],wa=['2026-09-17','2026-09-23'])=>({cliente_id:id,gsc_estado:'bien',gsc:{paginas:[]},clics:{semana:n,semana_ant:a,hasta:w[1],ventanas:{semana:w,semana_ant:wa}}});
+let tests=0;const t=(name,fn)=>{fn();tests++;};
+t('same dated cohort explicit observed zero',()=>{const r=b.resumenClicsCarteraSEO([f('a',0,2),f('b',3,4)],meta,hoy);assert.equal(r.actual,3);assert.equal(r.anterior,6);assert.equal(r.clientes,2);assert.equal(r.ventana[1],'2026-09-30');});
+t('same counters with missing window never aggregate',()=>{const x=f('a');delete x.clics.ventanas;const r=b.resumenClicsCarteraSEO([x],meta,hoy);assert.equal(r.actual,null);assert.equal(r.clientes,0);});
+t('mixed windows one cohort and labelled exclusion',()=>{const r=b.resumenClicsCarteraSEO([f('old',100,99,['2026-09-23','2026-09-29'],['2026-09-16','2026-09-22']),f('latest',3,4)],meta,hoy);assert.equal(r.actual,3);assert.equal(r.anterior,4);assert.equal(r.otras_ventanas,1);assert.equal(r.cliente_ids[0],'latest');});
+t('duplicate client excludes both',()=>{const r=b.resumenClicsCarteraSEO([f('a'),f('a'),f('b',7,8)],meta,hoy);assert.equal(r.actual,7);assert.equal(r.clientes,1);});
+t('error future invalid and missing count not zero',()=>{for(const x of [{...f('a'),gsc_estado:'error'},f('a',null),f('a',3,4,['2026-09-27','2026-10-03'],['2026-09-20','2026-09-26']),f('a',3,4,['2026-09-31','2026-10-02'],['2026-09-24','2026-09-30'])])assert.equal(b.resumenClicsCarteraSEO([x],meta,hoy).actual,null);});
+t('current count preserved when comparison absent',()=>{const x=f('a',3,null);delete x.clics.ventanas.semana_ant;const r=b.resumenClicsCarteraSEO([x,f('b',2,4)],meta,hoy);assert.equal(r.actual,5);assert.equal(r.anterior,null);assert.equal(r.clientes,2);});
+t('overflow no unsafe number',()=>assert.equal(b.resumenClicsCarteraSEO([f('a',Number.MAX_SAFE_INTEGER),f('b',3)],meta,hoy).actual,null));
+t('empty and immutable inputs',()=>{assert.equal(b.resumenClicsCarteraSEO([],meta,hoy).actual,null);const rows=[f('a')],before=JSON.stringify(rows);b.resumenClicsCarteraSEO(rows,meta,hoy);assert.equal(JSON.stringify(rows),before);});
+console.log(`${tests} grupos clics cartera312 PASS`);

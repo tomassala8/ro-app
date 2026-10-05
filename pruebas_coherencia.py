@@ -478,7 +478,7 @@ if _INC and _INC.get("control"):
         pid = x.get("persona_ref")
         if not pid or pid not in _pid:
             continue
-        cart = set(_P.contexto(_pid[pid], {"asignaciones": _asig, "personas": _pers})["cartera_ids"])
+        cart = set(_P.contexto(_pid[pid], {"asignaciones": _asig, "personas": _pers, "clientes": leer("clientes.json") or []})["cartera_ids"])
         m48 = sum(int(_bjc[c].get("mas_48") or 0) for c in cart if c in _bjc)
         tot = sum(int(_bjc[c].get("sin_contestar") or 0) for c in cart if c in _bjc)
         if ((x.get("contesta") or {}).get("mas48"), (x.get("contesta") or {}).get("correos")) != (m48, tot):
@@ -638,6 +638,8 @@ comprobar("alertas", "A8 · alertas.js cuenta SOLO con la definición del genera
           ([] if _blq and "D.definiciones" in _JS and "contadores_def" in _JS else ["falta el bloque <contar> o no lee D.definiciones"]) + _viejas)
 if _blq and _a8_casos:
     try:
+        if "--sin-navegador" in sys.argv:
+            raise ImportError("Navegador omitido por opción explícita")
         from playwright.sync_api import sync_playwright as _spw
         with _spw() as _pw:
             _nav = _pw.chromium.launch()
@@ -675,6 +677,8 @@ for _f in sorted(_glob.glob(str(DATA / "alertas" / "p_*.json"))):
         _lm_casos.append({"yo": _d.get("persona_id"), "A": _d, "mias": (_d.get("contadores") or {}).get("mias")})
 if _lm and _lm_casos:
     try:
+        if "--sin-navegador" in sys.argv:
+            raise ImportError("Navegador omitido por opción explícita")
         from playwright.sync_api import sync_playwright as _spw_lm
         with _spw_lm() as _pw:
             _nav = _pw.chromium.launch()
@@ -857,6 +861,8 @@ def _v2e():
     if "timeZone: zona" not in comp or "const ZONA_RO = 'Europe/Madrid'" not in comp:
         difs_f.append("componentes.js: el helper de fechas ya no usa la hora de Madrid")
     try:
+        if "--sin-navegador" in sys.argv:
+            raise ImportError("Navegador omitido por opción explícita")
         from playwright.sync_api import sync_playwright as _spw
     except ImportError:
         _spw = None
@@ -1078,7 +1084,7 @@ comprobar("finanzas", "V2 · sin textos internos a la vista (FIN §6, «regla «
 # --- V2-A · MI DÍA (3-oct): UNA SOLA VARA en Mi día. (1) La revisión técnica va a la jefa del ÁREA del autor
 #     (revision_piezas.areas_tecnica, la misma regla que servir.py → puede_revisar_pieza): ninguna pieza a dos jefas, y lo
 #     huérfano a operaciones. (2) «Rojo» = crítico de la verdad única en todos los bloques (Mili, Coti, semáforo, fuegos).
-#     (3) El número que manda del account cuenta TODA su cartera y el segundo indicador no da verde con críticos.
+#     (3) El número del account mide solo campañas activas; sin campaña no cuenta como fallo (feedback 3-oct).
 #     (4) Contadores con la definición de su pantalla (Bandeja, Producción, Personas, Captación, webs). (5) «Lo mío» y el
 #     consejo por pestaña de puesto, vencidas con su fecha y la cola con alDia(). (6) Como mucho 7 piezas a la vista.
 _MDB2 = (AQUI / "modulos" / "mi_dia_bloques.js").read_text()
@@ -1150,7 +1156,7 @@ _reglas_v2 = [  # (bloque, debe contener, no debe contener, qué)
     ("rojos_visto_coti", "porGravedad(", "Semáforo en rojo", "«Críticos esperando tu Visto» = críticos de la verdad (no Finexen/Greconsult en atención)"),
     ("semaforo_cartera", "porGravedad(", "c.salud >= 60).length, a =", "la cartera de Coti por gravedad (crítico · atención · bien), no «94 % verde · 0 en rojo»"),
     ("cuentas_problema", "criticos_casa", None, "«Fuegos» y la cartera de la trafficker = cifras únicas de Captación (criticos_casa, carteras_publicidad)"),
-    ("resultados_cartera", "pct(ok, total)", "pct(ok, act.length)), unidad", "el número del account cuenta TODA su cartera (sin campaña = no en objetivo)"),
+    ("resultados_cartera", "pct(ok, act.length)", "pct(ok, total)", "el account mide solo clientes con campaña activa (sin campaña = no aplica)"),
     ("cartera_salud", "c.grav !== 'critico'", None, "el segundo indicador no cuenta un crítico como bien ni sale verde con críticos"),
     ("clientes_esperando", "bandejaComoPantalla(", None, "Mili «Lucía · 13» = la Bandeja de Lucía (regla de la pantalla Bandeja)"),
     ("trabajo_account", "controlPersona(", None, "«Trabajo» con revisionesDelAccount (como Producción e Incidencias)"),
@@ -1249,6 +1255,106 @@ if _IM and _AD3.get("impagos"):
     _cli = {x["cliente_id"]: x for x in (leer("finanzas/impagos_clientes.json") or {}).get("clientes", [])}
     _dif += [c for c in {x["cliente_id"] for x in _IM["filas"] if x.get("cliente_id")} if c not in _cli]
     comprobar("finanzas", "v3 · impagos: pestaña Impagos = admin.impagos = alertas de administración = «Lo mío» de Sofía (y cada cliente con impago lo ve su equipo)", _dif)
+
+# --- Tomás 3-oct · CLIENTES DE BAJA FUERA DE LAS PANTALLAS DE TRABAJO (fuentes_verdad/clientes_activos.py). Un solo filtro
+#     «cliente activo»: (1) la lista existe y trae a Gestymas y FBC como bajas; (2) la verdad única no lleva bajas; (3) con la
+#     app de verdad (servir.py en 127.0.0.1 con una COPIA de local.db, puertos 9960-9969): ningún fichero de una pantalla de
+#     trabajo (todo lo de datos_de_modulo salvo finanzas e informes pasados), ni la sesión, ni el buscador lleva una fila de
+#     un cliente de baja, para Tomás, Agus, Mili, una account, la jefa de CRM y la trafficker.
+ADOPTADOS |= {"clientes activos"}
+def _bajas_fuera():
+    import os, shutil, socket, subprocess, tempfile, time, urllib.request
+    sys.path.insert(0, str(AQUI))
+    from fuentes_verdad import clientes_activos as ACT
+    E_ = ACT.estado()
+    nombres = {b["nombre"] for b in E_.get("bajas", [])}
+    comprobar("clientes activos", "la lista única existe y trae a Gestymas y FBC Euroconsulting como bajas",
+              [n for n in ("Gestoría Administrativa Gestymas", "Fbc Euroconsulting") if n not in nombres])
+    comprobar("clientes activos", "Gestymas, FBC (y su subcuenta «28925 FBC EUROCONSULTING») y Volatt se reconocen como baja",
+              [t for t in ("GESTYMAS", "28925 FBC EUROCONSULTING", "fbceuroconsulting.es", "Volatt") if not (ACT.nombra_baja(t, compacto=True) or ACT._exacto_baja(t))])
+    comprobar("clientes activos", "ningún cliente activo se confunde con una baja (Asetra, Gómez de Barreda, Gestió Plural…)",
+              [c["nombre"] for c in E_.get("activos", []) if ACT.nombra_baja(c["nombre"])])
+    comprobar("clientes activos", "la verdad única no lleva clientes de baja",
+              [cid for cid in list(ver) + list(comun) if ACT.es_baja_id(cid)])
+    reglas = json.loads((AQUI / "reglas_permisos.json").read_text())
+    rels = [k for k in reglas.get("datos_de_modulo", {}) if "*" not in k and not ACT.es_historico(k) and (DATA / f"{k}.json").exists()]
+    ini, fin = (int(x) for x in os.environ.get("RO_PUERTOS_BAJAS", "9960-9969").split("-"))
+    puerto = None
+    for pu in range(ini, fin + 1):
+        with socket.socket() as so:
+            try:
+                so.bind(("127.0.0.1", pu)); puerto = pu; break
+            except OSError:
+                continue
+    if not puerto:
+        avisos.append("clientes activos · sin puerto libre: no se prueba con el servidor"); return
+    tmp = Path(tempfile.mkdtemp())
+    shutil.copy(AQUI / "local.db", tmp / "c.db")
+    (tmp / "recarga.json").write_text('{"ligera": [], "conexiones": []}')
+    env = {**os.environ, "RO_DB": str(tmp / "c.db"), "RO_RECARGA_CONFIG": str(tmp / "recarga.json")}
+    env.pop("RO_MODO", None)
+    srv = subprocess.Popen([sys.executable, "servir.py", "--bind", "127.0.0.1", "--puerto", str(puerto)], cwd=AQUI, env=env,
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    B = f"http://127.0.0.1:{puerto}"
+
+    def pedir(ruta, yo):
+        rq = urllib.request.Request(B + ruta, headers={"Cookie": f"ro_yo={yo}", "X-RO-App": "1"})
+        try:
+            with urllib.request.urlopen(rq, timeout=60) as r:
+                return json.loads(r.read())
+        except Exception:
+            return None
+
+    def filas_baja(o, ruta, out):
+        if isinstance(o, list):
+            for v in o:
+                if ACT.fila_de_baja(v):
+                    out.append(f"{ruta}: {str(v.get('cliente') or v.get('subcuenta') or v.get('nombre') or v.get('cliente_id') or v.get('dominio'))[:40]}")
+                filas_baja(v, ruta, out)
+        elif isinstance(o, dict):
+            for k, v in o.items():
+                if ACT.es_baja_id(k):
+                    out.append(f"{ruta}: clave {k}")
+                filas_baja(v, ruta, out)
+    try:
+        for _ in range(120):
+            try:
+                urllib.request.urlopen(B + "/index.html", timeout=1); break
+            except Exception:
+                time.sleep(0.3)
+        difs, n = [], 0
+        for yo in ("tomas", "agustina", "mili", "natalia", "yessica", "valeria"):
+            ses = pedir("/api/sesion", yo) or {}
+            filas_baja((ses.get("datos") or ses).get("clientes") or ses.get("clientes") or [], f"{yo} · sesión", difs)
+            filas_baja(pedir("/api/buscar/indice", yo) or {}, f"{yo} · buscador", difs)
+            for rel in rels + [f"mi_dia/p_{yo}", f"alertas/p_{yo}", f"prioridades/p_{yo}", f"consejos/p_{yo}"]:
+                d = pedir(f"/api/modulo/{rel}", yo)
+                if d is None:
+                    continue
+                n += 1
+                filas_baja(d, f"{yo} · {rel}", difs)
+                t = json.dumps(d, ensure_ascii=False).lower()
+                for nombre in ("gestymas", "fbc euroconsulting", "fbceuroconsulting"):
+                    if nombre in t:
+                        difs.append(f"{yo} · {rel}: texto «{nombre}»")
+        comprobar("clientes activos", f"ningún cliente de baja sale en pantallas de trabajo (sesión, buscador y {n} ficheros servidos a 6 personas)", sorted(set(difs)))
+        tb = pedir("/api/modulo/verdad/bajas_tareas", "agustina")
+        comprobar("clientes activos", "Agus (operaciones de sistemas) recibe la lista «Tareas de clientes de baja por cerrar»",
+                  [] if tb and tb.get("tareas") else ["sin lista de tareas de baja para Agus"])
+        tb2 = pedir("/api/modulo/verdad/bajas_tareas", "natalia")
+        comprobar("clientes activos", "una account no recibe la lista de tareas de baja (solo operaciones y dirección)",
+                  [] if not (tb2 and tb2.get("tareas")) else ["natalia la recibe"])
+    finally:
+        srv.terminate()
+        try:
+            srv.wait(timeout=10)
+        except Exception:
+            srv.kill()
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+if "--sin-servidor" not in sys.argv:
+    _bajas_fuera()
 
 if "--sin-navegador" not in sys.argv:
     _r15_menu()

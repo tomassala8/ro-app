@@ -1,6 +1,6 @@
 # Cuaderno de la noche · migración 4→5-oct-2026
 
-ESTADO: SIN EMPEZAR
+ESTADO: EN CURSO
 
 Leyenda: ⬜ pendiente · 🔄 en curso · ✅ hecho (puerta verde) · ⚠ plan B aplicado (ver motivo).
 Cada paso: su sección en `migracion/PLAN_NOCHE.md` (el plan de la noche, escrito y revisado antes) y el detalle en `migracion/PROMPTS_CURSOR.md` (mismo código). Hasta 3 intentos con enfoques distintos; luego, su plan B.
@@ -8,7 +8,7 @@ Formato al cerrar: `✅ F1.2 · 23:14 · <resultado en una línea> · puerta: ~/
 Mientras dura: `🔄 F2.4 · 01:10 · intento 2/3 · <qué estás probando>` (el número de intento va en la línea del paso: si te relanzan, sigues por ahí). En F5.10, con el fallo en curso: `🔄 F5.10 · 01:10 · L-03 · intento 2/3 · <qué>`.
 Al retomar, arranca solo lo de fases cerradas: `viejo` tras F1.4, `legado` tras F2.3, `api` y `web` tras F3.1. Nunca un `servicios.sh arrancar` a secas antes de F2.3: crearía tablas en `ro_app` vacía.
 
-Fin de la noche: (si `RO_FIN_NOCHE` está vacío, escribe aquí la hora de empezar + 72 h en la primera vuelta y úsala como fin)
+Fin de la noche: 2026-10-08 02:01 (`RO_FIN_NOCHE`)
 
 Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al principio):
 - F5.10: hasta **2 h 30** antes del fin (L-01 y L-21, luego los de seguridad, van primero; no tienen prórroga). Lo que quede → `pendiente: sin tiempo` y al informe.
@@ -19,12 +19,13 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-(nada)
+🔄 F1.3 · 02:05 · intento 1/3 · instantánea del Mac, privados fuera y copias
 
 ## Fase 1 · Referencia
 
-- ⬜ F1.1 Inventario del código del Mac y notas de la noche. Plan B: si `--comparar` falla, inventario sin comparar y apuntarlo.
-- ⬜ F1.2 Escáner de secretos sin falsos positivos de v2 (commit propio). Plan B: dejarlo como estaba y apuntar los falsos positivos.
+- ✅ F1.1 · 02:03 · inventario 42 pantallas, 37 rutas (22 GET, 15 POST), 125 enchufes, 66 tablas, 21 puestos, 41 tipos, 107 componentes; 0 altas/bajas de pantallas, rutas, tablas y componentes; commit a97b648. Puerta f1 en F1.7. Plan B: si `--comparar` falla, inventario sin comparar y apuntarlo.
+- ✅ F1.2 · 02:05 · escáner salida 1, 38 ficheros, 0 en v2/; commit 5d007f1 (solo CARPETAS_FUERA). Plan B: dejarlo como estaba y apuntar los falsos positivos.
+- 🔄 F1.3 · 02:05 · intento 1/3 · instantánea del Mac, privados fuera y copias. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
 - ⬜ F1.3 Instantánea del código del Mac en la rama `migracion/v2` (tras el escáner; el código hasta el corte 675 de la entrega ya está en la rama: solo lo cambiado en el Mac después, fichero a fichero; los privados que la entrega sacó de git no se vuelven a añadir nunca), las ramas de `migracion/RAMAS_A_JUNTAR.txt` juntadas (PR #2, #3 y #4 del 4-oct), copia de la base y copia congelada de la app de hoy en `~/RO_MIGRACION/ref`. Plan B: si el escáner marca algo, NO se commitea ese fichero; se apunta y se sigue.
 - ⬜ F1.4 Servicios de referencia y grabaciones: contrato, vectores, fotos (con sus tiempos), y `excepciones_solidez.txt` con los fallos heredados conocidos (N-13). Plan B: si las fotos de una pantalla salen vacías o con error en la app de hoy, se apunta y esa pantalla queda fuera de la comparación de fotos (no de la del contrato).
 - ⬜ F1.5 Casos de escritura (todos los POST de servir.py: uno que funciona y uno que se deniega). Plan B: ninguno; es imprescindible.

@@ -54,8 +54,41 @@ const hoyISO = () => fechas.hoy();
 const masDias = (iso, n) => sumarDias(String(iso).slice(0, 10), n);
 /** «2026-10-02 22:14» (UTC, local.db) → «2026-10-03 00:14» en hora de Madrid (antes: zona del Mac). */
 const utcAMadrid = t => { if (!t) return ''; const iso = String(t).replace(' ', 'T') + (/[Zz]|[+-]\d\d:?\d\d$/.test(String(t)) ? '' : 'Z'); return fechas.dia(iso) ? `${fechas.dia(iso)} ${fechas.hora(iso)}` : ''; };
-const edadH = hora => { if (!hora) return null; const d = new Date(hora.replace(' ', 'T')); return Number.isNaN(+d) ? null : Math.max(0, (Date.now() - d) / 36e5); };
-const fres = (f, nombre) => f && f.hora ? { fuente: nombre || f.fuente, edad_h: edadH(f.hora), estado: f.estado === 'bien' ? (edadH(f.hora) > 30 ? 'viejo' : 'ok') : 'viejo' } : { fuente: nombre || f?.fuente || 'Fuente', estado: 'sin datos' };
+// El productor usa hora local de Europe/Madrid sin offset; ISO con zona también se admite.
+// Fechas inexistentes o ambiguas (cambio de hora), futuras y lecturas fallidas no son recientes.
+function instanteFuente488(hora) {
+  if (typeof hora !== 'string') return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:?\d{2})?$/.exec(hora);
+  if (!m) return null;
+  const [y, mo, d, hh, mm, ss] = m.slice(1, 7).map(x => Number(x || 0));
+  if (y < 1900 || mo < 1 || mo > 12 || d < 1 || hh > 23 || mm > 59 || ss > 59) return null;
+  const base = Date.UTC(y, mo - 1, d, hh, mm, ss, Number((m[7] || '').padEnd(3, '0')));
+  const dt = new Date(base);
+  if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+  if (m[8]) {
+    if (m[8] === 'Z') return base;
+    const z = /^([+-])(\d{2}):?(\d{2})$/.exec(m[8]);
+    const zh = Number(z[2]), zm = Number(z[3]);
+    if (zh > 14 || zm > 59 || (zh === 14 && zm !== 0)) return null;
+    return base - (z[1] === '+' ? 1 : -1) * (zh * 60 + zm) * 60000;
+  }
+  const formato = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' });
+  const candidatos = [1, 2].map(offset => base - offset * 36e5).filter(t => {
+    const partes = Object.fromEntries(formato.formatToParts(new Date(t)).map(p => [p.type, p.value]));
+    return Number(partes.year) === y && Number(partes.month) === mo && Number(partes.day) === d && Number(partes.hour) === hh && Number(partes.minute) === mm && Number(partes.second) === ss;
+  });
+  return candidatos.length === 1 ? candidatos[0] : null;
+}
+const edadH = (hora, ahora = Date.now()) => {
+  const t = instanteFuente488(hora);
+  return t !== null && Number.isFinite(ahora) && t <= ahora ? (ahora - t) / 36e5 : null;
+};
+const fres = (f, nombre, ahora = Date.now()) => {
+  const edad = edadH(f?.hora, ahora);
+  return { fuente: nombre || f?.fuente || 'Fuente', edad_h: edad,
+    estado: f?.estado === 'bien' && edad !== null ? (edad > 30 ? 'viejo' : 'ok') : 'sin datos',
+    lectura: instanteFuente488(f?.hora) !== null ? f.hora : null };
+};
 const _M3N = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const _DSN = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 const fechaLarga = iso => { if (!iso) return '—'; const d = new Date(iso.slice(0, 10) + 'T12:00:00'); return `${d.getDate()}-${_M3N[d.getMonth()]}`; };   // §2.3: «18-sep»
@@ -196,16 +229,16 @@ const leyenda = items => h('div', { style: { display: 'flex', flexWrap: 'wrap', 
   items.map(([m, t]) => h('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--s-2)' } }, m, t)));
 
 // ================================================================== cabecera común
-/** Un solo chip de datos («Datos al día» o «2 fuentes con retraso») que despliega el detalle (guía 3.6). */
+/** Recencia de las cinco lecturas; no acredita cobertura de los datos. */
 function avisoDatos(d) {
   const f = d.fuentes || {};
   const lista = [fres(f.sign, 'Zoho Sign'), fres(f.clickup, 'ClickUp'), fres(f.meta, 'Meta'), fres(f.ghl, 'GHL'), fres(f.dns, 'DNS')];
   const malas = lista.filter(x => x.estado !== 'ok').length;
   return h('details', { style: { minWidth: '0' } },
     h('summary', { style: { display: 'inline-flex', alignItems: 'center', gap: 'var(--s-2)', minHeight: 'var(--s-8)', cursor: 'pointer', listStyle: 'none' } },
-      chipEstado(malas ? 'ambar' : 'verde', malas ? `${malas} fuente${malas === 1 ? '' : 's'} con retraso` : 'Datos al día'),
+      h('span', { title: 'Lecturas dentro de 30 h; no acredita cobertura', 'aria-label': malas ? `${malas} fuentes con lectura antigua, no válida o no disponible; no acredita cobertura` : '5 fuentes con lecturas dentro de 30 h; no acredita cobertura' }, chipEstado(malas ? 'ambar' : 'verde', malas ? `${malas} fuente${malas === 1 ? '' : 's'} por revisar` : 'Fuentes recientes')),
       h('span', { style: S.meta }, 'Ver de dónde salen')),
-    h('div', { class: 'fila', style: { paddingTop: 'var(--s-2)' } }, lista.map(frescura)));
+    h('div', { class: 'fila', style: { paddingTop: 'var(--s-2)' } }, lista.map(x => h('span', { title: x.lectura ? `Lectura original: ${x.lectura}${/[Z]|[+-]\d\d:?\d\d$/.test(x.lectura) ? '' : ' · Europe/Madrid'}` : 'Lectura no válida o no disponible' }, frescura(x), x.lectura ? h('span', { style: S.meta }, ` · ${x.lectura}${/[Z]|[+-]\d\d:?\d\d$/.test(x.lectura) ? '' : ' Madrid'}`) : null))));
 }
 
 // ================================================================== fila de un alta

@@ -17,7 +17,7 @@ export const PUESTOS = REGLAS.puestos;
 export const PUESTO = Object.fromEntries(PUESTOS.map(p => [p.id, p]));
 
 const tiene = (persona, ids) => (persona.puestos || []).some(p => ids.includes(p));
-const hoyISO = () => new Date().toISOString().slice(0, 10);
+const hoyISO = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
 /** Niveles de ver un módulo: 'todo' (●), 'suyo' (◐), 'resumen' (○). El más alto de sus puestos. */
 const RANGO = { resumen: 1, suyo: 2, todo: 3 };
@@ -51,7 +51,19 @@ function vigente(a, hoy) {
  * (una suplencia es una asignación con suplencia: true y fecha «hasta» obligatoria; caduca sola).
  * Si la persona no tiene ninguna silla (dirección, operaciones…), cuenta todas sus filas.
  */
-export function carteraPorSilla(persona, asignaciones, hoy = hoyISO()) {
+// Contratos explícitos. Silla/Metricool no confirman una venta; desconocido queda fuera.
+const SERVICIOS_SILLA = {
+  seo: ['seo'], trafficker: ['publicidad'], crm: ['crm_ghl'], ghl: ['crm_ghl'],
+  web: ['web', 'mantenimiento'], redes: ['redes', 'social_media'], outreach: ['outreach'],
+};
+const SERVICIOS_JEFATURA = {
+  jefa_seo: ['seo'], jefa_publicidad: ['publicidad'], jefa_crm: ['crm_ghl', 'outreach'],
+};
+export function servicioContratado(cliente, claves) {
+  return claves.some(k => cliente.servicios?.[k] === 'sí');
+}
+
+export function carteraPorSilla(persona, asignaciones, hoy = hoyISO(), clientes = null) {
   const sillas = sillasDe(persona);
   const out = {};
   for (const a of asignaciones) {
@@ -60,13 +72,35 @@ export function carteraPorSilla(persona, asignaciones, hoy = hoyISO()) {
     if (a.silla && sillas.size && !sillas.has(a.silla) && !a.suplencia) continue;
     (out[a.silla || 'sin_silla'] ||= new Set()).add(a.cliente_id);
   }
+  // Tomás 3-oct («sillas_de_equipo»): web y redes son equipos transversales: con la silla por su puesto, sus clientes
+  // de esa silla son todos los que la tienen asignada a alguien (el servicio activo). Igual que permisos.py.
+  for (const silla of REGLAS.sillas_de_equipo || []) {
+    if (!sillas.has(silla)) continue;
+    for (const a of asignaciones) {
+      if (a.silla !== silla || !vigente(a, hoy) || (a.suplencia && !a.hasta)) continue;
+      (out[silla] ||= new Set()).add(a.cliente_id);
+    }
+  }
+  if (clientes !== null) {
+    const porId = Object.fromEntries(clientes.map(c => [c.id, c]));
+    for (const [silla, ids] of Object.entries(out)) {
+      const claves = SERVICIOS_SILLA[silla];
+      if (claves) out[silla] = new Set([...ids].filter(cid => porId[cid] && servicioContratado(porId[cid], claves)));
+    }
+    for (const silla of REGLAS.sillas_de_equipo || []) {
+      if (sillas.has(silla) && SERVICIOS_SILLA[silla]) out[silla] = new Set(clientes.filter(c => servicioContratado(c, SERVICIOS_SILLA[silla])).map(c => c.id));
+    }
+    for (const [puesto, claves] of Object.entries(SERVICIOS_JEFATURA)) {
+      if (persona.puestos.includes(puesto)) out['servicio_' + puesto] = new Set(clientes.filter(c => servicioContratado(c, claves)).map(c => c.id));
+    }
+  }
   return out;
 }
 
 /** Cartera de una persona en una fecha: todos los clientes de carteraPorSilla juntos. */
-export function cartera(persona, asignaciones, hoy = hoyISO()) {
+export function cartera(persona, asignaciones, hoy = hoyISO(), clientes = null) {
   const ids = new Set();
-  for (const s of Object.values(carteraPorSilla(persona, asignaciones, hoy))) for (const c of s) ids.add(c);
+  for (const s of Object.values(carteraPorSilla(persona, asignaciones, hoy, clientes))) for (const c of s) ids.add(c);
   return ids;
 }
 
@@ -75,6 +109,14 @@ export function ambito(persona) {
   const orden = REGLAS.orden_ambitos;
   return persona.puestos.map(p => PUESTO[p]?.ambito || 'ninguno')
     .reduce((a, b) => (orden.indexOf(b) > orden.indexOf(a) ? b : a), 'ninguno');
+}
+
+/** Tomás 3-oct: ¿solo recibe los clientes de su cartera, en todas partes? (accounts sin ámbito mayor). Igual que permisos.py. */
+export function soloSuCartera(persona) {
+  if (ambito(persona) === 'todos') return false;
+  return tiene(persona, REGLAS.solo_su_cartera?.puestos || [])
+    || tiene(persona, Object.keys(SERVICIOS_JEFATURA))
+    || [...sillasDe(persona)].some(s => s in SERVICIOS_SILLA);
 }
 
 /** ¿Es `persona` jefa de la persona `objetivo`? Por el campo jefe o por la disciplina. */
@@ -86,6 +128,7 @@ function esJefe(persona, objetivo) {
 }
 
 function cumple(caso, persona, dato, cp) {
+  if (caso.identidades && !caso.identidades.includes(persona.id)) return false;
   if (caso.puestos && !tiene(persona, caso.puestos)) return false;
   if (caso.ambito && !caso.ambito.includes(ambito(persona))) return false;
   if (caso.cartera) {
@@ -115,6 +158,9 @@ function cumple(caso, persona, dato, cp) {
  * ver_como, ajustes_editar, catalogo_indicadores, rastro_todo). Desconocido = no.
  */
 export function ver(persona, dato, cp = {}) {
+  if (dato.cliente_id && soloSuCartera(persona) && !cp.carteraIds?.has(dato.cliente_id)) {
+    return { ok: false, nivel: 'no', motivo: 'Este cliente no está en tu cartera ni en tu servicio contratado.' };
+  }
   const regla = REGLAS.tipos[dato.tipo];
   if (!regla) return { ok: false, nivel: 'no', motivo: `Tipo de dato desconocido: ${dato.tipo}. Por defecto, no se enseña.` };
   if (regla.nunca) return { ok: false, nivel: 'no', motivo: regla.nunca };
@@ -132,4 +178,12 @@ export function enmascarar(texto = '') {
   if (texto.includes('@')) { const [u, d] = texto.split('@'); return `${u[0] || ''}···@${d}`; }
   if (/\d{6,}/.test(texto.replace(/\D/g, ''))) return texto.replace(/\d(?=(?:\D*\d){3})/g, '·');
   return texto.split(/\s+/).map(p => (p ? p[0] + '···' : p)).join(' ');
+}
+
+/** Fechas y salud de fuentes para la carcasa; sin contadores ni historia de otros clientes. */
+export function metaDeCartera(meta) {
+  const out = Object.fromEntries(['generado', 'construido'].filter(k => k in meta).map(k => [k, meta[k]]));
+  if (Array.isArray(meta.fuentes)) out.fuentes = meta.fuentes.filter(f => f && typeof f === 'object' && !Array.isArray(f))
+    .map(f => Object.fromEntries(['fuente', 'estado', 'generado', 'fecha', 'actualizado'].filter(k => k in f).map(k => [k, f[k]])));
+  return out;
 }

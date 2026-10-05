@@ -521,7 +521,7 @@ def calidad(b, ctx, otros_clientes=()):
     cuerpo_n = _sin_tildes(cuerpo)
     sin_corchetes = RE_CORCHETE.sub(" ", cuerpo)
     tipo = b.get("tipo") or (ctx.get("clasificacion") or {}).get("tipo") or "consulta"
-    g = GUIAS.get(tipo) or GUIAS["consulta"]
+    g = GUIAS.get(tipo) or GUIAS_SALIENTES.get(tipo) or GUIAS["consulta"]
     faltas, puntos, bloqueos = [], 0, []
     ctx_txt = _texto_contexto(ctx)
     ctx_nums = _nums_contexto(ctx_txt)
@@ -643,6 +643,184 @@ def calidad(b, ctx, otros_clientes=()):
     return {"nota": nota, "nivel": nivel, "faltas": bloqueos + faltas, "bloqueos": bloqueos, "por_completar": len(huecos),
             "palabras": palabras, "longitud_tipo": [lo, hi], "tipo": tipo, "tipo_nombre": g["nombre"] if tipo in GUIAS else "Seguimiento",
             "preguntas": len(pregs), "preguntas_sin_cubrir": len(sin_cubrir)}
+
+
+
+# ===================================================================================== correos que EMPIEZA RO
+# 3-oct (Tomás): «al pulsar "Proponer fecha" no sale ningún correo base». Los tipos de arriba son RESPUESTAS a un correo del
+# cliente (clasificar() los detecta); estos los inicia el equipo. No entran en ORDEN (nunca se «detectan» en un correo que
+# llega) ni en sistema() (el redactor de respuestas no cambia). Funcionan por REGLAS, sin clave de IA, y nunca dejan huecos.
+GUIAS_SALIENTES = {
+    "propuesta_reunion": {
+        "nombre": "Propuesta de reunión (lo empieza RO)",
+        "estructura": [
+            "Saludo con el nombre de pila del contacto («Hola Jordi,»; si no se sabe, «Hola,»). Nada de «espero que estés bien».",
+            "Primera frase: para qué es la reunión según el tipo (seguimiento mensual, repaso del informe, arranque, trimestre, campaña) y cuánto dura.",
+            "Dos o tres huecos REALES numerados, con día de la semana, fecha y hora, en hora peninsular (la del cliente), sacados de la agenda de quien firma; nunca un hueco inventado ni «[día y hora]».",
+            "Cómo se confirma: «dime cuál te va mejor y te mando la invitación». Si quien firma tiene enlace de agenda, «elige en mi agenda: <enlace>».",
+            "Cierre «Un abrazo,» (relación hecha) o «Un saludo,» (cliente nuevo). Firma de quien lo manda (nombre, puesto, Ranking Online): la pone Desk o va en el texto si su firma de Desk no está.",
+        ],
+        "longitud": {"min": 35, "max": 130, "nota": "Corto y concreto: motivo, huecos y cómo confirmar. En Desk, las reuniones se contestan con una mediana de 38 palabras."},
+        "datos": ["última reunión", "mes del que se repasan resultados", "agenda de quien firma", "enlace de agenda si lo tiene"],
+        "si": ["proponer huecos de su agenda", "duración orientativa"],
+        "no": ["dar por confirmada una hora", "prometer resultados", "hablar de cuotas, facturas o contrato", "huecos sin rellenar"],
+        "escalar": None,
+    },
+}
+
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+DIAS_SEMANA = ["lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo"]
+
+# Motivo de la reunión según el tipo. {mes} = mes de la reunión, {mes_ant} = mes del que se repasan resultados, {min} = duración.
+MOTIVOS_REUNION = {
+    "seguimiento_mensual": {"nombre": "Seguimiento mensual", "min": 30, "asunto": "Reunión de {mes} · {cliente}",
+                            "frase": "¿Buscamos hueco para la reunión de {mes}? Repasamos los resultados de {mes_ant} y los próximos pasos, en unos {min} minutos."},
+    "revision_informe": {"nombre": "Repaso del informe", "min": 30, "asunto": "Repaso del informe de {mes_ant} · {cliente}",
+                         "frase": "Te propongo repasar juntos el informe de {mes_ant}: qué ha funcionado, qué cambiamos y los próximos pasos. Son unos {min} minutos."},
+    "arranque": {"nombre": "Arranque", "min": 45, "asunto": "Reunión de arranque · {cliente}",
+                 "frase": "Para arrancar con buen pie te propongo una reunión de unos {min} minutos: repasamos los accesos, los objetivos y el calendario de las primeras semanas."},
+    "revision_trimestral": {"nombre": "Revisión del trimestre", "min": 45, "asunto": "Revisión del trimestre · {cliente}",
+                            "frase": "Te propongo una revisión del trimestre de unos {min} minutos: cómo han ido estos tres meses, qué mantenemos y qué cambiamos para los siguientes."},
+    "campana": {"nombre": "Revisión de la campaña", "min": 30, "asunto": "Revisión de la campaña · {cliente}",
+                "frase": "Me gustaría revisar contigo cómo va la campaña y los cambios que vienen, en unos {min} minutos."},
+}
+
+# Cualquier hueco de plantilla (el mismo criterio que envios.py: si sale uno, el envío se rechaza en el servidor)
+RE_HUECO_AMPLIO = re.compile(
+    r"\[\s*(?:(?:completar|confirmar|rellenar|insertar|añadir|poner|d[ií]as?|horas?|fechas?|nombres?|enlaces?|link|url|importes?|cifras?|"
+    r"n[uú]mero|tel[eé]fono|empresa|despacho|cliente|motivo|causa|tema|plazo|mes|datos?|firma|cargo|huecos?|x+)\b[^\]\n]{0,60}|…|\.{3})\s*\](?!\()",
+    re.I)
+RE_HUECO_LINEA = re.compile(r"(?im)^\s*(?:\d+[.)]|[-·•])?\s*(?:lunes|martes|mi[eé]rcoles|jueves|viernes|s[aá]bado|domingo)\s+\d{1,2}\s+de\s+[a-zé]+\s+a\s+las\s+\d{1,2}:\d{2}")
+
+
+def texto_hueco(inicio):
+    """«2026-10-06 10:00» → «Lunes 6 de octubre a las 10:00»."""
+    from datetime import datetime as _dt
+    d = _dt.strptime(inicio[:16], "%Y-%m-%d %H:%M")
+    return f"{DIAS_SEMANA[d.weekday()].capitalize()} {d.day} de {MESES[d.month - 1]} a las {d:%H:%M}"
+
+
+def redactar_propuesta_reunion(d):
+    """Correo de propuesta de reunión POR REGLAS (sin IA y sin huecos). d = {tipo, cliente, contacto, huecos: [«AAAA-MM-DD HH:MM»],
+    mes, mes_ant, enlace, firma: {nombre, puesto, en_texto}, cliente_nuevo, es_tomas}. Devuelve {asunto, cuerpo, tipo, motivo}."""
+    tipo = d.get("tipo") if d.get("tipo") in MOTIVOS_REUNION else "seguimiento_mensual"
+    m = MOTIVOS_REUNION[tipo]
+    datos = {"mes": d.get("mes") or "", "mes_ant": d.get("mes_ant") or "", "min": d.get("minutos") or m["min"], "cliente": d.get("cliente") or ""}
+    contacto = (d.get("contacto") or "").strip()
+    huecos = [texto_hueco(x) for x in (d.get("huecos") or [])][:3]
+    lineas = [f"Hola {contacto}," if contacto else "Hola,", "", m["frase"].format(**datos), ""]
+    if huecos:
+        lineas.append("Te propongo estos huecos (hora peninsular):" if len(huecos) > 1 else "Te propongo este hueco (hora peninsular):")
+        lineas += [f"{i}. {t}" for i, t in enumerate(huecos, 1)]
+        lineas.append("")
+        lineas.append("Dime cuál te va mejor y te mando la invitación con el enlace de la videollamada.")
+    else:
+        lineas.append("Dime qué días te vienen bien estas dos semanas y te mando la invitación con el enlace de la videollamada.")
+    if d.get("enlace"):
+        lineas.append(f"Si ninguno te encaja, elige el hueco que prefieras en mi agenda: {d['enlace']}" if huecos else f"Si lo prefieres, elige directamente en mi agenda: {d['enlace']}")
+    elif huecos:
+        lineas.append("Si ninguno te encaja, dime qué día te viene bien y lo buscamos.")
+    lineas += ["", "Un saludo," if d.get("cliente_nuevo") else "Un abrazo,"]
+    f = d.get("firma") or {}
+    if f.get("en_texto") and f.get("nombre"):
+        lineas.append(f["nombre"])
+        lineas.append(" · ".join(x for x in (f.get("puesto"), "Ranking Online") if x))
+    return {"asunto": m["asunto"].format(**datos), "cuerpo": "\n".join(lineas).strip() + "\n", "tipo": "propuesta_reunion",
+            "motivo": tipo, "motivo_nombre": m["nombre"], "minutos": datos["min"]}
+
+
+def calidad_propuesta(cuerpo, asunto="", ctx=None, otros_clientes=()):
+    """Nota 0-100 de una propuesta de reunión (la de la pantalla, recalculada en el servidor con cada retoque).
+    Bloquea (nota 0) huecos sin rellenar, correos o teléfonos, otro cliente, importes o sueldos."""
+    ctx = ctx or {}
+    g = GUIAS_SALIENTES["propuesta_reunion"]
+    texto = cuerpo or ""
+    n = _sin_tildes(texto)
+    faltas, bloqueos, puntos = [], [], 0
+    huecos_sin = RE_HUECO_AMPLIO.findall(texto + "\n" + (asunto or ""))
+    if huecos_sin:
+        bloqueos.append("Hueco sin rellenar: " + ", ".join(sorted(set(h.strip() for h in huecos_sin))[:3]))
+    sin_enlaces = re.sub(r"https?://\S+", " ", texto)
+    if re.search(r"[\w.+-]+@[\w-]+\.[\w.]+|\b\d{3}[ .]?\d{3}[ .]?\d{3}\b", sin_enlaces):
+        bloqueos.append("Lleva un correo o un teléfono")
+    if "€" in texto or RE_COBRO.search(texto) or RE_SUELDO.search(texto):
+        bloqueos.append("Habla de dinero (cuotas, facturas o sueldos): una propuesta de reunión no lo lleva")
+    for o in otros_clientes:
+        if o and len(o) > 4 and re.search(r"\b" + re.escape(_sin_tildes(o)) + r"\b", n):
+            bloqueos.append(f"Nombra a otro cliente: {o}")
+    # saludo (10)
+    if re.match(r"(?i)\s*(hola|buenos d[ií]as|buenas tardes)", texto):
+        puntos += 10
+    else:
+        faltas.append("Falta el saludo con el nombre")
+    # motivo (15): para qué es la reunión
+    if re.search(r"(?i)reuni[oó]n|repas|revis|arranc|trimestre|campa[ñn]a|informe", texto):
+        puntos += 15
+    else:
+        faltas.append("No dice para qué es la reunión")
+    # huecos concretos (25)
+    nh = len(RE_HUECO_LINEA.findall(texto))
+    if nh >= 2:
+        puntos += 25
+    elif nh == 1:
+        puntos += 15
+        faltas.append("Solo propone un hueco: mejor dos o tres")
+    elif ctx.get("enlace") and ctx["enlace"] in texto:
+        puntos += 12
+        faltas.append("No propone huecos concretos (solo el enlace de agenda)")
+    else:
+        faltas.append("No propone ningún hueco con día y hora")
+    # cómo se confirma (10)
+    if re.search(r"(?i)dime|te va mejor|te encaja|confirma|elige", texto):
+        puntos += 10
+    else:
+        faltas.append("No dice cómo confirmar el hueco")
+    # enlace de agenda (10): si lo tiene, que vaya
+    if ctx.get("enlace"):
+        if ctx["enlace"] in texto:
+            puntos += 10
+        else:
+            puntos += 4
+            faltas.append("Tienes enlace de agenda y no va en el correo")
+    else:
+        puntos += 10
+    # cierre (5) y firma (10)
+    if re.search(r"(?im)^(un abrazo|un saludo|gracias!?),?\s*$", texto):
+        puntos += 5
+    else:
+        faltas.append("Falta el cierre («Un abrazo,» o «Un saludo,»)")
+    firma = ctx.get("firma") or {}
+    if not firma.get("en_texto") or (firma.get("nombre") and firma["nombre"].split()[0].lower() in texto.lower()):
+        puntos += 10
+    else:
+        faltas.append("Falta tu firma (tu firma de Desk no está: va en el texto)")
+    # longitud (5)
+    palabras = len(re.findall(r"\w+", re.sub(r"https?://\S+", "", texto)))
+    lo, hi = g["longitud"]["min"], g["longitud"]["max"]
+    if lo <= palabras <= hi * 1.15:
+        puntos += 5
+    else:
+        faltas.append(f"{'Corto' if palabras < lo else 'Largo'} para una propuesta de reunión ({palabras} palabras; lo normal es {lo}-{hi})")
+    # voz (10)
+    voz = 10
+    malas = [m for m in NEGRA if m in n]
+    if malas:
+        voz -= 4
+        faltas.append("Frases de la lista negra: " + ", ".join(malas[:3]))
+    if "¡" in texto:
+        voz -= 2
+        faltas.append("Lleva «¡»")
+    if [p for p in LATAM if re.search(p, texto, re.I)]:
+        voz -= 4
+        faltas.append("Calco de Latinoamérica: reescribir en castellano de España")
+    puntos += max(0, voz)
+    if not (asunto or "").strip():
+        faltas.append("Falta el asunto")
+        puntos -= 5
+    nota = 0 if bloqueos else max(0, min(100, puntos))
+    nivel = "lista" if nota >= 85 else ("revisar" if nota >= 70 else "rehacer")
+    return {"nota": nota, "nivel": nivel, "faltas": bloqueos + faltas, "bloqueos": bloqueos, "por_completar": len(huecos_sin),
+            "palabras": palabras, "longitud_tipo": [lo, hi], "tipo": "propuesta_reunion", "tipo_nombre": g["nombre"], "huecos": nh}
 
 
 if __name__ == "__main__":

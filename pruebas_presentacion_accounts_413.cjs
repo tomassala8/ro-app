@@ -1,0 +1,27 @@
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const prefix=fs.readFileSync(__dirname+'/pruebas_operaciones_accounts_263.cjs','utf8').split('(async()=>{try{')[0];
+const {dir}=new Function('require','__dirname',prefix+';return {dir};')(require,__dirname);
+const walk=n=>n&&typeof n==='object'?[n,...n.children.flatMap(walk)]:[],text=n=>n&&typeof n==='object'?n.children.map(text).join(' '):String(n??'');
+(async()=>{try{
+ const {h}=await import('file://'+path.join(dir,'componentes.mjs'));
+ const {horasDisplay413,renderAccounts263,prepararAccounts263}=await import('file://'+path.join(dir,'_operaciones_accounts_263.mjs'));
+ const base={horas:{valor:'7 h registradas',detalle:'Copia parcial',medicion:{periodo:'2026-09'}},pauta_horas:{horas:20,periodo:'2026-09'},horasPauta:{valor:'7 h / 20 h ref. · sept2026',detalle:'No objetivo confirmado',estado:'gris'}};
+ const original=JSON.stringify(base),same=horasDisplay413(base);assert.equal(same.valor,'7 h / 20 h†');assert.equal(same.estado,'gris');assert(same.detalle.includes('sept2026'));assert.equal(JSON.stringify(base),original);
+ const mixed=horasDisplay413({...base,pauta_horas:{horas:20,periodo:'2026-10'}});assert(!mixed.valor.includes('/'));assert.match(mixed.valor,/sept.*26.*oct.*26/);assert(!mixed.valor.includes('ref.'));
+ const missing=horasDisplay413({...base,horas:{valor:'Sin dato',detalle:'Sin fuente'},pauta_horas:null});assert.equal(missing.valor,'—');assert(!missing.valor.includes('0'));
+ assert(horasDisplay413({...base,pauta_horas:{horas:0.00000001,periodo:'2026-09'}}).valor.includes('0,00000001'));
+ const ps=[{id:'ops',estado:'activo',puestos:['operaciones']},{id:'acc',estado:'activo',puestos:['account']}],cs=[{id:'ok',nombre:'Cliente fixture413',activo_confirmado:true,detalle:true,equipo:{account:[{persona_id:'acc',principal:true,confianza:'confirmada'}]}}];
+ const c={servidor:true,hoy:'2026-10-05',real:ps[0],persona:ps[0],datos:{personas:ps,asignaciones:[]},clientes:cs,clientesVisibles:cs,carteraPorSilla:{account:new Set(['ok'])},veModulo:()=>true,ver:()=>({ok:true}),nombre:x=>x,vigente:()=>true,api:async()=>null,datosModulo:async()=>null};
+ const prod={hoy:'2026-09-30',fuentes:{horas:{hora:'2026-10-02 05:00'}},proyectos:[{cliente_id:'ok',horas_mes:7,horas_medicion:{estado:'medido',fuente:'horas',periodo:'2026-09',fecha:'2026-10-02 05:00'}}]},ref={generado:'2026-10-02 05:00',mes_cuota:'2026-09',clientes:[{cliente_id:'ok',cuota_horas:{pautadas:20},cuota:987654}]};
+ c.datosModulo=async p=>p==='produccion/produccion'?prod:p==='dinero_cliente/dinero_cliente'?ref:null;
+ const root=h('main',{});root.connected=true;await renderAccounts263(root,c,'clientes');
+ const table=walk(root).find(n=>n.attrs['data-clientes-orden']==='348');assert(table);assert(text(table).includes('7 h / 20 h†'));assert(!text(table).includes('h ref.'));
+ const legend=walk(root).find(n=>n.attrs['data-leyenda-horas']==='413');assert(legend);assert(!walk(table).includes(legend));assert(text(legend).includes('no objetivo ni presupuesto confirmado'));assert(!text(root).includes('987654'));
+ c.ver=d=>({ok:d.tipo!=='horas_pautadas'});assert.equal(prepararAccounts263(c,{produccion:prod,dinero_cliente:ref}).rows[0].pauta_horas,null);
+ const summary={semana_inicio:'2026-10-05',cobertura:'parcial',verificacion_externa:false,cumplimiento:null,clientes:[{cliente_id:'ok',contactos_declarados:0,reuniones_declaradas:0,source_kind:'registro_equipo',verificacion_externa:false,cumplimiento:null}]};
+ c.api=async ruta=>ruta.startsWith('clientes/evidencias_kpi/resumen?')?summary:null;
+ const macroRoot=h('main',{});macroRoot.connected=true;await renderAccounts263(macroRoot,c,'accounts');
+ const macro=walk(macroRoot).find(n=>n.attrs['data-control-artifact']==='250'),contact=walk(macro).find(n=>n.tag==='button'&&String(n.attrs['aria-label']).includes(' · Contacto · 0 decl.'));assert(contact);contact.events.click();assert(text(macro).includes('0 declarados'));assert(text(macro).includes('no ausencia de actividad'));
+ c.clientes[0].activo_confirmado=false;walk(root).find(n=>n.tag==='button'&&text(n)==='Restablecer filtros').events.click();assert(!text(root).includes('Cliente fixture413'));
+ console.log('PASS 413: 8 grupos de presentación, periodos, DTO intacto, cifras pequeñas, leyenda externa, permiso y revocación');
+}finally{fs.rmSync(dir,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});

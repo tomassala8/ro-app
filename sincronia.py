@@ -48,6 +48,7 @@ import sys
 import threading
 import traceback
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo as _ZI
 from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
@@ -56,6 +57,7 @@ CARPETA = DATA / "sincronia"
 INTERRUPTOR = Path(os.environ.get("RO_SINC_INTERRUPTOR") or CARPETA / "interruptor.json")
 PUENTE = Path(os.environ.get("RO_SINC_PUENTE") or CARPETA / "puente_chat.json")
 TEAM = "90152357276"
+_MAD = _ZI("Europe/Madrid")
 API2 = "https://api.clickup.com/api/v2"
 API3 = "https://api.clickup.com/api/v3"
 
@@ -72,10 +74,13 @@ CONF_DEF = {
     "tipos_clickup": {"mover_estado": "estado", "mover_tarjeta": "estado", "mover": "estado", "marcar_hecha": "estado_hecha",
                       "pieza_aprobar": "estado_revision", "pieza_pedir_cambios": "estado_cambios", "comentario": "comentario",
                       "imputar_horas": "horas", "asignar": "asignado", "asignacion": "asignado", "tarea": "crear_tarea",
-                      "pedir_movil": "crear_tarea", "crear_lista_onboarding": "otro", "fechas_dn": "otro"},
+                      "pedir_movil": "crear_tarea", "crear_lista_onboarding": "otro", "fechas_dn": "otro",
+                      # Mi trabajo (3-oct): cambiar a cualquier estado de SU lista y cambiar la fecha límite
+                      "cambiar_estado": "estado_libre", "cambiar_fecha": "fecha"},
     "tipos_chat": ["mensaje_chat", "chat_mensaje", "chat_respuesta"],
     "destinos_mover": ["revisión project manager"],      # a dónde se puede MOVER una tarea desde la app
     "estado_hecha": "complete",
+    "estados_hecha": ["completado", "complete", "completada", "cerrado", "closed", "hecho", "done"],   # el primero que exista en la lista
     "ven_todos_puestos": ["direccion", "operaciones", "tecnico_altas"],
     "reintentan_puestos": ["direccion", "operaciones", "tecnico_altas"],
     "avisar_a": ["agustina"],
@@ -203,7 +208,16 @@ def conectar(db=None):
 
 
 def preparar(con):
-    con.executescript(TABLAS_SQL)
+    # executescript confirma implícitamente cualquier transacción previa. No usarlo
+    # sobre conexiones prestadas: las acciones del caller deben seguir reversibles.
+    sentencia = ""
+    for linea in TABLAS_SQL.splitlines(keepends=True):
+        sentencia += linea
+        if sqlite3.complete_statement(sentencia):
+            con.execute(sentencia)
+            sentencia = ""
+    if sentencia.strip():
+        raise ValueError("Esquema de sincronía incompleto")
 
 
 def conf():
@@ -258,27 +272,139 @@ def canal_real(canal):
 
 
 # =================================================================== qué es cada acción en ClickUp (lo decide el servidor)
+#218: dos slots documentales, no datos ni permisos de una sesión.
+_DOCUMENTOS_TAREA = {}
+_INDICE_TAREA = {"documentos": None, "por_id": {}}
+_CANDADO_DOCUMENTOS_TAREA = threading.RLock()
+_MT = {"mtime": None, "doc": {}, "por_id": {}}
+
+
+def _firma_documento_tarea(path):
+    try:
+        st = path.stat()
+        return (str(path.absolute()), st.st_dev, st.st_ino, st.st_mtime_ns, st.st_ctime_ns, st.st_size)
+    except OSError:
+        return None
+
+
+def _documento_tarea(slot, path):
+    """Una lectura por versión exacta; errores/races no recuperan copia vieja."""
+    with _CANDADO_DOCUMENTOS_TAREA:
+        for _ in range(2):
+            antes = _firma_documento_tarea(path)
+            if antes is None:
+                previo = _DOCUMENTOS_TAREA.get(slot)
+                if previo and previo[0] is None:
+                    return previo[1]
+                _DOCUMENTOS_TAREA[slot] = (None, {})
+                return _DOCUMENTOS_TAREA[slot][1]
+            previo = _DOCUMENTOS_TAREA.get(slot)
+            if previo and previo[0] == antes:
+                return previo[1]
+            doc = leer_json(path, {})
+            despues = _firma_documento_tarea(path)
+            if antes == despues:
+                doc = doc if isinstance(doc, dict) else {}
+                _DOCUMENTOS_TAREA[slot] = (despues, doc)
+                return doc
+        _DOCUMENTOS_TAREA.pop(slot, None)
+        return {}
+
+
 def _produccion():
-    return leer_json(DATA / "produccion" / "produccion.json", {}) or {}
+    return _documento_tarea("produccion", DATA / "produccion" / "produccion.json")
+
+
+def _mi_trabajo():
+    """Documento y catálogo de la misma versión; incluye inode/ctime/tamaño."""
+    with _CANDADO_DOCUMENTOS_TAREA:
+        d = _documento_tarea("mi_trabajo", DATA / "mi_trabajo" / "mi_trabajo.json")
+        if _MT["doc"] is not d:
+            _MT.update(mtime=_DOCUMENTOS_TAREA.get("mi_trabajo", (None,))[0], doc=d,
+                       por_id={str(r.get("id")): r for r in d.get("tareas") or [] if isinstance(r, dict)})
+        return d
+
+
+def _mi_trabajo_tarea(ref):
+    with _CANDADO_DOCUMENTOS_TAREA:
+        _mi_trabajo()
+        return _MT["por_id"].get(str(ref or ""))
+
+
+def _indice_tareas_documentales(d, mi):
+    """Preserva exactamente prioridad cola/revisiones/fallback y autores."""
+    with _CANDADO_DOCUMENTOS_TAREA:
+        previo = _INDICE_TAREA["documentos"]
+        if previo is not None and previo[0] is d and previo[1] is mi:
+            return _INDICE_TAREA["por_id"]
+        produccion, trabajo, ultimas = {}, {}, {}
+        for r in d.get("cola") or []:
+            if not isinstance(r, dict):
+                continue
+            ref = str(r.get("id"))
+            out = produccion.setdefault(ref, {"id": ref, "nombre": r.get("tarea"), "estado": r.get("estado"), "cli": r.get("cli"), "autores": set()})
+            out["autores"].add(r.get("persona_id"))
+        for r in d.get("revisiones") or []:
+            if not isinstance(r, dict):
+                continue
+            ref = str(r.get("id"))
+            out = produccion.setdefault(ref, {"id": ref, "nombre": r.get("tarea"), "estado": r.get("estado"), "cli": r.get("cliente_id"), "autores": set()})
+            out["estado"] = r.get("estado") or out["estado"]
+            out["cli"] = out["cli"] or r.get("cliente_id")
+        for r in mi.get("tareas") or []:
+            if not isinstance(r, dict):
+                continue
+            ref = str(r.get("id"))
+            out = trabajo.setdefault(ref, {"id": ref, "nombre": r.get("tarea"), "estado": r.get("estado"), "cli": r.get("cli"), "autores": set()})
+            out["autores"].add(r.get("persona_id"))
+            ultimas[ref] = r
+        todos = dict(trabajo)
+        todos.update(produccion)
+        for ref, out in todos.items():
+            out["visto"] = d.get("generado") if ref in produccion else mi.get("generado")
+            mt = ultimas.get(ref)
+            if mt:
+                out["vence"] = mt.get("vence")
+                out["lista_id"] = mt.get("lista_id")
+        _INDICE_TAREA.update(documentos=(d, mi), por_id=todos)
+        return todos
 
 
 def tarea(ref):
-    """La tarea según Producción (cola y revisiones): {id, nombre, estado, cli, autores}. Nunca del navegador."""
+    """Lookup documental, no autoridad: las guardias actuales se aplican fuera."""
+    from copy import deepcopy
     ref = str(ref or "")
-    d = _produccion()
-    out = None
-    for r in d.get("cola") or []:
-        if isinstance(r, dict) and str(r.get("id")) == ref:
-            out = out or {"id": ref, "nombre": r.get("tarea"), "estado": r.get("estado"), "cli": r.get("cli"), "autores": set()}
-            out["autores"].add(r.get("persona_id"))
-    for r in d.get("revisiones") or []:
-        if isinstance(r, dict) and str(r.get("id")) == ref:
-            out = out or {"id": ref, "nombre": r.get("tarea"), "estado": r.get("estado"), "cli": r.get("cliente_id"), "autores": set()}
-            out["estado"] = r.get("estado") or out["estado"]
-            out["cli"] = out["cli"] or r.get("cliente_id")
-    if out:
-        out["visto"] = d.get("generado")
-    return out
+    d, mi = _produccion(), _mi_trabajo()
+    out = _indice_tareas_documentales(d, mi).get(ref)
+    return deepcopy(out) if out is not None else None
+
+
+def estados_de_tarea(ref):
+    """Estados del catálogo real de SU lista leído por el extractor. [] si no se sabe."""
+    r = _mi_trabajo_tarea(ref)
+    return list((_mi_trabajo().get("estados_lista") or {}).get((r or {}).get("lista_id") or "", []))
+
+
+def estados_hecha_de_tarea(ref):
+    """El atajo sólo admite nombres configurados con tipo final acreditado en SU lista."""
+    r = _mi_trabajo_tarea(ref)
+    lid = (r or {}).get('lista_id')
+    datos = _mi_trabajo()
+    catalogos = datos.get('estados_detalle') if isinstance(datos, dict) else None
+    filas = catalogos.get(lid, []) if isinstance(catalogos, dict) else []
+    if not isinstance(filas, list) or not filas:
+        return []
+    tipos = {}
+    for fila in filas:
+        if not isinstance(fila, dict) or not isinstance(fila.get('estado'), str):
+            return []
+        nombre = fila['estado']
+        if nombre in tipos:
+            return []  # Catálogo ambiguo: elegir explícitamente tras actualizar.
+        tipos[nombre] = fila.get('tipo')
+    hay = estados_de_tarea(ref)
+    return [nombre for nombre in conf().get('estados_hecha', [])
+            if nombre in hay and tipos.get(nombre) in ('done', 'closed')]
 
 
 def _reglas_piezas():
@@ -343,7 +469,19 @@ def traducir(a):
         destino = pedido if pedido in destinos else destinos[0]
         cambio = {"campo": "estado", "valor": destino}
     elif clase == "estado_hecha":
-        cambio = {"campo": "estado", "valor": c["estado_hecha"]}
+        # Ni nombre por sí solo ni cualquier final (podría ser «rechazado»).
+        cambio = {"campo": "estado", "valor": next(iter(estados_hecha_de_tarea(ref)), None)}
+    elif clase == "estado_libre":
+        # Mi trabajo: solo un estado que exista en SU lista (lo dice el servidor con sus datos); si no, el primero de mover
+        hay = estados_de_tarea(ref)
+        pedido = vp.get("a") if isinstance(vp.get("a"), str) else None
+        cambio = {"campo": "estado", "valor": pedido if pedido in hay else None}
+        if pedido and pedido not in hay:
+            ignorado["a"] = str(pedido)[:80]
+    elif clase == "fecha":
+        dia = str(vp.get("dia") or "")
+        cambio = {"campo": "fecha", "valor": dia if re.fullmatch(r"\d{4}-\d{2}-\d{2}", dia) else None}
+        base = {"vence": (t or {}).get("vence"), "visto": (t or {}).get("visto")} if t else None
     elif clase == "estado_revision":
         regla = ((_reglas_piezas().get("por_estado") or {}).get((t or {}).get("estado")) or {})
         cambio = {"campo": "estado", "valor": regla.get("a") or "revisión project manager"}
@@ -369,6 +507,20 @@ def traducir(a):
         cambio = {"campo": "asignado", "persona": pid if p.get("activo") else None, "usuario_clickup": p.get("clickup_id")}
     else:
         cambio = {"campo": "otro", "tipo": tipo}
+    if vp.get('transicion_produccion') is True:
+        #209: la cola debe conservar el destino autorizado; nunca fallback legado
+        # si fuente/regla cambia entre INSERT y traducción. "otro" no se envía.
+        try:
+            derivado = destino_produccion_recibo(tipo, ref, vp.get('expected_estado'), vp)
+            coherente = (a['modulo'] == 'produccion' and tipo in ('pieza_aprobar', 'pieza_pedir_cambios', 'mover_estado')
+                         and vp.get('transicion_tablero') is not True and derivado is not None
+                         and derivado == vp.get('a') and cambio.get('campo') == 'estado' and cambio.get('valor') == derivado)
+        except (TypeError, ValueError, KeyError, AttributeError):
+            coherente = False
+        if not coherente:
+            cambio = {'campo': 'otro', 'tipo': tipo, 'motivo': 'Transición de Producción sin destino exacto acreditado; requiere revisión de fuente y catálogo.'}
+    if cambio.get("campo") == "estado" and cambio.get("valor") not in estados_de_tarea(ref):
+        cambio = {"campo": "otro", "tipo": tipo, "motivo": "Estado no confirmado en el catálogo real de esta lista."}
     return "clickup", objeto, cambio, base, ignorado
 
 
@@ -557,7 +709,7 @@ class ClickUpSimulado(Proveedor):
             t["estado"], t["actualizado"] = g["fuera"], ahora_utc() + timedelta(seconds=1)
             g["_fuera_hecho"] = True
         return {"existe": True, "estado": t.get("estado"), "actualizado": t.get("actualizado"), "marcas": set(t.get("marcas") or ()),
-                "asignados": set(t.get("asignados") or ())}
+                "asignados": set(t.get("asignados") or ()), "vence": t.get("vence")}
 
     def aplicar(self, c):
         self._puerta("aplicar", c)
@@ -575,9 +727,13 @@ class ClickUpSimulado(Proveedor):
             t = self._t(c)
             if cam["campo"] == "estado":
                 t["estado"] = cam["valor"]
+            if cam["campo"] == "fecha":
+                t["vence"] = cam["valor"]
             if cam["campo"] in ("comentario", "horas", "crear_tarea") or cam.get("comentario"):
                 t.setdefault("marcas", set()).add(marca(c["clave"]))
                 t.setdefault("comentarios", []).append(cam.get("texto") or cam.get("comentario"))
+            if cam["campo"] == "asignados":
+                t["asignados"] = set(cam.get("usuarios") or [])
             if cam["campo"] == "asignado" and cam.get("usuario_clickup"):
                 t.setdefault("asignados", set()).add(cam["usuario_clickup"])
             t["actualizado"] = ahora_utc()
@@ -671,6 +827,27 @@ class ProveedorClickUp(Proveedor):
             raise ErrorSinc("permiso", "la llave de servicio es de un propietario o administrador: debe ser un miembro")
         return {"ok": True, "usuario": uid, "rol": {3: "miembro", 4: "invitado"}.get(rol, rol)}
 
+    def marca_comentario(self, ref, marca_ro):
+        """GET Task Comments paginado; nunca interpretar truncamiento como ausencia.
+        Fuente: developer.clickup.com/reference/gettaskcomments (start + start_id).
+        """
+        from urllib.parse import urlencode
+        ruta = f"/task/{ref}/comment"
+        cursores = set()
+        for _ in range(40):
+            comments = self.pide("GET", ruta).get("comments") or []
+            if any(marca_ro in (x.get("comment_text") or "") for x in comments):
+                return True
+            if len(comments) < 25:
+                return False
+            ultimo = comments[-1]
+            cursor = (str(ultimo.get("date") or ""), str(ultimo.get("id") or ""))
+            if not all(cursor) or cursor in cursores:
+                raise ErrorSinc("no_soportado", "Lectura de comentarios incompleta: no se reenvía sin verificar.")
+            cursores.add(cursor)
+            ruta = f"/task/{ref}/comment?" + urlencode({'start':cursor[0],'start_id':cursor[1]})
+        raise ErrorSinc("no_soportado", "Comentarios superan la ventana verificable: no se reenvía sin verificar.")
+
     def leer(self, c):
         o = json.loads(c["objeto"])
         m = marca(c["clave"])
@@ -683,15 +860,16 @@ class ProveedorClickUp(Proveedor):
         marcas = set()
         cam = json.loads(c["cambio"])
         if cam["campo"] in ("comentario",) or cam.get("comentario"):
-            for x in self.pide("GET", f"/task/{o['ref']}/comment").get("comments") or []:
-                if m in (x.get("comment_text") or ""):
-                    marcas.add(m)
+            if self.marca_comentario(o["ref"],m):
+                marcas.add(m)
         if cam["campo"] == "horas":
             for x in self.pide("GET", f"/team/{TEAM}/time_entries?task_id={o['ref']}").get("data") or []:
                 if m in (x.get("description") or ""):
                     marcas.add(m)
         act = t.get("date_updated")
-        return {"existe": True, "estado": (t.get("status") or {}).get("status"),
+        due = t.get("due_date")
+        vence = datetime.fromtimestamp(int(due) / 1000, timezone.utc).astimezone(_MAD).strftime("%Y-%m-%d") if due else None
+        return {"existe": True, "estado": (t.get("status") or {}).get("status"), "vence": vence,
                 "actualizado": datetime.fromtimestamp(int(act) / 1000, timezone.utc).replace(tzinfo=None) if act else None,
                 "marcas": marcas, "asignados": {str(a.get("id")) for a in t.get("assignees") or []}}
 
@@ -711,11 +889,30 @@ class ProveedorClickUp(Proveedor):
                 self.pide("POST", f"/task/{o['ref']}/comment", {"comment_text": cam["comentario"] + firma, "notify_all": False})
             return {"ok": True}
         if cam["campo"] == "comentario":
+            if cam.get("menciones") or cam.get("entrega"):
+                # API oficial comment-formatting: tags reales, no @nombre simulado.
+                contenido = [{'text':cam.get('texto') or ''}]
+                for x in cam.get('menciones') or []:
+                    contenido.append({'type':'tag','user':{'id':int(x['usuario_clickup'])}})
+                if cam.get('entrega'):
+                    contenido.append({'text':'Entregable','attributes':{'link':cam['entrega']}})
+                contenido.append({'text':firma})
+                return self.pide("POST",f"/task/{o['ref']}/comment",{'comment':contenido,'notify_all':False})
             return self.pide("POST", f"/task/{o['ref']}/comment", {"comment_text": cam["texto"] + firma, "notify_all": False})
         if cam["campo"] == "horas":
             ini = datetime.strptime(cam["dia"] + " 09:00", "%Y-%m-%d %H:%M").replace(tzinfo=timezone.utc)
             return self.pide("POST", f"/team/{TEAM}/time_entries", {"tid": o["ref"], "start": int(ini.timestamp() * 1000),
                                                                     "duration": int(cam["minutos"]) * 60000, "description": (cam.get("nota") or "") + firma})
+        if cam["campo"] == "fecha":
+            if not cam.get("valor"):
+                raise ErrorSinc("rechazo", "fecha no válida")
+            fin = datetime.strptime(cam["valor"] + " 12:00", "%Y-%m-%d %H:%M").replace(tzinfo=_MAD)
+            return self.pide("PUT", f"/task/{o['ref']}", {"due_date": int(fin.timestamp() * 1000), "due_date_time": False})
+        if cam["campo"] == "asignados":
+            actual = self.pide("GET", f"/task/{o['ref']}")
+            actuales = {str(a.get("id")) for a in actual.get("assignees") or []}
+            destino = set(cam.get("usuarios") or [])
+            return self.pide("PUT", f"/task/{o['ref']}", {"assignees": {"add": [int(x) for x in destino-actuales], "rem": [int(x) for x in actuales-destino]}})
         if cam["campo"] == "asignado":
             if not cam.get("usuario_clickup"):
                 raise ErrorSinc("destinatario", "esa persona no tiene usuario de ClickUp conocido")
@@ -742,33 +939,81 @@ def aplicado(c, r):
         return ok and (not cam.get("comentario") or m in (r.get("marcas") or set()))
     if campo in ("comentario", "horas", "crear_tarea", "mensaje"):
         return m in (r.get("marcas") or set())
+    if campo == "asignados":
+        return {str(x) for x in cam.get("usuarios") or []} == {str(x) for x in r.get("asignados") or []}
     if campo == "asignado":
         return bool(cam.get("usuario_clickup")) and str(cam["usuario_clickup"]) in {str(x) for x in r.get("asignados") or ()}
+    if campo == "fecha":
+        return bool(cam.get("valor")) and str(r.get("vence") or "") == cam["valor"]
     return False
 
 
 def valor_app(c):
     cam = json.loads(c["cambio"])
-    return cam.get("valor") if cam.get("campo") == "estado" else cam.get("usuario_clickup") if cam.get("campo") == "asignado" else None
+    if cam.get("campo") == "asignados":
+        return cam.get("usuarios")
+    return cam.get("valor") if cam.get("campo") in ("estado", "fecha") else cam.get("usuario_clickup") if cam.get("campo") == "asignado" else None
 
 
 def es_conflicto(con, c, r, desde):
     """Otro valor en ClickUp, distinto del que la app vio y del que la app quiere, y puesto DESPUÉS de `desde`."""
     cam = json.loads(c["cambio"])
-    if cam.get("campo") != "estado":
+    if cam.get("campo") not in ("estado", "fecha", "asignados"):
         return False
     base = base_vigente(con, c) or {}
-    actual = norm(r.get("estado"))
-    if not actual or actual == norm(cam["valor"]) or (base.get("estado") and actual == norm(base.get("estado"))):
+    if cam["campo"] == "asignados":
+        actual = {str(x) for x in r.get("asignados") or []}
+        deseado = {str(x) for x in cam.get("usuarios") or []}
+        anterior = {str(x) for x in base.get("asignados") or []}
+        act = r.get("actualizado")
+        return bool(actual != deseado and actual != anterior and act and desde and act >= desde)
+    clave = "estado" if cam["campo"] == "estado" else "vence"
+    actual = norm(r.get(clave))
+    if not actual or actual == norm(cam["valor"]) or (base.get(clave) and actual == norm(base.get(clave))):
         return False
     act = r.get("actualizado")
     return bool(act and desde and act >= desde)
 
 
+def reclamar_escritura(con, cid, quien, intento, ahora):
+    """Claim durable en conexión propia; nunca confirmar una transacción del caller.
+
+    No hay lease con caducidad: un proceso caído deja resultado incierto para
+    verificación por lectura, nunca autorización automática para volver a escribir.
+    """
+    if con.in_transaction:
+        return False  # Cola/decisión aún no persistida: siguiente vuelta tras commit del caller.
+    dbs = con.execute("PRAGMA database_list").fetchall()
+    archivo = next((r[2] for r in dbs if r[1] == "main"), "")
+    if not archivo:
+        return False  # Memoria/no archivo no puede garantizar recuperación durable.
+    propia = sqlite3.connect(archivo, timeout=20)
+    propia.row_factory = sqlite3.Row
+    try:
+        propia.execute("PRAGMA busy_timeout=20000")
+        propia.execute("PRAGMA synchronous=FULL")
+        propia.execute("BEGIN IMMEDIATE")
+        c = fila(propia, cid)
+        act = estado_actual(propia, cid)
+        if not c or not act or act["estado"] != "pendiente" or bloqueado_por_anterior(propia, c):
+            propia.rollback()
+            return False
+        paso(propia, cid, "enviado", "escritura_reclamada", quien=quien, intento=intento, hora=ahora,
+             motivo="Envío reservado. Su resultado aún no está confirmado; comprobar antes de repetir.",
+             detalle={"resultado_desconocido": True, "seguro_reintentar": False, "claim_durable": True})
+        propia.commit()  # Sólo la transacción propia, ANTES de cualquier request de escritura.
+        return True
+    finally:
+        propia.close()
+
+
 # =================================================================== despachar, verificar, avisar
 def ejecutar(con, cid, prov, quien="sistema", ahora=None):
-    """pendiente → enviado → (verificar). Idempotente: antes de escribir relee la tarea y, si el cambio ya está, no lo
-    repite; si ClickUp tiene un valor más nuevo que el que vio la app, «conflicto» sin pisarlo."""
+    """Relee y reclama de forma durable antes de escribir. `enviado` no acredita aceptación.
+
+    Una transacción prestada activa difiere el efecto; sólo el caller decide su commit.
+    Un claim incierto se reconcilia por lectura y nunca caduca habilitando un reenvío.
+    """
     ahora = ahora or ahora_utc()
     c = fila(con, cid)
     act = estado_actual(con, cid)
@@ -784,6 +1029,10 @@ def ejecutar(con, cid, prov, quien="sistema", ahora=None):
         avisar(con, cid, motivo)
         return "fallido"
     n = intentos(con, cid)
+    escritura_iniciada = False
+    # No publicar efectos externos sobre una cola/decisión no confirmada por su caller.
+    if con.in_transaction:
+        return "pendiente"
     try:
         r = prov.leer(c)
         if aplicado(c, r):
@@ -791,10 +1040,21 @@ def ejecutar(con, cid, prov, quien="sistema", ahora=None):
             return verificar(con, cid, prov, ahora=ahora)
         if es_conflicto(con, c, r, leer_hora(c["creado"])):
             return marcar_conflicto(con, cid, r, quien)
+        if not reclamar_escritura(con, cid, quien, n, ahora):
+            actual = estado_actual(con, cid)
+            return actual["estado"] if actual else "pendiente"
+        escritura_iniciada = True
         prov.aplicar(c)
         paso(con, cid, "enviado", "enviado", quien=quien, intento=n, motivo="ClickUp lo ha aceptado. Se relee para confirmarlo.",
-             detalle={"proveedor": prov.nombre})
+             detalle={"proveedor": prov.nombre, "claim_durable": True, "resultado_desconocido": True, "seguro_reintentar": False})
     except ErrorSinc as x:
+        if escritura_iniciada:
+            # aplicar puede incluir varios requests: incluso un rechazo posterior
+            # puede llegar después de una escritura aceptada. Nunca afirmar ausencia.
+            paso(con, cid, "enviado", "resultado_desconocido", quien=quien, intento=n,
+                 motivo="El proveedor no confirmó el resultado. Se comprueba antes de reenviar.",
+                 detalle={"tipo": x.tipo, "resultado_desconocido": True, "seguro_reintentar": False})
+            return "enviado"
         return _error(con, cid, x, quien, n, ahora)
     return verificar(con, cid, prov, ahora=ahora)
 
@@ -826,7 +1086,7 @@ def _error(con, cid, x, quien, n, ahora):
 
 
 def verificar(con, cid, prov, ahora=None):
-    """enviado → confirmado | conflicto | fallido, releyendo en ClickUp (solo lectura)."""
+    """Relectura: confirma presencia o detecta conflicto. Un claim incierto no permite reenviar."""
     ahora = ahora or ahora_utc()
     c = fila(con, cid)
     act = estado_actual(con, cid)
@@ -846,6 +1106,10 @@ def verificar(con, cid, prov, ahora=None):
         return "confirmado"
     if es_conflicto(con, c, r, leer_hora(act["hora"])):
         return marcar_conflicto(con, cid, r, "sistema")
+    if detalle_de(act).get("resultado_desconocido"):
+        # Una lectura sin marca no acredita ausencia histórica (ventana de horas,
+        # chat truncado, consistencia eventual). Conservar bloqueo por objeto.
+        return "enviado"
     if (ahora - (leer_hora(act["hora"]) or ahora)).total_seconds() >= int(conf()["gracia_min"]) * 60:
         paso(con, cid, "fallido", "no_aparece", motivo=LLANO["no_aparece"], detalle={"seguro_reintentar": True, "valor_clickup": r.get("estado")})
         avisar(con, cid, "no_aparece")
@@ -855,7 +1119,8 @@ def verificar(con, cid, prov, ahora=None):
 
 def marcar_conflicto(con, cid, r, quien):
     c = fila(con, cid)
-    actual = r.get("estado")
+    campo = json.loads(c["cambio"]).get("campo")
+    actual = sorted(str(x) for x in r.get("asignados") or []) if campo == "asignados" else r.get("vence") if campo == "fecha" else r.get("estado")
     paso(con, cid, "conflicto", "conflicto", quien=quien, motivo=LLANO["conflicto"],
          detalle={"version_app": valor_app(c), "version_clickup": actual, "clickup_cambiado": iso_z(txt_hora(r["actualizado"])) if r.get("actualizado") else None,
                   "base": base_vigente(con, c)})
@@ -876,7 +1141,11 @@ def bloqueado_por_anterior(con, c):
 
 
 def despachar(con, prov, ahora=None, canal=None):
-    """Una vuelta del despachador: los pendientes en orden de id, respetando el orden por objeto y las esperas."""
+    """Pendientes en orden: cada efecto requiere conexión sin transacción prestada activa.
+
+    Los pasos nuevos se confirman por el caller; los efectos restantes pueden quedar
+    para la siguiente vuelta. No se hace commit de acciones ajenas para acelerar envíos.
+    """
     ahora = ahora or ahora_utc()
     hechos = []
     llave_caida = False
@@ -986,7 +1255,7 @@ def elegir(con, cid, quien, gana):
         return {"ok": True, "estado": "descartado"}
     paso(con, cid, "pendiente", "gana_app", quien=quien,
          motivo=f"Se queda lo de la app («{d.get('version_app')}»): vuelve a la cola y pisará lo de ClickUp.",
-         detalle={"base_nueva": {"estado": d.get("version_clickup")}})
+         detalle={"base_nueva": {("vence" if json.loads(c["cambio"]).get("campo") == "fecha" else "estado"): d.get("version_clickup")}})
     return {"ok": True, "estado": "pendiente"}
 
 
@@ -1070,9 +1339,10 @@ def avisar(con, cid, tipo, solo_agus=False):
 
 
 # =================================================================== informe diario «cambios sin reflejar»
-def sin_reflejar(con, ahora=None, horas=None):
+def sin_reflejar(con, ahora=None, horas=None, preparar_base=True):
     """Lo que lleva más de X horas hecho en la app y no está en ClickUp (todo lo que no es confirmado ni descartado)."""
-    preparar(con)
+    if preparar_base:
+        preparar(con)
     ahora = ahora or ahora_utc()
     horas = float(horas if horas is not None else conf()["horas_sin_reflejar"])
     lim = ahora - timedelta(hours=horas)
@@ -1204,7 +1474,7 @@ def _abre_cliente(persona, cid):
     return P.ver(persona, {"tipo": "cliente_detalle", "cliente_id": cid}, cp)["ok"]
 
 
-ESTADO_TEXTO = {"simulado": TEXTO_PENDIENTE + " (simulación)", "pendiente": TEXTO_PENDIENTE, "enviado": "Enviado a ClickUp · comprobando",
+ESTADO_TEXTO = {"simulado": TEXTO_PENDIENTE + " (simulación)", "pendiente": TEXTO_PENDIENTE, "enviado": "Envío sin confirmar · comprobar ClickUp",
                 "confirmado": "En ClickUp (comprobado)", "fallido": "No está en ClickUp", "conflicto": "Dos versiones: elige", "descartado": "Se quedó lo de ClickUp"}
 
 
@@ -1214,6 +1484,8 @@ def describir(cam):
         return f"Estado → «{cam['valor']}»" + (" y comentario" if cam.get("comentario") else "")
     if campo == "comentario":
         return "Comentario en la tarea"
+    if campo == "fecha":
+        return f"Fecha límite → {cam.get('valor') or '¿?'}"
     if campo == "horas":
         return f"Imputar {cam.get('minutos')} min el {cam.get('dia')}"
     if campo == "asignado":
@@ -1263,11 +1535,13 @@ def resumen_estado(con, cid):
 
 def _get(h, ruta, q, real, persona):
     with conectar() as con:
-        preparar(con)
-        with _CANDADO:
-            sincronizar(con)
-            con.commit()
-        filas = [dict(r) for r in con.execute("SELECT * FROM sinc_cambios ORDER BY id DESC")]
+        # El montaje del módulo/los POST inicializan el esquema. GET no reconcilia
+        # acciones ni crea tablas: una base sin inicializar es indisponibilidad.
+        try:
+            con.execute("SELECT id FROM sinc_pasos LIMIT 0")
+            filas = [dict(r) for r in con.execute("SELECT * FROM sinc_cambios ORDER BY id DESC")]
+        except sqlite3.DatabaseError:
+            return h.responder(503, {"error": "La lectura de Sincronía no está disponible."})
         if ruta == "/api/sincronia/cambio":
             try:
                 cid = int((q.get("id") or ["0"])[0])
@@ -1290,7 +1564,7 @@ def _get(h, ruta, q, real, persona):
             lista = [x for x in lista if x["canal"] == canal]
         if estado:
             lista = [x for x in lista if x["estado"] == estado]
-        inf = sin_reflejar(con)
+        inf = sin_reflejar(con, preparar_base=False)
         if not (ve_todos(real) and ve_todos(persona)):
             inf = {**inf, "cambios": [x for x in inf["cambios"] if x["quien"] == persona["id"]]}
             inf["total"] = len(inf["cambios"])
@@ -1383,6 +1657,120 @@ def _tras_accion(aid):
     return out
 
 
+
+def destino_produccion_recibo(tipo, ref, desde, vp):
+    """209: sólo destino explícito derivado por RP y catálogo tipado de esta lista."""
+    t = tarea(ref)
+    if not t or t.get('estado') != desde or not isinstance(vp, dict):
+        return None
+    lid = t.get('lista_id')
+    datos = _mi_trabajo()
+    catalogos = datos.get('estados_detalle') if isinstance(datos, dict) else None
+    filas = catalogos.get(lid, []) if isinstance(catalogos, dict) else []
+    if not isinstance(filas, list) or not filas:
+        return None
+    tipos = {}
+    for f in filas:
+        if (not isinstance(f, dict) or not isinstance(f.get('estado'), str) or f['estado'] in tipos
+                or f.get('tipo') not in ('open', 'unstarted', 'custom', 'done', 'closed')):
+            return None
+        tipos[f['estado']] = f['tipo']
+    rp = _reglas_piezas()
+    if not isinstance(rp, dict):
+        return None
+    if tipo == 'pieza_aprobar':
+        reglas = rp.get('por_estado')
+        regla = reglas.get(desde) if isinstance(reglas, dict) else None
+        destino = regla.get('a') if isinstance(regla, dict) else None
+    elif tipo == 'pieza_pedir_cambios':
+        destino = rp.get('pedir_cambios_a')
+    elif tipo == 'mover_estado':
+        # Política exacta del botón A revisión de Producción208, no destinos libres.
+        wanted = 'revisión project manager'
+        destino = wanted if vp.get('a') == wanted and wanted in conf().get('destinos_mover', []) else None
+    else:
+        return None
+    return destino if isinstance(destino, str) and destino != desde and desde in tipos and destino in tipos and destino in estados_de_tarea(ref) else None
+
+
+def recibo_transicion_tablero(aid, real, b):
+    """193: vínculo releído tras commit; no convierte guardado local en envío remoto.
+
+    Sólo opt-in validado por Mi Trabajo/Producción. El recibo contrasta la fila durable y
+    la intención194 con el cuerpo; catálogo y base deben seguir siendo coherentes.
+    Un fallo de cola/lectura deja recuperación explícita, nunca otro envío.
+    """
+    pendiente = {"cola_estado": "pendiente_recuperacion", "recibo_durable": False,
+                 "confirmacion_remota": False,
+                 "texto_cola": "Acción guardada en RO; no se ha acreditado su vínculo con la cola. Revisar Envíos antes de repetir."}
+    try:
+        from intenciones_acciones import identidad
+        if not isinstance(aid, int) or isinstance(aid, bool) or aid < 1:
+            return pendiente
+        vp = b.get("vista_previa")
+        if not isinstance(vp, dict):
+            return pendiente
+        tablero = vp.get('transicion_tablero') is True
+        produccion = vp.get('transicion_produccion') is True
+        if tablero == produccion:
+            return pendiente
+        flag, modulo = ('transicion_tablero', 'mi-trabajo') if tablero else ('transicion_produccion', 'produccion')
+        tipo = b.get('tipo')
+        if (tablero and tipo != 'cambiar_estado') or (produccion and tipo not in ('pieza_aprobar', 'pieza_pedir_cambios', 'mover_estado')):
+            return pendiente
+        if not isinstance(real, dict) or not isinstance(real.get("id"), str):
+            return pendiente
+        iid, huella = identidad(real["id"], b)
+        with conectar() as con:
+            act = con.execute("SELECT * FROM acciones WHERE id=?", (aid,)).fetchone()
+            cs = con.execute("SELECT * FROM sinc_cambios WHERE accion_id=?", (aid,)).fetchall()
+            intent = con.execute("SELECT accion_id, huella FROM intenciones_acciones WHERE actor=? AND intencion=?", (real["id"], iid)).fetchone()
+            if not act or len(cs) != 1 or not intent or intent["accion_id"] != aid or intent["huella"] != huella:
+                return pendiente
+            act, c = dict(act), dict(cs[0])
+            stored = json.loads(act.get("vista_previa") or "null")
+            obj, cam, base = json.loads(c["objeto"]), json.loads(c["cambio"]), json.loads(c.get("base") or "null")
+            tid = str(act.get("objeto") or "")
+            t = tarea(tid)
+            actual = estado_actual(con, c["id"])
+            if not isinstance(stored, dict) or not isinstance(base, dict) or not t or not actual:
+                return pendiente
+            if any(stored.get(k) != vp.get(k) for k in ("transicion_tablero", "transicion_produccion", "lista_id", "revision", "expected_estado", "a")):
+                return pendiente
+            desde, hasta, lid = stored.get("expected_estado"), stored.get("a"), stored.get("lista_id")
+            if (stored.get(flag) is not True or not isinstance(lid, str) or not lid
+                    or lid != t.get("lista_id") or not isinstance(desde, str) or not desde
+                    or not isinstance(hasta, str) or not hasta or desde == hasta
+                    or base.get("estado") != desde or hasta not in estados_de_tarea(tid)):
+                return pendiente
+            if (act.get("quien") != real["id"] or c.get("quien") != real["id"]
+                    or act.get("herramienta") != "clickup" or act.get("tipo") != tipo
+                    or act.get("modulo") != modulo or b.get("modulo") != modulo or c.get("modulo") != modulo
+                    or tid != str(b.get("objeto") or "") or c.get("objeto_ref") != tid
+                    or obj.get("tipo") != "tarea" or obj.get("ref") != tid
+                    or c.get("tipo") != tipo or c.get("canal") != "clickup"
+                    or act.get("cliente_id") != c.get("cliente_id")):
+                return pendiente
+            if produccion and t.get('cli') != act.get('cliente_id'):
+                return pendiente
+            if cam.get('campo') != 'estado':
+                return {**pendiente, 'cola_estado': actual.get('estado') if actual.get('estado') in ESTADOS else 'pendiente_recuperacion',
+                        'requiere_revision': True, 'reintento_seguro': False, 'motivo_recibo': 'cambio_no_enviable',
+                        'texto_cola': 'Acción guardada en RO, pero el cambio no es enviable: revisar fuente, regla y catálogo. Repetir la solicitud no acredita un envío.'}
+            if cam.get('valor') != hasta or (produccion and destino_produccion_recibo(tipo, tid, desde, stored) != hasta):
+                return {**pendiente, 'requiere_revision': True, 'reintento_seguro': False, 'motivo_recibo': 'destino_no_coherente'}
+            estado = actual.get("estado")
+            if estado not in ESTADOS:
+                return pendiente
+            remoto = estado == "confirmado" and c.get("modo") == "real" and actual.get("evento") == "verificado"
+            return {"cola_estado": estado, "recibo_durable": True, "confirmacion_remota": remoto,
+                    "recibo": {"accion_id": aid, "cambio_id": c["id"], "tarea_id": tid, "lista_id": lid, "tipo": tipo, "modulo": modulo,
+                               "desde": desde, "hasta": hasta, "intencion_id": iid,
+                               "estado_cola": estado, "confirmacion_remota": remoto}}
+    except Exception:
+        return pendiente
+
+
 def _al_momento(cid):
     import time
     for espera in (0, 120, int(conf()["gracia_min"]) * 60 + 5):
@@ -1434,6 +1822,9 @@ def enganchar(Manejador, servir):
                         obj = {**obj, "sincronia": sinc}
                 except Exception:
                     traceback.print_exc()
+                vp = b.get("vista_previa")
+                if isinstance(vp, dict) and (vp.get("transicion_tablero") is True or vp.get("transicion_produccion") is True):
+                    obj = {**obj, **recibo_transicion_tablero(int(obj["id"]), real, b)}
             return orig(codigo, obj, *a, **k)
         self.responder = responder
         try:

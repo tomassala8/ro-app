@@ -1,0 +1,11 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+class N{constructor(t,a={},xs=[]){this.tag=t;this.attrs=a;this.children=xs.flat(Infinity).filter(x=>x!=null)}setAttribute(k,v){this.attrs[k]=v}}
+(async()=>{const M=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(__dirname+'/modulos/_serie_paid_549.js')).toString('base64'));let n=0;const test=(s,f)=>{f();n++},num=x=>Number(x.replaceAll('.','').replace(',','.'));
+test('floor of1.006 does not become1.01',()=>{assert.equal(M.minimoGastoPaid554(1.006),'1,00');assert(num(M.minimoGastoPaid554(1.006))<=1.006)});
+test('tiny explicit0 and boundary never inflated',()=>{for(const v of [0,Number.MIN_VALUE,0.00999,0.01,0.29,1.005,1.999999,999.999999])assert(num(M.minimoGastoPaid554(v))<=v);assert.equal(M.minimoGastoPaid554(0.00999),'0,00');assert.equal(M.minimoGastoPaid554(0),'0,00')});
+test('large finite never Infinity or multiplication overflow',()=>{for(const v of [Number.MAX_VALUE,1e308,Number.MAX_SAFE_INTEGER]){const s=M.minimoGastoPaid554(v);assert(!/Infinity|NaN|[eE]/.test(s));assert(num(s)<=v)}for(const v of [Infinity,NaN,-1,true,'1'])assert.equal(M.minimoGastoPaid554(v),null)});
+const source=fs.readFileSync(__dirname+'/modulos/captacion.js','utf8'),a=source.indexOf('  // Contador de la copia;'),b=source.indexOf('  secCifras.firstChild',a),h=(t,a,...xs)=>new N(t,a,xs);
+const run=(gastoCompleto,verDinero=true)=>{const cards=[],env={...M,h,PERIODO:null,d:{ventanas:{'7d':['2026-10-01','2026-10-02']},datos_hasta:'2026-10-02'},filas:[],ctx:{hoy:'2026-10-04'},verDinero,hoyMadrid:()=> '2026-10-04',num:(v,d)=>d===2?'full:'+v:String(v),S:{2:'8px'},t:[],tile:o=>{cards.push(o);return h('div',{},o.etiqueta,o.valor,o.unidad)},rejillaTarjetas:xs=>h('div',{},xs),sumaSerie:()=>({leads:1,gasto:1.006,moneda:'EUR',completo:gastoCompleto,gastoCompleto,tipado:false,dias_observados:1,dias_esperados:2})};new Function('d','with(d){'+source.slice(a,b)+';}')(env);return cards[0]};
+test('real renderer uses floor only partial; complete formatting unchanged',()=>{assert.equal(run(false).unidad,'· ≥1,00 EUR');assert.equal(run(true).unidad,'· full:1.006 EUR');assert.equal(run(false,false).unidad,null);assert.equal(run(false).valor,'≥1')});
+console.log(n+' grupos554 PASS · formato exacto y consumidor real, sin red');
+})().catch(e=>{console.error(e);process.exitCode=1});

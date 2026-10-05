@@ -1,3 +1,11 @@
+import { celdaCtrTotalPaid682 } from './_ctr_paid_682.js';
+import { sumaSeriePaid549, compararSeriesPaid549, fechaPaid549, minimoGastoPaid554 } from './_serie_paid_549.js';
+import {ambitoPaid516,guardarPaid516,cargarLecturaPaid516} from './_intencion_paid_516.js';
+import { conteoMeta508, deltaMeta508, creativosMatriz508, cuentaMetaError508 } from './_matriz_paid_508.js';
+import { normalizarCita299, referenciaCita299, textoMetaQuincenal299 } from './_coste_cita_299.js';
+import { medirCplPaid, normalizarPaid, cplMovilPaid285, resumenNichoPaid671 } from './_paid_mediciones.js';
+import { medirEmbudoCRM, conteoCRM } from './_crm_mediciones.js';
+import { panelPaid } from './_panel_especialista.js';
 // modulos/captacion.js · M6 «Captación» · la Torre de Control de Paid dentro de la app (E5 del plan v2, 13_TORRE…).
 //
 // Qué pinta (orden por frecuencia: arriba lo de cada día, abajo lo de cada semana):
@@ -17,9 +25,9 @@
 // Botones: ctx.accion() → cola local «simulada» con vista previa. Nunca llama a Meta, GHL ni ClickUp.
 // Diseño (auditoría 30, 2-oct noche): sin hoja de estilos propia; barras, embudo y ventanas son los componentes comunes;
 // el resto, clases de estilos.css y tokens de la guía (--s-*, con su valor por defecto). Cifras con punto de miles; nada < 12 px.
-// Tiendas online (Kiosko, decisión del coordinador 2-oct): sus «leads» de Meta son conversiones del píxel. Fuera del total de
-// leads de la casa y del techo de 35 € por lead; su tarjeta lo explica.
+// El contador Meta legado no acredita tipo de evento; comercio queda fuera de CPL lead y de los totales de leads.
 
+import {renderMetaDiaria386,ambitoMeta386} from './_meta_diaria_386.js';
 import { duenoConexion } from './ajustes_conexiones.js';
 import { motivoSinCartera } from './ficha.js';   // V2 (B-M2): el dueño de cada conexión sale de un solo sitio
 import {
@@ -54,21 +62,12 @@ const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNa
 const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
 // R12 (A2) · periodo común SOLO donde hay dato diario: la serie de Meta por día (gasto y leads, unos 35 días).
-// Lo que se juzga (crítico, techo, CRM) sigue en su ventana fija de 7 días y lo dice.
+// La matriz mantiene su ventana fija; los objetivos requieren evidencia compatible propia.
 const PERIODOS_CAPTACION = ['7d', '30d', 'mes', 'ayer'];
 let PERIODO = null;
-/** Leads (sin tiendas) y gasto de Meta en [desde, hasta] sumando la serie diaria; completo = la serie cubre todo el tramo. */
-function sumaSerie(filas, desde, hasta, inicioSerie) {
-  let leads = 0, gasto = 0, conGasto = false;
-  for (const c of filas) {
-    if (esTienda(c)) continue;
-    for (const x of c.serie || []) {
-      if (x.d < desde || x.d > hasta) continue;
-      leads += x.leads_meta || 0;
-      if (typeof x.gasto_meta === 'number') { gasto += x.gasto_meta; conGasto = true; }
-    }
-  }
-  return { leads, gasto: conGasto ? gasto : null, completo: !inicioSerie || desde >= inicioSerie };
+/** Contador observado (sin comercio); huecos no son cero ni cobertura completa. */
+function sumaSerie(filas, desde, hasta, inicioSerie, hoy=hoyMadrid(), corte=null) {
+  return sumaSeriePaid549(filas,desde,hasta,hoy,corte);
 }
 
 // ------------------------------------------------------------------ vocabulario
@@ -87,9 +86,10 @@ const GRAV = {   // estado de la cuenta de publicidad (no es la gravedad del cli
   critico: { t: 'Publicidad crítica', e: 'rojo', i: 'fire', o: 0 },   // §2.1: «urgente» solo para plazos
   atencion: { t: 'Publicidad a vigilar', e: 'ambar', i: 'alert', o: 1 },
   ok: { t: 'Publicidad en orden', e: 'verde', i: 'ok', o: 2 },
+  dato:{t:'Señal pendiente de contraste',e:'gris',i:'info',o:3},
   inactivo: { t: 'Sin pauta', e: 'gris', i: 'vacio', o: 3 },
 };
-const chipPub = c => chipEstado(GRAV[c.severidad]?.e || 'gris', GRAV[c.severidad]?.t || 'Sin dato', { punto: false });
+const chipPub = c => chipEstado(GRAV[c.severidad]?.e || 'gris', (GRAV[c.severidad]?.t || 'Sin dato') + (c.estado_evaluacion === 'referencia_legacy_no_recalculada' ? ' · referencia anterior' : ''), { punto: false });
 const CUELLO = {
   paid: { t: 'Publicidad', i: 'target', quien: 'trafficker' },
   seguimiento: { t: 'Seguimiento del despacho', i: 'phone', quien: 'account' },
@@ -104,13 +104,24 @@ const num = (n, d = 0) => fmt.num(n, d);
 const eur = n => fmt.eur(n, n !== null && n !== undefined && Math.abs(n) < 100 && n % 1 ? 2 : 0);
 const pct = n => fmt.pct(n, n !== null && n !== undefined && Math.abs(n) < 10 && n % 1 ? 1 : 0);
 // gasto_texto (con euros) solo si llega entero: si el servidor ha tapado importes, mejor la frase sin cifras de dinero.
-const textoMot = m => limpiaTexto(m.gasto_texto && !m.gasto_texto.includes('[importe]') ? m.gasto_texto : m.texto)
+function contrastarMotivo(texto) {
+  return String(texto || '')
+    .replace(/: el despacho no trabaja los leads/g, ': falta confirmar el seguimiento con el despacho')
+    .replace(/: el despacho no mueve las etapas/g, ': hay una diferencia entre calendario y etapas que debe revisarse')
+    .replace(/en toda su historia/g, 'en la lectura disponible')
+    .replace(/Ningún lead ha llegado a cita/g, 'No hay cita registrada')
+    .replace(/Ningún lead ha pasado a cita/g, 'No hay paso a cita registrado')
+    .replace(/Subcuenta de GoHighLevel sin usar/g, 'Subcuenta de GoHighLevel con pocos contactos registrados')
+    .replace(/los (.*?) leads de Meta de 7 días no van a GoHighLevel/g, 'hay $1 leads de Meta en 7 días; su destino no está reconciliado por lead')
+    .replace(/Ayer no gastó nada: campañas paradas, sin saldo o rechazadas/g, 'Ayer no hay gasto registrado; confirmar estado de campañas, saldo y lectura')
+    .replace(/techo de (\d+(?:[.,]\d+)?) €/g, 'umbral anterior de $1 €');
+}
+const textoMot = m => contrastarMotivo(limpiaTexto(m.gasto_texto && !m.gasto_texto.includes('[importe]') ? m.gasto_texto : m.texto))
   + (m.objetivo_sin_cargar && PARAMS ? ` (techo de ${PARAMS.techo_cpl} € por lead y red de seguridad de ${PARAMS.alarma_cita} € por cita)` : '');
 let PARAMS = null;                 // parámetros de la casa (no son dinero de ningún cliente)
 let NOMBRE_CTX = null;             // ctx.nombre(): el nombre de la persona como en toda la app
-const JEFA_CRM = 'yessica';        // si un cliente no tiene especialista de CRM asignado, la tarea va a la jefa de CRM
 /** V2 (B-B10): el mismo texto en «Lo primero hoy» y en la tarjeta cuando no hay especialista de CRM. */
-const crmTexto = (d, c) => (c.equipo?.crm ? nombre(d, c.equipo.crm) : `sin especialista (cubre ${nombre(d, JEFA_CRM)})`);
+const crmTexto = (d, c) => (c.equipo?.crm ? nombre(d, c.equipo.crm) : 'CRM · asignación pendiente');
 
 // ------------------------------------------------------------------ sin hoja propia: tokens y piezas pequeñas
 const S = { 1: 'var(--s-1, 4px)', 2: 'var(--s-2, 8px)', 3: 'var(--s-3, 12px)', 4: 'var(--s-4, 16px)', 5: 'var(--s-5, 20px)', 6: 'var(--s-6, 24px)' };
@@ -120,13 +131,46 @@ const NOWRAP = { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' };
 const chipCuello = (k, conPrefijo) => h('span', { class: 'chip gris sin-punto', title: `Se rompe en: ${CUELLO[k].t}` }, icono(CUELLO[k].i, { clase: 's' }), conPrefijo ? `Se rompe en: ${CUELLO[k].t}` : CUELLO[k].t);
 /** Línea de fuentes en un solo chip «Datos al día» que se despliega (guía 3.6). */
 function lineaFuentes(fuentes, ...extra) {
-  const lista = fuentes.filter(Boolean);
-  const viejas = lista.filter(f => f.estado && f.estado !== 'ok').length;
-  const pto = h('span', { 'aria-hidden': 'true', style: { width: '8px', height: '8px', borderRadius: '50%', background: viejas ? 'var(--warn)' : 'var(--good)', display: 'inline-block' } });
-  return h('details', { class: 'que-es', style: { minWidth: '0' } },
-    h('summary', { style: { display: 'inline-flex', alignItems: 'center', gap: S[2], minHeight: '32px' } }, pto,
-      viejas ? `${viejas} ${viejas === 1 ? 'fuente con retraso' : 'fuentes con retraso'}` : 'Datos al día', h('span', { class: 'sub' }, `· ${lista.length} fuentes`)),
-    h('div', { class: 'fila', style: { marginTop: S[2], gap: `${S[2]} ${S[3]}`, flexWrap: 'wrap', minWidth: '0' } }, lista.map(f => { const e = frescura(f); Object.assign(e.style, { maxWidth: '100%', whiteSpace: 'normal', height: 'auto' }); return e; }), ...extra));   // P2: el chip largo parte línea, no se sale
+  const lista = (Array.isArray(fuentes)?fuentes:[]).filter(f=>f&&typeof f==='object');
+  const avisos=lista.filter(f=>typeof f.estado==='string'&&!['ok','bien'].includes(f.estado)).length;
+  const pto=h('span',{'aria-hidden':'true',style:{width:'8px',height:'8px',borderRadius:'50%',background:avisos?'var(--warn)':'var(--off)',display:'inline-block'}});
+  return h('details',{class:'que-es',style:{minWidth:'0'}},
+    h('summary',{style:{display:'inline-flex',alignItems:'center',gap:S[2],minHeight:'32px'}},pto,'Fuentes · copia',h('span',{class:'sub'},`· ${lista.length} fuentes${avisos?` · ${avisos} con aviso`:''}`)),
+    h('div',{class:'fila',style:{marginTop:S[2],gap:`${S[2]} ${S[3]}`,flexWrap:'wrap',minWidth:'0'}},lista.map(f=>{
+      const fecha=fechaPaid549(f.fecha),estado=typeof f.estado==='string'?f.estado:'sin estado',valida=fecha&&fecha<=hoyMadrid();
+      return h('span',{class:'chip gris',title:`${f.fuente||'Fuente'} · lectura: ${f.fecha||'sin fecha'} · corte: ${f.datos_hasta||'sin corte'} · estado: ${estado}. No acredita cobertura ni actualidad de todos los recursos.`,style:{maxWidth:'100%',whiteSpace:'normal',height:'auto'}},`${f.fuente||'Fuente'} · ${valida?fDiaRO(fecha):'fecha por confirmar'} · ${estado}`);
+    }),...extra));
+}
+/** 411: información secundaria disponible sin desplazar la tabla o el editor. */
+function plegablePaid411(titulo, ...contenido) {
+  return h('details', { class: 'que-es', 'data-paid-detalle': '411', style: { minWidth: '0' } },
+    h('summary', { style: { minHeight: '44px', display: 'flex', alignItems: 'center', gap: S[2] } }, titulo),
+    h('div', { class: 'pila', style: { marginTop: S[2], gap: S[2], minWidth: '0' } }, ...contenido));
+}
+function cabeceraPaid411(ctx, d, c) {
+  const eq = c.equipo || {};
+  return h('section', { class: 'detalle-cab', 'data-paid-cabecera': '411', style: { display: 'grid', gap: S[2] }, 'aria-label': 'Cabecera de la cuenta' },
+    h('div', { class: 'fila', style: { gap: S[2], alignItems: 'center', justifyContent: 'space-between' } },
+      h('div', { class: 'fila', style: { gap: S[2], minWidth: '0', flex: '1 1 240px' } },
+        logoCliente(c, 'logo-cli'), h('strong', { style: { fontSize: 'var(--fs-base, 14px)', minWidth: '0' } }, c.nombre),
+        h('span', { class: `chip ${gc(c).e}`, title: (c.motivos_cliente || []).join(' · ') || 'Gravedad única del cliente (la de toda la app)' }, `Estado: ${gc(c).t}`),
+        chipPub(c),
+        c.cuenta_meta?.estado && c.cuenta_meta.estado !== 'activa' ? chipEstado('rojo', `Cuenta de Meta: ${c.cuenta_meta.estado}`) : null,
+        !c.objetivo?.cargado && c.cuenta_meta ? chipEstado('ambar', 'Objetivo sin cargar') : null),
+      h('div', { class: 'fila', style: { gap: S[2] } },
+        c.cuenta_meta?.enlace ? h('a', { class: 'bt', href: c.cuenta_meta.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en Meta') : null,
+        c.ghl?.enlace ? h('a', { class: 'bt', href: c.ghl.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en GHL') : null,
+        h('a', { class: 'bt', href: `#/en-rojo/${c.cliente_id}` }, icono('cli'), 'Ficha'))),
+    plegablePaid411('Equipo y contexto',
+      h('div', { class: 'meta-linea' },
+        ...['trafficker', 'account', 'crm'].map(s => h('span', { title: eq[s + '_confianza'] ? `Asignación con confianza ${eq[s + '_confianza']} (fase 0)` : null },
+          h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(nombre(d, eq[s]) || '?')), `${s === 'crm' ? 'CRM' : s === 'account' ? 'Account' : 'Trafficker'}: ${s === 'crm' ? crmTexto(d, c) : (nombre(d, eq[s]) || 'sin asignar')}`)),
+        c.nicho ? h('span', {}, icono('maletin'), c.nicho) : null),
+      h('div', { class: 'fila', style: { gap: S[2] } },
+        esTienda(c) ? chipEstado('azul', 'Tienda online', { punto: false }) : null,
+        ...(c.cuello || []).map(k => chipCuello(k, true)),
+        ...(c.plataformas || []).map(p => chipEstado('azul', p === 'meta' ? 'Meta' : p === 'google' ? 'Google Ads' : p, { punto: false })),
+        c.nuevo ? chipEstado('azul', 'Cliente nuevo') : null)));
 }
 /** El contenedor es una rejilla: que ningún hijo (tabla, pestañas) estire la página en el móvil. Antes, .cap-raiz. */
 function sinDesborde(raiz) {
@@ -134,10 +178,10 @@ function sinDesborde(raiz) {
   fija(raiz);
   new MutationObserver(() => fija(raiz)).observe(raiz, { childList: true, subtree: true });
 }
-// Tiendas online: los «leads» de Meta son conversiones del píxel (compras), no contactos de un despacho.
+// Tiendas online: el contador legado no acredita compras ni contactos.
 const TIENDAS_ONLINE = new Set(['kiosko-box']);
 const esTienda = c => !!c.tienda_online || TIENDAS_ONLINE.has(c.cliente_id);
-const NOTA_TIENDA = 'Tienda online: los «leads» de Meta de esta cuenta son conversiones del píxel (compras y pasos de la tienda), no contactos. Por eso no cuentan en el total de leads de la casa ni se juzgan con el techo de 35 € por lead (decisión del coordinador, 2 oct).';
+const NOTA_TIENDA = 'Tienda online: el contador Meta de esta copia no acredita el tipo de evento. No demuestra contactos, compras ni conversiones únicas; no se incorpora a leads ni se evalúa como CPL real.';
 
 // ------------------------------------------------------------------ datos
 async function cargar(ctx) {
@@ -151,6 +195,8 @@ async function cargar(ctx) {
   try { d.carteras = (await ctx.datosModulo('verdad/clientes'))?.carteras || []; } catch { d.carteras = []; }
   const logos = new Map(ctx.clientes.map(c => [c.id, c]));
   for (const c of d.clientes) {
+    c.coste_por_cita=normalizarCita299(c.coste_por_cita);
+    if(c.quincenal){c.quincenal.coste_por_cita_referencia_14d=referenciaCita299(c.quincenal)??referenciaCita299(c.coste_por_cita);c.quincenal.coste_por_cita_14d=null;}
     const b = logos.get(c.cliente_id);
     c.logo = b?.logo || null;
     c.enCartera = !!b?.enCartera;
@@ -187,8 +233,8 @@ function completarDinero(c, f) {
     c.dinero = true;
   }
   if (g?.coste_por_cita) {
-    c.coste_por_cita = { ...g.coste_por_cita, alarma_100: (g.coste_por_cita.coste_por_cita_14d || 0) > 100 };
-    if (c.quincenal) c.quincenal.coste_por_cita_14d = g.coste_por_cita.coste_por_cita_14d;
+    c.coste_por_cita = normalizarCita299(g.coste_por_cita);
+    if (c.quincenal) { c.quincenal.coste_por_cita_referencia_14d=referenciaCita299(c.coste_por_cita);c.quincenal.coste_por_cita_14d=null; }
   }
   if (ga?.total?.coste !== undefined && c.google_ads && !c.google_ads.parada) c.google_ads.coste = ga.total.coste;
   if (c.solo_google && c.google_ads?.coste !== undefined) c.dinero = true;
@@ -230,14 +276,21 @@ function textoCartera(cp) {
 /** V2 (B-B9): tres «AKUA_PRECIO-01» seguidos no se distinguen: campaña · conjunto · nº del anuncio (4 últimas cifras). */
 const distingue = a => [a.campana, a.conjunto ? `conjunto ${a.conjunto}` : null, a.ad_id ? `anuncio …${String(a.ad_id).slice(-4)}` : null].filter(Boolean).join(' · ');
 const nombre = (d, id) => (id ? (NOMBRE_CTX ? NOMBRE_CTX(id) : (d.personas?.[id] || 'persona sin ficha')) : null);
-const crmDe = c => c.equipo?.crm || JEFA_CRM;
+const crmDe = c => c.equipo?.crm || null;
 const fuenteDe = (d, id) => {
-  const f = (d.fuentes || []).find(x => x.id === id);
-  if (!f) return { fuente: id, estado: 'sin datos' };
-  if (!f.hora) return { fuente: f.fuente, estado: 'sin datos' };
-  const edad = (Date.now() - new Date(f.hora.replace(' ', 'T'))) / 36e5;
-  return { fuente: f.fuente, edad_h: Math.max(0, edad), estado: f.medicion === 'medias' ? 'viejo' : edad > 30 ? 'viejo' : 'ok' };
+  const f=(d.fuentes||[]).find(x=>x.id===id);
+  return f?{fuente:f.fuente||id,fecha:f.hora||null,datos_hasta:f.datos_hasta||null,estado:f.medicion==='medias'?'parcial':f.estado||'sin estado',medicion:f.medicion}:{fuente:id,estado:'sin datos'};
 };
+
+// Resumen de observaciones: ausencia no es cero y una muestra no acredita el universo.
+function resumenObservadoPaid4(filas,d,hoy) {
+  const conGravedad=filas.filter(c=>['critico','atencion','bien'].includes(c.gravedad));
+  const muestras=filas.map(c=>creativosMatriz508(c,d,hoy)).filter(m=>m!==null);
+  return {total:filas.length,gravedadConDato:conGravedad.length,
+    criticos:conGravedad.length?conGravedad.filter(c=>c.gravedad==='critico').length:null,
+    atencion:conGravedad.length?conGravedad.filter(c=>c.gravedad==='atencion').length:null,
+    creativosConDato:muestras.length,senales:muestras.length?muestras.reduce((n,m)=>n+m.valor,0):null};
+}
 
 // ------------------------------------------------------------------ cálculos sobre un conjunto de cuentas
 function cifras(filas, d) {
@@ -250,7 +303,7 @@ function cifras(filas, d) {
   // Misma definición que Salud del CRM; fuera las subcuentas sin uso (no son fugas: GAC) y las que no tienen dato.
   const conGhl = activas.filter(c => c.ghl?.conectado && c.despacho?.leads_meta_7d && !c.despacho.subcuenta_sin_uso && c.despacho.leads_ghl_7d !== null && c.despacho.leads_ghl_7d !== undefined);
   const sumMeta = conGhl.reduce((s, c) => s + (c.despacho.leads_meta_7d || 0), 0);
-  const sumGhl = conGhl.reduce((s, c) => s + Math.min(c.despacho.leads_ghl_7d || 0, c.despacho.leads_meta_7d || 0), 0);
+  const sumGhl = conGhl.reduce((s, c) => s + (c.despacho.leads_ghl_7d || 0), 0);
   const suma = (k, v) => conDinero.reduce((s, c) => s + ((c[k] || {})[v] || 0), 0);
   return {
     activas, conDinero,
@@ -263,12 +316,22 @@ function cifras(filas, d) {
     gasto7: suma('gasto', '7d'), gasto7p: suma('gasto', '7d_prev'), gastoMesAnt: suma('gasto', 'mes_anterior'),
     leads7: deLeads.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0), leads7p: deLeads.reduce((s, c) => s + (c.leads?.['7d_prev'] || 0), 0),
     tiendas, conversionesTienda7: tiendas.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0),
-    pctCrm: sumMeta ? Math.round(sumGhl / sumMeta * 100) : null, sumMeta, sumGhl, conGhl,
+    pctCrm: null, comparacionRecuentos: conGhl.length > 0, sumMeta, sumGhl, conGhl,
     cansadas: filas.reduce((s, c) => s + (c.anuncios?.cansadas || 0), 0),
     vigilar: filas.reduce((s, c) => s + (c.anuncios?.vigilar || 0), 0),
     rechazados: filas.reduce((s, c) => s + (c.anuncios?.problemas_total || 0), 0),
     paradas: activas.filter(c => (c.gasto?.ayer === 0) || (c.cuenta_meta?.ultimo_dia_con_gasto && c.cuenta_meta.ultimo_dia_con_gasto < d.datos_hasta)),
   };
+}
+
+// 648: recuentos observados no certifican exhaustividad ni ausencia de señales.
+function contadorObservado648(v) { return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v : null; }
+function resumenEquipo648(filas, d) {
+  const gravedad = filas.filter(c => ['critico', 'atencion', 'bien'].includes(c?.gravedad));
+  const dia = v => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) && Number.isFinite(Date.parse(v+'T12:00:00Z')) && new Date(v+'T12:00:00Z').toISOString().slice(0,10) === v;
+  const paradas = filas.filter(c => c?.meta_activa && ((typeof c.gasto?.ayer === 'number' && Number.isFinite(c.gasto.ayer) && c.gasto.ayer >= 0) || (dia(c.cuenta_meta?.ultimo_dia_con_gasto) && dia(d.datos_hasta) && c.cuenta_meta.ultimo_dia_con_gasto <= d.datos_hasta)));
+  const n = paradas.filter(c => c.gasto?.ayer === 0 || (dia(c.cuenta_meta?.ultimo_dia_con_gasto) && dia(d.datos_hasta) && c.cuenta_meta.ultimo_dia_con_gasto < d.datos_hasta)).length;
+  return { gravedad: gravedad.length, paradas: paradas.length ? n : null, paradasConDato: paradas.length };
 }
 
 // ================================================================== LISTA
@@ -325,6 +388,7 @@ async function pintarLista(cont, ctx, d) {
 
 function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   const C = cifras(filas, d);
+  const observado4=resumenObservadoPaid4(filas,d,ctx.hoy||hoyMadrid());
   const techo = d.parametros.techo_cpl;
   const verDinero = C.conDinero.length > 0;
   const nAct = C.activas.length;
@@ -334,9 +398,7 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   for (const c of [...filas].sort((a, b) => gc(a).o - gc(b).o || GRAV[a.severidad].o - GRAV[b.severidad].o)) {
     for (const m of c.motivos || []) if (m.nivel === 'critico' || (c.severidad !== 'inactivo' && m.nivel === 'atencion')) primeras.push({ c, m });
     const integ = (c.avisos || []).find(a => a.clase_id === 'integracion');
-    // Fuga grande (p. ej. GAC: 101 leads en Meta y 0 en GHL) cuenta como crítica aunque la publicidad vaya bien.
-    const fugaGrande = c.despacho && (c.despacho.leads_meta_7d || 0) >= 10 && (c.despacho.pct_llegan_crm ?? 100) < 50;
-    if (integ && c.severidad !== 'inactivo') primeras.push({ c, m: { ...integ, nivel: fugaGrande ? 'critico' : 'atencion' } });
+    if (integ && c.severidad !== 'inactivo') primeras.push({c,m:{...integ,nivel:'dato'}});
   }
   const vistos = new Set();
   const lista = primeras.filter(({ c, m }) => { const k = c.cliente_id + (m.clase_id || ''); if (vistos.has(k)) return false; vistos.add(k); return true; })
@@ -344,11 +406,11 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   const A_LA_VISTA = 4;
   const loPrimero = listaLoPrimero(lista.map(({ c, m }) => ({
     // V2: el color de la fila es la gravedad del CLIENTE (verdad única); el motivo dice qué falla en la publicidad
-    estado: c.gravedad ? gc(c).e : nivelTxt(m.nivel), icono: CUELLO[m.clase_id]?.i || 'alert',
+    estado:m.nivel==='dato'?'gris':(c.gravedad?gc(c).e:nivelTxt(m.nivel)), icono: CUELLO[m.clase_id]?.i || 'alert',
     motivo: `${c.nombre} · ${({ critico: 'cliente crítico · ', atencion: 'cliente a vigilar · ', bien: 'cliente bien · ' })[c?.gravedad] || ''}${CUELLO[m.clase_id]?.t || m.clase}`,
     detalle: `${textoMot(m)}${c.equipo?.trafficker ? ` — trafficker ${nombre(d, c.equipo.trafficker)}` : ''}${c.equipo?.account ? `, account ${nombre(d, c.equipo.account)}` : ''}, CRM ${crmTexto(d, c)}`,
     botones: botonesCaso(ctx, c, d, m),
-  })), { vacio: { titulo: 'Nada urgente en publicidad', porque: 'Ninguna cuenta tiene un problema de publicidad ni una fuga de leads abierta.', celebrar: true } });
+  })), { vacio: { titulo:'Sin alerta actual acreditada en esta vista', porque: 'No hay alertas en la lectura disponible; no acredita ausencia de problemas ni entrega de todos los leads.', celebrar:false } });
   const ocultas = [...loPrimero.querySelectorAll(':scope > li')].slice(A_LA_VISTA);
   ocultas.forEach(li => { li.hidden = true; });
   const verMas = ocultas.length ? h('button', { type: 'button', class: 'bt', 'aria-expanded': 'false', on: { click: e => {
@@ -360,60 +422,51 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   const ctxN = K.nodoUniverso ? [K.nodoUniverso] : [];   // Ronda U: lo de leer va DEBAJO de la lista de cuentas (pantallaAncha), plegado
   ctxN.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: `${alcance === 'mias' ? 'Tus cuentas' : alcance === 'apoyo' ? 'Cuentas en las que ayudas' : alcance === 'trafficker' ? 'Sus cuentas' : 'Toda la casa'}: lo más grave arriba, con dónde se rompe` }, loPrimero, verMas ? h('footer', { class: 'panel-pie' }, h('span', {}, `${lista.length} casos en total`), verMas) : null));
 
-  // ---- 2 · la cifra que manda + 3 tarjetas de apoyo ----
-  // Mientras ningún cliente tenga objetivo de coste por cita, manda el techo de 35 € por lead (no un «—»).
-  const pctTecho = C.juzg.length ? Math.round(C.enTecho.length / C.juzg.length * 100) : null;
-  const sinObjetivo = nAct - C.conObjetivo.length;
-  const principal = h('div', { class: `tile ${C.juzg.length ? semaforo(pctTecho, { verde: 70, ambar: 50 }) : 'gris'}`, role: 'listitem' },
-    cifraPrincipal({
-      etiqueta: `Techo de ${techo} €`,
-      valor: C.juzg.length ? num(C.enTecho.length) : h('small', { class: 'dim' }, 'Sin dato'), unidad: C.juzg.length ? `de ${num(C.juzg.length)}` : null,   // barrido v1: nunca «—» de 32 px
-      estado: C.juzg.length ? semaforo(pctTecho, { verde: 70, ambar: 50 }) : 'gris',
-      comparacion: C.juzg.length ? `${pct(pctTecho)} de las cuentas con muestra` : 'Sin dato · ninguna cuenta con 3 leads o más',
-    }),
-    h('span', { class: 'tx' }, sinObjetivo ? `Sin objetivo propio en ${num(sinObjetivo)} de ${num(nAct)}: manda el techo` : 'Todas las cuentas activas tienen objetivo cargado'));
+  // El objetivo de CPL debe estar acreditado; el techo anterior no lo sustituye.
+  const comparadas=filas.map(c=>medirCplPaid(c,d,ctx.hoy||hoyMadrid())).filter(m=>m.evaluable);
+  const cumplen=comparadas.filter(m=>m.real<=m.objetivo);
+  const principal=h('div',{class:'tile gris',role:'listitem'},cifraPrincipal({
+    etiqueta:'CPL frente a objetivo propio',valor:comparadas.length?num(cumplen.length):h('small',{class:'dim'},'Sin comparación acreditada'),
+    unidad:comparadas.length?`de ${num(comparadas.length)} cuentas comparables`:null,estado:'gris',
+    comparacion:`${comparadas.length} de ${filas.length} cuentas con objetivo vigente y semana comparable`,
+  }),h('span',{class:'tx'},'Los CPL y objetivos registrados siguen en la tabla; un techo anterior no ratifica cumplimiento.'));
   const t = [principal];
   t.push(tile({
-    icono: 'fire', etiqueta: 'Clientes críticos', valor: C.criticos.length, unidad: `de ${filas.length}`,
-    estado: C.criticos.length ? 'rojo' : 'verde',   // P6: crítico = rojo, como En rojo
-    comparacion: { texto: `${fmt.num(C.atencion.length)} más a vigilar · gravedad del cliente, la de toda la app` },
+    icono: 'fire', etiqueta: 'Clientes críticos', valor: observado4.criticos, unidad: observado4.gravedadConDato?`en ${observado4.gravedadConDato} de ${filas.length} cuentas con gravedad`:null,
+    estado: observado4.criticos>0 ? 'rojo' : 'gris',
+    comparacion: { texto: observado4.atencion===null?'Gravedad sin dato; no acredita ausencia de problemas':`${fmt.num(observado4.atencion)} más a vigilar · ${observado4.gravedadConDato} de ${filas.length} cuentas con gravedad, la de toda la app` },
     medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => irAPestana(zona, 'cuentas', { gravedad: 'critico' }),
   }));
   t.push(tile({
-    icono: 'plug', etiqueta: 'En el CRM', valor: C.pctCrm === null ? null : pct(C.pctCrm),
-    estado: C.pctCrm === null ? 'gris' : semaforo(C.pctCrm, { verde: 100, ambar: 90 }),
-    comparacion: C.pctCrm === null ? { texto: 'Sin dato · ninguna cuenta con GoHighLevel y leads' } : { texto: `${num(C.sumGhl)} de ${num(C.sumMeta)} · ${C.conGhl.length} cuentas` },
-    medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => irAPestana(zona, 'despacho', { fuga: true }),
+    icono: 'plug', etiqueta: 'Meta y CRM · 7 días', valor: !C.comparacionRecuentos ? null : 'Recuentos',
+    estado: 'gris',
+    comparacion: !C.comparacionRecuentos ? { texto: 'Sin dato · ninguna cuenta con GoHighLevel y leads' } : { texto: `${num(C.conGhl.reduce((s, c) => s + (c.despacho.leads_ghl_7d || 0), 0))} contactos CRM · ${num(C.sumMeta)} contador Meta · ${C.conGhl.length} cuentas; sin unión por identidad` },
+    medible: 'hoy', ir: 'Ver cuáles', alPulsar: () => irAPestana(zona, 'despacho'),
   }));
-  if (C.pctCrm === null) t.at(-1).setAttribute('aria-label', 'Leads que llegan al CRM: sin dato. Ver cuáles');
-  // Leads y gasto del periodo de arriba (serie diaria de Meta); sin periodo, la ventana fija de 7 días de siempre.
-  const P = PERIODO, ini = d.ventanas?.serie?.[0];
-  const hastaDato = d.datos_hasta;
-  const SP = P ? sumaSerie(filas, P.desde, P.hasta > hastaDato ? hastaDato : P.hasta, ini) : null;
-  const SC = P?.comp ? sumaSerie(filas, P.comp.desde, P.comp.hasta, ini) : null;
+  if (!C.comparacionRecuentos) t.at(-1).setAttribute('aria-label', 'Comparación de recuentos Meta y CRM: sin dato. Ver cuáles');
+  // Contador de la copia; no sustituir falta de serie por totales legacy.
+  const P=PERIODO,w=P?[P.desde,P.hasta]:d.ventanas?.['7d'],prev=P?.comp?[P.comp.desde,P.comp.hasta]:P?null:d.ventanas?.['7d_prev'];
+  const SP=sumaSerie(filas,w?.[0],w?.[1],null,ctx.hoy||hoyMadrid(),d.datos_hasta),SC=prev?sumaSerie(filas,prev[0],prev[1],null,ctx.hoy||hoyMadrid(),d.datos_hasta):null;
+  const delta=compararSeriesPaid549(SP,SC),coverage=`${SP.dias_observados} de ${SP.dias_esperados??'—'} días-cuenta con contador observado; muestra no exhaustiva`;
   t.push(tile({
-    icono: 'users', etiqueta: P ? `Leads · ${P.nombre.toLowerCase()}` : 'Leads · 7 días', valor: num(SP ? SP.leads : C.leads7),
-    unidad: verDinero ? `· ${eur(SP ? SP.gasto : C.gasto7)}` : null,
-    comparacion: SP ? (SC && SC.completo ? { delta: variacion(SP.leads, SC.leads), pct: true, texto: P.comp.texto } : { texto: SC ? `sin dato antes del ${fDiaRO(ini)} para comparar` : 'sin comparar' })
-      : { delta: variacion(C.leads7, C.leads7p), pct: true, texto: 'frente a la semana anterior' },
-    contexto: [SP && !SP.completo ? `Solo desde el ${fDiaRO(ini)} (no hay serie antes)` : null,
-      C.tiendas.length ? `De Meta, sin ${C.tiendas.map(c => c.nombre).join(', ')} (tienda online)` : (verDinero ? 'Gasto de todas las cuentas, en hora de Madrid' : null)].filter(Boolean).join(' · ') || null,
-    medible: 'hoy',
+    icono:'users',etiqueta:P?`Contador Meta · ${P.nombre.toLowerCase()}`:'Contador Meta · 7 días',valor:SP.leads===null?null:SP.completo?num(SP.leads):`≥${num(SP.leads)}`,
+    unidad:verDinero&&SP.gasto!==null?`· ${SP.gastoCompleto?num(SP.gasto,2):'≥'+minimoGastoPaid554(SP.gasto)} ${SP.moneda}`:null,estado:'gris',
+    comparacion:delta===null?{texto:'Sin comparación acreditada'}:{delta,pct:true,texto:P?.comp?.texto||'frente a la semana anterior'},
+    contexto:`${coverage}. Contador Meta: no contactos únicos ni cualificación.`,medible:'copia',
   }));
-  const secCifras = h('section', { class: 'pila', style: { gap: S[2] }, 'aria-label': 'Cifras del día' },
-    rejillaTarjetas(t.map(x => { x.setAttribute('role', 'listitem'); return x; })),
-    h('p', { class: 'sub', style: { margin: '0' } }, P ? `La tarjeta de leads y gasto sigue el periodo de arriba (${P.rango}, serie diaria de Meta hasta el ${fDiaRO(d.datos_hasta)}). Lo que se juzga va en ventana fija: crítico, techo y CRM a 7 días, coste por cita a 14 días y Google Ads de septiembre.`
-      : 'Ventanas fijas: leads y gasto de los últimos 7 días frente a los 7 anteriores, coste por cita a 14 días y Google Ads de septiembre.'));
+  const secCifras=h('section',{class:'pila',style:{gap:S[2]},'aria-label':'Cifras del día'},
+    rejillaTarjetas(t.map(x=>{x.setAttribute('role','listitem');return x;})),
+    h('p',{class:'sub',style:{margin:'0'},title:`Tarjeta: ${w?.join(' → ')||'ventana sin confirmar'}. Corte original de la copia: ${d.datos_hasta||'sin fecha'}. Cobertura de observaciones no acredita exhaustividad del proveedor. CPL sólo con objetivo propio vigente y medición compatible; coste por cita histórico sin cohorte no se juzga.`},`Tarjeta de contador: ${P?.rango||'7 días fijos'}. Matriz: 7 días fijos.`));
   secCifras.firstChild.setAttribute('role', 'list');
   ctxN.push(secCifras);
   const avisoObjetivo = !resumenNivel && C.conObjetivo.length === 0 && nAct
-    ? `Ningún cliente tiene cargado su objetivo de coste por cita ni de coste por lead. Hasta que el account lo cargue en el alta, se juzga con el techo general de ${techo} € por lead y con la red de seguridad de ${d.parametros.alarma_cita} € por cita; cada tarjeta de cliente lleva el aviso «objetivo sin cargar».` : null;
+    ? `Ningún cliente tiene cargado su objetivo de coste por cita ni de coste por lead. Hasta que el account lo cargue en el alta, el generador anterior aplica como referencia (no objetivo acordado) el techo general de ${techo} € por lead y con la red de seguridad de ${d.parametros.alarma_cita} € por cita; cada tarjeta de cliente lleva el aviso «objetivo sin cargar».` : null;
 
   // ---- 3 · pestañas (lo de cada día primero; Valeria y la paridad, abajo del todo) ----
   const pest = [
-    { id: 'cuentas', texto: 'Cuentas', icono: 'res', cuenta: C.criticos.length, cuentaEstado: 'rojo' },   // críticos = gravedad del cliente
+    { id: 'cuentas', texto: 'Cuentas', icono: 'res', cuenta: observado4.criticos, cuentaEstado: observado4.criticos>0?'rojo':'gris' },   // críticos = gravedad del cliente
     ...(K.jefe || ctx.persona.puestos.includes('jefa_publicidad') ? [{ id: 'equipo', texto: 'Por trafficker', icono: 'eq' }] : []),
-    { id: 'creatividades', texto: 'Creatividades', icono: 'spark', cuenta: C.cansadas + C.rechazados, cuentaEstado: 'rojo' },
+    { id: 'creatividades', texto: 'Creatividades', icono: 'spark', cuenta: observado4.senales, cuentaEstado: 'gris' },
     { id: 'despacho', texto: 'El despacho', icono: 'phone', cuenta: filas.filter(c => c.cuello?.includes('seguimiento')).length, cuentaEstado: 'rojo' },
     { id: 'google', texto: 'Google Ads', icono: 'globe' },
     ...(K.jefe ? [{ id: 'torre', texto: 'Paridad con la Torre', icono: 'check' }] : []),
@@ -433,10 +486,10 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
     h('div', { class: 'cuerpo pila', style: { gap: S[3] } },
       avisoObjetivo ? avisoParcial(avisoObjetivo, { titulo: 'Objetivo sin cargar.' }) : null,
       h('p', { class: 'sub', style: { margin: '0' } }, 'Crítico, Atención y Bien son la gravedad del cliente: la misma en toda la app (menú, Mi día, En rojo y ficha). Un problema de publicidad cuenta en ella como «atención».'),
-      h('p', { class: 'sub', style: { margin: '0' } }, `«Publicidad urgente» si: el lead cuesta 1,5 veces el máximo, 7 días sin leads gastando, el coste sube un 50 % o más, leads parados o la cuenta sin pagar. El techo cuenta solo cuentas con 3 leads o más${C.tiendas.length ? ' y sin tiendas online' : ''}. «Leads que llegan al CRM» son los contactos nuevos de la subcuenta en 7 días, la misma cifra que Salud del CRM.`),
+      h('p', { class: 'sub', style: { margin: '0' } }, 'Los motivos anteriores se conservan como señales por contrastar, sin acreditar urgencia actual. El CPL sólo se evalúa con objetivo propio vigente, muestra fiable y semana cerrada comparable. Meta y CRM son recuentos independientes; no prueban conversión ni cualificación.'),
       inds.length ? h('div', { class: 'rejilla' }, inds.map(i => fichaCatalogo(i, {
-        valor: i.id.includes('en_objetivo') ? null : i.id.includes('leads_que_llegan') ? (C.pctCrm ?? null) : i.id.includes('cansada') ? C.cansadas : i.id.includes('rojo_por') ? null : (C.juzg.length ? `${C.enTecho.length}/${C.juzg.length}` : null),
-        unidad: i.id.includes('leads_que_llegan') ? '%' : null,
+        valor: i.id.includes('en_objetivo') ? null : i.id.includes('leads_que_llegan') ? null : i.id.includes('cansada') ? null : i.id.includes('rojo_por') ? null : (C.juzg.length ? `${C.enTecho.length}/${C.juzg.length}` : null),
+        unidad: null,
       }))) : null)));
   const fase2 = (ctx.indicadores() || []).filter(i => i.modulo === 'captacion');
   const pie = pieFase2(fase2);
@@ -444,12 +497,13 @@ function pintarCuerpo(zona, ctx, d, filas, K, resumenNivel, alcance) {
   // franja de cifras (filtran la lista) · «Sin apuntar hoy» = cuentas con pauta sin bitácora de hoy
   const sinHoy = filas.filter(c => c.meta_activa && !hoyBit(ctx, d, c.cliente_id)).length;
   const franja = !resumenNivel ? franjaCifras([
-    { etiqueta: 'Clientes críticos', valor: C.criticos.length, estado: C.criticos.length ? 'rojo' : '', alPulsar: () => irAPestana(zona, 'cuentas', { gravedad: 'critico' }) },
+    { etiqueta: 'Clientes críticos', valor: observado4.criticos??'sin dato', estado: observado4.criticos>0?'rojo':'gris', titulo:`Gravedad disponible en ${observado4.gravedadConDato} de ${filas.length} cuentas; no acredita ausencia de problemas en las demás.`, alPulsar: () => irAPestana(zona, 'cuentas', { gravedad: 'critico' }) },
     { etiqueta: 'Sin apuntar hoy', valor: sinHoy, estado: sinHoy ? 'rojo' : '', titulo: 'Cuentas con pauta sin «qué cambio hoy» apuntado', alPulsar: () => irAPestana(zona, 'cuentas', { sinHoy: true }) },
-    { etiqueta: 'Creatividades cansadas', valor: C.cansadas + C.rechazados, estado: C.cansadas + C.rechazados ? 'rojo' : '', alPulsar: () => irAPestana(zona, 'creatividades') },
-    { etiqueta: 'En el CRM', valor: C.pctCrm === null ? 'sin dato' : pct(C.pctCrm), alPulsar: () => irAPestana(zona, 'despacho', { fuga: true }) },
+    { etiqueta: 'Anuncios señalados', valor: observado4.senales??'sin dato', estado:'gris', titulo:`Anuncios con señales en muestras de ${observado4.creativosConDato} de ${filas.length} cuentas; cobertura parcial, no inventario ni fatiga confirmada.`, alPulsar: () => irAPestana(zona, 'creatividades') },
+    { etiqueta: 'Meta / CRM · recuentos', valor: !C.comparacionRecuentos ? 'sin dato' : 'ver', alPulsar: () => irAPestana(zona, 'despacho') },
   ], { etiqueta: 'Cifras del día (filtran la lista)' }) : null;
-  zona.append(pantallaAncha({ id: 'captacion', filtros: franjaEnLinea(franja), lista: caja, contexto: ctxN, tituloContexto: 'Lo primero hoy, cifras y cómo se mide' }));
+  if(franja)ctxN.unshift(franjaEnLinea(franja));
+  zona.append(pantallaAncha({ id: 'captacion', lista: caja, contexto: ctxN, tituloContexto: 'Resumen, señales y cómo se mide' }));
 }
 
 /** Botones de un caso de «Lo primero hoy»: uno principal («Abrir tarjeta») y el resto en el menú «⋯»
@@ -459,7 +513,8 @@ function botonesCaso(ctx, c, d, m) {
   const items = [];
   if (c.cuenta_meta?.enlace && m.clase_id === 'paid') items.push({ texto: 'Abrir en Meta', icono: 'ext', alPulsar: () => window.open(c.cuenta_meta.enlace, '_blank', 'noopener') });
   if (c.ghl?.enlace && m.clase_id !== 'paid') items.push({ texto: 'Abrir en GoHighLevel', icono: 'ext', alPulsar: () => window.open(c.ghl.enlace, '_blank', 'noopener') });
-  items.push({ texto: `Tarea al CRM (${nombre(d, crmDe(c))})`, icono: 'check', alPulsar: () => {
+  if (crmDe(c)) items.push({ texto: `Tarea al CRM (${nombre(d, crmDe(c))})`, icono: 'check', alPulsar: () => {
+    if ((ctx.vigente && !ctx.vigente()) || !crmDe(c)) return;
     const b = botonTarea(ctx, c, d, crmDe(c), `Tarea al CRM (${nombre(d, crmDe(c))})`, `${c.nombre}: ${textoMot(m)}`);
     hueco.replaceChildren(b);
     b.querySelector('button')?.click();           // abre la pregunta «¿Crear tarea…?» con Sí / No
@@ -509,6 +564,12 @@ function pCuentas(el, ctx, d, filas, C, K) {
     alCambiar: () => pintar(),
   });
   const caja = h('div');
+  const detalleCuenta243=h('section',{'aria-label':'Detalle de la cuenta Paid',tabindex:-1,style:{scrollMarginTop:'90px'}});
+  const cerrarDetalle415=()=>{detalleCuenta243._cerrar243?.();detalleCuenta243.replaceChildren();};
+  // Los controles de tablaDensa repintan dentro de caja, sin llamar pintar().
+  caja.addEventListener('input',cerrarDetalle415);
+  caja.addEventListener('change',cerrarDetalle415);
+  caja.addEventListener('click',e=>{if(e.target?.closest?.('.tabla-ctl,.tabla-filtros,.tabla-mas,thead'))cerrarDetalle415();});
   const techo = d.parametros.techo_cpl;
   // Móvil (< 641 px): los filtros (chips y desplegables de la tabla) van en un plegable de una fila «Filtros (n activos)».
   const movil = typeof matchMedia === 'function' && matchMedia('(max-width: 640px)').matches;
@@ -520,30 +581,52 @@ function pCuentas(el, ctx, d, filas, C, K) {
     resumen.textContent = n ? `Filtros (${n} ${n === 1 ? 'activo' : 'activos'})` : 'Filtros';
   };
   const pintar = () => {
+    detalleCuenta243._cerrar243?.();detalleCuenta243.replaceChildren();
     const g = chipsG.valor(), cu = chipsC.valor(), p = chipsP.valor();
     let base = filas.filter(c => (!g || (c.gravedad || 'sin') === g) && (!cu.length || cu.every(k => c.cuello?.includes(k))) && (!p || c.plataformas?.includes(p)));
     if (f?.aviso === 'objetivo') base = base.filter(c => c.meta_activa && !c.objetivo?.cargado);
     if (f?.sinHoy) base = base.filter(c => c.meta_activa && !hoyBit(ctx, d, c.cliente_id));
     const filasT = base.map(c => ({
-      ...c, grav: gc(c).o * 10 + GRAV[c.severidad].o, pub: GRAV[c.severidad].o, motivo: (c.motivos || [])[0] ? textoMot(c.motivos[0]) : ((c.avisos || []).find(a => a.clase_id === 'integracion') ? textoMot(c.avisos.find(a => a.clase_id === 'integracion')) : ''),
+      ...c, panelEspecialista:{...panelPaid(c,d,ctx.hoy||hoyMadrid()),real:medirCplPaid(c,d,ctx.hoy||hoyMadrid()).real,referenciaAnterior:medirCplPaid(c,d,ctx.hoy||hoyMadrid()).referenciaAnterior}, grav: gc(c).o * 10 + GRAV[c.severidad].o, pub: GRAV[c.severidad].o, motivo: (c.motivos || [])[0] ? textoMot(c.motivos[0]) : ((c.avisos || []).find(a => a.clase_id === 'integracion') ? textoMot(c.avisos.find(a => a.clase_id === 'integracion')) : ''),
       trafficker: nombre(d, c.equipo?.trafficker) || 'sin trafficker', account: nombre(d, c.equipo?.account) || 'sin account',
-      leads7: c.leads?.['7d'] ?? null, gasto7: c.gasto?.['7d'] ?? null, cplref: c.cpl_resumen?.ref ?? null, cita: c.coste_por_cita?.coste_por_cita_14d ?? null,
+      leads7: cuentaMetaError508(c)?null:conteoMeta508(c.leads?.['7d']), deltaMeta508:deltaMeta508(c,d,ctx.hoy||hoyMadrid()), creativos508:creativosMatriz508(c,d,ctx.hoy||hoyMadrid()), gasto7: c.gasto?.['7d'] ?? null, cplref: c.cpl_resumen?.ref ?? null, cita: c.coste_por_cita?.coste_por_cita_14d ?? null,
     }));
     const soloUnTrafficker = new Set(filasT.map(c => c.trafficker)).size <= 1;
     caja.replaceChildren(tablaDensa({
-      filas: filasT, orden: { clave: 'grav', dir: 'asc' }, porPagina: 12,
+      filas: filasT, orden: { clave: 'grav', dir: 'asc' }, porPagina: 12, apilable:true,
       buscar: { campos: ['nombre', 'trafficker', 'account', 'motivo'], placeholder: 'Buscar cliente, trafficker o motivo' },
       filtros: [new Set(filasT.map(c => c.trafficker)).size > 1 ? { clave: 'trafficker', titulo: 'Trafficker' } : null, { clave: 'account', titulo: 'Account' }].filter(Boolean),
       columnas: [
-        { clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c), c.nombre, c.nuevo ? chipEstado('azul', 'nuevo') : null, esTienda(c) ? h('span', { class: 'chip gris sin-punto', title: NOTA_TIENDA }, 'tienda online') : null) },
-        !(ctx.nivel === 'resumen') ? { clave: 'hoy', titulo: 'Qué cambió hoy', ordenable: false, celda: c => celdaHoy(ctx, d, c) } : null,
-        { clave: 'grav', titulo: 'Gravedad', celda: c => h('span', { style: { display: 'grid', gap: S[1], justifyItems: 'start' } }, chipCli(c), chipPub(c)) },
-        { clave: 'motivo', titulo: 'Por qué', ordenable: false, celda: c => c.motivo ? h('span', { style: { display: 'grid', gap: S[1], minWidth: '240px' } }, h('span', {}, c.motivo),
-          h('span', { class: 'fila', style: { gap: S[1] } }, (c.cuello || []).map(k => chipCuello(k)))) : h('span', { class: 'sub' }, c.meta_activa ? 'Publicidad sin motivos' : 'Sin pauta activa') },
-        { clave: 'trafficker', titulo: 'Trafficker', celda: c => c.equipo?.trafficker ? h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(c.trafficker)), c.trafficker) : chipEstado('ambar', 'sin trafficker') },
-        { clave: 'leads7', titulo: 'Leads · gasto 7 d', num: true, celda: c => c.leads7 === null ? '—' : h('span', { style: { display: 'inline-grid', justifyItems: 'end', gap: S[1] } }, h('span', { style: NOWRAP, title: esTienda(c) ? 'Conversiones del píxel (tienda online)' : null }, num(c.leads7), ' ', deltaMini(c.leads?.['7d'], c.leads?.['7d_prev'])), h('span', { class: 'sub', style: NOWRAP }, esTienda(c) ? 'conversiones' : c.dinero ? eur(c.gasto7) : 'gasto no visible')) },
-        { clave: 'cplref', titulo: 'Coste por lead', num: true, celda: c => celdaCpl(c, techo) },
-        { clave: 'cita', titulo: 'Por cita 14 d', num: true, celda: c => celdaCita(c, d) },
+        { clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c), h('span',{class:'paid-nombre-401'},c.nombre), esTienda(c) ? h('span', { class: 'chip gris sin-punto', title: NOTA_TIENDA }, 'tienda online') : null) },
+        { clave: 'grav', titulo: 'Estado', tituloCompleto:'Semáforo del cliente', celda: c => h('span', { title: `Gravedad del cliente; Paid: ${GRAV[c.severidad]?.t || 'Sin dato'}. Consulta el detalle para la evidencia de publicidad.` }, chipCli(c)) },
+        { clave: 'trafficker', titulo: 'Traf.', tituloCompleto:'Trafficker responsable', celda: c => c.equipo?.trafficker ? h('span', {title:c.trafficker}, c.trafficker) : chipEstado('ambar', 'sin trafficker') },
+        { clave: 'leads7', titulo: 'Meta 7d', tituloCompleto:'Contador de resultados Meta · 7 días; no acredita cualificación', num: true, celda: c => c.panelEspecialista.cuentaError ? '—' : c.leads7 === null ? '—' : h('span', { style: NOWRAP, title:'Contador Meta de siete días; tipo de evento y cualificación en el detalle.' }, num(c.leads7), c.deltaMeta508===null?null:h('span',{class:'sub',title:'Variación de eventos Meta del mismo tipo, dos ventanas de siete días consecutivas acreditadas; no cualificación ni conversión CRM.'},` ${c.deltaMeta508>0?'▲':c.deltaMeta508<0?'▼':'='} ${num(Math.abs(c.deltaMeta508))} %`)) },
+        { clave: 'gasto7', titulo:'Gasto', tituloCompleto:'Gasto Meta · 7 días, moneda de la cuenta', num:true, celda:c=>{
+          if(!c.dinero)return candado('Reservado');
+          const v=c.gasto7,moneda=c.cuenta_meta?.moneda;
+          if(c.panelEspecialista.cuentaError||typeof v!=='number'||!Number.isFinite(v)||v<0)return '—';
+          return h('span',{style:NOWRAP,title:`Gasto Meta · ${d.ventanas?.['7d']?.join(' a ')||'ventana de siete días'} · moneda ${moneda||'por confirmar'}`},moneda==='EUR'?eur(v):`${num(v,2)}${typeof moneda==='string'&&/^[A-Z]{3}$/.test(moneda)?' '+moneda:''}`);
+        } },
+        { clave: 'cplref', titulo: 'CPL', tituloCompleto:'Coste por lead · objetivo y evidencia en el detalle', num:true, celda:c=>{
+          if(!c.dinero)return candado('Reservado');
+          const p=c.panelEspecialista,m=c._cplMedicion;
+          const valor=p.real===null?(p.referenciaAnterior==null?'—':`${eur(p.referenciaAnterior)}†`):eur(p.real);
+          const objetivo=p.objetivo===null?'—':`${eur(p.objetivo)}${m?.objetivoVigente?'':'‡'}`;
+          return h('span',{class:`chip ${m?.evaluable?m.estado:'gris'} sin-punto`,title:`${m?.nota||'CPL sin comparación acreditada'}. Objetivo: ${objetivo}. Datos hasta ${p.hasta||'sin fecha'}. † Referencia anterior: unidad pendiente, no CPL real. ‡ Objetivo pendiente de ratificar. — Sin dato.`},`${valor}`);
+        } },
+        { clave:'cpm',titulo:'CPM',tituloCompleto:'Coste por mil impresiones · referencia de cuenta en copia local',num:true,ordenable:false,celda:c=>{
+          if(!c.dinero)return candado('Reservado');
+          const r=referenciaCpm417(c,d);
+          return r?h('span',{class:'chip gris sin-punto',title:`CPM de cuenta en copia local: ${r.desde} a ${r.hasta}. Lectura ${r.fecha_lectura}; zona y cobertura originales pendientes. § Referencia histórica, no medición actual ni cumplimiento.`},`${eur(r.coste_por_mil)}§`):h('span',{title:'Sin referencia CPM válida para esta cuenta y ventana.'},'—');
+        } },
+        { clave:'objetivoCpl',titulo:'Obj. CPL',tituloCompleto:'Objetivo propio de coste por lead; vigencia y evidencia en el detalle',num:true,ordenable:false,celda:c=>{
+          if(!c.dinero)return candado('Reservado');
+          const m=c._cplMedicion,v=m?.objetivo;
+          if(typeof v!=='number'||!Number.isFinite(v)||v<=0)return h('span',{title:'Sin objetivo propio válido; no se aplica un objetivo por defecto.'},'—');
+          return h('span',{class:'chip gris sin-punto',title:m.objetivoVigente?'Objetivo propio con vigencia acreditada; no acredita cumplimiento del CPL.':'‡ Objetivo registrado pendiente de ratificar vigencia; no acredita cumplimiento del CPL.'},`${eur(v)}${m.objetivoVigente?'':'‡'}`);
+        } },
+        { clave:'creativos',titulo:'Anun.',tituloCompleto:'Anuncios con señales en muestra parcial; cada anuncio se cuenta una vez, no cantidad de señales',ordenable:false,celda:c=>h('span',{title:`Anuncios con señales observadas en la muestra del generador; cada anuncio se cuenta una vez, no la cantidad de señales; cobertura parcial; no confirma fatiga ni inventario completo. Lectura de anuncios: ${lecturaAnunciosPaid4(d,ctx.hoy||hoyMadrid())||'sin fecha válida'}. Antigüedad del creativo: sin dato.`},c.creativos508===null?'—':num(c.creativos508.valor)) },
+        { clave:'pendiente',titulo:'Ver',tituloCompleto:'Detalle de cuenta y registro de trabajo',ordenable:false,celda:c=>celdaRevisionCompacta243(ctx,d,c,detalleCuenta243) },
       ].filter(Boolean).filter(col => !(col.clave === 'trafficker' && soloUnTrafficker)),
       alPulsar: c => ctx.navegar(`captacion/${c.cliente_id}`),
       etiquetaFila: c => `${c.nombre}: cliente ${gc(c).t.toLowerCase()}, ${GRAV[c.severidad].t.toLowerCase()}. ${c.motivo}. Abrir tarjeta`,
@@ -560,20 +643,95 @@ function pCuentas(el, ctx, d, filas, C, K) {
   const filtros = [chipsG, h('div', { class: 'fila', style: { gap: S[4] } }, chipsC, chipsP)];
   el.append(h('div', { class: 'panel' },
     h('div', { class: 'pila', style: { gap: S[2], padding: `${S[2]} var(--relleno) 0` } },
+      h('small',{class:'sub',title:'Esta matriz conserva su ventana de siete días de la copia; el selector general de periodo no cambia sus cifras. CPL y CPM pueden ser referencias con otra cobertura: consulta el detalle.'},'Matriz Meta · 7 días de la copia · periodo fijo'),
       // Ronda U: los filtros, en una línea plegada también en el ordenador (antes 3 filas de chips encima de la tabla)
       h('details', { class: 'que-es' },
         h('summary', { style: { display: 'flex', alignItems: 'center', gap: S[2], minHeight: '36px', fontWeight: '600' } }, icono('filtro', { clase: 's' }), resumen,
           h('span', { class: 'sub', style: { fontWeight: '400' } }, '· gravedad, dónde se rompe y plataforma')),
         h('div', { class: 'pila', style: { gap: S[2], marginTop: S[2] } }, ...filtros, movil ? hueSel : null)),
       f?.aviso === 'objetivo' ? avisoParcial('Solo las cuentas activas sin objetivo de coste por cita cargado. Vuelve a «Captación» para quitar el filtro.', { tipo: 'info' }) : null),
-    caja));
+    caja,detalleCuenta243,
+    h('p',{class:'sub',style:{padding:'10px 16px',margin:'0',fontSize:'12px'}},`Copia hasta ${fDiaRO(d.datos_hasta)} · Gasto: inversión Meta · CPL: coste por evento lead · CPM: coste por mil impresiones · Obj. CPL: objetivo propio · Anun.: anuncios con señales en muestra parcial · — sin dato · † referencia anterior, unidad pendiente · ‡ objetivo por confirmar · § CPM histórico, zona y cobertura pendientes. Creativos: señales por contrastar. Abre una fila para revisar fuentes y acciones.`),
+    h('style',{}, `@media(min-width:641px){[data-paid-cuentas-243] .tabla-densa table{table-layout:fixed;width:100%;min-width:900px}[data-paid-cuentas-243] table.densa th,[data-paid-cuentas-243] table.densa td{padding:5px 6px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}[data-paid-cuentas-243] table.densa th{white-space:normal;overflow-wrap:normal;word-break:normal}[data-paid-cuentas-243] table.densa th button{display:block;padding:0;white-space:normal;max-width:100%;min-width:0;font-size:inherit;letter-spacing:0;line-height:1.3;overflow-wrap:normal;word-break:normal}[data-paid-cuentas-243] table.densa th:first-child{width:18%}[data-paid-cuentas-243] table.densa th:last-child{width:10%}[data-paid-cuentas-243] .celda-cli{gap:4px;min-width:0;flex-wrap:wrap}[data-paid-cuentas-243] .paid-nombre-401{min-width:80px;flex:1;overflow-wrap:normal;word-break:normal}[data-paid-cuentas-243] table.densa td .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}[data-paid-cuentas-243] .tabla-ctl{padding:12px 16px;gap:10px}[data-paid-cuentas-243] .tabla-ctl input,[data-paid-cuentas-243] .tabla-ctl select{border-radius:10px;min-height:42px}[data-paid-cuentas-243] table.densa td{height:42px}}`)));
+  el.lastElementChild?.setAttribute('data-paid-cuentas-243','');
+}
+// Fecha de lectura del generador; no fecha de publicación ni antigüedad del creativo.
+function lecturaAnunciosPaid4(d,hoy) {
+  const stamp=d?.anuncios_generado||d?.fuentes?.find?.(f=>f.id==='anuncios')?.hora;
+  const dia=fechaPaid549(stamp),actual=fechaPaid549(hoy);
+  return dia&&actual&&dia<=actual?stamp:null;
+}
+//417 · nunca convierte un agregado legacy en medición actual ni en semáforo de rendimiento.
+function referenciaCpm417(c,d){
+  const r=c.coste_cpm_referencia_7d,w=d.ventanas?.['7d'];
+  if(!c.dinero||c.panelEspecialista?.cuentaError||c.cuenta_meta?.error||!r||r.version!=='417.1'||r.cliente_id!==c.cliente_id||r.moneda!=='EUR'||c.cuenta_meta?.moneda!=='EUR'||r.fuente!=='cache_legacy'||r.nivel!=='account_agregado_legacy'||r.estado!=='referencia_observada'||r.medicion_actual!==false||r.zona!==null||r.cobertura!=='presencia_original_no_acreditada'||!Array.isArray(w)||w.length!==2||r.desde!==w[0]||r.hasta!==w[1])return null;
+  const n=x=>typeof x==='number'&&Number.isFinite(x)&&x>=0;
+  if(!n(r.gasto_observado)||!Number.isSafeInteger(r.impresiones_observadas)||r.impresiones_observadas<=0||!n(r.coste_por_mil)||typeof r.fecha_lectura!=='string'||!/^\d{4}-\d{2}-\d{2}[T ]/.test(r.fecha_lectura)||typeof r.cuenta_id!=='string'||!/^[1-9][0-9]{0,29}$/.test(r.cuenta_id))return null;
+  const dia=x=>{if(typeof x!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(x))return null;const t=Date.parse(x+'T00:00:00Z');return Number.isFinite(t)&&new Date(t).toISOString().slice(0,10)===x?t:null;};
+  const desde=dia(r.desde),hasta=dia(r.hasta),m=/^(\d{4}-\d{2}-\d{2})[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,6})?)?(?:Z|([+-])(\d{2}):(\d{2}))?$/.exec(r.fecha_lectura);
+  if(desde===null||hasta===null||hasta-desde!==6*86400000||!m||dia(m[1])===null||dia(m[1])<=hasta||+m[2]>23||+m[3]>59||+(m[4]||0)>59||m[5]&&(+m[6]>14||+m[7]>59||+m[6]===14&&+m[7]!==0))return null;
+  const calculado=1000*r.gasto_observado/r.impresiones_observadas;
+  if(!Number.isFinite(calculado)||Math.abs(calculado-r.coste_por_mil)>Math.max(1,calculado)*1e-10)return null;
+  return r;
+}
+/** Ámbito del detalle Paid: no requiere mediciones Meta ni permiso de inversión. */
+function ambitoDetallePaid415(ctx,cid) {
+  try {
+    const ids=x=>typeof x==='string'&&/^[A-Za-z0-9_-]{1,100}$/.test(x);
+    if(ctx.vigente?.()===false||ctx.veModulo?.('captacion')!==true||!ids(cid))return null;
+    const ps=Array.isArray(ctx.datos?.personas)?ctx.datos.personas:[];
+    for(const p of [ctx.real,ctx.persona]) {
+      const xs=ps.filter(x=>x?.id===p?.id);
+      if(!ids(p?.id)||xs.length!==1||p.estado!=='activo'||p.activo===false||xs[0].estado!=='activo'||xs[0].activo===false||!Array.isArray(p.puestos)||!p.puestos.length||!p.puestos.every(ids)||new Set(p.puestos).size!==p.puestos.length||!Array.isArray(xs[0].puestos)||JSON.stringify([...p.puestos].sort())!==JSON.stringify([...xs[0].puestos].sort()))return null;
+    }
+    const cs=[ctx.clientes,ctx.clientesVisibles].map(xs=>Array.isArray(xs)?xs.filter(x=>x?.id===cid):[]);
+    if(cs.some(xs=>xs.length!==1||xs[0].activo_confirmado!==true||xs[0].detalle===false)||ctx.ver?.({tipo:'cliente_detalle',cliente_id:cid})?.ok!==true)return null;
+    return JSON.stringify([ctx.real,ctx.persona,ps,ctx.clientes,ctx.clientesVisibles,ctx.nivel,ctx.soloLectura,ctx.ver({tipo:'cliente_detalle',cliente_id:cid}),ctx.ver({tipo:'inversion',cliente_id:cid}),ctx.veModulo('captacion')]);
+  } catch {return null;}
+}
+/** Detalle bajo demanda: el botón conserva teclado y evita la navegación de la fila. */
+function celdaRevisionCompacta243(ctx,d,c,destino=null) {
+  const p=c.panelEspecialista;
+  const firma415=ctx.servidor===true?ambitoDetallePaid415(ctx,c.cliente_id):null;
+  const vigente415=()=>ctx.vigente?.()!==false&&(ctx.servidor!==true||(firma415&&ambitoDetallePaid415(ctx,c.cliente_id)===firma415));
+  const guard415=e=>{if(vigente415())return true;destino?._cerrar243?.();destino?.replaceChildren();detalle.replaceChildren();detalle.hidden=true;boton.setAttribute('aria-expanded','false');e?.preventDefault?.();e?.stopPropagation?.();return false;};
+  const detalle=h('div',{hidden:true,style:{marginTop:'6px',minWidth:'0',textAlign:'left'},on:{click:e=>e.stopPropagation(),keydown:e=>e.stopPropagation()}});
+  const boton=h('button',{type:'button',class:'bt mini','aria-expanded':'false',on:{click:e=>{
+    if(!guard415(e))return;
+    e.stopPropagation();const abierto=detalle.hidden;detalle.hidden=!abierto;boton.setAttribute('aria-expanded',String(abierto));
+    if(abierto&&!detalle.childNodes.length)detalle.append(
+      h('b',{},'Por qué'),h('p',{},c.motivo||'Sin motivo registrado'),
+      h('span',{class:'fila'},(c.cuello||[]).map(k=>chipCuello(k))),
+      h('p',{},p.accion),
+      c.dinero?h('p',{},`CPL: datos hasta ${p.hasta||'sin fecha'}${p.datoVigente?'':' · lectura anterior'}. Objetivo ${p.objetivo===null?'sin confirmar':`${eur(p.objetivo)} · ${c.objetivo?.cuando||'fecha por confirmar'} · ${c._cplMedicion?.objetivoVigente?'vigente acreditado':'pendiente de ratificar'}`}`):null,
+      (r=>r?h('p',{},`CPM histórico: ${eur(r.coste_por_mil)} · ${num(r.impresiones_observadas)} impresiones · gasto ${eur(r.gasto_observado)} · ${r.desde} a ${r.hasta}. Lectura ${r.fecha_lectura}; zona y cobertura pendientes. No medición actual.`):null)(referenciaCpm417(c,d)),
+      h('p',{},`Días sin resultados Meta: ${p.racha==null||cuentaMetaError508(c)?'sin dato':`${p.racha.completa?'':'≥ '}${p.racha.dias}`} · hasta ${p.racha?.hasta||'sin fecha'}. Contador de la copia; no acredita ausencia de leads.`),
+      h('p',{},`Lectura de anuncios: ${lecturaAnunciosPaid4(d,ctx.hoy||hoyMadrid())||'sin fecha válida'}. Antigüedad del creativo: sin dato. Muestra parcial del generador; contrastar, no certifica fatiga.`),
+      h('p',{},'CPC y CTR de cuenta: sin fuente compatible en esta matriz. CPC: coste por clic; CTR: porcentaje de clics. No se reconstruyen a partir de anuncios ni de otra cuenta.'),
+      h('p',{},'Leads recibidos; cualificación no instrumentada aquí.'),
+      ctx.nivel==='resumen'?null:celdaHoy(ctx,d,c),
+      h('a',{href:`#/captacion/${c.cliente_id}`},'Abrir cuenta y fuentes'));
+    if(destino){
+      if(abierto){
+        destino._cerrar243?.();detalle.hidden=false;boton.setAttribute('aria-expanded','true');
+        const cerrar=()=>{detalle.hidden=true;boton.setAttribute('aria-expanded','false');destino.replaceChildren();destino._cerrar243=null;};
+        destino._cerrar243=cerrar;
+        destino.replaceChildren(h('div',{class:'pila',style:{padding:'16px',borderTop:'1px solid var(--line)',gap:'12px'}},h('div',{class:'fila',style:{justifyContent:'space-between'}},h('h3',{},c.nombre),h('button',{type:'button',class:'bt mini',on:{click:()=>{cerrar();boton.focus?.();}}},'Cerrar detalle')),detalle));
+        destino.focus?.({preventScroll:true});destino.scrollIntoView?.({block:'start',behavior:'smooth'});
+      }else{destino._cerrar243?.();}
+    }
+  }}},ctx.nivel!=='resumen'&&c.meta_activa&&!ctx.soloLectura?'Ver':'Ver');
+  boton.setAttribute('title',p.accion);
+  detalle.addEventListener('click',e=>guard415(e),true);
+  detalle.addEventListener('keydown',e=>guard415(e),true);
+  return h('span',{class:'pila',style:{gap:'2px'}},boton,destino?null:detalle);
 }
 /** Celda «Qué cambió hoy»: lo apuntado hoy o el último apunte, y «Apuntar» (editor en la propia fila, sin abrir la tarjeta). */
 function celdaHoy(ctx, d, c) {
   const caja = h('span', { style: { display: 'grid', gap: S[1], minWidth: '200px', maxWidth: '280px' }, on: { click: e => e.stopPropagation(), keydown: e => e.stopPropagation() } });
   const pintar = () => {
     const l = d.bitacora?.get(c.cliente_id) || [];
-    const hoyA = l.find(a => ctx.fechas?.esHoy?.(diaDe(a)));
+    const hoyA = l.find(a => !a._recibo516 && diaDe(a) && ctx.fechas?.esHoy?.(diaDe(a)));
     const ult = hoyA || l[0];
     const texto = ult ? h('span', { class: hoyA ? null : 'sub', style: { whiteSpace: 'normal', overflowWrap: 'anywhere' } }, hoyA ? '✓ ' : '', ult.texto, h('span', { class: 'sub' }, ` · ${cuandoBit(ctx, ult)}`))
       : h('span', { class: 'sub' }, c.meta_activa ? 'Sin apuntar hoy' : 'Sin pauta');
@@ -583,7 +741,7 @@ function celdaHoy(ctx, d, c) {
       if (abrir && !ed.childNodes.length) ed.append(editorBitacora(ctx, d, c, { compacto: true, alHecho: pintar }));
       if (abrir) ed.querySelector('input')?.focus();
     } } }, icono('editar'), hoyA ? 'Añadir' : 'Apuntar') : null;
-    caja.replaceChildren(texto, b ? h('span', {}, b) : null, ed);
+    caja.replaceChildren(texto, ...(b ? [h('span', {}, b)] : []), ed);
   };
   pintar();
   return caja;
@@ -593,22 +751,21 @@ function deltaMini(a, b) {
   if (v === null) return null;
   return h('span', { class: 'sub', title: 'Frente a los 7 días anteriores' }, `${v > 0 ? '▲' : v < 0 ? '▼' : '='} ${num(Math.abs(v))} %`);
 }
-function celdaCpl(c, techo) {
+function celdaCpl(c, techo, d={}) {
   if (!c.dinero) return candado('—');
   const r = c.cpl_resumen || {};
   if (r.ref === null || r.ref === undefined) return h('span', { class: 'sub', title: c.muestra?.nota || '' }, c.meta_activa ? 'sin muestra' : '—');
-  if (esTienda(c)) return h('span', { style: { display: 'inline-grid', justifyItems: 'end', gap: S[1] }, title: NOTA_TIENDA }, h('span', { style: NOWRAP }, eur(r.ref)), h('span', { class: 'sub' }, 'por conversión · sin techo'));
   // Color único de la app para el coste por lead (colorCifra); con objetivo propio cargado, contra su objetivo.
-  const obj = c.objetivo?.cpl_objetivo;
-  const e = obj ? semaforo(r.ref, { verde: obj, ambar: obj * 1.5, mejorSi: 'bajo' }) : colorCifra('coste_lead', r.ref);
-  return h('span', { style: { display: 'inline-grid', justifyItems: 'end', gap: S[1] } }, chipEstado(e, eur(r.ref)),
-    h('span', { class: 'sub' }, `${r.ref_base}${r.fiable ? '' : ' · poca muestra'}`));
+  const medicion=medirCplPaid(c,d,hoyMadrid());
+  const e=medicion.estado;
+  const valor=medicion.real??medicion.referenciaAnterior;
+  return h('span', { style: { display: 'inline-grid', justifyItems: 'end', gap: S[1] } }, valor===null?'Sin dato':chipEstado(e, eur(valor)),
+    h('span', { class: 'sub' }, `${medicion.real===null?'Referencia anterior · ':''}${r.ref_base||'ventana sin confirmar'} · ${medicion.nota}`));
 }
 function celdaCita(c, d) {
   if (!c.dinero) return candado('—');
-  const v = c.coste_por_cita?.coste_por_cita_14d;
-  if (v === null || v === undefined) return h('span', { class: 'sub', title: c.coste_por_cita?.nota || '' }, c.meta_activa ? (c.ghl?.conectado ? 'sin citas' : 'sin GHL') : '—');
-  return chipEstado(v > d.parametros.alarma_cita ? 'rojo' : v > d.parametros.arranque_cita ? 'ambar' : 'verde', eur(v));
+  const v=referenciaCita299(c.coste_por_cita);
+  return h('span',{title:'Gasto y citas sin unión por identidad: referencia anterior, no coste de captación ni cumplimiento.'},v===null?'Sin dato':chipEstado('gris',`${eur(v)} · ref.`));
 }
 
 // ------------------------------------------------------------------ pestaña · por trafficker (M8 · vista de Valeria)
@@ -630,36 +787,41 @@ function pEquipo(el, ctx, d, filas) {
     };
   }).sort((a, b) => b.rojos - a.rojos || b.activas - a.activas);
   const total = cifras(filas, d);
+  const observado648 = resumenEquipo648(filas, d);
 
-  el.append(tiles([
-    tile({ icono: 'eq', etiqueta: 'Traffickers con 5 o más cuentas en rojo', valor: filasT.filter(x => x.id !== '—' && x.rojos >= ambar + 1).length, unidad: `de ${filasT.filter(x => x.id !== '—').length}`,
-      estado: filasT.some(x => x.id !== '—' && x.rojos > ambar) ? 'rojo' : filasT.some(x => x.id !== '—' && x.rojos > verde) ? 'ambar' : 'verde',
-      contexto: `Verde ≤ ${verde} · ámbar ${verde + 1}-${ambar} · rojo ≥ ${ambar + 1} cuentas críticas por trafficker`, medible: 'hoy', frescura: fuenteDe(d, 'meta') }),
+  const cifrasEquipo416=tiles([
+    tile({ icono: 'eq', etiqueta: 'Traffickers con 5 o más cuentas en rojo', valor: observado648.gravedad ? filasT.filter(x => x.id !== '—' && x.rojos >= ambar + 1).length : null, unidad: `de ${filasT.filter(x => x.id !== '—').length}`,
+      estado: filasT.some(x => x.id !== '—' && x.rojos > ambar) ? 'rojo' : filasT.some(x => x.id !== '—' && x.rojos > verde) ? 'ambar' : 'gris',
+      contexto: `Señales observadas en ${observado648.gravedad} de ${filas.length} cuentas; referencia ámbar ${verde + 1}-${ambar} y rojo ≥ ${ambar + 1}. Cobertura no exhaustiva; cero no acredita ausencia de críticos.`, medible: 'medias', frescura: fuenteDe(d, 'meta') }),
     total.conDinero.length ? tile({ icono: 'cartera', etiqueta: 'Inversión gestionada · septiembre', valor: eur(total.gastoMesAnt), comparacion: { texto: `${eur(total.gasto7)} en los últimos 7 días` },
       contexto: 'Solo Meta. Google Ads va aparte (muestra manual) hasta la clave de Windsor.', medible: 'medias', medibleDetalle: 'Falta Google Ads y TikTok', frescura: fuenteDe(d, 'meta') }) : null,
-    tile({ icono: 'flag', etiqueta: 'Cuentas paradas sin saberlo', valor: total.paradas.length, unidad: `de ${total.activas.length} activas`,
-      estado: total.paradas.length ? 'rojo' : 'verde', contexto: 'Con pauta en la semana y sin gasto ayer o desde antes del último día con datos.', medible: 'hoy', frescura: fuenteDe(d, 'meta') }),
+    tile({ icono: 'flag', etiqueta: 'Señales de cuentas paradas', valor: observado648.paradas, unidad: `en ${observado648.paradasConDato} de ${total.activas.length} activas con dato`,
+      estado: observado648.paradas > 0 ? 'rojo' : 'gris', contexto: 'Gasto ayer cero o último gasto anterior al corte: señal guardada por contrastar. Cobertura no exhaustiva; no confirma campañas paradas.', medible: 'medias', frescura: fuenteDe(d, 'meta') }),
     tile({ icono: 'rocket', etiqueta: 'Arranques con ganador en el mes 1', valor: (() => { const n = filas.filter(c => c.nuevo && c.meta_activa); return n.length ? `${n.filter(c => c.anuncios?.ganadoras).length} de ${n.length}` : null; })(),
       estado: 'gris', contexto: 'En el arranque, 3 contactos o más a 45 € o menos.', medible: 'hoy', frescura: fuenteDe(d, 'anuncios') }),
-  ].filter(Boolean)));
+  ].filter(Boolean));
 
-  el.append(panel({ titulo: 'Cuentas en rojo por trafficker', icono: 'eq', sub: 'Pulsa una fila para ver sus cuentas. Responsable = tabla de asignaciones (no el «PM» escrito a mano de la Torre).' },
+  el.append(h('section', {'data-paid-equipo':'416',style:{minWidth:'0'}},
+    h('style',{},'[data-paid-equipo="416"] .tabla-scroll{overflow-x:auto;max-width:100%}[data-paid-equipo="416"] table.densa{table-layout:fixed;width:100%;min-width:940px}[data-paid-equipo="416"] table.densa th,[data-paid-equipo="416"] table.densa td{padding:5px 6px;font-size:13px;line-height:1.3;overflow-wrap:normal;word-break:normal}[data-paid-equipo="416"] table.densa th:first-child{width:180px}[data-paid-equipo="416"] table.densa th:nth-child(2){width:160px}[data-paid-equipo="416"] table.densa th{white-space:normal}[data-paid-equipo="416"] table.densa td{height:44px}[data-paid-equipo="416"] table.densa td:first-child>span{white-space:normal}'),
+    panel({ titulo: 'Cuentas por trafficker', icono: 'eq', sub: 'Pulsa una fila para ver sus cuentas. Referencia de coste anterior; no objetivo acordado.' },
     tablaApilable({
       filas: filasT,
       columnas: [
         { clave: 'nombre', titulo: 'Trafficker', principal: true, celda: x => h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(x.nombre)), x.nombre) },
         // V2 (B-A3): la misma cartera con nombre que Mi día y Personas (carteras_publicidad)
         { clave: 'cuentas', titulo: 'Cartera', num: true, celda: x => (x.cp ? h('span', { style: { display: 'inline-grid', justifyItems: 'end' } }, `${x.cp.cartera} clientes${x.cp.apoyo ? ` + ${x.cp.apoyo} de apoyo` : ''}`, h('small', { class: 'sub' }, `${x.cp.con_meta} con Meta · ${x.cp.meta_encendida} encendidas`)) : `${x.activas} encendidas de ${x.cuentas}`) },
-        { clave: 'rojos', titulo: 'Críticos', num: true, celda: x => chipEstado(x.id === '—' ? 'gris' : x.rojos > ambar ? 'rojo' : x.rojos > verde ? 'ambar' : 'verde', `${x.rojos}${x.atencion ? ` · +${x.atencion} a vigilar` : ''}`) },
-        { clave: 'techo', titulo: `En el techo de ${d.parametros.techo_cpl} €`, num: true, celda: x => x.techoTxt },
+        { clave: 'rojos', titulo: 'Críticos', num: true, celda: x => chipEstado('gris',`${x.rojos}${x.atencion?` · +${x.atencion} a vigilar`:''}`) },
+        { clave: 'techo', titulo:'Ref. coste', num: true, celda: x => h('span',{title:`Referencia anterior ${d.parametros.techo_cpl} € · no objetivo: ${x.techoTxt}`},x.techoTxt) },
         { clave: 'gasto7', titulo: 'Gasto 7 d', num: true, celda: x => (x.gasto7 === null ? candado('—') : eur(x.gasto7)) },
         { clave: 'gastoMes', titulo: 'Septiembre', num: true, celda: x => (x.gastoMes === null ? candado('—') : eur(x.gastoMes)) },
-        { clave: 'cansadas', titulo: 'Anuncios', num: true, celda: x => `${x.cansadas} cansados · ${x.rechazados} rechazados` },
-        { clave: 'objetivos', titulo: 'Objetivo cargado', num: true },
+        { clave: 'cansadas', titulo: 'Señales / rechazos', num: true, celda: x => h('span',{title:`${x.cansadas} anuncios con señal de cansada · ${x.rechazados} rechazados`},`${x.cansadas} / ${x.rechazados}`) },
+        { clave: 'objetivos', titulo: 'Objetivos', num: true, celda:x=>h('span',{title:'Cuentas con objetivo cargado / activas; no acredita objetivo ratificado ni cumplimiento.'},x.objetivos) },
       ],
       alPulsar: x => { try { sessionStorage.setItem('captacion.filtro', JSON.stringify({ trafficker: x.id })); } catch { /* */ } ctx.navegar(`captacion/~trafficker/${x.id}`); },
       etiquetaFila: x => `${x.nombre}: ${fmt.plural(x.rojos, 'cuenta crítica', 'cuentas críticas')}. Ver sus cuentas`,
-    })));
+    }))));
+  el.append(plegablePaid411('Cifras y referencias por trafficker',cifrasEquipo416,
+    h('p',{class:'sub'},`Ref. coste: comparación anterior con ${d.parametros.techo_cpl} €; no objetivo acordado. Responsable: tabla de asignaciones, no el «PM» escrito a mano de la Torre. Señales / rechazos conserva los recuentos de anuncios; no confirma fatiga actual.`)));
 
   // comparativa por nicho
   const nichos = new Map();
@@ -669,18 +831,19 @@ function pEquipo(el, ctx, d, filas) {
     nichos.get(k).push(c);
   }
   const filasN = [...nichos.entries()].map(([k, cs]) => {
-    const g = cs.filter(c => c.dinero).reduce((s, c) => s + (c.gasto?.['7d'] || 0), 0), l = cs.reduce((s, c) => s + (c.leads?.['7d'] || 0), 0);
-    return { nicho: k, cuentas: cs.length, nombres: cs.map(c => c.nombre).join(', '), leads: l, cpl: cs.some(c => c.dinero) && l ? g / l : null, dinero: cs.some(c => c.dinero) };
-  }).sort((a, b) => b.leads - a.leads);
-  el.append(h('div', { class: 'dos' },
+    const resumen = resumenNichoPaid671(cs,d,ctx.hoy||hoyMadrid());
+    return { nicho: k, nombres: cs.map(c => c.nombre).join(', '), ...resumen };
+  }).sort((a, b) => (b.leads??-1) - (a.leads??-1));
+  el.append(plegablePaid411('Comparativa por nicho · 7 días',
     panel({ titulo: 'Comparativa por nicho · 7 días', icono: 'capas', sub: 'Solo cuentas con pauta activa. El nicho sale de la descripción del cliente.' },
       tablaApilable({ filas: filasN, columnas: [
         { clave: 'nicho', titulo: 'Nicho', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.nicho), h('small', { class: 'sub' }, x.nombres)) },
         { clave: 'cuentas', titulo: 'Cuentas', num: true },
-        { clave: 'leads', titulo: 'Leads', num: true, celda: x => num(x.leads) },
-        { clave: 'cpl', titulo: 'Coste por lead', num: true, celda: x => (x.dinero ? eur(x.cpl) : candado('—')) },
-      ] })),
-    pAuditoria(ctx, d, filas)));
+        { clave: 'leads', titulo: 'Leads obs.', num: true, celda: x => x.leads===null?'—':num(x.leads) },
+        { clave: 'conDato', titulo: 'Datos', tituloCompleto:'Cuentas con descriptor válido / cuentas del nicho; no acredita cobertura total de Meta', num:true, celda:x=>`${x.conDato}/${x.cuentas}` },
+        { clave: 'cpl', titulo: 'CPL', tituloCompleto:'Misma semana, evento lead y moneda EUR; todas las cuentas con gasto autorizado. No mide cualificación ni ventas', num: true, celda: x => x.cpl===null?'—':eur(x.cpl) },
+      ] }))));
+  el.append(plegablePaid411('Auditoría semanal',pAuditoria(ctx, d, filas)));
 }
 
 /** Auditoría semanal: el trafficker apunta cortar / escalar / no tocar por cuenta (simulación, rastro). */
@@ -688,31 +851,55 @@ function pAuditoria(ctx, d, filas) {
   const activas = filas.filter(c => c.meta_activa);
   const lista = h('div', { class: 'pila', style: { gap: S[2] } });
   const hechas = h('div');
+  const resto = h('div', { class: 'pila', style: { gap: S[2] } });
+  let desplegable;
+  let raiz,lectura=0;
+  const firma=()=>JSON.stringify([ctx.real?.id,ctx.persona?.id,[...(ctx.real?.puestos||[])].sort(),[...(ctx.persona?.puestos||[])].sort()]);
+  const identidad=firma();
+  const vivo=()=>{
+    if(!raiz?.isConnected)return false;
+    if(ctx.vigente?.()===false||firma()!==identidad){lectura++;lista.replaceChildren();resto.replaceChildren();desplegable?.replaceChildren();hechas.replaceChildren();return false;}
+    return true;
+  };
   const cargarHechas = async () => {
+    if(!vivo())return;
+    const turno=++lectura;
     if (!ctx.servidor) { hechas.replaceChildren(h('p', { class: 'sub' }, 'Sin servidor: las decisiones quedan solo en el rastro de esta sesión.')); return; }
     try {
       const r = await ctx.api('acciones?modulo=captacion');
-      const semana = (r.acciones || []).filter(a => a.tipo === 'auditoria_semanal');
-      hechas.replaceChildren(listaConIcono(semana.slice(0, 6).map(a => ({ icono: 'check', estado: 'verde', texto: `${a.objeto} · ${a.texto}`, extra: `${nombre(d, a.quien) || a.quien} · ${fDiaRO(a.creada || '')}` })),
-        { vacio: { icono: 'check', titulo: 'Esta semana no hay decisiones apuntadas', texto: 'Cada trafficker apunta una por cuenta el día de la auditoría.' } }));
-    } catch (e) { hechas.replaceChildren(h('p', { class: 'sub' }, `No se pudieron leer: ${e.message}`)); }
+      if(!vivo()||turno!==lectura)return;
+      const decisiones = (r.acciones || []).filter(a => a.tipo === 'auditoria_semanal');
+      hechas.replaceChildren(decisiones.length
+        ? listaConIcono(decisiones.slice(0, 6).map(a => ({ icono: 'check', estado: 'verde', texto: `${a.objeto} · ${a.texto}`, extra: `${nombre(d, a.quien) || a.quien} · ${fDiaRO(a.creada || '')}` })))
+        : h('div', {}, h('p', { class: 'sub' }, 'Sin decisiones en la respuesta disponible'),
+          h('p', { class: 'sub' }, 'Esta lectura no aplica un filtro de semana.')));
+    } catch (e) { if(!vivo()||turno!==lectura)return;hechas.replaceChildren(h('p', { class: 'sub' }, `No se pudieron leer: ${e.message}`)); }
   };
-  for (const c of activas.slice(0, 14)) {
-    lista.append(h('div', { class: 'fila', style: { justifyContent: 'space-between', borderBottom: '1px solid var(--line-soft)', paddingBottom: S[2] } },
+  for (const [indice,c] of activas.entries()) {
+    (indice<6?lista:resto).append(h('div', { class: 'fila', style: { justifyContent: 'space-between', borderBottom: '1px solid var(--line-soft)', paddingBottom: S[2] } },
       h('span', { class: 'celda-cli' }, logoCliente(c), c.nombre, chipCli(c)),
       h('span', { class: 'fila', style: { gap: S[1] } }, ['Cortar', 'Escalar', 'No tocar'].map(dec => botonConfirmar({
         texto: dec, mini: true, pregunta: `¿${dec} en ${c.nombre}?`, confirmar: 'Apuntar', soloLectura: ctx.soloLectura,
         alConfirmar: async () => {
+          if(!vivo()||ctx.soloLectura)throw new Error('La vista ha cambiado; no se confirma esta decisión.');
           await ctx.accion({ herramienta: 'app', tipo: 'auditoria_semanal', objeto: c.nombre, cliente_id: c.cliente_id, texto: dec,
             vista_previa: `Auditoría semanal: «${dec}» en ${c.nombre}. Queda en el rastro; Valeria lo ve en su vista.` });
-          cargarHechas();
+          if(!vivo()||ctx.soloLectura)throw new Error('La vista ha cambiado; no se confirma esta decisión.');
+          await cargarHechas();
+          if(!vivo()||ctx.soloLectura)throw new Error('La vista ha cambiado; no se confirma esta decisión.');
           return `«${dec}» apuntado (simulación)`;
         },
       })))));
   }
-  cargarHechas();
-  return panel({ titulo: 'Auditoría semanal', icono: 'check', sub: 'Una decisión por cuenta activa: cortar, escalar o no tocar. Queda en el rastro (el indicador «auditoría el mismo día» todavía no se mide).' },
+  if(activas.length>6){
+    desplegable=h('details', { on: { toggle: () => { if(!vivo())desplegable.replaceChildren(); } } },
+      h('summary', {}, `Resto de cuentas activas · ${activas.length-6}`), resto);
+    lista.append(desplegable);
+  }
+  raiz=panel({ titulo: 'Auditoría semanal', icono: 'check', sub: 'Una decisión por cuenta activa: cortar, escalar o no tocar. Queda en el rastro (el indicador «auditoría el mismo día» todavía no se mide).' },
     h('div', { class: 'cuerpo pila' }, activas.length ? lista : vacio({ icono: 'check', titulo: 'Sin cuentas activas que auditar' }), h('h3', { class: 'titulo-seccion' }, 'Últimas decisiones'), hechas));
+  queueMicrotask(()=>{if(vivo())cargarHechas();});
+  return raiz;
 }
 
 // ------------------------------------------------------------------ pestaña · creatividades (M5 · D-39, D-40, D-43)
@@ -724,13 +911,14 @@ function pCreatividades(el, ctx, d, filas) {
   const cnt = k => ads.filter(a => a.estado === k).length;
   const chips = chipsFiltro({
     etiqueta: 'Estado', clave: 'captacion.anuncios',
-    opciones: [{ valor: 'aviso', texto: 'Con señales', icono: 'alert', cuenta: cnt('cansada') + cnt('vigilar'), cuentaEstado: 'rojo' },
-      { valor: 'cansada', texto: 'Cansadas', icono: 'baja', cuenta: cnt('cansada'), cuentaEstado: 'rojo' },
+    opciones: [{ valor: 'aviso', texto: 'Con señales', icono: 'alert', cuenta: cnt('cansada') + cnt('vigilar'), cuentaEstado: 'gris' },
+      { valor: 'cansada', texto: 'Cansadas', icono: 'baja', cuenta: cnt('cansada'), cuentaEstado: 'gris' },
       { valor: 'ganadora', texto: 'Ganadoras', icono: 'star', cuenta: cnt('ganadora') }, { valor: '', texto: 'Todas', cuenta: ads.length }],
     alCambiar: () => pintar(),
   });
   const caja = h('div');
   const pintar = () => {
+    if(ctx.vigente?.()===false){caja.replaceChildren();return;}
     const v = chips.valor();
     const base = ads.filter(a => !v || (v === 'aviso' ? ['cansada', 'vigilar'].includes(a.estado) : a.estado === v));
     caja.replaceChildren(tablaDensa({
@@ -738,38 +926,44 @@ function pCreatividades(el, ctx, d, filas) {
       buscar: { campos: ['nombre', 'cliente', 'campana'], placeholder: 'Buscar anuncio o cliente' },
       filtros: [{ clave: 'cliente', titulo: 'Cliente' }],
       columnas: [
-        { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: a => h('span', { style: { display: 'grid', gap: S[1] } }, h('b', {}, a.nombre || '—'), h('small', { class: 'sub' }, `${a.cliente} · ${distingue(a)}`)) },
+        { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: a => h('span', { title:`${a.nombre||'Sin nombre'} · ${a.cliente} · ${distingue(a)}`, style: { display: 'grid', gap: S[1] } }, h('b', {}, a.nombre || '—'), h('small', { class: 'sub' }, a.cliente)) },
         { clave: 'estado', titulo: 'Estado', celda: a => h('span', { style: { display: 'grid', gap: S[1] } },
-          chipEstado(a.estado === 'cansada' ? 'rojo' : a.estado === 'vigilar' ? 'ambar' : a.estado === 'ganadora' ? 'verde' : 'gris', a.estado === 'cansada' ? 'Cansada' : a.estado === 'vigilar' ? 'Vigilar' : a.estado === 'ganadora' ? 'Ganadora' : 'Normal'),
-          a.senales?.length ? h('small', { class: 'sub' }, a.senales.join(' + ')) : null) },
-        { clave: 'frecuencia_7d', titulo: 'Frecuencia', num: true, celda: a => (a.frecuencia_7d === null || a.frecuencia_7d === undefined ? '—' : chipEstado(a.frecuencia_7d > 4 ? 'rojo' : a.frecuencia_7d > 3 ? 'ambar' : 'gris', num(a.frecuencia_7d, 1), { punto: false })) },
-        { clave: 'ctr_7d', titulo: '% de clics', num: true, celda: a => (a.ctr_7d === undefined ? '—' : h('span', { style: NOWRAP }, `${num(a.ctr_7d, 2)} %`, a.caida_ctr_pct !== null && a.caida_ctr_pct !== undefined ? h('small', { class: 'sub' }, ` (${a.caida_ctr_pct > 0 ? '−' : '+'}${num(Math.abs(a.caida_ctr_pct))} %)`) : null)) },
-        { clave: 'leads_7d', titulo: 'Leads 7 d', num: true, celda: a => num(a.leads_7d ?? null) },
-        { clave: 'cpl_7d', titulo: 'Coste por lead', num: true, celda: a => (!a.dinero ? candado('—') : a.cpl_7d ? eur(a.cpl_7d) : a.cpl_30d ? h('span', {}, eur(a.cpl_30d), h('small', { class: 'sub' }, ' 30 d')) : '—') },
+          chipEstado('gris', a.estado === 'cansada' ? 'Cansada' : a.estado === 'vigilar' ? 'Vigilar' : a.estado === 'ganadora' ? 'Ganadora' : 'Normal'),
+          a.senales?.length ? h('span', { title:a.senales.join(' + '),class:'sub' }, `${a.senales.length} ${a.senales.length===1?'señal':'señales'}`) : null) },
+        { clave: 'frecuencia_7d', titulo: 'Frec.', tituloCompleto:'Frecuencia de impresión · 7 días', num: true, celda: a => (typeof a.frecuencia_7d!=='number'||!Number.isFinite(a.frecuencia_7d)||a.frecuencia_7d<0 ? '—' : h('span',{title:'Frecuencia registrada en la copia; referencia sin evaluación de fatiga.'},chipEstado('gris', num(a.frecuencia_7d, 1), { punto: false }))) },
+        { clave: 'ctr_7d', titulo: 'CTR tot.', tituloCompleto:'CTR total registrado · clics totales / impresiones · 7 días; periodo anterior como referencia', num: true, celda: a => celdaCtrTotalPaid682(h, num, a) },
+        { clave: 'leads_7d', titulo: 'Meta 7d', tituloCompleto:'Contador Meta · 7 días; tipo de evento y cualificación pendientes', num: true, celda: a => a.leads_7d==null?'—':num(a.leads_7d) },
+        { clave: 'cpl_7d', titulo: 'Coste†', tituloCompleto:'Coste registrado · unidad pendiente; no acredita CPL real', num: true, celda: a => {
+          if(!a.dinero)return candado('—');
+          const valido=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
+          return valido(a.cpl_7d)?h('span',{title:'Referencia de coste registrada · 7 días; unidad pendiente.'},`${eur(a.cpl_7d)}†`):valido(a.cpl_30d)?h('span',{title:'Referencia de coste registrada · 30 días; unidad pendiente.'},`${eur(a.cpl_30d)}† · 30d`):'—';
+        } },
         { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: a => (a.enlace ? h('a', { class: 'bt mini', href: a.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Meta') : '—') },
         { clave: 'autor', titulo: 'Autor', celda: a => (a.autor ? nombre(d, a.autor) : h('span', { class: 'dim', title: 'Iniciales del autor en el nombre del anuncio desde el próximo lanzamiento' }, 'sin autor')) },
       ],
-      alPulsar: a => ctx.navegar(`captacion/${a.cliente_id}`),
+      alPulsar: a => {if(ctx.vigente?.()!==false)ctx.navegar(`captacion/${a.cliente_id}`);},
       etiquetaFila: a => `${a.nombre} de ${a.cliente}: ${a.estado}. Abrir tarjeta del cliente`,
-      vacio: { titulo: 'Ningún anuncio con estas señales', porque: 'Bien: ninguna creatividad necesita cambio con la regla de dos señales.', celebrar: true },
+      vacio: { titulo: 'Ningún anuncio con estas señales', porque: 'No hay anuncios en este filtro de la copia disponible; no acredita ausencia de señales ni necesidad de cambios.', celebrar: false },
     }));
   };
   pintar();
-  el.append(panel({ titulo: 'Anuncios de las cuentas activas · 7 días', icono: 'spark', sub: 'Cansada = dos señales a la vez. Ganadora = gasto ≥ 10 veces el objetivo con coste ≤ objetivo; en el arranque, 3 contactos a ≤ 45 €.' },
-    h('div', { class: 'cuerpo' }, chips), caja));
+  el.append(panel({ titulo: 'Anuncios de las cuentas activas · 7 días', icono: 'spark', sub: 'Señales de la copia; abre una cuenta para revisar fuentes y acciones.' },
+    h('div', { class: 'cuerpo' },typeof matchMedia==='function'&&matchMedia('(max-width:640px)').matches?h('details',{class:'que-es'},h('summary',{},'Filtros de esta vista'),chips):chips), caja,h('details',{class:'que-es',style:{padding:'8px 16px'}},h('summary',{},'Reglas de referencia'),h('p',{},'Cansada: dos señales a la vez. Ganadora: gasto ≥ 10 veces el objetivo con coste ≤ objetivo; regla anterior de arranque: 3 contactos a ≤ 45 €. Son etiquetas de la copia, pendientes de contraste; no acreditan rendimiento actual ni cualificación.')),h('p',{class:'sub',style:{padding:'8px 16px'}},`Muestra parcial de anuncios recibidos; no inventario completo. Lectura de anuncios: ${lecturaAnunciosPaid4(d,ctx.hoy||hoyMadrid())||'sin fecha válida'}. Antigüedad del creativo: sin dato. Señales de la copia, pendientes de contraste. † Coste registrado con unidad pendiente; no CPL real ni compras. Meta7d no acredita cualificación. Abre la cuenta para revisar fuentes y acciones.`)));
+  el.lastElementChild?.setAttribute('data-paid-creatividades-425','');
+  el.append(h('style',{},`@media(min-width:641px){[data-paid-creatividades-425] table.densa{table-layout:fixed;width:100%;min-width:900px}[data-paid-creatividades-425] table.densa th:first-child{width:25%}[data-paid-creatividades-425] table.densa th,[data-paid-creatividades-425] table.densa td{padding-left:6px;padding-right:6px;overflow-wrap:anywhere}[data-paid-creatividades-425] table.densa th button{padding-left:6px;padding-right:6px;white-space:normal}[data-paid-creatividades-425] table.densa td .chip{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}`));
   const lim = filas.filter(c => c.anuncios?.conjuntos_con_dato).map(c => ({ ...c, lim: c.anuncios.aprendizaje_limitado, con: c.anuncios.conjuntos_con_dato }));
   el.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Rechazados o con problemas', icono: 'alert', sub: 'Activos en los últimos 30 días o marcados hace menos de 30 días. Verde 0 · rojo alguno más de 24 h.' },
+    panel({ titulo: 'Rechazados o con problemas', icono: 'alert', sub: 'Señales de rechazo guardadas; fechas y cobertura por contrastar.' },
       tablaApilable({ filas: prob, columnas: [
         { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: p => h('span', { style: { display: 'grid' } }, h('b', {}, p.nombre), h('small', { class: 'sub' }, p.cliente)) },
         { clave: 'estado', titulo: 'Estado', celda: p => chipEstado(p.estado === 'DISAPPROVED' ? 'rojo' : 'ambar', p.estado === 'DISAPPROVED' ? 'Rechazado' : 'Con problemas') },
         { clave: 'desde', titulo: 'Desde', celda: p => fDiaRO(p.desde) },
         { clave: 'motivo', titulo: 'Motivo de Meta', celda: p => h('span', { class: 'sub' }, (p.motivo || 'Sin motivo en la respuesta').slice(0, 140)) },
-      ], vacio: { titulo: 'Ningún anuncio rechazado', texto: 'Meta no marca problemas en las cuentas activas.', tono: 'celebrar', icono: 'ok' } })),
-    panel({ titulo: 'Conjuntos en aprendizaje limitado', icono: 'medidor', sub: 'Verde < 20 % · ámbar 20-40 % · rojo > 40 % de los conjuntos activos con dato de Meta.' },
+      ], vacio: { titulo: 'Sin rechazos en esta copia', texto: 'La cobertura parcial no acredita ausencia de problemas actuales.',celebrar:false } })),
+    panel({ titulo: 'Conjuntos en aprendizaje limitado', icono: 'medidor', sub: 'Recuento de la copia; fechas y cobertura pendientes de contraste.' },
       tablaApilable({ filas: lim, columnas: [
         { clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c), c.nombre) },
-        { clave: 'lim', titulo: 'Limitados', num: true, celda: c => { const p = Math.round(c.lim / c.con * 100); return chipEstado(p > 40 ? 'rojo' : p >= 20 ? 'ambar' : 'verde', `${c.lim} de ${c.con} · ${p} %`); } },
+        { clave: 'lim', titulo: 'Limitados', num: true, celda: c => { const p = Math.round(c.lim / c.con * 100); return chipEstado('gris', `${c.lim} de ${c.con} · ${p} %`); } },
       ], vacio: { titulo: 'Meta no da el dato de aprendizaje', texto: 'Ningún conjunto activo trae «learning_stage_info» en estas cuentas.' } }))));
 }
 
@@ -777,48 +971,47 @@ function pCreatividades(el, ctx, d, filas) {
 function pDespacho(el, ctx, d, filas) {
   const f = filtroPendiente();
   const conGhl = filas.filter(c => c.despacho && (c.ghl?.conectado || c.meta_activa));
-  const [av, aa] = d.parametros.asistencia;
-  const filasT = conGhl.map(c => ({
-    ...c, llegan: c.despacho.pct_llegan_crm, estanc: c.despacho.estancados_72h, cohorte: c.despacho.cohorte_30d, sinEstado: c.despacho.sin_estado_14d,
-    asis: c.despacho.asistencia_14d, citas: c.despacho.citas_14d,
-    fuga: c.despacho.pct_llegan_crm !== null && c.despacho.pct_llegan_crm !== undefined && c.despacho.pct_llegan_crm < 90,
+  const filasT = conGhl.map(c => { const m=medirEmbudoCRM(c.ghl,(d.fuentes||[]).find(x=>x.id==='ghl'),ctx.hoy||hoyMadrid()); return ({
+    ...c, llegan: null, estanc:m.parados,cohorte:m.cohorte,sinEstado:m.sinEstado,
+    asis:m.asistencia,citas:m.agendadas,lecturaCRM:m,
+    fuga: false, // Sin unión por identidad/cohorte: el ratio legado no prueba pérdidas.
     sinGhl: !c.ghl?.conectado,
-  }));
+  }); });
   const chips = chipsFiltro({
-    etiqueta: 'Mirar', clave: f ? null : 'captacion.despacho', valor: f?.fuga ? 'fuga' : undefined,
+    etiqueta: 'Mirar', clave: f ? null : 'captacion.despacho', valor: f?.fuga ? '' : undefined,
     opciones: [{ valor: '', texto: 'Todas', cuenta: filasT.length },
-      { valor: 'fuga', texto: 'Leads que no llegan al CRM', icono: 'plug', cuenta: filasT.filter(x => x.fuga).length, cuentaEstado: 'rojo' },
-      { valor: 'estanc', texto: 'Estancados > 72 h', icono: 'clock', cuenta: filasT.filter(x => x.estanc).length, cuentaEstado: 'rojo' },
-      { valor: 'sinestado', texto: 'Citas sin estado', icono: 'cal', cuenta: filasT.filter(x => x.sinEstado).length, cuentaEstado: 'rojo' },
-      { valor: 'sincita', texto: 'Sin citas en 90 días', icono: 'alert', cuenta: filasT.filter(x => x.cuello?.includes('seguimiento') && x.despacho?.sin_avance_90d !== false).length },
+      { valor: 'estanc', texto: 'Estancados > 72 h', icono: 'clock', cuenta: filasT.filter(x => x.estanc).length, cuentaEstado:'ambar' },
+      { valor: 'sinestado', texto: 'Citas sin estado', icono: 'cal', cuenta: filasT.filter(x => x.sinEstado).length, cuentaEstado:'ambar' },
+      { valor: 'sincita', texto:'Sin avance de cita observado', icono: 'alert', cuenta: filasT.filter(x => x.cuello?.includes('seguimiento') && x.despacho?.sin_avance_90d === true).length },
       { valor: 'singhl', texto: 'Sin GHL', icono: 'base', cuenta: filasT.filter(x => x.sinGhl).length }],
     alCambiar: () => pintar(),
   });
   const caja = h('div');
   const pintar = () => {
-    const v = chips.valor();
-    const base = filasT.filter(x => !v || (v === 'fuga' && x.fuga) || (v === 'estanc' && x.estanc) || (v === 'sinestado' && x.sinEstado) || (v === 'singhl' && x.sinGhl)
-      || (v === 'sincita' && x.cuello?.includes('seguimiento') && x.despacho?.sin_avance_90d !== false));
+    if(ctx.vigente?.()===false){caja.replaceChildren();return;}
+    const elegido = chips.valor(), v=['estanc','sinestado','singhl','sincita'].includes(elegido)?elegido:'';
+    const base = filasT.filter(x => !v || (v === 'estanc' && x.estanc) || (v === 'sinestado' && x.sinEstado) || (v === 'singhl' && x.sinGhl)
+      || (v === 'sincita' && x.cuello?.includes('seguimiento') && x.despacho?.sin_avance_90d === true));
     caja.replaceChildren(tablaDensa({
       filas: base, orden: { clave: 'llegan', dir: 'asc' },
       buscar: { campos: ['nombre'], placeholder: 'Buscar cliente' },
       columnas: [
         { clave: 'nombre', titulo: 'Cliente', principal: true, celda: c => h('span', { class: 'celda-cli' }, logoCliente(c), c.nombre) },
-        { clave: 'llegan', titulo: 'Llegan al CRM · 7 d', num: true, celda: c => (c.sinGhl ? chipEstado('gris', 'sin GHL') : c.despacho.subcuenta_sin_uso ? chipEstado('ambar', 'subcuenta sin usar') : c.llegan === null || c.llegan === undefined ? h('span', { class: 'dim' }, 'sin leads') : h('span', { style: { display: 'inline-grid', justifyItems: 'end' } }, chipEstado(semaforo(c.llegan, { verde: 100, ambar: 90 }), pct(c.llegan)), h('small', { class: 'sub' }, `${num(c.despacho.leads_ghl_7d)} de ${num(c.despacho.leads_meta_7d)}`))) },
-        { clave: 'estanc', titulo: 'Parados > 72 h', num: true, celda: c => (c.sinGhl ? '—' : h('span', {}, `${num(c.estanc)} de ${num(c.cohorte)}`, c.despacho.horas_max_parado ? h('small', { class: 'sub', style: { display: 'block' } }, `el más parado: ${num(Math.round(c.despacho.horas_max_parado / 24))} días`) : null)) },
-        { clave: 'citas', titulo: 'Citas 14 d', num: true, celda: c => (c.sinGhl ? '—' : num(c.citas)) },
-        { clave: 'sinEstado', titulo: 'Sin estado', num: true, celda: c => (c.sinGhl ? '—' : c.sinEstado ? chipEstado('rojo', num(c.sinEstado)) : '0') },
-        { clave: 'asis', titulo: 'Asistencia 14 d', num: true, celda: c => (c.asis === null || c.asis === undefined ? h('span', { class: 'dim' }, '—') : chipEstado(semaforo(c.asis, { verde: av, ambar: aa }), pct(c.asis))) },
+        { clave: 'llegan', titulo: 'Meta / CRM', tituloCompleto:'Recuentos independientes Meta y CRM · 7 días; sin unión por identidad', num: true, celda: c => (c.sinGhl ? chipEstado('gris', 'sin GHL') : h('span', { title:`Recuentos de 7 días independientes, sin unión por identidad${c.despacho.subcuenta_sin_uso?' · uso de subcuenta por confirmar':''}.`, style:NOWRAP }, `${c.despacho.leads_meta_7d==null?'—':num(c.despacho.leads_meta_7d)} / ${c.despacho.leads_ghl_7d==null?'—':num(c.despacho.leads_ghl_7d)}`)) },
+        { clave: 'estanc', titulo:'Parados >72h',tituloCompleto:'Leads sin avance observado en la etapa durante más de 72 horas; no ausencia de trabajo', num: true, celda: c => (c.sinGhl ? '—' : h('span', {title:`Sin avance observado / cohorte registrada; no ausencia de trabajo. Mayor espera registrada: ${c.despacho.horas_max_parado?num(Math.round(c.despacho.horas_max_parado/24))+' días':'sin dato'}.`,style:NOWRAP}, `${c.estanc==null?'—':num(c.estanc)} / ${c.cohorte==null?'—':num(c.cohorte)}`)) },
+        { clave: 'citas', titulo: 'Citas 14d',tituloCompleto:'Citas agendadas observadas · 14 días', num: true, celda: c => (c.sinGhl ? '—' : num(c.citas)) },
+        { clave: 'sinEstado', titulo: 'Sin estado', num: true, celda: c => (c.sinGhl ? '—' : c.sinEstado===null?'—':chipEstado('gris',num(c.sinEstado))) },
+        { clave: 'asis', titulo: 'Asist. 14d',tituloCompleto:'Asistencia sobre resultados registrados · 14 días; no conversión', num: true, celda: c => (c.asis === null || c.asis === undefined ? h('span', { class: 'dim' }, '—') : chipEstado('gris',pct(c.asis))) },
       ],
-      alPulsar: c => ctx.navegar(`captacion/${c.cliente_id}`),
+      alPulsar: c => {if(ctx.vigente?.()!==false)ctx.navegar(`captacion/${c.cliente_id}`);},
       etiquetaFila: c => `${c.nombre}. Abrir tarjeta`,
-      vacio: { titulo: 'Nada que mirar aquí', porque: 'Ningún despacho tiene este problema.', celebrar: true },
+      vacio: { titulo: 'Nada que mirar aquí', porque: 'No hay casos en el filtro de la lectura disponible; no acredita ausencia de problemas.', celebrar:false },
     }));
   };
   pintar();
-  el.append(panel({ titulo: 'Qué hace el despacho con los leads', icono: 'phone', sub: `Embudo de GoHighLevel a 90 días y citas de 14 días. Asistencia: verde ≥ ${av} % · ámbar ${aa}-${av - 1} % · rojo < ${aa} %. Sin datos personales de leads: solo recuentos.` },
-    h('div', { class: 'cuerpo' }, chips), caja));
-  el.append(avisoParcial('La velocidad de contacto y los intentos por lead (el despacho llama en 1 hora o menos y hace 4 intentos en 72 h) necesitan leer las conversaciones de cada lead en GoHighLevel. Llegan con los avisos en tiempo real de GHL. Mientras, «parados más de 72 h» hace de señal.', { titulo: 'Todavía no se mide:' }));
+  el.append(panel({ titulo: 'Qué hace el despacho con los leads', icono: 'phone', sub:'Recuentos observados, con cobertura parcial. Asistencia sólo sobre resultados registrados; no mide conversión ni ventas.' },
+    h('div', { class: 'cuerpo' },typeof matchMedia==='function'&&matchMedia('(max-width:640px)').matches?h('details',{class:'que-es'},h('summary',{},'Filtros de esta vista'),chips):chips), caja,h('p',{class:'sub',style:{padding:'8px 16px'}},'Meta / CRM: recuentos independientes de 7 días, sin unión por lead. Parados: sin avance observado / cohorte; no acredita ausencia de trabajo. — sin dato.')));
+  el.append(avisoParcial('Esta copia no acredita llamadas, respuesta real ni cuatro intentos por lead. Contrasta conversaciones y registros del despacho; «sin avance observado >72 h» es sólo una señal de la etapa, no de ausencia de trabajo.', { titulo: 'Todavía no se mide:' }));
 }
 
 // ------------------------------------------------------------------ pestaña · Google Ads (muestra manual hasta W2)
@@ -861,7 +1054,7 @@ const PARIDAD = [
   ['T11', 'Avisos de integración y de datos', 'hecho', 'En la tarjeta; botón de tarea a Agus (simulación)'],
   ['T12', 'Frescura', 'hecho', 'Hora de cada fuente a la vista; recarga a mano hasta programarla'],
   ['T13', 'Responsable por cliente', 'hecho', 'Tabla de asignaciones (trafficker, account y CRM), no el «PM» escrito a mano'],
-  ['M1', 'Coste por cita como número que manda', 'medias', 'Calculado a 14 días; se juzga cuando haya objetivo. Red de seguridad > 100 €'],
+  ['M1', 'Coste por cita atribuido', 'medias', 'Pendiente de enlazar gasto y citas; ratio anterior sólo de referencia, sin alarma de100€'],
   ['M2', 'Objetivo por cliente con alarma si falta', 'hecho', 'Aviso «objetivo sin cargar» en cada tarjeta'],
   ['M3', 'Botones: pausar, presupuesto, tareas, escalar', 'medias', 'En simulación; pausar y presupuesto esperan el permiso de Meta'],
   ['M4', 'Tiempo real para lo urgente', 'no', 'Llega con los avisos de GHL y el despliegue'],
@@ -905,7 +1098,7 @@ function pintarTarjeta(cont, ctx, d, id) {
     return;
   }
   const g = GRAV[c.severidad];
-  ctx.titulo(c.nombre, `Estado: ${gc(c).t} · ${g.t.toLowerCase()} · trafficker ${nombre(d, c.equipo?.trafficker) || 'sin asignar'} · datos hasta el ${fDiaRO(d.datos_hasta)}`);
+  ctx.titulo(c.nombre, `Estado: ${gc(c).t} · ${g.t.toLowerCase()}${c.estado_evaluacion === 'referencia_legacy_no_recalculada' ? ' (referencia anterior)' : ''} · trafficker ${nombre(d, c.equipo?.trafficker) || 'sin asignar'} · datos hasta el ${fDiaRO(d.datos_hasta)}`);
 
   cont.append(h('div', { class: 'fila', style: { justifyContent: 'space-between' } },
     h('nav', { class: 'migas', 'aria-label': 'Migas' }, h('a', { href: '#/captacion' }, icono('target', { clase: 's' }), 'Captación'), h('span', { 'aria-hidden': 'true' }, '›'), h('span', { 'aria-current': 'page' }, c.nombre)),
@@ -914,30 +1107,8 @@ function pintarTarjeta(cont, ctx, d, id) {
       insignia: x => chipCli(d.clientes.find(y => y.cliente_id === x.id)),
       alElegir: x => ctx.navegar(`captacion/${x.id}`) })));
 
-  // ---- cabecera ----
-  const eq = c.equipo || {};
-  cont.append(h('section', { class: 'detalle-cab', style: { display: 'grid', gap: S[3] }, 'aria-label': 'Cabecera de la cuenta' },
-    h('div', { class: 'fila', style: { gap: S[4], alignItems: 'center' } },
-      logoCliente(c, 'logo-cli xl'),
-      h('div', { style: { minWidth: 0, flex: '1 1 260px' } },
-        h('h2', {}, c.nombre),
-        h('div', { class: 'meta-linea', style: { marginTop: S[1] } },
-          ...['trafficker', 'account', 'crm'].map(s => h('span', { title: eq[s + '_confianza'] ? `Asignación con confianza ${eq[s + '_confianza']} (fase 0)` : null },
-            h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(nombre(d, eq[s]) || '?')), `${s === 'crm' ? 'CRM' : s === 'account' ? 'Account' : 'Trafficker'}: ${s === 'crm' ? crmTexto(d, c) : (nombre(d, eq[s]) || 'sin asignar')}`)),
-          c.nicho ? h('span', {}, icono('maletin'), c.nicho) : null),
-        h('div', { class: 'fila', style: { marginTop: S[3], gap: S[2] } },
-          h('span', { class: `chip ${gc(c).e}`, title: (c.motivos_cliente || []).join(' · ') || 'Gravedad única del cliente (la de toda la app)' }, `Estado: ${gc(c).t}`),
-          chipPub(c),
-          esTienda(c) ? chipEstado('azul', 'Tienda online', { punto: false }) : null,
-          ...(c.cuello || []).map(k => chipCuello(k, true)),
-          ...(c.plataformas || []).map(p => chipEstado('azul', p === 'meta' ? 'Meta' : p === 'google' ? 'Google Ads' : p, { punto: false })),
-          c.cuenta_meta?.estado && c.cuenta_meta.estado !== 'activa' ? chipEstado('rojo', `Cuenta de Meta: ${c.cuenta_meta.estado}`) : null,
-          !c.objetivo?.cargado && c.cuenta_meta ? chipEstado('ambar', 'Objetivo sin cargar') : null,
-          c.nuevo ? chipEstado('azul', 'Cliente nuevo') : null)),
-      h('div', { class: 'fila' },
-        c.cuenta_meta?.enlace ? h('a', { class: 'bt', href: c.cuenta_meta.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en Meta') : null,
-        c.ghl?.enlace ? h('a', { class: 'bt', href: c.ghl.enlace, target: '_blank', rel: 'noopener' }, icono('ext'), 'Abrir en GHL') : null,
-        h('a', { class: 'bt', href: `#/en-rojo/${c.cliente_id}` }, icono('cli'), 'Ficha')))));
+  // 411: estado y enlaces a mano; equipo y contexto en una sola línea plegada.
+  cont.append(cabeceraPaid411(ctx, d, c));
 
   // ---- motivos y avisos con su cuello (T1, T2, T11) ----
   const items = [...(c.motivos || []).map(m => ({ ...m, tipo: 'motivo' })), ...(c.avisos || []).map(a => ({ ...a, tipo: 'aviso', nivel: a.clase_id === 'integracion' ? 'atencion' : 'info' }))];
@@ -947,49 +1118,44 @@ function pintarTarjeta(cont, ctx, d, id) {
   const motivos = h('ul', { style: { display: 'grid', gap: S[2], margin: '0', padding: '0', listStyle: 'none' } }, items.length ? items.map(m => { const est = m.nivel === 'critico' ? 'rojo' : m.nivel === 'atencion' ? 'ambar' : 'gris'; return liMot(est,
     h('span', { class: `ico-c s ${est}` }, icono(CUELLO[m.clase_id]?.i || 'info')),
     h('div', { style: { flex: '1 1 220px', minWidth: '0' } }, h('div', {}, textoMot(m)), h('div', { class: 'sub', style: { marginTop: S[1] } }, `${CUELLO[m.clase_id]?.t || m.clase}${CUELLO[m.clase_id]?.quien ? ` · lo mueve: ${quienArregla(m.clase_id, c, d)}` : ''}`)),
-    m.clase_id === 'integracion' ? botonTarea(ctx, c, d, 'agustina', 'Tarea a Agus', `Revisar integración: ${textoMot(m)}`) : null); }) : [liMot('gris', h('span', { class: 'ico-c s verde' }, icono('ok')), h('div', {}, 'Sin motivos: la cuenta va bien.'))]);
+    m.clase_id === 'integracion' ? botonTarea(ctx, c, d, 'agustina', 'Tarea a Agus', `Revisar integración: ${textoMot(m)}`) : null); }) : [liMot('gris', h('span',{class:'ico-c s gris'},icono('info')),h('div',{},'Sin motivos en esta copia; no acredita ausencia de problemas.'))]);
 
   // ---- cifras (T4-T7, M1) ----
   const techo = d.parametros.techo_cpl;
   const r = c.cpl_resumen || {};
   const cpc = c.coste_por_cita || {};
+  const lecturaCpl=medirCplPaid(c,d,hoyMadrid());
   const t = [];
   if (c.dinero && c.cpl) {
-    t.push(tile({ icono: 'target', etiqueta: 'Coste por cita · 14 días', valor: cpc.coste_por_cita_14d === null || cpc.coste_por_cita_14d === undefined ? null : eur(cpc.coste_por_cita_14d),
-      estado: cpc.coste_por_cita_14d ? (cpc.coste_por_cita_14d > d.parametros.alarma_cita ? 'rojo' : cpc.coste_por_cita_14d > d.parametros.arranque_cita ? 'ambar' : 'verde') : 'gris',
-      comparacion: { texto: `${num(cpc.citas_agendadas_14d)} citas · septiembre ${cpc.mes_anterior?.coste_por_cita ? eur(cpc.mes_anterior.coste_por_cita) : 'sin citas'}` },
-      contexto: c.objetivo?.cargado ? `Objetivo del cliente: ${eur(c.objetivo.coste_cita_objetivo)}` : 'Objetivo sin cargar: alarma > 100 €, 45 € solo en el arranque.',
+    t.push(tile({ icono: 'target', etiqueta: 'Gasto / citas · referencia anterior', valor: referenciaCita299(cpc)===null?null:eur(referenciaCita299(cpc)),
+      estado:'gris',
+      comparacion: {texto:'Sin cohorte enlazada por identidad'},
+      contexto:'Ratio heredado de recuentos independientes. No mide el coste atribuido a una cita ni el cumplimiento de un objetivo.',
       medible: 'medias', medibleDetalle: 'Citas = todas las del calendario de la subcuenta, no solo las que vienen de Meta', frescura: fuenteDe(d, 'ghl') }));
-    if (esTienda(c)) t.push(tile({ icono: 'euro', etiqueta: `Coste por conversión · ${r.ref_base || '7 días'}`, valor: r.ref === null || r.ref === undefined ? null : eur(r.ref), estado: 'gris',
-      comparacion: r.delta_pct !== null && r.delta_pct !== undefined ? { delta: r.delta_pct, pct: true, texto: 'frente a los 7 anteriores', mejorSi: 'bajo' } : null,
-      contexto: 'Tienda online: no se juzga con el techo de 35 € por lead.', medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
-    else t.push(tile({ icono: 'euro', etiqueta: `Coste por lead · ${r.ref_base || '7 días'}`, valor: r.ref === null || r.ref === undefined ? null : eur(r.ref),
-      estado: c.objetivo?.cpl_objetivo ? semaforo(r.ref, { verde: c.objetivo.cpl_objetivo, ambar: c.objetivo.cpl_objetivo * 1.5, mejorSi: 'bajo' }) : colorCifra('coste_lead', r.ref),
-      comparacion: r.delta_pct !== null && r.delta_pct !== undefined ? { delta: r.delta_pct, pct: true, texto: r.fiable ? 'frente a los 7 anteriores' : 'frente a los 7 anteriores · poca muestra', mejorSi: 'bajo' } : { texto: c.muestra?.nota || '' },
-      contexto: `${c.objetivo?.cargado ? 'Objetivo del cliente' : 'Techo general (objetivo sin cargar)'}: ${eur(c.objetivo?.cpl_objetivo || techo)}. Muestra mínima: 4 leads por semana.`,
+    if (esTienda(c)) t.push(tile({ icono: 'euro', etiqueta: `Coste registrado · unidad pendiente · ${r.ref_base || '7 días'}`, valor: lecturaCpl.referenciaAnterior===null?null:eur(lecturaCpl.referenciaAnterior), estado: 'gris',
+      comparacion: {texto:'Referencia anterior; no es CPL real'},
+      contexto: NOTA_TIENDA, medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
+    else t.push(tile({ icono: 'euro', etiqueta: `Coste por lead · ${r.ref_base || '7 días'}`, valor:lecturaCpl.real===null?null:eur(lecturaCpl.real),
+      estado:lecturaCpl.estado,
+      comparacion: { texto: lecturaCpl.referenciaAnterior===null?'Sin referencia anterior':`Referencia anterior ${eur(lecturaCpl.referenciaAnterior)} · comparación entre ventanas sin acreditar` },
+      contexto:`${lecturaCpl.nota}. Objetivo registrado: ${lecturaCpl.objetivo===null?'sin dato':eur(lecturaCpl.objetivo)}; fecha ${lecturaCpl.fechaObjetivo||'sin confirmar'}.`,
       medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
   } else if (c.cuenta_meta) {
-    t.push(h('div', { class: 'tile gris' }, h('span', { class: 'tt' }, h('span', { class: 'ico-c gris' }, icono('euro')), h('span', {}, 'Coste por lead y por cita')), candado('La inversión la ven publicidad, operaciones y quien lleva el cliente')));
+    t.push(h('div', { class: 'tile gris' }, h('span', { class: 'tt' }, h('span', { class: 'ico-c gris' }, icono('euro')), h('span', {}, 'Coste por lead y por cita')), candado('Inversión reservada para tu acceso')));
   }
-  t.push(tile({ icono: 'users', etiqueta: esTienda(c) ? 'Conversiones del píxel · 7 días' : 'Leads de Meta · 7 días', valor: c.leads ? num(c.leads['7d']) : null, estado: c.leads ? '' : 'gris',
+  t.push(tile({ icono: 'users', etiqueta: lecturaCpl.unidadAcreditada ? 'Eventos lead Meta · 7 días' : 'Contador Meta · 7 días', valor: c.leads ? num(c.leads['7d']) : null, estado: c.leads ? '' : 'gris',
     comparacion: c.leads ? { delta: variacion(c.leads['7d'], c.leads['7d_prev']), pct: true, texto: `frente a ${num(c.leads['7d_prev'])} los 7 anteriores` } : null,
     contexto: c.leads ? `Ayer ${num(c.leads.ayer)} · septiembre ${num(c.leads.mes_anterior)}` : 'Sin cuenta de Meta', medible: 'hoy', frescura: fuenteDe(d, 'meta') }));
   if (c.despacho) {
-    const p = c.despacho.pct_llegan_crm;
-    const mg = c.despacho.leads_meta_7d || 0, gh = c.despacho.leads_ghl_7d;
-    const masQueMeta = c.ghl?.conectado && !c.despacho.subcuenta_sin_uso && gh !== null && gh !== undefined && gh > mg;   // V2 (B-M11): «100 % · 13 de 6» no se entiende
-    if (masQueMeta) t.push(tile({ icono: 'plug', etiqueta: 'Leads que llegan al CRM', valor: num(gh), unidad: 'en GHL · 7 días', estado: 'verde',
-      comparacion: { texto: `${num(mg)} de Meta + ${num(gh - mg)} de otras vías (web, Instagram u otra campaña)` },
-      contexto: 'Llegan todos los de Meta y algunos más. Contactos nuevos de la subcuenta en 7 días (sin los creados a mano), la misma cifra que Salud del CRM.', medible: 'hoy', frescura: fuenteDe(d, 'ghl') }));
-    else t.push(tile({ icono: 'plug', etiqueta: 'Leads que llegan al CRM', valor: c.ghl?.conectado && p !== null && p !== undefined ? pct(p) : null,
-      estado: !c.ghl?.conectado ? 'rojo' : p === null || p === undefined ? 'gris' : semaforo(p, { verde: 100, ambar: 90 }),
-      comparacion: { texto: c.despacho.subcuenta_sin_uso ? 'Sin dato: el cliente no usa GoHighLevel' : c.ghl?.conectado ? `${num(c.despacho.leads_ghl_7d)} en GHL de ${num(c.despacho.leads_meta_7d)} en Meta (7 días)` : 'Sin subcuenta de GHL emparejada' },
-      contexto: c.despacho.subcuenta_sin_uso ? `La subcuenta no se usa: ${fmt.plural(c.despacho.contactos_historia || 0, 'contacto')} en toda su historia.` : 'Contactos nuevos de la subcuenta en 7 días (sin los creados a mano), la misma cifra que Salud del CRM.', medible: 'hoy', frescura: fuenteDe(d, 'ghl') }));
+    t.push(tile({ icono: 'plug', etiqueta: 'Meta y CRM · 7 días', valor: c.ghl?.conectado ? num(c.despacho.leads_ghl_7d ?? null) : null,
+      unidad: 'contactos CRM leídos', estado: 'gris',
+      comparacion: { texto: `${num(c.despacho.leads_meta_7d ?? null)} contador Meta; recuento independiente` },
+      contexto: 'Sin unión por lead/origen: no se puede afirmar cuántos leads de Meta llegaron, ni atribuir el exceso a otras vías. Contactos recibidos no equivalen a cualificados. Cobertura CRM parcial; pocos contactos no acreditan que el cliente no lo use.', medible: 'medias', frescura: fuenteDe(d, 'ghl') }));
   }
   const pr = c.presupuesto_ads;
   if (pr && c.dinero) {
-    const e = pr.pct_consumido > pr.pct_mes * 1.15 ? 'ambar' : 'verde';
-    t.push(tile({ icono: 'cartera', etiqueta: 'Presupuesto del mes', valor: `${pct(pr.pct_consumido)}`, unidad: `de ${eur(pr.aprobado)}`, estado: d.dias_transcurridos < 5 ? '' : e,
+    const valido4=v=>typeof v==='number'&&Number.isFinite(v)&&v>=0;
+    t.push(tile({ icono: 'cartera', etiqueta: 'Presupuesto histórico · confirmar vigencia', valor: valido4(pr.pct_consumido)?pct(pr.pct_consumido):null, unidad: valido4(pr.aprobado)?`de ${eur(pr.aprobado)}`:null, estado:'gris',
       comparacion: { texto: `mes transcurrido ${pct(pr.pct_mes)}${pr.proyeccion !== null && pr.proyeccion !== undefined && d.dias_transcurridos >= 5 ? ` · proyección ${eur(pr.proyeccion)}` : ' · sin proyección hasta el día 5'}` },
       contexto: `${pr.origen}. Septiembre real: ${eur(pr.septiembre_real?.invertido)} (${pct(pr.septiembre_real?.pct_consumido)}). Ritmo y proyección no avisan hasta el día 5.`,
       medible: 'medias', medibleDetalle: 'Presupuesto de octubre sin cargar', frescura: fuenteDe(d, 'meta') }));
@@ -1010,8 +1176,9 @@ function pintarTarjeta(cont, ctx, d, id) {
       el.append(h('p', { class: 'sub', style: { margin: '0', display: 'flex', gap: S[2], alignItems: 'flex-start' } }, icono('info', { clase: 's' }),
         h('span', {}, `Hora de Madrid: Meta cuenta esta cuenta en ${c.cuenta_meta.zona_horaria}; aquí cada día va en hora de Madrid y puede no casar al céntimo con el Administrador de anuncios.`)));
     }
-    el.append(h('div', { class: 'dos', style: { marginTop: S[4] } },
-      panel({ titulo: 'Qué pasa y dónde se rompe', icono: 'alert', sub: 'Motivos de la gravedad y avisos de integración y de datos' }, h('div', { class: 'cuerpo' }, motivos)),
+    el.append(h('div', { class: 'pila', style: { marginTop: S[3], gap: S[3], minWidth: '0' } },
+      plegablePaid411(`Señales y avisos (${items.length})`,
+        panel({ titulo: 'Qué pasa y dónde se rompe', icono: 'alert', sub: 'Motivos de la gravedad y avisos de integración y de datos' }, h('div', { class: 'cuerpo' }, motivos))),
       panel({ titulo: 'Actuar', icono: 'zap', sub: 'Simulación: queda en la cola de acciones con su vista previa. No se toca Meta, GHL ni ClickUp.' }, h('div', { class: 'cuerpo' }, acciones(ctx, c, d)))));
   };
 
@@ -1057,7 +1224,7 @@ function botonTarea(ctx, c, d, para, texto, que) {
 
 function acciones(ctx, c, d) {
   const eq = c.equipo || {};
-  const presu = h('input', { type: 'number', min: '0', step: '10', inputmode: 'numeric', placeholder: '€ al día', 'aria-label': 'Nuevo presupuesto diario en euros', style: { width: '112px', minHeight: '32px', padding: `${S[1]} ${S[2]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)' } });
+  const presu = h('input', { type: 'number', min: '0', step: '10', inputmode: 'numeric', placeholder: '€ al día', 'aria-label': 'Nuevo presupuesto diario en euros', style: { width: '112px', minWidth: '0', maxWidth: '100%', boxSizing: 'border-box', minHeight: '32px', padding: `${S[1]} ${S[2]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)' } });
   const accionSim = (texto, pregunta, tipo, herramienta, preview, objeto) => botonConfirmar({
     texto, mini: true, pregunta, confirmar: 'Sí (simulación)', soloLectura: ctx.soloLectura,
     alConfirmar: async () => {
@@ -1074,13 +1241,13 @@ function acciones(ctx, c, d) {
     grupo('Publicidad',
       accionSim(cansadas.length ? `Pausar «${(cansadas[0].nombre || '').slice(0, 22)}»` : 'Pausar un anuncio', '¿Pausar el anuncio en Meta?', 'pausar_anuncio', 'meta',
         `Pausaría en Meta el anuncio «${cansadas[0]?.nombre || 'elegido'}» de ${c.nombre}. Espera el permiso de Meta (permiso para gestionar anuncios): en el prototipo no se toca nada.`),
-      h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'nowrap' } }, presu, accionSim('Cambiar presupuesto', '¿Cambiar el presupuesto diario?', 'cambiar_presupuesto', 'meta',
+      h('span', { class: 'fila', style: { gap: S[2], flexWrap: 'wrap', minWidth: '0', maxWidth: '100%' } }, presu, accionSim('Cambiar presupuesto', '¿Cambiar el presupuesto diario?', 'cambiar_presupuesto', 'meta',
         () => { const v = Number(presu.value); return v > 0 && v < 5000 ? `Cambiaría el presupuesto diario de ${c.nombre} a ${num(v)} € en ${campanas[0]?.campana || 'la campaña activa'}. Espera el permiso de Meta.` : null; })),
       h('span', { class: 'sub' }, 'Pausar y presupuesto: esperan el permiso de Meta')),
     grupo('Tareas',
-      botonTarea(ctx, c, d, crmDe(c), eq.crm ? `Tarea al CRM (${nombre(d, eq.crm)})` : `Tarea al CRM (${nombre(d, JEFA_CRM)}, sin especialista asignado)`, c.cuello?.includes('seguimiento') ? 'Revisar el seguimiento del despacho: leads parados y citas sin estado' : 'Revisar el embudo y los recordatorios de citas'),
+      crmDe(c) ? botonTarea(ctx, c, d, crmDe(c), `Tarea al CRM (${nombre(d, crmDe(c))})`, c.cuello?.includes('seguimiento') ? 'Revisar el seguimiento del despacho: leads parados y citas sin estado' : 'Revisar el embudo y los recordatorios de citas') : h('span', { class: 'sub', role: 'status' }, 'CRM · asignación pendiente: confirmar especialista antes de preparar una tarea'),
       eq.account ? botonTarea(ctx, c, d, eq.account, `Tarea al account (${nombre(d, eq.account)})`, c.objetivo?.cargado ? 'Hablar con el despacho de la captación' : 'Cargar el objetivo de coste por cita y por lead en la ficha del alta') : null,
-      eq.account ? accionSim('Avisar de una fuga al «Mi día» del account', '¿Avisar al account?', 'aviso_fuga', 'app',
+      eq.account ? accionSim('Pedir contraste de recuentos al account', '¿Avisar al account?', 'aviso_fuga', 'app',
         `Pondría en el «Mi día» de ${nombre(d, eq.account)}: «${c.nombre}: ${(c.motivos || [])[0]?.texto || 'revisar el embudo'}».`) : null),
     grupo('Escalar',
       accionSim('A Valeria', '¿Escalar a Valeria?', 'escalar', 'app', `Escalaría ${c.nombre} a Valeria (jefa de publicidad) con los motivos: ${(c.motivos || []).map(m => m.texto).join(' · ') || 'sin motivos'}.`),
@@ -1093,62 +1260,61 @@ function tVentanas(el, ctx, d, c) {
   if (!c.leads && !c.google_ads) { el.append(vacio({ icono: 'target', titulo: 'Sin datos de Meta', texto: 'Este cliente no tiene cuenta de Meta emparejada.', quien: 'Agus' })); return; }
   if (c.leads) {
     const V = [['ayer', `Ayer · ${fDiaRO(d.ventanas.ayer)}`], ['7d', '7 días'], ['7d_prev', '7 anteriores'], ['mes_anterior', 'Septiembre']];
-    const pal = esTienda(c) ? 'conversiones' : 'leads', por = esTienda(c) ? 'por conversión' : 'por lead';
+    const pal = 'contador Meta', por = 'coste registrado · unidad pendiente';
     el.append(ventanas(V.map(([k, t]) => ({ titulo: t, valor: `${num(c.leads[k])} ${pal}`, sub: c.dinero ? `${eur(c.gasto?.[k])} · ${c.cpl?.[k] ? `${eur(c.cpl[k])} ${por}` : `sin ${pal}`}` : 'gasto no visible' }))));
   }
   const serie = c.serie || [];
   if (serie.length) {
-    const techo = c.objetivo?.cpl_objetivo || d.parametros.techo_cpl;
-    const movil = serie.map((p, i) => { const v = serie.slice(Math.max(0, i - 6), i + 1); const g = v.reduce((s, x) => s + (x.gasto_meta || 0), 0), l = v.reduce((s, x) => s + (x.leads_meta || 0), 0); return { x: p.d, y: i >= 6 && l ? Math.round(g / l * 100) / 100 : null }; });
+    const objetivoGrafico=medirCplPaid(c,d,hoyMadrid());
+    const movil = cplMovilPaid285(c,serie,ctx.hoy||hoyMadrid());
     el.append(h('div', { style: { display: 'grid', gap: S[5], gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', alignItems: 'start', marginTop: S[4] } },
-      graficoSerie({ titulo: 'Leads de Meta por día', puntos: serie.map(p => ({ x: p.d, y: p.leads_meta })) }),
+      graficoSerie({ titulo: 'Contador Meta por día · tipo de evento pendiente', puntos: serie.map(p => ({ x: p.d, y: p.leads_meta })) }),
       c.dinero ? graficoSerie({ titulo: 'Gasto en Meta por día (€)', puntos: serie.map(p => ({ x: p.d, y: p.gasto_meta })), formato: n => `${num(n)} €` }) : null,
-      c.dinero ? graficoSerie({ titulo: `Coste ${esTienda(c) ? 'por conversión' : 'por lead'} · 7 días móviles`, puntos: movil, umbral: esTienda(c) ? undefined : { y: techo, texto: `${c.objetivo?.cargado ? 'objetivo' : 'techo'} ${techo} €` }, formato: n => `${num(n)} €` })
-        : panel({ titulo: 'Gasto', icono: 'candado' }, h('div', { class: 'cuerpo' }, candado('La inversión la ven publicidad, operaciones y quien lleva el cliente'))) ));
+      c.dinero ? graficoSerie({ titulo: 'CPL Meta acreditado · 7 días móviles', puntos: movil, umbral:!objetivoGrafico.unidadAcreditada||!objetivoGrafico.objetivoVigente?undefined:{y:objetivoGrafico.objetivo,texto:'Objetivo propio vigente'}, formato: n => `${num(n)} €` })
+        : panel({ titulo: 'Gasto', icono: 'candado' }, h('div', { class: 'cuerpo' }, candado('Inversión reservada para tu acceso'))) ));
     el.append(h('p', { class: 'sub', style: { marginTop: S[2] } }, `Del ${fDiaRO(serie[0].d)} al ${fDiaRO(serie.at(-1).d)}. El día en curso no entra: llega incompleto.`));
   }
 }
 
 function tEmbudo(el, ctx, d, c) {
-  const e = c.ghl?.embudo;
-  if (!c.ghl?.conectado || !e) {
-    el.append(vacio({ icono: 'base', titulo: 'Sin embudo: el CRM no está conectado', texto: 'No hay subcuenta de GoHighLevel emparejada con este cliente, así que no se ve qué pasa con los leads después de Meta.', quien: 'Agus (emparejar la subcuenta)' }));
+  if (!c.ghl?.conectado) {
+    el.append(vacio({ icono: 'base', titulo: 'Sin embudo: el CRM no está conectado', texto: 'No hay subcuenta de GoHighLevel emparejada con este cliente. No se evalúa el seguimiento sin esa fuente.', quien: 'Agus (emparejar la subcuenta)' }));
     return;
   }
-  const ET = [['nuevo', 'Nuevo', 'inbox'], ['seguimiento', 'Seguimiento', 'phone'], ['cita', 'Cita', 'cal'], ['presupuesto', 'Presupuesto', 'doc'], ['cerrado', 'Cerrado', 'star'], ['descartado', 'Descartado', 'cerrar']];
-  const total = e.contactos_90d || 0;
-  const max = Math.max(1, ...ET.map(([k]) => e.funnel?.[k] || 0));
-  const cit = c.ghl.citas || {};
+  const m = medirEmbudoCRM(c.ghl, (d.fuentes || []).find(x => x.id === 'ghl'), ctx.hoy || hoyMadrid());
+  const ET = [['nuevo', 'Nuevo', 'inbox'], ['seguimiento', 'Seguimiento', 'phone'], ['cita', 'Cita', 'cal'], ['presupuesto', 'Presupuesto', 'doc'], ['cerrado', 'Cierre registrado en etapa', 'star'], ['descartado', 'Descartado', 'cerrar']];
+  const conocidas=m.etapas.filter(x=>x.n!==null);
+  const fuente = `${m.fuente} · lectura ${m.fecha || 'sin fecha válida'} · cobertura parcial`;
+  const mostrar=n=>n===null?'Sin dato':num(n);
   el.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Embudo de GoHighLevel · 90 días', icono: 'cap', sub: `${num(total)} contactos; cada uno en su etapa más avanzada. Pipelines: ${Object.keys(e.pipelines_90d || {}).join(', ') || '—'}` },
+    panel({ titulo: 'Etapas observadas · oportunidades creadas en 90 días', icono: 'cap', sub: `${mostrar(m.total)} contactos en la copia · ${fuente}` },
       h('div', { class: 'cuerpo pila' },
-        total ? embudoBarras(ET.map(([k, t, i]) => ({ etiqueta: t, icono: i, valor: e.funnel?.[k] || 0, estado: k === 'descartado' ? 'rojo' : k === 'cerrado' ? 'verde' : null, nota: `${num(e.funnel?.[k] || 0)} contactos` })), { max }) : vacio({ icono: 'inbox', titulo: 'Ningún contacto en 90 días', texto: 'GHL está conectado pero no tiene oportunidades: los leads de Meta no llegan al CRM.', quien: 'Agus', tono: 'aviso' }),
-        h('div', { class: 'fila', style: { gap: S[2] } },
-          chipEstado('gris', `Lead → cita ${pct(e.conv_lead_cita)}`, { punto: false }), chipEstado('gris', `Cita → presupuesto ${pct(e.conv_cita_pres)}`, { punto: false }),
-          chipEstado('gris', `Presupuesto → cierre ${pct(e.conv_pres_cierre)}`, { punto: false }), chipEstado(e.pct_en_nuevo > 50 ? 'ambar' : 'gris', `${pct(e.pct_en_nuevo)} sigue en Nuevo`, { punto: false })))),
-    h('div', { class: 'pila' },
-      tiles([
-        tile({ icono: 'clock', etiqueta: 'Parados más de 72 h', valor: `${num(e.estancados_72h)} de ${num(e.cohorte_30d)}`, estado: e.pct_estancado >= 50 ? 'rojo' : e.estancados_72h ? 'ambar' : 'verde',
-          comparacion: { texto: e.horas_max_parado ? `el más parado lleva ${num(Math.round(e.horas_max_parado / 24))} días` : 'cohorte de 30 días' },
-          contexto: `${num(e.bolsa_historica_en_nuevo)} oportunidades viejas en Nuevo (bolsa histórica, fuera de la alerta)`, medible: 'hoy', frescura: fuenteDe(d, 'ghl') }),
-        tile({ icono: 'cal', etiqueta: 'Citas · 14 días', valor: num(cit['14d']?.agendadas), comparacion: { texto: `${num(cit['14d']?.celebradas)} celebradas · ${num(cit['14d']?.no_presentadas)} no vinieron · ${num(cit.proximas)} próximas` },
-          contexto: cit['14d']?.sin_estado ? `${cit['14d'].sin_estado} sin marcar si vinieron: la asistencia no es fiable` : 'Todas con estado', estado: cit['14d']?.sin_estado ? 'ambar' : '', medible: 'hoy', frescura: fuenteDe(d, 'ghl') }),
-        tile({ icono: 'users', etiqueta: 'Asistencia · 14 días', valor: cit['14d']?.asistencia_pct === null || cit['14d']?.asistencia_pct === undefined ? null : pct(cit['14d'].asistencia_pct), estado: cit['14d']?.asistencia_pct === null || cit['14d']?.asistencia_pct === undefined ? 'gris' : semaforo(cit['14d'].asistencia_pct, { verde: d.parametros.asistencia[0], ambar: d.parametros.asistencia[1] }),
-          comparacion: { texto: `septiembre ${pct(cit.mes_anterior?.asistencia_pct)}` }, contexto: 'Verde ≥ 75 % · rojo < 60 %', medible: 'medias', medibleDetalle: 'Solo cuenta las citas con estado marcado', frescura: fuenteDe(d, 'ghl') }),
-      ]),
-      e.sin_avance_90d ? avisoParcial('Ningún lead ha pasado a cita en el embudo en 90 días.', { titulo: 'Embudo sin avance.' }) : null)));
+        conocidas.some(x=>x.n>0) ? embudoBarras(conocidas.map(x=>{const [,t,i]=ET.find(e=>e[0]===x.id);return {etiqueta:t,icono:i,valor:x.n,estado:'gris',nota:`${num(x.n)} contactos observados`};}), { max:Math.max(1,...conocidas.map(x=>x.n)) }) : vacio({ icono: 'inbox', titulo: m.total===null?'Embudo sin medición confirmada':'Cero contactos observados en esta lectura', texto:'No acredita ausencia de oportunidades reales. Contrasta periodo, paginación y fuente antes de decidir.', quien:'CRM', tono:'aviso' }),
+        conocidas.length<ET.length ? h('p',{class:'sub'},'Hay etapas sin recuento; no se han rellenado con cero.') : null,
+        h('p',{class:'sub'},m.aviso),
+        h('p',{class:'sub'},'Etapa de cierre no acredita venta, cobro ni fecha de cierre. Falta historial por oportunidad para medir conversiones de cohortes.'))),
+    h('div', { class: 'pila' }, tiles([
+      tile({ icono:'clock',etiqueta:'Sin avance observado >72 h',valor:m.parados===null?null:`${num(m.parados)} de ${num(m.cohorte)}`,estado:'gris',
+        contexto:`Señal del registro, no prueba falta de contacto o trabajo. ${fuente}`,medible:'medias',frescura:fuenteDe(d,'ghl') }),
+      tile({ icono:'cal',etiqueta:'Citas creadas en la lectura · 14 días',valor:m.agendadas===null?null:num(m.agendadas),estado:'gris',
+        comparacion:{texto:`${mostrar(m.celebradas)} con asistencia registrada · ${mostrar(m.ausencias)} con ausencia registrada · ${mostrar(m.proximas)} próximas`},
+        contexto:m.sinEstado===null?`Estado de las citas sin medir. ${fuente}`:`${num(m.sinEstado)} sin resultado registrado en esta lectura; no acredita que todas estén marcadas. ${fuente}`,medible:'medias',medibleDetalle:'Citas creadas por fecha de alta; asistencia/ausencia por fecha de la cita. No son la misma cohorte.',frescura:fuenteDe(d,'ghl') }),
+      tile({ icono:'users',etiqueta:'Asistencia observada · 14 días',valor:m.asistencia===null?null:pct(m.asistencia),estado:'gris',
+        comparacion:{texto:m.marcadas===null?'Sin denominador válido':`${num(m.marcadas)} citas con asistencia/ausencia registrada`},
+        contexto:`Sólo sobre resultados registrados; no son todos los leads ni una conversión atribuida a Paid. ${fuente}`,medible:'medias',frescura:fuenteDe(d,'ghl') }),
+    ]))));
 }
 
 function tCampanas(el, ctx, d, c) {
   const cs = c.campanas || [];
-  el.append(panel({ titulo: 'Campañas de Meta', icono: 'megafono', sub: 'Gasto, leads y coste por lead: 7 días, mes en curso y septiembre' },
+  el.append(panel({ titulo: 'Campañas de Meta', icono: 'megafono', sub: 'Gasto y contador Meta; costes registrados con unidad pendiente. Ventanas independientes, sin conversión CRM.' },
     tablaApilable({ filas: cs, columnas: [
       { clave: 'campana', titulo: 'Campaña', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.campana), h('small', { class: 'sub' }, x.plataforma === 'meta' ? 'Meta' : x.plataforma)) },
       { clave: 'l7', titulo: 'Leads 7 d', num: true, celda: x => num(x.leads_7d) },
       { clave: 'g7', titulo: 'Gasto 7 d', num: true, celda: x => (x.gasto_7d === undefined ? candado('—') : eur(x.gasto_7d)) },
-      { clave: 'c7', titulo: 'Coste por lead 7 d', num: true, celda: x => (x.gasto_7d === undefined ? candado('—') : x.cpl_7d ? eur(x.cpl_7d) : (x.gasto_7d ? 'sin leads' : '—')) },
+      { clave: 'c7', titulo: 'Coste registrado 7 d · unidad pendiente', num: true, celda: x => (x.gasto_7d === undefined ? candado('—') : x.cpl_7d ? eur(x.cpl_7d) : (x.gasto_7d ? 'sin leads' : '—')) },
       { clave: 'lm', titulo: 'Leads sept.', num: true, celda: x => num(x.leads_mes_anterior) },
-      { clave: 'cm', titulo: 'Coste por lead sept.', num: true, celda: x => (x.gasto_mes_anterior === undefined ? candado('—') : x.cpl_mes_anterior ? eur(x.cpl_mes_anterior) : '—') },
+      { clave: 'cm', titulo: 'Coste registrado sept. · unidad pendiente', num: true, celda: x => (x.gasto_mes_anterior === undefined ? candado('—') : x.cpl_mes_anterior ? eur(x.cpl_mes_anterior) : '—') },
       { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: x => (x.enlace || c.cuenta_meta?.enlace ? h('a', { class: 'bt mini', href: x.enlace || c.cuenta_meta.enlace, target: '_blank', rel: 'noopener', title: 'Abre la campaña en el Administrador de anuncios; si Meta no la selecciona, abre la cuenta' }, icono('ext'), 'Abrir en Meta') : '—') },
     ], vacio: { titulo: 'Sin campañas con gasto en las últimas 5 semanas', texto: 'La cuenta no ha gastado en Meta desde finales de agosto.' } })));
   if (c.google_ads?.periodo) el.append(avisoParcial(`Google Ads (${c.google_ads.cuenta}): solo totales de septiembre, sin campañas, hasta la clave de Windsor.`, { tipo: 'info' }));
@@ -1158,10 +1324,10 @@ function tAnuncios(el, ctx, d, c) {
   const a = c.anuncios;
   if (!a) { el.append(vacio({ icono: 'spark', titulo: 'Sin anuncios que mirar', texto: c.meta_activa ? 'No se pudieron leer los anuncios de esta cuenta.' : 'La cuenta no tiene pauta activa: no hay anuncios con impresiones en 7 días.' })); return; }
   el.append(tiles([
-    tile({ icono: 'baja', etiqueta: 'Cansadas', valor: a.cansadas, estado: a.cansadas ? 'rojo' : 'verde', contexto: 'Dos señales a la vez', medible: 'hoy' }),
-    tile({ icono: 'ojo', etiqueta: 'Con una señal', valor: a.vigilar, estado: a.vigilar ? 'ambar' : 'verde', contexto: 'Vigilar: una señal sola no dispara', medible: 'hoy' }),
+    tile({ icono: 'baja', etiqueta: 'Cansadas', valor: contadorObservado648(a.cansadas), estado: contadorObservado648(a.cansadas) > 0 ? 'rojo' : 'gris', contexto: 'Dos señales guardadas a la vez; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
+    tile({ icono: 'ojo', etiqueta: 'Con una señal', valor: contadorObservado648(a.vigilar), estado: contadorObservado648(a.vigilar) > 0 ? 'ambar' : 'gris', contexto: 'Una señal guardada para revisar; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
     tile({ icono: 'star', etiqueta: 'Ganadoras', valor: a.ganadoras, estado: '', contexto: 'Gasto ≥ 10 veces el objetivo con coste ≤ objetivo', medible: 'hoy' }),
-    tile({ icono: 'alert', etiqueta: 'Rechazados o con problemas', valor: a.problemas_total, estado: a.problemas_total ? 'rojo' : 'verde', contexto: `${a.aprendizaje_limitado} de ${a.conjuntos_con_dato} conjuntos en aprendizaje limitado`, medible: 'hoy' }),
+    tile({ icono: 'alert', etiqueta: 'Rechazados o con problemas', valor: contadorObservado648(a.problemas_total), estado: contadorObservado648(a.problemas_total) > 0 ? 'rojo' : 'gris', contexto: 'Rechazos o problemas guardados; cobertura no exhaustiva, cero no acredita ausencia.', medible: 'medias' }),
   ]));
   if (!ctx.soloLectura && ctx.nivel !== 'resumen') el.append(panel({ titulo: 'Pedir nuevas a producción', icono: 'send', sub: 'Con la cansada adjunta y el brief ya escrito.' }, h('div', { class: 'cuerpo' }, formPedido(ctx, d, c))));
   el.append(panel({ titulo: 'Anuncios · 7 días', icono: 'spark', sub: `${a.total_7d} con impresiones; ${a.sin_autor} sin iniciales de autor (desde el próximo lanzamiento)` },
@@ -1169,9 +1335,9 @@ function tAnuncios(el, ctx, d, c) {
       { clave: 'nombre', titulo: 'Anuncio', principal: true, celda: x => h('span', { style: { display: 'grid' } }, h('b', {}, x.nombre), h('small', { class: 'sub' }, distingue(x))) },
       { clave: 'e', titulo: 'Estado', celda: x => h('span', { style: { display: 'grid', gap: S[1] } }, chipEstado(x.cansada ? 'rojo' : x.vigilar ? 'ambar' : x.ganadora ? 'verde' : 'gris', x.cansada ? 'Cansada' : x.vigilar ? 'Vigilar' : x.ganadora ? 'Ganadora' : 'Normal'), x.senales?.length ? h('small', { class: 'sub' }, x.senales.join(' + ')) : null) },
       { clave: 'f', titulo: 'Frecuencia', num: true, celda: x => (x.frecuencia_7d ? num(x.frecuencia_7d, 1) : '—') },
-      { clave: 'ctr', titulo: '% de clics', num: true, celda: x => (x.ctr_7d === undefined ? '—' : `${num(x.ctr_7d, 2)} %${x.ctr_previo ? ` (antes ${num(x.ctr_previo, 2)})` : ''}`) },
+      { clave: 'ctr', titulo: 'CTR tot.', tituloCompleto:'CTR total registrado · clics totales / impresiones · 7 días; periodo anterior como referencia', num: true, celda: x => celdaCtrTotalPaid682(h, num, x) },
       { clave: 'l', titulo: 'Leads 7 d', num: true, celda: x => num(x.leads_7d ?? null) },
-      { clave: 'c', titulo: 'Coste por lead', num: true, celda: x => (!c.dinero || x.cpl_7d === undefined && x.cpl_30d === undefined ? candado('—') : x.cpl_7d ? eur(x.cpl_7d) : x.cpl_30d ? `${eur(x.cpl_30d)} (30 d)` : '—') },
+      { clave: 'c', titulo: 'Coste registrado · unidad pendiente', num: true, celda: x => (!c.dinero || x.cpl_7d === undefined && x.cpl_30d === undefined ? candado('—') : x.cpl_7d ? eur(x.cpl_7d) : x.cpl_30d ? `${eur(x.cpl_30d)} (30 d)` : '—') },
       { clave: 'autor', titulo: 'Autor', celda: x => nombre(d, x.autor) || h('span', { class: 'dim' }, 'sin autor') },
       { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: x => (x.enlace ? h('a', { class: 'bt mini', href: x.enlace, target: '_blank', rel: 'noopener', title: 'Abre el anuncio en el Administrador de anuncios; si Meta no lo selecciona, abre la cuenta' }, icono('ext'), 'Abrir en Meta') : '—') },
     ], vacio: { titulo: 'Ningún anuncio con impresiones esta semana' } })));
@@ -1199,22 +1365,23 @@ function tMetas(el, ctx, d, c) {
 function tQuincenal(el, ctx, d, c) {
   const q = c.quincenal;
   if (!q) { el.append(vacio({ icono: 'doc', titulo: 'Sin quincenal', texto: 'Solo para cuentas con Meta.' })); return; }
-  const [ini, fin] = q.periodo;
+  const [ini,fin]=Array.isArray(q.periodo)?q.periodo:['sin fecha','sin fecha'];
+  const crm=medirEmbudoCRM(c.ghl,(d.fuentes||[]).find(x=>x.id==='ghl'),ctx.hoy||hoyMadrid());
+  const observado=n=>n===null?'Sin dato':num(n);
   const lineas = [
     `Quincenal de ${c.nombre} · del ${fDiaRO(ini)} al ${fDiaRO(fin)}`,
-    `· Contactos de Meta: ${num(q.leads_14d)}`,
-    c.dinero ? `· Inversión: ${eur(q.gasto_14d)} · coste por contacto ${q.cpl_14d ? eur(q.cpl_14d) : '—'}` : null,
-    `· Citas agendadas: ${num(q.citas_14d)} · celebradas ${num(q.celebradas_14d)}${q.asistencia_14d !== null && q.asistencia_14d !== undefined ? ` · asistencia ${pct(q.asistencia_14d)}` : ''}`,
-    c.dinero && q.coste_por_cita_14d ? `· Coste por cita: ${eur(q.coste_por_cita_14d)}` : null,
-    q.sin_estado_14d ? `· Ojo: ${q.sin_estado_14d} citas pasadas sin marcar si vinieron` : null,
-    (c.motivos || []).length ? `· A trabajar: ${(c.motivos || []).map(textoMot).join(' · ')}` : '· Sin alertas abiertas',
+    ...textoMetaQuincenal299(q,c.dinero,eur),
+    `· Citas creadas observadas: ${observado(crm.agendadas)} · asistencia registrada: ${observado(crm.celebradas)} · ausencia registrada: ${observado(crm.ausencias)} · asistencia sobre resultados: ${crm.asistencia===null?'Sin dato':pct(crm.asistencia)}`,
+    `· Citas sin resultado registrado: ${observado(crm.sinEstado)}. No acredita que estén todas marcadas.`,
+    `· CRM leído ${crm.fecha||'sin fecha válida'}; cobertura parcial. Citas creadas y asistencia usan fechas distintas: no son una misma cohorte ni conversiones. Etapas/citas no acreditan ventas.`,
+    [...(c.motivos || []), ...(c.avisos || [])].length ? `· Señales por contrastar: ${[...new Set([...(c.motivos || []), ...(c.avisos || [])].map(textoMot))].join(' · ')}` : '· Sin alertas en la copia; no acredita ausencia de problemas',
     ...(() => {   // Ronda U: lo que se cambió en la cuenta en el periodo (bitácora del trafficker)
-      const l = (d.bitacora?.get(c.cliente_id) || []).filter(a => diaDe(a) >= ini);
-      return l.length ? ['· Qué se cambió:', ...l.slice(0, 8).reverse().map(a => `   ${fDiaRO(diaDe(a))}: ${a.texto}`)] : ['· Qué se cambió: nada apuntado en la bitácora'];
+      const l = (d.bitacora?.get(c.cliente_id) || []).filter(a => diaDe(a)>=ini && diaDe(a)<=fin);
+      return l.length ? ['· Declaraciones locales (no acreditan ejecución externa):', ...l.slice(0, 8).reverse().map(a => `   ${fDiaRO(diaDe(a))}: ${a.texto}`), d.lecturaPaid516?.aviso||'Lectura local sin fecha acreditada.'] : [d.lecturaPaid516?.estado==='observada'?'· Sin apuntes en la lectura disponible; historial limitado.':`· Bitácora: ${d.lecturaPaid516?.aviso||'pendiente de lectura'}`];
     })(),
   ].filter(Boolean);
   el.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Quincenal preparada', icono: 'doc', sub: 'Gasto, contactos, citas, coste por cita y asistencia del periodo, lista para la reunión del trafficker con el cliente.',
+    panel({ titulo: 'Quincenal preparada', icono: 'doc', sub: 'Resultados Meta de referencia y citas observadas por separado; revisar datos, fechas y atribución antes de la reunión.',
       acciones: h('button', { type: 'button', class: 'bt mini', on: { click: () => copiar(lineas.join('\n'), 'Resumen copiado') } }, icono('copy'), 'Copiar') },
       h('div', { class: 'cuerpo' }, h('pre', { style: { whiteSpace: 'pre-wrap', fontFamily: 'var(--sans)', fontSize: 'var(--fs-13)', margin: 0, lineHeight: 1.6 } }, lineas.join('\n')))),
     panel({ titulo: 'Apuntar la quincenal', icono: 'check', sub: 'Indicador «quincenal hecha con informe» (a medias hasta que se apunte aquí)' },
@@ -1229,15 +1396,15 @@ function tHistoria(el, ctx, d, c) {
   const pedidos = (d.pedidos?.get(c.cliente_id) || []).slice(0, 5);
   el.append(h('div', { class: 'dos', style: { marginBottom: S[4] } },
     panel({ titulo: 'Bitácora · qué se cambió', icono: 'editar', sub: 'Lo que el trafficker apunta cada día. Queda en el rastro.' }, h('div', { class: 'cuerpo' }, listaBitacora(ctx, d, c, 15))),
-    panel({ titulo: 'Creatividades pedidas', icono: 'spark' }, h('div', { class: 'cuerpo' }, pedidos.length ? listaConIcono(pedidos.map(p => ({ icono: 'spark', texto: p.texto, extra: `${cuandoBit(ctx, p)} · ${nombre(d, p.quien) || 'alguien'}` }))) : h('p', { class: 'sub', style: { margin: '0' } }, 'Ningún pedido en 14 días.')))));
+    panel({ titulo: 'Pedidos locales de creatividades', icono: 'spark' }, h('div', { class: 'cuerpo' }, h('p',{class:'sub',title:d.lecturaPaid516?.leido_en||'Fecha HTTP desconocida'},d.lecturaPaid516?.aviso||'Registro pendiente de lectura; no acredita envío ni creación en ClickUp.'), pedidos.length ? listaConIcono(pedidos.map(p => ({ icono: 'spark', texto: p.texto, extra: `${cuandoBit(ctx, p)} · ${nombre(d, p.quien) || 'alguien'} · registro local` }))) : h('p', { class: 'sub', style: { margin: '0' } }, d.lecturaPaid516?.estado==='observada'?'Sin pedidos en la lectura disponible; historial limitado.':'Pedidos pendientes de lectura.')))));
   const hst = c.historia || {};
   const caja = (titulo, sub, cuerpo, est) => h('div', { style: { border: '1px solid var(--line)', borderRadius: 'var(--r-s)', padding: S[3], display: 'grid', gap: S[1], background: 'var(--card)', minWidth: '0' } },
     h('span', { class: 'sub', style: { fontWeight: '600' } }, titulo), est ? h('span', {}, chipEstado(GRAV[est]?.e || 'gris', GRAV[est]?.t || est)) : null, h('b', { style: NOWRAP }, cuerpo), sub ? h('span', { class: 'sub' }, sub) : null);
   const cols = [];
   if (hst.hace_4_semanas) cols.push(caja(`Hace 4 semanas · ${fDiaRO(hst.hace_4_semanas.periodo[0])} a ${fDiaRO(hst.hace_4_semanas.periodo[1])}`, c.dinero && hst.hace_4_semanas.gasto_meta !== undefined ? `${eur(hst.hace_4_semanas.gasto_meta)} de gasto` : null, `${num(hst.hace_4_semanas.leads_meta)} leads`));
   if (hst.torre_17sep) cols.push(caja('Foto del 17 de septiembre (herramienta anterior)', (c.dinero ? hst.torre_17sep.gasto_motivos : hst.torre_17sep.motivos)?.join(' · ') || 'sin motivos', `${num(hst.torre_17sep.leads_7d)} leads en 7 días`, hst.torre_17sep.severidad));
-  if (c.leads) cols.push(caja('7 días anteriores', c.dinero ? `${eur(c.gasto?.['7d_prev'])} · ${c.cpl?.['7d_prev'] ? eur(c.cpl['7d_prev']) + ' por lead' : 'sin leads'}` : null, `${num(c.leads['7d_prev'])} leads`));
-  if (c.leads) cols.push(caja('Últimos 7 días', c.dinero ? `${eur(c.gasto?.['7d'])} · ${c.cpl?.['7d'] ? eur(c.cpl['7d']) + ' por lead' : 'sin leads'}` : null, `${num(c.leads['7d'])} leads`, c.severidad));
+  if (c.leads) cols.push(caja('7 días anteriores', c.dinero ? `${eur(c.gasto?.['7d_prev'])} · ${c.cpl?.['7d_prev'] ? eur(c.cpl['7d_prev']) + ' · coste registrado, unidad pendiente' : 'sin leads'}` : null, `${num(c.leads['7d_prev'])} leads`));
+  if (c.leads) cols.push(caja('Últimos 7 días', c.dinero ? `${eur(c.gasto?.['7d'])} · ${c.cpl?.['7d'] ? eur(c.cpl['7d']) + ' · coste registrado, unidad pendiente' : 'sin leads'}` : null, `${num(c.leads['7d'])} leads`, c.severidad));
   el.append(cols.length ? h('div', { class: 'rejilla' }, cols) : vacio({ icono: 'hist', titulo: 'Sin historia todavía' }));
   el.append(avisoParcial('A 90 días y «qué se cambió» llegan con las fotos diarias de la app (empezaron el 2-oct) y con el rastro de acciones. Mientras, la foto del 17 de septiembre de la herramienta anterior hace de punto de comparación.', { tipo: 'info', titulo: 'Historia.' }));
 }
@@ -1254,17 +1421,7 @@ const FORMATOS = [{ valor: 'estaticos', texto: 'Estáticos 4:5 y 9:16' }, { valo
 
 /** Lee las acciones del módulo (bitácora y pedidos), una vez por pantalla. */
 async function cargarBitacora(ctx, d) {
-  d.bitacora = new Map(); d.pedidos = new Map();
-  if (!(ctx.servidor && ctx.api)) return;
-  try {
-    const r = await ctx.api('acciones?modulo=captacion');
-    for (const a of (r.acciones || [])) {
-      if (!a.cliente_id) continue;
-      if (a.tipo === 'bitacora_cuenta') (d.bitacora.get(a.cliente_id) || d.bitacora.set(a.cliente_id, []).get(a.cliente_id)).push(a);
-      if (a.tipo === 'tarea' && String(a.vista_previa || '').includes('pedido_creatividad')) (d.pedidos.get(a.cliente_id) || d.pedidos.set(a.cliente_id, []).get(a.cliente_id)).push(a);
-    }
-    for (const m of [d.bitacora, d.pedidos]) for (const l of m.values()) l.sort((x, y) => String(y.creada).localeCompare(String(x.creada)));
-  } catch { /* sin acciones: la bitácora sale vacía */ }
+  await cargarLecturaPaid516(ctx,d);
 }
 /** La hora de la cola de acciones viene en UTC («2026-10-03 03:36:12»): día y hora en Madrid. */
 const madridDe = t => {
@@ -1275,51 +1432,54 @@ const madridDe = t => {
     .formatToParts(d).map(x => [x.type, x.value]));
   return { dia: `${p.year}-${p.month}-${p.day}`, hora: `${p.hour}:${p.minute}` };
 };
-const diaDe = a => (a?._local ? String(a.creada || '').slice(0, 10) : madridDe(a?.creada).dia);
+const diaDe = a => (a?._recibo516 ? '' : a?._local ? String(a.creada || '').slice(0, 10) : madridDe(a?.creada).dia);
 const horaDe = a => (a?._local ? String(a.creada || '').slice(11, 16) : madridDe(a?.creada).hora);
 /** «hoy 10:12», «ayer 18:03», «2-oct». */
 function cuandoBit(ctx, a) {
+  if(a?._recibo516)return 'recibo local confirmado · fecha por consultar';
   const dia = diaDe(a);
   if (ctx.fechas?.esHoy?.(dia)) return `hoy ${horaDe(a)}`;
   if (ctx.fechas?.esAyer?.(dia)) return `ayer ${horaDe(a)}`;
   return fDiaRO(dia);
 }
-const hoyBit = (ctx, d, cid) => (d.bitacora?.get(cid) || []).find(a => ctx.fechas?.esHoy?.(diaDe(a)));
+const hoyBit = (ctx, d, cid) => (d.bitacora?.get(cid) || []).find(a => !a._recibo516 && diaDe(a) && ctx.fechas?.esHoy?.(diaDe(a)));
 
-/** Apunta un cambio (optimista + Deshacer). alHecho() repinta lo que dependa de la bitácora. */
-function apuntarCambio(ctx, d, c, texto, alHecho) {
-  const a = { tipo: 'bitacora_cuenta', cliente_id: c.cliente_id, texto, quien: ctx.persona.id, creada: `${ctx.hoy || hoyMadrid()} ${new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date())}`, _local: true };
-  conDeshacer({
-    mensaje: `Apuntado en ${c.nombre}: «${texto.length > 40 ? texto.slice(0, 38) + '…' : texto}»`,
-    optimista: () => { const l = d.bitacora.get(c.cliente_id) || []; l.unshift(a); d.bitacora.set(c.cliente_id, l); alHecho?.(); },
-    revertir: () => { const l = d.bitacora.get(c.cliente_id) || []; d.bitacora.set(c.cliente_id, l.filter(x => x !== a)); alHecho?.(); },
-    hacer: () => ctx.accion({ herramienta: 'app', tipo: 'bitacora_cuenta', objeto: `${c.nombre} · qué cambió hoy`, cliente_id: c.cliente_id, texto,
-      vista_previa: `Bitácora de ${c.nombre} (${ctx.nombre(ctx.persona.id)}): «${texto}». Se ve en la tarjeta, en la ficha y en la quincenal.` }),
-  });
+/**516: una declaración sólo se pinta guardada tras el recibo local194. */
+async function apuntarCambio(ctx,d,c,texto,alHecho) {
+  const receipt=await guardarPaid516(ctx,{herramienta:'app',tipo:'bitacora_cuenta',objeto:`${c.nombre} · qué cambió hoy`,cliente_id:c.cliente_id,texto,
+    vista_previa:`Bitácora de ${c.nombre} (${ctx.nombre(ctx.persona.id)}), día ${ctx.hoy||hoyMadrid()}: «${texto}». Declaración local; no acredita ejecución externa.`});
+  if(!ambitoPaid516(ctx,c.cliente_id,true))throw Error('El acceso cambió; revisa Envíos antes de reintentar.');
+  const a={id:receipt.accion_id,tipo:'bitacora_cuenta',cliente_id:c.cliente_id,texto,quien:ctx.real.id,creada:null,_recibo516:true,estado:'simulada'};
+  const l=d.bitacora.get(c.cliente_id)||[];if(!l.some(x=>x.id===a.id))l.unshift(a);d.bitacora.set(c.cliente_id,l);alHecho?.();return receipt;
 }
 
 /** Editor «qué cambio hoy»: cambios rápidos (un clic los escribe) + texto + «Apuntar». */
-function editorBitacora(ctx, d, c, { alHecho, compacto } = {}) {
-  const campo = h('input', { type: 'text', maxlength: '300', placeholder: 'Qué cambias hoy en esta cuenta y por qué', 'aria-label': `Qué cambio hoy en ${c.nombre}`,
-    style: { flex: '1 1 260px', minWidth: '0', minHeight: 'var(--s-10)', padding: `${S[2]} ${S[3]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)', font: 'var(--t-cuerpo)' } });
-  const apuntar = h('button', { type: 'button', class: 'bt pri', 'aria-disabled': ctx.soloLectura ? 'true' : null, on: { click: () => {
-    if (ctx.soloLectura) return;
-    const t = campo.value.trim();
-    if (t.length < 3) { campo.focus(); campo.setAttribute('aria-invalid', 'true'); return; }
-    campo.removeAttribute('aria-invalid'); campo.value = '';
-    apuntarCambio(ctx, d, c, t, alHecho);
-  } } }, icono('editar'), 'Apuntar');
-  campo.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); apuntar.click(); } });
-  const rapidos = h('div', { class: 'fila', style: { gap: S[2] } }, CAMBIOS_RAPIDOS.map(t => h('button', { type: 'button', class: 'bt mini', 'data-cambio': t,
-    on: { click: () => { campo.value = campo.value.trim() ? `${campo.value.trim()} · ${t}` : t; campo.focus(); } } }, t)));
-  return h('div', { class: 'pila', style: { gap: S[2], minWidth: '0' } }, h('div', { class: 'fila', style: { gap: S[2], flexWrap: 'wrap' } }, campo, apuntar), compacto ? null : rapidos);
+function editorBitacora(ctx,d,c,{alHecho,compacto}={}) {
+  const scope=ambitoPaid516(ctx,c.cliente_id,true),caja=h('div',{class:'pila',style:{gap:S[2],minWidth:'0'}});
+  const vivo=()=>ctx.vigente?.()!==false&&scope!==null&&ambitoPaid516(ctx,c.cliente_id,true)?.firma===scope.firma;
+  const status=h('span',{class:'sub',role:'status'},scope?'':'Registro local no disponible para esta sesión.');
+  const campo=h('input',{type:'text',maxlength:'300',placeholder:'Qué cambias hoy en esta cuenta y por qué','aria-label':`Qué cambio hoy en ${c.nombre}`,style:{flex:'1 1 260px',minWidth:'0',minHeight:'44px'}});
+  let enviando=false;
+  const apuntar=h('button',{type:'button',class:'bt pri',disabled:!scope,on:{click:async()=>{
+    if(enviando)return;if(!vivo()){caja.replaceChildren();return;}
+    const t=campo.value.trim();if(t.length<3){campo.focus?.();campo.setAttribute('aria-invalid','true');return;}
+    campo.removeAttribute('aria-invalid');enviando=true;apuntar.disabled=true;status.textContent='Guardando intención local…';
+    try{await apuntarCambio(ctx,d,c,t,alHecho);if(!vivo()){caja.replaceChildren();return;}if(campo.value.trim()===t)campo.value='';status.textContent='Intención local guardada; no confirma cambios en Meta.';}
+    catch(e){if(!vivo()){caja.replaceChildren();return;}status.textContent=e?.message||'Resultado pendiente de comprobar. Reintenta el mismo contenido.';}
+    finally{enviando=false;apuntar.disabled=!vivo();}
+  }}},icono('editar'),'Apuntar');
+  campo.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();apuntar.click();}});
+  const rapidos=h('div',{class:'fila',style:{flexWrap:'wrap',gap:S[1]}},CAMBIOS_RAPIDOS.map(t=>h('button',{type:'button',class:'bt mini',disabled:!scope,on:{click:()=>{if(!vivo()){caja.replaceChildren();return;}campo.value=t;campo.focus?.();}}},t)));
+  caja.append(h('div',{class:'fila',style:{gap:S[2],flexWrap:'wrap'}},campo,apuntar),compacto?null:rapidos,status,h('a',{href:'#/envios',on:{click:e=>{if(!vivo()){e.preventDefault();caja.replaceChildren();}}}},'Consultar Envíos'));
+  return caja;
 }
 
 /** Últimos apuntes de la bitácora (lista con icono). */
-function listaBitacora(ctx, d, c, n = 3) {
-  const l = (d.bitacora?.get(c.cliente_id) || []).slice(0, n);
-  if (!l.length) return h('p', { class: 'sub', style: { margin: '0' } }, 'Todavía no hay nada apuntado en esta cuenta.');
-  return listaConIcono(l.map(a => ({ icono: 'editar', estado: ctx.fechas?.esHoy?.(diaDe(a)) ? 'verde' : null, texto: a.texto, extra: `${cuandoBit(ctx, a)} · ${nombre(d, a.quien) || 'alguien'}` })));
+function listaBitacora(ctx,d,c,n=3) {
+  const l=(d.bitacora?.get(c.cliente_id)||[]).slice(0,n),estado=d.lecturaPaid516;
+  const aviso=estado&&estado.estado!=='observada'?h('p',{class:'sub',role:'status',title:estado.leido_en||'Fecha HTTP desconocida'},estado.aviso):null;
+  const rows=l.length?listaConIcono(l.map(a=>({icono:'editar',texto:a.texto,extra:`${cuandoBit(ctx,a)} · ${nombre(d,a.quien)||'Autor por confirmar'} · registro local, no ejecución externa`}))):h('p',{class:'sub',style:{margin:'0'}},estado?.estado==='observada'?'Sin apuntes en la lectura disponible; historial limitado.':'Registro local pendiente de lectura.');
+  return h('div',{class:'pila',style:{gap:S[1]}},aviso,rows);
 }
 
 /** Formulario «Pedir creatividades a producción», con el brief ya escrito con lo que dice la cuenta. */
@@ -1339,20 +1499,30 @@ function formPedido(ctx, d, c, { anuncio } = {}) {
   const texto = h('textarea', { rows: 3, maxlength: '900', 'aria-label': 'Brief para producción', style: { width: '100%', padding: `${S[2]} ${S[3]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)', font: 'var(--t-cuerpo)' } }, brief);
   const fecha = h('input', { type: 'date', value: para, min: ctx.hoy || hoyMadrid(), 'aria-label': 'Para cuándo', style: { minHeight: 'var(--s-10)', padding: `${S[1]} ${S[2]}`, border: '1px solid var(--line)', borderRadius: 'var(--r-s)', background: 'var(--card)' } });
   const yaPedidos = (d.pedidos?.get(c.cliente_id) || []).slice(0, 2);
-  const enviar = botonDeshacer({ texto: 'Pedir a producción', hecho: 'Pedido a producción', pri: true, mini: false, icono: 'send', soloLectura: ctx.soloLectura,
-    validar: () => (!formatos.length ? 'Elige qué pides' : texto.value.trim().length < 10 ? 'Escribe el brief' : null),
-    alHacer: async () => {
-      const txt = `${FORMATOS.filter(f => formatos.includes(f.valor)).map(f => f.texto).join(' + ')} para el ${fDiaRO(fecha.value)}. ${texto.value.trim()}`;
-      await ctx.accion({ herramienta: 'clickup', tipo: 'tarea', objeto: `Pedido de creatividades · ${c.nombre}`.slice(0, 200), cliente_id: c.cliente_id, texto: txt,
-        vista_previa: { pedido_creatividad: true, tarea: `Creatividades nuevas · ${c.nombre}`, para: fecha.value, formatos, anuncio: base?.nombre || null, brief: texto.value.trim().slice(0, 900), de: ctx.persona.id } });
-      const l = d.pedidos.get(c.cliente_id) || []; l.unshift({ texto: txt, creada: new Date().toISOString().replace('T', ' ').slice(0, 19), quien: ctx.persona.id }); d.pedidos.set(c.cliente_id, l);
-      return 'Pedido en #avisos-redes y en la cola de ClickUp (simulado)';
-    } });
-  return h('div', { class: 'pila', style: { gap: S[2] } },
-    chips, texto,
-    h('div', { class: 'fila', style: { gap: S[2] } }, h('label', { class: 'fila sub', style: { gap: S[2] } }, 'Para cuándo', fecha), enviar),
-    h('p', { class: 'sub', style: { margin: '0' } }, 'Llega a producción en #avisos-redes con este brief y queda como tarea de ClickUp en la lista del cliente (hoy en simulación). La marca del cliente la ven en su tarea.'),
-    yaPedidos.length ? h('p', { class: 'sub', style: { margin: '0' } }, `Ya pedido: ${yaPedidos.map(p => `${cuandoBit(ctx, p)} (${nombre(d, p.quien) || 'alguien'})`).join(' · ')}`) : null);
+  const scope=ambitoPaid516(ctx,c.cliente_id,true),caja=h('div',{class:'pila',style:{gap:S[2]}});
+  const vivo=()=>ctx.vigente?.()!==false&&scope!==null&&ambitoPaid516(ctx,c.cliente_id,true)?.firma===scope.firma;
+  const status=h('p',{class:'sub',role:'status'},scope?'':'Registro local no disponible para esta sesión.');let enviando=false;
+  const enviar=h('button',{type:'button',class:'bt pri',disabled:!scope,on:{click:async()=>{
+    if(enviando)return;if(!vivo()){caja.replaceChildren();return;}
+    if(!formatos.length||texto.value.trim().length<10){status.textContent='Elige formatos y escribe el brief.';return;}
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(fecha.value)||!Number.isFinite(Date.parse(fecha.value+'T00:00:00Z'))||new Date(fecha.value+'T00:00:00Z').toISOString().slice(0,10)!==fecha.value){status.textContent='Elige una fecha válida.';return;}
+    const contenido=texto.value.trim(),txt=`${FORMATOS.filter(f=>formatos.includes(f.valor)).map(f=>f.texto).join(' + ')} para el ${fDiaRO(fecha.value)}. ${contenido}`;
+    const payload={herramienta:'clickup',tipo:'tarea',objeto:`Pedido de creatividades · ${c.nombre}`.slice(0,200),cliente_id:c.cliente_id,texto:txt,
+      vista_previa:{pedido_creatividad:true,tarea:`Creatividades nuevas · ${c.nombre}`,para:fecha.value,formatos:[...formatos],anuncio:base?.nombre||null,brief:contenido.slice(0,900),de:ctx.persona.id}};
+    enviando=true;enviar.disabled=true;status.textContent='Guardando intención local…';
+    try{const receipt=await guardarPaid516(ctx,payload);if(!vivo()){caja.replaceChildren();return;}
+      const l=d.pedidos.get(c.cliente_id)||[];if(!l.some(x=>x.id===receipt.accion_id))l.unshift({id:receipt.accion_id,texto:txt,creada:null,_recibo516:true,quien:ctx.real.id,estado:'simulada'});d.pedidos.set(c.cliente_id,l);
+      status.textContent='Intención local guardada; creación en ClickUp y comunicación a producción sin confirmar.';
+    }catch(e){if(!vivo()){caja.replaceChildren();return;}status.textContent=e?.message||'Resultado pendiente de comprobar. Reintenta el mismo contenido.';}
+    finally{enviando=false;enviar.disabled=!vivo();}
+  }}},icono('send'),'Guardar pedido local');
+  caja.append(chips,texto,h('div',{class:'fila',style:{gap:S[2]}},h('label',{class:'fila sub',style:{gap:S[2]}},'Para cuándo',fecha),enviar),status,
+    h('p',{class:'sub',style:{margin:'0'}},'Guarda una intención local con este brief. No acredita envío a un canal ni creación de tarea en ClickUp.'),
+    h('a',{href:'#/envios',on:{click:e=>{if(!vivo()){e.preventDefault();caja.replaceChildren();}}}},'Consultar Envíos'),
+    d.lecturaPaid516&&d.lecturaPaid516.estado!=='observada'?h('p',{class:'sub',role:'status',title:d.lecturaPaid516.leido_en||'Fecha HTTP desconocida'},d.lecturaPaid516.aviso):null,
+    yaPedidos.length?h('p',{class:'sub',style:{margin:'0'}},`Registros locales leídos: ${yaPedidos.map(p=>`${cuandoBit(ctx,p)} (${nombre(d,p.quien)||'Autor por confirmar'})`).join(' · ')}`):null);
+  return caja;
+
 }
 
 /** Barra de la tarjeta (molde: barraAcciones arriba y pegada): «Qué cambio hoy» y «Pedir creatividades». */
@@ -1390,13 +1560,17 @@ export default {
     const espera = esqueleto({ lineas: 4, tarjetas: 4 });
     contenedor.append(espera);
     const d = await cargar(ctx);
+    if (!contenedor.isConnected || (ctx.vigente && !ctx.vigente())) return;
     espera.remove();
     if (d.error) {
       contenedor.append(vacio({ icono: 'alert', titulo: 'No se pudieron cargar los datos de captación', texto: d.error, quien: 'Agus (técnico)', borde: true, tono: 'aviso' }));
       return;
     }
+    const avisoPaid401=h('details', {class:'que-es'}, h('summary',{style:{minHeight:'36px',display:'flex',alignItems:'center'}},'Fuentes y señales de Paid'), avisoParcial('Esta vista conserva reglas anteriores. Sus alertas requieren contraste: no demuestran pérdida de leads, falta de seguimiento ni cumplimiento de un objetivo acordado. Consulta Prioridades por cliente para la metodología vigente.', { tipo: 'info' }));
     PARAMS = d.parametros || null;
     await cargarBitacora(ctx, d);
+    if (!contenedor.isConnected || (ctx.vigente && !ctx.vigente())) return;
+    d.clientes=d.clientes.map(c=>normalizarPaid(c,d,ctx.hoy||hoyMadrid()));
     const [id, extra] = ctx.params;
     if (id === '~trafficker' && extra) {
       // atajo desde «Por trafficker»: lista filtrada por esa persona
@@ -1408,11 +1582,19 @@ export default {
       sinDesborde(zona);
       contenedor.append(zona);
       pintarCuerpo(zona, ctx, d, filas, K, ctx.nivel === 'resumen', 'trafficker');
+      contenedor.append(avisoPaid401);
       for (const hijo of contenedor.children) hijo.style.minWidth = '0';
       return;
     }
     if (id) pintarTarjeta(contenedor, ctx, d, id);
     else await pintarLista(contenedor, ctx, d);
+    if(id&&d.clientes.some(c=>c.cliente_id===id)){
+      const firmaMeta=ambitoMeta386(ctx,id);
+      if(firmaMeta){const diarioMeta=await renderMetaDiaria386(h,ctx,id);
+        if(contenedor.isConnected&&(!ctx.vigente||ctx.vigente())&&ambitoMeta386(ctx,id)===firmaMeta&&diarioMeta.querySelector('table'))contenedor.append(diarioMeta);
+      }
+    }
+    contenedor.append(avisoPaid401);
     // El contenedor es una rejilla: sin esto, un hijo ancho (tabla, pestañas) estira la página en móvil.
     for (const hijo of contenedor.children) hijo.style.minWidth = '0';
   },

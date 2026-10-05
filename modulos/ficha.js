@@ -1,3 +1,7 @@
+import { fichaMeta548, fichaHoras548 } from './_ficha_medicion_548.js';
+import { indiceRegistrado495, tituloEstadoRegistrado495 } from './_estado_ficha_495.js';
+import { contextoFicha233, exigirFichaVigente233 } from './_contexto_ficha_233.js';
+import { crearRegistroHechos, permisoLecturaHechos } from './evidencias_kpi.js';
 // modulos/ficha.js · M4 «Ficha del cliente» (2-oct-2026).
 // Porta la ficha v3 de «Panel de operaciones para Mili» (~/Downloads/HERRAMIENTA_RO_2026-10-02/plantilla.html), la que
 // Tomás vio y le gusta, «mejorable», al contrato de módulo de la app. Ruta: #/ficha/<cliente>/<pestaña>.
@@ -28,11 +32,12 @@ import { botonAvisar, compositorAviso, pintarReunion } from './ficha_equipo.js';
 import { botonDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_plegar_consejo.js';
 import { cargarObjetivos, puedeEditar, lunesDeHoy, RE_IMPORTE, TIPO_OBJETIVO, TIPO_SEMAFORO } from './objetivos_comun.js';
-import { botonIA, panelCopiloto, estilos as estilosIA } from './ia_componentes.js';
+import { botonIA, panelCopiloto, fichaCompleta, estilos as estilosIA } from './ia_componentes.js';
 import { conTickets } from './_legible.js';
 import { panelBitacora } from './_bitacora.js';
 import { bloqueEstadoWeb } from './_modular.js';
 import { bloqueFichaGoogle } from './_gbp_bloques.js';   // 3-oct · ficha de Google (Business Profile)
+import { serviciosActivos, pestanaFicha, pestanaConSentido, crmMedible, textoCrm, TEXTO_SIN_CRM, TEXTO_SIN_META } from './_servicios.js';   // Tomás 3-oct
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -113,8 +118,7 @@ const SILLAS = { account: 'Account', trafficker: 'Publicidad', crm: 'CRM', seo: 
 const ESPACIO_CLICKUP = '90152357276';
 const CLAVE_ULTIMO = 'ro.ficha.ultimo';
 
-// Caché de la sesión: cambiar de cliente o de pestaña es instantáneo (regla 10 del sistema visual).
-const CACHE = { cliente: new Map(), contactos: new Map(), chat: new Map(), portal: null, web: null };
+// Las fuentes y los privados se vuelven a solicitar con la identidad actual. No hay caché compartida entre fichas.
 
 const ses = { leer: k => { try { return sessionStorage.getItem(k); } catch { return null; } }, poner: (k, v) => { try { sessionStorage.setItem(k, v); } catch { /* nada */ } } };
 const num = v => (v === null || v === undefined || Number.isNaN(+v) ? null : +v);
@@ -178,39 +182,41 @@ function ventana(serie, n, valor = x => x[1]) {
 
 // ------------------------------------------------------------------ carga
 async function cargarCliente(ctx, id) {
-  if (CACHE.cliente.has(id)) return CACHE.cliente.get(id);
+  exigirFichaVigente233(ctx);
   let doc = null;
   if (ctx.servidor) doc = (await ctx.api(`cliente/${id}`)).fuentes;
   else doc = await (await fetch(`data/clientes/${id}.json`, { cache: 'no-cache' })).json();   // modo de respaldo sin permisos (LEEME)
-  CACHE.cliente.set(id, doc);
+  exigirFichaVigente233(ctx);
   return doc;
 }
 async function cargarModulo(ctx, nombre) {
-  const k = nombre.split('/')[1];
-  if (CACHE[k]) return CACHE[k];
-  try { CACHE[k] = await ctx.datosModulo(nombre); } catch { CACHE[k] = { filas: [] }; }
-  return CACHE[k];
+  exigirFichaVigente233(ctx);
+  let doc;
+  try { doc = await ctx.datosModulo(nombre); } catch { doc = { filas: [] }; }
+  exigirFichaVigente233(ctx);
+  return doc;
 }
 /** Contactos o chat del almacén privado. Solo si la regla lo deja (se pregunta antes: así no hay 403 en la consola). */
 async function cargarPrivado(ctx, cual, id) {
+  exigirFichaVigente233(ctx);
   const tipo = cual === 'contactos' ? 'contactos_cliente' : 'chat_cliente';
   const v = ctx.ver({ tipo, cliente_id: id });
   if (!v.ok) return { negado: v.motivo || 'No visible para tu puesto.' };
   if (!ctx.servidor) return { negado: 'Sin servidor: arranca «python3 servir.py» para abrir contactos y chat (van en almacén privado).' };
   if (ctx.soloLectura) return { negado: 'En «ver como» no se abren teléfonos, correos ni chat: abrirlos deja rastro a tu nombre. Entra como esa persona para probarlo.' };
-  const cache = CACHE[cual];
-  if (cache.has(id)) return cache.get(id);
   let r;
   const cuerpo = { almacen: `ficha/_privado/${cual}`, ref: id, campo: 'datos', cliente_id: id };
-  // Mismo /api/ver_dato que ctx.verDato, con la cabecera X-RO-App que exige servir.py desde la ronda 6 de E0
-  // (así no hay un 403 en consola mientras datos.js no la mande; con un servidor antiguo la cabecera se ignora).
+  // La puerta común conserva identidad/época, cabeceras y comprobación posterior529.
+  // No lectura directa ni respaldo estático para almacenes privados.
   try {
-    const resp = await fetch('api/ver_dato', { method: 'POST', cache: 'no-store', body: JSON.stringify(cuerpo),
-      headers: { 'Content-Type': 'application/json', 'X-RO-App': '1', 'X-RO-Yo': ctx.real.id, ...(ctx.persona.id !== ctx.real.id ? { 'X-RO-Como': ctx.persona.id } : {}) } });
-    const d = await resp.json().catch(() => ({}));
-    r = resp.ok ? { valor: d.valor } : resp.status === 404 ? { valor: null } : { negado: d.error || `Error ${resp.status}` };
-  } catch (e) { r = { negado: e.message }; }
-  cache.set(id, r);
+    if (typeof ctx.verDato !== 'function') return { negado: 'La lectura privada no está disponible.' };
+    const d = await ctx.verDato(cuerpo);
+    r = { valor: d?.valor ?? null };
+  } catch (e) {
+    r = e?.status === 404 ? { valor: null } : { negado: e?.message || 'No se ha podido abrir esta información privada.' };
+  }
+  exigirFichaVigente233(ctx);
+  if (!ctx.ver({ tipo, cliente_id: id }).ok || ctx.soloLectura) return { negado: 'El permiso ha cambiado. Vuelve a abrir la ficha.' };
   return r;
 }
 
@@ -231,7 +237,7 @@ export default {
     const raiz = h('div', { class: 'pila' });
     cont.append(raiz);
 
-    if (!vis.length && ctx.nivel === 'resumen') { await pintarBasica(raiz, ctx, idParam); return; }
+    if (!vis.length && ctx.nivel === 'resumen') { ctx = contextoFicha233(ctx, raiz); await pintarBasica(raiz, ctx, idParam); return; }
     if (!vis.length) {
       ctx.titulo('Ficha del cliente', 'Ningún cliente que abrir');
       raiz.append(vacio({ icono: 'candado', borde: true, titulo: 'No tienes clientes que abrir',
@@ -260,23 +266,31 @@ export default {
         quien: c.responsable, accion: h('a', { class: 'bt', href: `#/en-rojo` }, icono('fire'), 'Ir a En rojo') }));
       return;
     }
+    if (!vis.some(x => x.id === id)) return;
+    ctx = contextoFicha233(ctx, raiz, id);
+    if (!ctx.vigente()) return;
     ses.poner(CLAVE_ULTIMO, id);
 
     // ---- selector de cliente (logo, account, buscador). El periodo es el común de la carcasa (usa_periodo, ronda 9). ----
     const orden = ORDEN[perfil(ctx)];
-    let tabActual = orden.includes(tabParam) ? tabParam : (orden.includes(ses.leer('ro.pestana.ficha')) ? ses.leer('ro.pestana.ficha') : orden[0]);
+    // Tomás 3-oct: sin pestaña en la ruta, se abre la de sus servicios activos (con publicidad, la publicidad; sin ella y con
+    // SEO o web, «Web y SEO»; si solo es redes, «Redes»). La última que abriste solo manda si tiene sentido para ESTE cliente.
+    const sv = serviciosActivos(ctx, id);
+    const recordada = ses.leer('ro.pestana.ficha');
+    let tabActual = orden.includes(tabParam) ? tabParam
+      : (orden.includes(recordada) && recordada !== orden[0] && pestanaConSentido(recordada, sv) ? recordada : pestanaFicha(sv, { perfil: perfil(ctx), orden }));
     const selector = selectorCliente({
       clientes: [...vis].sort((a, b) => Number(b.enCartera) - Number(a.enCartera) || a.nombre.localeCompare(b.nombre, 'es')),
       actual: id, etiqueta: 'Cambiar de cliente',
       detalle: x => detalleSelector(ctx, x),
-      alElegir: x => ctx.navegar(`ficha/${x.id}/${tabActual}`),     // al cambiar de cliente te quedas en la misma pestaña
+      alElegir: x => ctx.navegar(`ficha/${x.id}`),     // Tomás 3-oct: el otro cliente abre en la pestaña de SUS servicios (la tuya, si le sirve)
     });
     // El nombre del cliente sale una vez: el selector ES el título (guía 3.6); sin migas ni nombre repetido.
     const barra = { selector };
     let periodoId = ctx.periodo?.id || '7d';
     // Atajo: «c» abre el selector de clientes (⌘K es el buscador de toda la app).
     const atajo = e => {
-      if (!raiz.isConnected) { document.removeEventListener('keydown', atajo); return; }
+      if (!ctx.vigente()) { document.removeEventListener('keydown', atajo); return; }
       if (e.key === 'c' && !e.metaKey && !e.ctrlKey && !e.altKey && !/input|textarea|select/i.test(document.activeElement?.tagName || '') && !document.activeElement?.isContentEditable) { e.preventDefault(); selector.abrir(); }
     };
     document.addEventListener('keydown', atajo);
@@ -296,9 +310,11 @@ export default {
         admin ? null : cargarModulo(ctx, 'bandeja/por_cliente'), admin ? null : cargarObjetivos(ctx),
         admin ? null : cargarModulo(ctx, 'fuentes/hallazgos_medicion')]);
     } catch (e) {
+      if (!ctx.vigente()) return;
       zona.replaceChildren(vacio({ icono: 'alert', tono: 'aviso', borde: true, titulo: 'No he podido cargar la ficha', texto: String(e.message || e), quien: 'quien mantiene la app' }));
       return;
     }
+    if (!ctx.vigente()) return;
     const F = {
       c, doc: doc || { fuentes: {} },
       portal: (portal.filas || []).find(x => x.cliente_id === id) || null,
@@ -326,19 +342,21 @@ export default {
     };
 
     function repintar() {
+      if (!ctx.vigente()) return;
       zona.replaceChildren(cabecera(ctx, F, barra));
       const cuentas = contadores(F);
       let caja = null;
       // Ronda U: al ir a una pestaña, sus pestañas quedan arriba (bajo la cabecera fija de la app), sin animación que el
       // repintado de la pestaña pueda cortar.
-      const irA = k => { if (caja && orden.includes(k)) { caja.elegir(k); const tl = caja.querySelector('[role=tablist]');
-        if (tl) setTimeout(() => window.scrollTo({ top: Math.max(0, tl.getBoundingClientRect().top + window.scrollY - (document.querySelector('header')?.offsetHeight || 64) - 8) }), 30); return true; } return false; };
+      const irA = k => { if (!ctx.vigente()) return false; if (caja && orden.includes(k)) { caja.elegir(k); const tl = caja.querySelector('[role=tablist]');
+        if (tl) setTimeout(() => { if (ctx.vigente()) window.scrollTo({ top: Math.max(0, tl.getBoundingClientRect().top + window.scrollY - (document.querySelector('header')?.offsetHeight || 64) - 8) }); }, 30); return true; } return false; };
       F.irA = irA;
       caja = pestanas({
         etiqueta: `Ficha de ${c.nombre}`, activa: tabActual, unaFila: true,
         pestanas: orden.map(k => ({ id: k, texto: PESTANAS[k].texto, icono: PESTANAS[k].icono, ...(cuentas[k] || {}) })),
-        alCambiar: k => { tabActual = k; ses.poner('ro.pestana.ficha', k); history.replaceState(null, '', `#/ficha/${id}/${k}`); },
+        alCambiar: k => { if (!ctx.vigente()) return; tabActual = k; ses.poner('ro.pestana.ficha', k); history.replaceState(null, '', `#/ficha/${id}/${k}`); },
         pintar: (k, z) => {
+          if (!ctx.vigente()) return;
           // N14: los fallos de medición de las fuentes de esta pestaña, arriba y con dueño (la pestaña se pinta debajo)
           const med = bloqueMedicion(ctx, F, k);
           if (med) { const dentro = h('div', { class: 'pila', style: { minWidth: '0' } }); z.replaceChildren(med, dentro); z = dentro; }
@@ -349,13 +367,14 @@ export default {
       zona.append(caja);
     }
     // ctx.periodo es el del momento de pintar; el oyente trae el nuevo y se repinta la ficha en la misma pestaña.
-    ctx.alCambiarPeriodo?.(v => { periodoId = v?.id; if (raiz.isConnected) repintar(); });
+    ctx.alCambiarPeriodo?.(v => { periodoId = v?.id; if (ctx.vigente()) repintar(); });
     if (abrirA4 && F.obj) F.a4 = abrirA4;
     repintar();
-    plegarConsejo(cont);   // Ronda U (#1, molde común): el «Qué haría yo hoy aquí» de la carcasa, plegado en una línea
+    plegarConsejo(cont, { despues: true });   // Consejo general plegado al pie; el copiloto del cliente conserva su lugar.
     if (abrirA4 && F.obj) {
       // El editor ya sale abierto (su botón, pulsado): basta con llevarlo al centro y dar el foco a su primer campo.
       const aLaVista = (n = 0) => {
+        if (!ctx.vigente()) return;
         const ed = zona.querySelector('[data-a4-editor]');
         if (!ed || !ed.isConnected) { if (n < 40) setTimeout(() => aLaVista(n + 1), 75); return; }
         const campo = ed.querySelector(abrirA4 === 'semaforo' ? 'input, button' : 'input');
@@ -380,7 +399,7 @@ function cabecera(ctx, F, barra = {}) {
   const web = c.web ? c.web.replace(/^https?:\/\//, '').replace(/\/$/, '') : null;
   const e = etapa(c);
   const grav = { critico: ['rojo', 'Crítico'], atencion: ['ambar', 'Vigilar'], bien: ['verde', 'Bien'] }[v.gravedad];
-  const salud = v.salud ?? c.salud;
+  const indice495 = indiceRegistrado495(v, c);
   const especialidad = (libro.espec || '').replace(/\s*\([A-ZÁÉÍÓÚ]{2,6}\)\s*/g, ' ').trim();   // «Ley de Segunda Oportunidad (LSO)» → sin la sigla
   const cuota = cuotaFicha(F);
 
@@ -451,9 +470,9 @@ function cabecera(ctx, F, barra = {}) {
         cuota ? h('span', { title: `Cuota mensual sin IVA · ${cuota.fuente}` }, icono('euro'), `${fmt.eur(cuota.valor)}/mes`) : null,
         especialidad ? h('span', {}, icono('maletin'), especialidad) : descripcionDe(portal, c) ? h('span', {}, icono('maletin'), descripcionDe(portal, c)) : null,
         web ? h('span', {}, icono('link'), h('a', { href: c.web, target: '_blank', rel: 'noopener' }, web)) : null),
-      grav ? h('span', { class: `chip ${grav[0]}`, title: (v.motivos || []).join(' · ') || 'Gravedad única del cliente' }, `Estado: ${grav[1]}`) : null,
+      grav ? h('span', { class: `chip ${grav[0]}`, title: [tituloEstadoRegistrado495(v), ...(v.motivos || [])].join(' · '), 'aria-label': `Estado registrado: ${grav[1]}. ${tituloEstadoRegistrado495(v)}` }, `Estado registrado: ${grav[1]}`) : null,
       F.obj ? null : chipEstado(sem, textoSem),   // A4: con el semáforo del lunes, va en su fila (abajo)
-      salud !== undefined && salud !== null ? h('span', { class: `chip ${semaforo(salud, { verde: 60, ambar: 40 })}`, title: 'Salud provisional (40 resultados + 30 atención + 30 arranque), a medias' }, `Salud ${salud}`) : chipEstado('gris', 'Salud sin dato'),
+      h('span', { class: 'chip gris', title: indice495.titulo, 'aria-label': `${indice495.etiqueta}. ${indice495.titulo}` }, indice495.etiqueta),
       (v.nuevo ?? c.nuevo) ? chipEstado('azul', e >= 0 ? `Cliente nuevo · ${['arranque', 'arranque', 'optimización', 'consolidado'][e]}` : 'Cliente nuevo') : null,
       F.alarmas.some(a => a.gravedad === 'rojo') ? h('a', { href: `#/en-rojo/${c.id}`, class: 'chip rojo', title: 'Ver los avisos rojos en «En rojo»' }, fmt.plural(F.alarmas.filter(a => a.gravedad === 'rojo').length, 'aviso rojo', 'avisos rojos')) : null,
       chipMedicion(F),
@@ -562,6 +581,11 @@ function zonaA4(ctx, F, previo) {
   const caja = h('div', { class: 'pila', style: { flexBasis: '100%', minWidth: '0' } });
   F.pintarA4 = () => pintarA4(caja, ctx, F, previo);
   F.pintarA4();
+  // 4-oct · riesgo de baja en tres ejes (data/riesgo/riesgo_baja.json, fuentes_riesgo/). Llega después: no frena la ficha.
+  if (perfil(ctx) !== 'admin') cargarModulo(ctx, 'riesgo/riesgo_baja').then(d => {
+    F.riesgo = (d?.clientes || []).find(x => x.cliente_id === F.c.id) || null;
+    if (F.riesgo) F.pintarA4();
+  });
   return caja;
 }
 
@@ -597,12 +621,45 @@ function pintarA4(caja, ctx, F, previo) {
   const bObj = boton('objetivo', 'target', 'Objetivo',
     o?.cargado ? chipEstado('azul', resumen) : chipEstado('ambar', editaObj ? 'Sin cargar · cargar' : 'Sin cargar'),
     o?.cargado ? quienCuando(ctx, o) : null,
-    o?.cargado ? `Cargado por ${quienCuando(ctx, o)} ${DESDE_TXT[o.desde] || ''}. Lo leen Captación, Mi día y Clientes nuevos.` : 'Sin objetivo, Captación y Mi día juzgan con el techo general. Pulsa para cargarlo.', editaObj);
+    o?.cargado ? `Cargado por ${quienCuando(ctx, o)} ${DESDE_TXT[o.desde] || ''}. Lo leen Captación, Mi día y Clientes nuevos.` : 'Sin objetivo confirmado y vigente no se evalúa CPL ni se aplica techo general. Pulsa para cargarlo.', editaObj);
 
   const partes = [h('div', { class: 'fila', style: { minWidth: '0' } }, bSem, bObj)];
+  if (F.riesgo) partes.push(filaRiesgo(ctx, F));
   if (F.a4 === 'semaforo') partes.push(editorSemaforo(ctx, F, edita, s, s_hoy, lunes));
   if (F.a4 === 'objetivo') partes.push(editorObjetivo(ctx, F, editaObj, o));
   caja.replaceChildren(...partes);
+}
+
+// 4-oct · Tomás: el semáforo distingue resultados, silencio y quejas; su combinación da el riesgo de baja y su ficha.
+const NIVEL_COLOR = { bajo: 'verde', vigilar: 'ambar', alto: 'rojo', critico: 'rojo' };
+const TONO_TXT = { calido: 'Cálido', normal: 'Normal', frio: 'Frío' };
+const TONO_COLOR = { calido: 'verde', normal: 'gris', frio: 'ambar' };
+const EJES = [['resultados', 'Resultados'], ['silencio', 'Relación'], ['quejas', 'Quejas']];   // Relación: contesta, viene y está cálido
+function filaRiesgo(ctx, F) {
+  const r = F.riesgo;
+  const zona = h('div', { class: 'pila', style: { minWidth: '0' } });
+  const chipEje = ([k, et]) => {
+    const e = r.ejes?.[k] || {};
+    const t = e.color === 'gris' ? `${et}: sin dato` : `${et}: ${COLOR_TXT[e.color] || e.color}`;
+    const chip = chipEstado(e.color || 'gris', t);
+    chip.title = (e.motivos || []).join(' · ') || (e.color === 'verde' ? 'Sin señales' : 'Sin dato');
+    return chip;
+  };
+  const ver = h('button', { type: 'button', class: 'bt', on: { click: async e => {
+    e.currentTarget.disabled = true;
+    try { const f = await ctx.api(`ia/cerebro?id=${encodeURIComponent(r.ficha)}`); zona.replaceChildren(fichaCompleta(ctx.api, f.ficha, { clienteId: F.c.id })); }
+    catch (err) { zona.replaceChildren(lineaMeta(`No he podido abrir la ficha: ${err?.message || err}`)); e.currentTarget.disabled = false; }
+  } } }, icono('ojo'), 'Qué significa y qué hago');
+  const motivos = EJES.flatMap(([k]) => r.ejes?.[k]?.motivos || []).slice(0, 4);
+  return h('div', { class: 'pila', 'data-riesgo-baja': r.nivel, style: { gap: '8px', minWidth: '0' } },
+    h('div', { class: 'fila', style: { minWidth: '0', flexWrap: 'wrap' } },
+      h('span', { class: 'titulo-seccion' }, 'Riesgo de baja'), chipEstado(NIVEL_COLOR[r.nivel] || 'gris', r.nivel_txt), EJES.map(chipEje),
+      ctx.servidor ? ver : null),
+    h('p', { style: { margin: '0', overflowWrap: 'anywhere' } }, r.lectura),
+    motivos.length ? lineaMeta(motivos.join(' · ')) : null,
+    r.discrepancia ? lineaMeta(`Ojo: ${r.discrepancia}.`) : null,
+    r.confianza !== 'alta' ? lineaMeta(r.confianza === 'baja' ? 'Faltan datos: léelo como pista, no como veredicto.' : 'Dato parcial: de Desk aún no llega la última respuesta del cliente en correos cerrados.') : null,
+    zona);
 }
 
 function cajaEditor(...hijos) {
@@ -622,6 +679,12 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
     const campo = h('div', { class: 'fila', style: { gap: 'var(--s-2)', alignItems: 'flex-end', minWidth: '0' } }, tres);
     const input = { get value() { return tres.map((c, i) => { const v = c.querySelector('input').value.trim(); return v ? `${ET[i][0]}: ${v}` : ''; }).filter(Boolean).join(' · '); } };
     const estado = h('span', { class: 'sub', role: 'status' }, F.a4msg || '');
+    // 4-oct · eje de quejas: hoy la app solo ve el asunto de los correos; lo que el account oye en llamadas y reuniones, lo marca aquí.
+    const casillaQueja = h('input', { type: 'checkbox', checked: sHoy?.queja || null, style: { width: '20px', height: '20px', accentColor: 'var(--accent)' } });
+    // 4-oct · Tomás: la calidez en la reunión es relación, no resultados. El verde del lunes no tapa la falta de resultados.
+    const selTono = h('select', { 'aria-label': 'Cómo estuvo en la última reunión o llamada' },
+      [['', 'Sin reunión ni llamada esta semana'], ['calido', 'Cálido'], ['normal', 'Normal'], ['frio', 'Frío o distante']]
+        .map(([v, t]) => h('option', { value: v, selected: (sHoy?.tono || '') === v || null }, t)));
     const elegir = color => h('button', { type: 'button', class: `bt${sHoy?.color === color ? ' pri' : ''}`, title: `Guardar el semáforo en ${COLOR_TXT[color].toLowerCase()} con la nota`,
       on: { click: async e => {
         const nota = input.value.trim();
@@ -629,11 +692,17 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
         RE_IMPORTE.lastIndex = 0;
         e.currentTarget.disabled = true;
         try {
-          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota } },
+          await guardarA4(ctx, F, { tipo: TIPO_SEMAFORO, texto: `Semáforo del lunes de ${c.nombre}: ${COLOR_TXT[color]} (${horaSeg()})`, vista_previa: { color, nota, queja: casillaQueja.checked, tono: selTono.value || null } },
             `Semáforo en ${COLOR_TXT[color].toLowerCase()}`);
         } catch (err) { estado.textContent = `No se ha guardado: ${err?.message || err}`; e.currentTarget.disabled = false; }
       } } }, chipEstado(color, COLOR_TXT[color]));
-    hijos.push(campo, h('div', { class: 'fila' }, h('span', { class: 'titulo-seccion' }, 'Ponlo en'), ['verde', 'ambar', 'rojo'].map(elegir)), estado);
+    hijos.push(campo,
+      h('label', { class: 'fila', style: { gap: '8px', minWidth: '0', cursor: 'pointer' } }, casillaQueja,
+        h('span', {}, 'Se ha quejado esta semana (correo, llamada, reunión o WhatsApp)')),
+      h('label', { class: 'fila', style: { gap: '8px', minWidth: '0', flexWrap: 'wrap' } },
+        h('span', {}, 'En la reunión o la llamada estuvo'), selTono),
+      lineaMeta('El color es tu lectura de la relación. Los resultados los mide la app aparte: un cliente que no dice nada malo en la reunión puede no estar recibiendo nada.'),
+      h('div', { class: 'fila' }, h('span', { class: 'titulo-seccion' }, 'Ponlo en'), ['verde', 'ambar', 'rojo'].map(elegir)), estado);
   } else {
     hijos.push(vacioLinea('Lo ponen su account, operaciones y dirección. Tú lo ves, sin editar.', { icono: 'ojo' }));
   }
@@ -649,6 +718,8 @@ function editorSemaforo(ctx, F, edita, s, sHoy, lunes) {
       return h('div', { class: 'fila', style: { minWidth: '0', flexWrap: 'wrap' } },
         h('span', { class: 'sub', style: { minWidth: '112px' } }, `Lunes ${fDiaRO(sem)}`),
         x ? chipEstado(x.color, COLOR_TXT[x.color]) : chipEstado('gris', 'Sin poner'),
+        x?.queja ? chipEstado('rojo', 'Queja') : null,
+        x?.tono ? chipEstado(TONO_COLOR[x.tono], TONO_TXT[x.tono]) : null,
         x?.nota ? h('span', { style: { minWidth: '0', overflowWrap: 'anywhere' } }, x.nota) : null,
         x ? h('span', { class: 'sub' }, quienCuando(ctx, x)) : null);
     })));
@@ -685,7 +756,7 @@ function editorObjetivo(ctx, F, edita, o) {
   }
   const extra = [o?.citas_mes != null ? `${fmt.num(o.citas_mes)} citas al mes` : null, veDinero && o?.inversion_mes != null ? `inversión de ${fmt.eur(o.inversion_mes)} al mes` : null].filter(Boolean);
   if (extra.length) hijos.push(lineaMeta(`Además, de Clientes nuevos: ${extra.join(' y ')}.`));
-  hijos.push(lineaMeta(o?.cargado ? `Cargado por ${quienCuando(ctx, o)} ${DESDE_TXT[o.desde] || ''}.` : 'Sin objetivo cargado: Captación y Mi día juzgan con el techo general (35 € por lead y red de seguridad de 100 € por cita).'),
+  hijos.push(lineaMeta(o?.cargado ? `Cargado por ${quienCuando(ctx, o)} ${DESDE_TXT[o.desde] || ''}.` : 'Sin objetivo confirmado y vigente: no se evalúa CPL ni se aplica techo general.'),
     lineaMeta('Una sola fuente: lo leen Captación, Mi día (el número que manda) y Clientes nuevos. Captación y Mi día lo usan desde la próxima actualización de datos.'));
   const hist = (F.obj?.historial_objetivo || []).slice(0, 5);
   if (hist.length > 1 || (hist.length && edita)) {
@@ -721,12 +792,13 @@ function correosCliente(F) {
 }
 
 /** Ventana de Meta para el periodo elegido: 7 días cerrados (sin hoy) frente a los 7 anteriores, o los 30 últimos días de la serie. */
-function ventanaMeta(md, n, inversion) {
-  const serie = (md.serie || []).filter(x => Array.isArray(x.meta));
-  if (n === 7) return { leads: md.leads['7d'], leadsAnt: md.leads['7d_prev'], gasto: md.gasto?.['7d'], gastoAnt: md.gasto?.['7d_prev'], cpl: md.cpl?.['7d'], cplAnt: md.cpl?.['7d_prev'], comp: 'frente a los 7 anteriores' };
-  const l = ventana(serie, 30, x => x.meta[1]); const g = inversion ? ventana(serie, 30, x => x.meta[0]) : {};
-  return { leads: l.actual, leadsAnt: null, gasto: g.actual, cpl: l.actual && g.actual ? g.actual / l.actual : null,
-    comp: `Septiembre completo: ${fmt.num(md.leads.mes_anterior)} leads${inversion && md.gasto ? ` · ${fmt.eur(md.gasto.mes_anterior)}` : ''}` };
+function ventanaMeta(md, n, inversion, ctx, F, meta) {
+  return fichaMeta548(md, n, inversion, ctx.hoy || new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(new Date()), F.obj?.objetivo, meta);
+}
+function tileHoras548(hor, anterior, ctx, extra = {}) {
+  const m = fichaHoras548(hor, anterior, ctx.hoy || new Intl.DateTimeFormat('sv-SE', { timeZone: 'Europe/Madrid' }).format(new Date()));
+  return tile({ icono: 'clock', etiqueta: m.etiqueta, valor: fmt.num(m.valor, 1), unidad: 'h', estado: m.estado,
+    contexto: m.nota, medible: 'medias', medibleDetalle: hor.nota, frescura: frescuraDe(hor), ...extra });
 }
 
 /** Cuota: la de la fuente única (Airtable de octubre, la misma que Dinero por cliente); si no la hay, la del libro. Solo si la ve. */
@@ -790,21 +862,25 @@ const PINTAR = {
     // 2 · resultados del cliente (cliente primero), con el periodo elegido arriba
     const n = +F.periodo();
     const md = meta?.datos || {};
-    if (pintable(meta) && md.leads) {
-      const W = ventanaMeta(md, n, F.ve.inversion);
-      L.push(tile({ icono: 'target', etiqueta: `Leads · ${n} días`, valor: fmt.num(W.leads), comparacion: W.leadsAnt != null ? { delta: variacion(W.leads, W.leadsAnt), pct: true, texto: W.comp } : { texto: W.comp },
+    // Tomás 3-oct: sin campaña de Meta encendida no hay ceros de publicidad; sin CRM en uso, nada de «0 citas».
+    const sv = serviciosActivos(ctx, c.id, { ghl: fuente(doc, 'ghl'), meta });
+    if (sv.meta === false && !(md.leads?.[n === 7 ? '7d' : 'mes_anterior'] > 0)) {
+      L.push(tile({ icono: 'target', etiqueta: 'Publicidad', valor: null, estado: 'gris', contexto: `${TEXTO_SIN_META}: no se mide en leads ni cuenta como fuera de objetivo.`, alPulsar: () => irA(sv.seo || sv.web ? 'web' : 'resultados') }));
+    } else if (pintable(meta) && md.leads) {
+      const W = ventanaMeta(md, n, F.ve.inversion, ctx, F, meta);
+      L.push(tile({ icono: 'target', etiqueta: `${W.etiqueta} · ${n} días`, valor: W.leads == null ? null : `${W.prefijo}${fmt.num(W.leads)}`, comparacion: W.leadsAnt != null ? { delta: variacion(W.leads, W.leadsAnt), pct: true, texto: W.comp } : { texto: W.comp },
         frescura: frescuraDe(meta), ir: 'Ver resultados', alPulsar: () => irA('resultados') }));
       if (F.ve.inversion && md.cpl) {
-        const obj = F.obj?.objetivo?.coste_lead;   // A4: el objetivo del cliente, de un solo sitio
-        L.push(tile({ icono: 'euro', etiqueta: `Coste por lead · ${n} días`, valor: W.cpl != null ? `${fmt.num(W.cpl, 2)} €` : null,
-          estado: W.cpl == null ? 'gris' : semaforo(W.cpl, { verde: obj || 45, ambar: obj ? obj * 1.3 : 100, mejorSi: 'bajo' }),
+        L.push(tile({ icono: 'euro', etiqueta: `${W.cplReferencia ? 'CPL · referencia snapshot' : 'Coste por lead Meta'} · ${n} días`, valor: W.cpl != null ? `${fmt.num(W.cpl, 2)} €` : null,
+          estado: W.estado,
           comparacion: W.cplAnt != null ? { delta: variacion(W.cpl, W.cplAnt), pct: true, texto: 'frente a los 7 anteriores', mejorSi: 'bajo' } : null,
-          contexto: obj ? `Objetivo del cliente: ${fmt.num(obj, 2)} €` : 'Sin objetivo del cliente: rojo si pasa de 100 €', frescura: frescuraDe(meta), alPulsar: () => irA('resultados') }));
+          contexto: W.nota, frescura: frescuraDe(meta), alPulsar: () => irA('resultados') }));
       }
-    } else L.push(tile({ icono: 'target', etiqueta: `Leads · ${n} días`, valor: null, contexto: meta?.nota || 'Sin cuenta de Meta enlazada', alPulsar: () => irA('resultados') }));
+    } else L.push(tile({ icono: 'target', etiqueta: `Resultados Meta · ${n} días`, valor: null, contexto: meta?.nota || 'Sin cuenta de Meta enlazada', alPulsar: () => irA('resultados') }));
     const ci = capt?.datos?.citas;
     const kc = n === 7 ? '7d' : 'mes_anterior';
-    if (pintable(capt) && ci) L.push(tile({ icono: 'cal', etiqueta: n === 7 ? 'Citas · 7 días' : 'Citas · septiembre', valor: fmt.num(ci[kc]?.agendadas), estado: (ci[kc]?.agendadas || 0) === 0 && (md.leads?.[n === 7 ? '7d' : 'mes_anterior'] || 0) > 0 ? 'ambar' : '',
+    if (!crmMedible(sv.crm)) L.push(tile({ icono: 'cal', etiqueta: 'CRM', valor: null, estado: 'gris', contexto: textoCrm(sv.crm) || TEXTO_SIN_CRM }));
+    else if (pintable(capt) && ci) L.push(tile({ icono: 'cal', etiqueta: n === 7 ? 'Citas · 7 días' : 'Citas · septiembre', valor: fmt.num(ci[kc]?.agendadas), estado: (ci[kc]?.agendadas || 0) === 0 && (md.leads?.[n === 7 ? '7d' : 'mes_anterior'] || 0) > 0 ? 'ambar' : '',
       contexto: ci[kc]?.asistencia_pct != null ? `Asistencia ${fmt.pct(ci[kc].asistencia_pct)} · verde desde el 75 %` : 'En su calendario de GoHighLevel', frescura: frescuraDe(capt), alPulsar: () => irA('resultados') }));
     // 3 · trabajo
     const td = tar?.datos || {};
@@ -816,10 +892,7 @@ const PINTAR = {
     if (pintable(ga)) L.push(tile({ icono: 'users', etiqueta: 'Visitas a la web · 30 días', valor: fmt.num(ga.datos.actual?.usuarios), unidad: 'usuarios',
       comparacion: { delta: variacion(ga.datos.actual?.usuarios, ga.datos.anterior?.usuarios), pct: true, texto: 'frente a los 30 anteriores' }, frescura: frescuraDe(ga), alPulsar: () => irA('web') }));
     if (F.ve.horas.ok && hor?.datos && F.ve.horas.nivel !== 'resumen') {
-      const hd = hor.datos;
-      L.push(tile({ icono: 'clock', etiqueta: 'Horas · septiembre', valor: fmt.num(hd.horas_mes_ant, 1), unidad: hd.horas_presup_mes ? `de ${fmt.num(hd.horas_presup_mes)} h pautadas` : 'h',
-        estado: hd.pct_horas == null ? '' : hd.pct_horas > 130 ? 'ambar' : '', contexto: hd.pct_horas != null ? `${fmt.pct(hd.pct_horas)} de lo pautado · solo como aviso` : 'Sin horas pautadas',
-        medible: 'medias', medibleDetalle: hor.nota, frescura: frescuraDe(hor), alPulsar: () => irA('trabajo') }));
+      L.push(tileHoras548(hor, true, ctx, { alPulsar: () => irA('trabajo') }));
     }
     z.append(rejilla(L));
 
@@ -841,10 +914,11 @@ const PINTAR = {
     // Finanzas v3 (3-oct): si el cliente tiene un impago, su equipo lo sabe; el importe solo llega a quien ve la cuota (servir.py)
     const avImp = h('div', { hidden: true }); z.append(avImp);
     cargarModulo(ctx, 'finanzas/impagos_clientes').then(di => {
+      if (!ctx.vigente() || !avImp.isConnected) return;
       const x = (di?.clientes || []).find(y => y.cliente_id === c.id);
       if (!x) return avImp.remove();
       avImp.replaceWith(avisoParcial(`${x.vencidas === 1 ? 'Tiene 1 factura vencida' : `Tiene ${x.vencidas} facturas vencidas`} sin cobrar (la más antigua, de hace ${x.dias_max} días)${typeof x.cuota_vencida === 'number' ? ` · ${fmt.eur(x.cuota_vencida)}` : ''}. ${x.texto}`, { titulo: 'Impago.' }));
-    });
+    }).catch(() => {});
 
     // Qué hay que mover hoy + últimos movimientos
     const movs = [];
@@ -873,7 +947,7 @@ const PINTAR = {
           h('div', { class: 'cuerpo' }, listaConIcono(movs.slice(0, 7), { vacio: { icono: 'hist', titulo: 'Sin movimientos registrados' } }))),
         panelEquipo(ctx, F))));
     // U3 (3-oct) · bitácora del trafficker («qué se cambió en la publicidad»), para quien ve Captación
-    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, c.id).then(p => hb.replaceWith(p)).catch(() => hb.remove()); }
+    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, c.id).then(p => { if (ctx.vigente() && hb.isConnected) hb.replaceWith(p); }).catch(() => hb.remove()); }
     // V2 (B-A4): a 390 la frescura más larga («Reuniones (CRM, Fathom y verificación manual)») desbordaba 1 px: que parta línea
     z.append(h('div', { class: 'fila', style: { minWidth: '0' } }, h('span', { class: 'sub' }, 'Hora del dato:'), ...['desk', 'meta', 'tareas', 'reuniones', 'ga4'].map(k => { const el = frescuraEl(fuente(doc, k)); if (el) { el.style.whiteSpace = 'normal'; el.style.maxWidth = '100%'; } return el; }).filter(Boolean)));
     // Ronda U: la barra de etapas (firma → consolidado) pasa de la cabecera al pie del Resumen (contexto, no trabajo).
@@ -883,9 +957,15 @@ const PINTAR = {
 
   // ------------------------------------------------------------- Reunión (ronda U, #9)
   reunion(z, ctx, F) {
-    F.cc = correosCliente(F); pintarReunion(z, ctx, F);
+    // La hoja se repinta tras su lectura y al guardar acuerdos; conserva los
+    // lectores independientes que se montan a continuación en la pestaña.
+    const hoja = h('div', { class: 'pila', style: { minWidth: '0' } });
+    z.append(hoja);
+    F.cc = correosCliente(F); pintarReunion(hoja, ctx, F);
+    pintarHistorialReuniones(z, ctx, F);
+    if (permisoLecturaHechos(ctx, F.c.id)) { const hechos=crearRegistroHechos(ctx,F.c.id); z.append(hechos.nodo); queueMicrotask(() => hechos.cargar()); }
     // U3 (3-oct) · lo que se cambió en la publicidad, para contarlo en la reunión
-    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, F.c.id).then(p => hb.replaceWith(p)).catch(() => hb.remove()); }
+    if (ctx.veModulo?.('captacion') !== false) { const hb = h('div', { hidden: true }); z.append(hb); panelBitacora(ctx, F.c.id).then(p => { if (ctx.vigente() && hb.isConnected) hb.replaceWith(p); }).catch(() => hb.remove()); }
   },
 
   // ------------------------------------------------------------- Contactos
@@ -896,57 +976,61 @@ const PINTAR = {
     const { doc } = F;
     const p = F.periodo(), n = +p;
     const meta = fuente(doc, 'meta'), capt = fuente(doc, 'captacion_ghl'), ghl = fuente(doc, 'ghl'), snov = fuente(doc, 'snov'), gads = fuente(doc, 'google_ads');
+    const sv = serviciosActivos(ctx, F.c.id, { ghl, meta });   // Tomás 3-oct: lo que no aplica se dice, no se pinta en ceros
     // ---- Meta ----
     const bloqueMeta = [];
-    if (pintable(meta) && meta.datos?.leads) {
+    if (sv.meta === false && !(meta?.datos?.leads?.mes_anterior > 0) && !(meta?.datos?.leads?.['7d'] > 0)) {
+      bloqueMeta.push(panel({ titulo: 'Meta Ads', icono: 'target' }, h('div', { class: 'cuerpo' },
+        vacioLinea(`${TEXTO_SIN_META}: no se mide en leads ni coste por lead y no cuenta como fuera de objetivo.`, { icono: 'info' }))));
+    } else if (pintable(meta) && meta.datos?.leads) {
       const md = meta.datos;
-      const serie = (md.serie || []).filter(x => Array.isArray(x.meta));
-      const L = ventanaMeta(md, n, F.ve.inversion);
+      const L = ventanaMeta(md, n, F.ve.inversion, ctx, F, meta);
       let metrica = 'leads';
       const grafico = h('div');
-      const pintarGrafico = () => grafico.replaceChildren(graficoSerie({ titulo: metrica === 'leads' ? 'Leads por día (Meta)' : 'Gasto por día (Meta)', alto: 160,
-        puntos: serie.slice(-Math.max(n, 14)).map(x => ({ x: x.d, y: metrica === 'leads' ? x.meta[1] : x.meta[0] })), formato: metrica === 'leads' ? (v => fmt.num(v)) : (v => `${fmt.num(v)} €`) }));
+      const pintarGrafico = () => grafico.replaceChildren(graficoSerie({ titulo: metrica === 'leads' ? `${L.etiqueta} por día` : 'Gasto por día (Meta)', alto: 160,
+        puntos: L.puntos.map(x => ({ x: x.d, y: metrica === 'leads' ? x.meta[1] : x.meta[0] })), formato: metrica === 'leads' ? (v => fmt.num(v)) : (v => `${fmt.num(v)} €`) }));
       const tl = [];
-      const tLeads = tile({ icono: 'target', etiqueta: `Leads · ${n} días`, valor: fmt.num(L.leads), activo: true,
+      const tLeads = tile({ icono: 'target', etiqueta: `${L.etiqueta} · ${n} días`, valor: L.leads == null ? null : `${L.prefijo}${fmt.num(L.leads)}`, activo: true,
         comparacion: L.leadsAnt != null ? { delta: variacion(L.leads, L.leadsAnt), pct: true, texto: L.comp } : { texto: L.comp }, frescura: frescuraDe(meta),
         alPulsar: () => { metrica = 'leads'; tLeads.setAttribute('aria-pressed', 'true'); tGasto?.setAttribute('aria-pressed', 'false'); pintarGrafico(); } });
       tl.push(tLeads);
       let tGasto = null;
       if (F.ve.inversion && md.gasto) {
-        tGasto = tile({ icono: 'euro', etiqueta: `Gasto · ${n} días`, valor: fmt.eur(L.gasto), activo: false,
+        tGasto = tile({ icono: 'euro', etiqueta: `Gasto · ${n} días`, valor: L.gasto == null ? null : `${L.gastoPrefijo}${fmt.eur(L.gasto)}`, activo: false,
           comparacion: L.gastoAnt != null ? { delta: variacion(L.gasto, L.gastoAnt), pct: true, texto: 'frente a los 7 anteriores', mejorSi: 'bajo' } : null,
-          contexto: md.presupuesto?.aprobado ? `Presupuesto del mes: ${fmt.eur(md.presupuesto.aprobado)} (${md.presupuesto.origen})` : null,
+          contexto: L.comp + (md.presupuesto?.aprobado != null ? ` · Presupuesto registrado: ${fmt.eur(md.presupuesto.aprobado)} (${md.presupuesto.origen || 'copia'}); referencia por confirmar` : ''),
           alPulsar: () => { metrica = 'gasto'; tGasto.setAttribute('aria-pressed', 'true'); tLeads.setAttribute('aria-pressed', 'false'); pintarGrafico(); } });
         tl.push(tGasto);
-        const obj = F.obj?.objetivo?.coste_lead;   // A4: el objetivo del cliente, de un solo sitio
-        tl.push(tile({ icono: 'zap', etiqueta: `Coste por lead · ${n} días`, valor: L.cpl != null ? `${fmt.num(L.cpl, 2)} €` : null,
-          estado: L.cpl == null ? 'gris' : semaforo(L.cpl, { verde: obj || 45, ambar: obj ? obj * 1.3 : 100, mejorSi: 'bajo' }),
+        tl.push(tile({ icono: 'zap', etiqueta: `${L.cplReferencia ? 'CPL · referencia snapshot' : 'Coste por lead Meta'} · ${n} días`, valor: L.cpl != null ? `${fmt.num(L.cpl, 2)} €` : null,
+          estado: L.estado,
           comparacion: L.cplAnt != null ? { delta: variacion(L.cpl, L.cplAnt), pct: true, texto: 'frente a los 7 anteriores', mejorSi: 'bajo' } : null,
-          contexto: obj ? `Objetivo del cliente: ${fmt.num(obj, 2)} €` : 'Sin objetivo del cliente: rojo si pasa de 100 €' }));
+          contexto: L.nota }));
       }
       const meta1 = (md.metas || [])[0];
-      if (meta1) tl.push(tile({ icono: 'flag', etiqueta: 'Meta de leads del mes', valor: fmt.num(meta1.logrado), unidad: `de ${fmt.num(meta1.cantidad)}`, estado: meta1.pct >= (new Date().getDate() / 30 * 100) ? 'verde' : 'ambar',
+      if (meta1) tl.push(tile({ icono: 'flag', etiqueta: 'Meta mensual · referencia registrada', valor: fmt.num(meta1.logrado), unidad: `de ${fmt.num(meta1.cantidad)}`, estado: 'gris',
         contexto: `Septiembre: ${fmt.pct(meta1.septiembre_pct)} de la meta · ${meta1.origen}` }));
       pintarGrafico();
       const campanas = md.campanas || [];
       bloqueMeta.push(rejilla(tl), h('div', { class: 'dos' },
-        panel({ titulo: 'Meta Ads por día', icono: 'grafico', sub: 'Pulsa «Leads» o «Gasto» arriba para cambiar el gráfico', acciones: recursoBoton(F, 'metaAds', 'Abrir en Meta') }, h('div', { class: 'cuerpo' }, grafico)),
-        panel({ titulo: 'Campañas', icono: 'megafono', sub: `${campanas.length} con actividad · últimos 7 días` },
+        panel({ titulo: 'Meta Ads por día', icono: 'grafico', sub: 'Pulsa «Resultados Meta» o «Gasto» arriba para cambiar el gráfico', acciones: recursoBoton(F, 'metaAds', 'Abrir en Meta') }, h('div', { class: 'cuerpo' }, grafico)),
+        panel({ titulo: 'Campañas', icono: 'megafono', sub: `${campanas.length} en copia · cifras históricas sin evento/ventana acreditados` },
           tablaApilable({ filas: campanas, vacio: { titulo: 'Ninguna campaña de Meta gastó en este periodo', texto: 'Si debería haber anuncios en marcha, lo revisa su trafficker.' }, columnas: [
             { clave: 'campana', titulo: 'Campaña', principal: true },
-            { clave: 'leads_7d', titulo: 'Leads', num: true, celda: x => fmt.num(x.leads_7d) },
-            ...(F.ve.inversion ? [{ clave: 'cpl_7d', titulo: 'Coste/lead', num: true, celda: x => (x.cpl_7d != null ? `${fmt.num(x.cpl_7d, 2)} €` : '—') }] : []),
+            { clave: 'leads_7d', titulo: 'Resultados Meta', num: true, celda: x => fmt.num(x.leads_7d) },
+            ...(F.ve.inversion ? [{ clave: 'cpl_7d', titulo: 'Coste · ref.', num: true, celda: x => (x.cpl_7d != null ? `${fmt.num(x.cpl_7d, 2)} €` : '—') }] : []),
             { clave: 'leads_mes_anterior', titulo: 'Septiembre', num: true, celda: x => fmt.num(x.leads_mes_anterior) },
           ] }))));
       const avisos = md.avisos || [];
       if (avisos.length) bloqueMeta.push(panel({ titulo: 'Avisos de captación', icono: 'alert', sub: 'De la Torre de control (captacion.json)' },
-        h('div', { class: 'cuerpo' }, listaConIcono(avisos.map(a => ({ icono: a.clase_id === 'integracion' ? 'plug' : a.clase_id === 'dato' ? 'info' : 'alert', estado: a.clase_id === 'integracion' ? 'rojo' : 'ambar', texto: a.texto, extra: a.clase }))))));
+        h('div', { class: 'cuerpo' }, listaConIcono(avisos.map(a => ({ icono: a.clase_id === 'integracion' ? 'plug' : a.clase_id === 'dato' ? 'info' : 'alert', estado: /techo general/i.test(a.texto || '') ? 'gris' : a.clase_id === 'integracion' ? 'rojo' : 'ambar', texto: /techo general/i.test(a.texto || '') ? h('span', { title: `Texto histórico de la copia: ${a.texto}` }, 'Objetivo de coste por lead pendiente de confirmar; no se evalúa CPL ni se aplica techo general.') : a.texto, extra: a.clase }))))));
     } else bloqueMeta.push(panel({ titulo: 'Meta Ads', icono: 'target' }, h('div', { class: 'cuerpo' }, huecoFuente(meta, { icono: 'target', quien: 'Vale (publicidad)' }))));
     z.append(...bloqueMeta);
 
     // ---- Embudo del CRM del cliente (GHL) ----
     const col = [];
-    if (pintable(capt) && capt.datos?.embudo) {
+    if (!crmMedible(sv.crm)) {
+      col.push(panel({ titulo: 'Su GoHighLevel', icono: 'cap' }, h('div', { class: 'cuerpo' }, vacioLinea(textoCrm(sv.crm), { icono: 'info' }))));
+    } else if (pintable(capt) && capt.datos?.embudo) {
       const e = capt.datos.embudo, fu = e.funnel || {}, ci = capt.datos.citas || {};
       const v = n === 7 ? ci['7d'] || {} : ci['mes_anterior'] || {};
       col.push(panel({ titulo: 'Embudo en su GoHighLevel', icono: 'cap', sub: `${fmt.num(e.contactos_90d)} contactos en 90 días · ${fmt.num(e.abiertas_total)} oportunidades abiertas` },
@@ -1131,7 +1215,7 @@ const PINTAR = {
   chat(z, ctx, F) {
     const caja = h('div', { class: 'pila' }, esqueleto({ lineas: 4 }));
     z.append(caja);
-    cargarPrivado(ctx, 'chat', F.c.id).then(r => pintarChat(caja, ctx, F, r));
+    cargarPrivado(ctx, 'chat', F.c.id).then(r => { if (ctx.vigente() && caja.isConnected) pintarChat(caja, ctx, F, r); }).catch(() => {});
   },
 
   // ------------------------------------------------------------- Trabajo
@@ -1141,10 +1225,7 @@ const PINTAR = {
     const td = tar?.datos || {};
     const L = [];
     if (F.ve.horas.ok && pintable(hor) && F.ve.horas.nivel !== 'resumen') {
-      const hd = hor.datos;
-      L.push(tile({ icono: 'clock', etiqueta: 'Horas · octubre', valor: fmt.num(hd.horas_mes, 1), unidad: 'h', contexto: 'Mes en curso', medible: 'medias', medibleDetalle: hor.nota, frescura: frescuraDe(hor) }));
-      L.push(tile({ icono: 'clock', etiqueta: 'Horas · septiembre', valor: fmt.num(hd.horas_mes_ant, 1), unidad: hd.horas_presup_mes ? `de ${fmt.num(hd.horas_presup_mes)} h pautadas` : 'h',
-        estado: hd.pct_horas > 130 ? 'ambar' : '', contexto: hd.pct_horas != null ? `${fmt.pct(hd.pct_horas)} de lo pautado · solo como aviso` : null, medible: 'medias', medibleDetalle: hor.nota }));
+      L.push(tileHoras548(hor, false, ctx), tileHoras548(hor, true, ctx));
     }
     L.push(tile({ icono: 'alert', etiqueta: 'Revisiones de más de 48 h', valor: fmt.num(td.revision_mas_48h || 0), unidad: `de ${fmt.num(td.revision_total || 0)}`, estado: semaforo(td.revision_mas_48h || 0, { verde: 0, ambar: 3, mejorSi: 'bajo' }), frescura: frescuraDe(tar) }));
     L.push(tile({ icono: 'cal', etiqueta: 'Tareas vencidas', valor: fmt.num(td.vencidas || 0), estado: (td.vencidas || 0) > 10 ? 'ambar' : '', contexto: `${fmt.num(td.sin_fecha)} sin fecha` }));
@@ -1326,6 +1407,7 @@ function tarjetaPersona(p, marcar, duda = false) {
 async function pintarBasica(raiz, ctx, idParam) {
   let d = null;
   try { d = await ctx.datosModulo('ficha/basica'); } catch { d = null; }
+  if (!ctx.vigente() || !raiz.isConnected) return;
   const fila = (d?.filas || []).find(x => x.persona_id === ctx.persona.id);
   const lista = fila?.clientes || [];
   if (!lista.length) {
@@ -1376,6 +1458,7 @@ async function pintarBasica(raiz, ctx, idParam) {
 async function pintarInformes(caja, ctx, F) {
   let d = null;
   try { d = await cargarModulo(ctx, 'ficha/informes'); } catch { d = null; }
+  if (!ctx.vigente() || !caja.isConnected) return;
   const fila = (d?.filas || []).find(x => x.cliente_id === F.c.id);
   const meta = d?._meta || {};
   if (!fila) { caja.replaceChildren(vacio({ icono: 'doc', borde: true, titulo: 'Sin histórico de informes', texto: 'Este cliente no está en la hoja «Informes mensuales» ni en el seguimiento de informes.', quien: F.c.responsable })); return; }
@@ -1534,6 +1617,7 @@ function pintarChat(caja, ctx, F, r) {
     h('p', { class: 'sub' }, 'Lectura real del canal de ClickUp (2-oct). Enviar deja el mensaje en la cola simulada con su vista previa: se manda de verdad cuando la app esté publicada con su llave en el servidor. Los mensajes con claves o contraseñas se ocultan.'));
   // Mensajes ya puestos en cola desde esta ficha (simulados)
   if (ctx.servidor) ctx.api('acciones?modulo=ficha').then(d => {
+    if (!ctx.vigente() || !caja.isConnected) return;
     // Fuera los envíos de prueba de la construcción (la cola es imborrable: se filtran aquí; ver dudas_pintura.md)
     const mios = (d.acciones || []).filter(a => a.tipo === 'mensaje_chat' && a.cliente_id === c.id && !/^prueba de la ficha/i.test(a.texto || '')).reverse();
     for (const a of mios) { const m = { quien: alias(ctx, a.quien), fecha: Date.parse(String(a.creada || '').replace(' ', 'T') + 'Z') || Date.now(), texto: a.texto }; ul.append(...conDia(m), pintarMsg(m, a.quien === ctx.real.id, true)); }
@@ -1558,6 +1642,7 @@ async function pintarRastro(caja, ctx, F) {
       }
     } catch { /* sin rastro del servidor */ }
   }
+  if (!ctx.vigente() || !caja.isConnected) return;
   // La historia del cliente (de las fuentes)
   const rd = fuente(doc, 'reuniones')?.datos || {};
   for (const r of rd.historial || []) ev.push({ fecha: r.fecha, titulo: `Reunión: ${r.asunto}`, detalle: `${r.quien || ''} · ${r.fuente}` });
@@ -1572,4 +1657,38 @@ async function pintarRastro(caja, ctx, F) {
   pintar();
   caja.replaceChildren(panel({ titulo: 'Rastro del cliente', icono: 'hist', sub: 'Quién hizo qué y cuándo, y la historia del cliente. Nada se borra.', acciones: chips }, lista),
     ...(ctx.servidor ? [] : [avisoParcial('Sin servidor solo se ve la historia del cliente; el rastro de la app sale de servir.py.', { tipo: 'info' })]));
+}
+
+
+// Histórico129: metadatos autorizados, separado de programación y de cadencia.
+async function pintarHistorialReuniones(z, ctx, F) {
+  const roles = new Set(ctx.persona?.puestos || []);
+  const realRoles = new Set(ctx.real?.puestos || ctx.persona?.puestos || []);
+  const puedeRol = rs => rs.has('direccion') || rs.has('operaciones') || rs.has('account');
+  if (!puedeRol(roles) || !puedeRol(realRoles)) return;
+  const caja = h('div', { class:'pila', style:{gap:'8px',minWidth:0} }, h('p',{class:'sub'},'Leyendo registros históricos del archivo local…'));
+  z.append(panel({titulo:'Histórico de reuniones',icono:'hist',sub:'Archivo local parcial; no confirma celebración ni cumplimiento de cadencia.'},h('div',{class:'cuerpo'},caja)));
+  const viva = () => caja.isConnected && (!ctx.vigente || ctx.vigente());
+  if (ctx.vigente && !ctx.vigente()) return;
+  if (typeof ctx.api !== 'function') { caja.replaceChildren(h('p',{class:'sub'},'El lector histórico requiere el servidor local. No se puede concluir ausencia de reuniones.')); return; }
+  try {
+    const datos = await ctx.api(`historial/reuniones?cliente_id=${encodeURIComponent(F.c.id)}`);
+    if (!viva()) return;
+    if (datos.cliente_id !== F.c.id) throw new Error('Identidad de histórico no coincidente');
+    if (datos.estado_fuente !== 'disponible') {
+      caja.replaceChildren(h('p',{class:'sub'},datos.nota || 'El depósito histórico todavía no está disponible. No significa que no existan reuniones.')); return;
+    }
+    const filas = Array.isArray(datos.registros) ? datos.registros : [];
+    const cuenta = h('p',{class:'sub'},`Archivo importado el ${datos.importado_el || 'día no documentado'} · cobertura parcial. ${filas.length} registros disponibles para este cliente.`);
+    const nota = h('p',{class:'sub'},'Account histórico sin evidencia; no se atribuye al responsable actual. Las grabaciones no tienen acceso verificado.');
+    if (!filas.length) { caja.replaceChildren(cuenta,h('p',{},'No hay registros enlazados en este archivo parcial; no demuestra ausencia de reuniones.'),nota); return; }
+    const detalles = h('details',{},h('summary',{style:{cursor:'pointer',minHeight:'44px'}},`Ver ${filas.length} registros · ${filas[filas.length-1].fecha} a ${filas[0].fecha}`),
+      h('div',{class:'pila',style:{gap:'8px',marginTop:'8px'}},...filas.map(r => h('div',{style:{borderTop:'1px solid var(--line)',padding:'8px 0',overflowWrap:'anywhere'}},
+        h('strong',{},`${r.fecha} · Registro histórico`),
+        h('p',{class:'sub'},`${r.fuente || 'Archivo local'} · ${r.transcripcion_registrada ? 'Transcripción registrada, texto reservado' : 'Transcripción no acreditada'} · account de esa fecha sin evidencia`),
+        r.fecha_ambigua ? h('p',{class:'sub'},`Fecha por contrastar: ${(r.fechas_documentadas || []).join(' / ') || 'fuentes discrepantes'}.`) : null))));
+    caja.replaceChildren(cuenta,detalles,nota);
+  } catch (_) {
+    if (viva()) caja.replaceChildren(h('p',{class:'sub'},'No se ha podido consultar este histórico o tu vista no tiene acceso. No se puede concluir ausencia de reuniones.'));
+  }
 }

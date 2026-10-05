@@ -24,13 +24,14 @@ MAPA = {
  '1790947835974': ('xterna', 4928195), 'deudot': ('deudot', 12991772),
 }
 HOY = datetime.date(2026, 10, 2)
-def pos_en(posiciones, dia, campo='pos'):
-    """Posición en la fecha más cercana ≤ día (0 = fuera del top 100 → None)."""
-    cand = [p for p in posiciones if p['date'] <= str(dia)]
-    if not cand: return None, None
-    p = max(cand, key=lambda x: x['date'])
-    v = p.get(campo) or 0
-    return (v if v > 0 else None), p['date']
+try:
+    from .posiciones import seleccionar, fecha
+except ImportError:
+    from posiciones import seleccionar, fecha
+
+def pos_en(posiciones,dia,campo='pos'):
+    return seleccionar(posiciones,dia,campo)
+
 salida = {}
 for f in glob.glob(os.path.join(CARPETA, '*.txt')) + glob.glob(os.path.join(CARPETA, '*.json')):
     clave = os.path.basename(f).rsplit('-', 1)[-1].split('.')[0]
@@ -43,14 +44,14 @@ for f in glob.glob(os.path.join(CARPETA, '*.txt')) + glob.glob(os.path.join(CARP
         for k in m.get('keywords', []):
             ps = k.get('positions') or []
             hoy, fh = pos_en(ps, HOY)
-            ayer, _ = pos_en(ps, HOY - datetime.timedelta(days=1))
-            sem, _ = pos_en(ps, HOY - datetime.timedelta(days=7))
-            sem2, _ = pos_en(ps, HOY - datetime.timedelta(days=8))
+            ayer, fa = pos_en(ps, HOY - datetime.timedelta(days=1))
+            sem, fs = pos_en(ps, HOY - datetime.timedelta(days=7))
+            sem2, fs2 = pos_en(ps, HOY - datetime.timedelta(days=8))
             mes, fm = pos_en(ps, HOY - datetime.timedelta(days=30))
-            primera = min((p['date'] for p in ps), default=None)
-            mapa, _ = pos_en(ps, HOY, 'map_position')
+            primera=min((p['date'] for p in ps if fecha(p.get('date'))),default=None)
+            mapa, fmaps = pos_en(ps, HOY, 'map_position')
             kws.append({'k': k['name'], 'vol': k.get('volume') or 0, 'hoy': hoy, 'ayer': ayer, 'sem': sem, 'sem2': sem2, 'mes': mes, 'mapa': mapa,
-                        'desde': primera, 'ultima': fh})
+                        'desde':primera,'ultima':fh,'fechas':{'hoy':fh,'ayer':fa,'sem':fs,'sem2':fs2,'mes':fm,'mapa':fmaps}})
         motores.append({'site_engine_id': m['site_engine_id'], 'principal': i == 0, 'palabras': kws})
     fechas = sorted({k['ultima'] for m in motores for k in m['palabras'] if k['ultima']})
     salida[cid] = {'proyecto': proyecto, 'motores': motores, 'ultima_comprobacion': fechas[-1] if fechas else None,

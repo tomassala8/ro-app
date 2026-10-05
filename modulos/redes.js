@@ -139,12 +139,12 @@ function pintarPortada(cont, ctx, d) {
 
   // 1 · cifras (6 → rejilla de 3 + 3). Ventanas fijas: lo programado mira 14 días adelante; lo publicado, 30 días atrás.
   ctxN.push(rejillaTarjetas([
-    tile({ icono: 'cal', etiqueta: '14 días cubiertos', valor: fmt.pct(pct), unidad: `${verdes} de ${base.length}`, estado: pct === 100 ? 'verde' : rojos.length ? 'rojo' : 'ambar',
+    tile({ icono: 'cal', etiqueta: '14 días cubiertos', valor: fmt.pct(pct), unidad: `${verdes} de ${base.length}`, estado: !base.length ? 'gris' : pct === 100 ? 'verde' : rojos.length ? 'rojo' : 'ambar',
       contexto: deRedes ? `Número que manda · bien el 100 % · tu cartera de redes: ${base.length} con calendario en Metricool (${lleva} que llevas y ${base.length - lleva} en que ayudas)${sinMc.length ? ` · ${sinMc.length} sin marca, no cuentan` : ''}` : 'Número que manda · bien el 100 %', medible: 'medias', medibleDetalle: m.regla_hueco, frescura: fres, ir: 'Ver el calendario', alPulsar: () => document.getElementById('red-cal')?.scrollIntoView({ behavior: 'smooth' }) }),
-    tile({ icono: 'alert', etiqueta: 'Hueco en 7 días', valor: rojos.length, unidad: `de ${base.length}`, estado: rojos.length ? 'rojo' : 'verde',
+    tile({ icono: 'alert', etiqueta: 'Hueco en 7 días', valor: base.length ? rojos.length : null, unidad: `de ${base.length}`, estado: !base.length ? 'gris' : rojos.length ? 'rojo' : 'verde',
       contexto: '48 h sin cubrir → account y Coti (no hay jefa de redes)', medible: 'hoy', frescura: fres, ir: 'Ver cuáles', alPulsar: () => elegirChip(cont, 'rojo') }),
-    tile({ icono: 'cerrar', etiqueta: 'Fallidas · 7 días', valor: fall7, estado: fall7 ? 'rojo' : 'verde', contexto: '7 días cerrados, sin hoy', medible: 'hoy', medibleDetalle: 'Error de la red o pendiente con fecha pasada', frescura: fres, ir: 'Ver cuáles', alPulsar: () => elegirChip(cont, 'fallidas') }),
-    tile({ icono: 'editar', etiqueta: 'Por aprobar', valor: borr, unidad: 'borradores', estado: borr ? 'ambar' : 'verde', contexto: 'Borradores con fecha', medible: 'medias', medibleDetalle: m.aprobaciones, frescura: fres }),
+    tile({ icono: 'cerrar', etiqueta: 'Fallidas · 7 días', valor: base.length ? fall7 : null, estado: !base.length ? 'gris' : fall7 ? 'rojo' : 'verde', contexto: '7 días cerrados, sin hoy', medible: 'hoy', medibleDetalle: 'Error de la red o pendiente con fecha pasada', frescura: fres, ir: 'Ver cuáles', alPulsar: () => elegirChip(cont, 'fallidas') }),
+    tile({ icono: 'editar', etiqueta: 'Por aprobar', valor: base.length ? borr : null, unidad: 'borradores', estado: !base.length ? 'gris' : borr ? 'ambar' : 'verde', contexto: 'Borradores con fecha', medible: 'medias', medibleDetalle: m.aprobaciones, frescura: fres }),
     tile({ icono: 'send', etiqueta: 'Programadas · 14 días', valor: fmt.num(prog), contexto: `${fmt.num(prog / Math.max(base.length, 1), 1)} por cliente · plan de RO ≈ 7`, medible: 'hoy', frescura: fres }),
     tile({ icono: 'check', etiqueta: 'En fecha · 30 días', valor: fmt.pct(enFecha), unidad: `${fmt.num(pub)} de ${fmt.num(pas)}`, estado: semaforo(enFecha, { verde: 100, ambar: 95 }), contexto: 'Bien el 100 % · mal por debajo del 95 %', medible: 'hoy', frescura: fres }),
   ]));
@@ -194,7 +194,7 @@ function pintarPortada(cont, ctx, d) {
           ...masAcciones(h('a', { class: 'bt mini', href: `#/redes/${f.cliente_id}` }, icono('cli'), 'Ver cliente'),
             h('a', { href: f.prueba, target: '_blank', rel: 'noopener', role: 'menuitem' }, icono('ext', { clase: 's' }), 'Abrir en Metricool'))],
       };
-    }), { vacio: { titulo: 'Sin huecos ni fallidas', porque: 'Todos tus clientes tienen la semana cubierta.', celebrar: true } })));
+    }), { vacio: { titulo: 'Sin huecos o fallidas observados', porque: 'No hay casos en esta copia de tu ámbito. Consulta el calendario y la fecha de Metricool; no acredita que todos los clientes tengan la semana cubierta.', celebrar: false } })));
 
   // 3 · calendario de 14 días: una tabla común (cabecera en mayúsculas de 11 px y 700), una fila por cliente
   const ops = [
@@ -293,10 +293,10 @@ function pintarPortada(cont, ctx, d) {
     ['Paquete de validación del día 20', 'tarea con fecha en ClickUp'],
   ]));
   const franja = franjaEnLinea(franjaCifras([
-    { etiqueta: 'Hueco en 7 días', valor: rojos.length, estado: rojos.length ? 'rojo' : '', alPulsar: () => elegirChip(cont, 'rojo') },
+    { etiqueta: 'Hueco en 7 días', valor: base.length ? rojos.length : null, estado: rojos.length ? 'rojo' : '', alPulsar: () => elegirChip(cont, 'rojo') },
     { etiqueta: 'Fallidas · 7 días', valor: fall7, estado: fall7 ? 'rojo' : '', alPulsar: () => elegirChip(cont, 'fallidas') },
     { etiqueta: '14 días cubiertos', valor: fmt.pct(pct), titulo: `${verdes} de ${base.length} · bien el 100 %`, alPulsar: () => elegirChip(cont, '') },
-    { etiqueta: 'Por aprobar', valor: borr },
+    { etiqueta: 'Por aprobar', valor: base.length ? borr : null },
   ], { etiqueta: 'Cifras (filtran el calendario)' }));
   cont.append(pantallaAncha({ id: 'redes', filtros: franja, lista: h('div', { class: 'pila', style: { gap: 'var(--s-4)', minWidth: '0' } }, lista), contexto: ctxN, tituloContexto: 'Cifras, rendimiento y lo que falta por medir' }));
 }

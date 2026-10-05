@@ -1,0 +1,4 @@
+{
+ "_que_es": "Enlace de agenda de cada persona para el correo de «Proponer fecha» (fuentes_reuniones/propuesta_reunion.py). persona_id → enlace público de reservas (Zoho Bookings, GHL o Calendly). Si una persona no tiene enlace, el correo propone solo los huecos. Lo rellena Tomás o cada persona (3-oct-2026: vacío; ningún enlace de agenda por persona estaba guardado en la app).",
+ "enlaces": {}
+}

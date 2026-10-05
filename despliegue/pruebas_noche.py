@@ -242,7 +242,7 @@ def acceso_servidor(tmp):
         time.sleep(0.5)
     casos = [("sin sello", "/api/sesion", {}, 403), ("?yo= sin sello", "/api/sesion?yo=tomas", {}, 403),
              ("X-RO-Yo sin sello", "/api/sesion", {"X-RO-Yo": "tomas"}, 403),
-             ("cabecera de correo falsificada", "/api/sesion", {"Cf-Access-Authenticated-User-Email": "tomas@rankingonline.com"}, 403),
+             ("cabecera de correo falsificada", "/api/sesion", {"Cf-Access-Authenticated-User-Email": "fixture1@rankingonline.com"}, 403),
              ("carcasa sin sello", "/index.html", {}, 403), ("datos de un módulo sin sello", "/api/modulo/bandeja/bandeja", {}, 403),
              ("salud de Render", "/vivo", {}, 200)]
     if firmar:
@@ -406,9 +406,13 @@ def _sol_tuberia(tmp, caso):
          and x1.get("fuentes", {}).get("meta", {}).get("datos", {}).get("gasto") == 354 and x1.get("estado_fuentes", {}).get("meta") == "dato_viejo")
     caso("Meta caído · sus dependientes sí corren (dato coherente)", (d / "dep_e1.txt").exists())
     import sqlite3
+
+    def tabla_avisos(con):   # F2.1 renombra «avisos» de tuberia.db a «tuberia_avisos»; antes de eso sigue siendo «avisos»
+        nueva = con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='tuberia_avisos'").fetchone()
+        return "tuberia_avisos" if nueva else "avisos"
     try:
         con = sqlite3.connect(est / "tuberia.db")
-        avisos = [r_[0] for r_ in con.execute("SELECT clave FROM avisos WHERE tipo='fuente_caida'")]
+        avisos = [r_[0] for r_ in con.execute(f"SELECT clave FROM {tabla_avisos(con)} WHERE tipo='fuente_caida'")]
         con.close()
     except Exception:
         avisos = []
@@ -418,7 +422,7 @@ def _sol_tuberia(tmp, caso):
     con_motivo = []
     try:
         con = sqlite3.connect(est / "tuberia.db")
-        con_motivo = [r_[0] for r_ in con.execute("SELECT texto FROM avisos WHERE tipo='fuente_caida' AND clave LIKE 'e1:%'")]
+        con_motivo = [r_[0] for r_ in con.execute(f"SELECT texto FROM {tabla_avisos(con)} WHERE tipo='fuente_caida' AND clave LIKE 'e1:%'")]
         con.close()
     except Exception:
         pass

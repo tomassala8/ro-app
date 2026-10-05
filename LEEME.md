@@ -670,3 +670,11 @@ Nada de esto lo hace un agente ni nadie del equipo sin su sí por escrito.
 10. **Fórmulas pendientes:** confirmar la fórmula de retención neta (paneles v4) y la de salud del cliente.
 11. **Canales:** añadir a Agus a #avisos-dirección.
 12. **Despliegue:** publicar la app fuera de este Mac (Cloudflare Access, Worker, base en la nube); hoy solo corre en 127.0.0.1.
+
+## Flecos del 3-oct (revisión final)
+
+- **Capa E1 en vivo:** cartera, horas, tareas, Desk, reuniones y alarmas de `data/clientes/<id>.json` salen de los módulos (verdad única, Producción, Bandeja, Reuniones y Alertas) con `fuentes/f_vivo.py`; cada bloque lleva `origen` y, si algún campo aún es del panel de Mili, `del_panel {campos, hora}`. Detalle en `fuentes/FORMATO.md`.
+- **Bandeja · hilos para todos:** `fuentes_bandeja/generar_hilos.py --desk` lee de Desk (solo lectura) los hilos de todos los correos abiertos con caché por ticket (`fuentes_bandeja/_cache_hilos/`, ya limpia: sin correos, teléfonos, credenciales ni pies legales) y tope por vuelta (`--tope 150 --max-llamadas 1500`); solo vuelve a leer un ticket si cambia su último correo o su estado. Sin `--desk` (como lo lanza `generar_bandeja.py`) no usa la red.
+- **Envíos:** el servidor rechaza con 400 y motivo llano cualquier envío (acción de un tipo de `tipos_envio`) cuyo texto o asunto lleve `[completar…]`, `[…]` o `[...]` sin rellenar (`envios.py → hueco_sin_rellenar`).
+- **Mi día:** un correo cuenta como despachado solo con respuesta, cierre, «no aplica», despachado, llamada devuelta o «esperando al cliente» (la regla de la Bandeja); una nota, tarea, aviso o asignación no lo saca.
+- **`pruebas_seguridad.py`:** cada servidor de prueba arranca con `arrancar()` (puerto del rango con SO_REUSEADDR, espera hasta 150 s y comprueba con `lsof` que quien escucha es su propio proceso); nada sale ya del rango de `RO_PUERTOS_PRUEBA`.

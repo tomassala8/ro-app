@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO, sumarDias as sumarDiasRO } from '../componentes.js';
 // modulos/incidencias.js · M14 «Incidencias y control de Operaciones» (E2 del plan v2 · puntos 7 y 9 de Mili, M5).
 //
 // Responde en segundos a la pregunta de Mili: ¿qué se incumple, quién es responsable, por qué, qué hizo Operaciones
@@ -42,9 +43,8 @@ function vigilarCortes(raiz) {
 
 // Revisión 44 (§2.3): fechas con el formato único de la app: «2-oct» y «2-oct, 17:34» (nunca «2 oct» ni «sept»).
 const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
-const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
-const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+const fDiaRO = iso => fechaCortaRO(FECHAS_RO.dia(iso));
+const fDiaHoraRO = iso => { const dia = FECHAS_RO.dia(iso), hora = FECHAS_RO.hora(iso); return dia ? `${fechaCortaRO(dia)}${hora ? `, ${hora}` : ''}` : '—'; };
 
 /** V2 (40_A B5): antigüedad en llano: a partir de 48 h, en días («478 h» → «20 días», la antigüedad común de fechas). */
 const enDias = t => (typeof t === 'string' ? t.replace(/\b(\d{2,})\s?h\b(?!\s+laborables)/g, (m, n) => (Number(n) > 48 ? fechas.antiguedad(Number(n)) : m)) : t);
@@ -90,13 +90,16 @@ const ORDEN_ESTADO = ['reabierta', 'escalada_vencida', 'toca_escalar', 'sin_avis
 const CANALES = ['Chat de ClickUp', 'Correo (Desk)', 'WhatsApp', 'Llamada', 'Reunión o 1:1'];
 
 // ------------------------------------------------------------------ utilidades de fecha
-const fechaLocal = s => { if (!s) return null; const d = new Date(s.length <= 10 ? `${s}T00:00:00` : s.replace(' ', 'T')); return Number.isNaN(+d) ? null : d; };
-const fechaServ = s => { if (!s) return null; const d = new Date(`${s.replace(' ', 'T')}Z`); return Number.isNaN(+d) ? null : d; };   // hora del servidor (UTC)
-const diaISO = d => d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` : null;
-const fh = d => d ? `${d.getDate()}-${_MES3[d.getMonth()]}${d.getHours() || d.getMinutes() ? `, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : ''}` : '—';   // §2.3
-const dias = d => d ? Math.max(0, Math.floor((Date.now() - d) / 864e5)) : null;
+const fechaLocal = s => FECHAS_RO.instante(s);
+const fechaServ = s => instanteServidorRO(s);
+const diaISO = d => FECHAS_RO.dia(d);
+const fh = d => fDiaHoraRO(d);
+const dias = d => { const horas = FECHAS_RO.horasDesde(d); return horas !== null && horas >= 0 ? Math.floor(horas / 24) : null; };
 const reloj = (desde, horas) => {
-  const fin = +desde + horas * 36e5; const resta = (fin - Date.now()) / 36e5;
+  const edad = FECHAS_RO.horasDesde(desde);
+  if (edad === null || edad < 0 || typeof horas !== 'number' || !Number.isFinite(horas) || horas <= 0) return { vencido: null, texto: 'Plazo sin fecha contrastada', estado: 'gris' };
+  const resta = FECHAS_RO.horasHasta(new Date(+desde + horas * 36e5));
+  if (resta === null) return { vencido: null, texto: 'Plazo sin fecha contrastada', estado: 'gris' };
   return resta >= 0 ? { vencido: false, texto: `Quedan ${Math.ceil(resta)} h`, estado: resta < 12 ? 'ambar' : 'azul' }
     : { vencido: true, texto: `Vencido hace ${-resta < 48 ? `${Math.floor(-resta)} h` : `${Math.floor(-resta / 24)} días`}`, estado: 'rojo' };
 };
@@ -146,35 +149,36 @@ function crearEstado(ctx, D, acciones) {
       const paso = { avisar: 'avisada', reiterar: 'reiterada', escalar: 'escalada', resolver: 'resuelta', no_aplica: 'no_aplica', decidir: 'decision', respuesta: 'respuesta', visto: 'visto', causa: 'causa', reabrir: 'reabierta' }[a.tipo] || a.tipo;
       evs.push({ paso, quien: a.quien, a: v.a, por: v.por, texto: a.texto, enlace: v.prueba || null, t: fechaServ(a.creada), origen: 'app', v, accion_id: a.id });
     }
-    evs.sort((x, y) => (+x.t || 0) - (+y.t || 0));
-    const det = fechaLocal(i.detectada);
+    evs.sort((x, y) => x.t && y.t ? x.t - y.t : x.t ? -1 : y.t ? 1 : 0);
+    const det = fechaLocal(i.detectada), edadDet = FECHAS_RO.horasDesde(det);
     const avisos = evs.filter(e => ['avisada', 'reiterada', 'escalada', 'accion'].includes(e.paso) && OPERACIONES.has(e.quien));
     const ultAviso = avisos.length ? avisos[avisos.length - 1] : null;
     const cierres = evs.filter(e => ['resuelta', 'no_aplica', 'reabierta'].includes(e.paso));
     const cierre = cierres.length ? cierres[cierres.length - 1] : null;
     const escal = evs.filter(e => e.paso === 'escalada');
     const ultEsc = escal.length ? escal[escal.length - 1] : null;
-    const decision = ultEsc ? evs.find(e => (e.paso === 'decision' || e.paso === 'respuesta') && +e.t > +ultEsc.t) : null;
+    const decision = ultEsc ? evs.find(e => (e.paso === 'decision' || e.paso === 'respuesta') && e.t && ultEsc.t && e.t > ultEsc.t) : null;
     let estado, relojEsc = null;
     if (cierre?.paso === 'no_aplica') estado = 'no_aplica';
     else if (cierre?.paso === 'resuelta') {
       if (cierre.inicial) estado = 'comprobada';
-      else estado = datosDia && diaISO(datosDia) > diaISO(cierre.t) ? 'reabierta' : 'por_comprobar';
+      else estado = datosDia && cierre.t && diaISO(datosDia) > diaISO(cierre.t) ? 'reabierta' : 'por_comprobar';
     } else if (ultEsc && !decision) {
-      const horas = ultEsc.v?.reloj_h || 48;
+      const horas = ultEsc.v?.reloj_h ?? 48;
       relojEsc = { ...reloj(ultEsc.t, horas), a: ultEsc.a || ultEsc.v?.a, desde: ultEsc.t, horas };
       estado = relojEsc.vencido ? 'escalada_vencida' : 'escalada';
     } else if (cierre?.paso === 'reabierta') estado = 'reabierta';
     else if (avisos.length) {
-      const viejo = ultAviso && Date.now() - ultAviso.t > H48;
+      const edadAviso = FECHAS_RO.horasDesde(ultAviso?.t);
+      const viejo = edadAviso !== null && edadAviso > 48;
       estado = viejo ? 'toca_escalar' : avisos.length > 1 ? 'reiterada' : 'avisada';
-    } else estado = det && Date.now() - det > H48 ? 'sin_avisar' : 'detectada';
+    } else estado = edadDet !== null && edadDet > 48 ? 'sin_avisar' : 'detectada';
     // Causa: la confirmada (última «causa»), o la propuesta. Regla R13: sin prueba de aviso tras 48 h, una «ejecución»
     // cuenta como «gestión de Operaciones».
     const causas = evs.filter(e => e.paso === 'causa');
     const conf = causas.length ? causas[causas.length - 1] : null;
     let propuesta = { donde: i.donde, por_que: i.por_que, motivo: i.por_que_motivo };
-    if (!avisos.length && i.por_que === 'ejecucion' && det && Date.now() - det > H48) {
+    if (!avisos.length && i.por_que === 'ejecucion' && edadDet !== null && edadDet > 48) {
       propuesta = { donde: i.donde, por_que: 'gestion_operaciones', motivo: 'Nadie de Operaciones avisó por escrito en 48 h: por la regla de los avisos por escrito cuenta como «gestión de Operaciones».' };
     }
     const causa = conf ? { donde: conf.v.donde, por_que: conf.v.por_que, explicacion: conf.v.explicacion, quien: conf.quien, t: conf.t, confirmada: true, cambiada: causas.length > 1 && conf.quien === 'tomas' && causas[causas.length - 2].quien !== 'tomas' } : { ...propuesta, confirmada: false };
@@ -283,7 +287,7 @@ function sinRepetirConsejo(main) {
 
 const gestiona = ctx => ctx.nivel === 'todo' && !ctx.soloLectura;
 const NOMBRE_FUENTE = { desk: 'Desk', zadarma: 'Zadarma', zadarma_ext: 'Extensiones de Zadarma', panel: 'Panel de Operaciones', rastro: 'Rastro de ClickUp', desk_agentes: 'Agentes de Desk', crm_usuarios: 'Usuarios del CRM', clickup_miembros: 'Miembros de ClickUp' };
-const fres = (D, k) => { const f = D.fuentes?.[k]; if (!f) return { fuente: NOMBRE_FUENTE[k] || k, estado: 'sin datos' }; const d = fechaLocal(f.hora); return { fuente: f.fuente, edad_h: d ? Math.max(0, (Date.now() - d) / 36e5) : null, estado: f.estado === 'bien' ? 'ok' : 'viejo' }; };
+const fres = (D, k) => { const f = D.fuentes?.[k]; if (!f) return { fuente: NOMBRE_FUENTE[k] || k, estado: 'sin datos' }; const h = FECHAS_RO.horasDesde(f.hora), edad = h !== null && h >= 0 ? h : null; return { fuente: f.fuente, edad_h: edad, estado: edad === null ? 'sin datos' : f.estado === 'bien' ? 'ok' : 'viejo' }; };
 
 // ================================================================== alertas de web y SEO (N4)
 const DEP_WEB = { web: 'Web', seo: 'SEO' };
@@ -291,9 +295,9 @@ const TIPO_ALERTA = { lo_tengo: 'alerta_lo_tengo', resuelta: 'alerta_resuelta', 
 const DE_ALERTA = { alerta_vista: 'vista', alerta_lo_tengo: 'lo_tengo', alerta_resuelta: 'resuelta', alerta_no_aplica: 'no_aplica', alerta_reabrir: 'nueva' };
 const CHIP_ALERTA = { lo_tengo: ['azul', 'Alguien la tiene'], reabierta: ['rojo', 'Reabierta'], resuelta: ['verde', 'Resuelta · se comprueba'], no_aplica: ['gris', 'No aplica'] };
 function estadoAlerta(a, acc, generado) {
-  const gen = generado ? new Date(String(generado).replace(' ', 'T')) : null;
+  const gen = fechaLocal(generado);
   const ult = acc.filter(x => x.objeto === a.id && DE_ALERTA[x.tipo]).sort((p, q) => (p.creada === q.creada ? (Number(q.id) || 0) - (Number(p.id) || 0) : p.creada < q.creada ? 1 : -1))[0];
-  if (ult && (!gen || new Date(`${String(ult.creada).replace(' ', 'T')}Z`) > gen)) return DE_ALERTA[ult.tipo];
+  if (ult && fechaServ(ult.creada) && (!generado || (gen && fechaServ(ult.creada) > gen))) return DE_ALERTA[ult.tipo];
   return a.estado || 'nueva';
 }
 /** La cola de alertas de web y SEO que esta persona ve (las suyas; su departamento si es jefe; todas para Mili y
@@ -307,7 +311,7 @@ function panelAlertasWeb(S, yaArriba = new Set()) {
   if (!todas.length) return null;
   const abiertas = todas.filter(a => !['resuelta', 'no_aplica'].includes(a.est));
   const pasada = a => a.venceD && a.venceD < ahora && a.est !== 'lo_tengo';
-  abiertas.sort((a, b) => (b.gravedad === 'alta') - (a.gravedad === 'alta') || pasada(b) - pasada(a) || (+a.venceD || 0) - (+b.venceD || 0));
+  abiertas.sort((a, b) => (b.gravedad === 'alta') - (a.gravedad === 'alta') || pasada(b) - pasada(a) || (a.venceD && b.venceD ? a.venceD - b.venceD : a.venceD ? -1 : b.venceD ? 1 : 0));
   const puede = ctx.veModulo('alertas') && !ctx.soloLectura;
   const marcar = (a, estado, texto) => async () => {
     await ctx.accion({ herramienta: 'app', modulo: 'alertas', tipo: TIPO_ALERTA[estado], objeto: a.id, cliente_id: a.cliente_id || null,
@@ -673,7 +677,7 @@ function frescoPartible(f) { if (f?.style) { f.style.whiteSpace = 'normal'; f.st
 function historia(i, S) {
   const { nom } = S;
   const ev = [{ paso: 'detectada', t: i.det, texto: `Detectada por la regla: ${i.titulo}`, quien: null, por: TEXTO_ORIGEN[i.origen] }, ...i.evs.filter(e => e.paso !== 'detectada' || e.quien)];
-  ev.sort((a, b) => (+a.t || 0) - (+b.t || 0));
+  ev.sort((a,b) => a.t && b.t ? a.t - b.t : a.t ? -1 : b.t ? 1 : 0);
   const PASO = { detectada: ['Detectada', 'ambar'], avisada: ['Avisada', 'ambar'], reiterada: ['Reiterada', 'ambar'], escalada: ['Escalada', 'rojo'], accion: ['Operaciones actúa', ''], respuesta: ['Respuesta', 'verde'], decision: ['Decisión', 'verde'], resuelta: ['Resuelta', 'verde'], no_aplica: ['No aplica', ''], causa: ['Causa', ''], visto: ['Vista', ''], reabierta: ['Reabierta', 'rojo'] };
   return h('ol', { class: 'tiempo' }, ev.map(e => {
     const [t, c] = PASO[e.paso] || [e.paso, ''];
@@ -914,7 +918,7 @@ function pintarIncongruencias(zona, S) {
   // ---- accesos de quien ya no está (lo de seguridad, arriba)
   const pend = acc.filter(a => !a.ok);
   const ok = acc.filter(a => a.ok);
-  zona.append(panel({ titulo: 'Accesos de quien ya no está', icono: 'escudo', sub: 'Personas de baja o que no están en el equipo y siguen con algo abierto en Desk, CRM, ClickUp o Zadarma (leído en vivo hoy).' },
+  zona.append(panel({ titulo: 'Accesos de quien ya no está', icono: 'escudo', sub: 'Observaciones de accesos en las fuentes disponibles. Consulta sus fechas abajo; la copia puede ser parcial.' },
     pend.length ? filasLP(pend.map(a => {
       const d = decidida(a.id);
       return { estado: d ? 'hecho' : a.estado_herramienta === 'activo' ? 'rojo' : 'ambar', icono: 'key',
@@ -922,11 +926,11 @@ function pintarIncongruencias(zona, S) {
         botones: [a.prueba ? h('a', { class: 'bt mini', href: a.prueba, target: '_blank', rel: 'noopener' }, icono('ext'), 'Ver la prueba') : null,
           puede && !d ? botonConfirmar({ texto: 'Pedir que se quite', pregunta: '¿A la cola?', confirmar: 'Sí', mini: true, soloLectura: ctx.soloLectura,
             alConfirmar: async () => { await ctx.accion({ herramienta: a.herramienta.toLowerCase().includes('desk') ? 'desk' : a.herramienta.toLowerCase().includes('zadarma') ? 'zadarma' : a.herramienta.toLowerCase().includes('clickup') ? 'clickup' : 'app', tipo: 'quitar_acceso', objeto: a.id, texto: `Quitar acceso de ${a.persona} en ${a.herramienta}`, vista_previa: { persona: a.persona, herramienta: a.herramienta, que: a.que_hacer } }); setTimeout(() => S.rehacer(), 700); return 'En la cola simulada'; } }) : null] };
-    })) : vacio({ icono: 'escudo', tono: 'celebrar', titulo: 'Nadie que se haya ido conserva acceso', texto: 'Desk, CRM, ClickUp y Zadarma cuadran con la tabla de personas.' }),
+    })) : vacio({ icono: 'escudo', tono: 'neutro', titulo: 'Sin accesos pendientes observados', texto: 'No hay casos visibles en esta copia. No acredita inventario completo ni ausencia de accesos en todas las herramientas.' }),
     ok.length ? h('p', { class: 'sub', style: PAD }, icono('ok', { clase: 's' }), ` Sin acceso, como debe ser: ${[...new Set(ok.map(a => a.persona))].join(', ')}.`) : null,
     h('div', { class: 'fila', style: { padding: '0 var(--relleno) var(--s-4)' } }, frescura(fres(D, 'desk_agentes')), frescura(fres(D, 'crm_usuarios')), frescura(fres(D, 'clickup_miembros')), frescura(fres(D, 'zadarma_ext')))));
 
-  if (!inc.length) { zona.append(vacio({ icono: 'capas', tono: 'celebrar', borde: true, titulo: 'Sin incongruencias que puedas ver', texto: 'ClickUp, Desk y el CRM dicen lo mismo de tus clientes.' })); return; }
+  if (!inc.length) { zona.append(vacio({ icono: 'capas', tono: 'neutro', borde: true, titulo: 'Sin incongruencias visibles en esta copia', texto: 'No hay casos observados en tu ámbito. No confirma que ClickUp, Desk y CRM coincidan ni que el cruce esté completo.' })); return; }
 
   // ---- incongruencias por tipo (orden por cuántas hay)
   const tipos = Object.entries(inc.reduce((m, x) => (m[x.tipo] = (m[x.tipo] || 0) + 1, m), {})).sort((a, b) => b[1] - a[1]);
@@ -1033,7 +1037,7 @@ function pintarTraspasos(zona, S) {
       c.addEventListener('change', sincro); sincro();
       zf.replaceChildren(h('form', { style: FORM, on: { submit: async e => {
         e.preventDefault(); if (de.value === a.value) { err.textContent = 'La persona de origen y la de destino son la misma.'; return; }
-        await ctx.accion({ herramienta: 'app', tipo: 'traspaso', objeto: `${c.value}:${silla.value}`, cliente_id: c.value, texto: `Traspaso de ${S.cli.get(c.value)?.nombre}: ${nom(de.value)} → ${nom(a.value)} (${silla.value}) el ${f.value}`, vista_previa: { cliente_id: c.value, silla: silla.value, de: de.value, a: a.value, fecha: f.value, revision: diaISO(new Date(new Date(f.value).getTime() + 14 * 864e5)) } });
+        await ctx.accion({ herramienta: 'app', tipo: 'traspaso', objeto: `${c.value}:${silla.value}`, cliente_id: c.value, texto: `Traspaso de ${S.cli.get(c.value)?.nombre}: ${nom(de.value)} → ${nom(a.value)} (${silla.value}) el ${f.value}`, vista_previa: { cliente_id: c.value, silla: silla.value, de: de.value, a: a.value, fecha: f.value, revision: sumarDiasRO(FECHAS_RO.fechaCivil(f.value), 14) } });
         avisoFlotante('Traspaso registrado · revisión a 14 días'); S.rehacer();
       } } }, h('b', {}, 'Registrar un traspaso'),
       h('div', { style: DOS_C }, campoL('Cliente', c), campoL('Silla', silla)),
@@ -1086,14 +1090,13 @@ function pintarVistos(zona, S) {
 // ================================================================== El mes
 function pintarMes(zona, S) {
   const { D, incs, nom } = S;
-  const hoy = new Date();
-  const mesIni = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+  const hoy = FECHAS_RO.hoy(), mesIni = `${FECHAS_RO.mes(hoy)}-01`;
   const resueltas = incs.filter(i => i.resueltaEn);
-  const tiempos = resueltas.map(i => (i.resueltaEn - i.det) / 864e5).filter(x => x >= 0);
+  const tiempos = resueltas.map(i => FECHAS_RO.horasDesde(i.det, i.resueltaEn)).filter(x => x !== null && x >= 0).map(x => x / 24);
   const media = tiempos.length ? tiempos.reduce((a, b) => a + b, 0) / tiempos.length : null;
   const abiertas = incs.filter(i => i.abierta);
   zona.append(tiles([
-    tile({ icono: 'alert', etiqueta: 'Abiertas hoy', valor: abiertas.length, estado: abiertas.length ? 'rojo' : 'verde', contexto: `${incs.filter(i => i.det && i.det >= mesIni).length} detectadas este mes`, medible: 'hoy' }),
+    tile({ icono: 'alert', etiqueta: 'Abiertas hoy', valor: abiertas.length, estado: abiertas.length ? 'rojo' : 'verde', contexto: `${incs.filter(i => i.det && FECHAS_RO.dia(i.det) >= mesIni && FECHAS_RO.dia(i.det) <= hoy && FECHAS_RO.horasDesde(i.det) >= 0).length} detectadas este mes`, medible: 'hoy' }),
     tile({ icono: 'check', etiqueta: 'Resueltas', valor: resueltas.length, contexto: 'Con prueba (en la app o en el rastro)', medible: 'hoy' }),
     tile({ icono: 'clock', etiqueta: 'Tiempo medio de resolución', valor: media === null ? null : fmt.num(media, 1), unidad: 'días', contexto: tiempos.length ? `Sobre ${fmt.plural(tiempos.length, 'resuelta')}` : 'Sin resueltas todavía', medible: 'medias', medibleDetalle: 'Empieza a contar desde el 2-oct; antes, solo lo que dice el rastro' }),
     tile({ icono: 'flag', etiqueta: 'Con causa confirmada', valor: incs.filter(i => i.causa.confirmada).length, unidad: `de ${incs.length}`, estado: incs.every(i => i.causa.confirmada) ? 'verde' : 'ambar', contexto: 'Aceptación de M5: una semana con todas confirmadas', medible: 'hoy' }),
@@ -1144,4 +1147,11 @@ function pintarMes(zona, S) {
         h('span', { class: 't' }, `${e.extension} · ${e.nombre || 'sin nombre'}`, h('span', { class: 'sub', style: { display: 'block' } }, e.en_linea === 'true' ? 'conectada' : 'desconectada')),
         h('span', { class: 'x' }, `${e.llamadas_32d} llamadas`)))),
       h('div', { class: 'fila', style: { padding: '0 var(--relleno) var(--s-4)' } }, frescura(fres(D, 'zadarma_ext')), frescura(fres(D, 'zadarma'))))));
+}
+
+// Las acciones SQLite declaran UTC; no confundirlas con textos de negocio Madrid.
+function instanteServidorRO(t) {
+  if (typeof t !== 'string' || !t.trim()) return null;
+  const s = t.trim();
+  return FECHAS_RO.instante(/(?:Z|[+-]\d{2}:?\d{2})$/.test(s) ? s : `${s}Z`);
 }

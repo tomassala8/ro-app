@@ -1,3 +1,10 @@
+import {entradaLead677,primerIntento677,sinIntento677,agregarSinIntento677} from './_contacto_observado_677.js';
+import {crearAccionCRM528} from './_intencion_crm_528.js';
+import {leadsPendientes369,estadoRevisionLead369,crearRevisionLead369} from './_revision_leads_369.js';
+import {notaCompacta336} from './_nota_compacta_336.js';
+import {panelEmbudo469} from './_embudo_observado_469.js';
+import {revisionCita334,citasPendientes334,crearRevisionCita334,estadoRevisionCita334} from './_revision_citas_334.js';
+import { normalizarFilaCRM, conteoCRM, senalFilaCRM541, agregarMensajesCRM597, parejaMensajesCRM597, automaticosCRM597 } from './_crm_mediciones.js';
 // modulos/crm.js · M7 «Salud del CRM» (E5 del plan v2, parte CRM). Ruta #/salud-crm y #/salud-crm/<subcuenta>.
 //
 // Para quién: especialista en GHL y la jefa de CRM (Yessica) · dirección,
@@ -23,7 +30,7 @@ import { pantallaAncha, franjaEnLinea } from './_trabajo_ancho.js';
 import { conDeshacer, botonDeshacer } from './_deshacer.js';
 
 // Ronda U (3-oct, cambio #10 del 50): «Revisado · motivo» en leads sin tocar y citas sin estado. Interno (queda en la app
-// con rastro, acción revisado_lead / revisado_cita): un clic en el motivo, la fila sale y «Deshacer» 8 s. No toca GoHighLevel.
+// con rastro: leads369 y citas334 guardan revisión local sin ocultar resultado pendiente. No toca GoHighLevel.
 const MOTIVOS_REVISADO = {
   lead: ['El despacho lo llamó desde su móvil', 'Duplicado', 'Prueba o spam', 'Ya es cliente del despacho', 'Número o datos falsos', 'Lo llama el despacho hoy'],
   cita: ['Vino (lo confirma el despacho)', 'No vino (lo confirma el despacho)', 'Cita de prueba', 'Duplicada', 'Cancelada fuera de GoHighLevel'],
@@ -31,24 +38,11 @@ const MOTIVOS_REVISADO = {
 const claveRev = (tipo, x) => `${tipo} ${x.ref}`;
 function botonRevisado(ctx, x, tipo, d) {
   if (ctx.soloLectura) return null;
-  const caja = h('details', { class: 'periodo-mas menu-mas', style: { display: 'inline-grid', justifyItems: 'start' } },
-    h('summary', { class: 'bt mini pri', style: { display: 'inline-flex', listStyle: 'none' }, 'aria-label': `Revisado: elegir el motivo (${x.subcuenta})` }, icono('check'), 'Revisado'),
-    h('div', { class: 'menu-flot', role: 'menu', style: { position: 'static', boxShadow: 'none', marginTop: 'var(--s-2)', minWidth: 0, display: 'grid', gap: 'var(--s-1)' } },
-      MOTIVOS_REVISADO[tipo].map(m => h('button', { type: 'button', role: 'menuitem', class: 'bt mini', 'data-motivo': m, style: { justifyContent: 'flex-start', whiteSpace: 'normal', textAlign: 'left' }, on: { click: e => {
-        caja.open = false;
-        const fila = e.currentTarget.closest('tr') || e.currentTarget.closest('li') || e.currentTarget.closest('[role=row]');
-        const clave = claveRev(tipo, x);
-        conDeshacer({
-          mensaje: `${tipo === 'lead' ? 'Lead' : 'Cita'} de ${x.subcuenta} revisado · ${m}`,
-          optimista: () => { if (fila) fila.hidden = true; d.revisados?.set(clave, { texto: m }); contarRevisados(fila); },
-          revertir: () => { if (fila) fila.hidden = false; d.revisados?.delete(clave); contarRevisados(fila); },
-          hacer: () => ctx.accion({ herramienta: 'app', tipo: tipo === 'lead' ? 'revisado_lead' : 'revisado_cita', objeto: clave, cliente_id: x.cliente_id || undefined, texto: m,
-            vista_previa: `${tipo === 'lead' ? 'Lead' : 'Cita'} de ${x.subcuenta} (${tipo === 'lead' ? `entró el ${fDiaRO(x.creado)}` : `cita del ${fDiaRO(x.inicio)}`}) revisado por ${ctx.nombre(ctx.persona.id)}: «${m}». Sale de la lista; no se toca GoHighLevel.` }),
-        });
-      } } }, m))));
-  caja.addEventListener('keydown', e => { if (e.key === 'Escape') { caja.open = false; caja.querySelector('summary')?.focus(); } });
-  return caja;
+  if(tipo==='cita')return crearRevisionCita334(h,ctx,x,d,MOTIVOS_REVISADO.cita);
+  if(tipo==='lead')return crearRevisionLead369(h,ctx,x,d,MOTIVOS_REVISADO.lead);
+  return null;
 }
+
 /** Tras marcar o deshacer, la cuenta de la pestaña y de la franja baja o sube sin repintar (el filtro de la tabla se queda). */
 function contarRevisados(fila) {
   const panelT = fila?.closest('[role=tabpanel]');
@@ -82,7 +76,7 @@ const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.
 
 const ID = 'salud-crm';
 let JEFA = 'Yessica';   // nombre de la jefa de CRM: sale de ctx.nombre('yessica') al pintar
-const EST = { rojo: { t: 'En rojo', o: 0 }, ambar: { t: 'Vigilar', o: 1 }, verde: { t: 'En verde', o: 2 }, gris: { t: 'Sin actividad', o: 3 } };
+const EST = { rojo: { t: 'Señal observada', o: 0 }, ambar: { t: 'Revisar muestra', o: 1 }, verde: { t: 'En verde', o: 2 }, gris: { t:'Referencia / sin señal acreditada', o: 3 } };
 const ICO_MOT = { sin_uso: 'plug', citas_fuera: 'cal', integracion: 'plug', sin_tocar: 'phone', sin_estado: 'cal', asistencia: 'users', sin_citas: 'cal', estancados: 'clock', whatsapp: 'wa', sin_automatico: 'zap', velocidad: 'clock' };
 const QUIEN_MOT = { sin_uso: 'account (confirmar si el servicio de CRM está contratado)', citas_fuera: 'especialista (conectar la agenda con GoHighLevel)', integracion: 'Agus (técnico)', sin_tocar: 'account con el despacho', sin_estado: 'account (que el despacho marque)', asistencia: 'especialista y account', sin_citas: 'account con el despacho', estancados: 'especialista', whatsapp: 'especialista', sin_automatico: 'especialista', velocidad: 'account con el despacho' };
 const ETAPAS = [['nuevo', 'Nuevo'], ['seguimiento', 'Seguimiento'], ['cita', 'Cita'], ['presupuesto', 'Presupuesto'], ['cerrado', 'Cerrado'], ['descartado', 'Descartado']];
@@ -103,13 +97,10 @@ function plegable(titulo, contenido, { icono: ico = 'chev', dentro = false } = {
     h('summary', { style: { padding: 'var(--s-3) var(--relleno)', minHeight: 'var(--s-10)', cursor: 'pointer', font: dentro ? 'var(--t-h3)' : 'var(--t-h2)', color: dentro ? 'var(--accent)' : null, display: 'flex', gap: 'var(--s-2)', alignItems: 'center' } }, icono(ico), titulo),
     contenido);
 }
-/** Rojo con cuentagotas (guía 3.4): de las filas que el umbral pone en rojo, solo el tercio más grave lleva el punto rojo;
- *  el resto, ámbar. El texto del estado no cambia. Devuelve una función fila → 'rojo' | 'ambar' | estado original. */
+/**541: el color es propio de la fila; orden/filtro sólo selecciona qué mostrar. */
 function cuentagotas(filas, estadoDe, peso) {
-  const rojas = filas.filter(r => estadoDe(r) === 'rojo').sort((a, b) => peso(b) - peso(a));
-  const tope = Math.max(1, Math.ceil(filas.length / 3));
-  const quedan = new Set(rojas.length > tope ? rojas.slice(0, tope) : rojas);
-  return r => { const e = estadoDe(r); return e === 'rojo' && !quedan.has(r) ? 'ambar' : e; };
+  //541: ordenar/filtrar nunca cambia la señal propia de una fila.
+  return r => estadoDe(r);
 }
 const pesoSub = f => (f.sin_tocar_24h || 0) + (f.citas_14d?.sin_estado || 0) * 2 + (f.citas_14d?.sin_estado_max_h || 0) / 24 + (f.leads_30d || 0) / 100;
 /** «⋯» del móvil: el resto de botones de una fila, en un <details> con .menu-flot (menuMas() pinta «null» cerrado; ver dudas_pintura.md).
@@ -123,7 +114,7 @@ function masAcciones(botones, nombre) {
   return caja;
 }
 const MOVIL = () => window.matchMedia?.('(max-width: 640px)').matches;   // en el móvil, tablas de 8 filas
-const numFuerte = n => (n ? h('b', { style: { fontVariantNumeric: 'tabular-nums' } }, fmt.num(n)) : fmt.num(n ?? 0));
+const numFuerte = n => (n===null||n===undefined?sinDato() : n ? h('b', { style: { fontVariantNumeric: 'tabular-nums' } }, fmt.num(n)) : fmt.num(n));
 
 // ------------------------------------------------------------------ datos y vista
 async function cargar(ctx) {
@@ -169,19 +160,21 @@ function vista(ctx, d) {
     etiqueta: jefatura ? 'Toda la casa' : ctx.nivel === 'suyo' ? (especialista ? 'Tus subcuentas' : 'Tus clientes') : 'Resumen de tus clientes' };
 }
 
-function sumar(filas) {
+function sumar(filas,fuente,hoy) {
   const enc = filas.filter(f => f.encendida);
-  const s = (fn) => filas.reduce((a, f) => a + (fn(f) || 0), 0);
-  const cel = s(f => f.citas_30d?.celebradas), nop = s(f => f.citas_30d?.no_presentadas);
-  const juz = s(f => f.velocidad?.juzgables), en1 = s(f => f.velocidad?.en_1h);
-  const wa = s(f => f.whatsapp?.enviados), waf = s(f => f.whatsapp?.fallidos);
+  const s=fn=>{const vs=filas.map(fn).filter(v=>conteoCRM(v)!==null);return vs.length?vs.reduce((a,n)=>a+n,0):null;};
+  const parejas=filas.filter(f=>conteoCRM(f.citas_30d?.celebradas)!==null&&conteoCRM(f.citas_30d?.no_presentadas)!==null);
+  const cel=parejas.length?parejas.reduce((a,f)=>a+f.citas_30d.celebradas,0):null,nop=parejas.length?parejas.reduce((a,f)=>a+f.citas_30d.no_presentadas,0):null;
+  const paresIntentos=filas.filter(f=>conteoCRM(f.velocidad?.juzgables)!==null&&conteoCRM(f.velocidad?.en_1h)!==null&&f.velocidad.en_1h<=f.velocidad.juzgables);
+  const juz=paresIntentos.length?paresIntentos.reduce((a,f)=>a+f.velocidad.juzgables,0):null,en1=paresIntentos.length?paresIntentos.reduce((a,f)=>a+f.velocidad.en_1h,0):null;
+  const waMedicion = agregarMensajesCRM597(filas,'whatsapp'), wa = waMedicion.enviados, waf = waMedicion.fallidos;
   return {
-    filas, enc, verde: enc.filter(f => f.estado === 'verde').length, rojo: enc.filter(f => f.estado === 'rojo').length, ambar: enc.filter(f => f.estado === 'ambar').length,
-    pctVerde: enc.length ? Math.round(enc.filter(f => f.estado === 'verde').length * 1000 / enc.length) / 10 : null,
-    leads: s(f => f.leads_30d), sinTocar: s(f => f.sin_tocar_24h), sinEstado14: s(f => f.citas_14d?.sin_estado),
-    agendadas30: s(f => f.citas_30d?.agendadas), celebradas: cel, noPresentadas: nop, asistencia: cel + nop ? Math.round(cel * 1000 / (cel + nop)) / 10 : null,
+    filas, enc, sinIntentoLectura677:agregarSinIntento677(filas,fuente,hoy), senalesSinTocar:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')),senalesSinEstado:filas.some(f=>f.motivos?.some(m=>m.clave==='sin_estado'&&m.origen==='observacion_muestra')),senalesWA:filas.some(f=>f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')),verde: enc.filter(f => f.estado === 'verde').length, rojo: enc.filter(f => f.estado === 'rojo').length, ambar: enc.filter(f => f.estado === 'ambar').length,
+    pctVerde:enc.length&&enc.every(f=>f._medicionCRM?.cobertura==='completa') ? Math.round(enc.filter(f => f.estado === 'verde').length * 1000 / enc.length) / 10 : null,
+    leads: s(f => f.leads_30d), sinTocar: agregarSinIntento677(filas,fuente,hoy).valor??agregarSinIntento677(filas,fuente,hoy).referencia, sinEstado14: s(f => f.citas_14d?.sin_estado),
+    agendadas30: s(f => f.citas_30d?.agendadas), celebradas: cel, noPresentadas: nop, asistencia:cel!==null&&nop!==null&&cel+nop>0?Math.round(cel*1000/(cel+nop))/10:null,
     futuras: s(f => f.citas_30d?.futuras), estancados: s(f => f.embudo?.estancados_72h), opps30: s(f => f.embudo?.cohorte_30d), agendadas14: s(f => f.citas_14d?.agendadas), juzgables: juz, en1h: en1, pct1h: juz ? Math.round(en1 * 1000 / juz) / 10 : null,
-    wa, waf, pctWa: wa ? Math.round(waf * 1000 / wa) / 10 : null,
+    wa, waf, waMedicion, pctWa: waMedicion.pct === null ? null : Math.round(waMedicion.pct * 10) / 10,
   };
 }
 
@@ -189,16 +182,8 @@ const frescuraGHL = d => ({ fuente: 'GHL', fecha: d.fuentes?.ghl?.hora, estado: 
 const frescuraCap = d => ({ fuente: 'Embudo (captación)', fecha: d.fuentes?.captacion?.hora, estado: 'ok' });
 
 // ------------------------------------------------------------------ botones (simulación)
-function accionSim(ctx, { texto, pregunta, tipo, herramienta = 'ghl', objeto, cliente_id, vista_previa, mini = true, peligro }) {
-  return botonConfirmar({
-    texto, mini, pregunta, confirmar: 'Sí (simulación)', soloLectura: ctx.soloLectura, peligro,
-    alConfirmar: async () => {
-      const prev = typeof vista_previa === 'function' ? vista_previa() : vista_previa;
-      if (prev === null) throw new Error('Rellena el dato antes');
-      await ctx.accion({ herramienta, tipo, objeto: String(typeof objeto === 'function' ? objeto() : objeto).slice(0, 200), cliente_id: cliente_id || undefined, texto: prev, vista_previa: prev });
-      return 'En la cola (simulación)';
-    },
-  });
+function accionSim(ctx, opciones) {
+  return crearAccionCRM528(h,ctx,opciones);
 }
 const tareaAccount = (ctx, f, que) => f.account
   ? accionSim(ctx, { texto: `Tarea a ${f.account}`, pregunta: `¿Crear tarea a ${f.account}?`, tipo: 'tarea', herramienta: 'clickup', objeto: `${f.nombre} · ${que}`, cliente_id: f.cliente_id,
@@ -206,33 +191,62 @@ const tareaAccount = (ctx, f, que) => f.account
   : null;
 const abrirGHL = (url, texto = 'Abrir en GHL') => url ? h('a', { class: 'bt mini', href: url, target: '_blank', rel: 'noopener' }, icono('ext'), texto) : null;
 
-async function verDatosLead(ctx, fila, caja, boton) {
+async function verDatosLead(ctx, fila, caja, boton, guardia) {
+  const vigente = () => caja?.isConnected === true && boton?.isConnected === true && guardia?.() === true;
+  const limpiar = () => { caja?.replaceChildren(); if (boton) boton.disabled = true; };
+  if (!vigente()) { limpiar(); return; }
+  if (boton.disabled) return;
+  const peticion = { almacen: 'crm/_privado/leads', ref: fila.ref, campo: 'datos', cliente_id: fila.cliente_id };
   boton.disabled = true;
   try {
-    const r = await ctx.verDato({ almacen: 'crm/_privado/leads', ref: fila.ref, campo: 'datos', cliente_id: fila.cliente_id });
+    const r = await ctx.verDato(peticion);
+    if (!vigente()) { limpiar(); return; }
     const v = r.valor || {};
     caja.replaceChildren(botonesContacto({ nombre: v.nombre || 'Lead', telefono: v.telefono, correo: v.correo, fuente: 'GoHighLevel · queda en el rastro' }));
     boton.remove();
   } catch (e) {
+    if (!vigente()) { limpiar(); return; }
     boton.disabled = false;
     avisoFlotante(e.message || 'No se pudo abrir', { icono: 'candado' });
   }
 }
 function botonVerDatos(ctx, fila, vis) {
-  if (!ctx.servidor || vis.resumen || ctx.soloLectura) return null;
-  if (!ctx.ver({ tipo: 'lead', cliente_id: fila.cliente_id }).desenmascarable) return null;
+  const ambito = () => { try {
+    const id = x => typeof x === 'string' && /^[A-Za-z0-9_-]{1,120}$/.test(x);
+    const roles = x => Array.isArray(x) && x.length > 0 && x.every(id) && new Set(x).size === x.length;
+    const mismosRoles = (a,b) => roles(a) && roles(b) && JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+    if (ctx.servidor !== true || vis.resumen || ctx.soloLectura || ctx.pilotoLectura || ctx.vigente?.() !== true || ctx.veModulo?.('salud-crm') !== true) return null;
+    if (!id(fila?.ref) || !id(fila.cliente_id) || ctx.real?.id !== ctx.persona?.id) return null;
+    const ps = Array.isArray(ctx.datos?.personas) ? ctx.datos.personas : [];
+    const actores = [ctx.real,ctx.persona];
+    for (const p of actores) {
+      const canon = ps.filter(x => x?.id === p?.id);
+      if (!id(p?.id) || p.estado !== 'activo' || p.activo === false || canon.length !== 1 || canon[0].estado !== 'activo' || canon[0].activo === false || !mismosRoles(p.puestos,canon[0].puestos)) return null;
+    }
+    const cs = (Array.isArray(ctx.clientes) ? ctx.clientes : []).filter(c => c?.id === fila.cliente_id);
+    const vs = (Array.isArray(ctx.clientesVisibles) ? ctx.clientesVisibles : []).filter(c => c?.id === fila.cliente_id);
+    if (cs.length !== 1 || vs.length !== 1 || [cs[0],vs[0]].some(c => c.activo_confirmado !== true || c.activo === false || c.estado === 'baja' || c.detalle !== true)) return null;
+    const detalle = ctx.ver?.({tipo:'cliente_detalle',cliente_id:fila.cliente_id});
+    const lead = ctx.ver?.({tipo:'lead',cliente_id:fila.cliente_id});
+    if (detalle?.ok !== true || lead?.ok !== true || lead.desenmascarable !== true) return null;
+    return JSON.stringify([actores,ps.filter(p=>p?.id===ctx.real.id),cs,vs,fila.ref,fila.cliente_id,ctx.datos?.asignaciones||[],ctx.nivel]);
+  } catch { return null; } };
+  const origen = ambito();
+  if (origen === null) return null;
   const caja = h('div', { style: { marginTop: 'var(--s-2)' } });
   const b = h('button', { type: 'button', class: 'bt mini', title: 'Nombre, teléfono y correo del lead. Queda en el rastro.' }, icono('ojo'), 'Ver datos');
-  b.addEventListener('click', () => verDatosLead(ctx, fila, caja, b));
+  const guardia = () => ambito() === origen;
+  b.addEventListener('click', () => verDatosLead(ctx, fila, caja, b, guardia));
+  caja.addEventListener('click', e => { if (!guardia()) { e.preventDefault(); e.stopPropagation(); caja.replaceChildren(); b.disabled = true; } }, true);
   return h('span', {}, b, caja);
 }
 
 // ------------------------------------------------------------------ pantalla principal
 function pintarInicio(cont, ctx, d) {
   const vis = vista(ctx, d);
-  const S = sumar(vis.base);
-  const casa = sumar(vis.reales);
-  ctx.titulo('Salud del CRM', `${vis.etiqueta} · ${vis.base.length} subcuentas de GoHighLevel · 30 días naturales cerrados · dato de las ${(d.fuentes?.ghl?.hora || '').slice(11) || '—'}`);
+  const S = sumar(vis.base,d.fuentes?.ghl,ctx.hoy);
+  const casa = sumar(vis.reales,d.fuentes?.ghl,ctx.hoy);
+  ctx.titulo('Salud del CRM', `${vis.etiqueta} · ${vis.base.length} subcuentas de GoHighLevel · 30 días naturales cerrados · lectura GHL ${d.fuentes?.ghl?.hora || 'sin fecha'}`);
 
   if (!vis.base.length) {
     cont.append(vacio({ icono: 'base', titulo: ctx.nivel === 'suyo' ? 'No tienes subcuentas de GoHighLevel a tu cargo' : 'No hay subcuentas que enseñar',
@@ -244,7 +258,7 @@ function pintarInicio(cont, ctx, d) {
   // ---- cabecera: de quién es la vista y frescura
   const cabecera = h('div', { class: 'fila', style: { justifyContent: 'space-between', gap: 'var(--s-2) var(--s-4)' } },
     h('span', { class: 'fila', style: ESP }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(ctx.persona.alias || ctx.persona.nombre)),
-      h('span', { class: 'sub' }, `${vis.etiqueta} · ${S.enc.length} con campaña o leads entrando · foto de ahora con ventanas fijas de 24 h, 14 y 30 días`)),
+      h('span', { class: 'sub' }, `${vis.etiqueta} · ${S.enc.length} con campaña o leads entrando · última lectura guardada con ventanas fijas de 24 h, 14 y 30 días`)),
     h('div', { class: 'fila' }, frescura(frescuraGHL(d)), frescura(frescuraCap(d))));
   const ctxNodos = [cabecera];   // Ronda U: lo de leer va DEBAJO de la lista (pantallaAncha), plegado
 
@@ -254,9 +268,9 @@ function pintarInicio(cont, ctx, d) {
   const prim = [];
   const ordenadas = [...vis.base].filter(f => f.estado === 'rojo' || f.estado === 'ambar')
     .sort((a, b) => EST[a.estado].o - EST[b.estado].o || ((b.sin_tocar_24h || 0) + (b.citas_14d?.sin_estado || 0)) - ((a.sin_tocar_24h || 0) + (a.citas_14d?.sin_estado || 0)) || (b.leads_30d || 0) - (a.leads_30d || 0));
-  const integ = ordenadas.filter(f => f.motivos.some(m => m.clave === 'integracion'));
+  const integ = ordenadas.filter(f => f.motivos.some(m => m.clave === 'integracion'&&m.origen==='observacion_muestra'));
   for (const f of [...integ, ...ordenadas.filter(x => !integ.includes(x))].slice(0, 7)) {
-    const m = f.motivos.find(x => x.clave === 'integracion') || f.motivos[0];
+    const m = f.motivos.find(x => x.origen==='observacion_muestra') || f.motivos[0];
     prim.push({
       estado: f.estado, icono: ICO_MOT[m.clave] || 'alert', motivo: `${f.nombre} · ${m.texto}`,
       detalle: `${f.motivos.length > 1 ? `Y ${f.motivos.length - 1} motivo${f.motivos.length > 2 ? 's' : ''} más. ` : ''}Lo arregla: ${QUIEN_MOT[m.clave] || 'especialista'}${f.especialista ? ` · especialista: ${f.especialista}` : ' · sin especialista asignado'}${f.account ? ` · account: ${f.account}` : ''}.`,
@@ -268,10 +282,10 @@ function pintarInicio(cont, ctx, d) {
       })(),
     });
   }
-  ctxNodos.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: vis.jefatura ? 'Las subcuentas que más pierden hoy y quién lo arregla. Las de integración rota, arriba.' : 'Tus subcuentas, lo más grave arriba' },
+  ctxNodos.push(panel({ titulo: 'Lo primero hoy', icono: 'zap', sub: vis.jefatura ? 'Señales de la última lectura para revisar y quién las contrasta. Diferencias de integración, arriba.' : 'Tus subcuentas, lo más grave arriba' },
     prim.length ? listaLoPrimero(prim.slice(0, MOVIL() ? 4 : 7)) : null,
     prim.length > 4 && MOVIL() ? plegable(`Ver las ${prim.length - 4} restantes`, listaLoPrimero(prim.slice(4)), { dentro: true }) : null,
-    prim.length ? null : h('div', { class: 'cuerpo' }, vacioLinea('Ninguna subcuenta en rojo: leads tocados, citas marcadas y WhatsApp sin fallos.', { icono: 'ok' }))));
+    prim.length ? null : h('div', { class: 'cuerpo' }, vacioLinea('No hay alertas en la lectura disponible. La cobertura de contactos y mensajes es parcial; contrasta el seguimiento con el despacho.', { icono: 'ok' }))));
 
   // ---- 2 · cifras (etiqueta de una línea, cifra, una línea de contexto y adónde lleva: 4 líneas como mucho)
   const fichas = [];
@@ -283,45 +297,46 @@ function pintarInicio(cont, ctx, d) {
   }));
   fichas.push(tile({
     icono: 'users', etiqueta: 'Asistencia · 30 días', valor: sd(S.asistencia === null ? null : pc(S.asistencia), 'Sin dato'),
-    unidad: S.asistencia === null ? '' : `${S.celebradas} de ${S.celebradas + S.noPresentadas}`, estado: S.asistencia === null ? 'gris' : semaforo(S.asistencia, { verde: 75, ambar: 60 }),
-    contexto: S.asistencia === null ? (S.agendadas30 ? 'Ninguna cita de los últimos 30 días tiene marcado si vino: márcalas en GoHighLevel y sale el porcentaje. Las de 14 días, en «Citas sin estado».' : 'Sin citas en tus subcuentas en 30 días.') : 'Bien desde el 75 % · a medias', ir: 'Ver citas sin estado', alPulsar: ir('citas'),
+    unidad: S.asistencia === null ? '' : `${S.celebradas} de ${S.celebradas + S.noPresentadas}`, estado:'gris',
+    contexto:'Sólo citas con resultado registrado; cobertura parcial, no cohorte ni cumplimiento contractual', ir: 'Ver citas sin estado', alPulsar: ir('citas'),
   }));
   fichas.push(tile({
-    icono: 'phone', etiqueta: 'Sin tocar > 24 h', valor: fmt.num(S.sinTocar), unidad: `de ${fmt.num(S.leads)} leads`,
-    estado: !S.leads ? 'gris' : S.sinTocar === 0 ? 'verde' : 'rojo', contexto: S.leads ? 'Ningún intento en GHL · bien solo con 0' : 'Sin leads en 30 días', ir: 'Ver los leads', alPulsar: ir('leads'),
+    icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: fmt.num(S.sinTocar), unidad: S.sinIntentoLectura677.cobertura||'',
+    estado: !S.leads ? 'gris' : S.sinTocar>0&&S.senalesSinTocar&&S.sinIntentoLectura677.todoScope?'ambar':'gris', contexto: S.sinIntentoLectura677.detalle, ir: 'Ver los leads', alPulsar: ir('leads'),
   }));
   fichas.push(tile({
     icono: 'cal', etiqueta: 'Citas sin estado · 14 d', valor: fmt.num(S.sinEstado14), unidad: 'sin marcar',
-    estado: !S.agendadas14 ? 'gris' : vis.jefatura ? semaforo(S.sinEstado14, { verde: 0, ambar: 20, mejorSi: 'bajo' }) : semaforo(S.sinEstado14, { verde: 0, ambar: 5, mejorSi: 'bajo' }),
-    contexto: vis.jefatura ? 'Verde 0 · ámbar 1-20 · rojo > 20' : 'Verde 0 · ámbar 1-5 · rojo > 5', ir: 'Marcarlas', alPulsar: ir('citas'),
+    estado:S.sinEstado14>0&&S.senalesSinEstado?'ambar':'gris',
+    contexto:'Resultados pendientes observados; cero no acredita que estén todas las citas marcadas', ir: 'Marcarlas', alPulsar: ir('citas'),
   }));
   fichas.push(tile({
-    icono: 'clock', etiqueta: '1.er intento < 1 h', valor: sd(S.pct1h === null ? null : pc(S.pct1h)), unidad: S.pct1h === null ? '' : `${S.en1h} de ${S.juzgables}`,
-    estado: S.pct1h === null ? 'gris' : semaforo(S.pct1h, { verde: 70, ambar: 40 }), contexto: 'Garantía: ≥ 70 % en < 1 h · a medias', ir: 'Ver por subcuenta', alPulsar: ir('subcuentas'),
+    icono: 'clock', etiqueta: '1.er intento < 1 h', valor: primerIntento677({velocidad:{en_1h:S.en1h,juzgables:S.juzgables}}).texto, unidad: '',
+    estado:'gris', contexto: 'Referencia del generador anterior: 70 % de intentos registrados en < 1 h; pendiente de adaptar al método vigente. No evalúa garantía contractual.', ir: 'Ver por subcuenta', alPulsar: ir('subcuentas'),
   }));
   fichas.push(tile({
     icono: 'hist', etiqueta: 'Paradas > 72 h', valor: S.opps30 ? fmt.num(S.estancados) : sinDato('Sin oportunidades'),
-    estado: !S.opps30 ? 'gris' : S.estancados ? 'ambar' : 'verde', unidad: S.opps30 ? `de ${fmt.num(S.opps30)}` : '', contexto: 'Leads del mes sin cambiar de etapa', ir: 'Ver cuáles', alPulsar: ir('paradas'),
+    estado: !S.opps30 ? 'gris' : 'gris', unidad: S.opps30 ? `de ${fmt.num(S.opps30)}` : '', contexto: 'Fecha de cambio anterior > 72 h; confirmar si corresponde a etapa o actualización', ir: 'Ver cuáles', alPulsar: ir('paradas'),
   }));
   fichas.push(tile({
-    icono: 'wa', etiqueta: 'WhatsApp fallido', valor: sd(S.pctWa === null ? null : pc(S.pctWa), 'Sin envíos'), unidad: S.pctWa === null ? '' : `${S.waf} de ${S.wa}`,
-    estado: S.wa ? semaforo(S.pctWa, { verde: 2, ambar: 10, mejorSi: 'bajo' }) : 'gris', contexto: 'Verde < 2 % · rojo > 10 %', ir: 'Ver WhatsApp y flujos', alPulsar: ir('flujos'),
+    icono: 'wa', etiqueta: 'WhatsApp fallido', valor: sd(S.pctWa === null ? null : pc(S.pctWa), 'Sin dato'), unidad: S.pctWa === null ? '' : `${S.waf} de ${S.wa}`,
+    estado: S.waf>0&&S.senalesWA?'ambar':'gris', contexto: `Fallos registrados en muestra parcial; ${S.waMedicion.observadas}/${S.waMedicion.total} subcuentas con pares compatibles. Revisar causa y cobertura`, ir: 'Ver WhatsApp y flujos', alPulsar: ir('flujos'),
   }));
   if (vis.jefatura) {
-    const masCarga = [...(d.especialistas || [])].sort((a, b) => b.clientes - a.clientes)[0];
+    const masCarga = [...especialistasMedidosCRM(d)].filter(e => conteoCRM(e.clientes) !== null).sort((a, b) => b.clientes - a.clientes)[0];
+    const sinEspecialista = sinEspecialistaCRM(d);
     fichas.push(tile({
       icono: 'eq', etiqueta: 'Especialista más cargado', valor: masCarga ? masCarga.clientes : sinDato(),
       unidad: masCarga ? `de ${masCarga.tope}` : '', estado: masCarga ? (masCarga.clientes > masCarga.tope ? 'rojo' : masCarga.clientes >= 14 ? 'ambar' : 'verde') : 'gris',
-      contexto: masCarga ? `${ctx.nombre(masCarga.id)} · ${(d.resumen?.encendidas_sin_especialista || []).length} encendidas sin especialista` : 'Sin especialistas en asignaciones',
+      contexto: masCarga ? `${ctx.nombre(masCarga.id)} · ${Array.isArray(sinEspecialista) ? sinEspecialista.length + ' encendidas sin especialista en la copia visible' : 'Asignaciones pendientes de verificar'}` : 'Carga asignada pendiente de verificar; subcuentas conectadas no equivalen a cartera',
       ir: 'Ver por especialista', alPulsar: ir('especialistas'),
     }));
   }
   ctxNodos.push(rejillaTarjetas(fichas));
 
-  // ---- 3 · pestañas (lo revisado con motivo ya no sale: la lista baja de verdad)
+  // ---- 3 · Revisar una cita localmente no elimina su resultado pendiente en la fuente.
   const rev = d.revisados || new Map();
-  const leads = (d.leads_sin_tocar || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id) && !rev.has(claveRev('lead', x)));
-  const citas = (d.citas_sin_estado || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id) && !rev.has(claveRev('cita', x)));
+  const leads = leadsPendientes369(d.leads_sin_tocar,vis.base);
+  const citas = citasPendientes334(d.citas_sin_estado,vis.base);
   const paradas = (d.oportunidades_paradas || []).filter(x => vis.base.some(f => f.sub_id === x.sub_id));
   const defs = [
     { id: 'subcuentas', texto: 'Subcuentas', icono: 'base', cuenta: S.rojo, cuentaEstado: 'rojo' },
@@ -357,26 +372,26 @@ function pintarInicio(cont, ctx, d) {
       h('div', { style: { minWidth: 0 } }, h('b', { style: { font: 'var(--t-h3)' } }, x.titulo), h('p', { class: 'sub', style: { margin: 'var(--s-1) 0 0', maxWidth: '72ch' } }, x.texto)),
       x.prueba ? h('a', { class: 'bt mini', href: x.prueba, target: '_blank', rel: 'noopener' }, icono('ext'), 'Ver prueba') : h('span'))));
     const N = MOVIL() ? 3 : 5;
-    ctxNodos.push(panel({ titulo: 'Hallazgos', icono: 'flag', sub: 'Lo que el dato dice que se rompe, con la prueba en GoHighLevel' },
+    ctxNodos.push(panel({ titulo: 'Hallazgos', icono: 'flag', sub: 'Señales del generador anterior para contrastar en GoHighLevel; no prueban pérdidas ni evalúan garantía' },
       lista(hall.slice(0, N)),
       hall.length > N ? plegable(`Ver los ${hall.length - N} hallazgos restantes`, lista(hall.slice(N)), { dentro: true }) : null));
   }
   ctxNodos.push(indicadoresPuesto(ctx, S, casa, vis));
   ctxNodos.push(plegable('Cómo se cuenta', h('div', { class: 'cuerpo pila' },
     h('p', { style: { margin: 0, maxWidth: '72ch' } }, `${d.reglas?.lead || ''} Un «intento» es una llamada o un mensaje que sale de GoHighLevel hecho por una persona (no por un flujo): las llamadas del despacho desde su móvil no constan, por eso «sin tocar» y la velocidad van «a medias». Encendida = campaña de Meta activa o 3 o más leads en 30 días.`),
-    h('p', { style: { margin: 0, maxWidth: '72ch' } }, `Esta pantalla es una foto de ahora con ventanas fijas (leads de 30 días, citas de 14 y 30 días, «sin tocar» a las 24 h, paradas a las 72 h); no depende de ningún periodo. ${d.ventanas?.leads ? `Ventanas: ${d.ventanas.leads}.` : ''}`),
-    h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'Los flujos con error no salen por la API y la asistencia depende de que el despacho marque las citas: por eso varias cifras van «a medias».'),
-    h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'En las tablas, el punto rojo marca solo el tercio más grave (más leads y citas sin atender, o más horas esperando); el resto de lo que pasa el umbral va con punto ámbar. El texto («En rojo», las horas) no cambia.')), { icono: 'info' }));
+    h('p', { style: { margin: 0, maxWidth: '72ch' } }, `Esta pantalla muestra la última lectura guardada con ventanas fijas (leads de 30 días, citas de 14 y 30 días, «sin tocar» a las 24 h, paradas a las 72 h); no depende de ningún periodo. ${d.ventanas?.leads ? `Ventanas: ${d.ventanas.leads}.` : ''}`),
+    h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'La lectura limita contactos a 150, dos conversaciones por contacto y 100 mensajes por conversación, sin cobertura completa acreditada. Los flujos con error no salen por la API y la asistencia depende de que el despacho marque las citas. Las reglas y colores del generador anterior orientan revisión; no evalúan garantía contractual ni acreditan calidad del lead.'),
+    h('p', { style: { margin: 0, maxWidth: '72ch' } }, 'El color es propio de cada señal y no cambia al filtrar. Ámbar: registros de una muestra para revisar. Rojo: cita pendiente con inicio y corte verificados, más de 48 h al corte; referencia operativa, no SLA ni prueba de asistencia. Las referencias anteriores y la ausencia de evidencia son grises; cero parcial no acredita cumplimiento.')), { icono: 'info' }));
   ctxNodos.push(h('p', { class: 'sub', style: { margin: 0 } }, `GoHighLevel leído el ${d.fuentes?.ghl?.hora || '—'} en hora de Madrid (${fmt.num(d.fuentes?.ghl?.llamadas)} lecturas, solo lectura) · Meta de Captación del ${d.fuentes?.captacion?.hora || '—'}`));
 
   // ---- franja de cifras (filtran la lista: llevan a su pestaña) + lista + contexto debajo
   const franja = franjaCifras([
-    !vis.resumen ? { etiqueta: 'Sin tocar > 24 h', valor: leads.length, estado: leads.length ? 'rojo' : '', alPulsar: () => pest.elegir('leads') } : null,
-    !vis.resumen ? { etiqueta: 'Citas sin estado', valor: citas.length, estado: citas.length ? 'rojo' : '', alPulsar: () => pest.elegir('citas') } : null,
-    { etiqueta: 'En rojo', valor: S.rojo, estado: S.rojo ? 'rojo' : '', alPulsar: () => pest.elegir('subcuentas') },
-    !vis.resumen ? { etiqueta: 'Paradas > 72 h', valor: paradas.length, alPulsar: () => pest.elegir('paradas') } : null,
-    { etiqueta: 'WhatsApp fallido', valor: S.pctWa === null ? 'sin envíos' : pc(S.pctWa), alPulsar: () => pest.elegir('flujos') },
-    rev.size ? { etiqueta: 'Revisados con motivo', valor: rev.size, titulo: 'Leads y citas que alguien revisó y salieron de la lista' } : null,
+    !vis.resumen ? { etiqueta: 'Sin intento registrado > 24 h', valor: leads.length, estado: leads.some(x=>senalFilaCRM541('lead',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado==='ambar')?'ambar':'gris', alPulsar: () => pest.elegir('leads') } : null,
+    !vis.resumen ? { etiqueta: 'Citas sin estado', valor: citas.length, estado: citas.some(x=>senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado==='rojo')?'rojo':citas.some(x=>senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado==='ambar')?'ambar':'gris', alPulsar: () => pest.elegir('citas') } : null,
+    { etiqueta: 'Subcuentas por revisar', valor: S.ambar, estado: S.ambar ? 'ambar' : 'gris', alPulsar: () => pest.elegir('subcuentas') },
+    !vis.resumen ? { etiqueta: 'Oportunidades por contrastar', valor: paradas.length, estado:'gris', alPulsar: () => pest.elegir('paradas') } : null,
+    { etiqueta: 'WhatsApp fallido', valor: S.pctWa === null ? '—' : pc(S.pctWa), titulo:'Fallos entre mensajes observados; sin denominador no se acredita ausencia de envíos', alPulsar: () => pest.elegir('flujos') },
+    rev.size ? { etiqueta: 'Revisados con motivo', valor: rev.size, titulo: 'Revisiones locales; los pendientes de la fuente permanecen visibles' } : null,
   ], { etiqueta: 'Cifras del CRM (llevan a su lista)' });
   cont.append(pantallaAncha({ id: ID, filtros: franjaEnLinea(franja), lista: pest, contexto: ctxNodos, tituloContexto: 'Lo primero hoy, cifras e indicadores' }));
 }
@@ -386,11 +401,11 @@ function pintarSubcuentas(zona, ctx, d, vis) {
   const todas = vis.jefatura ? d.subcuentas : vis.base;
   const cuenta = e => todas.filter(f => (e === 'pruebas' ? (f.tipo === 'prueba' || f.tipo === 'interna') : f.estado === e && f.tipo !== 'prueba' && f.tipo !== 'interna')).length;
   const opciones = [
-    { valor: 'activas', texto: 'Con actividad', icono: 'zap', cuenta: todas.filter(f => f.estado !== 'gris').length },
+    { valor: 'activas', texto: 'Señales y referencias', icono: 'zap', cuenta: todas.filter(f => f.estado !== 'gris'||f.motivos?.length).length },
     { valor: 'rojo', texto: 'En rojo', icono: 'fire', cuenta: cuenta('rojo'), cuentaEstado: 'rojo' },
     { valor: 'ambar', texto: 'Vigilar', icono: 'alert', cuenta: cuenta('ambar') },
     { valor: 'verde', texto: 'En verde', icono: 'ok', cuenta: cuenta('verde') },
-    { valor: 'gris', texto: 'Sin actividad', icono: 'vacio', cuenta: cuenta('gris') },
+    { valor: 'gris', texto: 'Sin dato de salud', icono: 'vacio', cuenta: cuenta('gris') },
     { valor: '', texto: 'Todas', cuenta: todas.length },
   ];
   if (vis.jefatura) opciones.splice(5, 0, { valor: 'pruebas', texto: 'Pruebas e internas', icono: 'aj', cuenta: cuenta('pruebas') });
@@ -398,52 +413,68 @@ function pintarSubcuentas(zona, ctx, d, vis) {
   const caja = h('div');
   const chips = chipsFiltro({ etiqueta: 'Estado', clave: 'crm.estado', opciones, valor: 'activas', alCambiar: () => pintar() });
   const pintar = () => {
+    if(ctx.vigente&&!ctx.vigente()){caja.replaceChildren();return;}
     const v = chips.valor();
-    const filas = todas.filter(f => v === '' ? true : v === 'activas' ? f.estado !== 'gris' : v === 'pruebas' ? (f.tipo === 'prueba' || f.tipo === 'interna') : v === 'mias' ? vis.mias.includes(f) : f.estado === v && f.tipo !== 'prueba' && f.tipo !== 'interna')
+    const filas = todas.filter(f => v === '' ? true : v === 'activas' ? (f.estado !== 'gris'||f.motivos?.length>0) : v === 'pruebas' ? (f.tipo === 'prueba' || f.tipo === 'interna') : v === 'mias' ? vis.mias.includes(f) : f.estado === v && f.tipo !== 'prueba' && f.tipo !== 'interna')
       .sort((a, b) => EST[a.estado].o - EST[b.estado].o || (b.leads_30d || 0) - (a.leads_30d || 0));
     const punto = cuentagotas(filas, f => f.estado, pesoSub);
     caja.replaceChildren(tablaDensa({
       filas, buscar: { campos: ['nombre', 'especialista', 'account', 'nombre_sub'], placeholder: 'Buscar subcuenta, especialista o account' },
       filtros: vis.jefatura ? [{ clave: 'especialista', titulo: 'Especialista' }] : [],
       columnas: [
-        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli', style: { minWidth: '200px' } }, logoCliente(f), h('span', { style: { display: 'grid', minWidth: 0 } }, f.nombre, f.tipo === 'sin_cliente' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, 'sin cliente en la app') : null)) },
-        { clave: 'estado', titulo: 'Estado', valor: f => EST[f.estado].o, celda: f => h('span', { style: { display: 'grid', gap: 'var(--s-1)', minWidth: '240px', maxWidth: '320px' } }, puntoEstado(punto(f), EST[f.estado].t),
-          f.mot1 ? h('span', { class: 'sub', title: f.mot1.texto, style: { fontSize: 'var(--fs-12)', lineHeight: '16px', display: '-webkit-box', WebkitLineClamp: '2', WebkitBoxOrient: 'vertical', overflow: 'hidden', whiteSpace: 'normal' } }, f.mot1.texto) : null) },
-        { clave: 'especialista', titulo: 'Especialista', celda: f => f.especialista ? h('span', { class: 'fila', style: ESP }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(f.especialista)), f.especialista) : h('span', { class: 'sub', style: { whiteSpace: 'nowrap' } }, 'sin asignar') },
-        { clave: 'leads_30d', titulo: 'Leads 30 d', num: true, celda: f => fmt.num(f.leads_30d) },
-        { clave: 'sin_tocar_24h', titulo: 'Sin tocar', num: true, celda: f => numFuerte(f.sin_tocar_24h) },
-        { clave: 'v1h', titulo: '1.er intento < 1 h', num: true, valor: f => f.velocidad?.pct_1h, celda: f => f.velocidad?.juzgables ? h('span', { style: { whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' } }, `${pc(f.velocidad.pct_1h)} · ${f.velocidad.en_1h}/${f.velocidad.juzgables}`) : '—' },
-        { clave: 'se', titulo: 'Citas sin estado 14 d', num: true, valor: f => f.citas_14d?.sin_estado, celda: f => numFuerte(f.citas_14d?.sin_estado) },
-        { clave: 'asis', titulo: 'Asistencia 30 d', num: true, valor: f => f.citas_30d?.asistencia_pct, celda: f => f.citas_30d?.asistencia_pct !== null && f.citas_30d?.asistencia_pct !== undefined ? puntoEstado(semaforo(f.citas_30d.asistencia_pct, { verde: 75, ambar: 60 }), pc(f.citas_30d.asistencia_pct)) : h('span', { class: 'sub', style: { whiteSpace: 'nowrap' }, title: 'Ninguna cita marcada como celebrada o no presentada' }, f.citas_30d?.agendadas ? 'sin marcar' : '—') },
-        { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: f => abrirGHL(f.enlaces.ghl) },
+        { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli', style: { minWidth: 0 } }, logoCliente(f), h('span', { style: { display: 'grid', minWidth: 0 } }, f.nombre, f.tipo === 'sin_cliente' ? h('small', { class: 'sub', style: { fontWeight: 500, fontSize: 'var(--fs-12)' } }, 'sin cliente en la app') : null)) },
+        { clave: 'estado', titulo: 'Estado', valor: f => EST[f.estado].o, celda: f => puntoEstado(punto(f), EST[f.estado].t) },
+        { clave: 'especialista', titulo: 'Especialista', celda: f => h('span', {title:f.especialista||'sin asignar'}, f.especialista || 'sin asignar') },
+        { clave: 'leads_30d', titulo: 'GHL30d · Meta7d', tituloCompleto:'Leads observados en GHL: 30 días; eventos lead en Meta: 7 días. Recuentos independientes', num: true, celda: f => h('span',{style:{whiteSpace:'nowrap'},title:`GHL30d: ${f.leads_30d??'Sin dato'} · Meta7d: ${f.leads_meta_7d??'Sin dato'}. Recuentos independientes, no unión por lead ni tasa de conversión`,'aria-label':`GHL30d: ${f.leads_30d??'Sin dato'}; Meta7d: ${f.leads_meta_7d??'Sin dato'}`},f.leads_30d==null?'—':numFuerte(f.leads_30d),' · ',f.leads_meta_7d==null?'—':numFuerte(f.leads_meta_7d)) },
+        { clave: 'sin_tocar_24h', titulo: 'Sin int.24h', num: true, celda: f => {const p=sinIntento677(f,d.fuentes?.ghl,ctx.hoy);return h('span',{title:p.detalle,'aria-label':p.detalle},p.texto);} },
+        { clave: 'v1h', titulo: 'Intento <1h', num: true, valor: f => primerIntento677(f).numerador, celda: f => {const p=primerIntento677(f);return h('span',{class:'sub',title:p.detalle,'aria-label':p.detalle},p.texto);} },
+        { clave: 'se', titulo: 'Sin est14d · Asist30d', tituloCompleto:'Citas sin estado: 14 días; asistencia entre resultados registrados: 30 días', num: true, valor: f => f.citas_14d?.sin_estado, celda: f => h('span',{style:{whiteSpace:'nowrap'},title:`Citas sin estado14d: ${f.citas_14d?.sin_estado??'Sin dato'} · Asistencia30d: ${f.citas_30d?.asistencia_pct??'Sin dato'}. Sólo resultados registrados, no todas las citas ni ventas`,'aria-label':`Citas sin estado14d: ${f.citas_14d?.sin_estado??'Sin dato'}; Asistencia30d: ${f.citas_30d?.asistencia_pct??'Sin dato'}`},f.citas_14d?.sin_estado==null?'—':numFuerte(f.citas_14d.sin_estado),' · ',f.citas_30d?.asistencia_pct !== null && f.citas_30d?.asistencia_pct !== undefined ? pc(f.citas_30d.asistencia_pct) : '—') },
+        { clave: 'ir', titulo: 'Detalle / GHL', ordenable: false, celda: f => detalleSubcuenta245(ctx,d,f) },
       ],
       porPagina: MOVIL() ? 8 : 15,
-      alPulsar: f => ctx.navegar(`${ID}/${f.sub_id}`),
+      alPulsar: f => {if(!ctx.vigente||ctx.vigente())ctx.navegar(`${ID}/${f.sub_id}`);},
       etiquetaFila: f => `${f.nombre}: ${EST[f.estado].t}${f.mot1 ? `, ${f.mot1.texto}` : ''}. Abrir`,
       vacio: { titulo: 'Ninguna subcuenta con este filtro', porque: 'Cambia el filtro de estado.' },
     }));
   };
   pintar();
   zona.append(panel({ titulo: 'Subcuentas de GoHighLevel', icono: 'base', sub: vis.jefatura ? `Las ${d.subcuentas.length} de la agencia; las de clientes con campaña, arriba. Pulsa una para ver su detalle.` : 'Tus subcuentas. Pulsa una para ver su detalle y actuar.' },
-    h('div', { class: 'cuerpo', style: { paddingBottom: 'var(--s-1)' } }, chips), caja));
+    h('div', { class: 'cuerpo', style: { padding:'4px 10px' } }, chips), caja,
+    h('style',{},`@media(min-width:641px){[data-crm-subcuentas-245] table.densa{table-layout:fixed;width:100%;min-width:900px}[data-crm-subcuentas-245] table.densa th,[data-crm-subcuentas-245] table.densa td{padding:5px 6px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}[data-crm-subcuentas-245] table.densa th,[data-crm-subcuentas-245] table.densa th button{white-space:normal;overflow-wrap:normal;word-break:normal;max-width:100%;min-width:0}[data-crm-subcuentas-245] table.densa th button{padding:0}[data-crm-subcuentas-245] table.densa th:first-child{width:18%}[data-crm-subcuentas-245] table.densa th:last-child{width:14%}[data-crm-subcuentas-245] table.densa th:not(:first-child):not(:last-child){width:11.333333%}[data-crm-subcuentas-245] .celda-cli{gap:4px;min-width:0}[data-crm-subcuentas-245] table.densa td .chip{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}`)));
+  zona.lastElementChild?.setAttribute('data-crm-subcuentas-245','');
+}
+function detalleSubcuenta245(ctx,d,f) {
+  const detalle=h('div',{hidden:true,style:{marginTop:'4px',textAlign:'left'},on:{click:e=>e.stopPropagation(),keydown:e=>e.stopPropagation()}});
+  const b=h('button',{type:'button',class:'bt mini','aria-expanded':'false',on:{click:e=>{
+    e.stopPropagation();if(ctx.vigente&&!ctx.vigente())return;
+    const abierto=detalle.hidden;detalle.hidden=!abierto;b.setAttribute('aria-expanded',String(abierto));
+    if(abierto&&!detalle.childNodes.length)detalle.append(
+      h('p',{},f.mot1?.texto||'Sin motivo registrado'),
+      h('p',{},`Lectura GHL: ${d.fuentes?.ghl?.hora||'sin fecha'}. Lectura de Captación: ${d.fuentes?.captacion?.hora||'sin fecha'}.`),
+      h('p',{},'GHL30d y Meta7d son recuentos independientes: ventanas diferentes, sin unión por lead. No acreditan cualificación, respuestas ni ventas.'),
+      h('p',{},'Primer intento no equivale a respuesta. Asistencia sólo de resultados registrados; pipeline observado no constituye una cohorte de conversión.'),
+      h('a',{href:`#/${ID}/${f.sub_id}`},'Abrir ficha y pipeline observado'));
+  }}},'Detalle');
+  return h('span',{style:{display:'grid',gap:'2px'}},b,abrirGHL(f.enlaces?.ghl,'GHL'),detalle);
 }
 
 // ------------------------------------------------------------------ pestaña: leads sin tocar
 function pintarLeads(zona, ctx, d, vis, leads) {
-  leads = leads.filter(x => !d.revisados?.has(claveRev('lead', x)));
-  const gota = cuentagotas(leads, x => (x.horas > 72 ? 'rojo' : 'ambar'), x => x.horas || 0);
+  leads = leadsPendientes369(leads,vis.base);
+  const gota = x => senalFilaCRM541('lead',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado;
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
-  zona.append(panel({ titulo: 'Leads sin tocar más de 24 h', icono: 'phone', sub: 'Sin ninguna llamada ni mensaje de una persona en GoHighLevel. «Revisado» con su motivo lo saca de la lista (se puede deshacer). Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
+  zona.append(panel({ titulo: 'Leads señalados sin intento registrado', icono: 'phone', sub: 'Leads señalados en la copia parcial; contrasta llamadas y mensajes con el despacho. La revisión en RO no elimina el pendiente ni confirma una llamada en GHL. Los datos del lead van tapados: «Ver datos» queda en el rastro.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas: leads, buscar: { campos: ['subcuenta', 'medio'], placeholder: 'Buscar subcuenta u origen' }, filtros: [{ clave: 'subcuenta', titulo: 'Subcuenta' }],
       orden: { clave: 'horas', dir: 'desc' },
       columnas: [
         { clave: 'subcuenta', titulo: 'Subcuenta', principal: true, celda: x => h('span', { class: 'celda-cli' }, logoCliente(porSub.get(x.sub_id) || { nombre: x.subcuenta }), x.subcuenta) },
         { clave: 'creado', titulo: 'Entró', celda: x => `${fDiaRO(x.creado)} · ${x.creado?.slice(11) || ''}` },
-        { clave: 'horas', titulo: 'Esperando', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
+        { clave: 'horas', titulo: 'Edad en copia', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
         { clave: 'medio', titulo: 'Origen', celda: x => h('span', { style: { display: 'inline-block', minWidth: '140px' } }, x.medio || '—') },
-        { clave: 'automatico', titulo: 'Mensaje automático', celda: x => x.automatico ? 'Sí salió' : puntoEstado('ambar', 'No salió') },
-        { clave: 'respondio', titulo: 'El lead escribió', celda: x => x.respondio ? puntoEstado('ambar', 'Sí, sin respuesta') : 'No' },
+        { clave: 'automatico', titulo: 'Mensaje automático', celda: x => x.automatico ? 'Sí salió' : h('span',{class:'sub',title:'No consta mensaje automático en esta lectura parcial'},'No consta') },
+        { clave: 'respondio', titulo: 'El lead escribió', celda: x => {const e=entradaLead677(x,ctx.hoy,d.fuentes?.ghl);return h('span',{class:'sub',title:e.detalle,'aria-label':e.detalle},e.texto);} },
+        { clave: 'revision_ro', titulo: 'Revisión RO', ordenable: false, celda: x => estadoRevisionLead369(h,x,d) },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
           // Ronda U: fila compacta · verbo principal (Revisado) + Ver datos + «⋯» con lo que sale fuera (GHL, nota, tarea)
           botonRevisado(ctx, x, 'lead', d), botonVerDatos(ctx, x, vis),
@@ -452,15 +483,15 @@ function pintarLeads(zona, ctx, d, vis, leads) {
               vista_previa: `Pondría en el contacto de GHL (${x.subcuenta}) la nota: «Sin contactar a las ${horasTxt(x.horas)} · revisado desde la app». Espera el permiso de GHL (falta un permiso de GoHighLevel).` }),
             porSub.get(x.sub_id) ? tareaAccount(ctx, porSub.get(x.sub_id), `Llamar al lead del ${fDiaRO(x.creado)} (${horasTxt(x.horas)} sin contactar)`) : null].filter(Boolean), `el lead de ${x.subcuenta}`)) },
       ],
-      vacio: { titulo: 'Ningún lead sin tocar', porque: 'Todos los leads del mes tienen al menos un intento en GHL.' },
+      vacio: { titulo: 'Ningún lead sin tocar', porque: 'No hay casos en los contactos y mensajes leídos; cobertura parcial. No acredita que todos los leads hayan sido llamados.' },
     })));
 }
 
 // ------------------------------------------------------------------ pestaña: oportunidades paradas 72 h
 function pintarParadas(zona, ctx, d, vis, paradas) {
-  const gota = cuentagotas(paradas, x => (x.horas > 7 * 24 ? 'rojo' : 'ambar'), x => x.horas || 0);
+  const gota = x => senalFilaCRM541('oportunidad',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado;
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
-  zona.append(panel({ titulo: 'Oportunidades paradas más de 72 h', icono: 'hist', sub: 'Abiertas, creadas en el último mes y sin cambiar de etapa en 72 h. GoHighLevel no tiene enlace a una oportunidad suelta: el atajo abre el contacto, que enseña sus oportunidades.' },
+  zona.append(panel({ titulo: 'Oportunidades por revisar · > 72 h', icono: 'hist', sub: 'Abiertas en esta copia, creadas en el último mes. Confirmar si la fecha registrada corresponde a un cambio de etapa, estado o actualización. El atajo abre el contacto en GHL.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas: paradas, buscar: { campos: ['subcuenta', 'etapa'], placeholder: 'Buscar subcuenta o etapa' }, filtros: [{ clave: 'subcuenta', titulo: 'Subcuenta' }, { clave: 'etapa', titulo: 'Etapa' }],
       orden: { clave: 'horas', dir: 'desc' },
@@ -468,22 +499,22 @@ function pintarParadas(zona, ctx, d, vis, paradas) {
         { clave: 'subcuenta', titulo: 'Subcuenta', principal: true, celda: x => h('span', { class: 'celda-cli' }, logoCliente(porSub.get(x.sub_id) || { nombre: x.subcuenta }), x.subcuenta) },
         { clave: 'etapa', titulo: 'Etapa', celda: x => x.etapa || '—' },
         { clave: 'creada', titulo: 'Creada', celda: x => fDiaRO(x.creada) },
-        { clave: 'horas', titulo: 'Parada', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
+        { clave: 'horas', titulo: 'Edad ref.', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
           !vis.resumen ? accionSim(ctx, { texto: 'Mover', pregunta: '¿Mover la oportunidad a «Seguimiento»?', tipo: 'mover_oportunidad', objeto: `${x.subcuenta} · oportunidad ${x.ref}`, cliente_id: x.cliente_id,
             vista_previa: `Movería la oportunidad (${x.etapa || 'sin etapa'}) de ${x.subcuenta} a «Seguimiento». Espera un permiso de GoHighLevel.` }) : null,
           abrirGHL(x.enlace, 'Abrir contacto en GHL')) },
       ],
-      vacio: { titulo: 'Ninguna oportunidad parada', porque: 'Todas las del último mes se han movido en las últimas 72 h.' },
+      vacio: { titulo: 'Sin oportunidades en esta lista', porque: 'La copia parcial no acredita que todas hayan cambiado de etapa ni que no haya pendientes.' },
     })));
 }
 
 // ------------------------------------------------------------------ pestaña: citas sin estado
 function pintarCitas(zona, ctx, d, vis, citas) {
-  citas = citas.filter(x => !d.revisados?.has(claveRev('cita', x)));
-  const gota = cuentagotas(citas, x => (x.horas > 48 ? 'rojo' : 'ambar'), x => x.horas || 0);
+  citas = citasPendientes334(citas,vis.base);
+  const gota = x => senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,vis.base).estado;
   const porSub = new Map(d.subcuentas.map(f => [f.sub_id, f]));
-  zona.append(avisoParcial('Marcar el estado de una cita en GoHighLevel manda un WhatsApp al lead (ley de la casa). En el prototipo no se marca nada: queda en la cola con su vista previa hasta tener el permiso de GoHighLevel.', { titulo: 'Ojo al marcar.' }));
+  zona.append(notaCompacta336(h,'Acciones de cita · registro local; revisa sus efectos',h('p',{},'La revisión en RO no marca asistencia ni envía mensajes. Las otras acciones guardan intenciones locales: cambiar el estado en GoHighLevel podría activar flujos o WhatsApp. Comprueba el efecto antes de ejecutarlo; esta vista no acredita el envío. Colores de muestra al corte de la copia: más de48h sin resultado registrado es referencia roja; no SLA contractual ni ausencia de contacto.')));
   zona.append(panel({ titulo: 'Citas de los últimos 14 días sin marcar', icono: 'cal', sub: 'Pasadas y sin «se presentó» ni «no se presentó». Sin marcar, la asistencia no se puede medir.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas: citas, buscar: { campos: ['subcuenta', 'calendario'], placeholder: 'Buscar subcuenta o calendario' }, filtros: [{ clave: 'subcuenta', titulo: 'Subcuenta' }],
@@ -492,7 +523,8 @@ function pintarCitas(zona, ctx, d, vis, citas) {
         { clave: 'subcuenta', titulo: 'Subcuenta', principal: true, celda: x => h('span', { class: 'celda-cli' }, logoCliente(porSub.get(x.sub_id) || { nombre: x.subcuenta }), x.subcuenta) },
         { clave: 'inicio', titulo: 'Cita', celda: x => `${fDiaRO(x.inicio)} · ${x.inicio?.slice(11) || ''}` },
         { clave: 'calendario', titulo: 'Calendario', celda: x => h('span', { style: { display: 'inline-block', minWidth: '160px' } }, x.calendario || '—') },
-        { clave: 'horas', titulo: 'Sin marcar', num: true, celda: x => puntoEstado(gota(x), horasTxt(x.horas)) },
+        { clave: 'horas', titulo: 'Sin resultado', num: true, celda: x => { const m=senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,vis.base); return h('span',{title:m.motivo+' · corte: '+(m.fecha||'sin fecha'),'aria-label':m.motivo},puntoEstado(gota(x),m.horas===null?horasTxt(x.horas):m.horas>48&&Math.round(m.horas)===48?'>48 h':horasTxt(m.horas))); } },
+        { clave: 'revision_ro', titulo: 'Revisión RO', celda: x => estadoRevisionCita334(h,x,d) },
         { clave: 'acc', titulo: 'Acciones', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } },
           botonRevisado(ctx, x, 'cita', d),
           masAcciones([accionSim(ctx, { texto: 'Se presentó', pregunta: '¿Marcar «se presentó»? Manda WhatsApp al lead', tipo: 'marcar_cita', objeto: `${x.subcuenta} · cita ${x.ref}`, cliente_id: x.cliente_id,
@@ -503,7 +535,7 @@ function pintarCitas(zona, ctx, d, vis, citas) {
             vista_previa: `Abriría la cita del ${fDiaRO(x.inicio)} para moverla y mandaría al lead el enlace de reagendar. Espera un permiso de GoHighLevel.` }),
           x.datos ? botonVerDatos(ctx, x, vis) : null, abrirGHL(x.enlace_contacto || x.enlace, x.enlace_contacto ? 'Abrir contacto en GHL' : 'Abrir calendario en GHL')].filter(Boolean), `la cita de ${x.subcuenta}`)) },
       ],
-      vacio: { titulo: 'Todas las citas están marcadas', porque: 'Ninguna cita pasada de los últimos 14 días sin estado.' },
+      vacio: { titulo: 'Sin citas detalladas pendientes en esta copia', porque: 'Lista parcial de 14 días; no acredita que todas estén marcadas ni resultados comerciales confirmados.' },
     })));
   if (porSub.size) {
     const top = [...porSub.values()].filter(f => vis.base.includes(f) && f.citas_30d?.agendadas).sort((a, b) => (b.citas_30d.sin_estado || 0) - (a.citas_30d.sin_estado || 0)).slice(0, 8);
@@ -524,67 +556,93 @@ function pintarCitas(zona, ctx, d, vis, citas) {
 }
 
 // ------------------------------------------------------------------ pestaña: por especialista (vista de Yessica)
+//207: una copia anterior sin cobertura tampoco acredita cargas o salud.
+function sinEspecialistaCRM(d) {
+  return d.agregados_cobertura?.estado === 'completa' && d.agregados_cobertura?.asignaciones_confirmadas === true
+    && Array.isArray(d.resumen?.encendidas_sin_especialista) ? d.resumen.encendidas_sin_especialista : null;
+}
+
+function especialistasMedidosCRM(d) {
+  return (d.especialistas || []).map(e => {
+    if (e.agregados_cobertura?.estado === 'completa' && e.agregados_cobertura?.cartera_asignada_confirmada === true) return e;
+    const r = { ...e };
+    for (const k of ['clientes', 'encendidas', 'verde', 'ambar', 'rojo', 'gris', 'sin_tocar', 'sin_estado', 'sin_subcuenta']) r[k] = null;
+    return r;
+  });
+}
+
 function pintarEspecialistas(zona, ctx, d, vis) {
-  const esp = (d.especialistas || []).filter(e => vis.jefatura || e.id === ctx.persona.id);
-  const max = Math.max(16, ...esp.map(e => e.clientes));
-  zona.append(panel({ titulo: 'Carga y salud por especialista', icono: 'eq', sub: 'Clientes con silla CRM en asignaciones (tope 16) y estado de sus subcuentas. Rojos por persona: verde ≤ 2 · rojo ≥ 5.' },
+  const esp = especialistasMedidosCRM(d).filter(e => vis.jefatura || e.id === ctx.persona.id);
+  const max = Math.max(16, ...esp.map(e => conteoCRM(e.clientes)).filter(n => n !== null));
+  zona.append(panel({ titulo: 'Carga y salud por especialista', icono: 'eq', sub: 'Subcuentas visibles en la copia. La carga asignada y la salud requieren cobertura verificada; una subcuenta conectada no acredita la cartera.' },
     tablaApilable({
       filas: esp,
       columnas: [
         { clave: 'nombre', titulo: 'Especialista', principal: true, celda: e => h('span', { class: 'fila', style: ESP }, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(e.nombre)), e.nombre) },
-        { clave: 'clientes', titulo: 'Carga', celda: e => h('span', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 'var(--s-2)', alignItems: 'center', minWidth: '160px' } },
+        { clave: 'clientes', titulo: 'Carga', celda: e => conteoCRM(e.clientes) === null ? 'Pendiente de verificar' : h('span', { style: { display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 'var(--s-2)', alignItems: 'center', minWidth: '160px' } },
           barraProgreso({ valor: e.clientes, max, estado: e.clientes > e.tope ? 'rojo' : e.clientes >= 14 ? 'ambar' : 'verde', marca: e.tope, etiqueta: `${e.clientes} de ${e.tope} clientes` }), h('b', { style: { fontVariantNumeric: 'tabular-nums' } }, `${e.clientes}/${e.tope}`)) },
-        { clave: 'encendidas', titulo: 'Encendidas', num: true },
-        { clave: 'verde', titulo: 'Verde', num: true, celda: e => fmt.num(e.verde) },
-        { clave: 'ambar', titulo: 'Vigilar', num: true, celda: e => fmt.num(e.ambar) },
-        { clave: 'rojo', titulo: 'Rojo', num: true, celda: e => puntoEstado(semaforo(e.rojo, { verde: 2, ambar: 4, mejorSi: 'bajo' }), fmt.num(e.rojo)) },
-        { clave: 'sin_tocar', titulo: 'Leads sin tocar', num: true },
-        { clave: 'sin_estado', titulo: 'Citas sin estado', num: true },
-        { clave: 'sin_subcuenta', titulo: 'Sin subcuenta emparejada', celda: e => e.sin_subcuenta?.length ? h('span', { class: 'sub', style: { display: 'inline-block', whiteSpace: 'normal', minWidth: '200px' } }, e.sin_subcuenta.join(', ')) : '—' },
+        { clave: 'encendidas', titulo: 'Encendidas', num: true, celda: e => conteoCRM(e.encendidas) === null ? 'Sin dato' : fmt.num(e.encendidas) },
+        { clave: 'verde', titulo: 'Verde', num: true, celda: e => conteoCRM(e.verde) === null ? 'Sin dato' : fmt.num(e.verde) },
+        { clave: 'ambar', titulo: 'Vigilar', num: true, celda: e => conteoCRM(e.ambar) === null ? 'Sin dato' : fmt.num(e.ambar) },
+        { clave: 'rojo', titulo: 'Rojo', num: true, celda: e => conteoCRM(e.rojo) === null ? 'Sin dato' : h('span',{class:'sub',title:'Recuento de estados del registro anterior; no gravedad actual acreditada'},fmt.num(e.rojo)) },
+        { clave: 'sin_tocar', titulo: 'Leads sin tocar', num: true, celda: e => conteoCRM(e.sin_tocar) === null ? 'Sin dato' : fmt.num(e.sin_tocar) },
+        { clave: 'sin_estado', titulo: 'Citas sin estado', num: true, celda: e => conteoCRM(e.sin_estado) === null ? 'Sin dato' : fmt.num(e.sin_estado) },
+        { clave: 'sin_subcuenta', titulo: 'Sin subcuenta emparejada', celda: e => !Array.isArray(e.sin_subcuenta) ? 'Pendiente de verificar' : e.sin_subcuenta.length ? h('span', { class: 'sub', style: { display: 'inline-block', whiteSpace: 'normal', minWidth: '200px' } }, e.sin_subcuenta.join(', ')) : '—' },
         // Ronda U: «Proponer reparto a Mili» en la fila de quien pasa del tope o acumula rojos (interno: deshacer, sin «¿Seguro?»)
         vis.jefatura ? { clave: 'reparto', titulo: 'Reparto', ordenable: false, celda: e => (e.clientes > e.tope || e.rojo >= 5) && !ctx.soloLectura ? botonDeshacer({ texto: 'Proponer reparto a Mili', hecho: 'Propuesta enviada a Mili', icono: 'users',
           alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'proponer_reasignacion', objeto: `Carga de ${e.nombre}`, texto: `${e.nombre}: ${e.clientes} de ${e.tope} clientes y ${e.rojo} en rojo`, vista_previa: `Propone a Mili repartir parte de la cartera de CRM de ${e.nombre} (${e.clientes} de ${e.tope} clientes, ${e.rojo} subcuentas en rojo). Deciden Mili y Tomás.` }); return 'Propuesta en el Mi día de Mili'; } }) : h('span', { class: 'sub' }, '—') } : null,
       ].filter(Boolean),
-      vacio: { titulo: 'Sin especialistas en asignaciones', texto: 'La silla CRM no tiene a nadie asignado todavía.' },
+      vacio: { titulo: 'Sin detalle visible de especialistas', texto: 'Esta copia no permite acreditar la cartera asignada.' },
     })));
-  const sin = d.resumen?.encendidas_sin_especialista || [];
+  const sin = sinEspecialistaCRM(d);
   if (vis.jefatura) {
     zona.append(panel({ titulo: 'Encendidas sin especialista', icono: 'persona', sub: 'Subcuentas con campaña o leads entrando que nadie tiene en la silla CRM' },
-      sin.length ? h('div', { class: 'cuerpo' }, h('div', { class: 'fila' }, sin.map(n => chipEstado('ambar', n))),
-        h('div', { class: 'fila', style: { marginTop: 'var(--s-3)' } }, accionSim(ctx, { texto: 'Proponer reparto a Mili', pregunta: '¿Mandar la propuesta a Mili?', tipo: 'proponer_reasignacion', herramienta: 'app', objeto: 'Subcuentas sin especialista',
+      !Array.isArray(sin) ? h('div', { class: 'cuerpo' }, vacioLinea('Asignaciones pendientes de verificar; no se acredita que todas las subcuentas tengan especialista.', { icono: 'hist' })) : sin.length ? h('div', { class: 'cuerpo' }, h('div', { class: 'fila' }, sin.map(n => chipEstado('ambar', n))),
+        h('div', { class: 'fila', style: { marginTop: 'var(--s-3)' } }, accionSim(ctx, { texto: 'Proponer reparto a Mili', pregunta: '¿Mandar la propuesta a Mili?', tipo: 'proponer_reasignacion', herramienta: 'app', objeto: 'Subcuentas sin especialista', globalCRM528: true,
           vista_previa: `Propondría a Mili asignar la silla CRM de: ${sin.join(', ')}. Deciden Mili y Tomás.`, mini: false })))
-        : h('div', { class: 'cuerpo' }, vacioLinea('Todas las encendidas tienen especialista.', { icono: 'ok' }))));
+        : h('div', { class: 'cuerpo' }, vacioLinea('En la copia visible no constan encendidas sin especialista.', { icono: 'ok' }))));
   }
 }
 
 // ------------------------------------------------------------------ pestaña: flujos, WhatsApp y correo
 function pintarFlujos(zona, ctx, d, vis) {
-  const filas = vis.base.filter(f => f.estado !== 'gris').sort((a, b) => (b.whatsapp?.fallidos || 0) - (a.whatsapp?.fallidos || 0) || (b.leads_30d || 0) - (a.leads_30d || 0));
-  zona.append(h('div', { class: 'dos' },
-    panel({ titulo: 'Flujos con error', icono: 'zap', sub: 'Lo que hoy no se puede leer y por qué' },
-      h('div', { class: 'cuerpo' }, vacioLinea('Los flujos no salen por la API: falta un permiso de GoHighLevel y la pestaña de errores no consta. Mientras, el aviso es el correo diario de GHL.', { icono: 'candado', quien: 'Tomás (falta un permiso de GoHighLevel)' }))),
-    panel({ titulo: 'Número de WhatsApp conectado', icono: 'wa', sub: 'Conectado, restringido o caído' },
-      h('div', { class: 'cuerpo' }, vacioLinea('No medible por API. Sí se mide el fallo de cada mensaje (tabla de abajo): si todo falla, sospecha de número desconectado.', { icono: 'wa', quien: 'especialista (Ajustes › WhatsApp en GHL)' })))));
-  zona.append(panel({ titulo: 'Por subcuenta: flujos, WhatsApp y correo', icono: 'base', sub: 'Mensajes a los leads del mes. «Abrir flujos» lleva a la pestaña de flujos de esa subcuenta.' },
+  if(ctx.vigente&&!ctx.vigente()){zona.replaceChildren();return;}
+  const celdaMensaje=(f,canal)=>{
+    const p=parejaMensajesCRM597(f,canal),texto=p.valida?`${p.fallidos} de ${p.enviados}`:'—';
+    const color=canal==='whatsapp'&&p.valida&&p.fallidos>0&&f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')?'ambar':'gris';
+    return h('span',{title:p.detalle,'aria-label':p.detalle,'data-color':color},p.valida?puntoEstado(color,texto):texto);
+  };
+  const filas = [...vis.base].sort((a, b) => (b.whatsapp?.fallidos || 0) - (a.whatsapp?.fallidos || 0) || (b.leads_30d || 0) - (a.leads_30d || 0));
+  const limites=notaCompacta336(h,'Flujos y número WA · lectura no disponible; detalle',
+    h('p',{},'Los flujos no salen por la API: falta un permiso de GoHighLevel y la pestaña de errores no consta. Mientras, el aviso es el correo diario de GHL.'),
+    h('p',{},'Número de WhatsApp conectado: no medible por API. La tabla conserva los fallos de mensajes observados; no acredita el estado del número. Contrasta Ajustes › WhatsApp en GHL con el especialista.'));
+  zona.append(panel({ titulo: 'Por subcuenta: flujos, WhatsApp y correo', icono: 'base', sub: 'Mensajes observados en la muestra de leads30d · cobertura parcial. «Abrir flujos» abre esa subcuenta.' },
     tablaDensa({
       porPagina: MOVIL() ? 8 : 15, filas, buscar: { campos: ['nombre', 'especialista'], placeholder: 'Buscar subcuenta' },
       columnas: [
         { clave: 'nombre', titulo: 'Subcuenta', principal: true, celda: f => h('span', { class: 'celda-cli' }, logoCliente(f), f.nombre) },
-        { clave: 'auto', titulo: 'Automático en < 5 min', num: true, valor: f => f.velocidad?.auto_5min, celda: f => f.velocidad ? `${f.velocidad.auto_5min}/${f.leads_30d || 0}` : '—' },
-        { clave: 'wa', titulo: 'WhatsApp fallido', num: true, valor: f => f.whatsapp?.pct_fallo, celda: f => f.whatsapp?.enviados ? puntoEstado(semaforo(f.whatsapp.pct_fallo, { verde: 2, ambar: 10, mejorSi: 'bajo' }), `${f.whatsapp.fallidos} de ${f.whatsapp.enviados}`) : h('span', { class: 'sub' }, 'sin envíos') },
-        { clave: 'sms', titulo: 'SMS fallido', num: true, valor: f => f.sms?.fallidos, celda: f => f.sms?.enviados ? `${f.sms.fallidos} de ${f.sms.enviados}` : '—' },
-        { clave: 'mail', titulo: 'Correos fallidos', num: true, valor: f => f.correo?.fallidos, celda: f => f.correo?.enviados ? `${f.correo.fallidos} de ${f.correo.enviados}` : '—' },
-        { clave: 'num', titulo: 'Número WhatsApp', ordenable: false, celda: () => h('span', { class: 'sub' }, 'no medible') },
+        { clave: 'auto', titulo: 'Automático en < 5 min', num: true, valor: f => automaticosCRM597(f).valida?f.velocidad.auto_5min:null, celda: f => {const a=automaticosCRM597(f);return h('span',{title:a.detalle,'aria-label':a.detalle},a.valida?`${a.numerador}/${a.denominador}`:'—');} },
+        { clave: 'wa', titulo: 'WhatsApp fallido', num: true, valor: f => parejaMensajesCRM597(f,'whatsapp').pct, celda: f => celdaMensaje(f,'whatsapp') },
+        { clave: 'sms', titulo: 'SMS fallido', num: true, valor: f => parejaMensajesCRM597(f,'sms').valida?f.sms.fallidos:null, celda: f => celdaMensaje(f,'sms') },
+        { clave: 'mail', titulo: 'Correos fallidos', num: true, valor: f => parejaMensajesCRM597(f,'correo').valida?f.correo.fallidos:null, celda: f => celdaMensaje(f,'correo') },
+        { clave: 'num', titulo: 'Número WhatsApp', ordenable: false, celda: () => h('span', { class: 'sub', title:'Estado del número WhatsApp no medible por la API disponible', 'aria-label':'Estado del número WhatsApp sin medición disponible' }, '—') },
         { clave: 'ir', titulo: 'Abrir', ordenable: false, celda: f => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } }, abrirGHL(f.enlaces.flujos, 'Abrir flujos en GHL'), abrirGHL(f.enlaces.whatsapp, 'Abrir WhatsApp en GHL')) },
       ],
-      alPulsar: f => ctx.navegar(`${ID}/${f.sub_id}`),
-      vacio: { titulo: 'Sin subcuentas con actividad', porque: 'No entra ningún lead en tus subcuentas.' },
+      alPulsar: f => {if(ctx.vigente&&!ctx.vigente()){zona.replaceChildren();return;}ctx.navegar(`${ID}/${f.sub_id}`);},
+      vacio: { titulo: 'Sin subcuentas con señales en este filtro', porque: 'La copia parcial no acredita ausencia de leads ni mensajes; revisa el filtro y la fecha.' },
     })));
-  const ro = d.correo_ro || {};
-  zona.append(panel({ titulo: 'Entregabilidad del correo', icono: 'mail', sub: 'Rebote y quejas: verde rebote < 2 % · ámbar 2-5 % · rojo quejas ≥ 0,3 %' },
+  zona.append(limites);
+  const ro = d.correo_ro && typeof d.correo_ro==='object' && !Array.isArray(d.correo_ro) ? d.correo_ro : {};
+  const fechaRO=typeof ro.fecha==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(ro.fecha)&&Number.isFinite(Date.parse(ro.fecha+'T00:00:00Z'))&&new Date(ro.fecha+'T00:00:00Z').toISOString().slice(0,10)===ro.fecha?ro.fecha:null;
+  const hoyRO=typeof ctx.hoy==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(ctx.hoy)&&Number.isFinite(Date.parse(ctx.hoy+'T00:00:00Z'))&&new Date(ctx.hoy+'T00:00:00Z').toISOString().slice(0,10)===ctx.hoy?ctx.hoy:null;
+  const reboteRO=typeof ro.rebote_pct==='number'&&Number.isFinite(ro.rebote_pct)&&ro.rebote_pct>=0&&ro.rebote_pct<=100&&fechaRO&&hoyRO&&fechaRO<=hoyRO?ro.rebote_pct:null;
+  const textoRO=reboteRO===null?'Subcuenta de RO: —':`Subcuenta de RO: ${fmt.num(reboteRO, 1)} % de rebote`;
+  zona.append(panel({ titulo: 'Entregabilidad del correo', icono: 'mail', sub: 'Auditoría anterior de RO · referencia, no medición actual de los clientes' },
     h('div', { class: 'cuerpo pila' },
-      h('div', { class: 'fila' }, chipEstado(semaforo(ro.rebote_pct, { verde: 2, ambar: 5, mejorSi: 'bajo' }), `Subcuenta de RO: ${fmt.num(ro.rebote_pct, 1)} % de rebote`), h('span', { class: 'sub' }, `${ro.fuente || ''} · ${fDiaRO(ro.fecha)}`)),
-      h('p', { class: 'sub', style: { margin: 0 } }, ro.nota || ''))));
+      h('div', { class: 'fila' }, chipEstado('gris', textoRO), h('span', { class: 'sub' }, `${typeof ro.fuente==='string'?ro.fuente:''} · ${fechaRO?fDiaRO(fechaRO):'Fecha por confirmar'}`)),
+      notaCompacta336(h,'Fuente y límites',
+        h('p',{},'Referencia de auditoría: rebote < 2 %, 2–5 % y quejas ≥ 0,3 %. No acredita entregabilidad actual ni ausencia de quejas; las subcuentas cliente sólo aportan mensajes fallidos observados.'),
+        h('p',{},typeof ro.nota==='string'?ro.nota:'')))));
 }
 
 // ------------------------------------------------------------------ pestaña: montajes de altas
@@ -614,11 +672,11 @@ function indicadoresPuesto(ctx, S, casa, vis) {
   const fr = { fuente: 'GHL', estado: 'ok' };
   const items = [
     vis.jefatura ? fichaCatalogo(ind('jefa_crm.de_subcuentas_con_el_crm_en_verde_el_que_manda'), { valor: casa.pctVerde === null ? null : fmt.num(casa.pctVerde, 1), unidad: '%', estado: semaforo(casa.pctVerde, { verde: 80, ambar: 60 }), frescura: fr, icono: 'base', parcial: 'Sin los flujos con error (no se pueden leer).' }) : null,
-    fichaCatalogo(ind('especialista_ghl.asistencia_a_las_citas_de_sus_despachos_el_que_m'), { valor: S.asistencia === null ? null : fmt.num(S.asistencia, 1), unidad: '%', estado: semaforo(S.asistencia, { verde: 75, ambar: 60 }), frescura: fr, icono: 'users', parcial: S.asistencia === null ? `0 de ${S.agendadas30} citas marcadas: sin dato.` : null }),
-    fichaCatalogo(ind('especialista_ghl.citas_sin_estado'), { valor: S.sinEstado14, unidad: 'en 14 días', estado: semaforo(S.sinEstado14, { verde: 0, ambar: 5, mejorSi: 'bajo' }), frescura: fr, icono: 'cal' }),
-    fichaCatalogo(ind('especialista_ghl.leads_sin_tocar_a_las_24_h'), { valor: S.sinTocar, estado: S.sinTocar ? 'rojo' : 'verde', frescura: fr, icono: 'phone', parcial: 'Solo intentos que pasan por GHL.' }),
-    fichaCatalogo(ind('especialista_ghl.velocidad_del_despacho_con_el_lead'), { valor: S.pct1h === null ? null : fmt.num(S.pct1h, 1), unidad: '% en < 1 h', estado: semaforo(S.pct1h, { verde: 70, ambar: 40 }), frescura: fr, icono: 'clock' }),
-    fichaCatalogo(ind('especialista_ghl.whatsapp_fallido_o_desconectado'), { valor: S.pctWa === null ? null : fmt.num(S.pctWa, 1), unidad: '%', estado: S.wa ? semaforo(S.pctWa, { verde: 2, ambar: 10, mejorSi: 'bajo' }) : 'gris', frescura: fr, icono: 'wa' }),
+    fichaCatalogo(ind('especialista_ghl.asistencia_a_las_citas_de_sus_despachos_el_que_m'), { valor: S.asistencia === null ? null : fmt.num(S.asistencia, 1), unidad: '%', estado:'gris', frescura: fr, icono: 'users', parcial: S.asistencia === null ? 'Sin denominador de asistencia confirmado; cobertura parcial.' : null }),
+    fichaCatalogo(ind('especialista_ghl.citas_sin_estado'), { valor: S.sinEstado14, unidad: 'en 14 días', estado:S.sinEstado14>0&&S.senalesSinEstado?'ambar':'gris', frescura: fr, icono: 'cal' }),
+    fichaCatalogo(ind('especialista_ghl.leads_sin_tocar_a_las_24_h'), { valor: S.sinTocar, estado: S.sinTocar>0&&S.senalesSinTocar&&S.sinIntentoLectura677.todoScope?'ambar':'gris', frescura: fr, icono: 'phone', parcial: 'Sólo intentos observados en mensajes leídos de GHL; cobertura parcial, no llamadas externas.' }),
+    fichaCatalogo(ind('especialista_ghl.velocidad_del_despacho_con_el_lead'), { valor: primerIntento677({velocidad:{en_1h:S.en1h,juzgables:S.juzgables}}).texto, unidad: '', estado:'gris', frescura: fr, icono: 'clock', parcial: 'Primeros intentos del registro anterior, numerador/denominador por contrastar; no tasa vigente ni respuesta acreditada.' }),
+    fichaCatalogo(ind('especialista_ghl.whatsapp_fallido_o_desconectado'), { valor: S.pctWa === null ? null : fmt.num(S.pctWa, 1), unidad: '%', estado: S.waf>0&&S.senalesWA?'ambar':'gris', frescura: fr, icono: 'wa' }),
   ].filter(Boolean);
   const todos = ctx.indicadores().filter(i => /^(especialista_ghl|jefa_crm)\./.test(i.id || ''));
   return plegable('Indicadores del puesto con su umbral firmado', h('div', { class: 'cuerpo pila' }, rejillaTarjetas(items), pieFase2(todos)), { icono: 'medidor' });
@@ -635,7 +693,7 @@ function pintarDetalle(cont, ctx, d, subId) {
     return;
   }
   ctx.titulo(f.nombre, `Subcuenta de GoHighLevel «${f.nombre_sub}» · ${EST[f.estado].t}${f.especialista ? ` · especialista ${f.especialista}` : ''}`);
-  const lista = (vis.jefatura ? d.subcuentas : vis.base).filter(x => x.estado !== 'gris' || x === f)
+  const lista = (vis.jefatura ? d.subcuentas : vis.base)
     .map(x => ({ id: x.sub_id, nombre: x.nombre, logo: x.logo, responsable: x.especialista ? `CRM: ${x.especialista}` : 'sin especialista', estado: x.estado }));
   cont.append(h('div', { class: 'fila', style: { justifyContent: 'space-between' } },
     h('nav', { class: 'migas', 'aria-label': 'Migas' }, h('a', { href: `#/${ID}` }, icono('base', { clase: 's' }), 'Salud del CRM'), h('span', { 'aria-hidden': 'true' }, '›'), h('span', { 'aria-current': 'page' }, f.nombre)),
@@ -650,7 +708,7 @@ function pintarDetalle(cont, ctx, d, subId) {
           h('span', {}, icono('base'), `GHL: ${f.nombre_sub}`),
           f.especialista ? h('span', {}, h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(f.especialista)), `CRM: ${f.especialista}`) : h('span', {}, icono('persona'), 'Sin especialista asignado'),
           f.account ? h('span', {}, icono('persona'), `Account: ${f.account}`) : null,
-          h('span', {}, icono('cal'), `${f.calendarios ?? 0} calendario${f.calendarios === 1 ? '' : 's'}`)),
+          h('span', {}, icono('cal'), `${conteoCRM(f.calendarios)===null?'Sin dato':f.calendarios} calendario${f.calendarios===1?'':'s'} observados`)),
         h('div', { class: 'fila', style: { marginTop: 'var(--s-3)', gap: 'var(--s-2)' } }, chipEstado(f.estado, `CRM: ${EST[f.estado].t}`), f.gravedad_cliente ? chipEstado(f.gravedad_cliente === 'critico' ? 'rojo' : f.gravedad_cliente === 'atencion' ? 'ambar' : 'verde', `Cliente: ${f.gravedad_cliente === 'critico' ? 'crítico' : f.gravedad_cliente === 'atencion' ? 'atención' : 'bien'}`) : null, f.encendida ? chipEstado('azul', f.meta_activa ? 'Campaña de Meta activa' : 'Leads entrando') : chipEstado('gris', 'Sin campaña'), f.tipo === 'sin_cliente' ? chipEstado('gris', 'Sin cliente en la app') : null)),
       h('div', { class: 'fila' }, abrirGHL(f.enlaces.ghl, 'Abrir en GHL'), abrirGHL(f.enlaces.conversaciones, 'Conversaciones'), abrirGHL(f.enlaces.calendarios, 'Calendarios'), abrirGHL(f.enlaces.oportunidades, 'Oportunidades'), abrirGHL(f.enlaces.flujos, 'Flujos')))));
 
@@ -658,55 +716,56 @@ function pintarDetalle(cont, ctx, d, subId) {
   const c14 = f.citas_14d || {}, c30 = f.citas_30d || {}, c90 = f.citas_90d || {};
   const asis = c30.asistencia_pct === null || c30.asistencia_pct === undefined ? null : c30.asistencia_pct;
   cont.append(rejillaTarjetas([
-    tile({ icono: 'users', etiqueta: 'Asistencia · 30 días', valor: asis === null ? sinDato() : pc(asis), unidad: asis === null ? '' : `${c30.celebradas} de ${c30.celebradas + c30.no_presentadas}`, estado: asis === null ? 'gris' : semaforo(asis, { verde: 75, ambar: 60 }), contexto: asis === null ? (c30.agendadas ? 'Ninguna cita de los últimos 30 días tiene marcado si vino: márcalas en GoHighLevel y sale el porcentaje.' : 'Sin citas en 30 días.') : 'Bien desde el 75 % · a medias' }),
-    tile({ icono: 'phone', etiqueta: 'Sin tocar > 24 h', valor: fmt.num(f.sin_tocar_24h ?? 0), unidad: `de ${fmt.num(f.leads_30d ?? 0)} leads`, estado: !f.leads_30d ? 'gris' : f.sin_tocar_24h ? 'rojo' : 'verde', contexto: `${f.leads_manuales_30d || 0} contactos creados a mano, aparte` }),
-    tile({ icono: 'clock', etiqueta: '1.er intento < 1 h', valor: v.juzgables ? pc(v.pct_1h) : sinDato(), unidad: v.juzgables ? `${v.en_1h} de ${v.juzgables}` : '', estado: v.juzgables ? semaforo(v.pct_1h, { verde: 70, ambar: 40 }) : 'gris', contexto: `Mediana ${v.mediana_min !== null && v.mediana_min !== undefined ? horasTxt(Math.round(v.mediana_min / 60)) : '—'} · 4 intentos en 72 h: ${v.juzgables_72h ? `${v.cuatro_en_72h} de ${v.juzgables_72h}` : '—'}` }),
-    tile({ icono: 'cal', etiqueta: 'Citas sin estado · 14 d', valor: fmt.num(c14.sin_estado ?? 0), unidad: c14.sin_estado ? `la más antigua, ${horasTxt(c14.sin_estado_max_h)}` : '', estado: !c14.agendadas ? 'gris' : c14.sin_estado > 5 || c14.sin_estado_max_h > 48 ? 'rojo' : c14.sin_estado ? 'ambar' : 'verde', contexto: `${c90.agendadas ?? 0} citas en 90 días · ${c30.futuras ?? 0} próximas` }),
-    tile({ icono: 'hist', etiqueta: 'Paradas > 72 h', valor: f.embudo?.cohorte_30d ? fmt.num(f.embudo.estancados_72h) : sinDato('Sin oportunidades'), unidad: f.embudo?.cohorte_30d ? `de ${f.embudo.cohorte_30d} del mes` : '', estado: !f.embudo?.cohorte_30d ? 'gris' : (f.embudo.pct_estancado || 0) >= 50 ? 'ambar' : 'verde', contexto: 'Sin cambiar de etapa en 72 h' }),
-    tile({ icono: 'wa', etiqueta: 'WhatsApp fallido', valor: f.whatsapp?.enviados ? `${f.whatsapp.fallidos}/${f.whatsapp.enviados}` : sinDato('Sin envíos'), estado: f.whatsapp?.enviados ? semaforo(f.whatsapp.pct_fallo, { verde: 2, ambar: 10, mejorSi: 'bajo' }) : 'gris', contexto: 'El número conectado no se mide por API' }),
-    f.sin_uso ? tile({ icono: 'plug', etiqueta: 'Uso de GoHighLevel', valor: fmt.num(f.contactos_total), unidad: 'contactos en total', estado: 'gris', contexto: 'No usa la subcuenta: ¿CRM contratado?', href: f.enlaces.contactos, ir: 'Ver contactos' }) : null,
-    !f.sin_uso && f.leads_meta_7d !== null && f.leads_meta_7d !== undefined ? tile({ icono: 'plug', etiqueta: 'Meta y GHL · 7 días', valor: fmt.num(f.leads_meta_7d), unidad: `en Meta · ${f.leads_ghl_7d ?? 0} en GHL`, estado: f.motivos.some(m => m.clave === 'integracion') ? 'rojo' : 'verde', contexto: 'Si a GHL no llega ninguno, el formulario está roto' }) : null,
+    tile({ icono: 'users', etiqueta: 'Asistencia · 30 días', valor: asis === null ? sinDato() : pc(asis), unidad: asis === null ? '' : `${c30.celebradas} de ${c30.celebradas + c30.no_presentadas}`, estado:'gris', contexto:'Sólo resultados de asistencia/ausencia registrados; lectura parcial, no todas las citas ni ventas' }),
+    tile({ icono: 'phone', etiqueta: 'Sin intento registrado > 24 h', valor: f.sin_tocar_24h===null?sinDato():fmt.num(f.sin_tocar_24h), unidad: sinIntento677(f,d.fuentes?.ghl,ctx.hoy).cobertura||'', estado: !f.leads_30d ? 'gris' : sinIntento677(f,d.fuentes?.ghl,ctx.hoy).vigente&&f.motivos?.some(m=>m.clave==='sin_tocar'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto: sinIntento677(f,d.fuentes?.ghl,ctx.hoy).detalle }),
+    tile({ icono: 'clock', etiqueta: '1.er intento < 1 h', valor: primerIntento677(f).texto, unidad: '', estado:'gris', contexto: `Referencia anterior por contrastar; no tasa vigente ni respuesta. Mediana ${v.mediana_min !== null && v.mediana_min !== undefined ? horasTxt(Math.round(v.mediana_min / 60)) : '—'} · 4 intentos en 72 h: ${v.juzgables_72h ? `${v.cuatro_en_72h} de ${v.juzgables_72h}` : '—'}` }),
+    tile({ icono: 'cal', etiqueta: 'Citas sin estado · 14 d', valor: c14.sin_estado===null?sinDato():fmt.num(c14.sin_estado), unidad: c14.sin_estado ? `la más antigua, ${horasTxt(c14.sin_estado_max_h)}` : '', estado:f.motivos?.some(m=>m.clave==='sin_estado'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto:`${fmt.num(c90.agendadas)} citas observadas en90 días · ${fmt.num(c30.futuras)} próximas; cero no acredita todas marcadas` }),
+    tile({ icono: 'hist', etiqueta: 'Paradas > 72 h', valor: f.embudo?.cohorte_30d ? fmt.num(f.embudo.estancados_72h) : sinDato('Sin oportunidades'), unidad: f.embudo?.cohorte_30d ? `de ${f.embudo.cohorte_30d} del mes` : '', estado:'gris', contexto: 'Confirmar origen de la fecha: etapa, estado o actualización' }),
+    tile({ icono: 'wa', etiqueta: 'WhatsApp fallido', valor: f.whatsapp?.enviados ? `${f.whatsapp.fallidos}/${f.whatsapp.enviados}` : sinDato('Sin envíos'), estado: f.motivos?.some(m=>m.clave==='whatsapp'&&m.origen==='observacion_muestra')?'ambar':'gris', contexto: 'El número conectado no se mide por API' }),
+    f.sin_uso ? tile({ icono: 'plug', etiqueta: 'Uso de GoHighLevel', valor: fmt.num(f.contactos_total), unidad: 'contactos en total', estado: 'gris', contexto:'Uso por confirmar; contactos observados no acreditan ausencia de uso', href: f.enlaces.contactos, ir: 'Ver contactos' }) : null,
+    !f.sin_uso && f.leads_meta_7d !== null && f.leads_meta_7d !== undefined ? tile({ icono: 'plug', etiqueta: 'Meta y GHL · 7 días', valor: fmt.num(f.leads_meta_7d), unidad: `en Meta · ${f.leads_ghl_7d??'Sin dato'} en GHL`, estado:'gris',contexto:'Recuentos independientes, sin unión por lead/origen; diferencia pide contraste, no acredita formulario roto' }) : null,
   ].filter(Boolean)));
 
   const sidebar = h('div', { class: 'pila' });
   const emb = f.embudo?.funnel;
   if (emb) {
     const max = Math.max(1, ...ETAPAS.map(([k]) => emb[k] || 0));
-    sidebar.append(panel({ titulo: 'Embudo · 90 días', icono: 'cap', sub: 'Oportunidades por etapa (captación)' },
-      h('div', { class: 'cuerpo' }, embudoBarras(ETAPAS.map(([k, t]) => ({ etiqueta: t, valor: emb[k] || 0, estado: k === 'descartado' ? 'rojo' : k === 'cerrado' ? 'verde' : null })), { max }))));
-  } else sidebar.append(panel({ titulo: 'Embudo · 90 días', icono: 'cap' }, h('div', { class: 'cuerpo' }, vacioLinea('Sin oportunidades en 90 días: esta subcuenta no tiene embudo con movimiento.', { icono: 'cap' }))));
+    sidebar.append(panel({ titulo: 'Embudo · 90 días', icono: 'cap', sub:'Stock observado por etapa; no conversión, ventas ni cobro acreditados' },
+      h('div', { class: 'cuerpo' }, embudoBarras(ETAPAS.filter(([k])=>conteoCRM(emb[k])!==null).map(([k,t])=>({etiqueta:t,valor:emb[k],estado:'gris'})), { max }))));
+  } else sidebar.append(panel({ titulo: 'Embudo · 90 días', icono: 'cap' }, h('div', { class: 'cuerpo' }, vacioLinea('Embudo sin recuento acreditado; confirma periodo y cobertura de la fuente.', { icono: 'cap' }))));
   sidebar.append(panel({ titulo: 'Flujos y WhatsApp', icono: 'zap' }, h('div', { class: 'cuerpo pila' },
     h('p', { class: 'sub', style: { margin: 0 } }, 'Los errores de flujo no salen por la API (falta un permiso de GoHighLevel). El número de WhatsApp conectado: no medible.'),
     h('div', { class: 'fila' }, abrirGHL(f.enlaces.flujos, 'Abrir flujos en GHL'), abrirGHL(f.enlaces.whatsapp, 'WhatsApp de la subcuenta')))));
 
   const principal = h('div', { class: 'pila' });
-  principal.append(panel({ titulo: 'Qué falla y quién lo arregla', icono: 'alert', sub: 'Motivos con el umbral firmado' },
-    f.motivos.length ? listaLoPrimero(f.motivos.map(m => ({ estado: m.nivel === 'rojo' ? 'rojo' : 'ambar', icono: ICO_MOT[m.clave] || 'alert', motivo: m.texto, detalle: `Lo arregla: ${QUIEN_MOT[m.clave] || 'especialista'}` })))
-      : h('div', { class: 'cuerpo' }, vacioLinea(f.estado === 'gris' ? 'Sin actividad: nada que vigilar.' : 'Esta subcuenta está en verde.', { icono: 'ok' }))));
+  principal.append(panel({ titulo: 'Señales y referencias para revisar', icono: 'alert', sub:'Señales del registro anterior para contrastar; no incumplimientos acreditados' },
+    f.motivos.length ? listaLoPrimero(f.motivos.map(m => ({ estado: m.nivel === 'rojo' ? 'rojo' : m.nivel==='ambar'?'ambar':'gris', icono: ICO_MOT[m.clave] || 'alert', motivo: m.texto, detalle: `Lo arregla: ${QUIEN_MOT[m.clave] || 'especialista'}` })))
+      : h('div', { class: 'cuerpo' }, vacioLinea('Sin alertas en esta copia; no acredita ausencia de problemas ni cumplimiento', { icono: 'ok' }))));
 
   if (!vis.resumen) {
     const leads = (d.leads_sin_tocar || []).filter(x => x.sub_id === f.sub_id);
     const citas = (d.citas_sin_estado || []).filter(x => x.sub_id === f.sub_id);
-    const gotaL = cuentagotas(leads, x => (x.horas > 72 ? 'rojo' : 'ambar'), x => x.horas || 0);
-    const gotaC = cuentagotas(citas, x => (x.horas > 48 ? 'rojo' : 'ambar'), x => x.horas || 0);
+    const gotaL = x => senalFilaCRM541('lead',x,d.fuentes?.ghl,ctx.hoy,[f]).estado;
+    const gotaC = x => senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,[f]).estado;
     if (leads.length) principal.append(panel({ titulo: `Leads sin tocar (${leads.length})`, icono: 'phone' }, tablaApilable({
       filas: leads.slice(0, 25), porPagina: MOVIL() ? 8 : 15, columnas: [
         { clave: 'creado', titulo: 'Entró', principal: true, celda: x => `${fDiaRO(x.creado)} · ${x.creado?.slice(11) || ''}` },
-        { clave: 'horas', titulo: 'Esperando', num: true, celda: x => puntoEstado(gotaL(x), horasTxt(x.horas)) },
+        { clave: 'horas', titulo: 'Edad en copia', num: true, celda: x => puntoEstado(gotaL(x), horasTxt(x.horas)) },
         { clave: 'medio', titulo: 'Origen', celda: x => h('span', { style: { display: 'inline-block', minWidth: '140px' } }, x.medio || '—') },
-        { clave: 'automatico', titulo: 'Automático', celda: x => x.automatico ? 'Sí' : puntoEstado('ambar', 'No') },
+        { clave: 'automatico', titulo: 'Automático', celda: x => x.automatico ? 'Sí' : h('span',{class:'sub',title:'No consta automático en la copia parcial'},'No consta') },
         { clave: 'acc', titulo: 'Abrir', ordenable: false, celda: x => h('span', { class: 'fila', style: { gap: 'var(--s-2)' } }, botonVerDatos(ctx, x, vis), abrirGHL(x.enlace, 'Abrir contacto en GHL')) },
       ] })));
     if (citas.length) principal.append(panel({ titulo: `Citas sin estado (${citas.length})`, icono: 'cal' }, tablaApilable({
       filas: citas, porPagina: MOVIL() ? 8 : 15, columnas: [
         { clave: 'inicio', titulo: 'Cita', principal: true, celda: x => `${fDiaRO(x.inicio)} · ${x.inicio?.slice(11) || ''}` },
         { clave: 'calendario', titulo: 'Calendario', celda: x => h('span', { style: { display: 'inline-block', minWidth: '160px' } }, x.calendario || '—') },
-        { clave: 'horas', titulo: 'Sin marcar', num: true, celda: x => puntoEstado(gotaC(x), horasTxt(x.horas)) },
+        { clave: 'horas', titulo: 'Sin resultado', num: true, celda: x => { const m=senalFilaCRM541('cita',x,d.fuentes?.ghl,ctx.hoy,[f]); return h('span',{title:m.motivo+' · corte: '+(m.fecha||'sin fecha'),'aria-label':m.motivo},puntoEstado(gotaC(x),m.horas===null?horasTxt(x.horas):m.horas>48&&Math.round(m.horas)===48?'>48 h':horasTxt(m.horas))); } },
         { clave: 'acc', titulo: 'Abrir', ordenable: false, celda: x => abrirGHL(x.enlace_contacto || x.enlace, x.enlace_contacto ? 'Abrir contacto en GHL' : 'Abrir calendario en GHL') },
       ] })));
     principal.append(panel({ titulo: 'Actuar', icono: 'zap', sub: 'En el prototipo todo va a la cola con su vista previa. Mover, anotar y citas esperan un permiso de GoHighLevel.' }, acciones(ctx, f, citas, (d.oportunidades_paradas || []).filter(x => x.sub_id === f.sub_id))));
   }
   cont.append(h('div', { class: 'dos' }, principal, sidebar));
+  if (f.cliente_id) cont.append(panelEmbudo469(ctx, f.cliente_id, {h}));
   const desc = Object.entries(f.descartados_30d || {});
   const DESC = { prueba: 'de prueba o demostración', otro_negocio: 'de otro negocio', manual: 'creados a mano', importado: 'importados', no_lead: 'que no son leads (candidaturas, cursos, clientes)', sin_origen: 'sin origen de formulario ni anuncio' };
   if (desc.length) cont.append(avisoParcial(`En 30 días no cuentan como leads: ${desc.map(([k, n]) => `${n} ${DESC[k] || k}`).join(', ')}.`, { tipo: 'info', titulo: 'Contactos que no se cuentan.' }));
@@ -747,7 +806,7 @@ function acciones(ctx, f, citas, paradas = []) {
       tareaAccount(ctx, f, f.mot1 ? f.mot1.texto : 'Revisar el CRM del despacho') || h('span', { class: 'sub' }, 'Sin account asignado'),
       accionSim(ctx, { texto: `Escalar a ${JEFA}`, pregunta: `¿Escalar a ${JEFA}?`, tipo: 'escalar', herramienta: 'app', objeto: f.nombre, cliente_id: f.cliente_id,
         vista_previa: `Escalaría ${f.nombre} a ${JEFA} (jefa de CRM) con: ${f.motivos.map(m => m.texto).join(' · ') || 'sin motivos'}.` }),
-      f.motivos.some(m => m.clave === 'integracion') ? accionSim(ctx, { texto: 'Aviso a Agus', pregunta: '¿Avisar a Agus de la integración rota?', tipo: 'aviso_integracion', herramienta: 'app', objeto: f.nombre, cliente_id: f.cliente_id,
+      f.motivos.some(m => m.clave === 'integracion'&&m.origen==='observacion_muestra') ? accionSim(ctx, { texto: 'Aviso a Agus', pregunta: '¿Avisar a Agus de la integración rota?', tipo: 'aviso_integracion', herramienta: 'app', objeto: f.nombre, cliente_id: f.cliente_id,
         vista_previa: `Pondría en la cola de Agus: «${f.nombre}: ${f.motivos.find(m => m.clave === 'integracion').texto}».` }) : null)),
     ctx.soloLectura ? h('p', { class: 'sub', style: { margin: 0 } }, 'Estás en «ver como»: los botones no hacen nada.') : null);
 }
@@ -767,11 +826,14 @@ export default {
     const espera = esqueleto({ tarjetas: 4, lineas: 4 });
     contenedor.append(espera);
     const d = await cargar(ctx);
+    if(!contenedor.isConnected||(ctx.vigente&&!ctx.vigente()))return;
     espera.remove();
     if (d.error) {
       contenedor.append(vacio({ icono: 'alert', titulo: 'No se pudieron cargar los datos del CRM', texto: d.error, quien: 'quien mantiene la app (fuentes_crm/generar_crm.py)', borde: true, tono: 'aviso' }));
       return;
     }
+    contenedor.append(notaCompacta336(h,`CRM · copia parcial · lectura ${d.fuentes?.ghl?.hora||'sin fecha'}`,h('p',{},'Lectura guardada con cobertura limitada de conversaciones y mensajes. «Sin intento registrado» requiere contraste con el despacho; no demuestra que no haya contactado al lead. Los porcentajes de esta vista no evalúan la garantía contractual.')));
+    d.subcuentas=(d.subcuentas||[]).map(f=>normalizarFilaCRM(f,d.fuentes?.ghl,ctx.hoy,d.fuentes?.captacion));
     const [sub] = ctx.params;
     if (sub) pintarDetalle(contenedor, ctx, d, sub);
     else pintarInicio(contenedor, ctx, d);

@@ -18,6 +18,7 @@ Uso:
   python3 escaner_secretos.py --proyecto # todo el texto de la app (.json .md .js .py .txt .html .csv) salvo _privado,
                                          # _cache, _crudo, capturas e historia
 """
+import ipaddress
 import hashlib
 import json
 import re
@@ -88,6 +89,26 @@ def _es_data_uri(texto):
     return texto.startswith("data:image/")
 
 
+def _es_opcion_lsof(valor, coincidencia):
+    """Opción -iTCP@IP[:puerto] / -iUDP@IP; nunca una excepción por dominio de correo."""
+    texto = coincidencia.group(0)
+    local, _, host = texto.partition("@")
+    if local not in ("-iTCP", "-iUDP"):
+        return False
+    try:
+        ipaddress.ip_address(host)
+    except ValueError:
+        return False
+    antes = valor[coincidencia.start() - 1:coincidencia.start()] if coincidencia.start() else ""
+    if antes and not (antes.isspace() or antes in "\"'`("):
+        return False
+    cola = valor[coincidencia.end():]
+    if cola.startswith(":"):
+        puerto = re.match(r":([0-9]{1,5})(?=$|[\s\"'`,;)])", cola)
+        return bool(puerto and 1 <= int(puerto.group(1)) <= 65535)
+    return not cola or cola[0].isspace() or cola[0] in "\"'`,;)"
+
+
 def escanear_fichero(path, permitidos=(), correos_ro_ok=False):
     """correos_ro_ok: en el barrido del proyecto, los correos de RO (@rankingonline.com…) no son fuga."""
     hallazgos = []
@@ -122,6 +143,8 @@ def escanear_fichero(path, permitidos=(), correos_ro_ok=False):
                 if t in permitidos or "sha256:" + hashlib.sha256(t.encode()).hexdigest()[:16] in permitidos:
                     continue
                 if tipo == "correo":
+                    if _es_opcion_lsof(valor, m):
+                        continue
                     if correos_ro_ok and (t.lower().endswith(DOMINIOS_RO_PROYECTO) or DOMINIOS_EJEMPLO.search(t) or lista_correos):
                         continue
                     hoja = re.sub(r"\[\d+\]$", "", ruta).split(".")[-1]

@@ -576,7 +576,7 @@ table.densa tr.clic:focus-visible { outline: 2px solid var(--accent); outline-of
 @media (max-width: 640px) { .que-es dl { grid-template-columns: 1fr; } }
 
 /* ---- E0 ronda 3 · rejilla de main y barras comunes (D-P-CAP3, D-P-BDJ) ---- */
-main#main > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no estira la página en móvil */
+main#main > *, main#main > [data-ruta] > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no estira la página en móvil */
 .barra-prog { position: relative; height: 10px; border-radius: var(--r-full); background: var(--line-soft); overflow: hidden; min-width: 40px; }
 .barra-prog i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: var(--r-full); background: var(--accent); }
 .barra-prog i.verde { background: var(--good); } .barra-prog i.ambar { background: var(--warn); } .barra-prog i.rojo { background: var(--bad); }
@@ -970,6 +970,14 @@ main#main > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no esti
 .topbar-in { min-width: 0; max-width: 100%; }
 .topbar .titulo { min-width: 64px; }
 @media (max-width: 720px) { .dato-guardado { display: none !important; } }
+/* 489 · aviso de transporte separado del título, sólo cuando falló un refresco. */
+.lectura-fallo-489 { display: none; }
+@media (max-width: 720px) {
+  .lectura-fallo-489 { display: block; position: sticky; top: var(--alto-cabecera); z-index: 14;
+    width: 100%; min-width: 0; max-width: 100%; padding: 6px 16px; border-bottom: 1px solid var(--line);
+    background: var(--card); color: var(--dim); font: var(--t-meta); line-height: 1.45;
+    white-space: normal; overflow-wrap: anywhere; }
+}
 @media (max-width: 640px) {
   .topbar-acc { gap: 4px; min-width: 0; }
   .yo-btn { padding: 0; }
@@ -1084,6 +1092,15 @@ main#main > * { min-width: 0; }   /* un hijo ancho (tabla, pestañas) ya no esti
 /* K1 · el fondo marino del menú llega hasta abajo aunque la página sea larga (también en capturas de página entera) */
 @media (min-width: 901px) { .app { background: linear-gradient(to right, var(--navy-2) 0, var(--navy-2) var(--side), transparent var(--side)); } }
 @media (min-width: 1920px) { .app { background: linear-gradient(to right, var(--navy-2) 0, var(--navy-2) 256px, transparent 256px); } }
+/*418 · sólo escritorio: una columna real al ocultar el menú, sin carril vacío. */
+.topbar .menu-escritorio-btn { display: none; min-height: 44px; width: 44px; padding: 10px; justify-content: center; flex: none; }
+.topbar .menu-escritorio-texto { display: none; }
+@media (min-width: 901px) {
+  .topbar .menu-escritorio-btn { display: inline-flex; }
+  .topbar .menu-escritorio-btn[hidden] { display: none; }
+  .app.menu-contraido { grid-template-columns: minmax(0, 1fr); background: none; }
+  .app.menu-contraido > .side { display: none; }
+}
 /* K4 · anillo de foco en todo campo (buscadores, fechas, textarea), aunque el módulo le quite el contorno */
 input:not([type="checkbox"]):not([type="radio"]):focus-visible, textarea:focus-visible, select:focus-visible { box-shadow: var(--anillo) !important; border-color: var(--accent); }
 input[type="checkbox"]:focus-visible, input[type="radio"]:focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px; }
@@ -1250,3 +1267,46 @@ table.calor tr.media th { border-top: 2px solid var(--line); }
 .tabla-plegada { display: grid; gap: 12px; }
 .tabla-plegada > summary { list-style: none; cursor: pointer; justify-self: start; }
 .tabla-plegada > summary::-webkit-details-marker { display: none; }
+
+/* Filtros de cartera: controles compactos, cómodos y aislados de otras pantallas. */
+[data-control-cartera] .cartera-filtros { display:flex; flex-wrap:wrap; align-items:center; gap:10px; padding:14px; margin:4px 0; background:var(--bg); border:1px solid var(--line); border-radius:14px; }
+[data-control-cartera] .cartera-filtros .input { box-sizing:border-box; min-height:42px; max-width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink); font:inherit; font-size:13px; }
+[data-control-cartera] .cartera-filtros select.input { flex:0 1 220px; min-width:160px; cursor:pointer; }
+[data-control-cartera] .cartera-filtros .input:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+[data-control-cartera] .cartera-filtros label { gap:8px; padding:0 4px; font-size:12px; }
+[data-control-cartera] .cartera-filtros input[type="checkbox"] { accent-color:var(--accent); width:16px; height:16px; }
+[data-control-cartera] .cartera-filtros .bt { border-radius:10px; font-size:12px; }
+@media (max-width:640px) { [data-control-cartera] .cartera-filtros { padding:12px; } [data-control-cartera] .cartera-filtros .input, [data-control-cartera] .cartera-filtros select.input { flex:1 1 100%; width:100%; min-width:0; } }
+
+/*421 · tablas con nueve o más indicadores: ganar espacio sin reducir letra ni foco. */
+@media(min-width:641px){
+ table.densa.compacta-421 th,table.densa.compacta-421 td{padding-left:6px;padding-right:6px}
+ table.densa.compacta-421 th button{padding-left:6px;padding-right:6px}
+ table.densa.compacta-421 th:has(> button){padding:0}
+}
+
+/* RO navegación progresiva: controles nativos, todas las rutas conservadas. */
+.nav-mas-ro > summary { cursor: pointer; color: var(--navy-txt); font: var(--t-h3); min-height: 44px; display: flex; align-items: center; gap: var(--s-2); padding: var(--s-2) var(--s-3); border-radius: var(--r-m); }
+.nav-mas-ro > summary::before { content: '▸'; }
+.nav-mas-ro[open] > summary::before { content: '▾'; }
+.nav-mas-ro > summary:focus-visible { outline: 2px solid var(--navy-txt); outline-offset: -2px; }
+.nav .ng[hidden] { display: none; }
+.nav-mas-ro .ngt { padding-top: var(--s-2); }
+@media (max-width: 640px) {
+  .paleta-fondo { max-height: 100dvh; overflow-y: auto; }
+  .paleta ul { max-height: min(64vh, calc(100dvh - 100px)); }
+}
+
+/* RELEASE2 · vacíos y controles estrechos: no cambia tablas ni geometría de escritorio. */
+@media (max-width: 639px) {
+  .vacio-g, .vacio { min-width: 0; max-width: 100%; grid-template-columns: minmax(0, 1fr); }
+  .vacio-g > *, .vacio > * { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .vacio > :not(.ico) { grid-column: auto; }
+  .vacio .ico { grid-row: auto; }
+  .vacio-g > .bt, .vacio > .bt { min-height: 44px; white-space: normal; justify-content: center; }
+  .vacio-g .quien, .vacio .quien { flex-wrap: wrap; }
+  .vacio-g .av, .vacio .av, .vacio-g .bt svg.i, .vacio .bt svg.i { flex-shrink: 0; }
+  .tabla-ctl { min-width: 0; }
+  .tabla-ctl label { min-width: 0; max-width: 100%; flex-wrap: wrap; overflow-wrap: anywhere; }
+  .tabla-ctl select, .tabla-ctl input { max-width: 100%; }
+}

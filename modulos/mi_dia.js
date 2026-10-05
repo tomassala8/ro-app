@@ -1,10 +1,11 @@
+import {celdaImputa390,imputaVigente390} from './_imputa_personal_390.js';
 // modulos/mi_dia.js · M1 «Mi día» (2-oct-2026): la pantalla de inicio de cada uno de los 21 puestos.
 //
 // Es un ORQUESTADOR. No recalcula nada que ya calcule otro módulo: pide a servir.py los datos que la persona ya
 // puede ver (ctx.datosModulo, recortados por el servidor) y los resume en bloques. Qué bloques y en qué orden,
 // por puesto, vive en data/mi_dia/config.json (se ajusta sin tocar código). Los bloques, en mi_dia_bloques.js.
 //
-// Arriba (A1, 2-oct noche): «Lo mío», UNA lista personal sin duplicados con todo lo de hoy (alertas tuyas, correos de tu
+// Arriba (A1, 2-oct noche): «Lo mío», UNA lista personal de avisos disponibles, sin duplicados (alertas tuyas, correos de tu
 // cartera, piezas por revisar, menciones, decisiones y lo urgente de los bloques), ordenada por plazo y gravedad, con un
 // botón por fila que abre el objeto exacto (+ «Lo tengo» y «Posponer» si es alerta). Funde «Lo primero hoy» y «Mis
 // alertas». A su lado (debajo en el móvil), «el número que manda» con su umbral (catálogo de E0). Debajo, los bloques
@@ -20,8 +21,15 @@ import {
   h, fmt, icono, chipEstado, selloMedible, frescura, vacio, estadoVacio, barraProgreso, pieFase2,
   limpiaTexto, deDondeSale, panel, avisoFlotante, cifraPrincipal, vacioLinea, esqueleto, hoyMadrid,
 } from '../componentes.js';
+import { celdaControlEquipo313 } from './_control_equipo_313.js';
+import { ambitoCadencia307 } from './_cadencia_metodo.js';
+import { prepararControlCartera, resumirAccountsControl } from './control_cartera.js';
+import { pintarMapaControl250, COLUMNAS_CONTROL_250 } from './_control_artifact_250.js';
+import { prepararResumenEvidencias } from './_evidencias_resumen.js';
+import { panelHerramientas } from './_herramientas_perfil.js';
+import { puestoControl239, tituloControl239, renderControl239 } from './_control_cartera_ruta_239.js';
 import { colorCifra } from '../componentes.js';
-import { bloqueCopiloto } from './ia_componentes.js';
+import { bloqueCopiloto, panelCerebro } from './ia_componentes.js';
 // Ronda U (50 #3, #4): «Deshacer» en vez de «¿Seguro?» en lo interno, y el consejo de la IA plegado a una línea.
 import { botonDeshacer } from './_deshacer.js';
 import { plegarConsejo } from './_trabajo.js';
@@ -58,6 +66,7 @@ const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00
 const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
 const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
+const scopeDia = ctx => JSON.stringify([ctx.real?.id || '', ctx.persona?.id || '', !!ctx.soloLectura, !!ctx.servidor]);
 const CACHE = new Map();          // persona|fichero → { t, ok, datos, motivo }
 const VIDA_CACHE_MS = 5 * 60 * 1000;
 let CONFIG = null;
@@ -86,8 +95,18 @@ function cargador(ctx, paquete = null, adelantados = {}) {
   const res = {};
   const sueltos = [];               // los que se pidieron aparte y llegaron (para adelantarlos la próxima vez)
   const fuentes = CONFIG?.fuentes || {};
+  const firmaMetodo309=()=>typeof ctx.veModulo==='function'&&ctx.veModulo('reuniones')===true&&(!ctx.vigente||ctx.vigente())?JSON.stringify([ambitoCadencia307(ctx).firma,!!ctx.servidor,!!ctx.soloLectura]):null;
+  const resultado309=nombre=>{const r=res[nombre];return nombre==='metodo/sugerencias'&&r?.ok&&(!r?.firma_metodo_309||r.firma_metodo_309!==firmaMetodo309())?motivoDe(403,'Contexto de reuniones cambiado.','reuniones'):r;};
   async function uno(nombre) {
-    const clave = `${ctx.persona.id}|${nombre}`;
+    // Overlay de método: API recortada por identidad real + vista. No persistir en caché global ni paquete.
+    if (nombre === 'metodo/sugerencias') {
+      const antes=firmaMetodo309();
+      if(!antes){res[nombre]=motivoDe(403,'Sin ámbito vigente de reuniones.','reuniones');return;}
+      try { const datos=await ctx.api(nombre);res[nombre]=antes===firmaMetodo309()?{ok:true,datos,firma_metodo_309:antes}:motivoDe(403,'Contexto de reuniones cambiado.','reuniones'); }
+      catch (e) { res[nombre] = motivoDe(e?.status, e?.message, 'reuniones'); }
+      return;
+    }
+    const clave = `${scopeDia(ctx)}|${nombre}`;
     const c = CACHE.get(clave);
     if (c && Date.now() - c.t < VIDA_CACHE_MS) { res[nombre] = c; return; }
     const f = fuentes[nombre] || {};
@@ -108,8 +127,8 @@ function cargador(ctx, paquete = null, adelantados = {}) {
   return {
     precargar: nombres => Promise.all([...new Set(nombres)].map(uno)),
     sueltos,
-    dato(nombre) { const r = res[nombre]; if (r?.ok) return r.datos; throw { falta: nombre, ...(r || { motivo: 'no_existe' }) }; },
-    opcional(nombre) { const r = res[nombre]; return r?.ok ? r.datos : null; },
+    dato(nombre) { const r = resultado309(nombre); if (r?.ok) return r.datos; throw { falta: nombre, ...(r || { motivo: 'no_existe' }) }; },
+    opcional(nombre) { const r = resultado309(nombre); return r?.ok ? r.datos : null; },
   };
 }
 
@@ -127,7 +146,7 @@ const VIDA_PAQUETE_H = 3;
 const PAQUETES = new Map();       // persona|puesto → { t, p: Promise }
 function pedirPaquete(ctx, puesto) {
   if (!ctx.servidor || ctx.soloLectura) return Promise.resolve(null);
-  const clave = `${ctx.persona.id}|${puesto || ''}`;
+  const clave = `${scopeDia(ctx)}|${puesto || ''}`;
   const c = PAQUETES.get(clave);
   if (c && Date.now() - c.t < VIDA_CACHE_MS) return c.p;
   const p = ctx.datosModulo(puesto ? `mi_dia/puestos/${puesto}/p_${ctx.persona.id}` : `mi_dia/p_${ctx.persona.id}`)
@@ -138,7 +157,7 @@ function pedirPaquete(ctx, puesto) {
 }
 // Lo que el resumen no puede traer (ventas_ro/*: abre nombres con rastro) se pide aparte. Se recuerda en el navegador
 // qué fue, para pedirlo la próxima vez A LA VEZ que el resumen (solo nombres de fichero; nunca datos).
-const claveAparte = (ctx, puesto) => `ro.midia.aparte.${ctx.persona.id}.${puesto || ''}`;
+const claveAparte = (ctx, puesto) => `ro.midia.aparte.${scopeDia(ctx)}.${puesto || ''}`;
 const leerAparte = k => { try { const l = JSON.parse(localStorage.getItem(k) || '[]'); return Array.isArray(l) ? l.filter(x => typeof x === 'string').slice(0, 6) : []; } catch { return []; } };
 const guardarAparte = (k, l) => { try { localStorage.setItem(k, JSON.stringify(l)); } catch { /* sin almacenamiento: solo se pierde el adelanto */ } };
 
@@ -167,9 +186,21 @@ const MODULO = {
   grupo: 'Hoy',
 
   async render(cont, ctx) {
+    if (ctx.vigente && !ctx.vigente()) return;
+    const raizDia = h('div', { 'data-mi-dia-raiz': '' });
+    cont.replaceChildren(raizDia);
+    cont = raizDia;
+    const identidadDia = scopeDia(ctx);
+    const rutaDia = typeof location !== 'undefined' ? location.hash : null;
+    const vigente = () => raizDia.isConnected && scopeDia(ctx) === identidadDia && (typeof location === 'undefined' || location.hash === rutaDia) && (!ctx.vigente || ctx.vigente());
     vigilarCortes(cont);
     document.getElementById('mid-estilos')?.remove(); document.getElementById('mid-maqueta')?.remove();   // hojas de antes de la guía 30
     cont.append(esqueleto({ lineas: 4, tarjetas: 2 }));
+    if (ctx.params[0] === 'control-cartera') {
+      await renderControl239(cont, ctx, vigente, panelControlCartera, h, estadoVacio);
+      if(vigente())vigilarConsejo(cont,cont,cont,{ctx,puesto:puestoControl239(ctx.real,ctx.persona,ctx.params[1]||null)});
+      return;
+    }
     // Auditoría 37 (causa 3): todo lo que no depende de la configuración sale A LA VEZ, en la primera tanda: el resumen
     // de la persona (configuración + ficheros de sus bloques), sus acciones, sus alertas, la lista del copiloto y, si
     // su puesto los ve, los avisos de fuentes y las acciones de prospección. Antes: configuración → ficheros → copiloto.
@@ -194,10 +225,12 @@ const MODULO = {
     const adelantados = usaPaquete ? Object.fromEntries(leerAparte(claveAparte(ctx, pidePuesto)).map(n => [n, ctx.datosModulo(n)])) : {};
     Object.values(adelantados).forEach(p => p.catch(() => null));
     const paquete = await pPaquete;
+    if (!vigente()) return;
     if (paquete && !CONFIG) CONFIG = paquete.config;
     try { await cargarConfig(ctx); }
-    catch (e) { cont.replaceChildren(estadoVacio({ titulo: 'No se ha podido preparar tu día', porque: 'Falta la configuración de los bloques de Mi día.', que_hacer: 'Recarga la página; si sigue, avisa a Tomás.' })); return; }
+    catch (e) { if (!vigente()) return; cont.replaceChildren(estadoVacio({ titulo: 'No se ha podido preparar tu día', porque: 'Falta la configuración de los bloques de Mi día.', que_hacer: 'Recarga la página; si sigue, avisa a Tomás.' })); return; }
 
+    if (!vigente()) return;
     // R12 (B-M06): un puesto de account sin ningún cliente asignado en esa silla (p. ej. Agus desde el 1-oct) no sale
     // como «día» propio si la persona tiene otro puesto: sus bloques serían de clientes que ya no lleva.
     const sinCarteraAccount = p => p === 'account' && !!ctx.carteraPorSilla && !ctx.carteraPorSilla.account?.size;
@@ -217,11 +250,14 @@ const MODULO = {
     // ---- qué hay que cargar
     const lista = conf.bloques.slice(0, CONFIG.comun?.max_bloques || 7).map(resolverBloque);
     const numCfg = conf.numero || {};
-    const usa = [...lista.flatMap(b => BLOQUES[b.id]?.usa || []), ...(NUMERO[numCfg.calculo]?.usa || []), ...(NUMERO[numCfg.proxy]?.usa || []), ...usaLoMio(ctx)];
+    const carteraControl = ['account', 'operaciones', 'direccion'].includes(puesto);
+    const usaControl = []; // La matriz se carga en su subvista, no junto con toda la rutina.
+    const usa = [...usaControl, ...lista.flatMap(b => BLOQUES[b.id]?.usa || []), ...(NUMERO[numCfg.calculo]?.usa || []), ...(NUMERO[numCfg.proxy]?.usa || []), ...usaLoMio(ctx)];
     // El resumen vale si es de este puesto (si no, sus ficheros se piden sueltos: mismo resultado, más viajes).
     const valePaquete = paquete?._meta?.puesto === puesto;
     const D = cargador(ctx, valePaquete ? paquete : null, adelantados);
     const [, acciones, avisosTodos, prospeccionTodas, alertas, accAlertas, campana, accionesBandeja, prio] = await Promise.all([D.precargar(usa), pAcciones, pAvisos, pProspeccion, promAlertas, pAccAlertas, pCampana, pAccBandeja, pPrio]);
+    if (!vigente()) return;
     if (valePaquete) guardarAparte(claveAparte(ctx, pidePuesto), D.sueltos);
     const avisos = ['direccion', 'operaciones'].includes(puesto) ? avisosTodos : [];
     const accionesProspeccion = puesto === 'outreach' ? prospeccionTodas : [];
@@ -262,7 +298,7 @@ const MODULO = {
       if (numCfg.proxy && NUMERO[numCfg.proxy] && !vacioSilla) { try { numero.proxy = NUMERO[numCfg.proxy].hacer(ctx, D); } catch { /* sin proxy */ } }
     } catch (e) { numero = e?.falta ? { falta: textoFalta(e) } : { error: String(e?.message || e) }; }
 
-    // ---- A1 · «Lo mío»: UNA lista con todo lo de hoy (funde «Lo primero hoy» y «Mis alertas»); V2: la de ESTA pestaña de puesto
+    // ---- A1 · «Lo mío»: señales disponibles para hoy (no inventario completo de tareas); V2: la de ESTA pestaña de puesto
     const lm = { ctx, D, A: alertas, accAlertas, acciones, extra, campana, bloques, avisos, local: new Map(), puesto, prio: prio?.persona_id === ctx.persona.id ? prio : null };
     const loMio = panelLoMio(lm);
 
@@ -270,6 +306,10 @@ const MODULO = {
     const pCopiloto = puesto === 'account' && ctx.veModulo('asistente-ia') ? bloqueCopiloto(ctx, { max: 5 }) : null;
     // R15a · A10: «Tu primera semana · N de 5» para quien entró hace menos de 14 días (o está por incorporar)
     const pPrimera = await tarjetaPrimeraSemana(ctx).catch(() => null);
+    if (!vigente()) return;
+    const puestoControl = carteraControl ? puestoControl239(ctx.real, ctx.persona, puesto) : null;
+    const control = puestoControl ? h('nav', { class:'chips-f', 'aria-label':'Abrir control de cartera' },
+      h('a', { href:`#/mi-dia/control-cartera/${puestoControl}`, class:'btn' }, tituloControl239(puestoControl))) : null;
 
     // ---- pintar. Arriba: «Lo mío» (lo que pide acción) y, a su lado, el número que manda. V2 (M9): entre 641 y 1.180 px
     // (1.024) el número va ARRIBA como franja (antes caía a 950-1.300 px, debajo de «Lo mío»); en el móvil, «Lo mío» primero.
@@ -284,7 +324,9 @@ const MODULO = {
     const tableta = !movil && typeof matchMedia === 'function' && matchMedia('(max-width: 1180px)').matches;
     const nVista = (CONFIG.comun?.max_bloques_vista || {})[movil ? 'movil' : 'escritorio'] ?? (movil ? 3 : 4);
     const aLaVista = piezas.slice(0, nVista);
-    const plegadas = [...piezas.slice(nVista), pCopiloto, panelCelebraciones(ctx)].filter(Boolean);
+    // 4-oct · «Qué hago si…» (cerebros de área): buscar la ficha de una situación, sin IA. Primero del pliegue.
+    const pCerebro = ctx.persona?.puestos?.length ? panelCerebro(ctx) : null;
+    const plegadas = [pCerebro, ...piezas.slice(nVista), pCopiloto, panelCelebraciones(ctx)].filter(Boolean);
     const fila1 = tableta
       ? h('div', { class: 'pila', 'data-mid-arriba': '', style: { gap: 'var(--s-4)' } }, Object.assign(hero, { style: 'min-width: 0' }), Object.assign(loMio, { style: 'min-width: 0' }))
       : h('div', { class: 'fila', 'data-mid-arriba': '', style: { gap: 'var(--s-4)', alignItems: 'flex-start' } },
@@ -292,6 +334,9 @@ const MODULO = {
         Object.assign(hero, { style: 'flex: 1 1 300px; min-width: 0' }));
     cont.replaceChildren(...[
       misPuestos.length > 1 ? chipsPuestos(ctx, puesto, misPuestos) : null,
+      control,
+      accesosTrabajo(ctx),
+      panelHerramientas(ctx, vigente),
       fila1,
       h('div', { class: 'mid-bloques', style: REJILLA(420) }, sinHuerfana(aLaVista)),
       plegadas.length ? masDeTuDia(plegadas) : null,
@@ -327,12 +372,231 @@ function chipsPuestos(ctx, puesto, misPuestos) {
       on: { click: () => ctx.navegar(`mi-dia/${x}`) } }, PUESTO[x]?.nombre || x)));
 }
 
+/** Atajos sin nuevas lecturas ni cifras: cada destino conserva sus propios permisos y alcance. */
+function accesosTrabajo(ctx) {
+  const destinos = [
+    { id: 'mi-trabajo', titulo: 'Mi trabajo · mis tareas', texto: 'Fechas, estados, comentarios y contexto para IA', icono: 'check' },
+    { id: 'horas', titulo: 'Horas · registros por persona', texto: 'Último día, semana de la copia y mes seleccionado; capacidad sin confirmar', icono: 'clock' },
+    { id: 'prioridades-cliente', titulo: 'Prioridades por cliente', texto: 'Revisar qué necesita atención y por qué', icono: 'flag' },
+  ].filter(x => ctx.veModulo(x.id));
+  if (!destinos.length) return null;
+  return h('nav', { 'aria-label': 'Organizar mi trabajo', 'data-mid-accesos-trabajo': '',
+    style: { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-2)' } },
+    destinos.map(x => h('a', { class: 'bt', href: `#/${x.id}`,
+      style: { flex: '1 1 240px', minWidth: '0', minHeight: '44px', whiteSpace: 'normal',
+        justifyContent: 'flex-start', textAlign: 'left', gap: 'var(--s-2)' } },
+      icono(x.icono), h('span', { style: { minWidth: '0', overflowWrap: 'anywhere' } },
+        h('b', { style: { display: 'block' } }, x.titulo),
+        h('span', { class: 'sub', style: { display: 'block', whiteSpace: 'normal' } }, x.texto)))));
+}
+
+// 117: matriz cliente a cliente antes de las tarjetas; fuentes recortadas y sólo lectura.
+function semanaDeclaracionesControl(hoy) {
+  if(typeof hoy!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(hoy))return null;
+  const d=new Date(`${hoy}T12:00:00Z`);
+  if(!Number.isFinite(+d)||d.toISOString().slice(0,10)!==hoy)return null;
+  d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10);
+}
+function ambitoDeclaracionesControl(ctx,semana) {
+  const roles=p=>Array.isArray(p?.puestos)&&p.puestos.some(r=>['account','operaciones','direccion'].includes(r));
+  if(!ctx.servidor||!roles(ctx.real)||!roles(ctx.persona)||typeof ctx.ver!=='function'||typeof ctx.veModulo!=='function'||!ctx.veModulo('mi-trabajo'))return null;
+  // Catálogo ya recortado + permiso actual: incluye toda la cartera autorizada antes de filtros UI.
+  const candidatos=ctx.clientes || ctx.clientesVisibles || [], ids=[], vistos=new Set();
+  for(const c of candidatos){
+    if(!c||typeof c.id!=='string'||vistos.has(c.id))return null;
+    vistos.add(c.id);
+    if(c.activo_confirmado===true&&ctx.ver({tipo:'cliente_detalle',cliente_id:c.id})?.ok===true)ids.push(c.id);
+  }
+  ids.sort();return {ids,firma:JSON.stringify([ctx.real.id,ctx.persona.id,ctx.real.puestos,ctx.persona.puestos,semana,ids])};
+}
+function proyectarDeclaracionesControl(respuesta,semana,ambito,actual,matrizIds,vigente) {
+  const identidad={real_id:ambito?.real_id,vista_id:ambito?.vista_id,generacion:0};
+  const doc=prepararResumenEvidencias({respuesta,semana_inicio:semana,cliente_ids:ambito?.ids || [],identidad,
+    identidad_actual:actual?.firma===ambito?.firma?identidad:null,vigente});
+  const mapa=new Map(doc.filas.map(f=>[f.cliente_id,f]));
+  return new Map(matrizIds.map(cid=>[cid,mapa.get(cid) || null]));
+}
+function panelControlCartera(ctx, D, puesto, vigente) {
+  const ops = ['direccion', 'operaciones'].includes(puesto);
+  const permisosPauta = () => {
+    if (!vigente() || !ctx.servidor || !ctx.real?.id || ctx.real.id !== ctx.persona?.id ||
+        ctx.real.estado !== 'activo' || ctx.persona.estado !== 'activo' || !ctx.veModulo('dinero-cliente') || typeof ctx.ver !== 'function') return [];
+    if (ctx.real.activo === false || ctx.persona.activo === false) return [];
+    return (ctx.clientesVisibles || []).filter(c => c?.activo_confirmado === true &&
+      ctx.ver({tipo:'cliente_detalle',cliente_id:c.id}).ok === true &&
+      ctx.ver({tipo:'horas_pautadas',cliente_id:c.id}).ok === true).map(c => c.id);
+  };
+  const fuentes = { bandeja: D.opcional('bandeja/por_cliente'), produccion: D.opcional('produccion/produccion'), reuniones: D.opcional('reuniones/reuniones'), metodo: D.opcional('metodo/sugerencias'), nuevos: D.opcional('nuevos/nuevos'),
+    dinero_cliente: permisosPauta().length ? D.opcional('dinero_cliente/dinero_cliente') : null };
+  const rows = prepararControlCartera({ clientes: ctx.clientesVisibles, persona_id: ctx.persona.id, esOps: ops,
+    carteraIds: [...(ctx.carteraPorSilla?.account || [])], asignaciones: ctx.datos?.asignaciones || [], personas:ctx.datos?.personas || [], fuentes, hoy: hoyMadrid(), permisosPautaIds:permisosPauta() });
+  const semana=semanaDeclaracionesControl(hoyMadrid());let declaraciones=new Map();
+  const declaracion=r=>declaraciones.get(r.cliente_id);
+  const agregadoDeclarado=(g,campo)=>{
+    const fs=rows.filter(r=>r.account_id===g.account_id).map(declaracion),validas=fs.filter(f=>f?.estado==='declarado');
+    const suma=validas.reduce((n,f)=>n+f[campo],0);
+    return {valor:validas.length&&Number.isSafeInteger(suma)?suma:null,filas:validas.length,total:fs.length};
+  };
+  const accountNombre = id => id ? (ctx.nombre?.(id) || (ctx.datos?.personas || []).find(p => p.id === id)?.alias || id) : 'Account por confirmar';
+  const panelRaiz = h('section', { class: 'panel', 'data-control-cartera': '', 'aria-label': ops ? 'Control de todas las carteras autorizadas' : 'Control de mi cartera' });
+  const cuerpo = h('div', { class: 'cuerpo pila', style: { minWidth: '0' } });panelRaiz.append(cuerpo);
+  const buscador = h('input', { type: 'search', class: 'input', placeholder: 'Buscar cliente o servicio', 'aria-label': 'Buscar cliente en la matriz', style: { flex: '1 1 220px', minWidth: '0' } });
+  const accounts = [...new Set(rows.map(r => r.account_id).filter(Boolean))].sort((a,b) => accountNombre(a).localeCompare(accountNombre(b), 'es'));
+  const selector = h('select', { class: 'input', 'aria-label': 'Filtrar cartera por account' }, h('option', { value: '' }, 'Todos los accounts'),
+    ...accounts.map(id => h('option', { value: id }, accountNombre(id))), h('option', { value: '__sin' }, 'Account por confirmar'));
+  const servicio = h('select', { class: 'input', 'aria-label': 'Filtrar por servicio confirmado' }, h('option', {value:''}, 'Todos los servicios'),
+    ...[...new Set(rows.flatMap(r=>r.servicios_lista))].sort().map(s=>h('option',{value:s},s)));
+  const urgentes = h('input', { type: 'checkbox', 'aria-label': 'Sólo registros con más de 48 horas o fechas pasadas' });
+  const etiquetaFiltro = h('label', { class: 'fila', style: { minHeight: '44px' } }, urgentes, 'Revisar >48h / fecha pasada');
+  const zona = () => h('div', { class:'tabla-scroll', style:{maxWidth:'100%',overflowX:'auto'}, tabIndex:0, 'aria-label':'Tabla desplazable horizontalmente' });
+  const tablaZona = h('div',{class:'tabla-scroll',style:{maxWidth:'100%',overflowX:'auto'},tabIndex:0,'aria-label':'Clientes y proyectos agrupados · tabla de la cartera filtrada'}), macroZona=zona();
+  const resumen = h('p', { class: 'sub', role: 'status' });
+  const restablecer = h('button', {type:'button',class:'bt',style:{minHeight:'44px'},on:{click:()=>{
+    if(!vigente())return;buscador.value='';selector.value='';servicio.value='';urgentes.checked=false;pintar();buscador.focus?.();
+  }}}, 'Restablecer filtros');
+  const columnas = [['semaforo','Sem.','Semáforo registrado del cliente'],['pendientes','Pend.','Pendientes visibles'],['horas','h / ref.','Horas observadas / pauta económica de referencia'],['revisiones','Rev.','Tareas en revisión'],['tickets','Tk.','Tickets abiertos'],['contacto','Cont./sem.','Contactos declarados en la semana'],['reuniones','Reu./sem.','Reuniones declaradas en la semana'],['detalle','Detalle','Fuentes y detalle del cliente'],['servicios','Serv.','Servicios confirmados']];
+  const href = (id, tab) => ctx.veModulo('ficha') ? `#/ficha/${encodeURIComponent(id)}/${tab}` : ctx.veModulo('prioridades-cliente') ? '#/prioridades-cliente' : null;
+  const semaforoControl = r => {
+    const v=ctx.verdad?.(r.cliente_id), ids=[v?.id,v?.cliente_id].filter(x=>x!=null);
+    const mapa={critico:['rojo','Crítico'],atencion:['ambar','Vigilar'],bien:['verde','Bien']};
+    if(!ids.length||ids.some(id=>id!==r.cliente_id)||!Object.hasOwn(mapa,v?.gravedad))return {estado:'gris',valor:'Por confirmar',detalle:'No hay un estado inequívoco de la verdad única autorizada. No se deduce de los KPI parciales.'};
+    const [estado,valor]=mapa[v.gravedad];
+    return {estado,valor,detalle:'Verdad única autorizada de clientes: misma gravedad que En rojo. Fecha del cálculo no incluida en este DTO; no acredita todos los KPI ni el semáforo manual de la ficha.'};
+  };
+  const celdaControl = (r,key) => {
+    const d=declaracion(r),est=semaforoControl(r),estilo={padding:'5px 7px',verticalAlign:'middle',maxWidth:'155px',whiteSpace:'normal',fontSize:'12px',lineHeight:'1.25',overflowWrap:'break-word'};
+    const mini=txt=>h('small',{class:'sub',style:{display:'block',fontSize:'11px',lineHeight:'1.25'}},txt);
+    if(key==='semaforo')return h('td',{style:estilo},chipEstado(est.estado,est.valor));
+    if(key==='servicios')return h('td',{style:estilo},r.servicios_lista.join(' / ')||'—');
+    const cifra=(valor,estado,explicacion)=>h('td',{style:estilo,title:explicacion,'aria-label':explicacion},chipEstado(estado,valor));
+    if(key==='pendientes')return cifra(Number.isSafeInteger(r.pendientes.total_visible)?String(r.pendientes.total_visible):'—',r.pendientes.fechas_pasadas>0?'ambar':'gris',`${r.pendientes.valor}. ${r.pendientes.detalle}`);
+    if(key==='horas'){
+      const m=r.horas.medicion,p=r.pauta_horas,total=typeof m?.total==='number'&&Number.isFinite(m.total)&&m.total>=0?m.total:/^\d+(?:\.\d+)? h observadas$/.test(r.horas.valor)?Number(r.horas.valor.split(' ')[0]):null;
+      const compatible=p&&permisosPauta().includes(r.cliente_id)&&m?.periodo===p.periodo&&typeof p.horas==='number'&&Number.isFinite(p.horas)&&p.horas>=0;
+      return cifra(`${total===null?'—':ntexto(total)} / ${compatible?ntexto(p.horas):'—'}`,'gris',`Horas observadas: ${r.horas.valor}. ${r.horas.detalle} ${compatible?'Pauta económica de referencia del mismo mes; no objetivo contractual confirmado.':'No hay pauta autorizada del mismo mes para comparar.'}`);
+    }
+    if(key==='revisiones'||key==='tickets'){
+      const e=r[key],m=e.medicion,medida=Number.isSafeInteger(m?.total)&&m.total>=0&&Number.isSafeInteger(m?.mas_48)&&m.mas_48>=0&&m.mas_48<=m.total;
+      const estado=!medida?'gris':key==='tickets'?(m.mas_48>0?'rojo':'gris'):(m.mas_48>=6?'rojo':m.mas_48>0?'ambar':'gris');
+      return cifra(medida?String(m.total):'—',estado,`${key}: ${medida?`${m.total} en total; ${m.mas_48} >48h`:'sin medición acreditada'}. ${e.fuente} · ${e.fecha||'fecha no disponible'}. ${e.detalle}`);
+    }
+    if(key==='contacto')return cifra(d?.estado==='declarado'?String(d.contactos_declarados):'—','gris','Contactos declarados en la semana actual; no actividad externa verificada ni cumplimiento.');
+    if(key==='reuniones')return cifra(d?.estado==='declarado'?String(d.reuniones_declaradas):'—','gris','Reuniones declaradas en la semana actual; la cadencia de 15 días y el histórico no son un conteo de reuniones celebradas.');
+    const firmaDetalle=()=>JSON.stringify([ctx.real,ctx.persona,ctx.clientes,ctx.datos?.personas,ctx.datos?.asignaciones,permisosPauta(),ctx.ver?.({tipo:'cliente_detalle',cliente_id:r.cliente_id})?.ok]);
+    const inicialDetalle=firmaDetalle();
+    const detalle=h('details',{on:{toggle:()=>{if(!vigente()||firmaDetalle()!==inicialDetalle)detalle.replaceChildren();}}},h('summary',{'aria-label':`Fuente y detalle de ${r.nombre}`,class:'sub',style:{minHeight:'44px',cursor:'pointer',display:'flex',alignItems:'center'}},'Ver detalle'),
+      mini(est.detalle),mini(r.owner_detalle),
+      r.pauta_horas&&permisosPauta().includes(r.cliente_id)?mini(`Pauta de referencia: ${ntexto(r.pauta_horas.horas)} h · ${mesControl(r.pauta_horas.periodo)}. ${r.pauta_horas.detalle}`):null,
+      r.reunion_historica?mini(`${r.reunion_historica.valor} · copia ${r.reunion_historica.fecha} · periodo ${mesControl(r.reunion_historica.periodo_fuente)}. ${r.reunion_historica.detalle}`):null,
+      ...['servicios','pendientes','horas','presupuesto','revisiones','tickets','contacto','reuniones','altas'].map(k=>{const e=r[k],valor=k==='horas'&&/^\d+(?:\.\d+)? h (registradas|observadas)$/.test(e.valor)?`${ntexto(Number(e.valor.split(' ')[0]))} h ${e.valor.endsWith('observadas')?'observadas':'registradas'}`:e.valor;return h('p',{class:'sub',style:{margin:'6px 0',fontSize:'12px'}},h('b',{},`${k}: `),`${valor} · ${e.fuente} · ${e.fecha||'fecha no disponible'}. ${e.detalle}`);}),
+      d?.estado==='declarado'?mini(`${d.contacto_texto}. ${d.reunion_texto}. Semana ${semana}; declaraciones del equipo sin verificación externa. ${d.motivo}`):null);
+    return h('td',{style:estilo},detalle);
+  };
+  const ntexto = v => typeof v==='number' && Number.isFinite(v) ? new Intl.NumberFormat('es-ES',{maximumFractionDigits:1}).format(v) : 'Sin dato';
+  const mesControl = v => /^\d{4}-(0[1-9]|1[0-2])$/.test(v || '') ? `${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'][Number(v.slice(5))-1]} ${v.slice(0,4)}` : 'mes sin confirmar';
+  const tMacro = {padding:'6px 8px',verticalAlign:'top',whiteSpace:'normal',overflowWrap:'anywhere',fontSize:'13px',lineHeight:'1.25'};
+  const breve = texto => h('small',{class:'sub',style:{display:'block',fontSize:'12px',lineHeight:'1.25'}},texto);
+  const datoMacro = (principal,secundario) => h('td',{style:tMacro},h('span',{},principal),secundario?breve(secundario):null);
+  const cobertura = m => `${m.medidos} medidos / ${m.sin_dato} sin dato`;
+  const pintarMacro = () => {
+    if (!ops || !vigente()) return;
+    const grupos = resumirAccountsControl(rows).sort((a,b)=>(!a.account_id)-(!b.account_id)||accountNombre(a.account_id).localeCompare(accountNombre(b.account_id),'es'));
+    const desconocido = detalle => ({valor:null,sub:'Sin dato',estado:'gris',detalle});
+    const observado = (m, detalle,rojoDesde=1) => ({valor:m.valor,sub:`${m.medidos}/${m.medidos+m.sin_dato} clientes`,estado:m.valor>=rojoDesde?'rojo':m.valor>0?'ambar':'gris',detalle: `${detalle} ${cobertura(m)}. Copia parcial; cero observado no certifica cobertura completa.`});
+    const filas = grupos.map(g => {
+      const contacto = agregadoDeclarado(g,'contactos_declarados');
+      return {id:g.account_id || "__sin",nombre:accountNombre(g.account_id),clientes:g.clientes,celdas:{
+        imputa:celdaImputa390(ctx,D.opcional('horas_personales/390'),g.account_id),
+        revisa:observado(g.revisiones48,'Tareas registradas en revision de account con mas de48h. Rojo desde6 tareas, amarillo de1 a5; umbral del mapa original.',6),
+        llama:desconocido('No existe en esta copia una serie de llamadas salientes de7dias atribuida de forma canonica a esta persona.'),
+        contesta:observado(g.tickets48,'Antiguedad de tickets registrados, no tiempo de respuesta de cada correo ni SLA certificado.'),
+        reune:{...desconocido('Un registro historico no confirma celebracion. Cadencia y reuniones se contrastan por cliente.'),sub:g.reuniones15?`${g.reuniones15} regla15d`:'Sin confirmar'},
+        contacto:{...desconocido('Contactos declarados del equipo, no actividad externa verificada. Cero declaraciones no significa ausencia de contacto.'),sub:contacto.valor===null?'Sin dato':`${contacto.valor} declarados`},
+        abandonados:desconocido('No se ha acreditado conjuntamente ausencia de horas y contactos durante14dias.'),
+        planifica:desconocido('La copia no acredita transiciones completas entre planning mensual, semanal y diario.'),
+        tarde:desconocido('No hay serie verificada de reuniones celebradas desde las15h durante45dias.'),
+      }};
+    });
+    const personal=D.opcional('horas_personales/390'),actual=imputaVigente390(ctx,personal);
+    const columnas = COLUMNAS_CONTROL_250.map(c=>c.key==='contesta'?{...c,sub:'tickets abiertos >48h'}:c.key==='imputa'&&actual?{...c,sub:`horas · ${diaCorto(personal.desde)}–${diaCorto(personal.hasta)}`} :c);
+    macroZona.replaceChildren(pintarMapaControl250({h,filas,columnas,vigente,
+      celdaVigente:(_row,key)=>key!=='imputa'||!personal||imputaVigente390(ctx,personal),
+      alSeleccionar:id=>{if(!vigente())return;selector.value=id||'__sin';buscador.value='';servicio.value='';urgentes.checked=false;pintar();tablaZona.focus?.();tablaZona.scrollIntoView?.({block:'nearest',behavior:'auto'});}}));
+  };
+  // La tabla inferior conserva su propia época: el mapa superior tiene otra guardia.
+  const firmaInferior=()=>JSON.stringify([ctx.real,ctx.persona,ctx.clientes,ctx.clientesVisibles,ctx.datos?.personas,ctx.datos?.asignaciones,
+    rows.map(r=>[r.cliente_id,ctx.ver?.({tipo:'cliente_detalle',cliente_id:r.cliente_id})?.ok]),permisosPauta()]);
+  const epocaInferior=firmaInferior();
+  const inferiorVigente=()=>{
+    const clientes=ctx.clientes,personas=ctx.datos?.personas;
+    const clientesValidos=!Array.isArray(clientes)||rows.every(r=>{
+      const encontrados=clientes.filter(c=>c?.id===r.cliente_id);
+      return encontrados.length===1&&encontrados[0].activo_confirmado===true;
+    });
+    const personasValidas=!Array.isArray(personas)||[ctx.real,ctx.persona].every(actor=>{
+      const encontrados=personas.filter(p=>p?.id===actor?.id);
+      const p=encontrados[0];
+      return encontrados.length===1&&p.estado==='activo'&&p.activo!==false&&
+        Array.isArray(p.puestos)&&Array.isArray(actor?.puestos)&&
+        JSON.stringify([...p.puestos].sort())===JSON.stringify([...actor.puestos].sort());
+    });
+    if(vigente()&&clientesValidos&&personasValidas&&firmaInferior()===epocaInferior)return true;
+    tablaZona.replaceChildren();return false;
+  };
+  const pintar = () => {
+    if (!inferiorVigente()) return;
+    const buscar = (buscador.value || '').trim().toLocaleLowerCase('es'),owner=ops?selector.value||'':'';
+    const visibles=rows.filter(r=>(!buscar||`${r.nombre} ${r.servicios_lista.join(' ')}`.toLocaleLowerCase('es').includes(buscar))&&(!owner||(owner==='__sin'?!r.account_id:r.account_id===owner))&&(!servicio.value||r.servicios_lista.includes(servicio.value))&&(!urgentes.checked||r.tickets.estado==='rojo'||r.revisiones.estado==='ambar'||r.pendientes.fechas_pasadas>0)).sort((a,b)=>(!a.account_id)-(!b.account_id)||accountNombre(a.account_id).localeCompare(accountNombre(b.account_id),'es')||a.nombre.localeCompare(b.nombre,'es'));
+    restablecer.disabled=!(buscar||owner||servicio.value||urgentes.checked);
+    const detalleResumen=`${owner?`${accountNombre(owner==='__sin'?null:owner)} · `:''}${visibles.length} de ${rows.length} clientes activos confirmados. Proyectos agrupados por cliente: no hay desglose de subproyectos. Copias parciales; sin dato no significa cero ni cumplido.`;
+    resumen.replaceChildren(h('span',{title:detalleResumen,'aria-label':detalleResumen},`${visibles.length} de ${rows.length} clientes activos`));
+    tablaZona.replaceChildren(h('table',{class:'densa',style:{width:'100%',minWidth:'900px',tableLayout:'fixed'}},
+      h('thead',{},h('tr',{},h('th',{scope:'col',style:{width:'160px',fontSize:'11px',padding:'6px 7px',whiteSpace:'normal',textTransform:'none',letterSpacing:'normal'}},'Cliente / account'),...columnas.map(([,t,explicacion])=>h('th',{scope:'col',title:explicacion,'aria-label':explicacion,style:{fontSize:'11px',padding:'6px 7px',whiteSpace:'normal',textTransform:'none',letterSpacing:'normal'}},t)))),
+      h('tbody',{},...visibles.map(r=>h('tr',{},h('th',{scope:'row',style:{position:'static',minWidth:'140px',maxWidth:'190px',whiteSpace:'normal',padding:'5px 7px',fontSize:'12px',textTransform:'none',letterSpacing:'normal'}},href(r.cliente_id,'resumen')?h('a',{href:href(r.cliente_id,'resumen'),style:{display:'inline-flex',alignItems:'center',minHeight:'44px',whiteSpace:'normal'}},h('span',{},r.nombre,breve(accountNombre(r.account_id)))):h('span',{},r.nombre,breve(accountNombre(r.account_id))),null),...columnas.map(([key])=>celdaControl(r,key)))))));
+    if(!visibles.length)tablaZona.append(vacioLinea(rows.length?'Ningún cliente coincide con estos filtros.':'No hay clientes activos confirmados en esta copia y cartera; no se habilitan vigencias desconocidas.',{icono:'cli'}));
+  };
+  buscador.addEventListener('input',pintar);selector.addEventListener('change',pintar);servicio.addEventListener('change',pintar);urgentes.addEventListener('change',pintar);
+  cuerpo.append(...[h('div',{class:'fila',style:{justifyContent:'space-between',flexWrap:'wrap',gap:'var(--s-2)'}},
+    h('h2',{},ops?'Control macro · accounts y proyectos':'Tu cartera · control por cliente'),
+    ctx.veModulo?.('horas') ? h('a',{href:'#/horas',class:'bt mini',style:{minHeight:'44px'}},ops?'Ver horas por persona · día / semana / mes':'Ver mis horas · día / semana / mes') : null),
+    ops?macroZona:null,
+    ops?h('h3',{},'Clientes y proyectos agrupados'):null,
+    h('div',{class:'fila',style:{justifyContent:'space-between',flexWrap:'wrap',gap:'var(--s-2)'}},
+      h('small',{class:'sub'},`Horas por proyecto: ${[...new Set(rows.map(r=>r.horas.medicion?.periodo).filter(Boolean))].map(mesControl).join(' / ')||'periodo sin confirmar'} · declaraciones: semana ${semana||'sin confirmar'}`),
+      h('details',{},h('summary',{class:'sub',style:{minHeight:'44px',display:'flex',alignItems:'center',cursor:'pointer'}},'Cómo interpretar'),h('p',{class:'sub'},'Proyectos agrupados por cliente: no hay desglose de subproyectos. Copias parciales; sin dato no significa cero ni cumplido. Gris: dato ausente, periodo sin confirmar o copia parcial; no acredita cumplimiento. h / ref.: horas observadas del proyecto y pauta económica autorizada del mismo mes, como referencia; no presupuesto ni objetivo contractual confirmado. Revisión y Tickets muestran totales; el color usa registros >48h (revisión: 1–5 amarillo, ≥6 rojo; tickets: >0 rojo). Contactos y reuniones son declaraciones de la semana actual, sin verificación externa. Cero declaraciones no significa ausencia de actividad; no certifica cumplimiento ni cadencia.'))),
+    h('div',{class:'cartera-filtros','aria-label':'Filtros de clientes y proyectos'},buscador,ops?selector:null,servicio,etiquetaFiltro,restablecer),resumen,tablaZona,
+    ctx.veModulo?.('dinero-cliente')?h('a',{href:'#/dinero-cliente/cierre-septiembre',class:'bt',style:{alignSelf:'flex-start',minHeight:'44px'}},'Cierre de septiembre'):null].filter(Boolean));
+  pintarMacro();pintar();
+  // Una consulta por panel: no refetch al cambiar filtros ni una petición por cliente.
+  Promise.resolve().then(async()=>{
+    if(!vigente()||!panelRaiz.isConnected||!semana)return;
+    const scope=ambitoDeclaracionesControl(ctx,semana);
+    if(!scope)return;
+    const ambito={...scope,real_id:ctx.real.id,vista_id:ctx.persona.id};
+    try{
+      const respuesta=await ctx.api(`clientes/evidencias_kpi/resumen?semana_inicio=${encodeURIComponent(semana)}`);
+      if(!vigente()||!panelRaiz.isConnected||!inferiorVigente()||semanaDeclaracionesControl(hoyMadrid())!==semana)return;
+      const actual=ambitoDeclaracionesControl(ctx,semana);
+      declaraciones=proyectarDeclaracionesControl(respuesta,semana,ambito,actual,rows.map(r=>r.cliente_id),true);
+      if(!vigente()||actual?.firma!==ambito.firma)return;
+      pintarMacro();pintar();
+    }catch(_){if(vigente()&&panelRaiz.isConnected&&inferiorVigente()&&semanaDeclaracionesControl(hoyMadrid())===semana&&ambitoDeclaracionesControl(ctx,semana)?.firma===ambito.firma){declaraciones=new Map();pintarMacro();pintar();}}
+  });return panelRaiz;
+}
+
 // ================================================================== el número que manda
 function heroNumero(ctx, cfg, n, puesto) {
   // R13 (E0): el catálogo marca `el_que_manda`; la config de cada puesto lo nombra (hoy coinciden los 6 marcados).
   // Si un puesto no nombra indicador, se toma el que el catálogo marque para ese puesto.
-  const ind = cfg.indicador ? ctx.indicador(cfg.indicador)
+  let ind = cfg.indicador ? ctx.indicador(cfg.indicador)
     : (puesto && typeof ctx.indicadores === 'function' ? ctx.indicadores().find(i => i.puesto === puesto && i.el_que_manda) || null : null);
+  const coberturaCRM = cfg.calculo === 'crm_verde';
+  if (coberturaCRM) {
+    // 319A: este cálculo mide lectura autorizada, no la clasificación histórica de salud.
+    const formula = 'Número de subcuentas cliente autorizadas con fuente de lectura reciente válida, dentro de la copia parcial actual.';
+    cfg = { ...cfg, titulo: 'Cobertura de lectura CRM', formula, umbral: null, meta: null, medible: 'medias', fuente: 'GoHighLevel · fecha de la copia visible; actualización según la fuente' };
+    ind = { ...ind, nombre: cfg.titulo, formula, umbral: null, medible: 'medias', medible_porque: 'Copia parcial: lectura reciente no acredita salud, actividad completa ni cumplimiento.' };
+  }
   const medible = cfg.medible || ind?.medible || (n?.fase2 ? 'no' : 'medias');
   const umbralTodo = cfg.umbral || (ind?.umbral && !/^Ver /.test(ind.umbral) ? ind.umbral : null);
   // V2 (B3): el matiz entre paréntesis del umbral («propuesta sin firmar: la misma vara que la trafficker») va a «¿Qué es?»
@@ -341,7 +605,7 @@ function heroNumero(ctx, cfg, n, puesto) {
   const enDuda = n?.duda ? chipEstado('gris', 'Dato en duda') : null;
   const fase2 = n?.fase2 || medible === 'no';
   const estado = fase2 ? 'gris' : (n?.estado || 'gris');
-  const titulo = L(n?.titulo || cfg.titulo || ind?.nombre || 'Sin número');
+  const titulo = L(coberturaCRM ? cfg.titulo : n?.titulo || cfg.titulo || ind?.nombre || 'Sin número');
   let cuerpo;
   if (n?.falta) cuerpo = [h('h3', { class: 'cifra-et' }, titulo), vacioLinea(`${n.falta.titulo}. ${n.falta.texto}`, { icono: n.falta.icono || 'info', quien: n.falta.quien })];
   else if (n?.error) cuerpo = vacioLinea(`No se ha podido calcular: ${n.error}`, { icono: 'alert' });
@@ -372,13 +636,13 @@ function heroNumero(ctx, cfg, n, puesto) {
     n.contexto ? h('p', { class: 'sub' }, L(n.contexto)) : null,
     // R13: el segundo indicador del puesto (p. ej. la salud de la cartera del account), debajo y en pequeño; V2 (A4): con su
     // color (nunca verde con un cliente en crítico)
-    n.proxy && n.proxy.valor !== null && n.proxy.valor !== undefined ? h('p', { class: 'sub fila', style: { gap: 'var(--s-1)' } }, `Segundo indicador: ${L(n.proxy.titulo || 'cartera con salud de 60 o más')} ·`,
+    n.proxy && n.proxy.valor !== null && n.proxy.valor !== undefined ? h('p', { class: 'sub fila', style: { gap: 'var(--s-1)' } }, `Segundo indicador: ${L(n.proxy.titulo || 'índices registrados · provisional')} ·`,
       chipEstado(n.proxy.estado || 'gris', `${n.proxy.valor}${n.proxy.unidad ? ` (${n.proxy.unidad})` : ''}`)) : null];
   }
   const queEs = h('details', { class: 'que-es' }, h('summary', {}, '¿Qué es?'),
     h('dl', {},
       h('dt', {}, 'Qué mide'), h('dd', {}, L(cfg.formula || ind?.formula || cfg.titulo || '—')),
-      h('dt', {}, 'Verde / ámbar / rojo'), h('dd', {}, [L(umbral) || '—', matizUmbral ? ` (${L(matizUmbral)})` : null]),
+      h('dt', {}, coberturaCRM ? 'Alcance' : 'Verde / ámbar / rojo'), h('dd', {}, coberturaCRM ? 'Lectura parcial autorizada, sin umbral de rendimiento ni semáforo contractual.' : [L(umbral) || '—', matizUmbral ? ` (${L(matizUmbral)})` : null]),
       n?.detalle ? [h('dt', {}, 'Detalle'), h('dd', {}, L(n.detalle))] : null,
       h('dt', {}, 'Fuente y frecuencia'), h('dd', {}, cfg.fuente ? L(cfg.fuente) : ind ? `${ind.fuente || '—'} · ${ind.frecuencia || '—'}` : '—'),
       cfg.meta ? [h('dt', {}, 'Meta'), h('dd', {}, L(cfg.meta))] : null));
@@ -653,11 +917,11 @@ function panelLoMio(lm) {
     ].filter(Boolean);
     const vencidas = filas.filter(x => tramoPlazo(x.plazo, ahora) === 0).length;
     // en una línea: cuántas y cuántas vencidas; el desglose, debajo y solo en escritorio (en el móvil, en el «title»)
-    const sub = filas.length ? `${fmt.plural(filas.length, 'cosa', 'cosas')} para ti${vencidas ? ` · ${fmt.num(vencidas)} con el plazo pasado` : ''} · ${ORDEN_TXT[lm.puesto] || 'lo vencido y lo grave arriba'}` : 'Nada pendiente a tu nombre';
+    const sub = filas.length ? `${fmt.plural(filas.length, 'cosa', 'cosas')} para ti${vencidas ? ` · ${fmt.num(vencidas)} con el plazo pasado` : ''} · ${ORDEN_TXT[lm.puesto] || 'lo vencido y lo grave arriba'}` : 'Sin avisos disponibles en esta lista';
     const desglose = [...partes, quitadas ? `${fmt.plural(quitadas, 'aviso repetido', 'avisos repetidos')} en la misma fila` : null].filter(Boolean).join(' · ');
     const tableta = !movil && typeof matchMedia === 'function' && matchMedia('(max-width: 1180px)').matches;
     const tope = movil ? LM_A_LA_VISTA.movil : tableta ? LM_A_LA_VISTA.tableta : LM_A_LA_VISTA.escritorio;
-    const lista = items => listaCompacta(items.map(x => itemLoMio(lm, x, ahora, pintar)), { movil, vacio: { titulo: 'Nada tuyo pendiente hoy', porque: 'Ni alertas, ni correos de tu cartera, ni piezas por revisar, ni menciones, ni decisiones esperando. Repasa los bloques de abajo.', celebrar: true } });
+    const lista = items => listaCompacta(items.map(x => itemLoMio(lm, x, ahora, pintar)), { movil, vacio: { titulo: 'No hay avisos disponibles para ti', porque: ctx.veModulo('mi-trabajo') ? 'Esta lista reúne avisos de las fuentes disponibles. Abre «Mi trabajo» arriba para revisar tus tareas, fechas y estados; consulta los bloques de abajo para ver datos pendientes.' : 'Esta lista reúne avisos de las fuentes disponibles. Consulta los bloques de abajo para ver qué se ha podido leer y qué datos están pendientes.' } });
     const marcarFilas = (ol, items) => { ol.querySelectorAll?.(':scope > li').forEach((li, i) => { const x = items[i]; if (!x) return; li.dataset.filaMia = x.clave; li.dataset.tipo = x.tipo; if (x.objeto) li.dataset.objeto = x.objeto; }); return ol; };
     const primeras = filas.slice(0, tope), resto = filas.slice(tope);
     const cuerpo = [marcarFilas(lista(primeras), primeras)];
@@ -669,7 +933,7 @@ function panelLoMio(lm) {
     }
     sec.replaceChildren(
       // Ronda U (50 #3): cabecera de una línea; el desglose («18 alertas tuyas · 2 piezas…») va en el title, no empuja la lista
-      h('header', { style: { padding: `var(--s-3) ${movil ? 'var(--s-3)' : 'var(--relleno)'}` } }, h('div', { style: { minWidth: '0', flex: '1 1 260px' } }, h('h2', { id: 'mid-lomio-t' }, icono('zap'), 'Lo mío'), h('p', { class: 'sub', title: desglose || null }, sub)),
+      h('header', { style: { padding: `var(--s-3) ${movil ? 'var(--s-3)' : 'var(--relleno)'}` } }, h('div', { style: { minWidth: '0', flex: '1 1 260px' } }, h('h2', { id: 'mid-lomio-t' }, icono('zap'), 'Lo mío · avisos'), h('p', { class: 'sub', title: desglose || null }, sub)),
         ctx.veModulo('alertas') && (lm.nAlertasTodas ?? nAl) ? h('a', { class: 'bt mini', href: '#/alertas', title: 'La misma cifra que «Mías» en Alertas' }, `Alertas · ${fmt.num(lm.nAlertasTodas ?? nAl)}`, icono('derecha')) : null),
       ...cuerpo);
   };
@@ -792,9 +1056,11 @@ function filtroConsejo(ctx, puesto) {
 }
 function vigilarConsejo(main, loMio, despuesDe, { ctx = null, puesto = null } = {}) {
   const deEstePuesto = ctx ? filtroConsejo(ctx, puesto) : () => true;
+  // La carcasa añade su consejo a #main, fuera de la raíz aislada del módulo.
+  const alcance = main.closest?.('#main') || main;
   const arreglar = () => {
-    if (!loMio.isConnected) { obs.disconnect(); return; }
-    const c = main.querySelector(':scope > [data-ia="consejo"]');
+    if (!loMio.isConnected || (ctx?.vigente && !ctx.vigente())) { obs.disconnect(); return; }
+    const c = alcance.querySelector(':scope > [data-ia="consejo"]');
     if (!c) return;
     const objetos = new Set([...loMio.querySelectorAll('[data-objeto]')].map(x => x.dataset.objeto));
     const items = [...c.querySelectorAll('li.ia-accion')];
@@ -815,11 +1081,14 @@ function vigilarConsejo(main, loMio, despuesDe, { ctx = null, puesto = null } = 
     // Ronda U (molde): el consejo nunca empuja la lista: va debajo de «Lo mío» y plegado a una línea (una vez: si la persona
     // lo abre, se queda abierto)
     if (!c.dataset.plegadoU) { c.dataset.plegadoU = '1'; plegarConsejo(c); }
-    if (despuesDe.isConnected && (despuesDe.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING)) despuesDe.after(c);
+    // Sigue como hijo directo de #main: la carcasa no debe recrear un segundo consejo.
+    let ancla = despuesDe;
+    while (ancla.parentElement && ancla.parentElement !== alcance) ancla = ancla.parentElement;
+    if (ancla.isConnected && (ancla.compareDocumentPosition(c) & Node.DOCUMENT_POSITION_PRECEDING)) ancla.after(c);
   };
   let pend = null;
   const obs = new MutationObserver(() => { clearTimeout(pend); pend = setTimeout(arreglar, 30); });
-  obs.observe(main, { childList: true });
+  obs.observe(alcance, { childList: true });
   obs.observe(loMio, { childList: true });   // al marcar algo en «Lo mío», el consejo se vuelve a filtrar con sus filas nuevas
   arreglar();
 }
@@ -954,6 +1223,8 @@ function tarjetaBloque(ctx, b) {
 const nombreRuta = r => nombreModulo(String(r || '').split('/')[0]);
 /** V3b / Ronda U: «y 3 impagos más en Finanzas» (con el objeto y, si la pantalla se ve, como enlace), nunca «y 3 más en su pantalla». */
 function objetoBloque(b, r) {
+  if(b.id==='reuniones_ciclo')return ['caso de seguimiento','casos de seguimiento'];
+  if(b.id==='nuevos_resumen')return ['alta','altas'];
   const u = typeof r.unidad === 'string' && r.unidad ? r.unidad.split(/ · | de |, /)[0].trim() : '';
   const pl = /^(\d|—)/.test(u) || !u ? String(b.titulo || 'cosas').replace(/^./, c => c.toLowerCase()) : u;
   return [unidadDe(1, pl), pl];
@@ -968,7 +1239,7 @@ function ronda(ctx, { items, hechas, hoy }, max) {
     const hecha = hechas.has(x.id);
     return h('li', {},
       h('span', { class: `ico-c s ${hecha ? 'verde' : 'gris'}` }, icono(hecha ? 'ok' : 'check')),
-      h('span', { class: `t${hecha ? ' dim' : ''}`, style: TEXTO_FILA }, h('span', {}, x.que), h('span', { class: 'sub' }, [x.f, x.prueba ? `prueba: ${x.prueba}` : null].filter(Boolean).join(" · "))),
+      h('span', { class: `t${hecha ? ' dim' : ''}`, style: TEXTO_FILA }, h('span', {}, x.que), x.referencia547 ? h('details', { class: 'que-es' }, h('summary', {}, 'Referencia histórica'), h('p', {}, x.referencia547), h('p', { class: 'sub' }, 'Regla anterior: no acredita jornada vigente ni incumplimiento.')) : null, h('span', { class: 'sub' }, [x.f, x.prueba ? `prueba: ${x.prueba}` : null].filter(Boolean).join(" · "))),
       // Ronda U (50 #4): «Hecho» al primer clic, con «Deshacer» 8 s (antes «¿Hecho? Sí»)
       hecha ? chipEstado('verde', 'Hecho') : botonDeshacer({ texto: 'Hecho', hecho: 'Hecho', soloLectura: ctx.soloLectura, atajo: 'e',
         alHacer: async () => { await ctx.accion({ herramienta: 'app', tipo: 'ronda', objeto: `${hoy}:${x.id}`, texto: x.que, vista_previa: { que: 'Marca este punto de la ronda como hecho hoy' } }); hechas.add(x.id); return 'Hecho · queda en el rastro'; } }));
@@ -981,20 +1252,14 @@ function ronda(ctx, { items, hechas, hoy }, max) {
 
 /** Mapa de control por persona (de Incidencias): tabla densa común, el estado en un chip por celda. */
 function mapaControl(filas, max) {
-  const c = (ok, txt, t) => h('td', { class: 'num', title: t || null }, chipEstado(ok === null ? 'gris' : ok ? 'verde' : 'rojo', txt));
-  const n = v => Number(v) || 0;
+  const c=(x,key)=>{const d=celdaControlEquipo313(x,key),texto=d.valor===null?'—':`${fmt.num(d.valor,key==='imputa'?1:0)}${key==='imputa'?' h':''}${d.tipo==='referencia'?' ref.':''}`;return h('td',{class:'num',title:d.detalle},chipEstado('gris',texto));};
   return h('div', {}, h('div', { class: 'tabla-scroll' }, h('table', { class: 'densa' },
-    h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Persona'), h('th', { scope: 'col', title: 'Horas imputadas ayer' }, 'Imputa'),
-      h('th', { scope: 'col', title: 'Revisiones de más de 48 h' }, 'Revisa'), h('th', { scope: 'col', title: 'Correos de más de 48 h' }, 'Contesta'),
-      h('th', { scope: 'col', title: 'Clientes sin reunión del ciclo' }, 'Reunión'), h('th', { scope: 'col', title: 'Clientes sin correo esta semana' }, 'Correo'))),
-    h('tbody', {}, filas.slice(0, max).map(x => h('tr', {},
-      h('th', { scope: 'row' }, x.nombre),
-      c(n(x.imputa?.ayer) > 0, `${fmt.num(x.imputa?.ayer, 1)} h`, `Semana: ${fmt.pct(x.imputa?.pct_sem)}`),
-      c(n(x.revisa?.mas48) <= 5, fmt.num(x.revisa?.mas48), `${x.revisa?.mas48} de ${x.revisa?.total}`),
-      c(n(x.contesta?.mas48) === 0, fmt.num(x.contesta?.mas48), `${x.contesta?.mas48} de ${x.contesta?.correos} correos`),
-      c(n(x.reune?.sin_reunion) === 0, fmt.num(x.reune?.sin_reunion)),
-      c(n(x.reune?.sin_correo_sem) === 0, fmt.num(x.reune?.sin_correo_sem))))))),
-  filas.length > max ? h('p', { class: 'sub' }, `y ${fmt.plural(filas.length - max, 'persona', 'personas')} más en el mapa de Incidencias`) : null);
+    h('thead', {}, h('tr', {}, h('th', { scope: 'col' }, 'Persona'), h('th', { scope: 'col', title: 'Registros del último día lunes–viernes de la copia; no evalúa calendario o jornada' }, 'Imputa'),
+      h('th', { scope: 'col', title: 'Referencia de revisiones+48h' }, 'Revisa'), h('th', { scope: 'col', title: 'Referencia de correos+48h' }, 'Contesta'),
+      h('th', { scope: 'col', title: 'Referencia mensual antigua, no celebración verificada' }, 'Reunión'), h('th', { scope: 'col', title: 'Referencia semanal antigua, no contacto verificado' }, 'Correo'))),
+    h('tbody', {}, filas.slice(0, max).map(x => h('tr', {},h('th', { scope: 'row' }, x.nombre),c(x,'imputa'),c(x,'revisa'),c(x,'contesta'),c(x,'reunion'),c(x,'correo')))))),
+    h('p',{class:'sub'},'Horas: registros parciales o referencia marcada; sin dato no es cero. Las demás cifras son referencias sin cobertura completa: no acreditan incumplimiento.'),
+    filas.length > max ? h('p', { class: 'sub' }, `y ${fmt.plural(filas.length - max, 'persona', 'personas')} más en el mapa de Incidencias`) : null);
 }
 
 /** Altas en su pista de 90 días: barra común con la marca del día 10 (encendido; límite el 12). */

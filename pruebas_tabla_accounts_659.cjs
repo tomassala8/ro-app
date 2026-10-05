@@ -1,0 +1,22 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const box={Date,Intl,Map,Set};vm.createContext(box);
+const p=fs.readFileSync(__dirname+'/modulos/_metodo_cohorte_305.js','utf8').replace(/export /g,'');vm.runInContext('(()=>{'+p+';this.proyectarMetodo305=proyectarMetodo305;})()',box);
+const file='modulos/_seguimiento_accounts_404.js';const s=fs.readFileSync(__dirname+'/'+file,'utf8').replace(/^import[^;]+;\s*/gm,'').replace(/export /g,'');vm.runInContext(s+';this.project=proyectarSeguimiento404;this.scope=ambitoSeguimiento404;this.vigente=seguimientoVigente404;this.columnas=COLUMNAS_SEGUIMIENTO_404;',box);
+const clone=x=>JSON.parse(JSON.stringify(x));
+function ctx(){const ps=[{id:'ops',estado:'activo',puestos:['operaciones']},{id:'paid',nombre:'Especialista fixture',estado:'activo',puestos:['trafficker']}],cs=[{id:'ok',activo_confirmado:true,detalle:true}];return {servidor:true,hoy:'2026-10-05',real:clone(ps[0]),persona:clone(ps[0]),datos:{personas:clone(ps)},clientes:clone(cs),clientesVisibles:clone(cs),carteraPorSilla:{account:new Set()},veModulo:()=>true,ver:()=>({ok:true}),vigente:()=>true};}
+const metodo=()=>({hoy:'2026-10-05',cobertura_reuniones:{completa:false},sugerencias:[{cliente_id:'ok',regla_id:'seguimiento_quincenal_especialista',cadencia_dias:15,responsable_role:'trafficker',responsable_id:'paid',responsables_ids:['paid'],ultima_confirmada:'2026-09-28',proxima_revision:'2026-10-13',estado:'en_cadencia',incumplimiento:null,fuentes_operativas:[{tipo:'reunion_celebrada',fecha:'2026-09-28'}]}]});
+const rows=[{cliente_id:'ok',reunion_historica:{fecha_registro:'2026-09-29'}}];
+const declared=n=>new Map([['ok',{cliente_id:'ok',estado:'declarado',source_kind:'registro_equipo',verificacion_externa:false,cumplimiento:null,reuniones_declaradas:n}]]);
+function project(c=ctx(),m=metodo(),d=declared(2)){return box.project(c,rows,{semana:'2026-10-05',metodo:m,declaraciones:d});}
+let n=0;const test=f=>{f();n++;};
+// Source function projects the visible table cells; no DTO mirror computation.
+for(const change of [m=>delete m.sugerencias[0].fuentes_operativas,m=>m.sugerencias[0].fuentes_operativas=[{tipo:'cita_agendada',fecha:'2026-09-28'}],m=>m.sugerencias[0].fuentes_operativas=[{tipo:'reunion_celebrada',fecha:'2026-09-27'}]])test(()=>{const m=metodo();change(m);const r=project(ctx(),m)[0];assert.equal(r.celdas[0].valor,'2');assert(r.celdas.slice(1).every(c=>c.valor==='—'));});
+for(const roles of [['account'],['publicidad'],['trafficker','trafficker'],['trafficker',' seo'],['trafficker',12]])test(()=>{const c=ctx();c.datos.personas[1].puestos=roles;const r=project(c)[0];assert(r.celdas.slice(1).every(x=>x.valor==='—'));assert.equal(r.celdas[0].valor,'2');});
+test(()=>{const r=project()[0];assert.equal(r.celdas[1].valor,'En cadencia');assert.equal(r.celdas[3].valor,'28/09/26');assert.equal(r.celdas[4].valor,'13/10/26');assert.equal(r.celdas.length+1,6);assert(r.celdas.every(x=>x.estado==='gris'&&x.cumplimiento===null));assert(!r.celdas.some(x=>x.valor==='15'));});
+test(()=>{assert.equal(project(ctx(),metodo(),declared(0))[0].celdas[0].valor,'0');assert.equal(project(ctx(),metodo(),new Map())[0].celdas[0].valor,'—');assert(project()[0].celdas[0].detalle.includes('no ausencia'));});
+test(()=>{const m=metodo();m.sugerencias.push(clone(m.sugerencias[0]));assert(project(ctx(),m)[0].celdas.slice(1).every(c=>c.valor==='—'));});
+test(()=>{const m=metodo();m.sugerencias[0].ultima_confirmada='2026-10-06';assert(project(ctx(),m)[0].celdas.slice(1).every(c=>c.valor==='—'));});
+test(()=>{const m=metodo();m.sugerencias[0].estado='revisar_cadencia';m.sugerencias[0].ultima_confirmada='2026-09-01';m.sugerencias[0].proxima_revision='2026-09-16';m.sugerencias[0].fuentes_operativas=[{tipo:'reunion_celebrada',fecha:'2026-09-01'}];assert.equal(project(ctx(),m)[0].celdas[1].valor,'Confirmar recencia');});
+for(const mut of [c=>c.clientes[0].activo_confirmado=false,c=>c.clientes.push(clone(c.clientes[0])),c=>c.ver=()=>({ok:false}),c=>c.datos.personas[0].estado='baja'])test(()=>{const c=ctx(),a=box.scope(c);mut(c);assert.equal(project(c).length,0);assert.equal(box.vigente(c,rows,a.firma),false);});
+test(()=>{const c=ctx(),m=metodo(),before=JSON.stringify([c,m]);project(c,m);assert.equal(JSON.stringify([c,m]),before);});
+console.log(n+' grupos659 PASS: celdas reales, evidencia/puesto antes estado quincenal; declaraciones e histórico separados.');
