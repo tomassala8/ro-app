@@ -19,7 +19,7 @@ Cortes del reloj (se miran con `date` al empezar CADA vuelta, no solo al princip
 
 ## En curso
 
-Siguiente: F2.3. F2.2 cerrado a las 08:23.
+Siguiente: F2.3 (intento 2/3: db:deploy no aplicó nada). F2.2 cerrado a las 08:23 (`87ab35f`).
 
 Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas_fotos.txt`. Una persona por (puestos, ámbito, módulos, ver como, permisos, clientes). 25 de 32.
 - candela, carla, casiana, dana, facundo, lucia, natalia: account, cada uno su cartera (8, 10, 7, 5, 6, 12, 9 clientes).
@@ -45,7 +45,7 @@ Fotos (decisión Tomás 5-oct 06:12), lista en `~/RO_MIGRACION/capturas/personas
 
 - ✅ F2.1 · 06:42 · `avisos` de la tubería → `tuberia_avisos` en `despliegue/estado.py`; prueba temporal count 1; solidez 69/95, igual que F1.6 · comprobado otra vez 08:21 (reabierto 06:47 por error de la maquinaria, nota de Claude para F2.2: no se rehace; commit a74fd94; grep residual de avisos 0; py_compile limpio). Plan B: dejarla y copiar solo `local.db` (la tubería empieza vacía en Postgres); apuntarlo.
 - ✅ F2.2 · 08:23 · 67 modelos; tuberia_avisos en schema.prisma y 0_base; 0 ✘ de crear_base_pg.py; el diff solo añade. Plan B: ninguno; sin esto se pierden columnas.
-- ⬜ F2.3 Postgres arriba, `pnpm db:deploy`, copia «cuadrada» de `local.db.antes` (y `tuberia.db.antes`), `publicacion.py publicar data`.
+- 🔄 F2.3 · 08:24 · intento 2/3 · db:deploy. El intento 1 no aplicó migraciones: ro_app sigue con 0 tablas.
 - ⬜ F2.4 Legado (servir.py sobre Postgres) arrancado y `bash migracion/puerta.sh f2` en VERDE, arreglando `despliegue/base.py` lo que haga falta (commits propios, cada uno con su prueba). Plan B: rutas que no cuadran tras 3 intentos → `~/RO_MIGRACION/excepciones.txt` con el motivo; apuntadas como bloqueo para el piloto.
 
 ## Fase 3 · La app nueva entera (por el proxy)
@@ -108,3 +108,4 @@ Reloj: hasta 1 h antes del fin; lo que quede → ⚠ «sin tiempo» y a la fase 
 - F1.7 · intento 2 · 08:21 · reabierto a las 06:47 por el mismo error. Comprobado: ~/RO_MIGRACION/puertas/f1.md (cabecera 05-10-2026 08:05, fichero 08:11) dice VERDE, 9 de 9 con ✔. El push anterior (bf6c714) ya estaba en origin; este cierre sube otra vez la rama. Nada regrabado; huellas_referencia.txt la rehace noche.sh.
 - F2.1 · intento 2 · 08:21 · reabierto a las 06:47 por el mismo error. Comprobado: `a74fd94` toca `despliegue/estado.py` (avisos → tuberia_avisos); `grep -w avisos` residual 0; `py_compile` limpio. La nota del intento 1 (06:42) sigue en este cuaderno. Nada rehecho.
 - F2.2 · intento 1 · 08:23 · inventario: 1 tabla nueva (`tuberia_avisos`), 0 quitadas, sin sección Columnas. `rehacer_base.sh` rc=0, 67 modelos, 0 ✘. Diff: solo `+model tuberia_avisos` y `+CREATE TABLE public.tuberia_avisos` (más secuencia y clave). `prisma validate` válido; `pnpm --filter @ro/db build` rc=0. `ro_app` seguía en 0 tablas.
+- F2.3 · intento 1 · 08:24 · hipótesis: `pnpm db:deploy` con `DATABASE_URL=postgresql://127.0.0.1:5432/ro_app?user=ro&password=ro` aplica `0_base` y `1_sin_truncate`. Resultado: no. `psql` con esa URL cuenta 0 tablas (la conexión libpq vale). Prisma responde `P1010: User was denied access on the database (not available)` y sale 1. `prisma.config.ts` por defecto usa `postgresql://ro:ro@127.0.0.1:5432/ro_app` (usuario delante del host); el plan de F2.3 manda la forma con `?user=`. Tras el fallo, `pg_tables` sigue en 0 y `_prisma_migrations` no existe. No se tocó `local.db.antes`.
