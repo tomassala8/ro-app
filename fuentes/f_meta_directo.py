@@ -19,17 +19,17 @@ import urllib.request
 from datetime import date, timedelta
 
 from comun import AHORA, AQUI, escribir, iso, leer
+import pathlib as _pl_n14, sys as _sys_n14  # N-14: las llaves por config.secreto()
+if str(_pl_n14.Path(__file__).resolve().parents[1]) not in _sys_n14.path:
+    _sys_n14.path.append(str(_pl_n14.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 GRAPH = "https://graph.facebook.com/v26.0"
 CACHE = AQUI / "_cache" / "meta_directo.json"
 
 
 def _token():
-    try:
-        return subprocess.check_output(["security", "find-generic-password", "-s", "meta_token", "-w"],
-                                       text=True, stderr=subprocess.DEVNULL).strip()
-    except subprocess.CalledProcessError:
-        return None
+    return _cfg.secreto("meta_token") or None
 
 
 def _get(url, q=None):

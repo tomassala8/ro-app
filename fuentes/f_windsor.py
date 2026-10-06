@@ -5,7 +5,7 @@ Plan B: el último ~/RO_HERRAMIENTAS/windsor/windsor_AAAA-MM.json que haya dejad
 Plan C (hoy): la muestra manual del 2-oct (_muestras/google_ads_septiembre_muestra_2026-10-02.json),
         totales de septiembre de 14_GOOGLE_ADS_VIA_WINDSOR.md. Se sella «muestra manual 2-oct».
 
-La clave nunca se lee aquí: solo se comprueba que existe (security sin -w). ws.py la usa y no la imprime.
+La clave nunca se lee aquí: solo se comprueba que existe (config.secreto, sin enseñar el valor). ws.py la usa y no la imprime.
 """
 import json
 import subprocess
@@ -13,6 +13,10 @@ import sys
 from datetime import date, timedelta
 
 from comun import AQUI, HERR, MUESTRAS, bloque, edad_h, fecha, iso, leer, mtime
+import pathlib as _pl_n14, sys as _sys_n14  # N-14: las llaves por config.secreto()
+if str(_pl_n14.Path(__file__).resolve().parents[1]) not in _sys_n14.path:
+    _sys_n14.path.append(str(_pl_n14.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 WS = HERR / "windsor" / "ws.py"
 MUESTRA = MUESTRAS / "google_ads_septiembre_muestra_2026-10-02.json"
@@ -23,8 +27,7 @@ FUENTES = {
 
 
 def hay_clave():
-    r = subprocess.run(["security", "find-generic-password", "-s", "windsor_api_key"], capture_output=True)
-    return r.returncode == 0
+    return bool(_cfg.secreto("windsor_api_key"))
 
 
 def mes_anterior(hoy=None):

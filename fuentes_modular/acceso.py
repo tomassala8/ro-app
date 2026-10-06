@@ -63,9 +63,11 @@ def _clave():
     if v:
         return v
     try:
-        import subprocess
-        return subprocess.check_output(["security", "find-generic-password", "-s", LLAVE_ACCESO, "-w"], text=True,
-                                       stderr=subprocess.DEVNULL).strip() or None
+        import pathlib as _pl_n14, sys as _sys_n14      # N-14: llavero por config.secreto()
+        if str(_pl_n14.Path(__file__).resolve().parents[1]) not in _sys_n14.path:
+            _sys_n14.path.append(str(_pl_n14.Path(__file__).resolve().parents[1]))
+        import config as _cfg
+        return _cfg.secreto(LLAVE_ACCESO) or None
     except Exception:
         return None
 

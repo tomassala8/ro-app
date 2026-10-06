@@ -436,9 +436,8 @@ _PSI = {}
 def PSI_CLAVE():
     """Clave de API de Google para PageSpeed (llavero «google_api_key»). Sin clave, Google corta a las pocas consultas al día."""
     if "k" not in _PSI:
-        import subprocess
         try:
-            _PSI["k"] = subprocess.check_output(["security", "find-generic-password", "-s", "google_api_key", "-w"], text=True, stderr=subprocess.DEVNULL).strip() or None
+            _PSI["k"] = _cfg.secreto("google_api_key") or None      # N-14
         except Exception:  # noqa: BLE001
             _PSI["k"] = None
     return _PSI["k"]

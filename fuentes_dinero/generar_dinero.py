@@ -66,7 +66,8 @@ def holded(path, **q):
         raise RuntimeError(str(e))
 
 def airtable_lineas():
-    t = subprocess.check_output(['security', 'find-generic-password', '-s', 'airtable_token', '-w'], text=True, stderr=subprocess.DEVNULL).strip()
+    t = _cfg.secreto('airtable_token')     # N-14: sin llave, error como antes (con_cache usa la copia de _cache)
+    if not t: raise RuntimeError('falta la llave airtable_token')
     recs, off = [], None
     while True:
         q = {'pageSize': '100', 'cellFormat': 'string', 'timeZone': 'Europe/Madrid', 'userLocale': 'es'}

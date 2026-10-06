@@ -21,6 +21,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from comun import (AQUI, BUILD, CAPTACION, HERRAMIENTA, LIBRO, MUESTRAS, RAIZ, SALIDA, SALIDA_CLIENTES,  # noqa: E402
                    escanear, escribir, iso, AHORA)
+import pathlib as _pl_n14, sys as _sys_n14  # N-14: las llaves por config.secreto()
+if str(_pl_n14.Path(__file__).resolve().parents[1]) not in _sys_n14.path:
+    _sys_n14.path.append(str(_pl_n14.Path(__file__).resolve().parents[1]))
+import config as _cfg  # noqa: E402
 
 semilla = int(sys.argv[1]) if len(sys.argv) > 1 else 20261002
 indice = json.loads((SALIDA / "indice_clientes.json").read_text())
@@ -105,11 +109,7 @@ for cid in muestra:
 
 # ------------------------------------------------------------- Meta en vivo
 vivo = []
-try:
-    tk = subprocess.check_output(["security", "find-generic-password", "-s", "meta_token", "-w"], text=True,
-                                 stderr=subprocess.DEVNULL).strip()
-except subprocess.CalledProcessError:
-    tk = None
+tk = _cfg.secreto("meta_token") or None     # N-14
 if tk:
     con_meta = [cid for cid in muestra
                 if g(json.loads((SALIDA_CLIENTES / f"{cid}.json").read_text()), "fuentes", "meta", "estado") == "bien"

@@ -138,9 +138,8 @@ def ia_clasificar(pendientes):
     """Afina con IA las que las reglas no resuelven. Sin clave, sin paquete o sin tope: nada (y se dice)."""
     if not pendientes: return {}, 'nada que afinar'
     tiene = bool(os.environ.get('ANTHROPIC_API_KEY'))
-    if not tiene and sys.platform == 'darwin':
-        import subprocess
-        tiene = subprocess.run(['security', 'find-generic-password', '-s', 'anthropic_api_key'], capture_output=True).returncode == 0
+    if not tiene:
+        tiene = bool(config.secreto('anthropic_api_key'))     # N-14: carpeta, variable, .env o llavero; con RO_SIN_LLAVES=1, nada
     if not tiene: return {}, 'sin clave de IA: solo reglas'
     try:
         os.environ.setdefault('RO_AVISOS_SIN_BUCLE', '1')

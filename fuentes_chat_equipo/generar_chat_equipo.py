@@ -67,7 +67,16 @@ if __name__ == '__main__' and '--solo-tapar' in sys.argv:
     print(f'chat del equipo · tapado aplicado sin red · ficheros cambiados: {n}')
     sys.exit(0)
 
-T = subprocess.check_output(['security', 'find-generic-password', '-s', 'clickup_api_token', '-w'], text=True).strip()
+_T = []
+
+
+def _token():
+    """N-14: la llave se lee al usarla (no al importar) y por config.secreto()."""
+    if not _T:
+        _T.append(_cfg.secreto('clickup_api_token', obligatorio=True))
+    return _T[0]
+
+
 LLAMADAS = 0
 
 
@@ -85,6 +94,7 @@ def g(url):
 def _g(url):
     global LLAMADAS
     LLAMADAS += 1
+    T = _token()
     for intento in range(3):
         try:
             return json.load(urllib.request.urlopen(urllib.request.Request(url, headers={'Authorization': T}), timeout=60))
