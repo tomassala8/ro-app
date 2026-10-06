@@ -363,7 +363,7 @@ table.densa tr.clic:focus-visible { outline: 2px solid var(--accent); outline-of
 .serie text { font-family: var(--sans); font-size: 12px; fill: var(--dim); }
 
 /* estado vacío (estadoVacio · compacto) */
-.vacio { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: start; padding: 20px 20px; border: 1px dashed var(--line); border-radius: var(--r); background: var(--card); }
+.vacio { min-width: 0; overflow-wrap: anywhere; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 16px; align-items: start; padding: 20px 20px; border: 1px dashed var(--line); border-radius: var(--r); background: var(--card); }
 .vacio > :not(.ico) { grid-column: 2; }
 .vacio .ico { grid-row: span 4; width: 40px; height: 40px; border-radius: var(--r-m); display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
 .vacio .ico svg.i { width: 20px; height: 20px; }
@@ -374,7 +374,7 @@ table.densa tr.clic:focus-visible { outline: 2px solid var(--accent); outline-of
 .vacio > .bt, .vacio > a.bt { justify-self: start; margin-top: 6px; }
 
 /* estado vacío grande (vacio) · icono grande + frase + quién lo arregla */
-.vacio-g { display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; color: var(--mid); }
+.vacio-g { min-width: 0; overflow-wrap: anywhere; display: grid; justify-items: center; text-align: center; gap: 8px; padding: 40px 20px; color: var(--mid); }
 .vacio-g .big { width: 56px; height: 56px; border-radius: var(--r-l); background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; margin-bottom: 4px; }
 .vacio-g .big svg.i { width: 26px; height: 26px; }
 .vacio-g.celebrar .big { background: var(--good-soft); color: var(--good-ink); }
@@ -743,7 +743,7 @@ main#main > *, main#main > [data-ruta] > * { min-width: 0; }   /* un hijo ancho 
 .cifra-principal.ambar .cifra-display { color: var(--warn-ink); }
 .cifra-principal.rojo .cifra-display { color: var(--bad-ink); }
 .cifra-principal .cifra-comp { font: var(--t-meta); color: var(--dim); }
-.vacio-linea { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 40px; font: var(--t-cuerpo); color: var(--mid); }
+.vacio-linea { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; min-height: 40px; font: var(--t-cuerpo); color: var(--mid); min-width: 0; overflow-wrap: anywhere; }   /* L-44: un texto largo sin espacios no ensancha la página */
 .vacio-linea svg.i { color: var(--dim); }
 .vacio-linea small { font: var(--t-meta); color: var(--dim); }
 .panel-pie { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px var(--relleno); border-top: 1px solid var(--line-soft); font: var(--t-meta); color: var(--dim); }
