@@ -1084,7 +1084,7 @@ export function estadoVacio({ titulo, porque, que_hacer, accion, celebrar = fals
   return h('div', { class: `vacio${celebrar ? ' celebrar' : ''}`, role: 'status' },
     h('span', { class: 'ico', 'aria-hidden': 'true' }, icono(ico || (celebrar ? 'ok' : 'info'))),
     h('h3', {}, titulo),
-    porque ? h('p', {}, typeof porque === 'string' ? limpiaTexto(porque) : porque) : null,
+    porque ? h('p', {}, typeof porque === 'string' ? (limpiaTexto(porque) || 'Todavía no hay datos de hoy.') : porque) : null,
     que_hacer ? h('p', {}, h('b', {}, 'Qué hacer: '), typeof que_hacer === 'string' ? limpiaTexto(que_hacer) : que_hacer) : null,
     quienHumano(quien) ? h('span', { class: 'quien' }, icono('persona', { clase: 's' }), `Lo arregla: ${quienHumano(quien)}`) : null,
     accion || null,
@@ -1862,7 +1862,7 @@ export function vacio(o) {
   return h('div', { class: `vacio-g${tono !== 'neutro' ? ' ' + tono : ''}${o.borde ? ' borde' : ''}`, role: 'status' },
     h('span', { class: 'big', 'aria-hidden': 'true' }, icono(o.icono || (tono === 'celebrar' ? 'ok' : tono === 'aviso' ? 'alert' : 'info'))),
     h('b', {}, o.titulo),
-    o.texto ? h('p', {}, typeof o.texto === 'string' ? limpiaTexto(o.texto) : o.texto) : null,
+    o.texto ? h('p', {}, typeof o.texto === 'string' ? (limpiaTexto(o.texto) || 'Todavía no hay datos de hoy.') : o.texto) : null,
     quienHumano(o.quien) ? h('span', { class: 'quien' }, h('span', { class: 'av' }, iniciales(quienHumano(o.quien))), `Lo arregla: ${quienHumano(o.quien)}`) : null,
     o.accion || null,
     o.tecnico && VISTA.direccion ? h('details', { class: 'que-es' }, h('summary', {}, 'Detalle técnico'), h('p', { class: 'sub' }, o.tecnico)) : null);
@@ -2210,8 +2210,11 @@ export function limpiaTexto(t) {
     .replace(/⭐|⚠️|⚠/g, '')
     .replace(/\(\s*\)/g, '')
     .replace(/\s+([,.;:)])/g, '$1')
-    .replace(/\s{2,}/g, ' ');
-  return t.split(/(«[^»]*»)/).map(x => (x.startsWith('«') ? x : limpia(x))).join('').trim().replace(/^[\s·,;]+|[\s·,;]+$/g, '');
+    .replace(/\s{2,}/g, ' ')
+    // L-39: un vacío no cuenta cómo se genera el dato. Sin el nombre del fichero, «No existe. Se generan con.» no dice nada.
+    .replace(/\bSe generan?\s+con\s*\.?\s*/gi, '');
+  return t.split(/(«[^»]*»)/).map(x => (x.startsWith('«') ? x : limpia(x))).join('').trim().replace(/^[\s·,;]+|[\s·,;]+$/g, '')
+    .replace(/^No existe\.?$/i, 'Todavía no hay datos de esta pantalla. Los genera la tubería (operaciones).');
 }
 
 /** deDondeSale(texto) · plegado «¿De dónde sale?» para la referencia técnica (decisión, fichero, regla). */

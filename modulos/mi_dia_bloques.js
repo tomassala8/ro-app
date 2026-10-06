@@ -722,7 +722,7 @@ def('ausencias', ['personas_m20/equipo'], (ctx, D) => {
     valor: l.length, unidad: 'ausencias registradas', estado: '',
     motivo: 'Hoy y las próximas 2 semanas, con su suplente. Cada ausencia crea una suplencia que caduca sola.',
     filas: l.map(a => ({ texto: `${alias(ctx, a.persona_id)} · ${diaCorto(a.desde)} → ${diaCorto(a.hasta)}`, extra: a.suplente ? `suplente ${alias(ctx, a.suplente)}` : 'sin suplente', estado: a.suplente ? 'verde' : 'rojo', icono: 'cal' })),
-    vacio: { titulo: 'Ninguna ausencia registrada', texto: 'No existe aún una tabla de ausencias fuera de la app: se apuntan en Personas.', quien: 'Cecilia' },
+    vacio: { titulo: 'Ninguna ausencia registrada', texto: 'Todavía no hay datos de ausencias de hoy: se apuntan en Personas.', quien: 'Cecilia' },
     frescura: fresco('Personas', e), medible: 'medias', medibleDetalle: 'Solo las que se apuntan en la app',
   };
 });
