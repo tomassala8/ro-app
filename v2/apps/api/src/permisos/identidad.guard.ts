@@ -95,8 +95,8 @@ const no = (status: number, texto: string) => new HttpException(texto, status);
  * es la persona real, a quién mira en «ver como» y el contexto de permisos de las dos. Mismos códigos y textos.
  * RO_IDENTIDAD=local: X-RO-Yo, ?yo= o la galleta ro_yo, solo desde 127.0.0.1. RO_IDENTIDAD=access: solo el sello
  * firmado de Cloudflare Access (X-RO-Yo, ?yo=, ro_yo y X-Forwarded-* no valen).
- * Lo que no hace (duda 29): la puerta de secretos (503 si el escáner encuentra algo en el núcleo) la sigue haciendo
- * servir.py, que es quien escanea data/; Nest no escanea.
+ * Lo que no hace (duda 29): la puerta de secretos (503 si el escáner encuentra algo en el núcleo). Nest no escanea:
+ * PuertaSecretosGuard, justo después, se lo pregunta a servir.py.
  */
 @Injectable()
 export class IdentidadGuard implements CanActivate {
