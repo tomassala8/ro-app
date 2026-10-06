@@ -221,7 +221,6 @@ describe.skipIf(!LISTO)('regresión de permisos (anexo punto 8)', () => {
         const C = await pedir('GET', ruta, { yo: tomas });
         if (B.status === 200) {
           const base = ruta.split('?')[0] ?? ruta;
-          if (base === '/api/indicadores') continue;
           const firma = (json: unknown, soloClaves: boolean) => {
             const m = new Map<string, number>();
             for (const [camino, valor] of hojas(json)) {
@@ -260,8 +259,6 @@ describe.skipIf(!LISTO)('regresión de permisos (anexo punto 8)', () => {
     expect(a.status).toBe(200);
     expect(a.json).toEqual({ modulo: null, acciones: [] });
   });
-  it.todo('L-50 /api/indicadores en «ver como» trae textos que no están en ninguna de las dos respuestas solas');
-
   it('8.4 las claves de dinero y de leads solo salen si el puesto las ve', async () => {
     const malas: string[] = [];
     const l12: string[] = [];

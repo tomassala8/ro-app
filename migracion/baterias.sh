@@ -45,6 +45,7 @@ bateria m14 900 python3 fuentes_incidencias/probar_incidencias.py "$PUERTO"
 bateria L-01 120 python3 migracion/pruebas_L-01.py --puerto "$PUERTO"
 bateria L-21 120 python3 migracion/pruebas_L-21.py --puerto "$PUERTO"
 bateria L-09 120 python3 migracion/pruebas_L-09.py --puerto "$PUERTO"
+bateria L-50 180 python3 migracion/pruebas_L-50.py --puerto "$PUERTO"
 bateria N-24 300 python3 migracion/pruebas_N-24.py
 bateria L-18 600 node migracion/pruebas_L-18.mjs --base "http://127.0.0.1:$PUERTO"
 bateria L-19 600 python3 migracion/pruebas_L-19.py --base "http://127.0.0.1:$PUERTO"
