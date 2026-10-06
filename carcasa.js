@@ -202,7 +202,7 @@ function pintarCampana() {
   const n = c ? c.nuevas || 0 : 0;
   CAMPANA.cuenta.textContent = n > 99 ? '99+' : String(n);
   CAMPANA.cuenta.hidden = !n;
-  CAMPANA.btn.setAttribute('aria-label', c ? `Avisos: ${n} nuevos, ${c.menciones} menciones, ${c.avisos_para_ti} con tu nombre` : 'Avisos');
+  CAMPANA.btn.setAttribute('aria-label', c ? `Avisos y menciones: ${n} nuevos, ${c.menciones} menciones, ${c.avisos_para_ti} con tu nombre` : 'Avisos y menciones');   // L-37: no es el contador de «Alertas»
   if (CAMPANA.pop.hidden || !c) return;
   const lista = h('div', { style: { display: 'grid', gap: 'var(--s-1)', maxHeight: '360px', overflowY: 'auto' } },
     c.items.length ? c.items.slice(0, 12).map(x => h('a', { class: 'yo-pop-l', href: `#/chat-equipo/${encodeURIComponent(x.canal_id)}`,
@@ -297,7 +297,7 @@ function iniciarCampana() {
   if (!CAMPANA.caja) {
     CAMPANA.cuenta = h('span', { hidden: true, 'aria-hidden': 'true', style: { position: 'absolute', top: '0', right: '0', font: 'var(--t-meta)', fontWeight: '700', lineHeight: '16px',
       background: 'var(--bad)', color: 'var(--card)', borderRadius: 'var(--r-full)', padding: '0 var(--s-1)', minWidth: '16px', textAlign: 'center', fontVariantNumeric: 'tabular-nums' } });
-    CAMPANA.btn = h('button', { class: 'yo-btn', type: 'button', id: 'campana-btn', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-controls': 'campana-pop', 'aria-label': 'Avisos',
+    CAMPANA.btn = h('button', { class: 'yo-btn', type: 'button', id: 'campana-btn', 'aria-haspopup': 'true', 'aria-expanded': 'false', 'aria-controls': 'campana-pop', 'aria-label': 'Avisos y menciones', title: 'Avisos y menciones (chat, ayuda, escalados)',
       style: { position: 'relative', width: '40px', justifyContent: 'center' },
       on: { click: e => { e.stopPropagation(); CAMPANA.pop.hidden ? abrirCampana() : cerrarCampana(); } } }, icono('campana'), CAMPANA.cuenta);
     CAMPANA.pop = h('div', { class: 'yo-pop', id: 'campana-pop', hidden: true, role: 'dialog', 'aria-label': 'Avisos' });
