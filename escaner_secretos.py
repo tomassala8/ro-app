@@ -107,6 +107,10 @@ def _es_opcion_lsof(valor, coincidencia):
         return False
     cola = valor[coincidencia.end():]
     if cola.startswith(":"):
+        # L-28: el puerto de una orden armada con una variable (`:{puerto}` de un f-string, `:$PUERTO`, `:${PUERTO}`) es un
+        # nombre, no un dominio: la IP ya se ha comprobado arriba y lo que sigue a los dos puntos solo puede ser un puerto.
+        if re.match(r":(\{[A-Za-z_][A-Za-z0-9_.]*\}|\$\{?[A-Za-z_][A-Za-z0-9_]*\}?)(?=$|[\s\"'`,;)])", cola):
+            return True
         puerto = re.match(r":([0-9]{1,5})(?=$|[\s\"'`,;)])", cola)
         return bool(puerto and 1 <= int(puerto.group(1)) <= 65535)
     return not cola or cola[0].isspace() or cola[0] in "\"'`,;)"
