@@ -16,7 +16,7 @@ Escribe:
   data/alertas/p_<id>.json    las de cada persona (solo_propio): las suyas, las de su departamento si es jefe; Mili y
                               Tomás todas. Lleva su «resumen diario» (texto listo para notificación) y el bloque
                               «mi_dia» que lee Mi día.
-  fuentes_alertas/estado_alertas.json   primera vez vista de cada alerta (para «desde» y escalado) y cerradas (no se sirve)
+  data/alertas/_estado/estado_alertas.json   (L-29; antes fuentes_alertas/) primera vez vista de cada alerta (para «desde» y escalado) y cerradas (no se sirve)
 
 Dinero: solo en claves que el servidor recorta (gasto_*, impagado_*); los textos van sin importes. Leads: solo recuentos,
 nunca nombres, teléfonos ni enlaces a un contacto. Uso:  python3 fuentes_alertas/generar_alertas.py
@@ -40,7 +40,9 @@ DATA = AQUI / "data"
 # Pruebas (fuentes_alertas/probar_alertas.py): RO_DB = copia de la base, RO_ALERTAS_SALIDA/_ESTADO = carpeta temporal,
 # RO_ALERTAS_AHORA = «AAAA-MM-DD HH:MM» para simular que pasa el tiempo (escalado). Sin variables: lo de siempre.
 SALIDA = Path(os.environ.get("RO_ALERTAS_SALIDA") or DATA / "alertas")
-ESTADO = Path(os.environ.get("RO_ALERTAS_ESTADO") or Path(__file__).resolve().parent / "estado_alertas.json")
+# L-29: el estado vive con los datos (data/alertas/_estado/), no en el repo. Antes: fuentes_alertas/estado_alertas.json.
+ESTADO_ANTIGUO = Path(__file__).resolve().parent / "estado_alertas.json"
+ESTADO = Path(os.environ.get("RO_ALERTAS_ESTADO") or DATA / "alertas" / "_estado" / "estado_alertas.json")
 DB = Path(os.environ.get("RO_DB") or AQUI / "local.db")
 # A8 (2-oct noche): alertas de la salud de conexiones (despliegue/salud_conexiones.py → «alertas», formato N4).
 SALUD = Path(os.environ.get("RO_ALERTAS_SALUD") or DATA / "conexiones" / "salud.json")
@@ -1259,6 +1261,9 @@ def bloque_mi_dia(vis, yo):
 
 # =================================================================== main
 def main():
+    if not ESTADO.exists() and ESTADO_ANTIGUO.exists() and not os.environ.get("RO_ALERTAS_ESTADO"):
+        ESTADO.parent.mkdir(parents=True, exist_ok=True)   # L-29: primera vez en el sitio nuevo → se hereda el estado de antes
+        ESTADO.write_text(ESTADO_ANTIGUO.read_text())
     memoria = json.loads(ESTADO.read_text()) if ESTADO.exists() else {}
     de_webs(); de_modular(); de_hostinger(); de_gbp(); de_seo(); de_crm(); de_captacion(); de_redes(); de_accounts(); de_altas(); de_admin()
     proximos = de_rrhh()
@@ -1348,6 +1353,7 @@ def main():
                                    for q in PERSONAS if q.get("activo") and q["id"] in todas["resumenes"]]
             f.write_text(json.dumps(d, ensure_ascii=False, indent=1))
     (SALIDA / "alertas.json").write_text(json.dumps(todas, ensure_ascii=False, indent=1))
+    ESTADO.parent.mkdir(parents=True, exist_ok=True)
     ESTADO.write_text(json.dumps(memoria, ensure_ascii=False, indent=1))
 
     c = Counter(a["departamento"] for a in ALERTAS)

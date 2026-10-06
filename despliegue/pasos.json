@@ -1668,8 +1668,7 @@
     "fuentes_alertas/generar_alertas.py"
    ],
    "salidas": [
-    "data/alertas",
-    "fuentes_alertas/estado_alertas.json"
+    "data/alertas"
    ],
    "timeout": 300,
    "aunque_falle": true,
