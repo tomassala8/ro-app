@@ -57,6 +57,7 @@ bateria L-24 120 python3 migracion/pruebas_L-24.py --puerto "$PUERTO"
 bateria L-37 120 python3 migracion/pruebas_L-37.py --puerto "$PUERTO"
 bateria L-38 150 python3 migracion/pruebas_L-38.py --puerto "$PUERTO"
 bateria L-39 400 python3 migracion/pruebas_L-39.py --puerto "$PUERTO"
+bateria L-40 400 python3 migracion/pruebas_L-40.py --puerto "$PUERTO"
 bateria L-25 300 python3 migracion/pruebas_L-25.py --puerto "$PUERTO"
 bateria L-26 300 python3 migracion/pruebas_L-26.py --puerto "$PUERTO"
 bateria L-27 120 python3 migracion/pruebas_L-27.py

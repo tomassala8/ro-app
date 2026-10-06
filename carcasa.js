@@ -364,7 +364,19 @@ function agruparNavegacionRO(nav) {
     trafficker: ['mi-dia', 'prioridades-cliente', 'captacion', 'en-rojo', 'ficha', 'mi-trabajo', 'bandeja', 'alertas', 'chat-equipo', 'agenda', 'creativos', 'paneles'],
     jefa_publicidad: ['mi-dia', 'prioridades-cliente', 'captacion', 'en-rojo', 'ficha', 'mi-trabajo', 'bandeja', 'alertas', 'chat-equipo', 'produccion', 'agenda', 'personas']
   };
-  const roles = Array.isArray(puestos) ? puestos.filter(p => typeof p === 'string' && Object.hasOwn(prioridades, p)) : [];
+  // L-40 · los seis puestos que faltaban. Solo cuentan si la persona no tiene ya otro puesto con lista (así su menú de hoy no cambia).
+  // Todos los ids son pantallas reales; si una persona no ve alguna, simplemente no se encuentra.
+  const prioridadesNuevas = {
+    proyectos: ['mi-dia', 'en-rojo', 'dinero-cliente', 'prioridades-cliente', 'ficha', 'clientes-nuevos', 'decisiones', 'produccion', 'personas', 'horas', 'alertas', 'chat-equipo'],
+    tecnico_altas: ['clientes-nuevos', 'mi-dia', 'bandeja', 'ficha', 'salud-crm', 'captacion', 'en-rojo', 'mi-trabajo', 'alertas', 'chat-equipo', 'agenda', 'incidencias'],
+    redes: ['redes', 'mi-dia', 'mi-trabajo', 'produccion', 'ficha', 'en-rojo', 'horas', 'alertas', 'chat-equipo', 'paneles', 'agenda', 'incidencias'],
+    setters: ['setters', 'mi-dia', 'mi-trabajo', 'agenda', 'alertas', 'chat-equipo', 'reuniones', 'horas', 'incidencias', 'mi-perfil', 'decisiones', 'personas'],
+    ventas_ro: ['ventas-ro', 'setters', 'prospeccion', 'mi-dia', 'agenda', 'reuniones', 'alertas', 'chat-equipo', 'horas', 'decisiones', 'personas', 'mi-trabajo'],
+    outreach: ['prospeccion', 'mi-dia', 'mi-trabajo', 'agenda', 'alertas', 'chat-equipo', 'horas', 'reuniones', 'incidencias', 'mi-perfil', 'ventas-ro', 'personas']
+  };
+  const propios = Array.isArray(puestos) ? puestos.filter(p => typeof p === 'string') : [];
+  let roles = propios.filter(p => Object.hasOwn(prioridades, p));
+  if (!roles.length) { roles = propios.filter(p => Object.hasOwn(prioridadesNuevas, p)); Object.assign(prioridades, prioridadesNuevas); }
   if (!roles.length) return;
   const existente = nav.querySelector('[data-ro-mas]');
   if (existente) { revelarActualRO(nav); return; }
