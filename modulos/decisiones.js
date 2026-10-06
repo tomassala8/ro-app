@@ -53,7 +53,7 @@ const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00
 const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
 const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
 
-const TIPO_TXT = { para_tomas: 'Para Tomás · 48 h', para_coti: 'Para Coti · 24 h', escalada: 'Escalada · 48 h' };
+const TIPO_TXT = { para_tomas: 'Para dirección · 48 h', para_coti: 'Para proyectos · 24 h', escalada: 'Escalada · 48 h' };   // L-45: el texto nombra el puesto, no a la persona (el `tipo` interno no cambia)
 const RELOJ = { para_tomas: 48, para_coti: 24, escalada: 48 };
 
 export default {
@@ -185,8 +185,8 @@ function vistaReloj(ctx, decis, { esTomas, esCoti, direccion, nombre, R, objetiv
   };
   const chips = chipsFiltro({ clave: 'decisiones.reloj', etiqueta: 'Ver', opciones: [
     { valor: 'abiertas', texto: 'Abiertas', icono: 'clock', cuenta: decis.filter(d => !d.respondida).length, cuentaEstado: 'rojo' },
-    { valor: 'para_tomas', texto: 'Para Tomás', icono: 'crown', cuenta: decis.filter(d => d.tipo !== 'para_coti').length },
-    { valor: 'para_coti', texto: 'Para Coti', icono: 'persona', cuenta: decis.filter(d => d.tipo === 'para_coti').length },
+    { valor: 'para_tomas', texto: 'Para dirección', icono: 'crown', cuenta: decis.filter(d => d.tipo !== 'para_coti').length },
+    ...(decis.some(d => d.tipo === 'para_coti') ? [{ valor: 'para_coti', texto: 'Para proyectos', icono: 'persona', cuenta: decis.filter(d => d.tipo === 'para_coti').length }] : []),   // L-45: solo a quien tiene alguna
     { valor: 'contestadas', texto: 'Contestadas', icono: 'check', cuenta: decis.filter(d => d.respondida).length },
     { valor: '', texto: 'Todas', cuenta: decis.length }], alCambiar: v => { filtro = v; pintar(); } });
   filtro = chips.valor();
@@ -212,7 +212,7 @@ function tarjeta(ctx, d, { esTomas, esCoti, nombre }) {
   const decidir = decision => botonDecidir(ctx, d, decision, motivo);
   return h('article', { class: `pm-tarjeta ${color}`, 'data-decision': String(d.id) },
     h('div', { class: 'pm-cab' }, h('span', { class: `ico-c ${color}` }, icono(d.tipo === 'para_coti' ? 'persona' : 'crown')),
-      h('span', { class: 't' }, h('b', { class: 'pm-dos', title: lt(d.titulo) }, lt(d.titulo)), h('span', {}, `${TIPO_TXT[d.tipo] || 'Para Tomás · 48 h'} · sube ${nombre[d.quien]}`)), h('span', { class: 'der' }, chipReloj(d))),
+      h('span', { class: 't' }, h('b', { class: 'pm-dos', title: lt(d.titulo) }, lt(d.titulo)), h('span', {}, `${TIPO_TXT[d.tipo] || 'Para dirección · 48 h'} · sube ${nombre[d.quien]}`)), h('span', { class: 'der' }, chipReloj(d))),
     // Ronda U (50 #14): las acciones arriba de la tarjeta, justo bajo el título (antes al final, a 600-700 px en el móvil)
     puedeDecidir ? h('div', { class: 'pila pm-form', style: { gap: 'var(--s-2)', gridTemplateColumns: 'minmax(0, 1fr)' } },
       h('div', { class: 'fila' }, decidir('Aprobar la recomendación'), decidir('Rechazar'), decidir('Delegar')), motivo) : null,
@@ -248,7 +248,7 @@ function focoDecision(ctx, d, { esTomas, esCoti, nombre }) {
   const puede = !d.respondida && ((esTomas && d.tipo !== 'para_coti') || (esCoti && d.tipo === 'para_coti'));
   const motivo = h('input', { type: 'text', placeholder: 'Motivo (para rechazar o delegar)', 'aria-label': 'Motivo', style: { minHeight: 'var(--s-8)', minWidth: '220px' } });
   const reloj = d.respondida ? `Contestada en ${horasTxt(d.horas)}` : d.quedan >= 0 ? `Quedan ${horasTxt(d.quedan)} · vence ${horaMadrid(+d.vence)}` : `Pasada ${horasTxt(-d.quedan)}`;
-  const barra = barraAcciones({ titulo: limpiaTexto(d.titulo), sub: `${TIPO_TXT[d.tipo] || 'Para Tomás · 48 h'} · sube ${nombre[d.quien]} · ${reloj}`,
+  const barra = barraAcciones({ titulo: limpiaTexto(d.titulo), sub: `${TIPO_TXT[d.tipo] || 'Para dirección · 48 h'} · sube ${nombre[d.quien]} · ${reloj}`,
     volver: { href: '#/decisiones/reloj', texto: 'Todas' },
     acciones: puede ? [botonDecidir(ctx, d, 'Aprobar la recomendación', motivo, { pri: true }), motivo, botonDecidir(ctx, d, 'Rechazar', motivo), botonDecidir(ctx, d, 'Delegar', motivo)]
       : [chipEstado(d.respondida ? 'gris' : 'ambar', d.respondida ? (d.respuesta?.decision || 'Contestada') : 'No es tuya: la decide su destinatario')] });
@@ -261,7 +261,7 @@ function focoDecision(ctx, d, { esTomas, esCoti, nombre }) {
 }
 
 function formNueva(ctx) {
-  const tipo = elegir([{ valor: 'para_tomas', texto: 'A Tomás (48 h)', icono: 'crown' }, { valor: 'para_coti', texto: 'A Coti (24 h)', icono: 'persona' }]);
+  const tipo = elegir([{ valor: 'para_tomas', texto: 'A dirección (48 h)', icono: 'crown' }, { valor: 'para_coti', texto: 'A proyectos (24 h)', icono: 'persona' }]);
   const titulo = h('input', { type: 'text', placeholder: 'En una línea: qué hay que decidir' });
   const problema = h('textarea', { placeholder: 'El problema con datos y nombres (no «desde sensación»)' });
   const rec = h('textarea', { placeholder: 'Tu recomendación marcada: qué harías tú' });

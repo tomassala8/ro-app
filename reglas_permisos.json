@@ -74,7 +74,7 @@
     },
     {
       "id": "jefa_publicidad",
-      "nombre": "Jefa de publicidad",
+      "nombre": "Jefatura de publicidad",
       "nivel": 3,
       "ambito": "disciplina",
       "grupo": "Publicidad y CRM"
@@ -88,7 +88,7 @@
     },
     {
       "id": "jefa_crm",
-      "nombre": "Jefa de CRM y outreach",
+      "nombre": "Jefatura de CRM y outreach",
       "nivel": 3,
       "ambito": "disciplina",
       "grupo": "Publicidad y CRM"
@@ -102,7 +102,7 @@
     },
     {
       "id": "jefa_seo",
-      "nombre": "Jefe de SEO",
+      "nombre": "Jefatura de SEO",
       "nivel": 3,
       "ambito": "disciplina",
       "grupo": "SEO, web y redes"
