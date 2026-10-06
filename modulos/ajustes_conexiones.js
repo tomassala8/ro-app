@@ -37,6 +37,16 @@ function sinTerminal(t) {
     .replace(/\s+y\s*\./g, '.').replace(/\s+\./g, '.').replace(/\s{2,}/g, ' ').trim();
   return { limpio, ordenes };
 }
+/** L-41 · el aviso de una llave que falta sin la orden de terminal, sin «Falta la llave: Falta la llave» y sin repetir el titular que ya dice la etiqueta de la fila. */
+export function detalleLlave(detalle, titular) {
+  let x = String(detalle || '')
+    .replace(/\s*(?:\.\s*)?Ejecuta:?\s*(?:security|python3?|bash|export)\b[\s\S]*$/i, '')
+    .replace(/\s*[;,]?\s*(?:luego\s+|y\s+)?(?:python3?\s+\S+|export\s+[A-Za-z_]+=\S*)/gi, '');
+  x = sinTerminal(x).limpio.replace(/(Falta la llave:?\s*)+/gi, 'Falta la llave ').replace(/\s{2,}/g, ' ').trim();
+  const t = String(titular || '').trim();
+  if (t && x.toLowerCase().startsWith(t.toLowerCase())) x = x.slice(t.length).replace(/^[\s·:,.\-–—]+/, '');
+  return x ? x.charAt(0).toUpperCase() + x.slice(1) : '';
+}
 const esTomas = ctx => ctx?.real?.id === 'tomas' || ctx?.persona?.id === 'tomas';
 
 const TXT = { verde: 'Funciona', ambar: 'Vigilar', rojo: 'No funciona', gris: 'Sin probar' };
@@ -138,7 +148,7 @@ function filaEl(f, ctx, D, alProbar) {
   const sq = sinTerminal(c.que_hacer);
   const queHacer = Dn ? `${Dn.texto}.` : (f.que_hacer ? sq.limpio : null);
   const quien = Dn ? `${Dn.hace} (lo comprueba ${Dn.comprueba})` : (f.quien || (f.quien_id && ctx.nombre ? ctx.nombre(f.quien_id) : null));
-  const detalle = f.detalle ? sinTerminal(f.detalle).limpio.replace(/\(faltan? \d+ de \d+ en el llavero o el entorno\)/g, '').replace(/\s{2,}/g, ' ') : null;
+  const detalle = f.detalle ? (detalleLlave(String(f.detalle).replace(/\(faltan? \d+ de \d+ en el llavero o el entorno\)/g, ''), f.titular) || null) : null;
   const caduca = f.caduca ? `${fmt.fecha(f.caduca)} (en ${f.dias_para_caducar} días)` : (f.caducidad_texto || null);
   const probando = D.probando === f.id;
   const puedeProbar = D.puede_probar !== false && !ctx.soloLectura && !D.respaldo;
