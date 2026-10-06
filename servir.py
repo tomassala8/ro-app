@@ -2374,6 +2374,14 @@ def calcular_avisos():
 
 
 # =============================================================== servidor HTTP
+class CuerpoGrande(Exception):
+    """N-13: el cuerpo de un POST pasa del tope (413)."""
+
+
+class CuerpoInvalido(Exception):
+    """N-13: el cuerpo de un POST no es JSON (400)."""
+
+
 class Manejador(SimpleHTTPRequestHandler):
     server_version = "RO"          # R16 (B2): sin versión de Python ni del servidor en la cabecera «Server»
     sys_version = ""
@@ -2491,10 +2499,18 @@ class Manejador(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def cuerpo(self):
-        n = int(self.headers.get("Content-Length") or 0)
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            raise CuerpoInvalido()
+        if n < 0:
+            raise CuerpoInvalido()
         if n > 200_000:
-            raise ValueError("cuerpo demasiado grande")
-        return json.loads(self.rfile.read(n) or b"{}") if n else {}
+            raise CuerpoGrande()
+        try:
+            return json.loads(self.rfile.read(n) or b"{}") if n else {}
+        except ValueError:     # JSONDecodeError y UnicodeDecodeError
+            raise CuerpoInvalido()
 
     # ---------------------------------------------------------------- identidad
     def quien(self, q):
@@ -3147,6 +3163,11 @@ class Manejador(SimpleHTTPRequestHandler):
             else:
                 with P.mirando_como(real, E.crudo):     # C3: también aquí, lo que ven las dos
                     self.api_post(unquote(url.path), real, persona, self.cuerpo())
+        except CuerpoGrande:
+            self.close_connection = True     # N-13: no se lee el cuerpo; se responde y se cierra
+            self.responder(413, {"error": "Petición demasiado grande"})
+        except CuerpoInvalido:
+            self.responder(400, {"error": "JSON no válido"})
         except Exception as e:
             traceback.print_exc()
             self.responder(500, {"error": "Error interno (el detalle queda en el registro del servidor)."})
