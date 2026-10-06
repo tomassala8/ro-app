@@ -5,8 +5,8 @@ Lee reglas_permisos.json (la única fuente de reglas) y expone:
   ambito(persona) · cartera_por_silla(persona, asignaciones) · cartera(...) · ver(persona, dato, cp)
   recortar(persona, crudo)  → el mismo resultado que datos.js recortar(), pero en el servidor.
 
-Si cambias algo aquí, cámbialo igual en permisos.js / datos.js: servir.py tiene una prueba de paridad
-(/api/prueba_paridad) que compara las dos implementaciones desde el navegador.
+Si cambias algo aquí, cámbialo igual en permisos.js / datos.js: la paridad la comprueban
+`pruebas_permisos_servicio.py` (Python frente a JS) y `migracion/vectores_permisos.py` (todas las personas).
 """
 import json
 import os

@@ -4,7 +4,7 @@ servir.py · servidor local de la app de RO (E0). Python estándar, SOLO en 127.
 
 Hace en el Mac lo mismo que hará el Worker de Cloudflare con W1:
   1. Sabe quién eres  → cabecera Cf-Access-Authenticated-User-Email (como Cloudflare Access) o, en el
-                         prototipo, ?yo=<id> / cabecera X-RO-Yo. Sin nada: Tomás (solo prototipo).
+                         prototipo, ?yo=<id> / cabecera X-RO-Yo. Sin nada: 401 (no se entra como Tomás por defecto).
   2. «Ver como»        → ?como=<id> / X-RO-Como, solo si reglas_permisos.json lo permite (Mili y Tomás);
                          solo lectura y queda en el rastro.
   3. Manda tu trozo    → recorta con permisos.py (las mismas reglas que permisos.js) y nunca sirve data/ en bruto.
