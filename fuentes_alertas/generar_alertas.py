@@ -996,15 +996,30 @@ RECHAZADAS = []
 
 
 def leer_estados():
-    """Acciones de cada alerta (tipos alerta_*) en la cola de acciones, en orden. creada va en UTC."""
-    db = DB
-    if not db.exists():
-        return {}
+    """Acciones de cada alerta (tipos alerta_*) en la cola de acciones, en orden. creada va en UTC.
+
+    Con DATABASE_URL (la nube) la cola está en Postgres. Sin ella, SQLite, como hasta ahora.
+    """
     try:
-        con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
-        con.row_factory = sqlite3.Row
-        filas = con.execute("SELECT * FROM acciones WHERE modulo='alertas' ORDER BY id").fetchall()
-        con.close()
+        if os.environ.get("DATABASE_URL"):
+            # F5.11: misma consulta. Se cierra la transacción antes de devolver la conexión al pool.
+            sys.path.insert(0, str(AQUI / "despliegue"))
+            import base as _B
+            con = _B.conectar()
+            try:
+                filas = con.execute("SELECT * FROM acciones WHERE modulo='alertas' ORDER BY id").fetchall()
+            finally:
+                if getattr(con, "_con", None) is not None and con.in_transaction:
+                    con.rollback()
+                con.close()
+        else:
+            db = DB
+            if not db.exists():
+                return {}
+            con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+            con.row_factory = sqlite3.Row
+            filas = con.execute("SELECT * FROM acciones WHERE modulo='alertas' ORDER BY id").fetchall()
+            con.close()
     except Exception:
         return {}
     out = {}
