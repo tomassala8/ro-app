@@ -1261,7 +1261,7 @@ export function fichaCatalogo(ind, o = {}) {
     return h('div', { class: 'ind-cat' },
       h('div', { class: 'ind gris fase2' },
         h('span', { class: 'l' }, ind.nombre),
-        h('span', { class: 'v' }, h('small', {}, 'Va a Fase 2')),
+        h('span', { class: 'v' }, h('small', {}, 'Todavía no se puede medir')),
         h('span', { class: 'umbral' }, ind.medible_porque || 'Todavía no se puede medir'),
         h('span', { class: 'pie' }, selloMedible('no', ind.medible_porque))),
       queEs);
@@ -1274,12 +1274,15 @@ export function fichaCatalogo(ind, o = {}) {
   return h('div', { class: 'ind-cat' }, ficha, o.parcial ? h('p', { class: 'parcial' }, o.parcial) : null, queEs);
 }
 
+// L-38: «Fase 2» es un nombre interno de la hoja de ruta; solo lo ve dirección. El resto ve la misma lista sin ese rótulo.
+const esDireccion = () => !!window.RO?.estado?.persona?.puestos?.includes?.('direccion');
+
 /** pieFase2(indicadores) · lista al pie de la pantalla de lo que «todavía no» se mide (regla R5). */
 export function pieFase2(indicadores = []) {
   const no = indicadores.filter(i => i && (i.medible === 'no' || i.fase2));
   if (!no.length) return null;
   return h('details', { class: 'pie-fase2' },
-    h('summary', {}, `Fase 2 · ${no.length} indicador${no.length === 1 ? ' que todavía no se puede medir' : 'es que todavía no se pueden medir'}`),
+    h('summary', {}, `${esDireccion() ? 'Fase 2 · ' : ''}${no.length} indicador${no.length === 1 ? ' que todavía no se puede medir' : 'es que todavía no se pueden medir'}`),
     h('ul', {}, no.map(i => h('li', {}, h('b', {}, i.nombre), ` — ${i.medible_porque || i.medible_texto || 'todavía no'}`))));
 }
 

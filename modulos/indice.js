@@ -39,7 +39,7 @@ export const MODULOS = [
     resumen: 'Clientes en rojo con motivo y responsable; detalle solo para quien lo lleva.' },
   { id: 'bandeja', num: 'M3', titulo: 'Bandeja', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './bandeja.js',
     puestos_que_lo_ven: { ...DIR, tecnico_altas: 'suyo', jefa_publicidad: 'todo', jefa_seo: null, jefa_crm: 'todo', account: 'suyo', trafficker: 'suyo', especialista_ghl: 'suyo' },   // L-25 (Tomás, 4-oct, D3): la Bandeja no clasifica por tema, así que la jefa de SEO no la ve; sus quejas le llegan por En rojo e Incidencias
-    resumen: 'Correos de clientes con 24/48 h (Desk), llamadas sin devolver (Zadarma), quejas arriba, por account y día; contestar con tu firma, nota, asignar, cerrar, «no aplica» (simulado hasta W1); triaje sin agente; WhatsApp en W6.' },
+    resumen: 'Correos de clientes con 24/48 h (Desk), llamadas sin devolver (Zadarma), quejas arriba, por account y día; contestar con tu firma, nota, asignar, cerrar, «no aplica» (simulado por ahora); triaje sin agente; WhatsApp más adelante.' },
   // M23 y M24 (2-oct, petición de Tomás). Datos: data/agenda/ (fuentes_agenda/generar_agenda.py) y data/chat_equipo/p_<persona>.json
   // (fuentes_chat_equipo/generar_chat_equipo.py). Cada uno ve lo suyo; jefes su equipo (agenda); Mili y Tomás, todo.
   { id: 'agenda', num: 'M23', titulo: 'Agenda', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './agenda.js',
@@ -47,7 +47,7 @@ export const MODULOS = [
     resumen: 'Tu calendario: citas con clientes y prospectos (Zoho CRM con Bookings, GHL de RO, Zoom), hoy y semana, huecos libres y clientes en rojo con reunión hoy.' },
   { id: 'chat-equipo', num: 'M24', titulo: 'Chat del equipo', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './chat_equipo.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo' },
-    resumen: 'Canales internos y directos de ClickUp aquí dentro: hilos, búsqueda, menciones y no leídos; escribir en simulación hasta W1 (cada uno con su cuenta de ClickUp).' },
+    resumen: 'Canales internos y directos de ClickUp aquí dentro: hilos, búsqueda, menciones y no leídos; escribir en simulación por ahora (cada uno con su cuenta de ClickUp).' },
   // N3 (2-oct noche): IA. Servidor ia.py (/api/ia/*), componentes en ia_componentes.js (Bandeja, ficha y Mi día los enganchan).
   { id: 'asistente-ia', num: 'N3', titulo: 'Asistente IA', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './asistente_ia.js',
     puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', proyectos: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', account: 'suyo' },
@@ -56,7 +56,7 @@ export const MODULOS = [
   // Datos: data/alertas/p_<persona>.json (solo_propio) y alertas.json (dirección y operaciones) ← fuentes_alertas/generar_alertas.py.
   { id: 'alertas', num: 'N4', titulo: 'Alertas del departamento', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './alertas.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', proyectos: 'todo', rrhh: 'todo', administracion: 'todo', tecnico_altas: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', setters: null },
-    resumen: 'Cada alerta con su departamento, dueño, motivo, plazo, gravedad y escalado (dueño → jefe → Mili): web, SEO, CRM, publicidad, redes, accounts, altas, administración, RRHH y dirección. Lo tengo, resuelta (se comprueba con el dato siguiente) y no aplica, con rastro.' },
+    resumen: 'Cada alerta con su departamento, dueño, motivo, plazo, gravedad y escalado (dueño → jefe → operaciones): web, SEO, CRM, publicidad, redes, accounts, altas, administración, RRHH y dirección. Lo tengo, resuelta (se comprueba con el dato siguiente) y no aplica, con rastro.' },
 
   // Producto (3-oct, encargo de Tomás): pantalla de inicio de Coti (directora de producto, puesto proyectos). Talleres de la
   // oferta, semáforo ESTRATÉGICO (resultados frente al objetivo del cliente) y avance. Datos: data/verdad/objetivos_clientes.json
@@ -86,13 +86,13 @@ export const MODULOS = [
   // E3 (2-oct): M13. Datos en data/informes/ (fuentes_informes/generar_informes.py: ClickUp cu.py + Desk zh.py).
   { id: 'informes-mensuales', num: 'M13', titulo: 'Informes mensuales', grupo: 'Clientes', fase: 1, estado: 'hecho', fichero: './informes_mensuales.js',
     puestos_que_lo_ven: { ...DIR, account: 'suyo' },
-    resumen: 'Hecho (ClickUp) / enviado (Desk) / pendiente por cliente y mes; verde el día 5, rojo el 6 con aviso a Mili (D-09); «enviado por otra vía»; histórico de la hoja en W5.' },
+    resumen: 'Hecho (ClickUp) / enviado (Desk) / pendiente por cliente y mes; verde el día 5, rojo el 6 con aviso a operaciones; «enviado por otra vía»; histórico de la hoja más adelante.' },
   // M14 (2-oct): ficha con ciclo detectada → avisada → reiterada → escalada → resuelta (comprobada con el dato del día
   // siguiente) y causa R13; detecciones de Desk y Zadarma; incongruencias, accesos, traspasos, quién vio primero, mapas.
   // Datos: data/incidencias/incidencias.json (fuentes_incidencias/generar_incidencias.py). Coti (proyectos) recibe escalados: todo.
   { id: 'incidencias', num: 'M14', titulo: 'Incidencias', grupo: 'Clientes', fase: 1, estado: 'hecho', fichero: './incidencias.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', proyectos: 'todo' },
-    resumen: 'Cada fallo con su historia: detectada, avisada, reiterada, escalada (reloj de 48 h para Tomás) y resuelta con prueba; causa en dos campos. Desk, Zadarma, incongruencias ClickUp ↔ Desk ↔ CRM, accesos, traspasos y mapas de control.' },
+    resumen: 'Cada fallo con su historia: detectada, avisada, reiterada, escalada (reloj de 48 h para dirección) y resuelta con prueba; causa en dos campos. Desk, Zadarma, incongruencias ClickUp ↔ Desk ↔ CRM, accesos, traspasos y mapas de control.' },
 
   { id: 'captacion', num: 'M6', titulo: 'Captación', grupo: 'Captación y CRM', fase: 2, estado: 'hecho', fichero: './captacion.js',
     puestos_que_lo_ven: { ...DIR, jefa_publicidad: 'todo', tecnico_altas: 'resumen', jefa_crm: 'resumen', account: 'suyo', trafficker: 'todo', especialista_ghl: 'resumen' },   // L-25 (Tomás, 4-oct, D4): producción ya no la ve; el trafficker, todos los clientes
@@ -116,11 +116,11 @@ export const MODULOS = [
     resumen: 'Tareas de tu equipo, revisiones pendientes y plazos por cliente.' },
   { id: 'horas', num: 'M11', titulo: 'Horas y productividad', grupo: 'Equipo', fase: 1, estado: 'hecho', fichero: './horas.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', rrhh: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo' },
-    resumen: 'Cada uno ve lo suyo; la comparación, solo jefes, Mili, Cecilia y Tomás. Las horas, solo como aviso (D-27).' },
+    resumen: 'Cada uno ve lo suyo; la comparación, solo jefaturas, operaciones y dirección. Las horas, solo como aviso.' },
   // E11 (2-oct): M15. Datos en data/reuniones/ (fuentes_reuniones/generar_reuniones.py: Zoom zm.py + capa E1).
   { id: 'reuniones', num: 'M15', titulo: 'Reuniones', grupo: 'Equipo', fase: 5, estado: 'hecho', fichero: './reuniones.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', administracion: null },
-    resumen: 'Zoom de RO (solo grabadas hasta W4): internas frente a clientes, tipo por el nombre (D-06) o desplegable, horas y % de capacidad por persona y mes, reunión del ciclo con cada cliente y actas.' },
+    resumen: 'Zoom de RO (solo grabadas por ahora): internas frente a clientes, tipo por el nombre o desplegable, horas y % de capacidad por persona y mes, reunión del ciclo con cada cliente y actas.' },
   // M20 (2-oct): datos en data/personas/ (fuentes_personas/generar_personas.py). Cada uno ve lo suyo; jefas, su equipo;
   // Cecilia, Mili y Tomás, todos (recorte por persona_id en servir.py). Contratación solo con Ajustes (Mili, Tomás, Cecilia).
   { id: 'personas', num: 'M20', titulo: 'Personas', grupo: 'Equipo', fase: 5, estado: 'hecho', fichero: './personas.js',
@@ -144,23 +144,23 @@ export const MODULOS = [
     resumen: 'Cuota, horas frente a cuota (31,47 €/h) y rentabilidad.' },
   { id: 'finanzas', num: 'M19', titulo: 'Finanzas de la empresa', grupo: 'Dinero', fase: 5, estado: 'hecho', fichero: './finanzas.js',
     puestos_que_lo_ven: { direccion: 'todo', finanzas_direccion: 'todo', administracion: 'todo' },
-    resumen: 'Solo Tomás; Sofía, cobros, impagos y saldos por banco.' },
+    resumen: 'Solo dirección y administración: cobros, impagos y saldos por banco.' },
   // C2 (2-oct): el panel de resultados v29/v30 entero, SOLO Tomás. Datos en data/panel_direccion/ (fuentes_panel_direccion/generar_panel_direccion.py).
   { id: 'panel-direccion', num: 'C2', titulo: 'Panel de dirección', grupo: 'Dinero', fase: 5, estado: 'hecho', fichero: './panel_direccion.js',
     puestos_que_lo_ven: { direccion: 'todo' },
-    resumen: 'El panel de resultados v29/v30 dentro de la app: la empresa (informe financiero) y la captación de RO en sus pestañas, con nombres. Solo Tomás.' },
+    resumen: 'El panel de resultados v29/v30 dentro de la app: la empresa (informe financiero) y la captación de RO en sus pestañas, con nombres. Solo dirección.' },
 
   // M21 (2-oct): decisiones.js envuelve el rastro de E0 (rastro.js, sin cambios) en su pestaña «Rastro».
   // Datos en data/decisiones/ (fuentes_decisiones/generar_decisiones.py): reloj (tabla decisiones de local.db), 101 firmadas, informe y cierre.
   { id: 'decisiones', num: 'M21', titulo: 'Decisiones y rastro', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './decisiones.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo' },
-    resumen: 'Decisiones con reloj de 48 h, las 101 firmadas, informe semanal para Tomás, cierre de mes y rastro imborrable.' },
+    resumen: 'Decisiones con reloj de 48 h, las decisiones firmadas, informe semanal para dirección, cierre de mes y rastro imborrable.' },
   { id: 'ajustes', num: 'M22', titulo: 'Ajustes', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './ajustes.js',
     puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', rrhh: 'resumen' },
     resumen: 'Personas, asignaciones, suplencias y «ver como».' },
   { id: 'indicadores', num: '—', titulo: 'Catálogo de indicadores', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './indicadores.js',
     puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo' },
-    resumen: 'Los 228 indicadores de las fichas (y 23 de fase 2) con umbral, origen y estado de medición (E0).' },
+    resumen: 'Los indicadores de las fichas, con umbral, origen y estado de medición.' },
   { id: 'componentes', num: '—', titulo: 'Componentes', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './catalogo.js',
     puestos_que_lo_ven: { direccion: 'todo' }, soloPrototipo: true,
     resumen: 'Catálogo vivo del sistema de diseño para quien construye módulos.' },
@@ -191,5 +191,5 @@ export const MODULOS = [
   // Gasto de IA (3-oct, encargo de Tomás «no quiero una IA con tokens infinitos»): topes en euros, coste real por llamada, modo reglas (ia_gasto.py). Solo Tomás.
   { id: 'gasto-ia', num: 'IA2', titulo: 'Gasto de IA', grupo: 'Sistema', fase: 0, estado: 'hecho', fichero: './gasto_ia.js',
     puestos_que_lo_ven: { direccion: 'todo' },
-    resumen: 'Lo que gasta la IA: mes, día, previsión, por función y por persona, con topes que solo cambia Tomás. Al 100 %, modo reglas sin coste.' },
+    resumen: 'Lo que gasta la IA: mes, día, previsión, por función y por persona, con topes que solo cambia dirección. Al 100 %, modo reglas sin coste.' },
 ];
