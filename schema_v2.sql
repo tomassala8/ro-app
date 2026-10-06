@@ -218,3 +218,14 @@ CREATE VIEW IF NOT EXISTS fuente_ultimo_bueno AS
   SELECT f.* FROM fuente_lectura f
    WHERE f.ok = 1
      AND f.id = (SELECT MAX(g.id) FROM fuente_lectura g WHERE g.fuente = f.fuente AND g.recurso = f.recurso AND g.ok = 1);
+
+-- N-20: interruptores de ClickUp real y de envíos reales, con quién y cuándo. Solo se añaden filas; manda la última de cada nombre.
+CREATE TABLE IF NOT EXISTS interruptor (
+  id     INTEGER PRIMARY KEY AUTOINCREMENT,
+  nombre TEXT NOT NULL,
+  valor  TEXT NOT NULL,
+  quien  TEXT NOT NULL,
+  motivo TEXT,
+  cuando TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS i_interruptor ON interruptor(nombre, id);

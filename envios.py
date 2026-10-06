@@ -205,10 +205,81 @@ def reglas():
 
 
 # =================================================================== interruptor (los activa Tomás)
+# N-20 · como en sincronia.py: los interruptores viven en la base (tabla `interruptor`, solo se añaden filas, manda la última de
+# cada nombre: «envios_reales» y «canal_<canal>») y el fichero queda de respaldo, porque en la nube `data/` se reemplaza.
+_INT_BASE = {"t": 0.0, "filas": None}
+_INT_SEGUNDOS = 5
+
+
+def _interruptor_base():
+    if _INT_BASE["filas"] is not None and time.monotonic() - _INT_BASE["t"] < _INT_SEGUNDOS:
+        return _INT_BASE["filas"]
+    filas = {}
+    if S is not None or os.environ.get("DATABASE_URL") or ruta_db().exists():       # nunca crear una SQLite vacía por mirar
+        try:
+            con = conectar()
+            try:
+                for r in con.execute("SELECT nombre, valor, quien, cuando FROM interruptor WHERE id IN (SELECT MAX(id) FROM interruptor GROUP BY nombre)"):
+                    filas[r["nombre"]] = {"valor": r["valor"], "quien": r["quien"], "cuando": r["cuando"]}
+            finally:
+                con.close()
+        except Exception:                          # sin tabla o base apagada: manda el fichero, como antes
+            filas = {}
+    _INT_BASE.update(t=time.monotonic(), filas=filas)
+    return filas
+
+
+def _cfg_interruptor():
+    cfg = dict(leer_json(INTERRUPTOR, {}) or {})
+    base = _interruptor_base()
+    r = base.get("envios_reales")
+    if r:
+        cfg.update(envios_reales=str(r["valor"]).strip().lower() == "true", activado_por=r["quien"], activado_el=r["cuando"])
+    canales = dict(cfg.get("canales") or {})
+    for c in CANALES:
+        r = base.get("canal_" + c)
+        if r:
+            canales[c] = str(r["valor"]).strip().lower() == "true"
+    cfg["canales"] = canales
+    return cfg
+
+
+def poner_interruptor(nombre, valor, quien, motivo, con=None):
+    """Cambia un interruptor de envíos: su fila en `interruptor` y su rastro en `registro`. Encender exige a quien manda.
+    NO envía nada por sí solo: los envíos reales siguen pidiendo RO_ENVIOS_REALES=si en el entorno."""
+    if nombre != "envios_reales" and not (nombre.startswith("canal_") and nombre[6:] in CANALES):
+        raise ValueError(f"Interruptor desconocido: {nombre}")
+    if not isinstance(valor, bool):
+        raise ValueError("El valor es verdadero o falso.")
+    if not quien or not str(motivo or "").strip():
+        raise ValueError("Hace falta quién lo cambia y el motivo.")
+    activa = reglas().get("activa") or "tomas"
+    if valor and quien != activa:
+        raise PermissionError("Solo lo enciende " + activa + ".")
+    sv = S
+    if sv is None:
+        import servir as sv          # el rastro encadenado es el de servir.py
+    texto = "true" if valor else "false"
+    sv.registrar(quien, "interruptor", f"interruptor_{nombre}", nombre, {"valor": texto}, motivo=str(motivo)[:300])
+    propia = con is None
+    con = con or conectar()
+    try:
+        if isinstance(con, sqlite3.Connection):
+            con.execute("CREATE TABLE IF NOT EXISTS interruptor (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, valor TEXT NOT NULL, "
+                        "quien TEXT NOT NULL, motivo TEXT, cuando TEXT NOT NULL DEFAULT (datetime('now')))")
+        con.execute("INSERT INTO interruptor (nombre, valor, quien, motivo) VALUES (?,?,?,?)", (nombre, texto, quien, str(motivo)[:300]))
+        if propia:
+            con.commit()
+    finally:
+        if propia:
+            con.close()
+    _INT_BASE.update(t=0.0, filas=None)
+
+
 def interruptor():
-    """Estado de los envíos reales. Hacen falta LAS DOS llaves: el fichero (envios_reales, canal activo y activado_por
-    «tomas») y la variable RO_ENVIOS_REALES=si en el entorno del servidor o de la tubería."""
-    cfg = leer_json(INTERRUPTOR, {}) or {}
+    """Estado de los envíos reales. Hacen falta LAS DOS llaves: el interruptor (la base o, de respaldo, el fichero:
+    envios_reales, canal activo y activado_por «tomas») y la variable RO_ENVIOS_REALES=si en el entorno del servidor o de la tubería."""
+    cfg = _cfg_interruptor()
     env = os.environ.get("RO_ENVIOS_REALES", "").strip().lower() == "si"
     fichero = bool(cfg.get("envios_reales")) and cfg.get("activado_por") == (reglas().get("activa") or "tomas")
     canales = {c: bool(fichero and env and (cfg.get("canales") or {}).get(c)) for c in CANALES}

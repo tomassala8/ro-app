@@ -46,6 +46,7 @@ import sqlite3
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo as _ZI
@@ -253,11 +254,82 @@ def limpio(t, tope=2000):
 
 
 # =================================================================== interruptor (lo activa Tomás)
+# N-20 · los interruptores viven en la base (tabla `interruptor`, solo se añaden filas; manda la última de cada nombre) y
+# el fichero queda de respaldo. En la nube `data/` se reemplaza con cada versión publicada y el fichero se perdería.
+NOMBRES_INTERRUPTOR = ("clickup_real", "chat_puente")
+_INT_BASE = {"t": 0.0, "filas": None}
+_INT_SEGUNDOS = 5
+
+
+def _interruptor_base():
+    """{nombre: {valor, quien, cuando}} con la última fila de cada nombre. {} si no hay tabla, ni base, ni filas."""
+    if _INT_BASE["filas"] is not None and time.monotonic() - _INT_BASE["t"] < _INT_SEGUNDOS:
+        return _INT_BASE["filas"]
+    filas = {}
+    if S is not None or os.environ.get("DATABASE_URL") or ruta_db().exists():       # nunca crear una SQLite vacía por mirar
+        try:
+            con = conectar()
+            try:
+                for r in con.execute("SELECT nombre, valor, quien, cuando FROM interruptor WHERE id IN (SELECT MAX(id) FROM interruptor GROUP BY nombre)"):
+                    filas[r["nombre"]] = {"valor": r["valor"], "quien": r["quien"], "cuando": r["cuando"]}
+            finally:
+                con.close()
+        except Exception:                          # sin tabla o base apagada: manda el fichero, como antes
+            filas = {}
+    _INT_BASE.update(t=time.monotonic(), filas=filas)
+    return filas
+
+
+def _cfg_interruptor():
+    """El fichero de siempre, con lo que diga la base por encima (por nombre)."""
+    cfg = dict(leer_json(INTERRUPTOR, {}) or {})
+    base = _interruptor_base()
+    r = base.get("clickup_real")
+    if r:
+        cfg.update(clickup_real=str(r["valor"]).strip().lower() == "true", activado_por=r["quien"], activado_el=r["cuando"])
+    r = base.get("chat_puente")
+    if r:
+        cfg["chat_puente"] = r["valor"]
+    return cfg
+
+
+def poner_interruptor(nombre, valor, quien, motivo, con=None):
+    """Cambia un interruptor: deja su fila en `interruptor` y su rastro en `registro`. Encender exige a quien manda
+    (`conf()["activa"]`). NO enciende nada por sí solo: ClickUp real sigue pidiendo RO_CLICKUP_REAL=si y la llave de servicio."""
+    if nombre not in NOMBRES_INTERRUPTOR:
+        raise ValueError(f"Interruptor desconocido: {nombre}")
+    texto = ("true" if valor else "false") if isinstance(valor, bool) else str(valor)
+    if nombre == "chat_puente" and texto not in ("apagado", "simulacion", "real"):
+        raise ValueError("El puente de chat solo vale apagado, simulacion o real.")
+    if not quien or not str(motivo or "").strip():
+        raise ValueError("Hace falta quién lo cambia y el motivo.")
+    enciende = texto in ("true", "real")
+    if enciende and quien != conf()["activa"]:
+        raise PermissionError("Solo lo enciende " + conf()["activa"] + ".")
+    sv = S
+    if sv is None:
+        import servir as sv          # el rastro encadenado es el de servir.py (la tubería lo importa igual que avisos)
+    sv.registrar(quien, "interruptor", f"interruptor_{nombre}", nombre, {"valor": texto}, motivo=str(motivo)[:300])
+    propia = con is None
+    con = con or conectar()
+    try:
+        if isinstance(con, sqlite3.Connection):       # SQLite sin el esquema al día (la tubería suelta): la tabla se crea sola
+            con.execute("CREATE TABLE IF NOT EXISTS interruptor (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT NOT NULL, valor TEXT NOT NULL, "
+                        "quien TEXT NOT NULL, motivo TEXT, cuando TEXT NOT NULL DEFAULT (datetime('now')))")
+        con.execute("INSERT INTO interruptor (nombre, valor, quien, motivo) VALUES (?,?,?,?)", (nombre, texto, quien, str(motivo)[:300]))
+        if propia:
+            con.commit()
+    finally:
+        if propia:
+            con.close()
+    _INT_BASE.update(t=0.0, filas=None)
+
+
 def interruptor():
-    """ClickUp real necesita LAS TRES cosas: el fichero (clickup_real: true + activado_por «tomas»), RO_CLICKUP_REAL=si en
-    el entorno y la llave del usuario de servicio (se comprueba al usarla). El puente de chat: «apagado» | «simulacion» |
-    «real» (este último, además, con ClickUp real activo)."""
-    cfg = leer_json(INTERRUPTOR, {}) or {}
+    """ClickUp real necesita LAS TRES cosas: el interruptor (la base o, de respaldo, el fichero: clickup_real: true +
+    activado_por «tomas»), RO_CLICKUP_REAL=si en el entorno y la llave del usuario de servicio (se comprueba al usarla).
+    El puente de chat: «apagado» | «simulacion» | «real» (este último, además, con ClickUp real activo)."""
+    cfg = _cfg_interruptor()
     firma = cfg.get("activado_por") == conf()["activa"]
     env = os.environ.get("RO_CLICKUP_REAL", "").strip().lower() == "si"
     real = bool(cfg.get("clickup_real")) and firma and env
