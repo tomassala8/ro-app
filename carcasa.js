@@ -19,7 +19,7 @@ import { MODULOS } from './modulos/indice.js';
 import { bloqueConsejo, enriquecerErrores } from './modulos/ia_componentes.js';
 import { abrirPedirAyuda, contextoActual } from './modulos/_escalar.js';
 
-const porTitulo = new Map(MODULOS.map(m => [m.titulo, m]));
+const porTitulo = new Map(MODULOS.flatMap(m => [[m.titulo, m], ...Object.values(m.titulo_por_puesto || {}).map(t => [t, m])]));   // L-43: también el título por puesto
 const porId = new Map(MODULOS.map(m => [m.id, m]));
 
 function decorarMenu(nav) {

@@ -70,7 +70,7 @@ async function pintar(cont, ctx) {
   const quien = veRent ? (real ? 'Tú ves la rentabilidad a tarifa y con el coste real.' : `Rentabilidad con la tarifa de ${TARIFA_HORA_TXT} €/h.`)
     : veCuota && !veHoras ? 'Cuota de cada cliente y si tiene línea en facturación.'
       : veCuota ? 'La cuota y las horas de tus clientes.' : 'Horas consumidas por cliente, sin euros.';
-  ctx.titulo('Dinero por cliente', `${filas.length} clientes · ${quien}`);
+  ctx.titulo(veCuota ? 'Dinero por cliente' : 'Horas por cliente', `${filas.length} clientes · ${quien}`);   // L-43: sin cuota no se promete dinero
 
   if (!filas.length) {
     cont.append(vacio({ icono: 'cli', titulo: 'No tienes clientes asignados', texto: 'Esta pantalla enseña los clientes de tu cartera. Las asignaciones las mantiene Mili.', quien: 'Mili' }));

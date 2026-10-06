@@ -141,6 +141,7 @@ export const MODULOS = [
   // E10 (2-oct): M18 y M19. Datos en data/dinero_cliente/ y data/finanzas/ (fuentes_dinero/generar_dinero.py: Holded y Airtable en lectura).
   { id: 'dinero-cliente', num: 'M18', titulo: 'Dinero por cliente', grupo: 'Dinero', fase: 5, estado: 'hecho', fichero: './dinero_cliente.js',
     puestos_que_lo_ven: { direccion: 'todo', finanzas_direccion: 'todo', operaciones: 'todo', proyectos: 'todo', administracion: 'todo', account: 'suyo', jefa_publicidad: 'resumen', trafficker: 'resumen' },
+    titulo_por_puesto: { account: 'Horas por cliente', jefa_publicidad: 'Horas por cliente', trafficker: 'Horas por cliente' },   // L-43: no ven la cuota (reglas_permisos.json › tipos.cuota)
     resumen: 'Cuota, horas frente a cuota (31,47 €/h) y rentabilidad.' },
   { id: 'finanzas', num: 'M19', titulo: 'Finanzas de la empresa', grupo: 'Dinero', fase: 5, estado: 'hecho', fichero: './finanzas.js',
     puestos_que_lo_ven: { direccion: 'todo', finanzas_direccion: 'todo', administracion: 'todo' },

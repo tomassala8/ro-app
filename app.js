@@ -103,6 +103,17 @@ async function arrancar() {
     estado.modulos = MODULOS.map(m => ({ ...m }));
     await Promise.all(estado.modulos.map(cargarModulo));
   }
+  // L-43 · `titulo_por_puesto` (indice.js): el título de la pantalla para quien mira. Solo manda si TODOS sus puestos con acceso a ella lo
+  // tienen; quien tenga también un puesto sin esa clave ve el título de siempre. Va como propiedad calculada porque `cargarModulo` hace
+  // `Object.assign(m, x.default)` y escribiría el título del fichero encima; el menú, la cabecera y la pestaña siguen leyendo `m.titulo`.
+  for (const m of estado.modulos) {
+    if (!m.titulo_por_puesto) continue;
+    let base = m.titulo;
+    Object.defineProperty(m, 'titulo', { enumerable: true, configurable: true, set: v => { base = v; }, get: () => {
+      const con = (estado.persona?.puestos || []).filter(x => m.puestos_que_lo_ven?.[x]);
+      return con.length && con.every(x => m.titulo_por_puesto[x]) ? m.titulo_por_puesto[con[0]] : base;
+    } });
+  }
 
   // Identidad. Prototipo: ?yo=<id> (por defecto Tomás). Producción: Cloudflare Access.
   const porId = id => estado.crudo.personas.find(p => p.id === id);
