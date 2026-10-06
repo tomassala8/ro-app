@@ -98,6 +98,8 @@ bateria N-11 300 node migracion/pruebas_N-11.mjs --base "http://127.0.0.1:$PUERT
 bateria N-12 300 python3 migracion/pruebas_N-12.py
 bateria N-17 120 python3 despliegue/pruebas_solidez_N-17.py
 # --- sin servidor: la entrega del 4-oct ----------------------------------------------------------------------------
+bateria escalados_pg 1500 python3 migracion/escalados.py
+bateria probar_alertas 900 python3 fuentes_alertas/probar_alertas.py --sin-capturas
 bateria seguridad_aisladas 900 python3 pruebas_seguridad.py --aisladas
 bateria solidez_tuberia 1200 python3 despliegue/pruebas_noche.py --solo-solidez --sin-red --sin-avisos
 # --- sin servidor: funciones del 4-oct (INTEGRAR.md) ------------------------------------------------------------
