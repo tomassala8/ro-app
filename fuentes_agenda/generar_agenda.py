@@ -248,7 +248,7 @@ except Exception as e:
     fuente('crm', 'Zoho CRM · eventos del calendario', 'rota', f'{type(e).__name__}: {e}'[:200])
 
 # ------------------------------------------------------------------ 2. GHL de RO · citas de los calendarios de Tomás
-REPARTO = os.path.join(HOME, 'Downloads/SETTERS_RO_2026-09-24/25_GHL_PRUEBA_SETTERS')
+REPARTO = str(_cfg.SETTERS_REPARTO)     # N-15: CRUDOS manda (en el Mac, ~/Downloads)
 CALS = {'ChisJEQCj8fXSnML13AQ': ('Reunión de 45 min', 'venta'), 'gzgK7Mz7Al7G9bVZY9uO': ('15 minutos', 'venta'),
         'brkp8BflHwar8ffAtRLQ': ('Taller de la oferta', 'taller'), 'qIVWgA1ki8CHBRbRtxJo': ('15 min · curso Claude', 'venta'),
         'mWBSx8J4GcYQkWdEWF09': ('Reunión (calendario antiguo)', 'venta')}
