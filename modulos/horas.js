@@ -12,7 +12,7 @@ import { rangoEquipo254, filaEquipo254 } from './_equipo_horas_254.js';
 
 import {
   h, fmt, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, avisoParcial, panel, frescura, icono, iniciales,
-  tablaDensa, copiar, fichaCatalogo, vacioLinea,
+  tablaDensa, copiar, fichaCatalogo, vacioLinea, filaPulsable,
 } from '../componentes.js';
 import { fechaControl227, ventanasHoras227 } from './_control_periodos_227.js';
 import { plegarConsejo } from './_plegar_consejo.js';
@@ -344,12 +344,9 @@ export default {
     }
     function listaPersonasTodas(ps, extra) {
       return h('ul', { class: 'lista-i cuerpo', style: { paddingTop: S[1], paddingBottom: S[1] } }, ps.map(p => {
-        const li = h('li', { tabindex: '0', style: { cursor: 'pointer' }, 'aria-label': `Ver las horas de ${p.nombre}` },
+        return filaPulsable(h('li', { 'aria-label': `Ver las horas de ${p.nombre}` },
           h('span', { class: 'av s', 'aria-hidden': 'true' }, iniciales(p.nombre)),
-          h('span', { class: 't pila', style: { gap: 'var(--s-1)' } }, h('b', {}, p.nombre), h('span', { class: 'sub' }, `${p.equipo} · ${zonaP(p)}`)), ...extra(p));
-        li.addEventListener('click', e => { if (!e.target.closest('a,button')) irAPersona(p.persona_id); });
-        li.addEventListener('keydown', e => { if (e.key === 'Enter') irAPersona(p.persona_id); });
-        return li;
+          h('span', { class: 't pila', style: { gap: 'var(--s-1)' } }, h('b', {}, p.nombre), h('span', { class: 'sub' }, `${p.equipo} · ${zonaP(p)}`)), ...extra(p)), () => irAPersona(p.persona_id));
       }));
     }
 

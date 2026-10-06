@@ -22,7 +22,7 @@
 
 import {
   h, fmt, icono, chipEstado, chipsFiltro, vacio, vacioLinea, avisoParcial, frescura, iniciales, avisoFlotante,
-  selectorPersona, fechas as FECHAS_MADRID,
+  selectorPersona, fechas as FECHAS_MADRID, filaPulsable,
 } from '../componentes.js';
 import { abrirPedirAyuda } from './_escalar.js';
 
@@ -979,13 +979,6 @@ function mensajeCu(S, c, m, { enHilo = false, donde, resultado = false } = {}) {
 }
 
 // ===================================================================== búsqueda y menciones
-function filaPulsable(el, ir) {
-  el.tabIndex = 0; el.setAttribute('role', 'button'); el.style.cursor = 'pointer';
-  el.addEventListener('click', e => { if (!e.target.closest('a, button')) ir(); });
-  el.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target === el) ir(); });
-  return el;
-}
-
 function vistaBusqueda(S, estrecho) {
   const zona = h('div', { style: { ...EST.msgs, paddingTop: 'var(--s-1)' } });
   const r = S.res;

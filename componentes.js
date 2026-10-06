@@ -1186,6 +1186,16 @@ export function cifraPrincipal({ etiqueta, valor, unidad, estado = '', comparaci
     comparacion ? h('span', { class: 'cifra-comp' }, comparacion) : null);
 }
 
+/** filaPulsable(el, ir) · L-46: una fila que se pulsa pero no es un botón (contiene enlaces o botones, no puede ser un
+ *  `<button>`). La hace accesible: foco, rol «botón» y Enter o Espacio, solo si el foco está en la fila misma (un botón o
+ *  enlace de dentro hace lo suyo). Un clic en un enlace o botón de dentro tampoco la activa. Devuelve el mismo elemento. */
+export function filaPulsable(el, ir) {
+  el.tabIndex = 0; el.setAttribute('role', 'button'); el.style.cursor = 'pointer';
+  el.addEventListener('click', e => { if (!e.target.closest('a, button')) ir(); });
+  el.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target === el) { e.preventDefault(); ir(); } });
+  return el;
+}
+
 /** vacioLinea(texto, { icono = 'info', quien }) · ronda 9 (D-P-MID2, guía 3.10): vacío DENTRO de un bloque, en una línea
  *  (icono 16 + frase 13 + quién lo arregla). El grande (vacio / estadoVacio) solo cuando toda la pantalla está vacía. */
 export function vacioLinea(texto, { icono: ico = 'info', quien, que_hacer } = {}) {
