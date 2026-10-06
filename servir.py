@@ -1051,7 +1051,7 @@ def recortar_modulo(persona, cp, obj, nivel=None, solo_todo=(), filas_lead=(), c
         return recorte_vacio(obj, conf)
     puestos = P.puestos_de(persona)        # ronda 7: en «ver como», solo los puestos de las dos
     ve_todos_setters = bool(puestos & {"direccion", "ventas_ro", "jefa_crm", "operaciones"})
-    mi_setter = persona["id"].replace("setter_", "") if persona["id"].startswith("setter_") else None
+    mi_setter = P.clave_setter_de(persona)
 
     conf = conf or {}
     cartera = cp.get("cartera_ids", set())
@@ -1294,7 +1294,7 @@ def nombres_para_su_dueno(persona, real, reglas, salida, rel, cp=None):
     solo las filas de clientes de SU cartera de outreach (además del recorte por silla). «anadir» = campos que la fila
     pública no trae (la empresa del prospecto) y se añaden solo para quien la ve en claro."""
     puestos = set(P.puestos_de(persona))
-    mi_setter = persona["id"].replace("setter_", "") if persona["id"].startswith("setter_") else None
+    mi_setter = P.clave_setter_de(persona)
     cartera_out = ((cp or {}).get("cartera_por_silla") or {}).get("outreach", set())
     abiertos = 0
     cache = {}
@@ -1306,7 +1306,7 @@ def nombres_para_su_dueno(persona, real, reglas, salida, rel, cp=None):
             if not isinstance(fila, dict):
                 continue
             es_dueno = ((dueno == "setter" and mi_setter and fila.get("setter") == mi_setter)
-                        or (dueno == "setter" and fila.get("setter") in ("ana", "javier") and puestos & set(r.get("tambien_puestos") or []))
+                        or (dueno == "setter" and fila.get("setter") in P.claves_setters((E.crudo or {}).get("personas")) and puestos & set(r.get("tambien_puestos") or []))
                         or (dueno == "persona_id" and fila.get("persona_id") == persona["id"])
                         or (dueno == "ventas_ro" and fila.get("setter") == "_closer" and "ventas_ro" in puestos)
                         or (dueno == "outreach" and (puestos & {"direccion", "jefa_crm"}
@@ -3451,7 +3451,7 @@ class Manejador(SimpleHTTPRequestHandler):
             dueno = almacen.split("/")[-1] if conf.get("dueno") == "fichero" else None   # «solo lo tuyo»: el fichero es de esa persona
             v = P.ver(persona, {"tipo": conf["tipo"], "cliente_id": cliente_real, "persona_id": dueno}, cp)
             nombre_alm = almacen.split("/")[-1]
-            dueño_ok = (not conf.get("dueno_setter") or nombre_alm == persona["id"]
+            dueño_ok = (not conf.get("dueno_setter") or (bool(P.clave_setter_de(persona)) and nombre_alm == "setter_" + P.clave_setter_de(persona))
                         or bool(P.puestos_de(persona) & {"direccion", "ventas_ro"}))
             modulo_ok = bool(ve_alguno(persona, conf.get("modulos", [])))
             if not v.get("desenmascarable") or not dueño_ok or not modulo_ok:

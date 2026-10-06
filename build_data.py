@@ -895,6 +895,10 @@ def main():
         p.pop("correo_entrada", None)
         p["tiene_correo_entrada"] = p["id"] in correos_entrada
         p["aviso_correo"] = "falta correo" if p.get("activo") and p["id"] not in correos_entrada else None
+        if "setters" in (p.get("puestos") or []) and not p.get("clave_setter"):
+            # L-09: la clave de setter (ficheros `setter_<clave>` y campo «setter» de los leads) es un dato de la persona.
+            # Una vez, idempotente: las de antes la sacan de su id; las altas de la app ya la traen.
+            p["clave_setter"] = p["id"][len("setter_"):] if p["id"].startswith("setter_") else p["id"]
 
     (AQUI / "data" / "_privado").mkdir(parents=True, exist_ok=True)
     # N9: las altas y bajas hechas en Ajustes (altas_personas.py) se conservan al regenerar: «desde_la_app».

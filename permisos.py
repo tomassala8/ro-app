@@ -276,6 +276,24 @@ DETALLE = ["web", "descripcion", "descripcion_completa", "alta", "tickets_abiert
 PERSONA_PUBLICA = ["id", "nombre", "alias", "puestos", "prueba", "estado", "activo", "jefe", "zona", "rol", "pais", "fecha_ingreso", "cumple_dia_mes", "etiquetas"]
 
 
+def clave_setter_de(persona):
+    """L-09: la clave de setter de una persona (la de sus ficheros `setter_<clave>` y la del campo «setter» de los leads).
+    Sale de `clave_setter` en personas; las setters de antes de este campo la sacan del prefijo del id hasta la primera recarga."""
+    mi_setter = persona.get("clave_setter") or (persona["id"][len("setter_"):] if persona["id"].startswith("setter_") else None)  # L-09: respaldo hasta la primera recarga
+    return mi_setter
+
+
+def claves_setters(personas):
+    """L-09: las claves de todas las personas con el puesto «setters» (para quien ve los leads de todas)."""
+    claves = set()
+    for p in personas or []:
+        if "setters" in (p.get("puestos") or []):
+            c = clave_setter_de(p)
+            if c:
+                claves.add(c)
+    return claves
+
+
 def directorio(personas):
     """Lo que cualquiera puede saber de una persona: nombre, alias, puestos y jefe. Sin correo ni horas."""
     return [{k: p.get(k) for k in PERSONA_PUBLICA} for p in personas]

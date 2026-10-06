@@ -985,6 +985,13 @@ def _post(h, ruta, real, persona, b):
         n = 2
         while pid in ids_creados:
             pid, n = f"{base}_{n}", n + 1
+        clave_setter = None
+        if "setters" in puestos:   # L-09: la clave de sus ficheros y de sus leads es un dato de la persona, no el prefijo del id
+            usadas = P.claves_setters(E.crudo["personas"]) | {p.get("clave_setter") for p in E.crudo["personas"]}
+            clave_setter = pid
+            n_clave = 2
+            while clave_setter in usadas:
+                clave_setter, n_clave = f"{pid}_{n_clave}", n_clave + 1
         alias = nombre.split()[0]
         if any((p.get("alias") or "") == alias for p in E.crudo["personas"]) and len(nombre.split()) > 1:
             alias = f"{alias} {nombre.split()[1][0]}."
@@ -1000,6 +1007,8 @@ def _post(h, ruta, real, persona, b):
             "zona_fuente": "Ajustes (alta)", "zona_a_confirmar": False, "etiquetas": [], "tiene_correo_entrada": bool(correo),
             "aviso_correo": None if correo else "falta correo", "alta_desde_app": True,
         }
+        if clave_setter:
+            persona_nueva["clave_setter"] = clave_setter
         with S.conectar() as con:
             hist(con, real['id'], 'personas', pid, 'crear', persona_nueva)
             hechas, cerradas = aplicar_cartera(con, real, pid, cartera, max(entrada, hoy()))

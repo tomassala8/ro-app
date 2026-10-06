@@ -64,23 +64,23 @@ def datos():
 
 
 def dueno(objeto):
-    """Setter («ana» / «javier») de un lead o una cita por su id de contacto (o id de cita). None si no es de ninguno."""
+    """Clave de la setter (la de `clave_setter`) de un lead o una cita por su id de contacto (o id de cita). None si no es de ninguno."""
     o = str(objeto or "")
     if not o:
         return None
     d = datos()
+    claves = P.claves_setters(S.E.crudo.get("personas"))
     for lista in ("leads", "citas", "pasadas"):
         for x in d.get(lista) or []:
-            if o in (x.get("id"), x.get("cita_id")) and x.get("setter") in ("ana", "javier"):
+            if o in (x.get("id"), x.get("cita_id")) and x.get("setter") in claves:
                 return x["setter"]
     return None
 
 
 def mi_setter(persona):
-    pid = str((persona or {}).get("id") or "")
     if "setters" not in P.puestos_de(persona):
         return None
-    return pid.replace("setter_", "") if pid.startswith("setter_") else None
+    return P.clave_setter_de(persona)
 
 
 def puede(persona, real, objeto):

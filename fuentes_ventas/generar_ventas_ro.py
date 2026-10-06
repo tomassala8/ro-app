@@ -40,10 +40,26 @@ ARGS = set(sys.argv[1:])
 
 # Extensiones de Zadarma de cada setter: POR CONFIRMAR. La 107 y la 110 (memoria del 1-oct) están desconectadas o son
 # de Lourdes según la auditoría de incidencias. Hasta que Tomás las confirme, ext = None y el marcador sale «sin dato».
-SETTERS = [
-    {'clave': 'ana', 'alias': 'Ana', 'tag': 'setter:ana', 'ext': None, 'ext_confirmada': False},
-    {'clave': 'javier', 'alias': 'Javier', 'tag': 'setter:javier', 'ext': None, 'ext_confirmada': False},
-]
+def setters_de_personas():
+    """L-09: las setters son las personas con el puesto «setters» de data/personas.json, con su `clave_setter`
+    (la de su etiqueta `setter:<clave>` en GHL y la de su fichero `_privado/setter_<clave>.json`). Sin nombres fijos."""
+    try:
+        with open(os.path.join(RAIZ, 'data', 'personas.json'), encoding='utf-8') as f:
+            personas = json.load(f)
+    except (OSError, ValueError):
+        return []
+    lista = personas.get('personas') if isinstance(personas, dict) else personas
+    sal = []
+    for p in lista or []:
+        if not isinstance(p, dict) or 'setters' not in (p.get('puestos') or []) or p.get('estado') == 'baja':
+            continue
+        clave = p.get('clave_setter') or (p['id'].removeprefix('setter_') if p['id'].startswith('setter_') else None)  # L-09: respaldo hasta la primera recarga
+        if clave and clave not in {x['clave'] for x in sal}:
+            sal.append({'clave': clave, 'alias': p.get('alias') or p['id'], 'tag': f'setter:{clave}', 'ext': None, 'ext_confirmada': False})
+    return sal
+SETTERS = setters_de_personas()
+_ALIAS = [s['alias'] for s in SETTERS]
+NOMBRES_SETTERS = (', '.join(_ALIAS[:-1]) + ' y ' + _ALIAS[-1]) if len(_ALIAS) > 1 else ''.join(_ALIAS)
 ENLACES = {  # formatos comprobados en 26_ARQUITECTURA_ERRORES_PLANES_B.md parte C
     'zadarma_estadisticas': 'https://my.zadarma.com/mystatistics/',
     'zadarma_centralita': 'https://my.zadarma.com/mypbx/',
@@ -404,7 +420,7 @@ if ghl_ok:
             if exclusion(cid): continue
             c = contacto(cid)
             previo = next((s['clave'] for s in SETTERS if s['tag'] in c.get('tags', [])), None)
-            setter = previo or (por_cid[cid]['setter'] if cid in por_cid else SETTERS[alterna % 2]['clave'])
+            setter = previo or (por_cid[cid]['setter'] if cid in por_cid else (SETTERS[alterna % len(SETTERS)]['clave'] if SETTERS else None))
             if not previo and cid not in por_cid: alterna += 1
             setters_out['pasadas'].append({'id': cid, 'setter': setter, 'cuando': iso(t), 'calendario': CALENDARIOS_VENTA[cal],
                                            'estado_ghl': e.get('appointmentStatus'), 'etapa': et or 'sin tarjeta',
@@ -443,9 +459,9 @@ for s in SETTERS:
                                         'pct_conv': round(100 * len(conv) / len(sal), 1) if sal else None, 'citas': citas,
                                         'citas_medibles': any(s['tag'] in (c.get('tags') or []) for c in contactos)})
 
-if not usuarios_setters.get('ana') and not usuarios_setters.get('javier'):
-    setters_out['avisos'].append('Ana y Javier todavía no tienen usuario en GHL: se crean el lunes 5 con el sí de Tomás (manda invitación por correo).')
-setters_out['avisos'].append('Extensiones de Zadarma de Ana y Javier por confirmar (la 107 y la 110 están desconectadas o son de Lourdes): hasta entonces las llamadas del marcador salen «sin dato».')
+if SETTERS and not any(usuarios_setters.get(s['clave']) for s in SETTERS):
+    setters_out['avisos'].append(f'{NOMBRES_SETTERS} todavía no tienen usuario en GHL: se crean el lunes 5 con el sí de Tomás (manda invitación por correo).')
+setters_out['avisos'].append(f'Extensiones de Zadarma de {NOMBRES_SETTERS} por confirmar (la 107 y la 110 están desconectadas o son de Lourdes): hasta entonces las llamadas del marcador salen «sin dato».')
 setters_out['enlaces'] = {**ENLACES, 'ghl_oportunidades': f'https://app.gohighlevel.com/v2/location/{LOC}/opportunities/list',
                           'ghl_calendario': f'https://app.gohighlevel.com/v2/location/{LOC}/calendars/view',
                           'ghl_conversaciones': f'https://app.gohighlevel.com/v2/location/{LOC}/conversations/conversations'}
