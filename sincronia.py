@@ -145,6 +145,8 @@ LLANO = {
     "permiso": "La llave de ClickUp no tiene permiso para esto (o es la de propietario, que no se usa para escribir): el cambio NO está en ClickUp.",
     "no_existe": "La tarea ya no existe en ClickUp (o la han movido a un sitio sin acceso): el cambio NO está. Míralo en ClickUp.",
     "destinatario": "No sé a qué lista, persona o canal de ClickUp va: el cambio NO está. Lo resuelve Agus en ClickUp.",
+    # N-19: la tarea nueva necesita la lista del cliente y hoy no se resuelve ninguna (ClickUp real aún no crea tareas)
+    "sin_lista": "Sin lista de ClickUp para este cliente: la tarea NO se ha creado en ClickUp. Queda guardada aquí hasta que Operaciones configure la lista (o la crea Agus a mano).",
     "rechazo": "ClickUp ha rechazado el cambio (dato no válido, p. ej. un estado que no existe en esa lista). Míralo en ClickUp.",
     "agotado": "ClickUp no ha respondido en varios intentos: el cambio sigue guardado aquí y NO está en ClickUp. No se ha duplicado. Reintenta desde Envíos › ClickUp.",
     "caida": "ClickUp no responde ahora: el cambio sigue guardado aquí y se reintenta solo (sin duplicar).",
@@ -570,7 +572,9 @@ def crear_cambio(con, *, clave, quien, canal, tipo, objeto, cambio, base=None, c
         return (previa["id"] if previa else None), False
     cid = cur.lastrowid
     if modo == "simulado":
-        paso(con, cid, "simulado", "creado", quien=quien, motivo=LLANO["simulado"], detalle={"ignorado": ignorado} if ignorado else None, hora=hora)
+        sin_lista = cambio.get("campo") == "crear_tarea" and not objeto.get("resuelto")      # N-19: se dice desde el principio
+        paso(con, cid, "simulado", "creado", quien=quien, motivo=LLANO["simulado"] + (" " + LLANO["sin_lista"] if sin_lista else ""),
+             detalle={"ignorado": ignorado} if ignorado else None, hora=hora)
     else:
         paso(con, cid, "pendiente", "en_cola", quien=quien, motivo=f"{TEXTO_PENDIENTE}: en cola para salir.",
              detalle={"ignorado": ignorado} if ignorado else None, hora=hora)
@@ -859,7 +863,7 @@ class ProveedorClickUp(Proveedor):
             msgs = self.leer_canal(o["ref"])
             return {"existe": True, "marcas": {m for x in msgs if m in (x.get("texto") or "")}}
         if o["tipo"] != "tarea":
-            raise ErrorSinc("destinatario", "sin lista resuelta")
+            raise ErrorSinc("no_soportado", LLANO["sin_lista"] if o["tipo"] == "lista" else LLANO["no_soportado"])      # N-19
         t = self.pide("GET", f"/task/{o['ref']}")
         marcas = set()
         cam = json.loads(c["cambio"])
@@ -886,7 +890,7 @@ class ProveedorClickUp(Proveedor):
             return self.pide("POST", f"/workspaces/{TEAM}/chat/channels/{o['ref']}/messages", {"type": "message", "content": cam["texto"] + firma},
                              v3=True, canal="chat")
         if o["tipo"] != "tarea":
-            raise ErrorSinc("destinatario", "sin lista resuelta")
+            raise ErrorSinc("no_soportado", LLANO["sin_lista"] if o["tipo"] == "lista" else LLANO["no_soportado"])      # N-19
         if cam["campo"] == "estado":
             self.pide("PUT", f"/task/{o['ref']}", {"status": cam["valor"]})
             if cam.get("comentario"):
@@ -1029,8 +1033,9 @@ def ejecutar(con, cid, prov, quien="sistema", ahora=None):
     cam = json.loads(c["cambio"])
     if cam.get("campo") == "otro" or (cam.get("campo") == "crear_tarea" and not json.loads(c["objeto"]).get("resuelto")):
         motivo = "no_soportado" if cam.get("campo") == "otro" else "destinatario"
-        paso(con, cid, "fallido", motivo, quien=quien, motivo=LLANO[motivo], detalle={"seguro_reintentar": False})
-        avisar(con, cid, motivo)
+        claro = "no_soportado" if cam.get("campo") == "otro" else "sin_lista"        # N-19: el texto de la tarea nueva es el claro
+        paso(con, cid, "fallido", motivo, quien=quien, motivo=LLANO[claro], detalle={"seguro_reintentar": False})
+        avisar(con, cid, claro)
         return "fallido"
     n = intentos(con, cid)
     escritura_iniciada = False
