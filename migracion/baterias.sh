@@ -64,6 +64,7 @@ bateria L-49 120 python3 migracion/pruebas_L-49.py
 bateria N-13 60 python3 despliegue/pruebas_solidez_N-13.py --puerto "$PUERTO"
 bateria N-14 60 python3 despliegue/pruebas_solidez_N-14.py
 bateria N-15 60 python3 despliegue/pruebas_solidez_N-15.py
+bateria N-16 60 python3 despliegue/pruebas_solidez_N-16.py
 bateria N-01 300 python3 despliegue/pruebas_solidez_N-01.py
 bateria N-02 120 python3 despliegue/pruebas_solidez_N-02.py
 bateria N-03 120 python3 despliegue/pruebas_solidez_N-03.py

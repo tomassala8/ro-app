@@ -62,6 +62,26 @@ envVarGroups:
       - { key: AIRTABLE_TOKEN, sync: false }
       - { key: ZADARMA_KEY, sync: false }
       - { key: ZADARMA_SECRET, sync: false }
+      # N-16 · las que faltaban (la tubería las lee; la web, no: `ro-app` sigue sin este grupo)
+      # IA (solo con RO_IA_REAL y el interruptor de Tomás; sin las dos, la IA sigue apagada)
+      - { key: ANTHROPIC_API_KEY, sync: false }
+      - { key: ANTHROPIC_API_KEY_RESPALDO, sync: false }
+      # Google Ads, Business Profile y PageSpeed
+      - { key: GOOGLE_ADS_DEVELOPER_TOKEN, sync: false }
+      - { key: GOOGLE_ADS_LOGIN_CUSTOMER_ID, sync: false }
+      - { key: GOOGLE_ADS_REFRESH_TOKEN, sync: false }
+      - { key: GOOGLE_GBP_REFRESH_TOKEN, sync: false }
+      - { key: GOOGLE_API_KEY, sync: false }
+      # webs y dominios
+      - { key: HOSTINGER_API_TOKEN, sync: false }
+      - { key: MODULARDS_API_KEY, sync: false }
+      - { key: MODULARDS_ACCESO_KEY, sync: false }
+      - { key: CLOUDFLARE_API_TOKEN, sync: false }
+      # escritura: solo con interruptor, nunca por defecto
+      - { key: CLICKUP_TOKEN_SERVICIO, sync: false }
+      - { key: GHL_PIT_WRITE, sync: false }
+      - { key: ZOHO_REFRESH_TOKEN_ESCRITURA, sync: false }
+      - { key: ZOHO_SHEET_REFRESH_TOKEN, sync: false }
   - name: ro-vigilancia
     envVars:
       - { key: SENTRY_DSN, sync: false }          # DSN de errores de Better Stack (SDK de Sentry). Vacío = sin envío
