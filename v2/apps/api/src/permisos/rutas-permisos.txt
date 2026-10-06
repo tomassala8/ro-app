@@ -1,1 +1,2 @@
+GET /sesion  →  {"soloIdentidad":"toda persona activa recibe su sesión, como servir.py › /api/sesion","sinRecorte":"la sesión ya sale recortada por recortar(persona, crudo), igual que servir.py › /api/sesion"}
 GET /vivo  →  público (comprobación de vida, sin datos)

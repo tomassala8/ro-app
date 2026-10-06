@@ -39,6 +39,7 @@ describe('proxy de legado', () => {
   it('lo que Nest atiende no pasa al legado', () => {
     expect(atiendeNest('GET', '/vivo')).toBe(true);
     expect(atiendeNest('GET', '/api/sesion')).toBe(false);
+    expect(atiendeNest('GET', '/api/clientes')).toBe(false);
   });
 
   it('pasa método, ruta, consulta, cabeceras, cuerpo, código y cabeceras de vuelta sin tocarlos', async () => {
@@ -62,7 +63,7 @@ describe('proxy de legado', () => {
   it('en local, rechaza un Host que no es 127.0.0.1 ni localhost (DNS rebinding), como servir.py', async () => {
     const app = express();
     app.use(proxyLegado('http://127.0.0.1:9'));
-    const r = await request(app).get('/api/sesion').set('Host', 'malo.example:3000');
+    const r = await request(app).get('/api/clientes').set('Host', 'malo.example:3000');
     expect(r.status).toBe(403);
     expect(r.body).toEqual({ error: 'Host no permitido.' });
   });
@@ -70,7 +71,7 @@ describe('proxy de legado', () => {
   it('detrás del rewrite de Next (Host 127.0.0.1:4000), mira también X-Forwarded-Host', async () => {
     const app = express();
     app.use(proxyLegado('http://127.0.0.1:9'));
-    const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:4000').set('X-Forwarded-Host', 'malo.example:3000');
+    const r = await request(app).get('/api/clientes').set('Host', '127.0.0.1:4000').set('X-Forwarded-Host', 'malo.example:3000');
     expect(r.status).toBe(403);
     expect(hostLocal({ host: '127.0.0.1:4000', 'x-forwarded-host': 'localhost:3000' })).toBe(true);
     expect(hostLocal({ host: '127.0.0.1:4000', 'x-forwarded-host': 'localhost:3000, malo.example' })).toBe(false);
@@ -85,7 +86,7 @@ describe('proxy de legado', () => {
     app.use(proxyLegado(`http://127.0.0.1:${(lento.address() as AddressInfo).port}`));
     const srv = app.listen(0, '127.0.0.1');
     await new Promise<void>((ok) => srv.once('listening', () => ok()));
-    const cliente = pedir({ port: (srv.address() as AddressInfo).port, host: '127.0.0.1', path: '/api/sesion' });
+    const cliente = pedir({ port: (srv.address() as AddressInfo).port, host: '127.0.0.1', path: '/api/clientes' });
     cliente.on('error', () => undefined);
     cliente.end();
     setTimeout(() => cliente.destroy(), 100);
@@ -97,7 +98,7 @@ describe('proxy de legado', () => {
   it('si el legado no responde, 502 con un mensaje claro', async () => {
     const app = express();
     app.use(proxyLegado('http://127.0.0.1:9'));
-    const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:3000');
+    const r = await request(app).get('/api/clientes').set('Host', '127.0.0.1:3000');
     expect(r.status).toBe(502);
   });
 
@@ -116,7 +117,7 @@ describe('proxy de legado', () => {
     await new Promise<void>((ok) => lento.listen(0, '127.0.0.1', () => ok()));
     const app = express();
     app.use(proxyLegado(`http://127.0.0.1:${(lento.address() as AddressInfo).port}`, { esperaMs: 200 }));
-    const r = await request(app).get('/api/sesion').set('Host', '127.0.0.1:3000');
+    const r = await request(app).get('/api/clientes').set('Host', '127.0.0.1:3000');
     expect(r.status).toBe(504);
     lento.closeAllConnections();
     lento.close();
@@ -127,7 +128,7 @@ describe('proxy de legado', () => {
     const app = express();
     app.use(proxyLegado(legado.url));
     expect((await request(app).head('/data/_privado/x.json').set('Host', '127.0.0.1:3000')).status).toBe(405);
-    expect((await request(app).options('/api/sesion').set('Host', '127.0.0.1:3000')).status).toBe(405);
+    expect((await request(app).options('/api/clientes').set('Host', '127.0.0.1:3000')).status).toBe(405);
     legado.cerrar();
   });
 });

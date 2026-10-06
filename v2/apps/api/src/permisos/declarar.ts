@@ -7,6 +7,7 @@ import { SetMetadata } from '@nestjs/common';
  *   @Permiso({ tipo: 'cliente' })
  *   @Permiso({ modulo: 'ver_dato', lecturaPorPost: 'solo lee: igual que servir.py' })   // POST que «ver como» puede usar
  *   @Permiso({ modulo: 'capturas', sinRecorte: 'binario' })                             // respuesta que no es JSON
+ *   @Permiso({ soloIdentidad: 'motivo', sinRecorte: 'motivo' })   // toda persona identificada; el recorte va dentro
  *   @Publico('comprobación de vida')               // solo para rutas sin datos (/vivo)
  *
  * Lo seguro va por defecto (auditoría del 4-oct, parte 2): toda respuesta se recorta salvo `sinRecorte`, todo método
@@ -29,6 +30,8 @@ export interface DeclaracionPermiso {
   sinRecorte?: string;
   /** Solo con motivo: un POST que solo lee y que «ver como» puede usar (hoy: /api/ver_dato y los /api/ia/* de lectura). */
   lecturaPorPost?: string;
+  /** Solo con motivo: la ruta la recibe toda persona identificada (y activa); el recorte va dentro (p. ej. /api/sesion). */
+  soloIdentidad?: string;
 }
 
 export const Permiso = (declaracion: DeclaracionPermiso) => SetMetadata(CLAVE_PERMISO, declaracion);

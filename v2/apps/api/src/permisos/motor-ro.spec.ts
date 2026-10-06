@@ -37,6 +37,11 @@ describe('MotorRo', () => {
     expect(motor.entrar(vista, { modulo: 'mi-dia' })).toEqual({ ok: true });
   });
 
+  it('soloIdentidad deja entrar a cualquier persona identificada, pero no sin identidad', () => {
+    expect(motor.entrar({ real: account, cp }, { soloIdentidad: 'sesión' })).toEqual({ ok: true });
+    expect(motor.entrar(undefined, { soloIdentidad: 'sesión' })).toMatchObject({ ok: false, status: 401 });
+  });
+
   it('un account no ve sueldos, con el motivo de la matriz', () => {
     const r = motor.entrar({ real: account, cp }, { tipo: 'sueldo' });
     expect(r.ok).toBe(false);
