@@ -38,8 +38,7 @@ describe('proxy de legado', () => {
 
   it('lo que Nest atiende no pasa al legado', () => {
     expect(atiendeNest('GET', '/vivo')).toBe(true);
-    expect(atiendeNest('GET', '/api/sesion')).toBe(true);
-    expect(atiendeNest('POST', '/api/sesion')).toBe(false);
+    expect(atiendeNest('GET', '/api/sesion')).toBe(false);
     expect(atiendeNest('GET', '/api/clientes')).toBe(false);
   });
 
