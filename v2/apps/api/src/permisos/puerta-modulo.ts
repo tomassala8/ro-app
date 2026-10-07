@@ -143,3 +143,35 @@ function clienteDeDatos(cid: string, crudo: Crudo, ps: Persona[], cps: Contexto[
   if (!clienteVisible(cid, crudo, ps, cps)) return false;
   return niveles.every((nivel, i) => nivel !== 'suyo' || (cps[i]?.cartera_ids ?? new Set()).has(cid));
 }
+
+/** servir.py › documento_raiz_581. Solo el cliente de la raíz; las filas las recorta recortarModulo. */
+function documentoRaiz(doc: unknown, rel: string, crudo: Crudo, ps: Persona[], cps: Contexto[], niveles: (string | null)[]): boolean {
+  const ids: unknown[] = [];
+  const deUrl = clienteDeUrl(rel);
+  if (deUrl !== null) ids.push(deUrl);
+  if (doc && typeof doc === 'object' && !Array.isArray(doc)) {
+    const o = doc as Record<string, unknown>;
+    for (const k of ['cliente_id', 'cid', 'cli']) {
+      if (k in o && o[k] != null) ids.push(o[k]);
+    }
+  }
+  if (!ids.length) return true;
+  const primero = ids[0];
+  if (!ids.every((cid) => typeof cid === 'string' && cid === primero)) return false;
+  return clienteDeDatos(primero as string, crudo, ps, cps, niveles);
+}
+
+/** servir.py › modulo_vigente_581. La segunda puerta no apunta en el rastro. */
+export async function moduloVigente(
+  vista: VistaConContexto,
+  rel: string,
+  crudo: Crudo,
+  previo: ResultadoPuerta,
+  doc: unknown,
+): Promise<boolean> {
+  const final = await puertaModulo(vista, rel, crudo, { apuntar: false, sello: previo.firma581 ?? null });
+  if (final.error || final.firma581 !== previo.firma581 || final.nivel !== previo.nivel || final.marca581 !== previo.marca581) return false;
+  const ambito = ambitoDe(crudo, vista.real, vista.como ?? vista.real);
+  if (!ambito) return false;
+  return documentoRaiz(doc, rel, crudo, ambito.ps, ambito.cps, final.niveles581 ?? []);
+}
