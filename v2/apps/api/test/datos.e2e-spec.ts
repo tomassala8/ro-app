@@ -44,6 +44,22 @@ describe.skipIf(!vectoresListos())('modulo en Nest', () => {
     }
   });
 
+  it('un fichero de la tanda 2 y otro de la tanda 3 coinciden con el legado', async () => {
+    const mapa = puestos();
+    const ids = [mapa.direccion, mapa.account, mapa.setters].filter(Boolean);
+    expect(ids.length).toBe(3);
+    for (const rel of ['/api/modulo/alertas/alertas', '/api/modulo/conexiones/salud']) {
+      for (const yo of ids) {
+        const nuevo = await pedir('GET', rel, { yo });
+        const viejoResp = await fetch(`http://127.0.0.1:8771${rel}`, {
+          headers: { Accept: 'application/json', 'X-RO-Yo': yo, 'X-RO-App': '1' },
+        });
+        expect(nuevo.status, `${rel} ${yo}`).toBe(viejoResp.status);
+        expect(iguales(nuevo.json, await viejoResp.json()), `${rel} ${yo}`).toBe(true);
+      }
+    }
+  });
+
   it('el setter no abre finanzas y el texto es el de la puerta', async () => {
     const yo = puestos().setters;
     expect(yo).toBeTruthy();
