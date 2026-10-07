@@ -3,18 +3,26 @@
 // da 0 diferencias para ella (y, si es POST, `contrato_escritura.py` también). Así la app está completa a cada momento.
 export type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-/** F5.3 tanda 1: ficheros de datos_de_modulo sin claves extra (el resto sigue por el proxy). */
+/** F5.3: ficheros de datos_de_modulo que atiende Nest (el resto sigue por el proxy). */
 export const MODULOS_EN_NEST: readonly string[] = [
   'ajustes/conexiones',
+  'alertas/alertas',
   'captacion/captacion',
+  'crm/crm',
+  'decisiones/direccion',
   'decisiones/reloj',
   'en_rojo/atajos',
+  'equipo/salida_accesos',
   'ficha/basica',
+  'ficha/informes',
   'ficha/portal',
+  'ficha/web',
   'finanzas/cuadre_facturacion',
   'finanzas/impagos',
   'finanzas/impagos_clientes',
+  'fuentes/hallazgos_medicion',
   'horas/horas',
+  'incidencias/incidencias',
   'informe/comun',
   'informe/p_2026-06',
   'informe/p_2026-07',
@@ -24,13 +32,19 @@ export const MODULOS_EN_NEST: readonly string[] = [
   'informe/p_u30',
   'informe/paridad',
   'informes/informes',
+  'mi_dia/ronda_mili',
+  'nuevos/nuevos',
+  'objetivos/objetivos',
   'paneles/indice',
+  'personas_m20/contratacion',
   'personas_m20/equipo',
   'produccion/marca',
   'redes/redes',
+  'reuniones/reuniones',
   'seo/seo',
   'seo/webs',
   'ventas_ro/meta',
+  'ventas_ro_extra/anuncios',
   'verdad/equipo',
   'whatsapp/whatsapp',
 ];

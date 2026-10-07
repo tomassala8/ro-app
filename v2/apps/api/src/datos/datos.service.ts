@@ -6,6 +6,7 @@ import { moduloVigente, puertaModulo } from '../permisos/puerta-modulo.js';
 import { recortarModuloConVista } from '../permisos/recortar-modulo.js';
 import { RastroService } from '../rastro/rastro.service.js';
 import { estadoClientes, quitarBajas } from './bajas.js';
+import { contratosSoloTomas, sanearContratos } from './contratos-privados.js';
 
 /** Python `\w` admite tildes: el mismo conjunto, más el guion de las rutas. */
 const REL_OK = /^[\p{L}\p{N}_\-/]+$/u;
@@ -56,6 +57,9 @@ export class DatosService {
       estado,
     );
     if (aviso && esFila(salida)) salida = { ...salida, _ultimo_dato_bueno: aviso };
+    // contratos_privados.py: la respuesta que no es de Tomás (real y vista) no lleva claves ni enlaces de contrato.
+    const vistaPersona = vista.como ?? vista.real;
+    if (!contratosSoloTomas(vista.real, vistaPersona)) salida = sanearContratos(salida);
     if (!(await moduloVigente(vista, rel, crudo, pm, doc))) {
       throw new HttpException('El ámbito cambió durante la lectura.', 403);
     }

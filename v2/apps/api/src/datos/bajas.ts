@@ -211,8 +211,8 @@ function metaAgregados(doc: Fila): Fila {
   return {
     version: '207.1',
     alcance: 'filas_visibles_post_permisos_y_act',
-    fuente_generado: doc.generado,
-    datos_hasta: doc.datos_hasta,
+    fuente_generado: doc.generado ?? null,
+    datos_hasta: doc.datos_hasta ?? null,
     periodo_certificado: false,
     estado: 'referencia_de_copia',
     limitacion: 'No acredita lectura completa, cartera asignada, salud actual ni conversiones.',
