@@ -2,13 +2,23 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F5.1
+## PARA: F5.2
 
-PUERTA f5 DE F5.1 (23:13): lo esencial en verde (compila, e2e, contrato, escrituras, velocidad). Quedan dos cosas:
-1. SEGURIDAD, fallo real, arréglalo antes de cerrar: `/api/sesion`, servida ya por Nest, sale sin las cabeceras de seguridad que pone la app de hoy (Content-Security-Policy, X-Frame-Options o frame-ancestors, y las otras que marque `seguridad_http.py`). Ponlas UNA vez y de forma global en Nest (middleware o interceptor registrado en `main.ts` o en el módulo raíz), con los mismos valores que `servir.py`, para que valgan en todas las rutas que se muden en F5.2–F5.9. Añade una prueba e2e que pida `/api/sesion` y `/vivo` y compruebe cada cabecera. No toques `seguridad_http.py`.
-2. CAÍDAS, «sin legado responde 200»: es lo esperado, porque `/api/sesion` ya no pasa por el legado. NO edites `caidas.sh`: es un juez con huella. Aplica la regla de las excepciones: abre N-29 en `migracion/PENDIENTES_LOGICA.md` (gravedad «pruebas», estado «conocido»: «caidas.sh prueba la caída del legado con /api/sesion, que desde F5.1 sirve Nest; el juez debe usar una ruta que siga por el proxy; lo cambia Claude de día»). Compruébalo a mano: con el legado parado, una ruta que siga por el proxy (por ejemplo `/api/indicadores`) da 502/503 en < 6 s. Si es así, esa línea no decide el paso. Apunta la orden y su salida en PROGRESO.
-3. Baterías contra la app nueva: cada rojo nuevo (no estaba en la última puerta f3) es del paso y se arregla. Los rojos que ya estaban, se apuntan.
-Hecho cuando: cabeceras globales con su e2e en verde, `seguridad_http.py` en verde, N-29 apuntado con la prueba manual, y baterías sin rojos nuevos.
+PRIMERO, ANTES DE LAS RUTAS DE F5.2: `/api/sesion` VUELVE A NEST (nota de Claude, 7-oct 02:50). F5.1 dejó identidad, rastro, sesión, cabeceras y puerta de secretos hechos y probados (a0079da, cf89cd4), pero sacó `/api/sesion` de `RUTAS_EN_NEST` (4b28116) porque la puerta f5 no salía verde. Esos rojos NO son de enrutar: con la ruta en Nest y sin ella salen los mismos. Si cada paso hace lo mismo, la noche acaba con cero rutas en Nest, y la meta es tener todas las rutas montadas.
+1. `git revert --no-edit 4b28116` (vuelve `['GET', /^\/api\/sesion$/]` a `rutas-en-nest.ts` y deja `proxy.spec.ts` como en cf89cd4).
+2. `contrato.py comparar` para `/api/sesion`: 0 diferencias. e2e de identidad en verde.
+3. En `migracion/PROGRESO.md`, en la línea ⚠ de F5.1, añade al final: «· `/api/sesion` enrutada en Nest en F5.2, HH:MM (nota de Claude 7-oct 02:50)». No cambies el ⚠.
+Hecho cuando: `/api/sesion` la sirve Nest (401 de 3000 con las 5 cabeceras y sin pasar por 8771) y su contrato da 0 diferencias.
+
+JUECES CONOCIDOS (N-30, vale para F5.2–F5.9). En la puerta f5 hay tres rojos que ya salían en F5.1 con y sin rutas en Nest, y no son de los pasos de rutas:
+- seguridad: SOLO `/: content-security-policy cambia` frente a la referencia (8770 corre `ref/` y 8771 el árbol con F5.10; 3000 = 8771 byte a byte).
+- baterías: N-13 (texto 413 del proxy), `seguridad_aisladas` y 562 (`pruebas_entrada_error_562.cjs`, roto por L-24).
+- fotos y 30 personas: regla N-28 de abajo.
+1. Abre N-30 en `migracion/PENDIENTES_LOGICA.md` (gravedad «pruebas», estado «conocido») con esos rojos y la prueba: la misma puerta con la ruta en Nest y sin ella da los mismos.
+2. Si en la puerta f5 de un paso lo ÚNICO rojo son esos, el paso se cierra ✅ y sus rutas SE QUEDAN en `RUTAS_EN_NEST`. No se sacan rutas por estos rojos, nunca.
+3. Cualquier otro rojo de seguridad (una cabecera que falta en una ruta nueva, un 5xx, otra ruta en `seguridad_http.py`) o una batería que antes estaba verde es fallo real del paso.
+4. Copia esta regla a las notas generales de `migracion/PROGRESO.md`.
+Hecho cuando: N-30 apuntado y la regla en PROGRESO.
 
 FOTOS Y 30 PERSONAS EN LA PUERTA f5 (6-oct 22:15; vale para F5.1–F5.9). Las pantallas se rediseñan (decisión de Tomás, 6-oct 19:02) y estas dos líneas ya salían rojas en F3.1 por causas conocidas y ajenas a las rutas: 96/2100 fotos por las 4 causas de F3.1, y «30 personas» por la cola de 8770 en macOS.
 1. Si en `bash migracion/puerta.sh f5` lo ÚNICO rojo es «fotos» y/o «30 personas», compara con la línea base de F3.1. Fotos: las pantallas distintas son un subconjunto de las 96 de F3.1. 30 personas: la app nueva (8771/3000) no da ningún 5xx propio y los errores vienen de la cola de 8770. Si cumple, cierra el paso ✅, apunta N-28 en `migracion/PENDIENTES_LOGICA.md` (gravedad «presentación», estado «conocido», «fotos y 30 personas iguales que la línea base de F3.1; no deciden pasos de rutas»), y no hagas intentos extra.
@@ -29,12 +39,3 @@ Hecho cuando: F6.1–F6.4 en ⚠ fuera de alcance, sin cambios en `v2/apps/web`,
 
 Datos reales (regla N-26, decisión de Tomás 6-oct 10:41, vale para todas las puertas que quedan): si un fichero del `data/` de la raíz cambia sin que lo escriba ninguna orden tuya, es una tarea de Tomás ajena a la noche. No lo repongas ni lo reescribas: apúntalo en N-26 de `migracion/PENDIENTES_LOGICA.md` y añade su ruta a `~/RO_MIGRACION/excepciones.txt` con el motivo. La noche no lanza generadores ni pruebas que escriban en el `data/` de la raíz (copia temporal si hace falta).
 
-## PARA: F5.2
-
-FOTOS Y 30 PERSONAS EN LA PUERTA f5 (6-oct 22:15; vale para F5.1–F5.9). Las pantallas se rediseñan (decisión de Tomás, 6-oct 19:02) y estas dos líneas ya salían rojas en F3.1 por causas conocidas y ajenas a las rutas: 96/2100 fotos por las 4 causas de F3.1, y «30 personas» por la cola de 8770 en macOS.
-1. Si en `bash migracion/puerta.sh f5` lo ÚNICO rojo es «fotos» y/o «30 personas», compara con la línea base de F3.1. Fotos: las pantallas distintas son un subconjunto de las 96 de F3.1. 30 personas: la app nueva (8771/3000) no da ningún 5xx propio y los errores vienen de la cola de 8770. Si cumple, cierra el paso ✅, apunta N-28 en `migracion/PENDIENTES_LOGICA.md` (gravedad «presentación», estado «conocido», «fotos y 30 personas iguales que la línea base de F3.1; no deciden pasos de rutas»), y no hagas intentos extra.
-2. Si sale una pantalla distinta NUEVA (no está entre las 96) o un 5xx de la app nueva, es fallo real del paso: sigue el plan normal.
-3. La cascada «F5.1 ⚠ → F5.2–F5.9 sin intentarlo» SOLO vale si falla la identidad, la sesión o el rastro: compila, e2e, contrato o escrituras en rojo. Nunca por fotos, 30 personas o velocidad.
-4. Mientras iteras usa `bash migracion/puerta.sh f5 --rapido`. La puerta completa, una sola vez al cerrar.
-5. Copia esta regla a las notas generales de `migracion/PROGRESO.md`.
-Hecho cuando: el paso se cierra con N-28 apuntado, o se identifica la pantalla o el 5xx nuevo.
