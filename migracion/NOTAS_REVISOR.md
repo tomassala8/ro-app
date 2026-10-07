@@ -2,22 +2,16 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F5.2
-
-PRIMERO, ANTES DE LAS RUTAS DE F5.2: `/api/sesion` VUELVE A NEST (nota de Claude, 7-oct 02:50). F5.1 dejó identidad, rastro, sesión, cabeceras y puerta de secretos hechos y probados (a0079da, cf89cd4), pero sacó `/api/sesion` de `RUTAS_EN_NEST` (4b28116) porque la puerta f5 no salía verde. Esos rojos NO son de enrutar: con la ruta en Nest y sin ella salen los mismos. Si cada paso hace lo mismo, la noche acaba con cero rutas en Nest, y la meta es tener todas las rutas montadas.
-1. `git revert --no-edit 4b28116` (vuelve `['GET', /^\/api\/sesion$/]` a `rutas-en-nest.ts` y deja `proxy.spec.ts` como en cf89cd4).
-2. `contrato.py comparar` para `/api/sesion`: 0 diferencias. e2e de identidad en verde.
-3. En `migracion/PROGRESO.md`, en la línea ⚠ de F5.1, añade al final: «· `/api/sesion` enrutada en Nest en F5.2, HH:MM (nota de Claude 7-oct 02:50)». No cambies el ⚠.
-Hecho cuando: `/api/sesion` la sirve Nest (401 de 3000 con las 5 cabeceras y sin pasar por 8771) y su contrato da 0 diferencias.
+## PARA: F5.3
 
 JUECES CONOCIDOS (N-30, vale para F5.2–F5.9). En la puerta f5 hay tres rojos que ya salían en F5.1 con y sin rutas en Nest, y no son de los pasos de rutas:
 - seguridad: SOLO `/: content-security-policy cambia` frente a la referencia (8770 corre `ref/` y 8771 el árbol con F5.10; 3000 = 8771 byte a byte).
 - baterías: N-13 (texto 413 del proxy), `seguridad_aisladas` y 562 (`pruebas_entrada_error_562.cjs`, roto por L-24).
 - fotos y 30 personas: regla N-28 de abajo.
-1. Abre N-30 en `migracion/PENDIENTES_LOGICA.md` (gravedad «pruebas», estado «conocido») con esos rojos y la prueba: la misma puerta con la ruta en Nest y sin ella da los mismos.
+1. Si aún no está, abre N-30 en `migracion/PENDIENTES_LOGICA.md` (gravedad «pruebas», estado «conocido») con esos rojos y la prueba: la misma puerta con la ruta en Nest y sin ella da los mismos.
 2. Si en la puerta f5 de un paso lo ÚNICO rojo son esos, el paso se cierra ✅ y sus rutas SE QUEDAN en `RUTAS_EN_NEST`. No se sacan rutas por estos rojos, nunca.
 3. Cualquier otro rojo de seguridad (una cabecera que falta en una ruta nueva, un 5xx, otra ruta en `seguridad_http.py`) o una batería que antes estaba verde es fallo real del paso.
-4. Copia esta regla a las notas generales de `migracion/PROGRESO.md`.
+4. Si aún no está, copia esta regla a las notas generales de `migracion/PROGRESO.md`.
 Hecho cuando: N-30 apuntado y la regla en PROGRESO.
 
 FOTOS Y 30 PERSONAS EN LA PUERTA f5 (6-oct 22:15; vale para F5.1–F5.9). Las pantallas se rediseñan (decisión de Tomás, 6-oct 19:02) y estas dos líneas ya salían rojas en F3.1 por causas conocidas y ajenas a las rutas: 96/2100 fotos por las 4 causas de F3.1, y «30 personas» por la cola de 8770 en macOS.
