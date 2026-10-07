@@ -6,6 +6,9 @@ export type Metodo = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 export const RUTAS_EN_NEST: ReadonlyArray<readonly [Metodo, RegExp]> = [
   ['GET', /^\/vivo$/],
   ['GET', /^\/api\/sesion$/],
+  ['GET', /^\/api\/rastro\/verificar$/],
+  ['POST', /^\/api\/rastro$/],
+  ['GET', /^\/api\/rastro$/],
 ];
 
 export function atiendeNest(metodo: string, ruta: string): boolean {

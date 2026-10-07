@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { huellaRastro, jsonComoPython } from '@ro/compat';
+import { horaMadrid, huellaRastro, jsonComoPython } from '@ro/compat';
 import type { Prisma } from '@ro/db';
 import { PrismaService } from '../prisma/prisma.service.js';
 
@@ -18,10 +18,75 @@ export interface FilaRastro {
 
 /** El candado del rastro entre procesos: el mismo número que despliegue/base.py (BEGIN IMMEDIATE en Postgres). */
 const CANDADO_RASTRO = 7262;
+/** servir.py › TOPE_RASTRO_MINUTO. Se lee al cargar el módulo, como el `int(os.environ…)` de Python. */
+const TOPE_RASTRO_MINUTO = Number(process.env.RO_TOPE_RASTRO_MINUTO || 30);
 
 @Injectable()
 export class RastroService {
+  /** Contadores en memoria de ESTE proceso (servir.py › _AGRUPADOS y _POR_MINUTO). No se comparten con el legado. */
+  private readonly agrupados = new Map<string, number>();
+  private readonly porMinuto = new Map<string, number>();
+
   constructor(private readonly prisma: PrismaService) {}
+
+  /** Hora local de Madrid, sin RO_RELOJ: servir.py › ahora() en el minuto de agrupación. */
+  private minutoLocal(): string {
+    return horaMadrid(new Date(), '').slice(0, 16).replace('T', ' ');
+  }
+
+  /** servir.py › tope_rastro_navegador. False cuando este minuto ya lleva TOPE * 2 anotaciones del navegador. */
+  topeNavegador(quien: string): boolean {
+    const k = `${quien}\u0000nav\u0000${this.minutoLocal()}`;
+    const n = this.porMinuto.get(k) ?? 0;
+    this.porMinuto.set(k, n + 1);
+    return n < TOPE_RASTRO_MINUTO * 2;
+  }
+
+  /** servir.py › registrar_agrupado. Una fila por persona, ruta y minuto; al pasarse, una sola «rastro_limitado». */
+  async registrarAgrupado(
+    quien: string,
+    coleccion: string,
+    accion: string,
+    clave: string | null,
+    datos: Record<string, unknown> | null,
+    motivo: string | null,
+    como: string | null,
+  ): Promise<number | null> {
+    const minuto = this.minutoLocal();
+    const k = [quien, como ?? '', coleccion, accion, clave ?? '', minuto].join('\u0000');
+    if (this.agrupados.size > 20000) {
+      this.agrupados.clear();
+      this.porMinuto.clear();
+    }
+    if (this.agrupados.has(k)) {
+      this.agrupados.set(k, (this.agrupados.get(k) ?? 0) + 1);
+      return null;
+    }
+    const mk = `${quien}\u0000${minuto}`;
+    const n = this.porMinuto.get(mk) ?? 0;
+    this.porMinuto.set(mk, n + 1);
+    if (n > TOPE_RASTRO_MINUTO) return null;
+    this.agrupados.set(k, 1);
+    if (n === TOPE_RASTRO_MINUTO) {
+      return this.registrar(null, {
+        quien,
+        coleccion: 'rastro',
+        accion: 'rastro_limitado',
+        clave: minuto,
+        datos: { detalle: `Más de ${TOPE_RASTRO_MINUTO} denegados o lecturas en un minuto: el resto de ese minuto no deja fila.` },
+        como,
+      });
+    }
+    return this.registrar(null, {
+      quien,
+      coleccion,
+      accion,
+      clave,
+      datos: { ...(datos ?? {}), agrupado: 'una fila por persona, ruta y minuto' },
+      motivo,
+      como,
+    });
+  }
 
   /**
    * servir.py › _registrar: rastro imborrable y ENCADENADO. Nest y el legado escriben a la vez: el candado va dentro

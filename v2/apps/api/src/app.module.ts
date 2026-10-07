@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { cabecerasSeguridad } from './permisos/cabeceras.middleware.js';
+import { PeticionMiddleware } from './permisos/peticion.middleware.js';
 import { IdentidadModule } from './permisos/identidad.module.js';
 import { PermisosModule } from './permisos/permisos.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
@@ -26,7 +27,11 @@ export class AppModule implements NestModule, OnApplicationBootstrap {
 
   // Cabeceras de seguridad de servir.py en todas las rutas de Nest, también en los errores de las guardas.
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(cabecerasSeguridad).forRoutes({ path: '{*splat}', method: RequestMethod.ALL });
+    const todas = { path: '{*splat}', method: RequestMethod.ALL };
+    // Cabeceras primero: un 403 de la petición sale con las mismas cabeceras que servir.py.
+    consumer.apply(cabecerasSeguridad).forRoutes(todas);
+    // Host, HEAD/OPTIONS y la petición propia de los POST. Corre después del proxy (main.ts) y antes de las guardas.
+    consumer.apply(PeticionMiddleware).forRoutes(todas);
   }
 
   // servir.py no manda ETag en las respuestas de /api (ni contesta 304): Express lo pone por defecto.

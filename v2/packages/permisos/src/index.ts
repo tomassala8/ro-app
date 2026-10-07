@@ -29,7 +29,28 @@ export type {
 export { cargarReglas, hoyIso, recargarReglas, reglas } from './reglas.js';
 export { ambito, cartera, carteraPorSilla } from './cartera.js';
 export { clasificarImporte580, fueraImporte580 } from './clasificacion-importes-580.js';
-export { enmascarar, enlaceSeguro, importesAQuitar, sinImportes, sinImportesLibre } from './importes.js';
+export {
+  CLAVES_COBROS,
+  CLAVES_COBROS_SRC,
+  CLAVES_CUOTA,
+  CLAVES_CUOTA_SRC,
+  CLAVES_DINERO_CAPTACION,
+  CLAVES_DINERO_CAPTACION_SRC,
+  CLAVES_INVERSION,
+  CLAVES_INVERSION_SRC,
+  CLAVES_LEAD,
+  CLAVES_LEAD_SRC,
+  DINERO_CUOTA_VALOR,
+  DINERO_EMPRESA,
+  DINERO_EMPRESA_SRC,
+  DINERO_INVERSION_VALOR,
+  enmascarar,
+  enlaceSeguro,
+  importesAQuitar,
+  sinImportes,
+  sinImportesLibre,
+} from './importes.js';
+export type { QuitaClave } from './importes.js';
 export { cargarModulos, nivelModulo } from './modulos.js';
 export { directorio, recortar, soloFilasDe } from './recortar.js';
 export { contexto, soloSuCartera, ver } from './ver.js';

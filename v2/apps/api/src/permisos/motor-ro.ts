@@ -45,7 +45,7 @@ export class MotorRo implements MotorPermisos {
       }
       if (d.tipo !== undefined) {
         const r = ver(persona, { tipo: d.tipo }, vista.cp ?? {});
-        return r.ok ? { ok: true } : { ok: false, status: 403, mensaje: r.motivo || 'No visible para tu puesto.' };
+        return r.ok ? { ok: true } : { ok: false, status: 403, mensaje: d.mensaje ?? (r.motivo || 'No visible para tu puesto.') };
       }
       return { ok: false, status: 403, mensaje: 'Sin permiso.' };
     };

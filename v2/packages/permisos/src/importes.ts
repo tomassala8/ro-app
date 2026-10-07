@@ -137,6 +137,68 @@ export function enlaceSeguro(u: unknown): unknown {
   return ESQUEMAS_OK.test(t) ? t : null;
 }
 
+/**
+ * Claves que recortar_doc quita (servir.py › CLAVES_* y ClaveValor). El texto del patrón es el de Python;
+ * `py()` traduce `\b` y `\d`, y la bandera `i` es `re.I`.
+ */
+export const CLAVES_CUOTA_SRC =
+  String.raw`(?:^|[_\-.])(?:cuota(?![_\-.]horas(?:$|[_\-.]))|fee|importe|mrr|precio\w*|tarifa(?![_\-.](?:hora|ruta|busqueda)(?:$|[_\-.])))(?:$|[_\-.])`;
+export const CLAVES_COBROS_SRC =
+  String.raw`(?:^|[_\-.])(?:facturas?\w*|facturado\w*|cobrad\w*|impag\w*|pendiente_cobro|revenue|invoice_total)(?:$|[_\-.])`;
+export const CLAVES_INVERSION_SRC =
+  String.raw`(?:^|[_\-.])(?:gasto\w*|coste(?![_\-.]horas(?:$|[_\-.]))\w*|cpl\w*|cpc\w*|cpm\w*|inversion\w*|spend|budget_ads|presupuesto_ads|ad_spend|cost_per_lead|cost_per_click|importe_publicidad)(?:$|[_\-.])`;
+export const CLAVES_LEAD_SRC =
+  String.raw`(?:^|[_\-.])(?:nombre_lead|lead_name|nombre_m|telefono|tel|tel_m|correo_lead|email_lead|lead_email|lead_phone|phone_lead|movil|móvil|whatsapp|telefono_contacto|dni|nif|nie|iban)(?:$|[_\-.])|^email$`;
+export const DINERO_EMPRESA_SRC =
+  String.raw`(?:^|[_\-.])(?:agency_(?:profit|margin|cost)|beneficio\w*|margen\w*|rentabilidad\w*|tarifa_hora|coste_eur)(?:$|[_\-.])`;
+export const CLAVES_DINERO_CAPTACION_SRC = String.raw`^(presupuesto.*|serie.*|invertido.*|objetivo.*)$`;
+
+export interface QuitaClave {
+  /** True si esta clave (y, si hace falta, su valor) no debe salir. */
+  quita(k: string, v: unknown): boolean;
+}
+
+function quitaPatron(src: string, bandera: 'i' | '' = 'i'): QuitaClave {
+  const re = new RegExp(py(src), bandera);
+  return {
+    quita(k: string) {
+      re.lastIndex = 0;
+      return re.test(String(k));
+    },
+  };
+}
+
+function esNum(x: unknown): boolean {
+  return typeof x === 'number' && !Number.isNaN(x);
+}
+
+export const CLAVES_CUOTA = quitaPatron(CLAVES_CUOTA_SRC);
+export const CLAVES_COBROS = quitaPatron(CLAVES_COBROS_SRC);
+export const CLAVES_INVERSION = quitaPatron(CLAVES_INVERSION_SRC);
+export const CLAVES_LEAD = quitaPatron(CLAVES_LEAD_SRC);
+export const DINERO_EMPRESA = quitaPatron(DINERO_EMPRESA_SRC);
+export const CLAVES_DINERO_CAPTACION = quitaPatron(CLAVES_DINERO_CAPTACION_SRC, '');
+
+/** servir.py › DINERO_CUOTA_VALOR. */
+export const DINERO_CUOTA_VALOR: QuitaClave = {
+  quita(k, v) {
+    const ks = String(k).toLowerCase();
+    if (ks === 'meses' && v && typeof v === 'object' && !Array.isArray(v)) {
+      const vals = Object.values(v as object);
+      return vals.length > 0 && vals.every((x) => x === null || esNum(x));
+    }
+    return /^ltv(_eur|_media|_mediana|_total)?$/i.test(ks) && esNum(v);
+  },
+};
+
+/** servir.py › DINERO_INVERSION_VALOR. */
+export const DINERO_INVERSION_VALOR: QuitaClave = {
+  quita(k, v) {
+    const ks = String(k).toLowerCase();
+    return (ks.startsWith('presupuesto') && !!v && typeof v === 'object' && !Array.isArray(v)) || ks.startsWith('invertido');
+  },
+};
+
 export function enmascarar(texto = ''): string {
   const t = texto || '';
   const arroba = t.indexOf('@');

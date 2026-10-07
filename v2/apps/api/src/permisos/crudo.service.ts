@@ -60,6 +60,11 @@ export class CrudoService {
     return (await this.vigente()).crudo;
   }
 
+  /** Marca del crudo (versión, disco, historial, decisiones y día). Sirve para ver si cambió a mitad de una lectura. */
+  async sello(): Promise<string> {
+    return (await this.marca()).marca;
+  }
+
   /** data/_privado/correos_entrada.json › correos de la misma versión. Solo para la identidad: nunca sale en una respuesta. */
   async correosEntrada(): Promise<Record<string, string>> {
     return (await this.vigente()).correosEntrada;

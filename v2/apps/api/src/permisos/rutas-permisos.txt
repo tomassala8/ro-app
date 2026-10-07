@@ -1,2 +1,5 @@
+GET /rastro  →  {"soloIdentidad":"toda persona activa lee su rastro, como servir.py › GET /api/rastro","sinRecorte":"el recorte lo hace fila_visible/recortar_vistas, línea a línea como servir.py:2808-2813"}
+GET /rastro/verificar  →  {"tipo":"rastro_todo","mensaje":"Solo dirección.","sinRecorte":"no lleva datos de clientes: estado de la cadena"}
 GET /sesion  →  {"soloIdentidad":"toda persona activa recibe su sesión, como servir.py › /api/sesion","sinRecorte":"la sesión ya sale recortada por recortar(persona, crudo), igual que servir.py › /api/sesion"}
 GET /vivo  →  público (comprobación de vida, sin datos)
+POST /rastro  →  {"soloIdentidad":"toda persona activa puede anotar en el rastro, como servir.py › POST /api/rastro","sinRecorte":"la respuesta es ok, id y hora, sin datos de clientes"}

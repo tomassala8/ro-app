@@ -32,6 +32,8 @@ export interface DeclaracionPermiso {
   lecturaPorPost?: string;
   /** Solo con motivo: la ruta la recibe toda persona identificada (y activa); el recorte va dentro (p. ej. /api/sesion). */
   soloIdentidad?: string;
+  /** Texto exacto de servir.py cuando la declaración deniega (si no, el motivo de la matriz). */
+  mensaje?: string;
 }
 
 export const Permiso = (declaracion: DeclaracionPermiso) => SetMetadata(CLAVE_PERMISO, declaracion);

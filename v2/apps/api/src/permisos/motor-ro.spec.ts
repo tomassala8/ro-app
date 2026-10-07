@@ -42,6 +42,11 @@ describe('MotorRo', () => {
     expect(motor.entrar(undefined, { soloIdentidad: 'sesión' })).toMatchObject({ ok: false, status: 401 });
   });
 
+  it('el mensaje de la declaración sustituye al motivo de la matriz', () => {
+    const r = motor.entrar({ real: account, cp }, { tipo: 'sueldo', mensaje: 'Solo dirección.' });
+    expect(r).toEqual({ ok: false, status: 403, mensaje: 'Solo dirección.' });
+  });
+
   it('un account no ve sueldos, con el motivo de la matriz', () => {
     const r = motor.entrar({ real: account, cp }, { tipo: 'sueldo' });
     expect(r.ok).toBe(false);
