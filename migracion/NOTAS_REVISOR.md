@@ -2,7 +2,7 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F5.3
+## PARA: F5.4
 
 JUECES CONOCIDOS (N-30, vale para F5.2–F5.9). En la puerta f5 hay tres rojos que ya salían en F5.1 con y sin rutas en Nest, y no son de los pasos de rutas:
 - seguridad: SOLO `/: content-security-policy cambia` frente a la referencia (8770 corre `ref/` y 8771 el árbol con F5.10; 3000 = 8771 byte a byte).
