@@ -2,7 +2,15 @@
 
 Las escribe Claude desde fuera. noche.sh las lee cada 5 minutos. No mandan sobre PROMPT_NOCHE.md ni .cursor/rules.
 
-## PARA: F5.4
+## PARA: F5.5
+
+RITMO PARA F5.5–F5.9 (nota de Claude, 7-oct 13:55). Quedan unas 12 h hasta el tope (jueves 02:01) y cada paso cuesta unas 2 h 30, casi todo en puertas. Fotos, baterías y «30 personas» salen siempre con los mismos rojos (N-28, N-30) y no deciden los pasos de rutas. Lo que sí vigila que nada se rompa es compila, e2e, contrato y escrituras.
+1. Para ITERAR no uses `puerta.sh`. Usa solo esto, sobre las rutas del paso: compilar, pruebas y e2e de la api (las mismas órdenes que usa `puerta.sh` en esos pasos), `python3 migracion/contrato.py` comparar solo con esas rutas y `python3 migracion/contrato_escritura.py` si hay POST. Unos 10 minutos.
+2. Para CERRAR F5.5, F5.6, F5.7 y F5.8: UNA `bash migracion/puerta.sh f5 --rapido`. Si sus únicos rojos son los conocidos (N-28, N-30 y la velocidad de día de N-27), el paso se cierra ✅ con la nota «cerrado con puerta rápida (nota de Claude 13:55); puerta completa en F5.9». Si sale cualquier otro rojo, pasa la completa en ese paso.
+3. Para cerrar F5.9: UNA `bash migracion/puerta.sh f5` COMPLETA, que cubre F5.4–F5.9 juntos. Un rojo nuevo ahí se atribuye al paso de la ruta que falla, se arregla y se apunta en su línea.
+4. Si las fotos fallan por el navegador (cuelgue o timeout, no una diferencia), no se repiten: se apunta y se sigue.
+5. Copia esta regla a las notas generales de `migracion/PROGRESO.md`.
+Hecho cuando: F5.5–F5.8 cerrados con su puerta rápida, y F5.9 con la completa.
 
 JUECES CONOCIDOS (N-30, vale para F5.2–F5.9). En la puerta f5 hay tres rojos que ya salían en F5.1 con y sin rutas en Nest, y no son de los pasos de rutas:
 - seguridad: SOLO `/: content-security-policy cambia` frente a la referencia (8770 corre `ref/` y 8771 el árbol con F5.10; 3000 = 8771 byte a byte).
