@@ -1,0 +1,105 @@
+/* ro-tema.css · los tokens de estilos.css (raíz del repo) convertidos en tema de Tailwind y de shadcn.
+   Regla: el aspecto lo manda estilos.css. Si cambia un token allí, se cambia aquí con el MISMO valor.
+   Claro siempre (orden de Tomás: nunca modo oscuro). Montserrat servida desde la propia app (sin Google Fonts). */
+
+@font-face {
+  font-family: "Montserrat"; font-style: normal; font-weight: 100 900; font-display: swap;
+  src: url("/fuentes_web/montserrat-latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("/fuentes_web/geist-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono"; font-style: normal; font-weight: 500; font-display: swap;
+  src: url("/fuentes_web/geist-mono-latin-500-normal.woff2") format("woff2");
+}
+
+:root {
+  color-scheme: light only;
+  --page: #f3f5fb; --card: #ffffff; --card-2: #f6f7fc; --hover: #eef0fa;
+  --line: #e3e6f2; --line-soft: #eceef7;
+  --ink: #10133a; --mid: #4a4f6e; --dim: #5f6482;
+  --accent: #3040b5; --accent-2: #4a5bd6; --accent-soft: #eaedfc; --accent-ink: #26339a;
+  --navy: #16205e; --navy-2: #0f1645; --navy-txt: #cfd3ee; --navy-dim: #8a91c2;
+  --good: #12945a; --good-ink: #0c7646; --good-soft: #e2f4ea;
+  --warn: #c27a00; --warn-ink: #8f5600; --warn-soft: #fff2d9;
+  --bad: #c93434; --bad-ink: #ae2828; --bad-soft: #fdeaea;
+  --off: #a9aec6; --off-soft: #eff1f7;
+  --r-s: 6px; --r-m: 10px; --r-l: 14px;
+
+  /* Variables que esperan los componentes de shadcn, apuntando a los tokens de RO */
+  --background: var(--page);
+  --foreground: var(--ink);
+  --card-foreground: var(--ink);
+  --popover: var(--card);
+  --popover-foreground: var(--ink);
+  --primary: var(--accent);
+  --primary-foreground: #ffffff;
+  --secondary: var(--card-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--card-2);
+  --muted-foreground: var(--dim);
+  --destructive: var(--bad);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--accent-soft);
+  --radius: var(--r-m);
+  --sidebar: var(--navy);
+  --sidebar-foreground: var(--navy-txt);
+}
+
+@theme inline {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* shadcn */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --radius-sm: var(--r-s);
+  --radius-md: var(--r-m);
+  --radius-lg: var(--r-l);
+  /* RO, con sus nombres (bg-page, text-ink, text-good-ink…) */
+  --color-page: var(--page);
+  --color-card-2: var(--card-2);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-ink: var(--ink);
+  --color-mid: var(--mid);
+  --color-dim: var(--dim);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-navy: var(--navy);
+  --color-navy-2: var(--navy-2);
+  --color-navy-txt: var(--navy-txt);
+  --color-navy-dim: var(--navy-dim);
+  --color-good: var(--good);
+  --color-good-ink: var(--good-ink);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-ink: var(--bad-ink);
+  --color-bad-soft: var(--bad-soft);
+  --color-off: var(--off);
+  --color-off-soft: var(--off-soft);
+}

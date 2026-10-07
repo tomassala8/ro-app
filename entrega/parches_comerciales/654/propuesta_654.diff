@@ -1,0 +1,243 @@
+--- baseline/cerebro_operativo.py
++++ propuesta/cerebro_operativo.py
+@@ -16,7 +16,7 @@
+     try:
+         n = float(valor)
+         return n if isfinite(n) and n >= 0 else None
+-    except (TypeError, ValueError):
++    except (TypeError, ValueError, OverflowError):
+         return None
+ 
+ 
+@@ -49,10 +49,15 @@
+             "cobertura": "no_acreditada"}
+ 
+ 
++def _objeto(valor):
++    return valor if isinstance(valor, dict) else {}
++
++
+ def _filas(doc, clave):
+     resultado, duplicados = {}, set()
+-    for fila in (doc or {}).get(clave, []) or []:
+-        if not isinstance(fila, dict) or not fila.get("cliente_id"):
++    filas = _objeto(doc).get(clave)
++    for fila in (filas if isinstance(filas, (list, tuple)) else []):
++        if not isinstance(fila, dict) or not isinstance(fila.get("cliente_id"), str) or not fila["cliente_id"]:
+             continue
+         cid = str(fila["cliente_id"])
+         if cid in resultado:
+@@ -72,7 +77,7 @@
+ 
+ 
+ def _semanas_comparables(doc, hoy):
+-    ventanas = (doc or {}).get("ventanas") or {}
++    ventanas = _objeto(_objeto(doc).get("ventanas"))
+     periodos = []
+     for key in ("7d_prev", "7d"):
+         raw = ventanas.get(key)
+@@ -96,10 +101,20 @@
+     fecha = _fecha(hoy) if hoy is not None else date.today()
+     if fecha is None:
+         raise ValueError("hoy debe ser una fecha ISO válida")
++    estructuras = []
++    for nombre, doc, clave in (("captacion", captacion, "clientes"), ("crm", crm, "subcuentas"), ("objetivos", objetivos, "clientes")):
++        if doc is not None and not isinstance(doc, dict):
++            estructuras.append({"fuente": nombre, "codigo": "documento_no_estructurado"})
++        elif isinstance(doc, dict) and clave in doc and doc[clave] is not None and not isinstance(doc[clave], (list, tuple)):
++            estructuras.append({"fuente": nombre, "codigo": "coleccion_no_estructurada"})
++    # Tipos de contenedor desconocidos no autorizan interpretar texto CSV como estructura.
++    captacion = captacion if isinstance(captacion, dict) else None
++    crm = crm if isinstance(crm, dict) else None
++    objetivos = objetivos if isinstance(objetivos, dict) else None
+     paid_fecha = ({**captacion, "generado": captacion["captacion_generado"]}
+                   if isinstance(captacion, dict) and captacion.get("captacion_generado") else captacion)
+     crm_fecha = crm
+-    ghl = ((crm or {}).get("fuentes") or {}).get("ghl")
++    ghl = _objeto(_objeto(crm).get("fuentes")).get("ghl")
+     if isinstance(ghl, dict):
+         crm_fecha = {"generado": ghl.get("hora")}
+         if "datos_hasta" in (crm or {}):
+@@ -119,11 +134,19 @@
+ 
+     for cid in ids:
+         k, s = paid.get(cid), cuentas.get(cid)
+-        equipo = (k or {}).get("equipo") or {}
++        equipo = _objeto(_objeto(k).get("equipo"))
+         owners = {"trafficker": equipo.get("trafficker"),
+                   "crm": (s or {}).get("especialista_id") or equipo.get("crm"),
+                   "account": (s or {}).get("account_id") or equipo.get("account")}
+         gaps = []
++        for fuente, fila, campos in (
++            ("captacion", k, ("equipo", "cuenta_meta", "leads", "gasto", "presupuesto_ads", "anuncios", "cpl_resumen")),
++            ("crm", s, ("velocidad", "citas_30d", "whatsapp", "correo", "embudo")),
++            ("objetivos", goals.get(cid), ("objetivo",))):
++            for campo in campos:
++                if fila and campo in fila and fila[campo] is not None and not isinstance(fila[campo], dict):
++                    gaps.append({"fuente": fuente, "codigo": "estructura_invalida_"+campo,
++                                 "texto": "Campo estructurado no válido: medición desconocida; no se interpreta como cero."})
+         cadena = {"paid": "sin_dato", "crm": "sin_dato", "recibidos": "sin_dato",
+                   "cualificados": "no_instrumentado", "citas": "sin_dato", "cierre": "sin_dato"}
+ 
+@@ -154,16 +177,16 @@
+             elif fuentes[f]["estado"] != "actual":
+                 gaps.append({"fuente": f, "codigo": "sin_vigencia", "texto": "Sin fecha reciente comprobable: no representa el estado actual."})
+ 
+-        paid_error = bool(k and ((k.get("cuenta_meta") or {}).get("error") or (k.get("cuenta_meta") or {}).get("errores") or k.get("error") or k.get("errores_lectura")))
++        paid_error = bool(k and (_objeto(k.get("cuenta_meta")).get("error") or _objeto(k.get("cuenta_meta")).get("errores") or k.get("error") or k.get("errores_lectura")))
+         if paid_error:
+             gaps.append({"fuente": "captacion", "codigo": "lectura_paid_parcial", "texto": "Hay errores de lectura de la cuenta: sus ceros y comparaciones no sostienen diagnósticos Paid."})
+         if k and not paid_error and fuentes["captacion"]["estado"] == "actual":
+-            periodo7 = (captacion.get("ventanas") or {}).get("7d")
++            periodo7 = _objeto(captacion.get("ventanas")).get("7d")
+             medicion331 = medir_paid331(k, periodo7, fecha.isoformat())
+             leads, gasto = medicion331["leads"], medicion331["gasto"]
+             if leads is None:
+-                raw331 = _numero((k.get("leads") or {}).get("7d"))
+-                spend331 = _numero((k.get("gasto") or {}).get("7d"))
++                raw331 = _numero(_objeto(k.get("leads")).get("7d"))
++                spend331 = _numero(_objeto(k.get("gasto")).get("7d"))
+                 if (raw331 is not None and raw331 > 0) or (spend331 is not None and spend331 > 0):
+                     recomendar("paid_validar_medicion", "paid", "Comprobar la definición y el periodo de resultados Meta",
+                         "Hay referencias en la copia, pero no una medición de eventos lead validada por cuenta, fecha y ventana. No se interpreta como leads, compras ni CPL.",
+@@ -184,7 +207,7 @@
+                     "Probar el formulario y la llegada al CRM; contrastar el evento de lead y registrar dónde falla.",
+                     "trafficker", "Eventos lead Meta observados en 7 días: 0; hay gasto observado. No acredita contactos únicos ni cualificados.", prioridad=1, periodo=periodo7)
+             if k.get("meta_activa") is True:
+-                previo331 = medir_paid331(k, (captacion.get("ventanas") or {}).get("7d_prev"), fecha.isoformat())
++                previo331 = medir_paid331(k, _objeto(captacion.get("ventanas")).get("7d_prev"), fecha.isoformat())
+                 previo_leads, previo_gasto = previo331["leads"], previo331["gasto"]
+                 periodos_iguales = _semanas_comparables(captacion, fecha) and medicion331["tipo_evento"] == previo331["tipo_evento"]
+                 # 4 leads/semana y 25% son umbrales de revisión propuestos por RO,
+@@ -199,7 +222,7 @@
+                             "El coste por evento lead Meta observado aumenta frente a la semana anterior. Es una señal de revisión con muestra operativa, no un juicio de rentabilidad, calidad o objetivo incumplido.",
+                             "Trafficker y account: contrastar cambios de campañas, entrega y formulario entre ambas semanas; revisar los leads con el criterio del cliente antes de cambiar presupuesto o atribuir una causa.",
+                             "trafficker", f"Dos semanas consecutivas de 7 días, con {int(previo_leads)} y {int(leads)} leads; coste por evento lead Meta observado sube un {variacion:.1f}%.",
+-                            periodo={"actual": periodo7, "anterior": (captacion.get("ventanas") or {}).get("7d_prev")},
++                            periodo={"actual": periodo7, "anterior": _objeto(captacion.get("ventanas")).get("7d_prev")},
+                             entrega="Variación contrastada por campaña y periodo, cambios verificados y siguiente comprobación documentada; sin cambio automático de inversión.")
+                 elif not periodos_iguales or not muestra:
+                     gaps.append({"fuente": "captacion", "codigo": "comparacion_paid_insuficiente", "texto": "Faltan dos semanas consecutivas de 7 días o muestra operativa de 4 leads en cada una; no se calcula tendencia comparable.",
+@@ -207,7 +230,7 @@
+                 elif not costes:
+                     gaps.append({"fuente": "captacion", "codigo": "coste_paid_no_comparable", "texto": "Sin gasto positivo medido y accesible en ambas semanas; no se calcula tendencia de coste.",
+                                  "accion": "Contrastar el gasto de ambos periodos con el responsable autorizado, sin tomar datos ausentes como cero."})
+-                presupuesto = k.get("presupuesto_ads") or {}
++                presupuesto = _objeto(k.get("presupuesto_ads"))
+                 # Las fotos de septiembre no se convierten en aprobación de octubre.
+                 if not presupuesto or presupuesto.get("confirmado") is not True or presupuesto.get("periodo") != fecha.strftime("%Y-%m"):
+                     gaps.append({"fuente": "captacion", "codigo": "presupuesto_mes_no_confirmado", "texto": "No consta presupuesto autorizado para el mes actual en esta fuente; no se proyecta gasto ni desviación.",
+@@ -215,13 +238,21 @@
+                 if fecha.day <= 4:
+                     gaps.append({"fuente": "captacion", "codigo": "ritmo_mes_temprano", "texto": "Primeros 4 días del mes: la muestra parcial no sostiene una proyección mensual estable.",
+                                  "accion": "Revisar semanas equivalentes; posponer la proyección mensual hasta tener presupuesto vigente y días suficientes."})
+-            anuncios = k.get("anuncios") or {}
++            anuncios = _objeto(k.get("anuncios"))
+             # La generación de Captación no rejuvenece la copia independiente de anuncios.
+             fecha_ads = _fecha(captacion.get("anuncios_generado"))
+             ads_vigentes = fecha_ads and 0 <= (fecha - fecha_ads).days <= 2
+             if anuncios.get("errores") or not ads_vigentes:
+                 gaps.append({"fuente": "captacion", "codigo": "anuncios_sin_cobertura", "texto": "Datos de anuncios parciales o sin vigencia comprobable; no se diagnostica fatiga."})
+-            for a in ([] if anuncios.get("errores") or not ads_vigentes else anuncios.get("anuncios", [])) or []:
++            anuncios_filas = anuncios.get("anuncios")
++            if anuncios_filas is not None and not isinstance(anuncios_filas, (list, tuple)):
++                gaps.append({"fuente": "captacion", "codigo": "estructura_invalida_lista_anuncios",
++                             "texto": "Lista de anuncios no válida; señales desconocidas, no cero."})
++            for a in ([] if anuncios.get("errores") or not ads_vigentes else anuncios_filas if isinstance(anuncios_filas, (list, tuple)) else []):
++                if not isinstance(a, dict):
++                    gaps.append({"fuente": "captacion", "codigo": "estructura_invalida_fila_anuncio",
++                                 "texto": "Fila de anuncio no válida; no acredita ausencia de señales."})
++                    continue
+                 freq, caida = _numero(a.get("frecuencia_7d")), _numero(a.get("caida_ctr_pct"))
+                 if freq is not None and caida is not None and freq > 3 and caida >= 40:
+                     recomendar("paid_fatiga_doble", "paid", "Contrastar dos señales de creatividad de la copia",
+@@ -236,7 +267,7 @@
+                                  "accion": "Contrastar el anuncio por ID, periodos, zona, alcance y muestra antes de atribuir desgaste o cambiar campañas."})
+                     break
+             # Techo general/cpl_usado NO es un objetivo acordado para este cliente.
+-            objetivo = ((goals.get(cid) or {}).get("objetivo") or {}) if fuentes["objetivos"]["estado"] == "actual" and cid not in dg else {}
++            objetivo = _objeto(_objeto(goals.get(cid)).get("objetivo")) if fuentes["objetivos"]["estado"] == "actual" and cid not in dg else {}
+             # El flag cargado del snapshot Paid no confirma vigencia/autoridad
+             # del objetivo y no rescata una fuente antigua, ausente o duplicada.
+             if objetivo.get("periodo") and objetivo["periodo"] != fecha.strftime("%Y-%m"):
+@@ -251,7 +282,7 @@
+                 objetivo = {}
+             objetivo_confirmado = objetivo.get("confirmado") is True
+             target = _numero(objetivo.get("cpl_objetivo")) if objetivo else None
+-            cr = k.get("cpl_resumen") or {}
++            cr = _objeto(k.get("cpl_resumen"))
+             ref = gasto / leads if gasto is not None and leads is not None and leads >= 4 else None
+             if target is not None and target > 0 and ref is not None and objetivo_confirmado and objetivo.get("periodo") == fecha.strftime("%Y-%m") and isinstance(periodo7, (list, tuple)) and all(str(d).startswith(objetivo["periodo"] + "-") for d in periodo7) and ref > target * 1.5:
+                 recomendar("paid_cpl_objetivo", "paid",
+@@ -272,8 +303,8 @@
+                 cadena["crm"] = "medido"
+                 if _conteo(s.get("leads_30d")) is not None:
+                     cadena["recibidos"] = "conteo_crm_no_cualificacion"
+-                periodo30 = (crm.get("ventanas") or {}).get("leads")
+-                v = s.get("velocidad") or {}
++                periodo30 = _objeto(crm.get("ventanas")).get("leads")
++                v = _objeto(s.get("velocidad"))
+                 for regla, n, d, titulo, accion in (
+                     ("crm_primera_hora", "en_1h", "juzgables", "Contrastar primer contacto y llamada en la primera hora", "Contrastar con el despacho la llamada y su hora para cada lead elegible; los intentos observados también pueden ser mensajes. Registrar lo realizado."),
+                     ("crm_cuatro_intentos", "cuatro_en_72h", "juzgables_72h", "Comprobar cuatro intentos en 72 horas", "Contrastar con el despacho los leads con 72 horas cumplidas que no registran cuatro intentos; acordar seguimiento y registrar el resultado.")):
+@@ -287,7 +318,7 @@
+                                      "Casos con 72 horas acreditadas: intentos observados únicos con fecha, zona y canal en la ventana creación a 72 horas, o ventana/fechas explícitamente pendientes. Separar registros CRM de declaración del despacho, sin completar faltantes ni duplicados y sin afirmar cuatro llamadas. Seguimiento con responsable y fecha."))
+                     elif par is None:
+                         gaps.append({"fuente": "crm", "codigo": regla + "_sin_cohorte", "texto": "Sin numerador y denominador elegibles consistentes; no se calcula porcentaje."})
+-                citas = s.get("citas_30d") or {}
++                citas = _objeto(s.get("citas_30d"))
+                 sin_estado = _conteo(citas.get("sin_estado"))
+                 # Un cero legado no acredita cobertura de calendarios ni eventos.
+                 if _conteo(citas.get("agendadas")) not in (None, 0) or (sin_estado is not None and sin_estado > 0):
+@@ -300,8 +331,8 @@
+                         "Pedir al despacho asistencia y resultado comercial de las citas pasadas; enlazar cada cita con su lead y oportunidad por ID y registrar siguiente acción, presupuesto o cierre confirmado sin inferir ventas.",
+                         "account", f"Citas sin estado en el periodo de 30 días: {int(sin_estado)}.",
+                         prioridad=1 if (_numero(citas.get("sin_estado_max_h")) or 0) > 48 else 2,
+-                        entrega="Citas pasadas enlazadas por ID a lead/oportunidad, asistencia y resultado comercial confirmados o explícitamente pendientes; siguiente acción con responsable. Citas futuras no se cierran.", periodo=(crm.get("ventanas") or {}).get("citas"))
+-                wa = s.get("whatsapp") or {}
++                        entrega="Citas pasadas enlazadas por ID a lead/oportunidad, asistencia y resultado comercial confirmados o explícitamente pendientes; siguiente acción con responsable. Citas futuras no se cierran.", periodo=_objeto(crm.get("ventanas")).get("citas"))
++                wa = _objeto(s.get("whatsapp"))
+                 fallo = _par(wa, "fallidos", "enviados")
+                 if fallo and fallo[0] > 0:
+                     recomendar("crm_whatsapp_fallidos", "crm", "Revisar mensajes de WhatsApp fallidos",
+@@ -309,14 +340,14 @@
+                         "Comprobar los errores y las secuencias WhatsApp que opera RO antes de reintentar.",
+                         "crm", f"Mensajes fallidos registrados: {fallo[0]} de {fallo[1]} envíos.", periodo=periodo30,
+                         entrega="Mensajes revisados por ID y subcuenta: estado, error, fecha y secuencia verificados o pendientes. Separar causa comprobada de hipótesis y registrar corrección propuesta. Un reintento solo queda comprobado con nuevo mensaje identificable y su estado posterior; sin reenvío automático ni entrega inferida.")
+-                email = _par(s.get("correo") or {}, "fallidos", "enviados")
++                email = _par(_objeto(s.get("correo")), "fallidos", "enviados")
+                 if email and email[0] > 0:
+                     recomendar("crm_correo_fallido", "crm", "Revisar emails fallidos registrados",
+                         "Hay correos marcados fallidos en conversaciones. Este conteo no acredita tasa de rebote, apertura ni entrega final.",
+                         "Comprobar el estado y error de esos mensajes y la secuencia email de RO; corregir la causa verificada antes de reintentar.",
+                         "crm", f"Emails fallidos registrados: {email[0]} de {email[1]} envíos observados.", periodo=periodo30,
+                         entrega="Errores de mensajes revisados y causa/acción registradas, sin reenvío automático ni métricas de apertura inferidas.")
+-                embudo = s.get("embudo") or {}
++                embudo = _objeto(s.get("embudo"))
+                 paradas = _par(embudo, "estancados_72h", "cohorte_30d")
+                 if paradas and paradas[0] > 0:
+                     recomendar("crm_etapas_paradas", "crm", "Contrastar oportunidades marcadas como paradas",
+@@ -350,7 +381,7 @@
+         recomendaciones.extend(recomendaciones_metodo308(metodo, metodo.get('_ids_308') or [], metodo.get('_personas_308') or [], metodo.get('_asignaciones_308') or [], fecha.isoformat()))
+     recomendaciones.sort(key=lambda r: (r["prioridad"], r["cliente_id"], r["regla_id"]))
+     return {"version": 1, "fecha": fecha.isoformat(), "recomendaciones": recomendaciones,
+-            "cobertura": {"fuentes": fuentes, "clientes": clientes,
++            "cobertura": {"fuentes": fuentes, "clientes": clientes, "estructuras_invalidas": estructuras,
+                 "metrica_resultado_ro": {"metrica": "leads_cualificados", "estado": "no_instrumentado",
+                     "criterio": "No confundir leads recibidos con oportunidades cualificadas; ventas es resultado final separado."},
+                 "alcance": "Solo filas previamente autorizadas; Meta y registros CRM. Cualificación, cierre y garantía no evaluables."}}
+--- baseline/meta_informe_291.py
++++ propuesta/meta_informe_291.py
+@@ -1,7 +1,11 @@
+ """Semántica Meta para exportación local. Ningún resultado legado equivale a lead."""
+ import datetime as dt,math,re
+ TIPOS={'lead','onsite_conversion.lead_grouped','offsite_conversion.fb_pixel_lead','onsite_web_lead'}
+-def numero(v,entero=False):return v if type(v) in (int,float) and math.isfinite(v) and v>=0 and (not entero or int(v)==v and v<=9007199254740991) else None
++def numero(v,entero=False):
++ try:
++  return v if type(v) in (int,float) and math.isfinite(v) and v>=0 and (not entero or int(v)==v and v<=9007199254740991) else None
++ except OverflowError:
++  return None
+ def dia(v):
+  try:return isinstance(v,str) and dt.date.fromisoformat(v).isoformat()==v
+  except ValueError:return False

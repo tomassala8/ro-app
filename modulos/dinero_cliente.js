@@ -1,3 +1,4 @@
+import { pintarCierre253 } from './_cierre_artifact_253.js';
 // modulos/dinero_cliente.js · M18 «Dinero por cliente» (E10).
 // Cuota, horas consumidas frente a pautadas y rentabilidad, cliente a cliente. Cuota: UNA fuente (Airtable de octubre; si no, factura de
 // octubre en Holded), la misma de fuentes_dinero/cuotas.json. Pautadas = cuota ÷ 31,47 €/h y solo llegan a quien ve la cuota (claves cuota_*).
@@ -28,6 +29,12 @@ async function pintar(cont, ctx) {
   const { d, error } = await cargarDatos(ctx, 'dinero_cliente/dinero_cliente');
   if (!d) {
     cont.append(vacio({ icono: 'euro', titulo: 'Sin datos de dinero por cliente', texto: error || 'Lanza fuentes_dinero/generar_dinero.py y recarga.', quien: 'Agus' }));
+    return;
+  }
+  if (ctx.params?.[0] === 'cierre-septiembre') {
+    if (ctx.vigente && !ctx.vigente()) return;
+    ctx.titulo('Cierre de septiembre', 'Por account y por cliente · horas registradas');
+    cont.replaceChildren(pintarCierre253({h,d,clientes:ctx.clientesVisibles || ctx.clientes || [],verdad:ctx.verdad,nombre:ctx.nombre,veFicha:ctx.veModulo?.('ficha')}));
     return;
   }
   const todo = ctx.nivel === 'todo';
@@ -412,6 +419,6 @@ export default {
   grupo: 'Dinero',
   puestos_que_lo_ven: { direccion: 'todo', finanzas_direccion: 'todo', operaciones: 'todo', proyectos: 'todo', administracion: 'todo', account: 'suyo', jefa_publicidad: 'resumen', trafficker: 'resumen' },
   // R12 (A-A2): lo facturado se mira por meses enteros; horas y rentabilidad son de septiembre (no cambian con el periodo)
-  usa_periodo: ['mes', 'mes_ant', 'trim', 'anio', 'medida'],
+  usa_periodo: params => params?.[0] === 'cierre-septiembre' ? false : ['mes', 'mes_ant', 'trim', 'anio', 'medida'],
   async render(contenedor, ctx) { await pintar(contenedor, ctx); },
 };

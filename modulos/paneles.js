@@ -22,8 +22,11 @@ import {
   chipEstado, variacion, grafico, embudoBarras, colorCifra, sumarSerie, serieDelPeriodo, fechaCorta,
   rangoPeriodo, hoyMadrid, periodoCompleto, leerPeriodo, sumarDias, menuMas,
 } from '../componentes.js';
+import { filaMeta216, numeroMeta216, fuenteMeta216, compararMeta216, sumaCampanasMeta216, totalMeta216, razonMeta216, serieMeta216 } from './_meta_mediciones_216.js';
+import { vigentePaneles213, controlesPaneles213 } from './_control_paneles_213.js';
 import { consejoCompacto } from './_trabajo.js';
 
+import { serviciosActivos, ordenHerramientas } from './_servicios.js';   // Tomás 3-oct: vista por defecto según servicios
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
 const _SEL_CORTE = '.tile .tx, .tile .tt span, .tile em, .det, .mot, .sub, .t, td, .chip, summary, b, small';
@@ -342,80 +345,71 @@ function pintarExperiencia(z, f) {
 const META_VISTAS = [{ id: 'campanas', texto: 'Campañas', icono: 'megafono' }, { id: 'conjuntos', texto: 'Conjuntos de anuncios', icono: 'capas' }, { id: 'anuncios', texto: 'Anuncios', icono: 'star' }];
 const ESTADO_META = { ACTIVE: ['verde', 'Activa'], PAUSED: ['gris', 'Pausada'], CAMPAIGN_PAUSED: ['gris', 'Campaña pausada'], ADSET_PAUSED: ['gris', 'Conjunto pausado'], ARCHIVED: ['gris', 'Archivada'], DELETED: ['gris', 'Borrada'], WITH_ISSUES: ['rojo', 'Con problemas'], DISAPPROVED: ['rojo', 'Rechazado'], PENDING_REVIEW: ['ambar', 'En revisión'], IN_PROCESS: ['ambar', 'En proceso'] };
 
-function metaSuma(f, r, ids) {
-  if (!r) return null;
-  const out = {};
-  for (const [cid, s] of Object.entries(f.serie || {})) {
-    if (ids && !ids.has(cid)) continue;
-    const v = sumarSerie(s, r);
-    const g = f.gasto_serie ? sumarSerie(f.gasto_serie[cid] || {}, r) : null;
-    if (!v && !g) continue;
-    out[cid] = { impresiones: v?.[0] || 0, clics: v?.[1] || 0, clics_enlace: v?.[2] || 0, leads: v?.[3] || 0, gasto: g ?? undefined };
-  }
-  return out;
-}
-const sumar = o => Object.values(o || {}).reduce((t, x) => { for (const k of ['impresiones', 'clics', 'clics_enlace', 'leads', 'gasto']) if (x[k] !== undefined) t[k] = (t[k] || 0) + x[k]; return t; }, {});
-
 function pintarMeta(z, f, P, vista, ctx, estado) {
   const verDinero = !!f.gasto_serie;
   const exacto = PRESET.has(P.id) ? f.periodos?.[`${P.desde}|${P.hasta}`] : null;
   const exactoC = P.comp && P.comparar === 'anterior' && PRESET.has(P.id) ? f.periodos?.[`${P.comp.desde}|${P.comp.hasta}`] : null;
-  const a = exacto?.cuenta || sumar(metaSuma(f, P)), b = P.comp ? (exactoC?.cuenta || sumar(metaSuma(f, P.comp))) : {};
-  const cpl = x => (x && x.gasto !== undefined && x.leads ? x.gasto / x.leads : null);
-  const ctr = x => (x && x.impresiones ? x.clics_enlace / x.impresiones : null);
+  const a = exacto?.cuenta ? filaMeta216(exacto.cuenta) : totalMeta216(sumaCampanasMeta216(f, P));
+  const b = exactoC?.cuenta ? filaMeta216(exactoC.cuenta) : {};
+  const comparable = compararMeta216(f, P, hoyMadrid(), exacto, exactoC);
+  const PC = comparable ? P : { ...P, comp: null };
+  const ratios = !!exacto?.cuenta && fuenteMeta216(f, P, hoyMadrid());
+  const cpl = x => razonMeta216(x, 'gasto', 'leads', ratios);
+  const ctr = x => razonMeta216(x, 'clics_enlace', 'impresiones', ratios);
   const sel = estado.metaMet || (verDinero ? 'gasto' : 'leads');
-  const tienda = estado.cli?.tipo_negocio === 'tienda_online';   // Kiosko: fuera del techo de 35 €/lead (D-P-CAP5)
   const cards = [
-    verDinero ? tarjeta({ icono: 'euro', etiqueta: 'Importe gastado', valor: a.gasto === undefined ? null : eur(a.gasto), activo: sel === 'gasto', alPulsar: () => { estado.metaMet = 'gasto'; estado.repintar(); }, comparacion: compTile(a.gasto, b.gasto, P) }) : null,
-    tarjeta({ icono: 'users', etiqueta: 'Clientes potenciales (leads)', valor: n0(a.leads || 0), activo: sel === 'leads', alPulsar: () => { estado.metaMet = 'leads'; estado.repintar(); }, comparacion: compTile(a.leads || 0, b.leads, P) }),
-    verDinero ? tarjeta({ icono: 'target', etiqueta: 'Coste por lead', valor: cpl(a) === null ? null : eur(cpl(a)), estado: tienda ? '' : colorCifra('coste_lead', cpl(a)), comparacion: compTile(cpl(a), cpl(b), P, 'bajo'), contexto: tienda ? 'Tienda online: sin el techo de 35 €' : 'Techo de la casa: 35 € por lead' }) : null,
-    tarjeta({ icono: 'ojo', etiqueta: 'Impresiones', valor: n0(a.impresiones || 0), activo: sel === 'impresiones', alPulsar: () => { estado.metaMet = 'impresiones'; estado.repintar(); }, comparacion: compTile(a.impresiones || 0, b.impresiones, P) }),
-    tarjeta({ icono: 'persona', etiqueta: 'Alcance', valor: exacto?.cuenta ? n0(exacto.cuenta.alcance) : null, contexto: exacto?.cuenta ? `Frecuencia ${fmt.num(exacto.cuenta.frecuencia, 2)}` : 'Exacto solo en los periodos fijos', comparacion: exactoC?.cuenta ? compTile(exacto?.cuenta?.alcance, exactoC.cuenta.alcance, P) : null }),
-    tarjeta({ icono: 'flecha', etiqueta: 'CTR (clics en el enlace)', valor: ctr(a) === null ? null : pc(ctr(a)), comparacion: compTile(ctr(a), ctr(b), P) }),
+    verDinero ? tarjeta({ icono: 'euro', etiqueta: 'Importe gastado', valor: a.gasto === null ? null : eur(a.gasto), activo: sel === 'gasto', alPulsar: () => { estado.metaMet = 'gasto'; estado.repintar(); }, comparacion: compTile(a.gasto, b.gasto, PC, 'neutro') }) : null,
+    tarjeta({ icono: 'users', etiqueta: 'Leads registrados en Meta', valor: a.leads === null ? null : n0(a.leads), activo: sel === 'leads', alPulsar: () => { estado.metaMet = 'leads'; estado.repintar(); }, comparacion: compTile(a.leads, b.leads, PC, 'neutro'), contexto: 'No acredita cualificación RO ni ventas del despacho' }),
+    verDinero ? tarjeta({ icono: 'target', etiqueta: 'Coste por lead de Meta', valor: cpl(a) === null ? null : eur(cpl(a)), estado: 'gris', comparacion: compTile(cpl(a), cpl(b), PC, 'neutro'), contexto: 'Objetivo vigente no confirmado; sin evaluación de cumplimiento' }) : null,
+    tarjeta({ icono: 'ojo', etiqueta: 'Impresiones', valor: a.impresiones === null ? null : n0(a.impresiones), activo: sel === 'impresiones', alPulsar: () => { estado.metaMet = 'impresiones'; estado.repintar(); }, comparacion: compTile(a.impresiones, b.impresiones, PC, 'neutro') }),
+    tarjeta({ icono: 'persona', etiqueta: 'Alcance', valor: a.alcance == null ? null : n0(a.alcance), contexto: a.frecuencia == null ? 'Frecuencia sin dato; alcance solo en agregado exacto' : `Frecuencia ${fmt.num(a.frecuencia, 2)}`, comparacion: compTile(a.alcance, b.alcance, PC, 'neutro') }),
+    tarjeta({ icono: 'flecha', etiqueta: 'CTR (clics en el enlace)', valor: ctr(a) === null ? null : pc(ctr(a)), comparacion: compTile(ctr(a), ctr(b), PC, 'neutro') }),
   ].filter(Boolean);
-  z.append(tiles(cards));
+  const contexto4=h('details',{class:'que-es','data-paid-meta-contexto':'4'},
+    h('summary',{style:{minHeight:'44px',display:'flex',alignItems:'center',fontWeight:'600'}},'Resumen, gráfico y fuente'),
+    h('div',{class:'pila',style:{gap:'12px',padding:'12px 0'}},tiles(cards)));
+  const contenido4=contexto4.lastElementChild;
+  contenido4.append(h('p', { class: 'sub' }, `Copia leída: ${fDiaHoraRO(f.leido)} · periodo ${P.desde} — ${P.hasta}. ${exacto?.cuenta ? 'Agregado de Meta para estas fechas.' : 'Suma de días presentes; cobertura del periodo no acreditada.'} ${Array.isArray(f.errores) && f.errores.length ? 'La fuente registra errores: cobertura parcial.' : 'Ausencia de días o campos no equivale a cero.'} Los leads son resultados de Meta, sin unión al CRM ni cohorte cualificada. ${P.comp && !comparable ? 'Comparación no disponible: requiere dos ventanas completas, consecutivas, iguales y agregados exactos sin errores.' : ''}`));
   if (!verDinero) z.append(vacioLinea('Tu puesto no ve la inversión de este cliente: aquí van impresiones, clics y leads, sin euros.', { icono: 'candado' }));
-  // gráfico diario
-  const serieTot = {};
-  const fuenteS = sel === 'gasto' ? f.gasto_serie : f.serie;
-  const idx = { leads: 3, impresiones: 0 }[sel];
-  for (const s of Object.values(fuenteS || {})) for (const [d, v] of Object.entries(s)) serieTot[d] = (serieTot[d] || 0) + (sel === 'gasto' ? v : v[idx]);
-  z.append(panel({ titulo: `${{ gasto: 'Importe gastado', leads: 'Leads', impresiones: 'Impresiones' }[sel]} por día`, icono: 'grafico' },
-    enCuerpo(graficoDoble({ actual: serieDelPeriodo(serieTot, P), comp: P.comp ? serieDelPeriodo(serieTot, P.comp) : null, formato: sel === 'gasto' ? x => `${fmt.num(x)} €` : n0, P }))));
+  contenido4.append(panel({ titulo: `${{ gasto: 'Importe gastado', leads: 'Leads de Meta', impresiones: 'Impresiones' }[sel]} por día`, icono: 'grafico' },
+    enCuerpo(graficoDoble({ actual: serieMeta216(f, P, sel), comp: comparable ? serieMeta216(f, P.comp, sel) : null, formato: x => x == null ? 'Sin dato' : sel === 'gasto' ? `${fmt.num(x)} €` : n0(x), P: PC }))));
+  z.append(h('p',{class:'sub',style:{margin:'0 0 8px'}},`Meta · ${P.desde} — ${P.hasta} · lectura ${fDiaHoraRO(f.leido)} · ${Array.isArray(f.errores)&&f.errores.length?'La fuente registra errores: cobertura parcial.':'Cobertura de la copia; ausencia de campos no equivale a cero.'}`));
   // tabla del administrador de anuncios
   const nivel = { campanas: 'campaign', conjuntos: 'adset', anuncios: 'ad' }[vista];
   const meta = { campanas: f.campanas, conjuntos: f.conjuntos, anuncios: f.anuncios }[vista] || {};
   let filas;
   if (vista === 'campanas' && !exacto) {
-    const A = metaSuma(f, P) || {}, B = P.comp ? metaSuma(f, P.comp) || {} : {};
+    const A = sumaCampanasMeta216(f, P) || {}, B = P.comp ? sumaCampanasMeta216(f, P.comp) || {} : {};
     filas = Object.entries(A).map(([id, x]) => ({ id, x, y: B[id] }));
   } else if (exacto) {
     const A = exacto[nivel] || {}, B = exactoC?.[nivel] || {};
     filas = Object.entries(A).map(([id, x]) => ({ id, x, y: P.comp ? B[id] || (exactoC ? null : undefined) : undefined }));
-  } else { z.append(avisoPeriodoTablas(P)); return; }
-  filas = filas.filter(r => r.x.impresiones || r.x.gasto).map(r => ({ ...r, m: meta[r.id] || {} }));
+  } else { z.append(vacioLinea('No hay agregado de conjuntos o anuncios para estas fechas. Elige un periodo fijo disponible; no se reconstruye alcance sumando días.', { icono: 'cal' })); z.append(contexto4); return; }
+  filas = filas.map(r => ({ ...r, x: filaMeta216(r.x), y: r.y ? filaMeta216(r.y) : null, m: meta[r.id] || {} }));
   const soloActivas = estado.metaActivas ?? false;
   const filtradas = soloActivas ? filas.filter(r => r.m.estado === 'ACTIVE') : filas;
-  filtradas.sort((p, q) => (q.x.gasto ?? q.x.impresiones) - (p.x.gasto ?? p.x.impresiones));
-  const conComp = !!P.comp && filtradas.some(r => r.y);
-  const col = (titulo, fn, fm = n0, mejorSi) => ({ titulo, num: true, valor: r => fn(r.x) ?? null, celda: r => celda(fn(r.x), conComp ? (r.y ? fn(r.y) : null) : undefined, fm, mejorSi) });
+  filtradas.sort((p, q) => (q.x.gasto ?? q.x.impresiones ?? -1) - (p.x.gasto ?? p.x.impresiones ?? -1));
+  const conComp = comparable && filtradas.some(r => r.y);
+  const col = (titulo, fn, fm = n0, mejorSi, tituloCompleto = titulo) => ({ titulo, tituloCompleto, tituloMovil:titulo, num: true, valor: r => fn(r.x) ?? null, celda: r => celda(fn(r.x), conComp ? (r.y ? fn(r.y) : null) : undefined, fm, 'neutro') });
   const columnas = [
-    { titulo: { campanas: 'Campaña', conjuntos: 'Conjunto', anuncios: 'Anuncio' }[vista], principal: true, valor: r => r.m.nombre || '', celda: r => h('span', { style: { display: 'block', minWidth: 'min(220px, 100%)' } }, h('span', { style: { font: 'var(--t-h3)', overflowWrap: 'anywhere' } }, r.m.nombre || 'Sin nombre (borrada)'),
+    { titulo: { campanas: 'Campaña', conjuntos: 'Conjunto', anuncios: 'Anuncio' }[vista], tituloCompleto:{campanas:'Nombre de la campaña Meta',conjuntos:'Nombre del conjunto de anuncios Meta',anuncios:'Nombre del anuncio Meta'}[vista], principal: true, valor: r => r.m.nombre || '', celda: r => h('span', { style: { display: 'block', minWidth: 'min(220px, 100%)' } }, h('span', { style: { font: 'var(--t-h3)', overflowWrap: 'anywhere' } }, r.m.nombre || 'Sin nombre (borrada)'),
       vista !== 'campanas' && r.m.campana && f.campanas?.[r.m.campana] ? h('span', { style: { display: 'block', font: 'var(--t-meta)', color: 'var(--dim)' } }, f.campanas[r.m.campana].nombre) : null) },
-    { titulo: 'Entrega', celda: r => { const e = ESTADO_META[r.m.estado] || ['gris', r.m.estado ? r.m.estado.toLowerCase() : 'sin dato']; return chipEstado(e[0], e[1]); } },
-    verDinero ? col('Importe gastado', x => x.gasto, eur) : null,
-    col('Leads', x => x.leads), verDinero ? col('Coste por lead', x => cpl(x), eur, 'bajo') : null,
-    col('Impresiones', x => x.impresiones),
-    exacto ? col('Alcance', x => x.alcance) : null, exacto ? col('Frecuencia', x => x.frecuencia, v => fmt.num(v, 2), 'bajo') : null,
-    col('Clics en el enlace', x => x.clics_enlace), col('CTR', x => ctr(x), pc),
-    verDinero && vista !== 'anuncios' ? { titulo: 'Presupuesto', num: true, celda: r => (r.m.inversion_diaria ? `${eur(r.m.inversion_diaria)}/día` : r.m.inversion_total ? `${eur(r.m.inversion_total)} total` : '—') } : null,
+    { titulo:'Estado',tituloCompleto:'Estado de Meta en la copia; no acredita estado actual',tituloMovil:'Estado', celda: r => { const e = ESTADO_META[r.m.estado] || ['gris', r.m.estado ? r.m.estado.toLowerCase() : 'sin dato']; return chipEstado(e[0], e[1]); } },
+    verDinero ? col('Gasto', x => x.gasto, eur, undefined, 'Importe gastado en Meta en el periodo seleccionado') : null,
+    col('Leads', x => x.leads, n0, undefined, 'Resultados registrados en Meta; no acredita cualificación RO ni unión al CRM'), verDinero ? col('CPL', x => cpl(x), eur, 'bajo', 'Coste por lead de Meta; no acredita cumplimiento de objetivo ni cualificación') : null,
+    col('Impr.', x => x.impresiones, n0, undefined, 'Impresiones de Meta en el periodo seleccionado'),
+    exacto ? col('Alcance', x => x.alcance, n0, undefined, 'Alcance de Meta; disponible sólo en agregado exacto') : null, exacto ? col('Frec.', x => x.frecuencia, v => fmt.num(v, 2), 'bajo', 'Frecuencia de impresión Meta en el agregado exacto; no acredita fatiga') : null,
+    col('Clics enl.', x => x.clics_enlace, n0, undefined, 'Clics en el enlace registrados en Meta; no clics totales'), col('CTR enl.', x => ctr(x), pc, undefined, 'Porcentaje de clics en el enlace sobre impresiones Meta; no CTR de clics totales'),
+    verDinero && vista !== 'anuncios' ? { titulo:'Presup.',tituloCompleto:'Presupuesto Meta registrado; diario o total según el dato disponible',tituloMovil:'Presup.', num: true, celda: r => (numeroMeta216(r.m.inversion_diaria, 'gasto') !== null ? `${eur(r.m.inversion_diaria)}/día` : numeroMeta216(r.m.inversion_total, 'gasto') !== null ? `${eur(r.m.inversion_total)} total` : '—') } : null,
   ].filter(Boolean);
   const activas = filas.filter(r => r.m.estado === 'ACTIVE').length;
   z.append(panel({ titulo: { campanas: 'Campañas', conjuntos: 'Conjuntos de anuncios', anuncios: 'Anuncios' }[vista], icono: { campanas: 'megafono', conjuntos: 'capas', anuncios: 'star' }[vista],
-    sub: `Con entrega en el periodo · ${conComp ? `la flecha compara con ${ante(P)}` : 'sin comparación'}` },
-  enCuerpo(chipsFiltro({ etiqueta: 'Entrega', valor: soloActivas ? 'activas' : '', opciones: [{ valor: '', texto: 'Todas', cuenta: filas.length }, { valor: 'activas', texto: 'Activas ahora', cuenta: activas, icono: 'zap' }],
+    sub: `Filas devueltas en la copia · ${conComp ? `la flecha compara con ${ante(P)}` : 'sin comparación'}` },
+  enCuerpo(chipsFiltro({ etiqueta: 'Estado en la copia', valor: soloActivas ? 'activas' : '', opciones: [{ valor: '', texto: 'Todas', cuenta: filas.length }, { valor: 'activas', texto: 'Activas en la copia', cuenta: activas, icono: 'zap' }],
     alCambiar: v => { estado.metaActivas = v === 'activas'; estado.repintar(); } })),
-  filtradas.length ? tabla({ porPagina: 15, columnas, filas: filtradas }) : enCuerpo(vacioLinea('Sin entrega en este periodo: ninguna gastó ni tuvo impresiones en estas fechas.', { icono: 'vacio' }))));
+  filtradas.length ? tabla({ porPagina: 15, columnas, filas: filtradas }) : enCuerpo(vacioLinea('Sin filas disponibles para este filtro y periodo. No acredita ausencia de actividad.', { icono: 'vacio' }))));
+  z.append(h('p',{class:'sub','data-paid-meta-leyenda':'5',style:{margin:'8px 0'}},'Estado: en la copia · Gasto: importe gastado · CPL: coste por lead Meta · Impr.: impresiones · Frec.: frecuencia · Clics enl.: clics en el enlace · CTR enl.: clics en el enlace / impresiones, en % · Presup.: diario o total según el dato. Leads: resultados Meta; no acredita cualificación RO ni unión al CRM.'));
+  z.append(contexto4);
 }
 
 // =========================================================================================== GoHighLevel
@@ -629,7 +623,7 @@ function escuchar(ctx, fn) { try { quitarOyente?.(); } catch { /* */ } quitarOye
 
 /** «Otros paneles ▾»: el mapa y, para dirección y operaciones, Zoho Desk y Zadarma de la empresa. */
 function otrosPaneles(ctx, activo) {
-  const items = [];
+  const items = controlesPaneles213(ctx);
   if (activo) items.push({ texto: 'Paneles por cliente', icono: 'cli', href: '#/paneles' });
   items.push({ texto: 'Dónde está cada panel', icono: 'capas', href: '#/paneles/mapa', activo: activo === 'mapa' });
   if (esEmpresa(ctx)) items.push({ texto: 'Zoho Desk de la empresa', icono: 'inbox', href: '#/paneles/empresa/desk', activo: activo === 'desk' },
@@ -656,11 +650,17 @@ export default {
   },
   // Ronda U (#1): pantalla de consulta; el consejo de la IA no empuja el selector ni el panel: va plegado al pie
   async render(cont, ctx) {
+    const vigente=vigentePaneles213(cont,ctx);
+    if(!vigente())return;
     await this.pintar(cont, ctx);
+    if(!vigente())return;
     const ultimo = cont.lastElementChild;
     if (ultimo) consejoCompacto(cont, ultimo);   // el consejo, plegado y detrás del panel
   },
   async pintar(cont, ctx) {
+    const vigente=vigentePaneles213(cont,ctx);
+    if(!vigente())return;
+    const navegar=ruta=>{if(vigente())ctx.navegar(ruta);};
     vigilarCortes(cont);
     const [a0, a1, a2] = ctx.params || [];
     escuchar(ctx, null);
@@ -670,7 +670,8 @@ export default {
       const z = pila(); cont.append(z); pintarMapa(z, ctx); return;
     }
     let indice;
-    try { indice = await ctx.datosModulo('paneles/indice'); } catch (e) { cont.append(vacio({ icono: 'alert', titulo: 'No se pueden leer los paneles', texto: String(e.message || e), quien: 'Tomás' })); return; }
+    try { indice = await ctx.datosModulo('paneles/indice'); } catch (e) { if(!vigente())return;cont.append(vacio({ icono: 'alert', titulo: 'No se pueden leer los paneles', texto: String(e.message || e), quien: 'Tomás' })); return; }
+    if(!vigente())return;
     if (a0 === 'empresa') return pintarEmpresa(cont, ctx, a1 || 'desk', indice);
     const filas = (indice.filas || []).filter(f => Object.entries(f.fuentes || {}).some(([k, x]) => veHerr(ctx, k) && x.estado !== 'sin_conectar'));
     const visibles = (ctx.clientesVisibles || []).filter(c => filas.some(f => f.cliente_id === c.id));
@@ -686,21 +687,23 @@ export default {
     try { localStorage.setItem(`ro.paneles.cli.${ctx.persona.id}`, cli.id); } catch { /* */ }
     const fila = filas.find(f => f.cliente_id === cli.id);
     const orden = [...new Set([...(ctx.persona.puestos.flatMap(p => ORDEN[p] || [])), 'meta', 'ghl', 'ga4', 'gsc', 'mc'])].filter(k => veHerr(ctx, k));
-    const herrs = orden.filter(k => fila.fuentes[k] && fila.fuentes[k].estado !== 'sin_conectar');
+    // Tomás 3-oct: con lo que el cliente tiene ACTIVO primero (sin campaña de Meta encendida, Meta no abre; sin CRM en uso,
+    // GoHighLevel no abre; con SEO o web, Analytics y Search Console; si solo es redes, Metricool).
+    const herrs = ordenHerramientas(orden.filter(k => fila.fuentes[k] && fila.fuentes[k].estado !== 'sin_conectar'), serviciosActivos(ctx, cli.id));
     const sinConectar = orden.filter(k => !herrs.includes(k));
     const herr = herrs.includes(a1) ? a1 : herrs[0];
     // el nombre del cliente sale una vez: en el selector (guía 3.6)
     ctx.titulo('Paneles de herramientas', 'Las vistas de cada herramienta, por cliente y con el periodo de arriba');
 
     const estado = { repintar: () => {}, cli };
-    const sc = selectorCliente({ clientes: visibles, actual: cli.id, etiqueta: 'Cambiar de cliente', alElegir: c => ctx.navegar(`paneles/${c.id}/${herr}${a2 ? '/' + a2 : ''}`) });
+    const sc = selectorCliente({ clientes: visibles, actual: cli.id, etiqueta: 'Cambiar de cliente', alElegir: c => navegar(`paneles/${c.id}`) });   // Tomás 3-oct: el otro cliente abre en la herramienta de SUS servicios
     cont.append(filaEntre(sc, otrosPaneles(ctx)));
     const fx = fila.fuentes[herr] || {};
     const nav = h('div', { class: 'pila' });
     if (herrs.length) {
       nav.append(pestanas({
         etiqueta: 'Herramienta', pestanas: herrs.map(k => ({ id: k, texto: HERR[k].texto, icono: HERR[k].icono, cuenta: ['rota'].includes(fila.fuentes[k].estado) ? 1 : undefined, cuentaEstado: 'rojo' })),
-        activa: herr, alCambiar: id => ctx.navegar(`paneles/${cli.id}/${id}`),
+        activa: herr, alCambiar: id => navegar(`paneles/${cli.id}/${id}`),
       }));
     }
     const zona = pila();
@@ -710,38 +713,43 @@ export default {
     if (fx.estado === 'rota' || fx.estado === 'sin_leer') { zona.append(vacio({ icono: 'alert', tono: 'aviso', titulo: `${HERR[herr].texto} no responde para este cliente`, texto: fx.nota || 'La última lectura falló. Se reintenta en la próxima recarga.', quien: 'Agus' })); pieSinConectar(); return; }
     let datos;
     try { datos = (await ctx.datosModulo(`paneles/${herr}/${cli.id}`))?.filas?.[0]; } catch { datos = null; }
+    if(!vigente())return;
     if (!datos) { zona.append(vacio({ icono: 'vacio', titulo: 'Sin datos de esta herramienta', texto: fx.nota || 'La herramienta no devolvió datos de este cliente.', quien: 'Agus' })); pieSinConectar(); return; }
     // R12 (A2) · si la herramienta elegida por defecto no tiene datos recientes, el periodo no cambiaría nada: se abre la
     // siguiente con datos (p. ej. ECIJA: Analytics sin datos desde el 31-jul → Search Console).
     if (!a1 && ultimoDato(herr, datos) && ultimoDato(herr, datos) < sumarDias(hoyMadrid(), -14)) {
       const otra = herrs.find(k => k !== herr && ['bien'].includes(fila.fuentes[k]?.estado));
-      if (otra) { ctx.navegar(`paneles/${cli.id}/${otra}`); return; }
+      if (otra) { navegar(`paneles/${cli.id}/${otra}`); return; }
     }
     const VISTAS = { ga4: GA_VISTAS, gsc: GSC_VISTAS, meta: META_VISTAS, ghl: GHL_VISTAS, mc: Object.keys(datos.redes || {}).map(k => ({ id: k, texto: RED[k]?.[0] || k, icono: RED[k]?.[1] || 'heart' })) }[herr];
     const vista = VISTAS.some(v => v.id === a2) ? a2 : VISTAS[0]?.id;
     const PINTA = { ga4: pintarGA, gsc: pintarGSC, meta: pintarMeta, ghl: pintarGHL, mc: pintarMC }[herr];
     // vistas de la herramienta (chips) a la izquierda; frescura y «Abrir en …» a la derecha, en la misma fila
     nav.append(filaEntre(
-      VISTAS.length > 1 ? chipsFiltro({ etiqueta: 'Vista', valor: vista, opciones: VISTAS.map(v => ({ valor: v.id, texto: v.texto, icono: v.icono })), alCambiar: id => ctx.navegar(`paneles/${cli.id}/${herr}/${id}`) }) : h('span'),
+      VISTAS.length > 1 ? chipsFiltro({ etiqueta: 'Vista', valor: vista, opciones: VISTAS.map(v => ({ valor: v.id, texto: v.texto, icono: v.icono })), alCambiar: id => navegar(`paneles/${cli.id}/${herr}/${id}`) }) : h('span'),
       h('span', { class: 'fila' },
         fx.hora ? frescura({ fuente: HERR[herr].fuente, fecha: fx.hora }) : null,
         fx.abrir ? h('a', { class: 'bt mini', href: fx.abrir, target: '_blank', rel: 'noopener', title: fx.nombre || null }, icono('ext', { clase: 's' }), `Abrir en ${HERR[herr].texto}`) : null)));
     let P = periodoDe(ctx);
     estado.repintar = () => {
+      if(!vigente())return;
       zona.replaceChildren();
       try { PINTA(zona, datos, P, vista, ctx, estado); } catch (e) { console.error(e); zona.append(vacio({ icono: 'alert', titulo: 'No se ha podido pintar esta vista', texto: String(e.message || e) })); }
     };
-    escuchar(ctx, nuevo => { P = nuevo; estado.repintar(); });
+    escuchar(ctx, nuevo => { if(!vigente())return; P = nuevo; estado.repintar(); });
     estado.repintar();
     pieSinConectar();
   },
 };
 
 async function pintarEmpresa(cont, ctx, cual) {
+  const vigente=vigentePaneles213(cont,ctx);
+  if(!vigente())return;
   ctx.titulo('Paneles de herramientas', cual === 'zadarma' ? 'Zadarma · llamadas de la centralita' : 'Zoho Desk · tickets y plazos');
   if (!esEmpresa(ctx)) { cont.append(filaEntre(h('span'), otrosPaneles(ctx, cual))); cont.append(vacio({ icono: 'candado', titulo: 'Solo dirección y operaciones', texto: 'Estos paneles comparan a personas del equipo.' })); return; }
   let d;
   try { d = await ctx.datosModulo(`paneles/empresa/${cual === 'zadarma' ? 'zadarma' : 'desk'}`); } catch { d = null; }
+  if(!vigente())return;
   const nombre = cual === 'zadarma' ? 'Zadarma' : 'Zoho Desk';
   cont.append(filaEntre(
     d?.leido ? h('span', { class: 'fila' }, frescura({ fuente: nombre, fecha: d.leido }),
@@ -751,10 +759,11 @@ async function pintarEmpresa(cont, ctx, cual) {
   cont.append(z);
   let P = periodoDe(ctx);
   const pintar = () => {
+    if(!vigente())return;
     z.replaceChildren();
     if (!d) { z.append(vacio({ icono: 'plug', titulo: 'Sin lectura todavía', texto: 'La próxima recarga de los paneles lo trae.', quien: 'Tomás' })); return; }
     try { (cual === 'zadarma' ? pintarZadarma : pintarDesk)(z, d, P); } catch (e) { console.error(e); z.append(vacio({ icono: 'alert', titulo: 'No se ha podido pintar', texto: String(e.message || e) })); }
   };
-  escuchar(ctx, nuevo => { P = nuevo; pintar(); });
+  escuchar(ctx, nuevo => { if(!vigente())return; P = nuevo; pintar(); });
   pintar();
 }

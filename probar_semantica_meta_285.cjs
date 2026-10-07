@@ -1,0 +1,21 @@
+const fs=require('fs'),path=require('path'),assert=require('assert');
+(async()=>{
+ const helper=fs.readFileSync(path.join(__dirname,'modulos/_meta_semantica_285.js'),'utf8').replace(/export /g,''),src=fs.readFileSync(path.join(__dirname,'modulos/_metricas_tarjetas_277.js'),'utf8').replace(/^import .*;\n/gm,helper+'\n');
+ const M=await import('data:text/javascript;base64,'+Buffer.from(src).toString('base64'));let n=0;const test=f=>{f();n++;};
+ const descriptor=()=>({version:'220.1',fuente:'meta_insights',nivel:'account',periodo_valido:true,desde:'2026-10-02',hasta:'2026-10-02',fecha_lectura:'2026-10-03 02:00',campos_observados:['leads'],tipo_lead:'lead',cohorte:'resultados_meta_sin_union_crm_ni_cualificacion_ro'});
+ const fila=()=>({d:'2026-10-02',leads_meta:7,medicion:descriptor()});
+ const ctx=()=>({hoy:'2026-10-03',clientesVisibles:[{id:'c',activo_confirmado:true,detalle:true,tipo_negocio:'despacho'}],ver:()=>({ok:true}),veModulo:()=>true});
+ const cap=ss=>({datos_hasta:'2026-10-02',ventanas:{serie:['2026-08-29','2026-10-02']},clientes:[{cliente_id:'c',serie:ss}]});
+ const build=(ss,c=ctx(),extras={})=>M.metricasTarjetas277([{id:'c'}],c,{captacion:{...cap(ss),...extras}})[0];
+ test(()=>{const r=build([{d:'2026-10-02',leads_meta:5353}]);assert.equal(r.leads30,null);assert.equal(r.leads30Medicion,null);assert.equal(r.resultadosMeta30,5353);assert.equal(r.resultadosMeta30Medicion.eventos_lead_acreditados,false);assert(!r.resultadosMeta30Medicion.compras);});
+ test(()=>{const r=build([fila()]);assert.equal(r.leads30,7);assert.equal(r.leads30Medicion.tipo_evento,'lead');assert.equal(r.resultadosMeta30,7);for(const k of ['cualificados','contactos_unicos','compras','conversion_crm','cpl_real'])assert.equal(r.resultadosMeta30Medicion[k],false);});
+ test(()=>{const c=ctx();c.clientesVisibles[0].tipo_negocio='tienda_online';const r=build([fila()],c);assert.equal(r.leads30,null);assert.equal(r.resultadosMeta30,7);assert(r.resultadosMeta30Medicion.detalle.includes('no se afirma'));});
+ test(()=>{for(const tipo of ['purchase','offsite_conversion.fb_pixel_purchase','unknown','resultados','']){const f=fila();f.medicion.tipo_lead=tipo;assert.equal(build([f]).leads30,null);}});
+ test(()=>{for(const cambio of [{version:'legacy'},{fuente:'cache'},{nivel:'campaign_diario'},{periodo_valido:false},{cohorte:'cualificados'},{campos_observados:[]},{desde:'2026-10-01'},{hasta:'2026-10-03'},{fecha_lectura:'2026-10-04'},{fecha_lectura:'2026-02-30'},{fecha_lectura:'2026-10-01'}]){const f=fila();Object.assign(f.medicion,cambio);assert.equal(build([f]).leads30,null);assert.equal(build([f]).resultadosMeta30,7);}});
+ test(()=>{const a=fila(),b={...fila(),d:'2026-10-01',medicion:{...descriptor(),desde:'2026-10-01',hasta:'2026-10-01',tipo_lead:'onsite_conversion.lead_grouped'}};assert.equal(build([a,b]).leads30,null);assert.equal(build([a,b]).resultadosMeta30,14);});
+ test(()=>{const f=fila();f.error=true;assert.equal(build([f]).leads30,null);const c=cap([fila()]);c.clientes[0].cuenta_meta={error:'error sintético'};assert.equal(build([fila()],ctx(),c).resultadosMeta30,null);});
+ test(()=>{const c=ctx();c.hoy='2026-10-01';assert.equal(build([fila()],c).resultadosMeta30,null);c.hoy=undefined;assert.equal(build([fila()],c).resultadosMeta30,null);});
+ test(()=>{const c=ctx();c.clientesVisibles[0].activo_confirmado=false;assert.equal(build([fila()],c),undefined);c.clientesVisibles[0].activo_confirmado=true;c.ver=()=>({ok:false});assert.equal(build([fila()],c),undefined);});
+ test(()=>{const f=fila();f.leads_meta=0;const r=build([f]);assert.equal(r.leads30,null);assert.equal(r.resultadosMeta30,null);const q=[fila()];const antes=JSON.stringify(q);build(q);assert.equal(JSON.stringify(q),antes);});
+ console.log(n+' grupos285 PASS: legado/ecommerce separan contador, evento tipado acreditado, compras/mezcla/errores/futuro/ACT excluidos, sin cualificación/CPL.');
+})().catch(e=>{console.error(e);process.exit(1);});

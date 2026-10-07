@@ -631,7 +631,7 @@ BJ_CLI = {c["cliente_id"]: c for c in (leer(DATA / "bandeja" / "por_cliente.json
 PROD = leer(DATA / "produccion" / "produccion.json", {}) or {}
 REU = leer(DATA / "reuniones" / "reuniones.json", {}) or {}
 VERDAD_CLI = {c["cliente_id"]: c for c in (leer(DATA / "verdad" / "clientes.json", {}) or {}).get("clientes", [])}
-CRUDO_P = {"asignaciones": ASIG, "personas": PERSONAS}
+CRUDO_P = {"asignaciones": ASIG, "personas": PERSONAS, "clientes": CLIENTES}
 P_ID = {p["id"]: p for p in PERSONAS}
 
 

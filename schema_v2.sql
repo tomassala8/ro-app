@@ -196,3 +196,25 @@ CREATE TABLE IF NOT EXISTS avisos (
   visto_por   TEXT,
   UNIQUE (dia, tipo, clave)
 );
+
+-- ------------------------------------------------------------------ F5.10 · N-01: copia propia de lo que llega de las APIs
+-- Una fila por lectura de una API (buena o con error). La escribe solo fuentes/lectura.py › leer().
+-- Si la API falla, da cero o vacío, se sirve la última buena con su hora: nunca un 0 ni un vacío.
+-- Se guardan las 30 últimas buenas por fuente y recurso y 30 días de errores (lectura.podar). Sin disparador de borrado.
+CREATE TABLE IF NOT EXISTS fuente_lectura (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  fuente      TEXT NOT NULL,                   -- gsc | metricool | ghl | hostinger | holded…
+  recurso     TEXT NOT NULL,                   -- cliente, cuenta o subcuenta ('' si la fuente es una sola)
+  hora        TEXT NOT NULL DEFAULT (datetime('now')),
+  ok          INTEGER NOT NULL CHECK (ok IN (0,1)),
+  codigo      TEXT,                            -- en error: código HTTP, «vacio», «a_cero», «sospechoso» o la excepción
+  error       TEXT,                            -- una línea
+  cuerpo      TEXT,                            -- JSON de lo que devolvió la API
+  huella      TEXT                             -- sha256 del JSON canónico
+);
+CREATE INDEX IF NOT EXISTS i_fuente_lectura ON fuente_lectura(fuente, recurso, ok, id);
+
+CREATE VIEW IF NOT EXISTS fuente_ultimo_bueno AS
+  SELECT f.* FROM fuente_lectura f
+   WHERE f.ok = 1
+     AND f.id = (SELECT MAX(g.id) FROM fuente_lectura g WHERE g.fuente = f.fuente AND g.recurso = f.recurso AND g.ok = 1);

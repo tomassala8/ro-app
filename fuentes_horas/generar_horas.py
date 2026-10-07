@@ -21,6 +21,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'fuentes_producc
 from comun_equipo import (leer, escribir, personas, mapa_usuarios, miembros_clickup, clientes_app, fecha_ms, norm, dias_lab,
                           tipo_tarea, sin_cliente, nombre_mes, limpiar, DATA, CACHE, PANEL, HOY, AHORA, ESTADOS_PRODUCTIVOS)
 
+from fuentes_horas.diario_238 import construir_diarios
+
 HORAS_MES = 128  # D-25
 CONTENEDOR = re.compile(r'reuni|daily|dailys|siempre|semanal|mensual|recurrent|formaci|gestion general|gestion de equipo|organizaci|tareas (agosto|septiembre|octubre)')
 JEFAS = {'operaciones', 'proyectos', 'rrhh', 'jefa_publicidad', 'jefa_seo', 'jefa_crm', 'direccion'}
@@ -52,7 +54,9 @@ def main():
     T = leer(CACHE / 'tareas.json')
     if not H or not T:
         raise SystemExit('Faltan los ficheros de fuentes_produccion/_cache: lanza  python3 ../fuentes_produccion/extraer_clickup.py')
-    P = {p['id']: p for p in personas()}
+    personas_fuente = personas()
+    diarios_238 = construir_diarios(H, personas_fuente, miembros_clickup(), str(HOY))
+    P = {p['id']: p for p in personas_fuente}
     U = mapa_usuarios(miembros_clickup())
     por_carpeta, nombres = clientes_app()
     MESES = meses_atras(7)  # 6 meses cerrados + el actual
@@ -213,6 +217,7 @@ def main():
             'dias_lab_semana': dias_lab(lunes_p, hoy_p), 'zona': zona_txt(pid),
             'meses': meses, 'por_tipo': comp_tipo,
             'primera_imputacion': primera.get(pid),
+            **({'diario_238': diarios_238[pid]} if pid in diarios_238 else {}),
         })
     filas.sort(key=lambda r: (['Accounts', 'Especialistas', 'Jefes y coordinación'].index(r['grupo']), r['equipo'], r['nombre']))
 

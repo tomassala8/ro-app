@@ -15,6 +15,7 @@
 //     curso con fecha, semáforo y objetivo, y el acta de hoy: notas + acuerdos (cada acuerdo crea su tarea en la cola de
 //     sincronía, simulada) con «Guardar». «Copiar guion» deja el orden del día en el portapapeles.
 //
+// El acta y sus tareas se guardan juntas por POST /api/ficha/acta, con recibo idempotente y copia simulada de sincronía.
 // Datos: los que ya carga ficha.js (F) + ctx.api('acciones?modulo=ficha') (actas y acuerdos hechos) + Producción y
 // Reuniones solo si la persona ve esas pantallas (ctx.veModulo), recortados por el servidor. Nada sale fuera de la app.
 // Diseño estricto: clases comunes (panel, pila, fila, dos, bt, chip, campo, sub, lista-i, titulo-seccion) y tokens.
@@ -51,19 +52,36 @@ const MOTIVOS = {
 
 /** Personas del equipo del cliente, por silla, sin quien mira. [{ silla, pid, nombre, completo, principal }] */
 export function equipoAvisable(ctx, F) {
-  // La verdad única trae el equipo por silla, pero el servidor quita las personas cuyas horas no ve quien mira (un account
-  // recibe solo su silla): entonces, las asignaciones del cliente (fuente «asignaciones», una persona por silla), como el
-  // panel «Equipo y servicios» de la ficha.
+  // El equipo del cliente ya está autorizado por cliente_detalle. La verdad y la fuente
+  // antigua pueden venir recortadas por horas; no se buscan integrantes en fuentes privadas.
+  if (typeof ctx.vigente !== 'function' || !ctx.vigente()) return [];
+  for (const actor of [ctx.real, ctx.persona]) {
+    const canonicos = (ctx.datos?.personas || []).filter(p => p.id === actor?.id);
+    if (!actor || actor.estado !== 'activo' || actor.activo === false || canonicos.length !== 1
+        || canonicos[0].estado !== 'activo' || canonicos[0].activo === false
+        || !Array.isArray(actor.puestos) || !Array.isArray(canonicos[0].puestos)
+        || JSON.stringify([...actor.puestos].sort()) !== JSON.stringify([...canonicos[0].puestos].sort())) return [];
+  }
+  const clientes = (ctx.clientes || []).filter(c => c.id === F.c?.id);
+  const visibles = (ctx.clientesVisibles || []).filter(c => c.id === F.c?.id);
+  if (clientes.length !== 1 || visibles.length !== 1 || clientes[0].activo_confirmado !== true
+      || !clientes[0].detalle || !ctx.ver?.({ tipo: 'cliente_detalle', cliente_id: F.c.id })?.ok) return [];
   const eq = F.verdad?.equipo || {};
+  const autorizado = clientes[0].equipo || {};
   const viejas = fuente(F.doc, 'asignaciones')?.datos?.sillas || {};
   const yo = ctx.real?.id;
   const out = [];
   for (const s of Object.keys(SILLA)) {
-    const lista = (eq[s] || []).length ? eq[s] : (viejas[s] ? [{ persona_id: viejas[s], principal: true }] : []);
+    const lista = Array.isArray(eq[s]) && eq[s].length ? eq[s]
+      : Array.isArray(autorizado[s]) && autorizado[s].length ? autorizado[s]
+      : (typeof viejas[s] === 'string' ? [{ persona_id: viejas[s], principal: true }] : []);
+    const vistos = new Set();
     for (const x of lista) {
-      if (!x?.persona_id || x.persona_id === yo) continue;
-      const p = (ctx.datos?.personas || []).find(q => q.id === x.persona_id) || {};
-      if (p.estado && p.estado !== 'activo') continue;
+      if (typeof x?.persona_id !== 'string' || !x.persona_id || x.persona_id === yo || vistos.has(x.persona_id)) continue;
+      vistos.add(x.persona_id);
+      const personas = (ctx.datos?.personas || []).filter(q => q.id === x.persona_id);
+      if (personas.length !== 1 || personas[0].estado !== 'activo' || personas[0].activo === false) continue;
+      const p = personas[0];
       out.push({ silla: s, pid: x.persona_id, nombre: ctx.nombre(x.persona_id), completo: p.nombre || ctx.nombre(x.persona_id), principal: !!x.principal });
     }
   }
@@ -102,12 +120,15 @@ export function botonAvisar(ctx, F, alElegir) {
   // al account. Los demás, en el menú «Otros».
   const yoAccount = (ctx.persona?.puestos || []).includes('account');
   const primero = (yoAccount ? gente.find(p => p.silla === 'trafficker' && p.principal) : gente.find(p => p.silla === 'account')) || gente[0];
-  const directo = h('button', { type: 'button', class: 'bt', 'data-avisar': primero.silla, title: `Mensaje a ${primero.nombre} con el dato del cliente ya escrito (interno)`, on: { click: () => alElegir(primero) } },
+  const elegir = p => {
+    if (equipoAvisable(ctx, F).some(x => x.pid === p.pid && x.silla === p.silla)) alElegir(p);
+  };
+  const directo = h('button', { type: 'button', class: 'bt', 'data-avisar': primero.silla, title: `Mensaje a ${primero.nombre} con el dato del cliente ya escrito (interno)`, on: { click: () => elegir(primero) } },
     icono('campana'), `Avisar a ${primero.nombre} (${SILLA[primero.silla].texto.toLowerCase()})`);
   const resto = gente.filter(p => p !== primero);
   return h('span', { class: 'fila', style: { gap: 'var(--s-1)', flexWrap: 'nowrap' } }, directo,
     resto.length ? menuMas({ texto: 'Otros', etiqueta: `Avisar a otra persona del equipo de ${F.c.nombre}`,
-      items: resto.map(p => ({ texto: `${SILLA[p.silla].texto} · ${p.nombre}${p.principal ? '' : ' (apoyo)'}`, icono: SILLA[p.silla].icono, alPulsar: () => alElegir(p) })) }) : null);
+      items: resto.map(p => ({ texto: `${SILLA[p.silla].texto} · ${p.nombre}${p.principal ? '' : ' (apoyo)'}`, icono: SILLA[p.silla].icono, alPulsar: () => elegir(p) })) }) : null);
 }
 
 /** Compositor del aviso: motivo (chips), texto con el contexto ya escrito, tarea opcional y «Enviar aviso» (con Deshacer). */
@@ -270,24 +291,27 @@ function editorActa(ctx, F, A, repintar) {
   const estado = h('span', { class: 'sub', role: 'status' });
   const guardar = h('button', { type: 'button', class: 'bt pri', 'aria-disabled': ctx.soloLectura ? 'true' : null, title: ctx.soloLectura ? 'Estás en «ver como»: solo lectura' : 'Guarda el acta en la app; cada acuerdo crea su tarea (simulada) en la cola de ClickUp',
     on: { click: async () => {
-      if (ctx.soloLectura) return;
+      if (ctx.soloLectura || guardar.disabled) return;
       const acuerdos = [...filas.querySelectorAll('[data-acuerdo]')].map(f => { const [t, q, d] = f.querySelectorAll('input[type=text], select, input[type=date]'); return { texto: t.value.trim(), quien: q.value, vence: d.value || null }; }).filter(x => x.texto);
       const texto = tn.value.trim();
       if (!texto && !acuerdos.length) { estado.textContent = 'Escribe las notas o al menos un acuerdo.'; tn.focus(); return; }
       if (/[\w.+-]+@[\w-]+\.\w|(\+34|\b[6789]\d{2})[\s.-]?\d{3}[\s.-]?\d{3}\b/.test(`${texto} ${acuerdos.map(x => x.texto).join(' ')}`)) { estado.textContent = 'Sin correos ni teléfonos en el acta: van en Contactos.'; return; }
       guardar.disabled = true;
+      let guardada = false;
       try {
-        const r = await ctx.accion({ herramienta: 'app', tipo: 'acta', objeto: `${ACTA(c.id)}${ctx.hoy}`, cliente_id: c.id, texto: texto ? texto.slice(0, 600) : `Acta de ${c.nombre} (solo acuerdos)`,
-          vista_previa: { fecha: ctx.hoy, notas: texto, acuerdos } });
-        let n = 0;
-        for (const x of acuerdos) {
-          await ctx.accion({ herramienta: 'clickup', tipo: 'tarea', objeto: `${c.nombre} · ${x.texto}`.slice(0, 180), cliente_id: c.id, texto: `Acuerdo de la reunión del ${dia(ctx.hoy)} con ${c.nombre}: ${x.texto}`,
-            vista_previa: { tarea: `${c.nombre} · ${x.texto}`.slice(0, 180), asignado: x.quien, vence: x.vence, origen: 'acta de reunión', acta: r?.id } });
-          n += 1;
-        }
-        avisoFlotante(`Acta guardada${n ? ` · ${fmt.plural(n, 'tarea', 'tareas')} a la cola de ClickUp (simulada)` : ''}`);
+        const lote = { cliente_id: c.id, fecha: ctx.hoy, notas: texto, acuerdos };
+        // La clave sobrevive a un fallo o a recargar: el servidor la liga a persona, cliente y contenido.
+        const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(JSON.stringify(lote)));
+        const clave = `acta_${Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join('')}`;
+        const r = await ctx.api('ficha/acta', { metodo: 'POST', cuerpo: { ...lote, clave } });
+        guardada = true;
+        const n = r.tareas?.length || 0;
+        avisoFlotante(`${r.repetida ? 'Acta ya guardada (sin duplicar)' : 'Acta guardada'}${n ? ` · ${fmt.plural(n, 'tarea', 'tareas')} a la cola de ClickUp (simulada)` : ''}`);
         await repintar();
-      } catch (e) { estado.textContent = `No se ha guardado: ${e?.message || e}`; guardar.disabled = false; }
+      } catch (e) {
+        estado.textContent = guardada ? `Acta guardada. No se pudo actualizar la pantalla: ${e?.message || e}` : `No se pudo confirmar el guardado: ${e?.message || e}. Tus notas y acuerdos siguen aquí; puedes reintentar sin duplicarlos.`;
+        guardar.disabled = false;
+      }
     } } }, icono('ok'), 'Guardar');
   return h('section', { class: 'panel', 'aria-label': 'Acta de hoy', 'data-acta': '' },
     h('header', {}, h('div', {}, h('h2', {}, icono('doc'), `Acta de hoy · ${dia(ctx.hoy)}`), h('p', { class: 'sub' }, 'Lo que guardes aquí es lo «pendiente de la última reunión» la próxima vez')), guardar),

@@ -8,6 +8,8 @@
 //  · Todo lo que se pulsa es <button> o <a> (teclado gratis). Nada de div con onclick.
 //  · Catálogo vivo con ejemplos: abre la app como Tomás → Sistema → Componentes.
 
+import { diaRO, horaRO, instanteRO, horasDesdeRO, horasHastaRO, fechaCivilRO, mesRO, nombreMesRO, zonaFechaRO } from './_fechas_ro.js';
+
 import { telefono as telefonoComun } from './modulos/_telefono.js';   // regla común de teléfonos (3-oct)
 
 /**
@@ -115,6 +117,7 @@ export const ICONOS = {
   izquierda: '<path d="M15 6l-6 6 6 6"/>',
   flecha: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   volver: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
+  opciones: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
   mas: '<path d="M12 5v14M5 12h14"/>',
   ok: '<circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/>',
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/>',
@@ -166,7 +169,7 @@ export function icono(nombre, { clase = '', titulo } = {}) {
 
 /** Icono de cada pantalla del menú (por id de módulo) y, si falta, por grupo. Lo usa la carcasa y ⌘K. */
 export const ICONO_MODULO = {
-  'mi-dia': 'hoy', 'en-rojo': 'fire', bandeja: 'inbox', ficha: 'cli', 'ficha-cliente': 'cli', 'informe-cliente': 'grafico',
+  'mi-dia': 'hoy', 'mi-trabajo': 'casilla', 'en-rojo': 'fire', bandeja: 'inbox', ficha: 'cli', 'ficha-cliente': 'cli', 'informe-cliente': 'grafico',
   'clientes-nuevos': 'rocket', 'informes-mensuales': 'doc', incidencias: 'alert', captacion: 'target', 'salud-crm': 'base',
   'seo-web': 'globe', redes: 'heart', produccion: 'check', horas: 'clock', reuniones: 'video', personas: 'eq',
   setters: 'auricular', 'ventas-ro': 'megafono', prospeccion: 'send', 'dinero-cliente': 'euro', finanzas: 'cartera',
@@ -440,7 +443,7 @@ export function tablaDensa(o) {
   // tras «Filtros ▾» y la tabla apilada se ordena con «Ordenar ▾»; cabecera ordenable = celda entera (≥ 32 px);
   // verTodas: true → «Ver las N filas» de una vez; columna.minAncho = '160px' pone el ancho mínimo en th y td.
   const porPagina = o.porPagina === undefined ? 50 : o.porPagina;
-  const columnas = o.columnas || [];
+  const columnas = (o.columnas || []).map(cabeceraCompacta421);
   const ordenable = c => c.ordenable !== false && (c.clave !== undefined || typeof c.valor === 'function');
   const claveCol = (c, i) => (c.clave !== undefined ? c.clave : `__col${i}`);
   const estado = { orden: o.orden || null, filtros: {}, q: '', paginas: 1 };
@@ -477,16 +480,16 @@ export function tablaDensa(o) {
   ctl.append(cuenta);
 
   const cabeceras = columnas.map((c, i) => {
-    const th = h('th', { scope: 'col', class: c.num ? 'num' : null, style: c.minAncho ? { minWidth: c.minAncho } : null });
+    const th = h('th', { scope: 'col', class: c.num ? 'num' : null, title:c.tituloCompleto||null, 'aria-label':c.tituloCompleto||null, style: c.minAncho ? { minWidth: c.minAncho } : null });
     if (!ordenable(c)) th.textContent = c.titulo;
-    else th.append(h('button', { type: 'button', on: { click: () => {
+    else th.append(h('button', { type: 'button',title:c.tituloCompleto||null,'aria-label':c.tituloCompleto||null, on: { click: () => {
       const k = claveCol(c, i);
       const dir = estado.orden && estado.orden.clave === k && estado.orden.dir === 'desc' ? 'asc' : 'desc';
       estado.orden = { clave: k, dir }; pintar();
     } } }, c.titulo));
     return th;
   });
-  const tabla = h('table', { class: `densa${o.apilable !== false ? ' apilable' : ''}` }, h('thead', {}, h('tr', {}, cabeceras)), cuerpo);
+  const tabla = h('table', { class: `densa${columnas.length>=9?' compacta-421':''}${o.apilable !== false ? ' apilable' : ''}` }, h('thead', {}, h('tr', {}, cabeceras)), cuerpo);
   raiz.append(ctl, h('div', { class: 'tabla-scroll' }, tabla));
   const hueco = h('div', { class: 'cuerpo' });
   const mas = h('div', { class: 'tabla-mas' });
@@ -510,7 +513,7 @@ export function tablaDensa(o) {
     const visibles = porPagina ? filas.slice(0, porPagina * estado.paginas) : filas;
     cabeceras.forEach((th, i) => th.setAttribute('aria-sort', estado.orden && estado.orden.clave === claveCol(columnas[i], i) ? (estado.orden.dir === 'asc' ? 'ascending' : 'descending') : 'none'));
     cuerpo.replaceChildren(...visibles.map(r => {
-      const tr = h('tr', {}, columnas.map(c => h('td', { class: [c.num ? 'num' : '', c.principal ? 'principal' : ''].join(' ').trim() || null, 'data-l': c.titulo, style: c.minAncho ? { minWidth: c.minAncho } : null }, c.celda ? c.celda(r) : celdaPorDefecto(r[c.clave]))));
+      const tr = h('tr', {}, columnas.map(c => h('td', { class: [c.num ? 'num' : '', c.principal ? 'principal' : ''].join(' ').trim() || null, 'data-l': c.tituloMovil||c.titulo,title:c.tituloCompleto||null, style: c.minAncho ? { minWidth: c.minAncho } : null }, c.celda ? c.celda(r) : celdaPorDefecto(r[c.clave]))));
       if (o.alPulsar && (!o.puedePulsar || o.puedePulsar(r))) {
         tr.classList.add('clic'); tr.tabIndex = 0;
         if (o.etiquetaFila) tr.setAttribute('aria-label', o.etiquetaFila(r));
@@ -534,6 +537,71 @@ export function tablaDensa(o) {
   }
   pintar();
   return raiz;
+}
+
+//421 · vocabulario compartido: abreviar sin cortar palabras ni ocultar unidades/periodos.
+function cabeceraCompacta421(c){
+  const nombres={
+    'Trafficker':'Traf.','Trafficker (asignaciones)':'Traf. (asig.)','Semáforo':'Estado',
+    'Interacciones':'Interac.','Frecuencia':'Frec.','Impresiones':'Impr.',
+    'Bloqueadas':'Bloq.','Devueltas':'Dev.','En fecha 30 d':'En fecha 30d','A la primera':'1.ª vez',
+    'Reuniones celebradas':'Reu. hechas','Reuniones por confirmar':'Reu. pendientes',
+    'Reunión mensual':'Reu. mes','Contacto semanal':'Contacto sem.',
+    'Revisión account':'Rev. account','Revisión técnica':'Rev. técnica',
+    'Horas imputadas':'H. imput.','Horas presupuestadas':'H. presup.',
+    'Horas consumidas':'H. consum.','Horas del mes':'Horas mes',
+    'Horas sep. / pautadas':'H. sep. / pauta','Porcentaje imputado':'% imput.',
+    'Último registro':'Últ. registro','Último registro encontrado':'Últ. registro',
+    'Último día con gasto':'Últ. gasto','Siguiente revisión':'Próx. rev.',
+    'Diferencia observada':'Dif. observada','Fuente y lectura':'Fuente / fecha',
+    'Tipo de tarea':'Tipo','Mediana del tipo':'Mediana / tipo',
+    'Tokens entrada / salida':'Tokens E/S','Respuestas 30 días':'Resp. 30d',
+    'WhatsApp 7 días':'WA 7d','WhatsApp fallido':'WA fallido',
+    'Correos fallidos':'Email fallido','Número WhatsApp':'N.º WA',
+    'Mensaje automático':'Msg. auto.','Automático en < 5 min':'Auto. <5min',
+    'Leads sin tocar':'Leads sin gestión','Sin subcuenta emparejada':'Sin subcuenta',
+    'Asistencia 14 d':'Asist. 14d','Llamadas semana':'Llam. sem.',
+    'Informado al cliente':'Cliente informado','Coste (índice)':'Índ. coste',
+    'Clics (índice)':'Índ. clics','Referencia estimada':'Ref. estimada',
+    'Comparación / referencias':'Compar. / ref.',
+    'Coste registrado · unidad pendiente':'Coste (ref.)',
+    'Coste registrado 7 d · unidad pendiente':'Coste 7d (ref.)',
+    'Coste registrado sept. · unidad pendiente':'Coste sep. (ref.)',
+    //441 · títulos exactos verificados en Personas, altas, sistema, informes y SEO.
+    'Registro del último laborable':'Reg. últ. laborable',
+    'Semana de la fuente':'Sem. fuente',
+    'Días con 0 en la foto (últimos 5)':'Días 0 foto (últ.5)',
+    'Revisión de cartera':'Rev. cartera',
+    'Configuración básica':'Config. básica',
+    'Estado y paso (equipo)':'Estado/paso equipo',
+    'Terminada (Madrid)':'Fin (Madrid)',
+    'Aceptadas en LinkedIn':'Acept. LinkedIn',
+    'Errores al guardar o cargar':'Errores guardar/cargar',
+    'Cambio en sesiones':'Δ sesiones',
+    'Eventos por sesión':'Eventos/sesión',
+    'Resultados Meta · referencia':'Res. Meta (ref.)',
+    'Coste por evento lead':'Coste/evento lead',
+    'Impresiones sep (web)':'Impr. sep (web)',
+    'Impresiones sep (por página)':'Impr. sep/pág.',
+    'Consultas org. / Maps':'Cons. org./Maps',
+    'Plugins / rendimiento':'Plugins/rend.',
+    //457 · vocabulario transversal: mismo indicador, título breve y significado accesible.
+    'Especialista':'Espec.',
+    'Actualizaciones':'Actualiz.',
+    'Respuesta HTML':'Resp. HTML',
+    'Objetivo / páginas':'Obj. / pág.',
+    'Orgánico · mejor lectura':'Org. · mejor lectura',
+    'Maps · observado':'Maps · obs.',
+    'Cambio acreditado · 7 d':'Δ acreditado 7d',
+    'El lead escribió':'Lead escribió',
+    'Clientes +48 h sin respuesta':'Clientes sin resp. +48h',
+    'Tareas en revisión +48 h':'Rev. +48h',
+    'Nota media de accounts':'Nota media acc.',
+    'Semáforos sin rellenar':'Semáf. vacíos',
+    'Acciones con rastro (acumulado)':'Acciones acum.'
+  };
+  const breve=typeof c.titulo==='string'?nombres[c.titulo]:null;
+  return breve&&breve.length<c.titulo.length?{...c,titulo:breve,tituloCompleto:c.tituloCompleto||c.titulo}:c;
 }
 
 // ------------------------------------------------------------ capas flotantes (V3a)
@@ -1402,23 +1470,13 @@ const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 's
 // Argentina). Los módulos lo leen de ctx.hoy (texto) y ctx.fechas (funciones); fuera de un módulo, fechasDe(). Las fechas
 // de los datos sin zona («2026-10-02 23:14») ya están en hora de Madrid: se toma su día tal cual. Ver LEEME › Fechas.
 const ZONA_RO = 'Europe/Madrid';
-const _dfs = new Map();
-function _diaEn(zona, d) {
-  if (!_dfs.has(zona)) { try { _dfs.set(zona, new Intl.DateTimeFormat('en-CA', { timeZone: zona, year: 'numeric', month: '2-digit', day: '2-digit' })); } catch { _dfs.set(zona, _dfs.get(ZONA_RO) || new Intl.DateTimeFormat('en-CA', { timeZone: ZONA_RO, year: 'numeric', month: '2-digit', day: '2-digit' })); } }
-  return _dfs.get(zona).format(d);
-}
-const _hm = new Map();
-function _horaEn(zona, d) {
-  if (!_hm.has(zona)) { try { _hm.set(zona, new Intl.DateTimeFormat('es-ES', { timeZone: zona, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })); } catch { _hm.set(zona, new Intl.DateTimeFormat('es-ES', { timeZone: ZONA_RO, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })); } }
-  return _hm.get(zona).format(d);
-}
+function _diaEn(zona, d) { return diaRO(d, zona); }
 let _hoyFijo = null;   // solo prototipo: ?hoy=AAAA-MM-DD en 127.0.0.1 para probar un lunes o un fin de mes (lo fija app.js)
 /** fijarHoy('2026-10-05') · solo pruebas en local: todas las pantallas creen que hoy es ese día. null lo quita. */
-export function fijarHoy(t) { _hoyFijo = /^\d{4}-\d\d-\d\d$/.test(t || '') ? t : null; }
+export function fijarHoy(t) { _hoyFijo = typeof t === 'string' && /^\d{4}-\d\d-\d\d$/.test(t) ? fechaCivilRO(t) : null; }
 export function hoyMadrid() { return _hoyFijo || _diaEn(ZONA_RO, new Date()); }
 const DIA_CORTO = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
 const DIA_LARGO = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-const _esIsoZona = t => /T.*(Z|[+-]\d\d:?\d\d)$/.test(t);
 /**
  * fechasDe(zona = 'Europe/Madrid') → helpers de fecha con UNA definición para toda la app:
  *   hoy() · ayer() · manana()                       'AAAA-MM-DD' del calendario de la agencia
@@ -1429,23 +1487,19 @@ const _esIsoZona = t => /T.*(Z|[+-]\d\d:?\d\d)$/.test(t);
  *   laborable(t) · ultimoLaborable()                lunes a viernes; el último laborable ANTES de hoy (sábado 3 → viernes 2)
  *   diaSemana(t, largo?)                            'vie' / 'viernes'
  *   relativo(t)                                     'hoy' · 'ayer' · 'mañana' · 'el vie 2' (±6 días) · '28-sep'
- *   hora(t)                                         'HH:MM' en Madrid (ISO con zona) o la que traiga el dato
+ *   instante(t)                                     Date|null; sin zona = Madrid, sólo-fecha/hueco/hora DST repetida = null
+ *   horasDesde(t, ahora?) · horasHasta(t, ahora?)     duración real en horas, null sin instante; ahora inyectable
+ *   fechaCivil(t) · mes(t?) · nombreMes(t?)           civil válido, 'AAAA-MM', mes en español; sin zona del navegador
+ *   hora(t)                                         'HH:MM' del instante en zona; '' sin instante
  *   diaDatos(generado)                              { dia, esHoy, texto: '' | 'datos de ayer (vie 2)' | 'datos del 28-sep' }
  *   antiguedad(horas)                               '5 h' hasta 48 h; luego '3 días' (nada de «478 h»)
  *   plazo(t)                                        'hoy a las 18:00' · 'mañana a las 10:00' · 'el lun 5 a las 9:00' (hora en punto)
  */
 export function fechasDe(zona = ZONA_RO) {
-  const z = zona || ZONA_RO;
+  const z = zonaFechaRO(zona);
   const hoy = () => _hoyFijo || _diaEn(z, new Date());
-  const dia = t => {
-    if (!t) return null;
-    if (t instanceof Date) return Number.isNaN(+t) ? null : _diaEn(z, t);
-    const s = String(t);
-    if (_esIsoZona(s)) { const d = new Date(s); return Number.isNaN(+d) ? null : _diaEn(z, d); }
-    if (/^\d{4}-\d\d-\d\d/.test(s)) return s.slice(0, 10);
-    const e = s.match(/^(\d\d)-(\d\d)-(\d{4})/);  // «02-10-2026 11:06» (meta.json de build_data)
-    return e ? `${e[3]}-${e[2]}-${e[1]}` : null;
-  };
+  const dia = t => diaRO(t, z);
+  const hora = t => horaRO(t, z);
   const diasDesde = t => { const d = dia(t); return d ? _dias(d, hoy()) : null; };
   const semana = () => { const h0 = hoy(); const dw = (_D(h0).getUTCDay() + 6) % 7; const desde = sumarDias(h0, -dw); return { desde, hasta: sumarDias(desde, 6) }; };
   const laborable = t => { const d = dia(t); if (!d) return false; const w = _D(d).getUTCDay(); return w >= 1 && w <= 5; };
@@ -1461,6 +1515,8 @@ export function fechasDe(zona = ZONA_RO) {
   };
   return {
     zona: z, hoy, dia, diasDesde, semana, laborable, diaSemana, relativo,
+    instante: instanteRO, horasDesde: horasDesdeRO, horasHasta: horasHastaRO, fechaCivil: fechaCivilRO,
+    mes: (t = hoy()) => mesRO(t, z), nombreMes: (t = hoy()) => nombreMesRO(t, z),
     ayer: () => sumarDias(hoy(), -1),
     manana: () => sumarDias(hoy(), 1),
     esHoy: t => dia(t) === hoy(),
@@ -1469,29 +1525,24 @@ export function fechasDe(zona = ZONA_RO) {
     venceHoy: t => dia(t) === hoy(),
     estaSemana: t => { const d = dia(t); const s = semana(); return !!d && d >= s.desde && d <= s.hasta; },
     ultimoLaborable: () => { let d = sumarDias(hoy(), -1); for (let i = 0; i < 7 && !laborable(d); i++) d = sumarDias(d, -1); return d; },
-    hora: t => {
-      if (!t) return '';
-      const s = String(t);
-      if (_esIsoZona(s)) { const d = new Date(s); return Number.isNaN(+d) ? '' : _horaEn(z, d); }
-      return (s.match(/[ T](\d\d:\d\d)/) || [])[1] || '';
-    },
+    hora,
     diaDatos: generado => {
       const d = dia(generado); if (!d) return { dia: null, esHoy: false, texto: '' };
       const n = _dias(d, hoy());
-      return { dia: d, esHoy: n <= 0, texto: n <= 0 ? '' : n === 1 ? `datos de ayer (${diaSemana(d)} ${Number(d.slice(8, 10))})` : `datos del ${n <= 6 ? `${diaSemana(d)} ${Number(d.slice(8, 10))}` : fechaCorta(d)}` };
+      return { dia: d, esHoy: n === 0, texto: n === 0 ? '' : n < 0 ? `datos futuros (${fechaCorta(d, d.slice(0, 4) !== hoy().slice(0, 4))})` : n === 1 ? `datos de ayer (${diaSemana(d)} ${Number(d.slice(8, 10))})` : `datos del ${n <= 6 ? `${diaSemana(d)} ${Number(d.slice(8, 10))}` : fechaCorta(d)}` };
     },
     /** plazo(t) → «hoy a las 18:00», «mañana a las 10:00», «el lun 5 a las 9:00», «28-sep» (40_A B2: sin minutos raros
      *  como «17:53»: se redondea a la hora en punto siguiente). */
     plazo: t => {
       const d = dia(t); if (!d) return '—';
-      const hm = (String(t).match(/[ T](\d\d):(\d\d)/) || []);
+      const hm = (hora(t).match(/^(\d\d):(\d\d)$/) || []);
       let hh = hm[1] ? Number(hm[1]) + (Number(hm[2]) > 0 ? 1 : 0) : null;
       if (hh === 24) hh = 23;
       const rel = relativo(d);
       return hh === null || /^\d/.test(rel) ? rel : `${rel} a las ${hh}:00`;
     },
     antiguedad: horas => {
-      const n = Number(horas);
+      const n = typeof horas === 'number' || (typeof horas === 'string' && horas.trim()) ? Number(horas) : NaN;
       if (!Number.isFinite(n)) return '—';
       if (n < 48) return `${Math.max(0, Math.round(n))} h`;
       const d = Math.round(n / 24);
@@ -1501,15 +1552,15 @@ export function fechasDe(zona = ZONA_RO) {
 }
 /** fechas · los helpers con la zona de la agencia (Madrid). Para un módulo: ctx.fechas (la misma definición). */
 export const fechas = fechasDe(ZONA_RO);
-const _D = t => { const [a, m, d] = t.split('-').map(Number); return new Date(Date.UTC(a, m - 1, d)); };
+const _D = t => { const civil = fechaCivilRO(t); if (!civil) return new Date(NaN); const [a, m, d] = civil.split('-').map(Number); const fecha = new Date(0); fecha.setUTCFullYear(a, m - 1, d); fecha.setUTCHours(0, 0, 0, 0); return fecha; };
 const _S = d => d.toISOString().slice(0, 10);
-export const sumarDias = (t, n) => { const d = _D(t); d.setUTCDate(d.getUTCDate() + n); return _S(d); };
+export const sumarDias = (t, n) => { const d = _D(t); if (!Number.isFinite(+d) || !Number.isInteger(n)) return null; d.setUTCDate(d.getUTCDate() + n); return _S(d); };
 const _dias = (a, b) => Math.round((_D(b) - _D(a)) / 864e5);
 const _finMes = (a, m) => new Date(Date.UTC(a, m + 1, 0)).getUTCDate();
 function _menosMeses(t, n) { const d = _D(t); let m = d.getUTCMonth() - n, a = d.getUTCFullYear(); while (m < 0) { m += 12; a -= 1; } return _S(new Date(Date.UTC(a, m, Math.min(d.getUTCDate(), _finMes(a, m))))); }
 function _menosAnio(t) { const d = _D(t); const a = d.getUTCFullYear() - 1, m = d.getUTCMonth(); return _S(new Date(Date.UTC(a, m, Math.min(d.getUTCDate(), _finMes(a, m))))); }
 /** fechaCorta('2026-09-02') → «2-sep» · con año: «2-sep-26». */
-export const fechaCorta = (t, conAnio = false) => { if (!t) return '—'; const d = _D(t); return `${d.getUTCDate()}-${MESES_CORTOS[d.getUTCMonth()]}${conAnio ? `-${d.getUTCFullYear()}` : ''}`; };   // «1-dic-2025» (44 §2.3)
+export const fechaCorta = (t, conAnio = false) => { const d = _D(t); if (!Number.isFinite(+d)) return '—'; return `${d.getUTCDate()}-${MESES_CORTOS[d.getUTCMonth()]}${conAnio ? `-${d.getUTCFullYear()}` : ''}`; };   // «1-dic-2025» (44 §2.3)
 const _rango = (a, b, anio = false) => (a === b ? fechaCorta(a, anio) : `${fechaCorta(a, anio)} a ${fechaCorta(b, anio)}`);
 
 /** rangoPeriodo(id, { hoy, desde, hasta }) → { id, desde, hasta, dias, nombre, rango, texto } */
@@ -1903,9 +1954,10 @@ export function tablaApilable(o) {
   if (!o.filas?.length) return vacio({ icono: 'vacio', titulo: 'No hay nada que enseñar', ...(o.vacio || {}), texto: o.vacio?.texto || o.vacio?.porque });
   // Ronda 5: más de 50 filas → misma paginación que tablaDensa (porPagina, «Ver más»).
   if ((o.porPagina === undefined ? 50 : o.porPagina) && o.filas.length > (o.porPagina || 50)) return tablaDensa({ ...o, apilable: true });
-  const thead = h('thead', {}, h('tr', {}, o.columnas.map(c => h('th', { scope: 'col', class: c.num ? 'num' : null }, c.titulo))));
+  const columnas=(o.columnas||[]).map(cabeceraCompacta421);
+  const thead = h('thead', {}, h('tr', {}, columnas.map(c => h('th', { scope: 'col', class: c.num ? 'num' : null,title:c.tituloCompleto||null,'aria-label':c.tituloCompleto||null }, c.titulo))));
   const tbody = h('tbody', {}, o.filas.map(r => {
-    const tr = h('tr', {}, o.columnas.map(c => h('td', { class: [c.num ? 'num' : '', c.principal ? 'principal' : ''].join(' ').trim() || null, 'data-l': c.titulo }, c.celda ? c.celda(r) : celdaPorDefecto(r[c.clave]))));
+    const tr = h('tr', {}, columnas.map(c => h('td', { class: [c.num ? 'num' : '', c.principal ? 'principal' : ''].join(' ').trim() || null, 'data-l': c.tituloMovil||c.titulo,title:c.tituloCompleto||null }, c.celda ? c.celda(r) : celdaPorDefecto(r[c.clave]))));
     if (o.alPulsar && (!o.puedePulsar || o.puedePulsar(r))) {
       tr.classList.add('clic'); tr.tabIndex = 0;
       if (o.etiquetaFila) tr.setAttribute('aria-label', o.etiquetaFila(r));
@@ -1963,6 +2015,7 @@ export function botonesContacto(o) {
       tel ? h('a', { class: 'bt pri', href: tel.sip, title: `Llamar a ${quien || tel.mostrar} con Zadarma` }, icono('phone'), `Llamar a ${corto}`) : null,
       tel && o.whatsapp !== false ? h('a', { class: 'bt wa', href: tel.wa, target: '_blank', rel: 'noopener', title: `WhatsApp a ${quien || tel.mostrar}` }, icono('wa'), 'WhatsApp') : null,
       o.correo ? h('a', { class: 'bt', href: `mailto:${o.correo}`, title: `Escribir a ${o.correo}` }, icono('mail'), 'Correo') : null,
+      ...llamadasCliente(o, tel),
       !tel && !o.correo ? h('span', { class: 'sub' }, 'Sin teléfono ni correo de contacto') : null);
   }
   const filas = [];
@@ -1976,6 +2029,27 @@ export function botonesContacto(o) {
   if (!filas.length) filas.push(h('p', { class: 'sub' }, `Sin teléfono ni correo${quien ? ` de ${quien}` : ''}.`));
   if (o.fuente) filas.push(h('span', { class: 'sub', style: { fontSize: '12px' } }, `Fuente: ${o.fuente}`));
   return h('div', { class: 'contactos' }, filas);
+}
+
+/** 3-oct · «Te llamo y te conecto» (Zadarma, hoy simulado) y «Videollamada» con el cliente (Zoom), en la cabecera de la
+ *  ficha. El servidor decide (avisos.py → llamadas.py): solo quien lleva el cliente, y solo números de sus contactos. */
+function llamadasCliente(o, tel) {
+  const RO = window.RO;
+  if (!RO?.api || !RO.estado?.servidor) return [];
+  let cid = o.cliente_id;
+  if (!cid) { const m = /^#\/ficha\/([^/?]+)/.exec(location.hash || ''); try { cid = m ? decodeURIComponent(m[1]) : null; } catch { cid = null; } }
+  if (!cid) return [];
+  const verComo = RO.estado.persona?.id !== RO.estado.real?.id;
+  const pedir = async (ruta, cuerpo) => {
+    if (verComo) { avisoFlotante('Estás en «ver como»: es solo lectura.', { icono: 'candado' }); return null; }
+    try { return await RO.api(ruta, { metodo: 'POST', cuerpo }); } catch (e) { avisoFlotante(String(e?.message || 'No se pudo'), { icono: 'alert' }); return null; }
+  };
+  return [
+    tel ? h('button', { type: 'button', class: 'bt', title: 'Zadarma llama primero a tu extensión y, al descolgar, al cliente (hoy simulado)',
+      on: { click: async () => { const r = await pedir('canales/llamar', { cliente_id: cid, telefono: tel.e164 }); if (r) avisoFlotante(r.texto, { icono: 'phone' }); } } }, icono('auricular'), 'Te llamo y te conecto') : null,
+    h('button', { type: 'button', class: 'bt', title: 'Videollamada con el cliente: abre Zoom con tu cuenta para mandarle el enlace',
+      on: { click: async () => { const r = await pedir('canales/videollamada', { para: 'cliente', cliente_id: cid }); if (r?.url) { window.open(r.url, '_blank', 'noopener'); avisoFlotante(r.texto || 'Videollamada abierta.', { icono: 'video' }); } } } }, icono('video'), 'Videollamada'),
+  ].filter(Boolean);
 }
 
 // ------------------------------------------------------ extras de la ficha v3

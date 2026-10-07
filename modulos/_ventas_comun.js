@@ -1,3 +1,4 @@
+import { fechas as FECHAS_RO, fechaCorta as fechaCortaRO } from '../componentes.js';
 // modulos/_ventas_comun.js · piezas compartidas de E6 (setters, ventas de RO, prospección). No es un módulo.
 //
 // Datos: data/ventas_ro/*.json (fuentes_ventas/generar_ventas_ro.py, solo lectura), servidos RECORTADOS por servir.py:
@@ -30,7 +31,8 @@ export function fresco(meta, prefijo, texto) {
   const f = (meta?.fuentes || []).find(x => x.fuente.startsWith(prefijo));
   if (!f) return { fuente: texto || prefijo, estado: 'sin datos' };
   if (f.estado === 'error' || f.estado === 'sin datos') return { fuente: texto || f.fuente, estado: 'sin datos' };
-  const edad = (Date.now() - new Date(f.hora.replace(' ', 'T'))) / 36e5;
+  const edad = FECHAS_RO.horasDesde(f.hora);
+  if (edad === null || edad < 0) return { fuente: texto || f.fuente, estado: 'sin datos' };
   return { fuente: texto || f.fuente.replace('Panel v29 · ', 'Panel de resultados · '), edad_h: Math.max(0, edad), estado: f.estado === 'viejo' || edad > 26 ? 'viejo' : 'ok' };
 }
 
@@ -42,18 +44,16 @@ export function duracionTexto(min) {
 }
 /** «2026-10-05 11:00» → «lun 5 · 11:00» (hora de Madrid: así vienen del generador). */
 export function cuandoTexto(s) {
-  if (!s) return '—';
-  const d = new Date(s.replace(' ', 'T'));
-  if (Number.isNaN(+d)) return s;
-  return `${d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' })} · ${d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+  const dia = FECHAS_RO.dia(s), hora = FECHAS_RO.hora(s);
+  return dia ? `${FECHAS_RO.diaSemana(dia)} ${Number(dia.slice(8))}${hora ? ` · ${hora}` : ''}` : '—';
 }
-export const minutosDesde = s => (s ? Math.max(0, Math.round((Date.now() - new Date(s.replace(' ', 'T'))) / 6e4)) : null);
+export const minutosDesde = s => { const horas = FECHAS_RO.horasDesde(s); return horas === null || horas < 0 ? null : Math.round(horas * 60); };
 
 /** Nombre a la vista: completo si el servidor lo ha abierto para su dueño (su setter; 3-oct: también dirección y ventas
  *  de RO, que dirigen a los setters); si no, enmascarado. Es un dato, no un texto de la app: sin limpiaTexto (se comía
  *  el «···» final y dejaba una letra suelta, «J»). Sin nombre: el teléfono enmascarado o «Sin nombre · formulario del 2-oct». */
 const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-export const diaCorto = s => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ? `${Number(s.slice(8, 10))}-${MESES_C[Number(s.slice(5, 7)) - 1]}` : '');
+export const diaCorto = s => { const dia = FECHAS_RO.dia(s); return dia ? fechaCortaRO(dia) : ''; };
 export function nombreLead(x) {
   const n = String(x.nombre_m || '').trim();
   const desp = String(x.despacho_m || '').trim();

@@ -1,0 +1,1 @@
+GET /vivo  →  público (comprobación de vida, sin datos)

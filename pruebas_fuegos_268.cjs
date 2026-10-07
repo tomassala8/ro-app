@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');const b={};vm.createContext(b);
+vm.runInContext(fs.readFileSync(__dirname+'/modulos/_meta_semantica_285.js','utf8').replace(/export /g,''),b);
+const s=fs.readFileSync(__dirname+'/modulos/_operaciones_fuegos_268.js','utf8');vm.runInContext(s.replace(/^import .*;\n/gm,'').replace(/export /g,'')+'\nglobalThis.labels=METRICAS_FUEGOS_268;',b);
+const v={serie:['2026-08-29','2026-10-02']};
+let m=b.muestraMeta30Fuego268({serie:[{d:'2026-09-02',gasto_meta:999,leads_meta:999},{d:'2026-09-03',gasto_meta:10,leads_meta:2},{d:'2026-10-02',gasto_meta:20,leads_meta:3}]},v,{},'2026-10-03');
+assert.equal(m.desde,'2026-09-03');assert.equal(m.gasto,30);assert.equal(m.resultados,5);assert.equal(m.leads,null);assert.equal(m.cpl,null);assert.equal(m.cobertura,'parcial');
+assert.equal(b.muestraMeta30Fuego268({serie:[{d:'2026-10-02',gasto_meta:0,leads_meta:0}]},v).gasto,null);
+assert.equal(b.muestraMeta30Fuego268({serie:[{d:'2026-10-02',gasto_meta:20,leads_meta:1},{d:'2026-10-02',gasto_meta:20,leads_meta:1}]},v),null);
+assert.equal(b.muestraMeta30Fuego268({serie:[{d:'2026-09-31',gasto_meta:20,leads_meta:1}]},v).gasto,null);
+assert.equal(b.muestraMeta30Fuego268({serie:'bad'},v).gasto,null);assert.equal(b.muestraMeta30Fuego268({},{}),null);
+for(const value of [-1,Infinity,NaN,'20',true,null])assert.equal(b.muestraMeta30Fuego268({serie:[{d:'2026-10-02',gasto_meta:value,leads_meta:1}]},v).gasto,null);
+assert.equal(b.labels.length,12);
+for(const label of ['Leads Meta','Gasto Meta','Coste por lead','Anuncios nuevos','Reuniones','Último correo','Días sin contestar','% horas','Tareas en revisión','Outreach · enviados','Outreach · respuestas','Outreach · leads'])assert(b.labels.some(x=>x.startsWith(label)));
+console.log('268 PASS: doce métricas conservadas, ventana30d exacta, resultados sin tipado no acreditan leads/CPL, duplicados/calendario/tipos desconocidos.');

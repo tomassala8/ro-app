@@ -32,7 +32,7 @@ sys.path.insert(1, str(Path(__file__).resolve().parents[1]))  # C5: rutas y secr
 import config  # noqa: E402
 sys.path.insert(0, str(config.HERRAMIENTAS / "ghl_agencia"))
 
-import zoneinfo, re
+import zoneinfo, re, math
 MAD = zoneinfo.ZoneInfo("Europe/Madrid")          # todo en hora de Madrid (regla 4 de la ronda)
 HOY = dt.datetime.now(MAD)
 AHORA_MS = int(HOY.timestamp() * 1000)
@@ -108,6 +108,43 @@ def iso_ms(s):
         return int(dt.datetime.fromisoformat(str(s).replace("Z", "+00:00")).timestamp() * 1000)
     except Exception:
         return None
+
+
+def timestamp_mensaje(valor):
+    """Epoch ms finito o ISO con zona explícita; no adivinar zona de un mensaje."""
+    if isinstance(valor,(int,float)) and not isinstance(valor,bool):
+        return int(valor) if math.isfinite(valor) and valor>=0 else None
+    if not isinstance(valor,str):return None
+    try:
+        fecha=dt.datetime.fromisoformat(valor.replace('Z','+00:00'))
+        return int(fecha.timestamp()*1000) if fecha.tzinfo is not None else None
+    except (ValueError,OverflowError,OSError):return None
+
+
+def resumir_intentos(mensajes, creado, corte):
+    """No usar conversaciones previas como intentos del lead recién creado.
+
+    Si un mensaje no tiene fecha válida o está en el futuro, el conteo/primer
+    intento son desconocidos; los mensajes fechados se conservan como observación.
+    """
+    inicio,fin=timestamp_mensaje(creado),timestamp_mensaje(corte)
+    if inicio is None or fin is None or inicio>fin:
+        return {'primer_min':None,'intentos_72h':None,'intentos_observados':None,'fechas_desconocidas':len(mensajes)}
+    fechas=[timestamp_mensaje(x.get('dateAdded')) for x in mensajes]
+    desconocidas=sum(t is None or t>fin for t in fechas)
+    validas=sorted(t for t in fechas if t is not None and inicio<=t<=fin)
+    return {'primer_min':(validas[0]-inicio)/60000 if validas and not desconocidas else None,
+            'intentos_72h':sum(t<=inicio+72*3600e3 for t in validas) if not desconocidas else None,
+            'intentos_observados':len(validas) if not desconocidas else None,
+            'fechas_desconocidas':desconocidas}
+
+def intentos_medidos672(lead):
+    """No certificar contadores de un cache legacy o de otro corte como actuales."""
+    n=lead.get('intentos');m=lead.get('intentos_medicion')
+    if type(n) is not int or not 0<=n<=9007199254740991 or not isinstance(m,dict):return False
+    if set(m)!={'fuente','estado','desde_ms','hasta_ms','completa'} or m.get('fuente')!='ghl_conversacion' or m.get('estado')!='observado_parcial' or m.get('completa') is not False:return False
+    desde,hasta=timestamp_mensaje(m.get('desde_ms')),timestamp_mensaje(m.get('hasta_ms'))
+    return desde is not None and hasta is not None and desde==timestamp_mensaje(lead.get('creado')) and desde<=hasta and hasta==AHORA_MS
 
 
 def ms_iso(ms):
@@ -213,24 +250,32 @@ def leer_subcuenta(g, loc):
         if lead["es_lead"]:
             cv = g.req(loc, "GET", "/conversations/search", locationId=loc, contactId=c.get("id"), limit=5)
             msgs = []
-            for conv in (cv.get("conversations") or [])[:2]:
+            conversaciones = cv.get('conversations') if isinstance(cv,dict) else None
+            conversaciones_validas = isinstance(cv,dict) and '_error' not in cv and isinstance(conversaciones,list) and all(isinstance(x,dict) and isinstance(x.get('id'),str) and x['id'] for x in conversaciones)
+            for conv in (conversaciones[:2] if conversaciones_validas else []):
                 m = g.req(loc, "GET", f"/conversations/{conv['id']}/messages", limit=100)
-                msgs += (m.get("messages") or {}).get("messages", []) or []
+                paquete=m.get('messages') if isinstance(m,dict) else None
+                mensajes=paquete.get('messages') if isinstance(paquete,dict) else None
+                if not isinstance(m,dict) or '_error' in m or not isinstance(mensajes,list) or any(not isinstance(x,dict) for x in mensajes):
+                    conversaciones_validas=False
+                else:
+                    msgs += mensajes
             com = [x for x in msgs if x.get("messageType") in COMUNICACION]
             sal = sorted([x for x in com if x.get("direction") == "outbound" or (x.get("messageType") == "TYPE_CALL" and x.get("direction") != "inbound")],
-                         key=lambda x: iso_ms(x.get("dateAdded")) or 0)
+                         key=lambda x: timestamp_mensaje(x.get("dateAdded")) or 0)
             humanos = [x for x in sal if (x.get("source") or "").lower() not in AUTOMATICO]
             autos = [x for x in sal if (x.get("source") or "").lower() in AUTOMATICO]
-            t_h = iso_ms(humanos[0].get("dateAdded")) if humanos else None
-            t_a = iso_ms(autos[0].get("dateAdded")) if autos else None
-            lim72 = (creado or 0) + 72 * 3600e3
+            intentos_h = resumir_intentos(humanos, creado, AHORA_MS)
+            intentos_a = resumir_intentos(autos, creado, AHORA_MS)
             wa = [x for x in sal if x.get("messageType") == "TYPE_WHATSAPP"]
             sms = [x for x in sal if x.get("messageType") in ("TYPE_SMS", "TYPE_CUSTOM_SMS", "TYPE_CUSTOM_PROVIDER_SMS")]
             lead.update({
-                "humano_min": round((t_h - creado) / 60000) if t_h and creado else None,
-                "auto_min": round((t_a - creado) / 60000) if t_a and creado else None,
-                "intentos": len(humanos),
-                "intentos_72h": sum(1 for x in humanos if (iso_ms(x.get("dateAdded")) or 0) <= lim72),
+                "humano_min": intentos_h["primer_min"] if conversaciones_validas else None,
+                "auto_min": intentos_a["primer_min"] if conversaciones_validas else None,
+                "mensajes_fecha_desconocida": intentos_h["fechas_desconocidas"] + intentos_a["fechas_desconocidas"],
+                "intentos": intentos_h["intentos_observados"] if conversaciones_validas else None,
+                "intentos_medicion": {"fuente":"ghl_conversacion", "estado":"observado_parcial" if conversaciones_validas and intentos_h["intentos_observados"] is not None else "desconocido", "desde_ms":creado, "hasta_ms":AHORA_MS, "completa":False},
+                "intentos_72h": intentos_h["intentos_72h"] if conversaciones_validas else None,
                 "llamadas": sum(1 for x in humanos if "CALL" in (x.get("messageType") or "")),
                 "respondio": any(x.get("direction") == "inbound" for x in com),
                 "wa_env": len(wa), "wa_fallo": sum(1 for x in wa if (x.get("status") or "").lower() in ("failed", "undelivered")),
@@ -390,12 +435,12 @@ def main():
         sin_uso = bool(v) and total_contactos is not None and total_contactos < 5
         hace24 = AHORA_MS - 24 * 3600e3
         hace72 = AHORA_MS - 72 * 3600e3
-        sin_tocar = [x for x in auto if x["creado"] and x["creado"] <= hace24 and not x.get("intentos") and not x["cita"]]
+        sin_tocar = [x for x in auto if x["creado"] and x["creado"] <= hace24 and intentos_medidos672(x) and x["intentos"] == 0 and not x["cita"]]
         juzg = [x for x in auto if x["creado"] and x["creado"] <= hace24]
-        en1h = [x for x in juzg if x.get("humano_min") is not None and x["humano_min"] <= 60]
+        en1h = [x for x in juzg if x.get("humano_min") is not None and 0 <= x["humano_min"] <= 60]
         juzg72 = [x for x in auto if x["creado"] and x["creado"] <= hace72]
         cuatro = [x for x in juzg72 if (x.get("intentos_72h") or 0) >= 4]
-        auto_ok = [x for x in auto if x.get("auto_min") is not None and x["auto_min"] <= 5]
+        auto_ok = [x for x in auto if x.get("auto_min") is not None and 0 <= x["auto_min"] <= 5]
         tiempos = [x["humano_min"] for x in auto if x.get("humano_min") is not None]
         wa_env = sum(x.get("wa_env", 0) for x in auto)
         wa_fallo = sum(x.get("wa_fallo", 0) for x in auto)
@@ -417,7 +462,7 @@ def main():
         meta_activa = bool(vc.get("campana_activa")) if vc else bool(cp.get("meta_activa"))
         encendida = tipo in ("cliente", "sin_cliente") and not sin_uso and (meta_activa or len(auto) >= 3)
 
-        # motivos (umbrales firmados del catálogo: especialista_ghl.*, D-45)
+        # motivos (umbrales operativos del catálogo: especialista_ghl.*, D-45; no prueban una garantía contractual)
         mot = []
         def M(nivel, clave, texto):
             mot.append({"nivel": nivel, "clave": clave, "texto": texto})
@@ -428,7 +473,7 @@ def main():
             M("rojo" if leads_ghl_7d / leads_meta_7d < 0.5 else "ambar", "integracion",
               f"Meta dio {int(leads_meta_7d)} leads en 7 días y a GoHighLevel llegaron {leads_ghl_7d}: revisar la conexión del formulario")
         if sin_tocar:
-            M("rojo", "sin_tocar", f"{len(sin_tocar)} lead{'s' if len(sin_tocar) != 1 else ''} de más de 24 h sin ningún intento apuntado en GHL")
+            M("rojo", "sin_tocar", f"{len(sin_tocar)} lead{'s' if len(sin_tocar) != 1 else ''} de más de 24 h sin intento observado en la copia parcial de GHL")
         if c14:
             if c14["sin_estado"] > 5 or (c14["sin_estado"] and c14["sin_estado_max_h"] > 48):
                 M("rojo", "sin_estado", f"{c14['sin_estado']} cita{'s' if c14['sin_estado'] != 1 else ''} de los últimos 14 días sin marcar si vino (la más antigua, hace {c14['sin_estado_max_h'] // 24} días)")
@@ -458,7 +503,7 @@ def main():
         if juzg and len(juzg) >= 3:
             p1 = len(en1h) * 100 / len(juzg)
             if p1 < 40:
-                M("ambar", "velocidad", f"Solo {len(en1h)} de {len(juzg)} leads con un primer intento en menos de 1 h (garantía: 70 %)")
+                M("ambar", "velocidad", f"Solo {len(en1h)} de {len(juzg)} leads con un primer intento en menos de 1 h (referencia operativa de seguimiento: 70 %; no acredita una garantía contractual)")
         if tipo in ("prueba", "interna"):
             estado = "gris"
         elif not encendida and not mot:
@@ -483,11 +528,13 @@ def main():
             "encendida": encendida, "meta_activa": meta_activa,
             "leads_meta_7d": leads_meta_7d, "leads_meta_sep": leads_meta_30d, "leads_ghl_7d": leads_ghl_7d,
             "leads_30d": len(auto) if v else emb.get("cohorte_30d"), "leads_manuales_30d": sum(1 for x in L if x["manual"]),
-            "sin_tocar_24h": len(sin_tocar) if v else None,
+            "sin_tocar_24h": len(sin_tocar) if v and any(intentos_medidos672(x) for x in auto) else None,
+            "sin_tocar_medicion": {"fuente":"ghl_conversacion", "cobertura":"parcial", "leads_observados":sum(intentos_medidos672(x) for x in auto), "leads_elegibles":len(auto), "completa":False},
             "velocidad": {"juzgables": len(juzg), "en_1h": len(en1h), "pct_1h": pct(len(en1h), len(juzg)),
                           "juzgables_72h": len(juzg72), "cuatro_en_72h": len(cuatro), "pct_4en72": pct(len(cuatro), len(juzg72)),
                           "mediana_min": round(statistics.median(tiempos)) if tiempos else None,
-                          "con_intento": sum(1 for x in auto if x.get("intentos")), "intentos_medios": round(sum(x.get("intentos", 0) for x in auto) / len(auto), 1) if auto else None,
+                          "con_intento": sum(1 for x in auto if x.get("intentos")), "intentos_medios": round(sum(x["intentos"] for x in auto if intentos_medidos672(x)) / sum(intentos_medidos672(x) for x in auto), 1) if any(intentos_medidos672(x) for x in auto) else None,
+                          "intentos_medios_cobertura": {"observados":sum(intentos_medidos672(x) for x in auto), "total":len(auto), "completa":False},
                           "auto_5min": len(auto_ok), "respondieron": sum(1 for x in auto if x.get("respondio"))} if v else None,
             "citas_14d": c14, "citas_30d": c30, "citas_90d": c90, "calendarios": len(v.get("calendarios", [])) if v else (cp.get("ghl") or {}).get("calendarios"),
             "embudo": {"cohorte_30d": len(opps30) if v else emb.get("cohorte_30d"), "estancados_72h": len(paradas) if v else emb.get("estancados_72h"),
@@ -645,7 +692,7 @@ def main():
                   "verde_crm": "0 leads sin tocar > 24 h, citas marcadas (≤ 5 sin estado y ninguna > 48 h), asistencia ≥ 75 % cuando hay 3 o más citas marcadas, WhatsApp fallido ≤ 10 % y los leads de Meta llegan a GoHighLevel. Los flujos con error no se pueden leer todavía.",
                   "encendida": "Campaña de Meta activa o 3 o más leads en 30 días.",
                   "umbrales": {"asistencia": "≥ 75 / 60-74 / < 60 %", "sin_estado": "0 / 1-5 / > 5 o alguna > 48 h", "sin_tocar": "0 / — / ≥ 1",
-                               "velocidad": "≥ 70 % en < 1 h y 4 intentos en 72 h / 40-69 % / < 40 % (garantía 1-sep)", "whatsapp": "< 2 / 2-10 / > 10 %",
+                               "velocidad": "≥ 70 % en < 1 h y 4 intentos en 72 h / 40-69 % / < 40 % (referencia operativa legado; no garantía contractual)", "whatsapp": "< 2 / 2-10 / > 10 %",
                                "pct_verde": "≥ 80 / 60-79 / < 60 % (propuesta)", "carga": "≤ 16 subcuentas por especialista",
                                "rojos_especialista": "≤ 2 / 3-4 / ≥ 5"}},
               "fuentes": fuentes, "resumen": resumen, "subcuentas": filas, "leads_sin_tocar": sorted(leads_pub, key=lambda x: -x["horas"]),

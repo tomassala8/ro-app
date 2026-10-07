@@ -10,7 +10,7 @@ dirección; filas con cliente_id → quien ve el detalle de ese cliente. En la c
 en «cli» (no en cliente_id) para que una persona de producción vea sus propias tareas aunque no lleve el cliente.
 Sin euros: del anuncio solo salen índices (media de la cuenta = 100), nunca gasto ni coste.
 """
-import re, statistics, datetime as dt
+import re, statistics, math, datetime as dt
 from collections import defaultdict
 import sys as _sys
 _sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parents[1]))
@@ -23,8 +23,10 @@ def limpiar_tarea(texto):
     return _sin_importes(limpiar(texto))
 
 
-from comun_equipo import (leer, escribir, personas, mapa_usuarios, miembros_clickup, clientes_app, fecha_ms, norm,
+from comun_equipo import (leer, escribir, personas, miembros_clickup, fecha_ms, norm,
                           DATA, CACHE, PANEL, APP, HOY, AHORA, ESTADOS_REVISION_INTERNA, ESTADOS_TRABAJO, tipo_tarea, limpiar, es_urgente)
+
+from identidad_generadores_212 import identidades, clientes_directos
 
 LUNES = HOY - dt.timedelta(days=HOY.weekday())
 FIN_SEMANA = LUNES + dt.timedelta(days=7)
@@ -33,7 +35,7 @@ MES1 = HOY.replace(day=1)
 TOPE = {'account': 12, 'trafficker': 16, 'crm': 16}  # D-07
 NO_COLA = {'backlog', 'planning mensual'}
 ESPERA_CLIENTE = {'revisión cliente', 'enviar  cliente', 'enviar cliente', 'ver cliente', 'campaña en curso'}
-FINALES = {'completado', 'complete', 'cerrado', 'closed', 'done', 'finalizado', 'hecho'}
+from estados_catalogo import resolver_estado
 GRUPOS_AHORA = ('vencida', 'hoy', 'semana', 'bloqueada')   # «tu cola ahora»: lo que depende de ti (R12, una sola definición)
 PRIO = {'urgent': 1, 'high': 2, 'normal': 3, 'low': 4}
 PRIO_TXT = {'urgent': 'Urgente', 'high': 'Alta', 'normal': 'Normal', 'low': 'Baja'}
@@ -53,8 +55,8 @@ def hist_desde(t):
     return out
 
 
-def es_final(t):
-    return (t.get('tipo_estado') in ('closed', 'done')) or (t.get('estado') or '') in FINALES
+def es_final(t, catalogo):
+    return resolver_estado(t, catalogo)['final_flujo']
 
 
 def devuelta(t):
@@ -78,23 +80,80 @@ def a_la_primera(t):
     return not any(v > r0 for k, v in h.items() if k in ESTADOS_TRABAJO)
 
 
-def llegada(t):
-    """Cuándo llegó la pieza a «entregada» (revisión del account, del cliente, ver cliente o cerrada)."""
+def llegada(t, catalogo):
+    """Primer hito operativo observado; no acredita aceptación ni resultado exitoso.
+    Los nombres del historial sólo identifican revisión, nunca cierre.
+    Una fecha cerrada sólo se admite si el estado actual es terminal en su lista.
+    """
     h = hist_desde(t)
-    cands = [v for k, v in h.items() if k in ({'revisión project manager', 'revisión cliente', 'ver cliente', 'enviar  cliente'} | FINALES)]
-    if es_final(t) and t.get('cerrada'):
-        cands.append(fecha_ms(t['cerrada']))
+    cands = [v for k, v in h.items() if v and k in
+             {'revisión project manager', 'revisión cliente', 'ver cliente', 'enviar  cliente'}]
+    if es_final(t, catalogo) and t.get('cerrada'):
+        cierre = fecha_ms(t['cerrada'])
+        if cierre:
+            cands.append(cierre)
     return min(cands) if cands else None
+
+
+def medicion_revisiones_account(fila, sello, hoy):
+    """Metadato puro: cero sólo medido con campos originales y sello válidos."""
+    rev = fila.get('rev_pm') if isinstance(fila, dict) else None
+    fecha = None
+    if isinstance(sello, str):
+        try:
+            fecha = dt.datetime.fromisoformat(sello.replace('Z', '+00:00').replace(' ', 'T')).date()
+        except ValueError:
+            pass
+    valido = isinstance(rev, dict) and all(type(rev.get(k)) is int and rev[k] >= 0 for k in ('n', 'mas48'))
+    valido = valido and rev['mas48'] <= rev['n'] and fecha is not None and fecha <= hoy
+    return {'estado': 'medido' if valido else 'sin_dato', 'fuente': 'flujo', 'fecha': sello if fecha is not None and fecha <= hoy else None}
+
+
+def sumar_horas_cliente(entradas, por_carpeta, hoy):
+    """Observaciones del mes y anterior; una carpeta sin registros queda desconocida."""
+    mes = hoy.replace(day=1)
+    anterior = (mes - dt.timedelta(days=1)).replace(day=1)
+    actual, previo, descartadas = defaultdict(float), defaultdict(float), 0
+    for e in entradas if isinstance(entradas, list) else []:
+        if not isinstance(e, dict):
+            descartadas += 1
+            continue
+        horas, inicio = e.get('horas'), e.get('inicio')
+        if type(horas) not in (int, float) or not math.isfinite(horas) or horas < 0 or horas > 10:
+            descartadas += 1
+            continue
+        try:
+            if not isinstance(inicio, str):
+                raise ValueError('fecha ausente')
+            dia_e = dt.date.fromisoformat(inicio[:10])
+        except ValueError:
+            descartadas += 1
+            continue
+        c = por_carpeta.get(str(e.get('carpeta_id') or ''))
+        if not c or dia_e > hoy:
+            continue
+        if dia_e >= mes:
+            actual[c[0]] += horas
+        elif dia_e >= anterior:
+            previo[c[0]] += horas
+    return actual, previo, descartadas
 
 
 def main():
     T = leer(CACHE / 'tareas.json')
     if not T:
         raise SystemExit('Falta fuentes_produccion/_cache/tareas.json: lanza antes  python3 extraer_clickup.py')
+    catalogo = leer(CACHE / 'estados_listas.json', {}) or {}
     H = leer(CACHE / 'horas.json', {'entradas': []})
-    P = {p['id']: p for p in personas()}
-    U = mapa_usuarios(miembros_clickup())
-    por_carpeta, nombres = clientes_app()
+    try:
+        horas_disponibles = isinstance(H.get('entradas'), list) and isinstance(H.get('meta', {}).get('generado'), str) and dt.datetime.fromisoformat(H['meta']['generado'].replace('Z', '+00:00').replace(' ', 'T')).date() <= HOY
+    except (ValueError, TypeError, KeyError):
+        horas_disponibles = False
+    personas_fuente = personas()
+    P = {p['id']: p for p in personas_fuente}
+    identidad = identidades(personas_fuente, miembros_clickup())
+    U = identidad['por_usuario']
+    por_carpeta, nombres = clientes_directos(DATA)
     # R12 · el nombre de cada cliente sale de la verdad única (lista común); si no está, el de su ficha
     try:
         _vc = leer(DATA / 'verdad/clientes.json', {}) or {}
@@ -121,6 +180,7 @@ def main():
     sin_asignar = 0
     for t in tareas:
         est = t.get('estado') or ''
+        clasificacion = resolver_estado(t, catalogo)
         cli = por_carpeta.get(str(t.get('carpeta_id') or ''))
         pids = [U.get(str(a['id'])) for a in t.get('asignados') or []]
         pids = [p for p in pids if p]
@@ -128,14 +188,14 @@ def main():
         desde = fecha_ms(t.get('estado_desde'))
         dias_estado = round((AHORA - desde).total_seconds() / 86400, 1) if desde else None
         # ---- revisiones por proyecto (cliente): lo que espera al account o a la revisión técnica ----
-        if not es_final(t) and cli and est in ('revisión project manager', 'revisión técnica', 'bloqueado'):
+        if not es_final(t, catalogo) and cli and est in ('revisión project manager', 'revisión técnica', 'bloqueado'):
             rev_cli.append({'cliente_id': cli[0], 'id': t['id'], 'tarea': limpiar_tarea(t.get('nombre'))[:110], 'estado': est,
                             'dias': dias_estado, 'mas48': bool(dias_estado and dias_estado > 2),
                             'asignados': [P[p]['alias'] if P.get(p) else p for p in pids],
                             'revisa': 'account' if est == 'revisión project manager' else 'técnica' if est == 'revisión técnica' else 'cliente',
                             'account_id': account_de.get(cli[0])})
         # ---- entregas de los últimos 30 días (en fecha y a la primera) ----
-        lg = llegada(t)
+        lg = llegada(t, catalogo)
         if lg and HACE30 <= lg.date() < HOY:
             for p in pids:
                 e = entregas[p]
@@ -147,7 +207,7 @@ def main():
                 if ap is not None:
                     e['primera_base'] += 1
                     e['primera_si'] += 1 if ap else 0
-        if es_final(t):
+        if es_final(t, catalogo):
             continue
         if not pids:
             sin_asignar += 0 if est in NO_COLA else 1
@@ -156,7 +216,7 @@ def main():
             abiertas_p[p][est] += 1
             if cli:
                 proyectos_p[p].add(cli[0])
-        if est in NO_COLA and not (vence and vence < FIN_SEMANA + dt.timedelta(days=7)):
+        if clasificacion['determinado'] and est in NO_COLA and not (vence and vence < FIN_SEMANA + dt.timedelta(days=7)):
             continue
         # grupo de la cola: hoy · semana · revisión (espera a otro) · bloqueada · después
         vencida = bool(vence and vence < HOY)
@@ -179,7 +239,9 @@ def main():
         for p in pids:
             cola.append({'persona_id': p, 'id': t['id'], 'tarea': limpiar_tarea(t.get('nombre'))[:120],
                          'cli': cli[0] if cli else None, 'cliente': nombre_cli(cli[0]) if cli else ('Personal' if (t.get('carpeta') or '') in ('hidden', '') and not t.get('espacio') else (t.get('carpeta') if t.get('carpeta') not in (None, 'hidden') else t.get('espacio') or 'Personal')),
-                         'estado': est, 'grupo': grupo, 'prio_n': 1 if es_urgente(t.get('nombre')) else PRIO.get(t.get('prioridad'), 5),
+                         'estado': est, 'grupo': grupo, 'lista_id': t.get('lista_id'),
+                         'estado_determinado': clasificacion['determinado'], 'tipo_estado': clasificacion['tipo'],
+                         'estado_nota': clasificacion['motivo'], 'prio_n': 1 if es_urgente(t.get('nombre')) else PRIO.get(t.get('prioridad'), 5),
                          'vence': str(vence) if vence else None, 'vencida': vencida,
                          'dias_estado': dias_estado, 'devuelta': dv, 'comparte': len(pids) > 1})
     cola.sort(key=lambda r: (r['persona_id'], {'vencida': 0, 'hoy': 1, 'bloqueada': 2, 'semana': 3, 'revision': 4, 'despues': 5, 'olvidada': 6}[r['grupo']],
@@ -237,23 +299,12 @@ def main():
     # ---- proyectos (cliente): flujo del panel + lo calculado aquí ----
     flujo = leer(PANEL / 'build/tareas_flujo.json', {}) or {}
     plan = leer(PANEL / 'build/planificacion.json', {}) or {}
-    por_nombre = {norm(n): i for i, n in nombres.items()}
-    hcli, hcli_ant = defaultdict(float), defaultdict(float)
-    mes0 = (MES1 - dt.timedelta(days=1)).replace(day=1)          # el mes anterior entero (para la capa E1 y Dinero)
-    for e in H.get('entradas', []):
-        c = por_carpeta.get(str(e.get('carpeta_id') or ''))
-        if not c or e['horas'] > 10:
-            continue
-        dia_e = dt.date.fromisoformat(e['inicio'][:10])
-        if dia_e >= MES1:
-            hcli[c[0]] += e['horas']
-        elif dia_e >= mes0:
-            hcli_ant[c[0]] += e['horas']
+    hcli, hcli_ant, horas_descartadas = sumar_horas_cliente(H.get('entradas'), por_carpeta, HOY)
     proyectos = []
     for nom, f in flujo.items():
         if nom.startswith('_'):
             continue
-        cid = por_carpeta.get(str(f.get('carpeta_id')), (por_nombre.get(norm(nom)), None))[0]
+        cid = por_carpeta.get(str(f.get('carpeta_id')), (None, None))[0]
         if not cid:
             continue
         rv = [r for r in rev_cli if r['cliente_id'] == cid]
@@ -261,28 +312,42 @@ def main():
         proyectos.append({
             'cliente_id': cid, 'cliente': nombres.get(cid, nom), 'account_id': account_de.get(cid),
             'abiertas': sum((f.get('abiertas_por_estado') or {}).values()),
-            'rev_account': (f.get('rev_pm') or {}).get('n', 0), 'rev_account_48': (f.get('rev_pm') or {}).get('mas48', 0), 'rev_account_max': (f.get('rev_pm') or {}).get('max_dias', 0),
+            'revisiones_account': medicion_revisiones_account(f, (flujo.get('_meta') or {}).get('generado'), HOY),
+            'rev_account': f['rev_pm']['n'] if medicion_revisiones_account(f, (flujo.get('_meta') or {}).get('generado'), HOY)['estado'] == 'medido' else 0, 'rev_account_48': f['rev_pm']['mas48'] if medicion_revisiones_account(f, (flujo.get('_meta') or {}).get('generado'), HOY)['estado'] == 'medido' else 0, 'rev_account_max': (f.get('rev_pm') if isinstance(f.get('rev_pm'), dict) else {}).get('max_dias', 0),
             'rev_tecnica': (f.get('rev_tecnica') or {}).get('n', 0), 'rev_tecnica_48': (f.get('rev_tecnica') or {}).get('mas48', 0), 'rev_tecnica_max': (f.get('rev_tecnica') or {}).get('max_dias', 0),
             'bloqueadas': len(bl), 'bloqueo_max': max((r['dias'] or 0 for r in bl), default=0),
             'no_planificadas': f.get('no_planificadas_semana', 0), 'no_planificadas_ant': f.get('no_planificadas_semana_ant', 0),
             'vencidas': f.get('vencidas', 0), 'sin_fecha': f.get('sin_fecha', 0),
             'creadas_mes': f.get('creadas_mes', 0), 'creadas_mes_ant': f.get('creadas_mes_ant', 0), 'sin_tareas_mes': bool(f.get('sin_tareas_mes')),
             'cerradas_semana': f.get('cerradas_semana', 0), 'cerradas_semana_ant': f.get('cerradas_semana_ant', 0),
-            'horas_mes': round(hcli.get(cid, 0), 1), 'horas_mes_ant': round(hcli_ant.get(cid, 0), 1),
+            'horas_mes': round(hcli[cid], 1) if horas_disponibles and cid in hcli else None,
+            'horas_mes_ant': round(hcli_ant[cid], 1) if horas_disponibles and cid in hcli_ant else None,
+            'horas_medicion': {'estado': 'medido' if horas_disponibles and cid in hcli else 'sin_dato',
+                'fuente': 'horas', 'periodo': HOY.strftime('%Y-%m'),
+                'fecha': H.get('meta', {}).get('generado'), 'cobertura': 'parcial',
+                'alcance': 'entradas_leidas', 'entradas_descartadas': horas_descartadas},
         })
     proyectos.sort(key=lambda r: (-(r['rev_account_48'] + r['rev_tecnica_48'] + r['bloqueadas']), r['cliente']))
 
     # trabajo no planificado por persona que crea (D-24: 3 o más por persona y semana)
     no_plan = []
+    plan_sin_identidad = 0
+    personas_unicas = {pid for pid in P if sum(p.get('id') == pid for p in personas_fuente) == 1}
     for quien, x in plan.items():
         if quien.startswith('_'):
             continue
-        cand = [i for i, p in P.items() if norm(p['nombre']).split()[:1] == norm(quien).split()[:1]] if norm(quien) else []
-        pid = cand[0] if len(cand) == 1 else None
-        if not pid:
+        pid = x.get('persona_id') if isinstance(x, dict) else None
+        if not isinstance(pid, str) or pid not in personas_unicas:
+            plan_sin_identidad += 1
             continue
         no_plan.append({'persona_id': pid, 'semana': x['semana']['rompen'], 'semana_ant': x['semana_ant']['rompen'],
                         'creadas': x['semana']['creadas'], 'ejemplos': [{**e, 'tarea': limpiar_tarea(e.get('tarea'))} for e in x['semana']['ejemplos'][:3]]})
+
+    plan_fecha = (plan.get('_meta') or {}).get('generado')
+    try:
+        plan_fecha_valida = isinstance(plan_fecha, str) and dt.datetime.fromisoformat(plan_fecha.replace('Z', '+00:00')).date() <= HOY
+    except (ValueError, TypeError):
+        plan_fecha_valida = False
 
     # ---- anuncios: índice frente a la media de su cuenta (sin euros) ----
     anuncios, resumen_anu = indices_anuncios(nombres, P)
@@ -292,10 +357,14 @@ def main():
     # data/fuentes.json, que es el que usan los consejos y la cabecera: así nunca se contradicen).
     lim = {f.get('id'): f.get('limite_h') for f in (leer(DATA / 'fuentes.json', {}) or {}).get('fuentes', []) if isinstance(f, dict)}
     escribir(DATA / 'produccion/produccion.json', compacto=True, datos={
+        'cobertura_identidad': {'fuente':identidad['fuente_identidad'], **identidad['conteos']},
+        'no_planificado_cobertura': {'estado':'sin_dato' if plan_sin_identidad or not plan_fecha_valida else 'referencia_de_copia',
+            'filas_sin_identidad':plan_sin_identidad, 'total_semana':None if plan_sin_identidad or not plan_fecha_valida else sum(f['semana'] for f in no_plan),
+            'fecha':(plan.get('_meta') or {}).get('generado'), 'alcance':'filas_con_persona_id_explicito_unico'},
         'formato': 1, 'generado': AHORA.strftime('%Y-%m-%d %H:%M'), 'hoy': str(HOY), 'lunes': str(LUNES),
         'fuentes': {
             'tareas': {'fuente': 'ClickUp · tareas (llave propia)', 'nombre': 'Colas (tareas de ClickUp)', 'hora': sello, 'n': len(tareas), 'limite_h': lim.get('tareas') or 8},
-            'horas': {'fuente': 'ClickUp · horas (llave propia)', 'nombre': 'Horas imputadas', 'hora': H.get('meta', {}).get('generado'), 'limite_h': lim.get('horas') or 3},
+            'horas': {'fuente': 'ClickUp · horas (llave propia)', 'nombre': 'Horas imputadas', 'hora': H.get('meta', {}).get('generado') if horas_disponibles else None, 'limite_h': lim.get('horas') or 3},
             'flujo': {'fuente': 'ClickUp · flujo por proyecto (cu.py del panel)', 'nombre': 'Revisiones y proyectos', 'hora': (flujo.get('_meta') or {}).get('generado'), 'limite_h': lim.get('tareas') or 8},
             'anuncios': {'fuente': 'Meta · anuncios por cuenta (M6)', 'nombre': 'Anuncios de Meta', 'hora': resumen_anu.get('hora'), 'limite_h': lim.get('meta') or 30},
         },
@@ -309,7 +378,8 @@ def main():
         'notas': {
             'devueltas': 'Devuelta = está en un estado de trabajo (diario, en curso, planning semanal…) y antes pasó por una revisión (account, técnica, Mili, Tomás o cliente).',
             'a_la_primera': 'A la primera = pasó por revisión interna y después no volvió a un estado de trabajo. ClickUp da el tiempo total en cada estado, no cuántas veces se entra: una pieza devuelta dos veces cuenta como una. Para contar rondas exactas hace falta un estado «corrección» en ClickUp.',
-            'entregas': 'Entregada = llega a revisión del account, del cliente, «ver cliente» o se cierra. En fecha = antes o el mismo día de su fecha límite. Solo cuentan las tareas con fecha.',
+            'entregas': 'Hitos operativos: primera revisión registrada o cierre con tipo done/closed verificado en la lista. No acreditan entrega aceptada ni éxito. En fecha compara ese hito con la fecha límite, sólo en tareas con fecha; últimos 30 días. Historial resumido y copia parcial.',
+            'estados': {'fuente': 'ClickUp · catálogo de estados por lista', 'fecha': catalogo.get('leido'), 'texto': 'Un nombre no determina cierre. Sin catálogo exacto o ante contradicción, la tarea permanece no final y por contrastar.'},
             'anuncios': 'Índice = la pieza frente a la media de su misma cuenta (media = 100), 30 días, con más de 1.000 impresiones. Sin euros. Autor: iniciales en el nombre del anuncio.',
         },
     })

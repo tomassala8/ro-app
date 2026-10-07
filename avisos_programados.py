@@ -244,8 +244,14 @@ def canal_de_persona(p):
 
 
 def jefe_de(p):
-    j = p.get("jefe")
-    return j if j and activa(persona(j)) else "mili"
+    """A quién sube un recordatorio que nadie hace: su jefe (si está activo). Si no, el siguiente de la cadena oficial
+    (data/escalado.json: Mili, y si es Mili, Tomás). 3-oct: la cadena vive en escalado.py."""
+    try:
+        import escalado as ESC
+        actuales = (S.E.crudo.get("personas") or []) if S and S.E.crudo else []
+        return ESC.jefe_de(p.get("id"), actuales)
+    except Exception:
+        return None
 
 
 def clientes():
@@ -347,7 +353,7 @@ def gen_horas(r, t, con):
         cuanto = "no imputaste horas" if cero else f"solo imputaste {str(round(horas, 1)).replace('.', ',')} h"
         texto = r["texto"].format(nombre=nom, dia=dia_txt(ayer), cuanto=cuanto, saludo=saludo(local))
         out.append({"clave": f"prog:{r['id']}:{p['id']}:{ayer.isoformat()}", "canal": canal_de_persona(p), "texto": texto,
-                    "menciones": [p["id"]], "dueno": p["id"], "vence": f"{dia.isoformat()}T18:00", "ver": {"personas": sorted({p["id"], jefe})},
+                    "menciones": [p["id"]], "dueno": p["id"], "vence": f"{dia.isoformat()}T18:00", "ver": {"personas": sorted(x for x in {p["id"], jefe} if x)},
                     "botones": [{"texto": "Imputar", "url": CLICKUP_HORAS}, {"texto": "Ver mis horas", "ir": "#/horas"}],
                     "objetivo": p["id"], "dia": ayer.isoformat(), "escalar_a": jefe,
                     "texto_escalado": f"{nom} sigue sin imputar lo del {dia_txt(ayer)} aunque se le recordó."})
@@ -396,7 +402,7 @@ def gen_semaforo(r, t, con):
                                   semana=dia_txt(lunes))
         orden = sorted(faltan, key=lambda c: nombre_cliente(c))
         out.append({"clave": f"prog:{r['id']}:{acc}:{lunes.isoformat()}", "canal": "avisos-accounts", "texto": texto,
-                    "menciones": [acc], "dueno": acc, "vence": f"{local.date().isoformat()}T13:00", "ver": {"personas": sorted({acc, jefe})},
+                    "menciones": [acc], "dueno": acc, "vence": f"{local.date().isoformat()}T13:00", "ver": {"personas": sorted(x for x in {acc, jefe} if x)},
                     "botones": [{"texto": f"Semáforo de {nombre_cliente(c)[:24]}", "ir": f"#/ficha/{c}?semaforo=1"} for c in orden[:4]],
                     "objetivo": acc, "dia": lunes.isoformat(), "faltan": orden, "escalar_a": jefe,
                     "texto_escalado": f"{nom} sigue sin el semáforo de esta semana en {len(faltan)} cliente{'s' if len(faltan) != 1 else ''}."})
@@ -453,7 +459,7 @@ def gen_informe(r, t, con):
                                   limite=dia_txt(lim), cuando="hoy" if etapa == "limite" else f"el {dia_txt(lim)}")
         jefe = departamentos().get("accounts", {}).get("jefe") or jefe_de(p)
         out.append({"clave": f"prog:{r['id']}:{acc}:{mes}:{etapa}", "canal": "avisos-accounts", "texto": texto,
-                    "menciones": [acc], "dueno": acc, "vence": f"{limite}T23:00", "ver": {"personas": sorted({acc, jefe})},
+                    "menciones": [acc], "dueno": acc, "vence": f"{limite}T23:00", "ver": {"personas": sorted(x for x in {acc, jefe} if x)},
                     "botones": [{"texto": "Abrir mis informes", "ir": "#/informes-mensuales"}],
                     "objetivo": acc, "dia": hoy.isoformat(), "mes": mes, "ids": [f.get("id") for f in filas],
                     "escalar_a": jefe if etapa == "limite" else None,
@@ -671,7 +677,7 @@ def gen_produccion(r, t, con):
         nom = p.get("alias") or p["nombre"]
         out.append({"clave": f"prog:{r['id']}:{p['id']}:{lunes_de(local.date()).isoformat()}", "canal": canal_de_persona(p),
                     "texto": r["texto"].format(nombre=nom, n=n), "menciones": [p["id"]], "dueno": p["id"], "vence": None,
-                    "ver": {"personas": sorted({p["id"], jefe})}, "botones": [{"texto": "Abrir mi cola", "ir": "#/produccion"}],
+                    "ver": {"personas": sorted(x for x in {p["id"], jefe} if x)}, "botones": [{"texto": "Abrir mi cola", "ir": "#/produccion"}],
                     "objetivo": p["id"], "dia": local.date().isoformat(), "escalar_a": None})
     return out, {}
 
@@ -737,17 +743,31 @@ def escalar(con, r, t):
             traceback.print_exc()
             continue
         a_quien = (json.loads(m["menciones"] or "[]") or [None])[0]
-        sube = d.get("escalar_a") or esc.get("a") or "mili"
+        import escalado as ESC
+        actuales = (S.E.crudo.get("personas") or []) if S and S.E.crudo else []
+        per = ESC._personas_por_id(actuales)
+        if not ESC.activa(per.get(a_quien)):
+            continue
+        sube = d.get("escalar_a") or esc.get("a") or ESC.papel("atascado", actuales)
         if sube == a_quien:
-            sube = jefe_de(persona(a_quien) or {}) if a_quien else "tomas"
-        p_sube = persona(sube)
-        if not activa(p_sube):
+            sube = ESC.jefe_de(a_quien, actuales)
+        p_sube = per.get(sube)
+        if not ESC.activa(p_sube) or (sube == "tomas" and ESC.papel("final", actuales) != sube):
             continue
         texto_base = (d.get("texto_escalado") or r.get("texto_escalado") or "Sigue sin hacerse.")
         texto = f"{texto_base} Se avisó hace {int(horas)} h. @{corto(sube)}, ¿lo miras?"
         ver_padre = json.loads(m["ver"] or "null")
         mio = A.Vista(p_sube, p_sube, con)
-        if m["canal_id"] in mio.canales and mio.ve_fila(m):
+        mismo_canal = m["canal_id"] in mio.canales and mio.ve_fila(m)
+        # La lectura del canal puede coexistir con una revocación del catálogo.
+        # Revalidar los destinatarios inmediatamente antes de publicar.
+        actuales = (S.E.crudo.get("personas") or []) if S and S.E.crudo else []
+        per_actual = ESC._personas_por_id(actuales)
+        if (not ESC.activa(per_actual.get(a_quien)) or not ESC.activa(per_actual.get(sube))
+                or per_actual.get(sube) != p_sube
+                or (sube == "tomas" and ESC.papel("final", actuales) != sube)):
+            continue
+        if mismo_canal:
             mid = A.publicar(con, m["canal_id"], "evento", texto, "prog_esc:" + m["clave"], hilo_de=m["id"], menciones=[sube], dueno_id=sube,
                              datos={"icono": "flag", "regla": r["id"], "escalado": True})
         else:     # quien sube no ve ese canal: aviso suelto en el suyo, solo para él
@@ -1032,7 +1052,8 @@ def enganchar(Manejador, servir):
 
     Manejador._api_get = _api_get
     Manejador.api_post = api_post
-    if not os.environ.get("RO_AVISOS_SIN_BUCLE"):
+    import piloto_lectura
+    if not piloto_lectura.activo() and not os.environ.get("RO_AVISOS_SIN_BUCLE"):
         threading.Thread(target=bucle, daemon=True).start()
 
 

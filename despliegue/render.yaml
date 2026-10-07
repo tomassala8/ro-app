@@ -6,8 +6,11 @@
 #   ro-ligera          cada hora de 7 a 23 h de España: tubería ligera
 #   ro-completa        6:00 y 14:00: tubería completa (lectores en bruto, créditos, CRM en vivo)
 #   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
-#   ro-base            UNA sola Postgres: rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con
-#                      bloqueo y los datos de cada módulo por versión (despliegue/publicacion.py)
+#   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS).
+#                      A las 3 y a las 15 UTC, además a Backblaze B2 (otra cuenta, inmutable 30 días)
+#   La base es Supabase (Postgres, Frankfurt; Tomás, 4-oct), no una base de Render: DATABASE_URL va en el grupo ro-base.
+#                      Rastro, decisiones, asignaciones, estado de la tubería, llave de GHL con bloqueo y los datos
+#                      de cada módulo por versión (despliegue/publicacion.py). Pasos en DESPLIEGUE.md (T1b).
 #
 # Horarios en UTC (Render no admite zona horaria). Con horario de verano (UTC+2) caen a su hora; en invierno (UTC+1)
 # una hora antes. La ligera cubre de 5 a 22 UTC para tapar los dos casos. Render no lanza dos vueltas del MISMO
@@ -16,16 +19,13 @@
 previews:
   generation: manual            # entornos de vista previa por cambio (plan Pro), a petición
 
-databases:
-  - name: ro-base
-    region: frankfurt
-    plan: basic-1gb             # ligera: basic-256mb
-    databaseName: ro
-    user: ro
-    postgresMajorVersion: "16"
-    ipAllowList: []             # sin acceso desde internet: solo la red privada de Render
-
 envVarGroups:
+  - name: ro-base
+    envVars:
+      # Supabase › Connect › «Session pooler» (puerto 5432, IPv4, SSL). NO el «Transaction pooler» (6543): rompe los
+      # candados de sesión y las sentencias preparadas de psycopg. Formato:
+      # postgresql://postgres.<proyecto>:<clave>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - { key: DATABASE_URL, sync: false }
   - name: ro-comun
     envVars:
       - key: RO_ENTORNO
@@ -71,6 +71,10 @@ envVarGroups:
       - { key: RO_R2_BUCKET, sync: false }
       - { key: RO_R2_KEY_ID, sync: false }
       - { key: RO_R2_SECRET, sync: false }
+      - { key: RO_B2_ENDPOINT, sync: false }      # Backblaze B2, región UE (https://s3.eu-central-003.backblazeb2.com)
+      - { key: RO_B2_BUCKET, sync: false }        # bucket con Object Lock «compliance» 30 días por defecto
+      - { key: RO_B2_KEY_ID, sync: false }        # llave «solo escribir» de ese bucket
+      - { key: RO_B2_SECRET, sync: false }
 
 services:
   - type: web
@@ -90,8 +94,7 @@ services:
       # Ronda 11 (A8, auditoría 35): el Origin que manda el navegador en los POST. Sin esto, todos los botones (acciones,
       # decisiones, Ajustes, «Ver datos», IA) dan 403 «Origen no permitido». Varios, separados por comas.
       - { key: RO_ORIGEN_APP, value: "https://app.rankingonline.app" }
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-vigilancia
     # La web NO lleva las llaves de las herramientas: los botones dejan acciones simuladas y la tubería es quien lee.
@@ -106,8 +109,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh ligera
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves
       - fromGroup: ro-vigilancia
@@ -122,11 +124,26 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh completa
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves
       - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-copias
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    schedule: "0 * * * *"         # cada hora (Tomás, 4-oct). Sin R2 sale en rojo: el disco de un cron se pierde
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh copias
+    envVars:
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
+      - key: RO_COPIAS_DIAS
+        value: "7"                # cuántos días se guardan las copias de cada hora; se cambia aquí
+      - fromGroup: ro-comun
+      - fromGroup: ro-vigilancia   # RO_R2_* y RO_B2_*
 
   - type: cron
     name: ro-noche
@@ -138,8 +155,7 @@ services:
     dockerContext: .
     dockerCommand: despliegue/entrada.sh noche
     envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: ro-base, property: connectionString }
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
       - fromGroup: ro-comun
       - fromGroup: ro-llaves     # comprobar.py lee Meta (3 lecturas)
       - fromGroup: ro-vigilancia

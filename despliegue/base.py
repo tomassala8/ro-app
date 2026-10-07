@@ -8,11 +8,18 @@ Con DATABASE_URL (Render), servir.conectar() devuelve una ConexionPG que traduce
   datetime('now')           → la misma hora UTC en texto «AAAA-MM-DD HH:MM:SS» que da SQLite
   date('now')               → la fecha de hoy en texto
   INSERT OR IGNORE INTO …   → INSERT INTO … ON CONFLICT DO NOTHING
+  INSERT OR REPLACE INTO …  → INSERT INTO … ON CONFLICT (clave primaria) DO UPDATE SET …
+  datetime('now', '-1 hour') y datetime('now', ?) → la hora UTC en texto desplazada (interval)
+  FROM sqlite_master        → las tablas de information_schema (name, type)
   PRAGMA foreign_keys       → nada (Postgres ya las aplica)
+  BEGIN IMMEDIATE           → candado de transacción (pg_advisory_xact_lock): un solo escritor del rastro a la vez
   PRAGMA table_info(t)      → columnas de information_schema (fila[1] = nombre, como en SQLite)
-  lastrowid                 → RETURNING id (o n en historial) añadido a los INSERT de tablas con clave automática
+  lastrowid                 → RETURNING <columna con contador> añadido a los INSERT de cualquier tabla que la tenga
+  CREATE TABLE/INDEX/TRIGGER lanzados con execute() (no executescript) → la misma traducción del esquema, una vez
+  in_transaction            → como sqlite3: True si hay transacción abierta (ia_gasto, intenciones, vistas lo miran)
 y el esquema (schema_v2.sql) se traduce solo con esquema_postgres(): AUTOINCREMENT → BIGSERIAL, las vistas, y los
-disparadores que impiden borrar o cambiar el rastro → funciones plpgsql que lanzan el mismo mensaje.
+disparadores que impiden borrar o cambiar el rastro (también los que llevan condición WHEN) → funciones plpgsql que
+lanzan el mismo mensaje.
 
 ⚠️ Sin probar contra un Postgres real (no hay ninguno en el Mac). Se prueba el primer día en el entorno de pruebas de
 Render con «python3 despliegue/base.py --probar» (crea el esquema, inserta, comprueba que el rastro no se borra).
@@ -20,6 +27,7 @@ Render con «python3 despliegue/base.py --probar» (crea el esquema, inserta, co
 import os
 import re
 import sys
+import threading
 from pathlib import Path
 
 AHORA_PG = "to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD HH24:MI:SS')"
@@ -28,9 +36,13 @@ CLAVE_AUTO = {"asignaciones": "id", "registro": "id", "acciones": "id", "inciden
               "recargas": "id", "avisos": "id", "historial": "n"}
 
 
-def esquema_postgres(sql):
+def esquema_postgres(sql, cabecera=True):
+    # Fin de un disparador SQLite: «RAISE(ABORT, 'msg'); END;». Tolerante: con o sin espacio tras la coma y sin el «;»
+    # final (los módulos nuevos escriben «RAISE(ABORT,'…'); END» en un execute()). Local: probar_rastro_replace_569
+    # ejecuta esta función suelta.
+    fin = r"BEGIN\s+SELECT\s+RAISE\(\s*ABORT\s*,\s*'([^']*)'\s*\)\s*;\s*END\b;?"
     sql = re.sub(r"(?m)^\s*PRAGMA[^;]*;\s*$", "", sql)
-    sql = re.sub(r"INTEGER PRIMARY KEY AUTOINCREMENT", "BIGSERIAL PRIMARY KEY", sql)
+    sql = re.sub(r"INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT", "BIGSERIAL PRIMARY KEY", sql)
     sql = sql.replace("(datetime('now'))", f"({AHORA_PG})").replace("datetime('now')", AHORA_PG).replace("date('now')", HOY_PG)
     sql = sql.replace("CREATE VIEW IF NOT EXISTS", "CREATE OR REPLACE VIEW")
     cab = ("CREATE OR REPLACE FUNCTION ro_prohibido() RETURNS trigger LANGUAGE plpgsql AS $f$ "
@@ -38,28 +50,78 @@ def esquema_postgres(sql):
 
     def disparador(m):
         nombre, cuando, tabla, msg = m.group(1), m.group(2), m.group(3), m.group(4)
-        return (f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
-                f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION ro_prohibido('{msg}');")
-    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+) BEFORE (UPDATE|DELETE) ON (\w+) BEGIN SELECT RAISE\(ABORT, '([^']*)'\); END;",
+        sql = (f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
+               f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION ro_prohibido('{msg}');")
+        if cuando == "DELETE":   # un TRUNCATE no dispara los de fila: sin esto, lo imborrable se vaciaba de golpe
+            sql += (f"\nDROP TRIGGER IF EXISTS {nombre}_truncate ON {tabla};\n"
+                    f"CREATE TRIGGER {nombre}_truncate BEFORE TRUNCATE ON {tabla} FOR EACH STATEMENT "
+                    f"EXECUTE FUNCTION ro_prohibido('{msg}');")
+        return sql
+    def con_condicion(m):   # «BEFORE … WHEN cond BEGIN RAISE … END» (p. ej. «de una acción solo avanza el estado»)
+        nombre, cuando, tabla, cond, msg = m.groups()
+        cond = re.sub(r"\bIS NOT ((?:OLD|NEW)\.)", r"IS DISTINCT FROM \1", cond)
+        fila = "OLD" if cuando == "DELETE" else "NEW"
+        return (f"CREATE OR REPLACE FUNCTION {nombre}_fn() RETURNS trigger LANGUAGE plpgsql AS $f$ BEGIN "
+                f"IF ({' '.join(cond.split())}) THEN RAISE EXCEPTION '%', '{msg}'; END IF; RETURN {fila}; END $f$;\n"
+                f"DROP TRIGGER IF EXISTS {nombre} ON {tabla};\n"
+                f"CREATE TRIGGER {nombre} BEFORE {cuando} ON {tabla} FOR EACH ROW EXECUTE FUNCTION {nombre}_fn();")
+    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+)\s+BEFORE\s+(UPDATE|DELETE|INSERT)\s+ON\s+(\w+)\s+WHEN\s+(.+?)\s+"
+                 + fin, con_condicion, sql, flags=re.S)
+    sql = re.sub(r"CREATE TRIGGER IF NOT EXISTS (\w+)\s+BEFORE\s+(UPDATE|DELETE)\s+ON\s+(\w+)\s+" + fin,
                  disparador, sql)
-    return cab + sql
+    return (cab if cabecera else "") + sql
 
 
-def traducir(sql):
+SQLITE_MASTER_PG = ("(SELECT table_name AS name, table_name AS tbl_name, 'table' AS type FROM information_schema.tables "
+                    "WHERE table_schema = 'public') AS sqlite_master")
+
+
+def traducir(sql, claves=None, auto=None):
+    """claves(tabla) → columnas de la clave primaria (para INSERT OR REPLACE); auto(tabla) → su columna con contador
+    (BIGSERIAL), para que lastrowid funcione en TODAS las tablas, no solo en las de CLAVE_AUTO. Las da ConexionPG."""
     s = sql.strip()
+    if re.match(r"(?is)^CREATE\s+(UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\b", s):
+        # DDL lanzado con execute() (preparar() de los módulos nuevos): la misma traducción que el esquema.
+        # Los % se doblan como en el resto: execute() sin parámetros los deshace.
+        pg = esquema_postgres(s, cabecera=False)
+        if "ro_prohibido(" in pg:
+            pg = esquema_postgres("") + pg
+        return pg.replace("%", "%%"), ()
     if re.match(r"(?i)^PRAGMA\s+foreign_keys", s):
         return None, None
+    if re.match(r"(?i)^BEGIN(\s+(IMMEDIATE|EXCLUSIVE|DEFERRED))?;?$", s):
+        # SQLite «BEGIN IMMEDIATE» = un solo escritor a la vez entre procesos (la cadena de huellas del rastro).
+        # En Postgres la transacción ya está abierta: un candado de transacción hace lo mismo y se suelta en el COMMIT.
+        return "SELECT pg_advisory_xact_lock(7262)", ()
     m = re.match(r"(?i)^PRAGMA\s+table_info\((\w+)\)", s)
     if m:
         return ("SELECT ordinal_position - 1 AS cid, column_name AS name, data_type AS type FROM information_schema.columns "
                 "WHERE table_name = %s ORDER BY ordinal_position"), (m.group(1),)
     s = s.replace("%", "%%").replace("datetime('now')", AHORA_PG).replace("date('now')", HOY_PG)
+    # datetime('now', '-14 days') y datetime('now', ?) con «-14 days»: la misma hora UTC en texto, desplazada
+    s = re.sub(r"datetime\('now',\s*'([^']*)'\)",
+               lambda m: f"to_char((now() AT TIME ZONE 'UTC') + interval '{m.group(1)}', 'YYYY-MM-DD HH24:MI:SS')", s)
+    s = re.sub(r"datetime\('now',\s*\?\)", "to_char((now() AT TIME ZONE 'UTC') + CAST(? AS interval), 'YYYY-MM-DD HH24:MI:SS')", s)
+    s = re.sub(r"(?i)\bFROM\s+sqlite_master\b", "FROM " + SQLITE_MASTER_PG, s)
     if re.match(r"(?i)^INSERT\s+OR\s+IGNORE\s+INTO", s):
         s = re.sub(r"(?i)^INSERT\s+OR\s+IGNORE\s+INTO", "INSERT INTO", s) + " ON CONFLICT DO NOTHING"
+    m = re.match(r"(?i)^INSERT\s+OR\s+REPLACE\s+INTO\s+(\w+)\s*\(([^)]*)\)", s)
+    if m and claves:
+        # INSERT OR REPLACE = si choca la clave primaria, la fila nueva sustituye a la vieja
+        pk = claves(m.group(1))
+        if not pk:   # sin clave primaria saldría «ON CONFLICT ()», que Postgres no entiende: mejor un error claro
+            raise ValueError(f"INSERT OR REPLACE en «{m.group(1)}», que no tiene clave primaria en Postgres: "
+                             "no se sabe qué fila sustituir. Ponle clave primaria o cambia la consulta.")
+        cols = [c.strip() for c in m.group(2).split(",")]
+        resto = [c for c in cols if c not in pk] or cols[:1]
+        s = (re.sub(r"(?i)^INSERT\s+OR\s+REPLACE\s+INTO", "INSERT INTO", s) + f" ON CONFLICT ({', '.join(pk)}) DO UPDATE SET "
+             + ", ".join(f"{c} = EXCLUDED.{c}" for c in resto))
     s = _marcadores(s)
     m = re.match(r"(?i)^INSERT\s+INTO\s+(\w+)", s)
-    if m and m.group(1) in CLAVE_AUTO and " RETURNING " not in s.upper():
-        s += f" RETURNING {CLAVE_AUTO[m.group(1)]}"
+    if m and " RETURNING " not in s.upper():
+        col = CLAVE_AUTO.get(m.group(1)) or (auto(m.group(1)) if auto else None)
+        if col:
+            s += f" RETURNING {col}"
     return s, ()
 
 
@@ -74,22 +136,28 @@ def _marcadores(s):
 
 
 class Fila(dict):
-    """Como sqlite3.Row: por nombre y por posición."""
+    """Como sqlite3.Row: por nombre, por posición y por trozos (fila[:3]); al recorrerla o desempaquetarla
+    («for a, b in con.execute(…)») da los VALORES, no los nombres (ia_gasto lo hace así)."""
     def __init__(self, columnas, valores):
         super().__init__(zip(columnas, valores))
         self._v = list(valores)
 
     def __getitem__(self, k):
-        return self._v[k] if isinstance(k, int) else dict.__getitem__(self, k)
+        return self._v[k] if isinstance(k, (int, slice)) else dict.__getitem__(self, k)
+
+    def __iter__(self):
+        return iter(self._v)
 
     def keys(self):
         return list(dict.keys(self))
 
 
 class CursorPG:
-    def __init__(self, cur, lastrowid=None):
+    def __init__(self, cur, lastrowid=None, rowcount=-1):
         self._c, self.lastrowid = cur, lastrowid
         self._pend = None
+        # como sqlite3: filas tocadas por el último INSERT/UPDATE/DELETE (-1 si no aplica)
+        self.rowcount = cur.rowcount if cur is not None else rowcount
 
     def _cols(self):
         return [d[0] for d in (self._c.description or [])]
@@ -106,25 +174,133 @@ class CursorPG:
     def fetchall(self):
         if self._c is None or self._c.description is None:
             return []
-        return [Fila(self._cols(), r) for r in self._c.fetchall()]
+        cols = self._cols()   # una vez, no por fila: psycopg rehace description en cada llamada (era el 70 % del tiempo)
+        return [Fila(cols, r) for r in self._c.fetchall()]
 
     def __iter__(self):
         return iter(self.fetchall())
 
 
+_CLAVES, _AUTO = {}, {}
+
+
+# Conexiones reutilizadas: abrir una conexión nueva a Postgres en cada bloque «with» cuesta una ida y vuelta de red y
+# la autenticación (medido el 4-oct: /api/rastro/verificar pasaba de 17 ms en SQLite a 130 ms en Postgres local; en la
+# nube, con TLS, es más). Se guardan unas pocas conexiones libres; antes de reutilizar una se comprueba que sigue viva,
+# así que un reinicio de Postgres no da errores: la conexión rota se tira y se abre otra.
+_LIBRES, _CANDADO = [], threading.Lock()
+_MAX_LIBRES = int(os.environ.get("RO_PG_LIBRES", "4"))
+
+
+def _abrir(url):
+    try:
+        import psycopg as pg
+    except ImportError:
+        import psycopg2 as pg
+    return pg.connect(url)
+
+
+def _sana(con):
+    try:
+        if con.closed:
+            return False
+        con.cursor().execute("SELECT 1")
+        con.rollback()
+        return True
+    except Exception:
+        return False
+
+
+def _cerrar(con):
+    try:
+        con.close()
+    except Exception:
+        pass
+
+
+def _devolver(con):
+    if con is None:
+        return
+    try:
+        con.rollback()   # nada a medias pasa a la siguiente petición (y suelta el candado de transacción)
+    except Exception:
+        return _cerrar(con)
+    with _CANDADO:
+        if len(_LIBRES) < _MAX_LIBRES:
+            _LIBRES.append(con)
+            return
+    _cerrar(con)
+
+
+# Esquemas «CREATE … IF NOT EXISTS» que varios módulos (envios.py, sincronia.py…) lanzan en CADA petición. En SQLite
+# no cuesta nada; en Postgres, dos a la vez chocan («tuple concurrently updated», incluso «deadlock»): medido el 4-oct
+# con 30 personas a la vez, 172 errores 500. Ahora van de uno en uno (candado de transacción) y, si el script solo
+# crea lo que no existe, una vez por proceso y base.
+_ESQUEMAS_HECHOS, _CANDADO_ESQUEMA = set(), 7263
+
+
+def _solo_crea_si_no_existe(sql):
+    sin_cuerpos = re.sub(r"(?is)\bBEGIN\b.*?\bEND\b", "", re.sub(r"--[^\n]*", "", sql))   # cuerpos de disparadores
+    frases = [f.strip() for f in sin_cuerpos.split(";") if f.strip()]
+    patron = r"(?is)^CREATE\s+(UNIQUE\s+)?(TABLE|INDEX|TRIGGER|VIEW)\s+IF\s+NOT\s+EXISTS\b"
+    return bool(frases) and all(re.match(patron, f) for f in frases)
+
+
 class ConexionPG:
     def __init__(self, url):
-        try:
-            import psycopg as pg
-        except ImportError:
-            import psycopg2 as pg
-        self._con = pg.connect(url)
+        self._url = url
+        self._con = None
+        self._ddl = []   # DDL «IF NOT EXISTS» de esta transacción: cuenta como hecho solo tras el COMMIT
+        while self._con is None:
+            with _CANDADO:
+                libre = _LIBRES.pop() if _LIBRES else None
+            if libre is None:
+                self._con = _abrir(url)
+            elif _sana(libre):
+                self._con = libre
+            else:
+                _cerrar(libre)
+
+    def _claves(self, tabla):
+        if tabla not in _CLAVES:
+            cur = self._con.cursor()
+            cur.execute("SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey) "
+                        "WHERE i.indrelid = %s::regclass AND i.indisprimary ORDER BY a.attnum", (tabla,))
+            _CLAVES[tabla] = [r[0] for r in cur.fetchall()]
+        return _CLAVES[tabla]
+
+    def _auto(self, tabla):
+        # Por (base, tabla): un proceso puede hablar con dos bases. El «no tiene» no se guarda: la tabla puede no
+        # existir aún (la crea un executescript después) y entonces lastrowid se quedaría a None para siempre.
+        clave = (self._url, tabla)
+        if clave not in _AUTO:
+            cur = self._con.cursor()
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = %s "
+                        "AND column_default LIKE 'nextval(%%' ORDER BY ordinal_position LIMIT 1", (tabla,))
+            r = cur.fetchone()
+            if not r:
+                return None
+            _AUTO[clave] = r[0]
+        return _AUTO[clave]
+
+    @property
+    def in_transaction(self):
+        # como sqlite3.Connection.in_transaction (psycopg abre la transacción sola con la primera consulta)
+        info = getattr(self._con, "info", None)
+        estado = info.transaction_status if info is not None else self._con.get_transaction_status()
+        return int(estado) != 0   # 0 = IDLE en psycopg 3 y en psycopg2
 
     def execute(self, sql, args=()):
-        q, extra = traducir(sql)
+        ddl = (self._url, sql) if not args and _solo_crea_si_no_existe(sql) else None
+        if ddl in _ESQUEMAS_HECHOS:   # preparar() en cada petición: en Postgres, una vez por proceso y base
+            return CursorPG(None)
+        q, extra = traducir(sql, self._claves, self._auto)
         if q is None:
             return CursorPG(None)
         cur = self._con.cursor()
+        if ddl:   # de uno en uno, como executescript (si no, «tuple concurrently updated»)
+            cur.execute(f"SELECT pg_advisory_xact_lock({_CANDADO_ESQUEMA})")
+            self._ddl.append(ddl)
         params = tuple(args) if args else extra
         if params:
             cur.execute(q, params)
@@ -134,40 +310,57 @@ class ConexionPG:
         if " RETURNING " in q.upper() and q.upper().lstrip().startswith("INSERT"):
             r = cur.fetchone()
             lastrowid = r[0] if r else None
-            return CursorPG(None, lastrowid)
+            return CursorPG(None, lastrowid, cur.rowcount)
         return CursorPG(cur, lastrowid)
 
     def executescript(self, sql):
+        clave = (self._url, sql) if _solo_crea_si_no_existe(sql) else None
+        if clave in _ESQUEMAS_HECHOS:
+            return
         cur = self._con.cursor()
+        cur.execute(f"SELECT pg_advisory_xact_lock({_CANDADO_ESQUEMA})")
         cur.execute(esquema_postgres(sql))
         self._con.commit()
+        if clave:
+            _ESQUEMAS_HECHOS.add(clave)
 
     def cursor(self):
         return self
 
     def commit(self):
         self._con.commit()
+        _ESQUEMAS_HECHOS.update(self._ddl)
+        self._ddl = []
+
+    def rollback(self):
+        self._con.rollback()
+        self._ddl = []
 
     def close(self):
-        self._con.close()
+        self._ddl = []
+        _devolver(self._con)
+        self._con = None
 
     def __enter__(self):
         return self
 
     def __exit__(self, tipo, *_):
-        # como sqlite3: confirma si todo fue bien y deshace si hubo error. Además CIERRA: servir.py abre una conexión
-        # por bloque «with» y en Postgres cada conexión abierta cuenta (el plan Basic admite pocas).
+        # como sqlite3: confirma si todo fue bien y deshace si hubo error. Además la DEVUELVE: servir.py abre una
+        # conexión por bloque «with» y en Postgres cada conexión abierta cuenta (el plan Basic admite pocas): como
+        # mucho quedan RO_PG_LIBRES libres; las demás se cierran.
         try:
-            (self._con.rollback if tipo else self._con.commit)()
+            (self.rollback if tipo else self.commit)()
+        except Exception:
+            _cerrar(self._con)
+            self._con = None
+            raise
         finally:
-            self._con.close()
+            self.close()
         return False
 
     def __del__(self):
-        try:
-            self._con.close()
-        except Exception:
-            pass
+        if getattr(self, "_con", None) is not None:
+            _cerrar(self._con)
 
 
 def conectar():

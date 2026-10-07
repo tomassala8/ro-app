@@ -1,0 +1,19 @@
+{
+  "_LEEME": "Plantilla SIN PROBAR (no hay Cursor donde se escribió). En el ensayo de 1 hora: cópiala a .cursor/cli.json; si cursor-agent se queja al arrancar, bórrala y sigue sin ella (noche.sh ya cierra el llavero).",
+  "permissions": {
+    "deny": [
+      "Shell(security)",
+      "Shell(sudo)",
+      "Shell(launchctl)",
+      "Shell(osascript)",
+      "Shell(ssh)",
+      "Shell(scp)",
+      "Read(~/.ssh/**)",
+      "Read(~/Library/Keychains/**)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Write(local.db)",
+      "Write(data/**)"
+    ]
+  }
+}

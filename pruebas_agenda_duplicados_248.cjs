@@ -1,0 +1,16 @@
+const fs=require('node:fs');const base=fs.readFileSync(__dirname+'/pruebas_agenda_111.cjs','utf8').split('const evento=')[0];
+new Function('require','__dirname',base+String.raw`
+let n=0;const e={id:'one',persona_id:'owner',tipo:'prospecto',fuente:'crm',titulo:'Cita sintética',inicio:'2026-10-05 08:00',fin:'2026-10-05 08:45',atajos:[{h:'crm',url:'https://example.org/origin-one'}]};const second={...e,id:'two',fuente:'ghl',atajos:[{h:'ghl',url:'https://example.org/origin-two'}]};
+const run=(a,b)=>c.prepararAgendaDuplicados248([a,b]);
+let out=run(e,second);assert.equal(out.eventos.length,2);assert.equal(out.retirados,0);assert(out.eventos.every(x=>x.coincidencia248));assert(!e.coincidencia248);n++;
+out=run({...e,referencia_reunion:'ref'},{...second,referencia_reunion:'ref'});assert.equal(out.eventos.length,1);assert.equal(out.retirados,1);assert.equal(out.eventos[0].origenes.length,2);assert.equal(out.eventos[0].atajos.length,2);n++;
+for(const p of [{fin:undefined},{inicio:'2026-02-30 08:00'},{fin:'2026-10-05 08:00'},{persona_id:'other'},{inicio:'2026-10-05 09:00',fin:'2026-10-05 09:45'},{referencia_reunion:'different'},{referencia_reunion:{}},{fuente:'unverified'}]){const a={...e,referencia_reunion:'ref'},b={...second,referencia_reunion:'ref',...p};out=run(a,b);assert.equal(out.eventos.length,2);n++;}
+for(const p of [{cliente_ref:'other'},{estado_cita:'noshow'},{celebrada:false},{zoom_privado_disponible:true},{join_url:'https://zoom.us/j/456'}]){const a={...e,referencia_reunion:'ref',cliente_ref:'client',estado_cita:'showed',celebrada:true,join_url:'https://zoom.us/j/123'},b={...second,referencia_reunion:'ref',cliente_ref:'client',estado_cita:'showed',celebrada:true,join_url:'https://zoom.us/j/123',...p};assert.equal(run(a,b).eventos.length,2);n++;}
+out=run({...e,tipo:'interna',titulo:'Daily'},{...second,tipo:'interna',titulo:'Daily'});assert(out.eventos.every(x=>!x.coincidencia248));n++;
+out=run({...e,join_url:'https://zoom.us/j/123'},{...second,join_url:'https://zoom.us/j/123'});assert.equal(out.eventos.length,2);n++;
+const a={...e,inicio:'2026-10-05T08:00:00Z',fin:'2026-10-05T08:45:00Z',identidad_fuente:{fuente:'crm',source_event_id:'native-event',ventana_confirmada:true,inicio_utc:'2026-10-05T08:00:00Z',fin_utc:'2026-10-05T08:45:00Z'}};
+out=run(a,{...a,id:'two'});assert.equal(out.eventos.length,1);n++;
+for(const b of [{...a,id:'two',identidad_fuente:{...a.identidad_fuente,ventana_confirmada:false}},{...a,id:'two',fuente:'ghl',identidad_fuente:{...a.identidad_fuente,fuente:'ghl'}},{...a,id:'two',fin:'2026-10-05T09:00:00Z'},{...a,id:'two',inicio:e.inicio,fin:e.fin}]){assert.equal(run(a,b).eventos.length,2);n++;}
+const dup=c.prepararAgendaDuplicados248([e,second]).eventos[0];const S={ctx:{real:{id:'owner',puestos:['account']},persona:{id:'owner',puestos:['account']},clientesVisibles:[],vigente:()=>true},nombres:{}};const card=c.tarjeta(S,dup,{hoy:'2026-10-03',ahoraMin:600});assert(text(card).includes('Coincidencia por contrastar'));assert(buscar(card,x=>x.attrs?.title===dup.coincidencia248).length);n++;
+console.log(n+' grupos248 PASS: identidad fuerte, comparación no destructiva, exactasfuentes/enlaces, owner/duración/serie/reprogramación, conflictos/salasprivadas, timezone, tarjeta real.');
+`)(require,__dirname);

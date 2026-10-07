@@ -8,7 +8,7 @@
 //    recorta aquí con la misma regla. NO protege nada; solo sirve para probar pantallas.
 // Los módulos NUNCA leen los JSON crudos: solo ctx (ver LEEME.md).
 
-import { ver, cartera, carteraPorSilla, ambito } from './permisos.js';
+import { ver, cartera, carteraPorSilla, ambito, soloSuCartera, metaDeCartera } from './permisos.js';
 
 const FICHEROS = ['personas', 'asignaciones', 'clientes', 'alarmas', 'logos', 'meta'];
 
@@ -68,9 +68,9 @@ export async function cargarCrudo() {
  *  · alarmas de cliente: lista común; texto, acción y enlace solo con detalle. De persona: ver(alarma_persona).
  */
 export function recortar(persona, crudo) {
-  const porSilla = carteraPorSilla(persona, crudo.asignaciones);
-  const carteraIds = cartera(persona, crudo.asignaciones);
-  const cp = { carteraIds, carteraPorSilla: porSilla, personas: crudo.personas };
+  const porSilla = carteraPorSilla(persona, crudo.asignaciones, undefined, crudo.clientes);
+  const carteraIds = cartera(persona, crudo.asignaciones, undefined, crudo.clientes);
+  const cp = { carteraIds, carteraPorSilla: porSilla, personas: crudo.personas, clientesPorId: Object.fromEntries(crudo.clientes.map(c => [c.id, c])) };
   const v = dato => ver(persona, dato, cp);
   const nombrePersona = Object.fromEntries(crudo.personas.map(p => [p.id, p.alias || p.nombre]));
 
@@ -78,7 +78,8 @@ export function recortar(persona, crudo) {
   const DETALLE = ['web', 'descripcion', 'descripcion_completa', 'alta', 'tickets_abiertos', 'pend_horas', 'dias_sin_reunion', 'ult_reunion', 'prox_reunion',
     'informe_anterior', 'revision48', 'enlace_clickup', 'equipo', 'servicios'];
 
-  const clientes = crudo.clientes.map(c => {
+  const soloMios = soloSuCartera(persona);   // Tomás 3-oct: el account no recibe ni el nombre de un cliente ajeno
+  const clientes = crudo.clientes.filter(c => !soloMios || carteraIds.has(c.id)).map(c => {
     const out = {};
     for (const k of COMUNES) out[k] = c[k];
     out.logo = crudo.logos[c.id] || null;
@@ -97,6 +98,7 @@ export function recortar(persona, crudo) {
   for (const a of crudo.alarmas) {
     const responsable = a.responsable_id ? nombrePersona[a.responsable_id] : (a.responsable_texto || 'sin responsable');
     if (a.ambito === 'cliente') {
+      if (soloMios && !carteraIds.has(a.cliente_id)) continue;
       const conDetalle = porId[a.cliente_id]?.detalle && v({ tipo: 'alarma_detalle', cliente_id: a.cliente_id }).ok;
       alarmas.push({
         id: a.id, ambito: 'cliente', cliente_id: a.cliente_id, cliente: a.cliente, gravedad: a.gravedad,
@@ -113,11 +115,18 @@ export function recortar(persona, crudo) {
   }
 
   return {
-    clientes, alarmas, carteraIds, carteraPorSilla: porSilla, ambito: ambito(persona),
+    clientes, alarmas, carteraIds, carteraPorSilla: porSilla, ambito: ambito(persona), soloSuCartera: soloMios,
     personas: crudo.personas.map(p => ({ id: p.id, nombre: p.nombre, alias: p.alias, puestos: p.puestos, prueba: p.prueba, estado: p.estado, activo: p.activo, jefe: p.jefe, zona: p.zona, rol: p.rol, pais: p.pais, fecha_ingreso: p.fecha_ingreso, cumple_dia_mes: p.cumple_dia_mes, etiquetas: p.etiquetas || [] })),
-    asignaciones: crudo.asignaciones.filter(a => a.persona_id === persona.id),
-    meta: crudo.meta,
+    asignaciones: crudo.asignaciones.filter(a => a.persona_id === persona.id && (!soloMios || carteraIds.has(a.cliente_id))),
+    meta: soloMios ? metaDeCartera(crudo.meta) : crudo.meta,
   };
+}
+
+/** Tomás 3-oct: a cualquier profundidad, fuera las filas con cliente_id de un cliente que no está en «ids». Igual que permisos.py. */
+function soloFilasDe(o, ids) {
+  if (Array.isArray(o)) return o.filter(x => !(x && typeof x === 'object' && x.cliente_id && !ids.has(x.cliente_id))).map(x => soloFilasDe(x, ids));
+  if (o && typeof o === 'object') return Object.fromEntries(Object.entries(o).map(([k, v]) => [k, soloFilasDe(v, ids)]));
+  return o;
 }
 
 // =====================================================================================================================
@@ -132,7 +141,7 @@ export function recortar(persona, crudo) {
 //    Un 401/403 borra esa entrada (y con 401 todo). Cualquier POST olvida las listas que cambian con acciones.
 // =====================================================================================================================
 const RUTAS_CON_MEMORIA = /^(modulo\/|indicadores$|acciones(\?|$)|avisos$|decisiones$|ia\/(lista|estado)$|cliente\/|ajustes$|altas$|buscar\/indice$|contadores$|preferencias$)/;   // R15: índice del buscador, contadores y «Mis clientes»
-const NUNCA_GUARDAR = /_privado|sueldo|ver_dato|contrase|clave/i;
+const NUNCA_GUARDAR = /_privado|sueldo|ver_dato|contrase|clave|^produccion\/urgencias-observadas(?:\?|$)/i;
 const SOLO_MEMORIA = /^(ajustes|altas)$/;          // pantallas de edición de personas: nunca al disco del navegador
 const SIN_CAMBIO_DE_DATOS = /^(rastro|ia\/(consejo|copiloto|borrador)|ver_dato|opinion$|opiniones\/estado$)/;   // R15: «Algo va mal» no cambia datos  // POST que solo leen o apuntan (rastro, IA, «ver datos»)
 const QUEDAN_TRAS_POST = /^(modulo\/|indicadores$|cliente\/)/;   // ficheros de datos: los cambia el servidor, lo dice su ETag
@@ -140,9 +149,11 @@ const COMPROBAR_CADA_MS = 5000;           // no se pregunta al servidor dos vece
 const MAX_TEXTO_DISCO = 4_000_000;        // ficheros enormes (informe de 2 MB) solo en memoria
 const MEM = new Map();                    // clave → { texto, etag, hora, comprobado }
 const oyentes = new Set();
+const oyentesEstado = new Set();
 let dueno = null;                         // persona real confirmada por el servidor (o la del prototipo, ?yo=)
 let vista = null;                         // persona vista
 let idb = null;                           // promesa de la base IndexedDB (null = sin disco)
+let epoca = 0;                           // invalida IO pendiente al cambiar/salir de identidad
 
 const claveDe = (ruta, yo, como) => `${yo || '?'}|${como || yo || '?'}|${ruta}`;
 const disco = (yo, como) => !!idb && !!yo && (!como || como === yo) && yo === dueno;
@@ -159,9 +170,9 @@ function abrirDisco() {
     });
   } catch { return null; }
 }
-async function tx(modo, fn) {
+async function tx(modo, fn, vigente = () => true) {
   try {
-    const db = await idb; if (!db) return null;
+    const db = await idb; if (!db || !vigente()) return null;
     return await new Promise(res => {
       const t = db.transaction('datos', modo); const st = t.objectStore('datos');
       let out = null; const r = fn(st);
@@ -171,8 +182,8 @@ async function tx(modo, fn) {
   } catch { return null; }
 }
 const leerDisco = k => tx('readonly', st => st.get(k));
-const escribirDisco = (k, v) => tx('readwrite', st => st.put(v, k));
-const borrarDisco = k => tx('readwrite', st => st.delete(k));
+const escribirDisco = (k, v, vigente) => tx('readwrite', st => st.put(v, k), vigente);
+const borrarDisco = (k, vigente) => tx('readwrite', st => st.delete(k), vigente);
 const vaciarDisco = () => tx('readwrite', st => st.clear());
 
 /**
@@ -181,27 +192,37 @@ const vaciarDisco = () => tx('readwrite', st => st.clear());
  * provisional = true cuando aún no lo ha confirmado el servidor (prototipo con ?yo=): solo se usa si coincide con el dueño.
  */
 export async function fijarPersonas(realId, personaId, { provisional = false } = {}) {
+  const turno = ++epoca;
+  enVuelo.clear();
+  avisarEstado(null, null);
   if (!idb) idb = abrirDisco();
-  if (vista !== null && vista !== personaId) MEM.clear();
+  if (dueno !== realId || vista !== personaId) MEM.clear();
   vista = personaId;
+  dueno = null;
   if (!realId) { dueno = null; return; }
   const guardado = await tx('readonly', st => st.get('__dueno'));
+  if (turno !== epoca) return;
   if (guardado && guardado !== realId) {
     if (provisional) { dueno = null; return; }      // no se toca hasta que el servidor diga quién es
-    await olvidarTodo();
+    await vaciarDisco();
+    if (turno !== epoca) return;
   }
   if (!provisional || guardado === realId) {
     dueno = realId;
-    if (!guardado || guardado !== realId) await escribirDisco('__dueno', realId);
+    if (!guardado || guardado !== realId) await escribirDisco('__dueno', realId, () => turno === epoca);
   }
 }
 
 /** Borra todo lo guardado (persona de baja, sin identidad, otra persona). */
 export async function olvidarTodo() {
+  ++epoca;
+  enVuelo.clear();
+  avisarEstado(null, null);
   MEM.clear();
+  dueno = null;
+  vista = null;
   if (!idb) idb = abrirDisco();
   await vaciarDisco();
-  dueno = null;
   try { if (self.caches) await caches.delete('ro-pagina-v1'); } catch { /* sin caché de la página */ }   // la de sw.js
 }
 
@@ -213,6 +234,18 @@ export function olvidarTrasCambio(rutaPost = '') {
 
 /** alCambiarDato(fn) → fn(ruta) cuando lo refrescado detrás trae algo distinto de lo que se pintó. */
 export function alCambiarDato(fn) { oyentes.add(fn); return () => oyentes.delete(fn); }
+
+/** Estado de transporte de una lectura; no cambia datos ni provoca otra petición. */
+export function alCambiarEstadoDato(fn) { oyentesEstado.add(fn); return () => oyentesEstado.delete(fn); }
+function estadoLectura(e) {
+  return { hora: e.hora, ultimoIntento: e.ultimoIntento ?? null,
+    falloActualizacion: e.falloActualizacion ?? null };
+}
+function avisarEstado(ruta, e) {
+  if (ruta !== null && !conMemoria(ruta)) return;
+  const turno = epoca;
+  oyentesEstado.forEach(fn => { if (turno === epoca) try { fn(ruta, e ? estadoLectura(e) : null); } catch { /* sólo estado */ } });
+}
 
 /** ¿Se guarda esta ruta? (memoria siempre; disco solo para la persona real y sin nada sensible). */
 export const conMemoria = ruta => RUTAS_CON_MEMORIA.test(ruta) && !NUNCA_GUARDAR.test(ruta);
@@ -229,29 +262,36 @@ async function bajar(ruta, yo, como, etag) {
   if (r.status === 304) return { noCambia: true };
   const texto = await r.text();
   if (!r.ok) { let c = {}; try { c = JSON.parse(texto); } catch { /* sin cuerpo */ } throw errorDe(r, c); }
+  // Validar antes de promover: también admite null, cero y colecciones vacías legítimas.
+  JSON.parse(texto);
   return { texto, etag: r.headers.get('ETag'), hora: Date.now() };
 }
 
-function guardar(k, e, yo, como) {
+function guardar(k, e, yo, como, vigente) {
+  if (!vigente()) return;
   MEM.set(k, e);
-  if (disco(yo, como) && e.texto.length <= MAX_TEXTO_DISCO && !SOLO_MEMORIA.test(k.split('|').slice(2).join('|'))) escribirDisco(k, e);
+  if (disco(yo, como) && e.texto.length <= MAX_TEXTO_DISCO && !SOLO_MEMORIA.test(k.split('|').slice(2).join('|'))) escribirDisco(k, e, vigente);
 }
 
 const enVuelo = new Map();
-function comprobar(k, ruta, yo, como, e) {
+function comprobar(k, ruta, yo, como, e, vigente) {
   if (enVuelo.has(k) || Date.now() - (e.comprobado || 0) < COMPROBAR_CADA_MS) return;
   const p = bajar(ruta, yo, como, e.etag).then(n => {
-    if (n.noCambia) { e.comprobado = Date.now(); return; }
+    if (!vigente() || MEM.get(k) !== e) return;
+    if (n.noCambia) { e.comprobado = Date.now(); delete e.falloActualizacion; delete e.ultimoIntento; avisarEstado(ruta,e); return; }
     n.comprobado = Date.now();
     const sinHora = t => t.replace(/"hora": ?"[^"]*"/g, '');   // la hora de la respuesta no es un cambio del dato
     const cambia = sinHora(n.texto) !== sinHora(e.texto);
-    guardar(k, n, yo, como);
-    if (cambia) oyentes.forEach(fn => { try { fn(ruta); } catch { /* el oyente no rompe nada */ } });
+    guardar(k, n, yo, como, vigente);
+    avisarEstado(ruta,n);
+    if (cambia) oyentes.forEach(fn => { if (vigente()) try { fn(ruta); } catch { /* el oyente no rompe nada */ } });
   }).catch(err => {
+    if (!vigente() || MEM.get(k) !== e) return;
     if (err.status === 401) { olvidarTodo(); oyentes.forEach(fn => fn(ruta)); return; }
-    if ([403, 404].includes(err.status)) { MEM.delete(k); borrarDisco(k); oyentes.forEach(fn => fn(ruta)); }
+    if ([403, 404].includes(err.status)) { MEM.delete(k); borrarDisco(k, vigente); avisarEstado(ruta,null); oyentes.forEach(fn => { if (vigente()) fn(ruta); }); }
+    else { e.ultimoIntento = Date.now(); e.falloActualizacion = err.status ? `HTTP ${err.status}` : 'No se pudo actualizar'; e.comprobado = Date.now(); avisarEstado(ruta,e); }
     // sin red: se queda lo guardado
-  }).finally(() => enVuelo.delete(k));
+  }).finally(() => { if (enVuelo.get(k) === p) enVuelo.delete(k); });
   enVuelo.set(k, p);
 }
 
@@ -261,30 +301,55 @@ function comprobar(k, ruta, yo, como, e) {
  * info (opcional): se le pone { guardado: true, hora } si se ha servido de lo guardado.
  */
 export async function pedirDato(ruta, { yo, como, info } = {}) {
+  const turno = epoca, propietario = dueno, personaVista = vista;
+  const vigente = () => turno === epoca && propietario === dueno && personaVista === vista;
+  const exigirVigente = () => { if (!vigente()) { const e = new Error('La identidad cambió durante la lectura.'); e.status = 409; throw e; } };
   ruta = ruta.replace(/^\/?(api\/)?/, '');
   if (!conMemoria(ruta)) {
     const n = await bajar(ruta, yo, como, null);
+    exigirVigente();
+    if (info) Object.assign(info, { guardado: false, ...estadoLectura(n) });
     return JSON.parse(n.texto);
   }
   const k = claveDe(ruta, yo, como);
   let e = MEM.get(k);
-  if (!e && disco(yo, como)) { e = await leerDisco(k); if (e) { e.comprobado = 0; MEM.set(k, e); } }
+  if (!e && disco(yo, como)) {
+    e = await leerDisco(k); exigirVigente();
+    if (e) { try { JSON.parse(e.texto); } catch { e = null; borrarDisco(k, vigente); } }
+    if (e) { e.comprobado = 0; MEM.set(k, e); }
+  }
   if (e) {
-    comprobar(k, ruta, yo, como, e);
-    if (info) Object.assign(info, { guardado: Date.now() - e.hora > COMPROBAR_CADA_MS, hora: e.hora });
+    comprobar(k, ruta, yo, como, e, vigente);
+    if (info) Object.assign(info, { guardado: Date.now() - e.hora > COMPROBAR_CADA_MS, hora: e.hora,
+      ultimoIntento: e.ultimoIntento ?? null, falloActualizacion: e.falloActualizacion ?? null });
     return JSON.parse(e.texto);
   }
   if (enVuelo.has(k)) await enVuelo.get(k).catch(() => {});
+  exigirVigente();
   e = MEM.get(k);
-  if (e) return JSON.parse(e.texto);
-  const p = bajar(ruta, yo, como, null);
-  enVuelo.set(k, p.catch(() => {}));
+  if (e) {
+    if (info) Object.assign(info, { guardado: Date.now() - e.hora > COMPROBAR_CADA_MS, ...estadoLectura(e) });
+    return JSON.parse(e.texto);
+  }
+  const p = bajar(ruta, yo, como, null), espera = p.catch(() => {});
+  enVuelo.set(k, espera);
   try {
     const n = await p;
+    exigirVigente();
+    if (n.noCambia) throw new Error('Respuesta sin lectura previa válida.');
     n.comprobado = Date.now();
-    guardar(k, n, yo, como);
+    guardar(k, n, yo, como, vigente);
+    avisarEstado(ruta,n);
+    exigirVigente();
+    if (info) Object.assign(info, { guardado: false, ...estadoLectura(n) });
     return JSON.parse(n.texto);
-  } finally { enVuelo.delete(k); }
+  } catch (err) {
+    if (vigente()) {
+      if (err.status === 401) await olvidarTodo();
+      else if ([403, 404].includes(err.status)) { MEM.delete(k); borrarDisco(k, vigente); avisarEstado(ruta,null); }
+    }
+    throw err;
+  } finally { if (enVuelo.get(k) === espera) enVuelo.delete(k); }
 }
 
 /**

@@ -2,8 +2,10 @@
 """M8 · SEO, ficha de Google y webs · genera data/seo/seo.json y data/seo/webs.json (solo lectura, 2-oct-2026).
 
 Fuentes:
-  · SE Ranking: posiciones de los proyectos por el CONECTOR (la clave de proyectos del llavero da 403). sr_condensar.py deja
-    _cache/seranking.json con hoy, hace 7 días y hace ~30 días de cada palabra (40 clientes, 1-sep → 2-oct).
+  · SE Ranking: posiciones de los proyectos por la API de PROYECTOS (sr_leer.py, paso «seranking» de la tubería, cada día a
+    las 6:00; no gasta créditos). Deja _cache/seranking.json con hoy, hace 7 días y hace ~30 días de cada palabra y
+    «dia_dato» (la última comprobación completa), que se enseña en pantalla: «Posiciones del sábado 3-oct».
+    (Hasta el 3-oct se leía en api4.seranking.com, que SE Ranking apagó: de ahí el «se ha roto».)
   · Search Console (gg.py, cuenta gmb1@): clics e impresiones semana contra semana, 28 días contra 28, serie diaria, páginas y búsquedas.
   · Google Analytics 4: lo que ya trae la capa de E1 (data/clientes/<id>.json → fuentes.ga4).
   · Monitor de webs: UNA comprobación real desde este Mac (la IP de RO): estado HTTP, redirección, tiempo, certificado y
@@ -19,7 +21,8 @@ import concurrent.futures as cf, datetime as dt, glob, json, os, re, socket, ssl
 AQUI = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(AQUI)
 C = lambda n: os.path.join(AQUI, '_cache', n)
-HOY = dt.date(2026, 10, 2)
+from zoneinfo import ZoneInfo  # noqa: E402
+HOY = dt.datetime.now(ZoneInfo('Europe/Madrid')).date()   # 3-oct: antes fijo en el 2-oct (los certificados contaban mal los días)
 LENTA_MS = 5000                                # V2: una sola regla de «web lenta» (webs.json → _meta.lenta)
 # Search Console va con 2-3 días de retraso: la «semana» es la última completa con dato.
 S1 = (HOY - dt.timedelta(days=9), HOY - dt.timedelta(days=3))     # 23-sep → 29-sep
@@ -48,6 +51,9 @@ def clientes():
 
 # ------------------------------------------------------------------ Search Console
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'fuentes'))
+if APP not in sys.path: sys.path.insert(0, APP)
+from fuentes_seo.posiciones import preparar_motores, comparar, posicion, reparto_observado, top, suma_medida, fecha as fecha_posiciones
+from fuentes_seo.motores_contexto import contexto_desde_cache  # noqa: E402
 from comun import consulta_basura  # noqa: E402  · barrido v1 (N14): filas de exportación de Google Ads no son búsquedas
 
 
@@ -93,7 +99,10 @@ def leer_gsc(cls):
                                         'semana': tot(site, *s1), 'semana_ant': tot(site, *s0), 'mes': tot(site, *m1), 'mes_ant': tot(site, *m0),
                                         'serie': serie,
                                         'paginas': [[k, v[0], v[1], v[2], (pag0.get(k) or [None])[0]] for k, v in pag1.items()],
-                                        'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()]}
+                                        'busquedas': [[k, v[0], v[1], v[2], (bus0.get(k) or [None, None, None])[2]] for k, v in bus1.items()],
+                                        # diagnósticos de calidad (fuentes_diagnosticos): reparto blog/servicio y marca/informativa/compra
+                                        'paginas_todas': [[k, *v] for k, v in dim(site, 'page', *m1, 250).items()],
+                                        'busquedas_todas': [[k, *v] for k, v in dim(site, 'query', *m1, 250).items()]}
             print(f"GSC {c['id'][:26]:26} hasta {L} {out['clientes'][c['id']]['semana']['clics']:>6} clics semana", flush=True)
         except Exception as e:
             out['clientes'][c['id']] = {'site': site, '_error': str(e)[:120]}
@@ -206,10 +215,43 @@ def aviso_sr(filas):
     if des <= 50:
         return None
     return {'desaparecen': des, 'clics_suben': suben, 'con_clics': len(con),
-            'texto': f"SE Ranking dejó de ver {des} palabras de golpe esta semana y los clics de Google suben en {suben} de {len(con)} clientes. Parece un fallo suyo: compruébalo en Google antes de tocar nada. Las palabras que hoy no ve no cuentan como caída."}
+            'texto': f"SE Ranking dejó de ver {des} palabras de golpe esta semana y los clics de Google suben en {suben} de {len(con)} clientes. La diferencia no identifica la causa: contrasta fecha, motor, ubicación y dispositivo antes de tocar nada. Las palabras que hoy no ve no cuentan como caída."}
+
+
+DIAS_SEM = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo']
+MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+DIA_SR = HOY
+
+
+def info_sr(sr):
+    """3-oct · la fecha del dato de SE Ranking, dicha en llano («Posiciones del sábado 3-oct»), su coste y si se leyó bien
+    la última vez (_cache/seranking_estado.json). Así nadie piensa que está roto cuando solo es el dato del día."""
+    try:
+        est = json.load(open(C('seranking_estado.json')))
+    except Exception:
+        est = {}
+    d = dt.date.fromisoformat(sr.get('dia_dato') or (sr.get('generado') or str(HOY))[:10])
+    dias = (HOY - d).days
+    texto = f"Posiciones del {DIAS_SEM[d.weekday()]} {d.day}-{MES3[d.month - 1]}"
+    viejo = dias >= 2
+    return {'origen': sr.get('origen'), 'leido': sr.get('generado'), 'dia_dato': str(d), 'dias': dias, 'texto_dia': texto,
+            'viejo': viejo, 'ultima_lectura_ok': est.get('ok', None), 'error': None if est.get('ok', True) else est.get('error'),
+            # «creditos» y no «coste»: el servidor quita las claves coste* (dinero) a quien no las ve
+            'creditos': sr.get('coste') or {'texto': 'Leer posiciones no gasta créditos (API de proyectos).', 'fuente': 'https://seranking.com/api/api-credits-system/'},
+            'aviso': (f"{texto}: SE Ranking no se ha podido leer después ({est.get('error')})." if est.get('ok') is False else
+                      f"{texto}: hace {dias} días que no se lee SE Ranking (se lee cada día a las 6:00)." if viejo else None)}
 
 
 def construir(cls, sr, gsc, mon):
+    # Sólo caché local. Ausencia/error no borra posiciones ni inventa contexto; se carga una vez.
+    try:
+        with open(C('seranking_motores.json')) as fm:
+            contexto_sr = json.load(fm)
+    except (OSError, ValueError):
+        contexto_sr = {}
+    global DIA_SR
+    fecha_sr=fecha_posiciones(sr.get('dia_dato') or str(sr.get('generado') or '')[:10])
+    DIA_SR=fecha_sr if fecha_sr and fecha_sr<=HOY else HOY  # límite, no acredita lectura del día
     personas = {p['id']: p['nombre'] for p in json.load(open(os.path.join(APP, 'data', 'personas.json')))}
     try:
         verdad = {x['cliente_id']: x for x in json.load(open(os.path.join(APP, 'data', 'verdad', 'clientes.json')))['clientes']}
@@ -232,6 +274,7 @@ def construir(cls, sr, gsc, mon):
         # responsables: la verdad única (equipo vigente); si el cliente no está en ella, las asignaciones de E1
         sil = {k: principal(v, k) for k in ('seo', 'web', 'redes', 'account')} if v else (a.get('sillas') or {})
         s = sr['clientes'].get(c['id'])
+        motores_sr = contexto_desde_cache(c['id'], s.get('proyecto'), s.get('motores'), contexto_sr) if s else []
         g = (gsc or {}).get('clientes', {}).get(c['id'])
         ga = c['fuentes'].get('ga4') or {}
         gsc_nota = (c['fuentes'].get('gsc') or {}).get('nota')
@@ -246,61 +289,50 @@ def construir(cls, sr, gsc, mon):
         if con_seo:
             palabras, informe, alertas = [], [], []
             if s:
-                mejor = lambda a, b: min([x for x in (a, b) if x] or [None]) if (a or b) else None
-                for m_ in s['motores']:
-                    for p in m_['palabras']:
-                        p['hoy_d'], p['sem_d'] = p['hoy'], p['sem']          # el dato del día, para enseñarlo
-                        p['hoy'], p['sem'] = mejor(p['hoy'], p.get('ayer')), mejor(p['sem'], p.get('sem2'))
-                prin = next((m for m in s['motores'] if m['principal']), s['motores'][0])
-                palabras = prin['palabras']
+                s={**s,'motores':preparar_motores(s.get('motores'),str(DIA_SR))}
+                prin=next((m for m in s['motores'] if m.get('principal')),s['motores'][0] if s['motores'] else {'palabras':[]})
+                palabras=prin['palabras']
                 todas = [p for m in s['motores'] for p in m['palabras']]
                 # las 15 del informe: provisional, las 15 de más búsquedas del buscador principal (ver _ESTADO_seo.md)
                 # primero las que el despacho trabaja de verdad (alguna vez en el top 30 este mes), luego por búsquedas
-                mejor_pos = lambda p: min([x for x in (p['hoy'], p['sem'], p['mes']) if x] or [999])
+                mejor_pos = lambda p: min([x for x in (p['hoy'],p['sem'],p['mes']) if x is not None],default=float('inf'))
                 informe = sorted(palabras, key=lambda p: (mejor_pos(p) > 30, -(p['vol'] or 0), p['k']))[:15]
                 # alertas solo de las 15 del informe (la «lista clave», monitor-posiciones-alertas l.157)
                 for p in informe:
-                    if p['sem'] and p['sem'] <= 10 and p['hoy'] and p['hoy'] > 10:
+                    if comparar(p) is not None and p['sem']<=10 and p['hoy']>10:
                         alertas.append({'tipo': 'fuera_top10', 'gravedad': 'rojo', 'palabra': p['k'], 'antes': p['sem'], 'hoy': p['hoy'],
                                         'texto': f"«{p['k']}» sale del top 10 (hace 7 días {p['sem']}, hoy {p['hoy']})"})
                     elif p['sem'] and p['sem'] <= 10 and not p['hoy']:
                         # de top 10 a «no aparece» en dos comprobaciones: o desindexación o fallo de la comprobación → se mira, no se da por caída
                         alertas.append({'tipo': 'desaparece', 'gravedad': 'ambar', 'palabra': p['k'], 'antes': p['sem'], 'hoy': None,
-                                        'texto': f"«{p['k']}» no aparece en la comprobación (hace 7 días {p['sem']}): mirar en Google antes de actuar"})
-                    elif p['sem'] and p['hoy'] and p['sem'] <= 10 and (p['hoy'] - p['sem'] >= 3 or (p['sem'] <= 3 < p['hoy'])):
+                                        'texto': f"«{p['k']}» sin posición observada en esta copia (lectura anterior {p['sem']}): contrastar fecha, motor y Google antes de actuar"})
+                    elif comparar(p) is not None and p['sem']<=10 and (p['hoy']-p['sem']>=3 or (p['sem']<=3<p['hoy'])):
                         alertas.append({'tipo': 'cae', 'gravedad': 'ambar', 'palabra': p['k'], 'antes': p['sem'], 'hoy': p['hoy'],
                                         'texto': f"«{p['k']}» baja de {p['sem']} a {p['hoy']} en 7 días"})
                 # palabras que suben y bajan (todas las seguidas, 7 días)
                 mov = []
                 for p in todas:
-                    a, b = p['sem'] or 101, p['hoy'] or 101
-                    if a == b or (a > 30 and b > 30):
+                    cambio=comparar(p)
+                    a,b=p['sem'],p['hoy']
+                    if cambio is None or cambio==0:
                         continue
-                    mov.append({'k': p['k'], 'vol': p['vol'], 'antes': p['sem'], 'hoy': p['hoy'], 'delta': a - b})
+                    mov.append({'k': p['k'], 'vol': p['vol'], 'antes': p['sem'], 'hoy': p['hoy'], 'delta':cambio,'motor_id':p['motor_id'],'fechas':dict(p['fechas'])})
                 movimientos = {'suben': sorted([m for m in mov if m['delta'] > 0], key=lambda m: -m['delta'])[:6],
                                'bajan': sorted([m for m in mov if m['delta'] < 0], key=lambda m: m['delta'])[:6],
                                'n_suben': sum(1 for m in mov if m['delta'] > 0), 'n_bajan': sum(1 for m in mov if m['delta'] < 0)}
-                comparables = [p for p in todas if p['desde'] and p['desde'] <= str(HOY - dt.timedelta(days=8))]
+                comparables=[p for p in todas if comparar(p) is not None]
                 v1, v0 = vis(comparables, 'hoy'), vis(comparables, 'sem')
-                visib = {'hoy': round(v1, 1), 'sem': round(v0, 1), 'var': pct(v1, v0)}
-                desaparecen = sum(1 for p in comparables if p['sem'] and not p['hoy'])
+                visib={'hoy':round(v1,1) if comparables else None,'sem':round(v0,1) if comparables else None,'var':pct(v1,v0) if comparables else None,'comparables':len(comparables),'cobertura':'parcial; sólo pares del mismo motor con fechas exactas7d'}
+                desaparecen=sum(1 for p in todas if p['sem'] is not None and p['hoy'] is None)
                 visib['desaparecen'] = desaparecen
                 if visib['var'] is not None and visib['var'] <= -15 and desaparecen <= max(3, len([p for p in comparables if p['sem']]) // 4):
                     alertas.append({'tipo': 'visibilidad', 'gravedad': 'rojo', 'texto': f"Visibilidad {fes(visib['var'])} % en 7 días (el límite es −15 %)"})
                 elif visib['var'] is not None and visib['var'] <= -15:
                     alertas.append({'tipo': 'visibilidad', 'gravedad': 'ambar', 'texto': f"Visibilidad {fes(visib['var'])} % en 7 días, pero {desaparecen} palabras dejan de aparecer de golpe: comprobar en Google antes de actuar"})
-                top = lambda campo, n, lista: sum(1 for p in lista if p[campo] and p[campo] <= n)
-                # R12 · UNA medida para «hoy frente al mes anterior»: solo palabras que SE Ranking ve hoy. Las que estaban
-                # arriba y hoy «no aparecen» no se cuentan como caída (casi siempre es un fallo de la comprobación):
-                # van en «sin_ver_hoy» y se avisa. «mes_todas» guarda la cifra bruta.
-                vistas = [p for p in informe if p['hoy']]
-                reparto = {k: {'hoy': top('hoy', n, informe), 'mes': top('mes', n, vistas), 'mes_todas': top('mes', n, informe),
-                               'sin_ver_hoy': sum(1 for p in informe if not p['hoy'] and p['mes'] and p['mes'] <= n)}
-                           for k, n in (('top1', 1), ('top3', 3), ('top5', 5), ('top10', 10))}
-                reparto['fuera'] = {'hoy': sum(1 for p in informe if not p['hoy'] or p['hoy'] > 10), 'mes': sum(1 for p in informe if not p['mes'] or p['mes'] > 10)}
+                reparto=reparto_observado(informe)
                 todas_top10 = top('hoy', 10, todas)
                 if informe and reparto['top10']['hoy'] == 0 and not any(x['gravedad'] == 'rojo' for x in alertas):
-                    alertas.append({'tipo': 'sin_top10', 'gravedad': 'ambar', 'texto': 'Ninguna de las 15 palabras del informe está en el top 10'})
+                    alertas.append({'tipo': 'sin_top10', 'gravedad': 'ambar', 'texto':'Ninguna consulta con posición observada de esta muestra está en el top 10; las ausentes no se clasifican'})
             else:
                 visib, reparto, todas_top10, movimientos = None, None, None, None
             clics = None
@@ -340,8 +372,9 @@ def construir(cls, sr, gsc, mon):
                 'estado': estado, 'motivo': motivo, 'alertas': sorted(alertas, key=lambda x: x['gravedad'] != 'rojo')[:12],
                 'n_alertas': {'rojo': len(rojas), 'ambar': len(alertas) - len(rojas)},
                 'seranking': {'proyecto': s['proyecto'], 'ultima': s['ultima_comprobacion'], 'prueba': s['prueba'], 'seguidas': sum(len(m['palabras']) for m in s['motores']),
-                              'top10_todas': todas_top10, 'buscadores': len(s['motores'])} if s else None,
-                'informe15': [{'k': p['k'], 'vol': p['vol'], 'hoy': p['hoy'], 'sem': p['sem'], 'mes': p['mes'], 'mapa': p['mapa']} for p in informe] if s else [],
+                              'top10_todas': todas_top10, 'buscadores': len(s['motores']), 'motores_contexto': motores_sr,
+                              'nota_posiciones': 'Consultas provisionales del primer motor; mejor posición de dos comprobaciones. Contexto parcial si no constan región/dispositivo.'} if s else None,
+                'informe15': [{'k': p['k'], 'vol': p['vol'], 'hoy': p['hoy'], 'sem': p['sem'], 'mes': p['mes'], 'mapa':p['mapa'],'motor_id':p['motor_id'],'fechas':p['fechas'],'fechas_d':p['fechas_d'],'hoy_d':p['hoy_d'],'sem_d':p['sem_d'],'cobertura':'parcial; orgánico/maps separados, contexto motor en seranking.motores_contexto'} for p in informe] if s else [],
                 'reparto': reparto, 'movimientos': movimientos, 'visibilidad': visib, 'clics': clics,
                 'gsc': {'site': g['site'], 'serie': g.get('serie', []), 'paginas': g.get('paginas', []), 'busquedas': [b for b in g.get('busquedas', []) if not consulta_basura(b[0] if b else '')]} if g and 'semana' in g else None,
                 'gsc_estado': (c['fuentes'].get('gsc') or {}).get('estado') if g else 'sin_conectar', 'gsc_nota': re.sub(r'\s*\(\d{5,}\)', '', gsc_nota or '') or None,
@@ -419,10 +452,10 @@ def construir(cls, sr, gsc, mon):
     aviso = aviso_sr(filas)
     pct_v = round(100 * verdes / len(medibles)) if medibles else None
     meta = {'generado': dt.datetime.now().strftime('%Y-%m-%d %H:%M'), 'hoy': str(HOY),
-            'seranking': {'origen': sr['origen'], 'leido': sr['generado']},
+            'seranking': info_sr(sr),
             'gsc': {'leido': (gsc or {}).get('leido'), 'regla': 'Search Console va 2-3 días por detrás: cada sitio se compara hasta su último día con dato (7 y 28 días cerrados frente a los mismos días justo antes).',
                     'hasta': max([x.get('hasta') for x in (gsc or {}).get('clientes', {}).values() if x.get('hasta')] or [None])},
-            'confirmacion': 'Cada posición es la mejor de dos comprobaciones seguidas (hoy y ayer; hace 7 y 8 días): una palabra solo «sale del top 10» si lo confirman dos días.',
+            'confirmacion': 'Mejor de dos observaciones sólo cuando ambas existen con fechas consecutivas; si falta una no acredita confirmación doble. Movimientos sólo pares fechados exactamente7d del mismo motor.',
             'informe15': 'Provisional: las 15 de más búsquedas entre las que han estado en el top 30 este mes (y, si no llegan a 15, las de más búsquedas). Cuando cada SEO marque su grupo «Informe» en SE Ranking, se leen esas.',
             'visibilidad': 'Calculada con las posiciones de SE Ranking: búsquedas × clic esperado por posición (30 % el 1.º … 2 % el 10.º, 1 % del 11 al 20), hoy frente a hace 7 días, todos los buscadores del proyecto, solo palabras seguidas desde hace más de 8 días.'}
     seo = {'_meta': meta,
@@ -439,8 +472,8 @@ def construir(cls, sr, gsc, mon):
                        'desaparecen_total': sum((f['visibilidad'] or {}).get('desaparecen', 0) for f in filas),
                        'clics_suben': sum(1 for f in filas if f['clics'] and (f['clics']['var_mes'] or 0) > 0),
                        'con_gsc': sum(1 for f in filas if f['gsc']), 'con_sr': sum(1 for f in filas if f['seranking']),
-                       'top5': {'hoy': sum((f['reparto'] or {}).get('top5', {}).get('hoy', 0) for f in filas),
-                                'mes': sum((f['reparto'] or {}).get('top5', {}).get('mes', 0) for f in filas),
+                       'top5': {'hoy': suma_medida((f['reparto'] or {}).get('top5',{}).get('hoy') for f in filas),
+                                'mes': suma_medida((f['reparto'] or {}).get('top5',{}).get('mes') for f in filas),
                                 'sin_ver_hoy': sum((f['reparto'] or {}).get('top5', {}).get('sin_ver_hoy', 0) for f in filas)},
                        'aviso_seranking': aviso,
                        # V2 · el número que manda no da un color apoyándose en un dato en duda: con el aviso de SE Ranking

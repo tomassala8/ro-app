@@ -1,0 +1,25 @@
+{
+  "name": "ro-app-v2",
+  "private": true,
+  "engines": {
+    "node": ">=22",
+    "pnpm": ">=10.28"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down",
+    "db:generate": "pnpm --filter @ro/db generate",
+    "db:migrate": "pnpm --filter @ro/db migrate:dev",
+    "db:deploy": "pnpm --filter @ro/db migrate:deploy",
+    "db:seed": "pnpm --filter @ro/db seed",
+    "dev": "pnpm -r --parallel --filter @ro/api --filter @ro/web dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3"
+  }
+}

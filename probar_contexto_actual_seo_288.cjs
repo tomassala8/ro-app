@@ -1,0 +1,15 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const b={};vm.createContext(b);vm.runInContext(fs.readFileSync('modulos/_seo_mediciones.js','utf8').replace(/export /g,'')+';this.project=configuracionActualMotoresSEO;',b);
+const a={site_engine_id:1,search_engine_id:2,buscador:'Google Spain',region:'City',dispositivo:null,dispositivo_estado:'sin_dato',idioma:'es',maps_modo:2,fecha_contexto:'2026-10-03T16:36:14Z',fuente:'SE Ranking /sites/search-engines + /system/search-engines'};
+const row={site_engine_id:1,fecha_contexto:a.fecha_contexto,contexto_posicion_confirmado:false,objetivo_ciudad_confirmado:false,aplica_fecha_distinta:false,configuracion_actual:a};
+const f=rows=>({seranking:{motores_contexto:rows}}),run=rows=>b.project(f(rows),'2026-10-03');let n=0;
+let r=run([row]);assert.equal(r.length,1);assert.equal(r[0].region,'City');assert.equal(r[0].dispositivo,null);assert.equal(r[0].maps,'Maps presentados por separado');assert.equal(r[0].posicion,undefined);n++;
+assert.equal(run([row,row]).length,0);n++;
+assert.equal(run([{...row,site_engine_id:3}]).length,0);n++;
+for(const key of ['contexto_posicion_confirmado','objetivo_ciudad_confirmado','aplica_fecha_distinta'])assert.equal(run([{...row,[key]:true}]).length,0);n++;
+assert.equal(run([{...row,fecha_contexto:'2026-10-04',configuracion_actual:{...a,fecha_contexto:'2026-10-04'}}]).length,0);n++;
+assert.equal(run([{...row,configuracion_actual:{...a,fuente:'browser'}}]).length,0);n++;
+assert.equal(run([{...row,configuracion_actual:{...a,region:'https://example.com?token=secret'}}])[0].region,null);n++;
+for(const [mode,label]of [[0,'Sin Maps'],[1,'Maps incluidos en los resultados'],[null,'Maps sin confirmar']])assert.equal(run([{...row,configuracion_actual:{...a,maps_modo:mode}}])[0].maps,label);n++;
+assert.equal(b.project(f([row]),null).length,0);assert.equal(run([{site_engine_id:1,region:'Old city'}]).length,0);n++;
+console.log(n+' grupos PASS: configuración separada, IDs/fechas/fuentes exactos, sin contexto histórico inferido.');

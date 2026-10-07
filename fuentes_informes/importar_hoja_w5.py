@@ -8,7 +8,7 @@ Por API (llave de Zoho del llavero con ZohoSheet.dataAPI.READ, canjeada por Tom�
     no hay ninguna llamada que pueda leerla (ni rango, ni libro entero, ni exportación).
   · worksheet.content.get devuelve, por celda, el texto y el HIPERVÍNCULO («url»): así salen los enlaces reales a cada
     informe y a cada estadística, no solo el texto visible.
-Formato de la hoja: fila 1 = el mes (no siempre sobre la primera columna del bloque); fila 2 = «Informe entregables · Informes estadísticas ·
+Formato de la hoja: fila 1 = el mes con año explícito (si falta, requiere --anio-confirmado YYYY) (no siempre sobre la primera columna del bloque); fila 2 = «Informe entregables · Informes estadísticas ·
 informado a cliente · Enviado a cliente»; desde la fila 3, un cliente por fila. Casillas TRUE/FALSE.
 
 Sin llave (o para probar con un CSV exportado a mano): python3 importar_hoja_w5.py <fichero.csv>
@@ -16,6 +16,7 @@ Sin llave (o para probar con un CSV exportado a mano): python3 importar_hoja_w5.
 Uso normal:   python3 importar_hoja_w5.py --zoho            (y después: python3 generar_informes.py --ficheros)
 Comprobar:    python3 importar_hoja_w5.py --zoho --probar   (solo cuenta filas y meses; no escribe)
 """
+import argparse
 import csv
 import importlib.util
 import json
@@ -45,14 +46,40 @@ NO = {'no', 'false', '0', 'falso'}
 
 def booleano(v):
     t = norm(v)
-    return True if t in SI else False if t in NO else None
+    if not t:
+        return None
+    if t in SI:
+        return True
+    if t in NO:
+        return False
+    raise ValueError('Marca booleana no reconocida; se requiere confirmación.')
+
+
+def validar_enlace(v):
+    if v is None or not str(v).strip():
+        return None
+    u = str(v).strip()
+    try:
+        partes = urllib.parse.urlsplit(u)
+        valido = (partes.scheme in ('http', 'https') and partes.hostname
+                  and not partes.username and not partes.password
+                  and not any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in u)
+                  and '\\' not in u)
+        partes.port  # también rechaza puertos mal formados
+    except ValueError:
+        valido = False
+    if not valido:
+        raise ValueError('Enlace de informe inválido; se requiere una URL HTTP(S).')
+    return u
 
 
 def enlace(celda):
     if not celda:
         return None
-    u = celda.get('url') or (celda.get('content') if re.match(r'https?://', celda.get('content') or '') else None)
-    return u.strip() if u else None
+    if celda.get('url'):
+        return validar_enlace(celda['url'])
+    contenido = str(celda.get('content') or '').strip()
+    return validar_enlace(contenido) if re.match(r'https?://', contenido, re.I) else None
 
 
 # ------------------------------------------------------------------ Zoho Sheet
@@ -103,84 +130,165 @@ PREFIJOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct'
 
 def mes_de(texto):
     t = norm(texto)
-    for i, p in enumerate(PREFIJOS):          # por las tres primeras letras: aguanta «Septimebre»
-        if re.match(rf'{p}', t) or re.search(rf'\b{p}', t):
-            return i + 1
-    return None
+    meses = {i + 1 for i, p in enumerate(PREFIJOS) if re.search(rf'\b{p}[a-z]*\b', t)}
+    if len(meses) > 1:
+        raise ValueError('Cabecera de mes ambigua.')
+    return next(iter(meses), None)
 
 
-def leer_rejilla(rejilla, filas, cols):
-    """La hoja no es regular (bloques de 4 a 7 columnas, la etiqueta del mes no siempre sobre la primera, «Septimebre»):
-    cada bloque empieza en una columna «Informe entregables» de la fila 2 y sus columnas se reconocen por su cabecera."""
+def validar_anio(anio):
+    if anio is None:
+        return None
+    if isinstance(anio, bool) or not re.fullmatch(r'[0-9]{4}', str(anio)) or int(anio) == 0:
+        raise ValueError('El año confirmado debe tener cuatro cifras y ser válido.')
+    return int(anio)
+
+
+def periodo_de(texto, anio_confirmado=None):
+    """La fecha escrita manda; el parámetro solo completa años ausentes, nunca infiere un salto de año."""
+    confirmado = validar_anio(anio_confirmado)
+    t = str(texto or '').strip()
+    if re.fullmatch(r'[0-9]{4}-[0-9]{2}', t):
+        anio, mes = map(int, t.split('-'))
+        if anio and 1 <= mes <= 12:
+            return t
+        raise ValueError('Periodo de informe inválido.')
+    mes = mes_de(t)
+    anios = re.findall(r'(?<![0-9])[0-9]{4}(?![0-9])', t)
+    if len(anios) > 1:
+        raise ValueError('Cabecera de año ambigua.')
+    anio = validar_anio(anios[0]) if anios else confirmado
+    if mes is None or anio is None:
+        raise ValueError('Falta mes o año explícito; indique --anio-confirmado si el año ha sido confirmado.')
+    return f'{anio:04d}-{mes:02d}'
+
+
+def leer_rejilla(rejilla, filas, cols, *, anio_confirmado=None):
+    """Bloques de anchura variable, etiquetas escritas y columnas opcionales reconocidas por cabecera."""
+    validar_anio(anio_confirmado)
     cab = {c: norm((rejilla.get((2, c)) or {}).get('content')) for c in range(1, cols + 1)}
     inicios = [c for c in range(2, cols + 1) if cab[c].startswith('informe entregable')]
-    etiquetas = sorted((c, mes_de((rejilla.get((1, c)) or {}).get('content'))) for c in range(2, cols + 1)
-                       if mes_de((rejilla.get((1, c)) or {}).get('content')))
-    bloques, anio, prev = [], 2025, None
+    if not inicios:
+        raise ValueError('No hay bloques de informes reconocidos.')
+    bloques, vistos = [], set()
     for i, ini in enumerate(inicios):
         fin = inicios[i + 1] - 1 if i + 1 < len(inicios) else cols
-        m = next((mm for c, mm in etiquetas if ini <= c <= fin), None)
-        if m is None and prev:
-            m = prev % 12 + 1                   # bloque sin etiqueta: el mes siguiente al anterior
-        if m is None:
-            continue
-        if prev and m < prev:
-            anio += 1
-        prev = m
+        etiquetas = [(rejilla.get((1, c)) or {}).get('content') for c in range(ini, fin + 1)
+                     if mes_de((rejilla.get((1, c)) or {}).get('content'))
+                     or re.fullmatch(r'[0-9]{4}-[0-9]{2}', str((rejilla.get((1, c)) or {}).get('content') or '').strip())]
+        if not etiquetas:
+            raise ValueError('Bloque de informe sin periodo escrito; no se infiere el mes siguiente.')
+        periodos = {periodo_de(t, anio_confirmado) for t in etiquetas}
+        if len(periodos) != 1:
+            raise ValueError('Bloque con periodos ambiguos.')
+        periodo = next(iter(periodos))
+        if periodo in vistos:
+            raise ValueError('Periodo duplicado en la hoja.')
+        vistos.add(periodo)
         col = {'informe': ini}
         for c in range(ini + 1, fin + 1):
-            if cab[c].startswith('informe') and 'estadistic' in cab[c]:
-                col.setdefault('estad', c)
-            elif cab[c].startswith('informado'):
-                col.setdefault('informado', c)
-            elif cab[c].startswith('enviado'):
-                col.setdefault('enviado', c)
-        bloques.append((f'{anio}-{m:02d}', col))
-    out = []
+            clave = ('estad' if cab[c].startswith('informe') and 'estadistic' in cab[c]
+                     else 'informado' if cab[c].startswith('informado')
+                     else 'enviado' if cab[c].startswith('enviado') else None)
+            if clave:
+                if clave in col:
+                    raise ValueError('Columna de informe ambigua dentro del bloque.')
+                col[clave] = c
+        bloques.append((periodo, col))
+    out, clientes = [], set()
     for f in range(3, filas + 1):
-        nombre = ((rejilla.get((f, 1)) or {}).get('content') or '').strip()
+        nombre = str((rejilla.get((f, 1)) or {}).get('content') or '').strip()
         if not nombre:
             continue
+        if norm(nombre) in clientes:
+            raise ValueError('Cliente duplicado en la hoja; revisar identidad antes de importar.')
+        clientes.add(norm(nombre))
         for mes, col in bloques:
             cel = {k: rejilla.get((f, c)) for k, c in col.items()}
             fila = {'cliente_hoja': sanear(nombre), 'mes': mes,
                     'enlace_informe': enlace(cel.get('informe')), 'enlace_estadisticas': enlace(cel.get('estad')),
                     'informado_en_reunion': booleano((cel.get('informado') or {}).get('content')),
                     'enviado': booleano((cel.get('enviado') or {}).get('content'))}
-            if any(fila[k] is not None for k in ('enlace_informe', 'enlace_estadisticas', 'informado_en_reunion', 'enviado')):
+            if any(fila[k] is not None for k in COLUMNAS[2:]):
                 out.append(fila)
     return out, [m for m, _ in bloques]
 
 
 # ------------------------------------------------------------------ CSV (plan B)
-def leer_csv(ruta):
+ALIAS_CSV = {
+    'cliente': ('cliente', 'cliente_hoja', 'nombre_cliente'),
+    'mes': ('mes', 'periodo', 'mes_informe'),
+    'enlace_informe': ('enlace_informe', 'informe_entregables', 'informe_entregable', 'url_informe'),
+    'enlace_estadisticas': ('enlace_estadisticas', 'informes_estadisticas', 'informe_estadisticas', 'url_estadisticas'),
+    'informado_en_reunion': ('informado_en_reunion', 'informado_a_cliente', 'informado_al_cliente', 'informado'),
+    'enviado': ('enviado', 'enviado_a_cliente', 'enviado_al_cliente'),
+}
+
+
+def leer_csv(ruta, *, anio_confirmado=None):
+    validar_anio(anio_confirmado)
+    aliases = {norm(a): campo for campo, nombres in ALIAS_CSV.items() for a in nombres}
     with open(ruta, newline='', encoding='utf-8-sig') as f:
-        lector = csv.reader(f)
-        cab = [norm(c).replace(' ', '_') for c in next(lector)]
-        idx = {c: (cab.index(c) if c in cab else i) for i, c in enumerate(COLUMNAS)}
+        lector = csv.reader(f, strict=True)
+        cab = next(lector, None)
+        if not cab:
+            raise ValueError('CSV sin cabecera.')
+        idx = {}
+        for i, nombre in enumerate(cab):
+            campo = aliases.get(norm(nombre))
+            if campo:
+                if campo in idx:
+                    raise ValueError('Cabeceras CSV ambiguas para una misma columna.')
+                idx[campo] = i
+        if not {'cliente', 'mes'} <= idx.keys():
+            raise ValueError('El CSV requiere cabeceras cliente y mes/periodo.')
+        vistos = set()
         for r in lector:
-            if any(r):
-                v = {c: (r[idx[c]] if idx[c] < len(r) else '') for c in COLUMNAS}
-                yield {'cliente_hoja': sanear(v['cliente']), 'mes': v['mes'], 'enlace_informe': v['enlace_informe'] or None,
-                       'enlace_estadisticas': v['enlace_estadisticas'] or None,
-                       'informado_en_reunion': booleano(v['informado_en_reunion']), 'enviado': booleano(v['enviado'])}
+            if not any(v.strip() for v in r):
+                continue
+            if len(r) != len(cab):
+                raise ValueError('Fila CSV con anchura distinta de la cabecera.')
+            v = {c: r[idx[c]].strip() if c in idx else None for c in COLUMNAS}
+            if not v['cliente']:
+                raise ValueError('Fila CSV sin cliente.')
+            mes = periodo_de(v['mes'], anio_confirmado)
+            clave = (norm(v['cliente']), mes)
+            if clave in vistos:
+                raise ValueError('Periodo duplicado para el mismo cliente en CSV.')
+            vistos.add(clave)
+            yield {'cliente_hoja': sanear(v['cliente']), 'mes': mes,
+                   'enlace_informe': validar_enlace(v['enlace_informe']),
+                   'enlace_estadisticas': validar_enlace(v['enlace_estadisticas']),
+                   'informado_en_reunion': booleano(v['informado_en_reunion']), 'enviado': booleano(v['enviado'])}
 
 
 # ------------------------------------------------------------------ emparejar con los clientes de la app
 def emparejar(filas):
     idx = (leer(APP / 'data/indice_clientes.json', {}) or {}).get('clientes', [])
     manual = {k: v for k, v in (leer(AQUI / 'emparejamiento_hoja.json', {}) or {}).items() if not k.startswith('_')}  # «-» = ninguno
-    por_norm = {norm(c['nombre']): c['id'] for c in idx}
+    por_norm = {}
+    for c in idx:
+        por_norm.setdefault(norm(c['nombre']), set()).add(c['id'])
+    ids = {c['id'] for c in idx}
     sin = set()
     for f in filas:
         n = norm(f['cliente_hoja'])
-        compacto = {norm(c['nombre']).replace(' ', ''): c['id'] for c in idx}
-        cid = manual.get(f['cliente_hoja'].strip()) or por_norm.get(n) or compacto.get(n.replace(' ', ''))
+        f.pop('sugerencias_cliente_ids', None)
+        f.pop('no_es_cliente', None)
+        elegido = manual.get(f['cliente_hoja'].strip())
+        if elegido not in (None, '-') and elegido not in ids:
+            raise ValueError('Emparejamiento manual apunta a un cliente inexistente.')
+        exactos = por_norm.get(n, set())
+        cid = elegido or (next(iter(exactos)) if len(exactos) == 1 else None)
         if not cid:
             tt = tokens(f['cliente_hoja']) | {w for w in n.split() if len(w) >= 3}
-            cands = [c['id'] for c in idx if (tokens(c['nombre']) and tokens(c['nombre']) <= tt) or (n and n in norm(c['nombre']).split())
-                     or (tokens(f['cliente_hoja']) and tokens(f['cliente_hoja']) <= tokens(c['nombre']))]
-            cid = cands[0] if len(set(cands)) == 1 else None
+            cands = {c['id'] for c in idx if norm(c['nombre']).replace(' ', '') == n.replace(' ', '')
+                     or (tokens(c['nombre']) and tokens(c['nombre']) <= tt)
+                     or (n and n in norm(c['nombre']).split())
+                     or (tokens(f['cliente_hoja']) and tokens(f['cliente_hoja']) <= tokens(c['nombre']))}
+            if cands:
+                f['sugerencias_cliente_ids'] = sorted(cands)
+        f['emparejamiento'] = 'manual' if elegido else 'nombre_exacto_unico' if cid else 'pendiente_confirmacion'
         if cid == '-':
             cid, f['no_es_cliente'] = None, True
         f['cliente_id'] = cid
@@ -191,26 +299,34 @@ def emparejar(filas):
 
 
 def main():
-    if len(sys.argv) < 2:
-        sys.exit(__doc__)
-    if sys.argv[1] == '--reemparejar':  # sin llamar a Zoho: vuelve a casar los nombres de la última importación
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('csv', nargs='?')
+    modo = parser.add_mutually_exclusive_group()
+    modo.add_argument('--zoho', action='store_true')
+    modo.add_argument('--reemparejar', action='store_true')
+    parser.add_argument('--probar', action='store_true')
+    parser.add_argument('--anio-confirmado', type=validar_anio)
+    args = parser.parse_args()
+    if bool(args.csv) == bool(args.zoho or args.reemparejar):
+        parser.error('Elija un CSV, --zoho o --reemparejar.')
+    if args.reemparejar:  # sin llamar a Zoho: vuelve a casar los nombres de la última importación
         prev = leer(SALIDA) or sys.exit('No hay importación previa.')
         filas, meses, origen = prev['filas'], prev['meses'], prev['origen']
-    elif sys.argv[1] == '--zoho':
+    elif args.zoho:
         nombre, nf, nc, rejilla = zoho()
-        filas, meses = leer_rejilla(rejilla, nf, nc)
+        filas, meses = leer_rejilla(rejilla, nf, nc, anio_confirmado=args.anio_confirmado)
         origen = f'Zoho Sheet por API · libro «CARTERA CLIENTES RO» · solo la hoja «{nombre.strip()}» (con hipervínculos)'
     else:
-        filas, meses = list(leer_csv(sys.argv[1])), []
+        filas, meses = list(leer_csv(args.csv, anio_confirmado=args.anio_confirmado)), []
         meses = sorted({f['mes'] for f in filas})
-        origen = f'CSV exportado a mano ({Path(sys.argv[1]).name})'
+        origen = f'CSV exportado a mano ({Path(args.csv).name})'
     filas, sin = emparejar(filas)
     salida = {'estado': 'importado', 'origen': origen, 'importado': datetime.now().strftime('%Y-%m-%d %H:%M'),
               'meses': meses, 'columnas': COLUMNAS, 'sin_emparejar': sin, 'filas': filas}
     con_enlace = sum(1 for f in filas if f['enlace_informe'] or f['enlace_estadisticas'])
     print(f'{len(filas)} filas cliente×mes · {len({f["cliente_hoja"] for f in filas})} clientes en la hoja · meses {meses[:1]}…{meses[-1:]} · '
           f'{con_enlace} con enlace · enviados {sum(1 for f in filas if f["enviado"])} · sin emparejar {len(sin)}: {sin[:12]}')
-    if '--probar' in sys.argv:
+    if args.probar:
         return
     hall = escanear(salida)
     if hall:
@@ -220,4 +336,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except (ValueError, csv.Error) as error:
+        sys.exit(f'No se importa: {error}')

@@ -379,7 +379,7 @@ function tarjetaDuda(d, ctx, editar, nombre, nomCli, accounts, A, previa) {
     respuesta = () => sel.value ? clientes.map(c => ({ duda: d.id, tipo: 'asignacion', cliente_id: c, silla: d.silla || 'account', persona_id: sel.value, accion: 'poner' })) : null;
   } else if (d.tipo === 'persona' && d.persona_id) {
     const sel = h('select', { disabled: !editar, 'aria-label': `Estado de ${nombre[d.persona_id]}` },
-      h('option', { value: '' }, '— solo nota —'), ['activo', 'dudoso', 'baja'].map(v => h('option', { value: v }, `${nombre[d.persona_id]}: ${v}`)));
+      h('option', { value: '' }, '— solo nota —'), ['activo', 'dudoso'].map(v => h('option', { value: v }, `${nombre[d.persona_id]}: ${v}`)));
     control = campo('Estado', sel);
     respuesta = () => sel.value ? { duda: d.id, tipo: 'persona', persona_id: d.persona_id, cambios: { estado: sel.value } } : null;
   }
@@ -655,7 +655,7 @@ function altaPersona(Al, ctx, editar) {
   alCambiarPuesto();
   const paso = (n, titulo, sub, ...cuerpo) => h('div', { class: 'pila', style: { gap: 'var(--s-2)' } },
     h('b', {}, `${n}. ${titulo}`), sub ? h('p', { class: 'sub' }, sub) : null, ...cuerpo);
-  const form = panel({ titulo: 'Añadir persona', icono: 'mas', sub: 'Cuatro pasos, menos de 2 minutos. Solo se guardan nombre, puesto, jefe, zona, fechas y cumpleaños (día y mes); nunca teléfonos, direcciones ni correos personales.' },
+  const form = panel({ titulo: 'Añadir persona', icono: 'mas', sub: 'Cuatro pasos. Solo se guardan nombre, puesto, jefe, zona, fechas y cumpleaños (día y mes); nunca teléfonos, direcciones ni correos personales.' },
     h('div', { class: 'cuerpo pila' },
       paso(1, 'Quién es', null, h('div', { class: 'pm-form' }, campo('Nombre y apellido', nom), campo('Fecha de entrada', entrada), campo('Cumpleaños (día y mes)', cumple), campo('Zona horaria', zona))),
       paso(2, 'Puesto y jefe', Al.esTomas ? 'Puede tener varios puestos: la app le suma las vistas.' : 'Los puestos de mando (dirección, finanzas, RRHH, operaciones, ventas de RO y administración) solo los da Tomás.',
@@ -672,7 +672,8 @@ function altaPersona(Al, ctx, editar) {
           poner(resultado, resultadoComprobacion(r.comprobacion, ctx, { titulo: `${r.alias} ya está dada de alta`,
             extra: listaIconos([
               { icono: 'cartera', estado: 'azul', texto: r.asignaciones ? `${plural(r.asignaciones, 'cliente')} en su cartera${r.sustituidas ? ` (sustituye en ${r.sustituidas})` : ''}.` : 'Sin cartera todavía.' },
-              { icono: 'key', estado: r.tarea_access ? 'ambar' : 'rojo', texto: r.tarea_access ? 'Tarea para Tomás: añadir su correo a Cloudflare Access (lista de acceso actualizada).' : 'Sin correo de entrada: no podrá entrar hasta que se lo pongáis.' },
+              { icono: 'key', estado: r.tarea_access ? 'ambar' : 'rojo', texto: r.tarea_access ? 'Tarea guardada para Tomás: añadir su correo a Cloudflare Access. El acceso externo está pendiente de confirmación.' : 'Sin correo de entrada: no podrá entrar hasta que se lo pongáis.' },
+              ...(r.pendientes_locales?.length ? [{ icono: 'hist', estado: 'ambar', texto: 'Alta guardada; quedan actualizaciones locales pendientes. Reintenta con los mismos datos para completarlas sin duplicar la persona.' }] : []),
               { icono: 'hist', estado: 'gris', texto: r.recarga_pedida ? 'Queda en el historial y en el rastro. Recarga de datos pedida: sus alertas, chat y agenda llegan cuando termine.' : 'Queda en el historial y en el rastro. Sus datos de cada pantalla llegan con la próxima recarga.' },
             ]) }));
           resultado.scrollIntoView({ block: 'start', behavior: 'smooth' });

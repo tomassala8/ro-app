@@ -1,0 +1,5933 @@
+{
+ "_meta": {
+  "area": "personas_admin",
+  "titulo": "Personas (RRHH) y administración (facturación y cobros)",
+  "puestos": [
+   "rrhh",
+   "administracion",
+   "finanzas_direccion",
+   "operaciones"
+  ],
+  "version": "1.1",
+  "fecha": "2026-10-04",
+  "fuentes_principales": [
+   "central:skills/criterio-tomas-ro/LEYES.md (D3 y D4)",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-18_onboarding-am-nuevo.md",
+   "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+   "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+   "ro-equipo:30_SKILLS/redacta-mail-ro/CAPA_MENSAJE.md",
+   "ro-equipo:30_SKILLS/redacta-mail-ro/ejemplos/admin.md",
+   "ro-equipo:40_MEMORIA/feedback_cobros_sepa.md",
+   "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+   "central:memoria/project_sistema_admin_2026.md",
+   "central:memoria/project_decisiones_organizativas_tomas.md (solo línea 55)",
+   "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+   "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+   "ro-app:fuentes_consejos/conocimiento/reglas.json",
+   "ro-app:fuentes_alertas/generar_alertas.py",
+   "ro-app:indicadores.json",
+   "ro-app:modulos/personas.js",
+   "ro-app:modulos/finanzas.js",
+   "ro-app:avisos_programados.py",
+   "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+   "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md"
+  ],
+  "nota": "Cubre personas del equipo (alertas, horas, carga, 1:1, nota del mes, conversaciones difíciles, salidas, ausencias, incorporación, celebraciones, contratación, privacidad) y administración (alta en facturación, impagos hasta el corte, SEPA, facturas mal emitidas, cambios de cuota, cierres, conciliación). Material sensible: no contiene sueldos, valoraciones de personas concretas ni datos personales. Donde Cole Gordon o Hormozi aconsejan despedir rápido, manda la escalera de Tomás y, por encima, la ley laboral aplicable. Deriva a operaciones la capacidad y el reparto de cartera, a account la relación con el cliente, a direccion las decisiones económicas y a altas el arranque del cliente. Prefijo «skills-compartidas:» = repo skills-compartidas-entre-compas (fuera de los cuatro prefijos del encargo).",
+  "pendientes_tomas": [
+   "Fecha de la factura del equipo: mapa de enrutado dice día 5 (colaboradores a facturas@) y también «facturas antes del 20» para el pago del 25. ¿Cuál vale para quién?",
+   "Faltan SOPs: RRHH (incorporación de personas, evaluación quincenal, 1:1), factura rectificativa, cambio de cuota y baja (P7), impagos y facturación (están en 90_CONFIDENCIAL, no en repo).",
+   "11_DECISIONES_PARA_TOMAS.md y 06_KPIS_INTERNOS no están en repo: la escalera 30/60/2 cuotas, el 1:1 trimestral y el mínimo de 3 personas se citan vía reglas.json. Los sube Tomás (respuestas n.º 58-60).",
+   "Sin encuesta de satisfacción ni tabla de rotación: umbrales de mercado sin firmar."
+  ],
+  "decisiones_aplicadas": "4-oct-2026: respuestas de Tomás a las dudas de los cerebros (RESPUESTAS_TOMAS_2026-10-04). Se citan como decision_tomas_2026-10-04 con su número de respuesta."
+ },
+ "principios": [
+  {
+   "id": "personas_admin_p_dato_antes_que_juicio",
+   "texto": "Toda conversación sobre una persona empieza por el dato objetivo (tareas, plazos, revisiones) y solo después entra la valoración.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:410",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_escalera_completa",
+   "texto": "Ninguna salida sin la escalera completa y registrada: gap, qué necesita, recursos, ultimátum por escrito, decisión. Nadie se entera el día del despido de que estaba en riesgo.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:410 y central:memoria/project_decisiones_organizativas_tomas.md:55",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_ley_manda",
+   "texto": "En despidos, contratos y datos personales manda la ley aplicable a esa persona, por encima de Cole Gordon y Hormozi. La salida la decide solo Tomás, con asesoría jurídica.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md:62",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_rotar_es_perder",
+   "texto": "En servicios, rotar personas es rotar clientes: se retiene y se corrige antes de sustituir. Nada de despedir rápido como higiene.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:424",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_sistema_antes_que_persona",
+   "texto": "Antes de señalar a alguien, pregunta si el sistema le dio lo que necesitaba. Si falló el sistema, se arregla el sistema y la persona no suma aviso.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md:37",
+   "autor": "RO"
+  },
+  {
+   "id": "personas_admin_p_horas_solo_aviso",
+   "texto": "Las horas imputadas son un aviso de disciplina: no ponen a nadie en alerta ni cuentan en su valoración.",
+   "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:1361",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_privacidad",
+   "texto": "Nada de sueldos, valoraciones ni datos personales fuera de su sitio: en costes, áreas de menos de 3 personas se agrupan; de cada persona solo nombre, puesto, jefe, zona y fechas.",
+   "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:522 y ro-app:altas_personas.py:17",
+   "autor": "RO"
+  },
+  {
+   "id": "personas_admin_p_sepa_siempre",
+   "texto": "Se cobra primero con tarjeta y después por domiciliación SEPA con mandato firmado; cualquier otra vía la autoriza Tomás (decisión de Tomás, 4-oct).",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:325 y ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md:78",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_escalera_impago",
+   "texto": "Impago: reclamar al vencer, aviso al account a 30 días, decisión de Tomás a 60 y nunca más de dos cuotas acumuladas. Con 2 cuotas, la app propone la pausa ese mismo día y decide Tomás. Un plan de pago solo lo aprueba Tomás.",
+   "fuente": "ro-app:fuentes_consejos/conocimiento/reglas.json:1378",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_admin_no_fija_precio",
+   "texto": "Administración factura, domicilia y reclama; nunca fija precio, descuento ni condición. Precio, Coti; excepciones, Tomás.",
+   "fuente": "central:skills/criterio-tomas-ro/LEYES.md:136",
+   "autor": "Tomás"
+  },
+  {
+   "id": "personas_admin_p_sin_documento",
+   "texto": "Sin documento no hay movimiento: cada gasto con su factura y cada cambio de cuota con su papel antes del cierre.",
+   "fuente": "central:memoria/project_sistema_admin_2026.md:17",
+   "autor": "RO"
+  },
+  {
+   "id": "personas_admin_p_reconocer_igual",
+   "texto": "Reconocer tiene la misma cadencia que corregir: un refuerzo concreto por semana, sobre un comportamiento exacto, nunca un ranking.",
+   "fuente": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md:81",
+   "autor": "RO"
+  }
+ ],
+ "situaciones": [
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_alerta"
+    ],
+    "alertas": [
+     "rrhh_alerta"
+    ],
+    "indicadores": [
+     "rrhh.personas_en_alerta_sin_plan"
+    ],
+    "palabras_clave": [
+     "persona en alerta",
+     "está en alerta",
+     "tareas arrastradas",
+     "revisiones viejas",
+     "correos sin contestar",
+     "no llega",
+     "va mal",
+     "bajo rendimiento",
+     "le veo floja",
+     "se le acumulan tareas"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Mensaje privado para abrir la conversación (no en canal público)",
+     "texto": "{nombre}, el panel te marca {motivo} desde el {fecha}. Igual no quedó claro, así que lo vemos juntos: ¿tienes 15 minutos {dia}? Antes dime una cosa: ¿te ha fallado algo del sistema o de un cliente que yo no esté viendo?"
+    },
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "En la conversación, para cerrar con plan",
+     "texto": "Lo que necesito es {estandar}, porque si no {consecuencia_cliente}. Lo dejamos así: {accion} antes del {fecha_revision}. ¿Qué necesitas de mí para llegar?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "revision_personas_escalera",
+    "horas_solo_aviso",
+    "sistemas_no_personas"
+   ],
+   "id": "personas_admin_persona_en_alerta",
+   "titulo": "Una persona del equipo está en alerta",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "La persona aparece en «Personas en alerta» por motivos del panel: tareas arrastradas, revisiones o correos de más de 48 h. Plazo de la alerta: 7 días para tener conversación y plan.",
+   "gravedad": "media",
+   "plazo": "Esta semana (antes de 7 días)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lee los motivos exactos de la alerta y desde qué fecha está.",
+     "donde": "Personas › En alerta (tarjeta de la persona)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Comprueba si el sistema le falló: tarea mal asignada, recordatorio que no llegó, cliente que bloquea.",
+     "donde": "ClickUp y Mi día de la persona",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira su carga frente a capacidad y si lleva más carteras de las permitidas.",
+     "donde": "Personas › Carga",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Mira si hubo una ausencia, un cambio de puesto o una incorporación reciente.",
+     "donde": "Personas › Ausencias y ficha",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Pregunta a su jefa qué ve ella esta quincena.",
+     "donde": "Ronda con las jefas",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 6,
+     "comprueba": "Si hay patrón de semanas, revisa avisos y 1:1 anteriores.",
+     "donde": "Ficha de la persona › planes y 1:1",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo de sistema: la tarea no estaba bien cableada o el bloqueo es del cliente",
+     "como_confirmar": "El motivo desaparece al corregir la asignación o el bloqueo tiene dueño externo",
+     "solucion": [
+      "Corrige la asignación o la dependencia en ClickUp.",
+      "Anota en el plan que fue sistema: no cuenta como aviso a la persona."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Sobrecarga: más trabajo del que cabe",
+     "como_confirmar": "Carga > 100 % o cartera por encima del tope del puesto",
+     "solucion": [
+      "Pasa el caso a la ficha de sobrecarga.",
+      "Quita producción antes de repartir cuentas."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Persona nueva o en cambio de puesto",
+     "como_confirmar": "Entró hace menos de 14 días o cambió de silla",
+     "solucion": [
+      "Revisa su primera semana y su compañero de apoyo.",
+      "Ajusta expectativas por escrito con fecha."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Falta de claridad: no sabe qué se espera",
+     "como_confirmar": "En la conversación no sabe decir el estándar ni el plazo",
+     "solucion": [
+      "Fija el estándar por escrito: qué, cómo se demuestra y para cuándo."
+     ],
+     "quien": "rrhh",
+     "plazo": "En la conversación"
+    },
+    {
+     "id": "c5",
+     "causa": "Patrón de rendimiento o de actitud que se repite",
+     "como_confirmar": "Segunda semana seguida o 3 avisos en 4 semanas",
+     "solucion": [
+      "Abre la escalera de consecuencias (ficha de conversación difícil)."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Abre la tarjeta y lee los motivos antes de hablar con nadie.",
+    "Agenda la conversación esta semana con la persona y, si es de producción, avisa a su jefa.",
+    "Al terminar, escribe en la app la conversación, lo que se pide y la fecha de revisión."
+   ],
+   "que_no_hacer": [
+    "No abras con la valoración: abre con el dato y una pregunta.",
+    "No lo hables en un canal público ni en la retro.",
+    "No uses las horas imputadas como motivo: son solo aviso.",
+    "No dejes la conversación sin escribir el plan en la app."
+   ],
+   "escalar": {
+    "cuando": "7 días en alerta sin conversación ni plan, o alerta reincidente tras un plan vencido",
+    "a": "direccion"
+   },
+   "exito": "La persona sale de la lista de alerta y el plan queda cumplido en su fecha de revisión; 0 personas en alerta sin plan a 7 días.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 215,
+     "autor": "RO",
+     "nota": "Alerta rrhh_alerta: motivos del panel y plazo de 168 h"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 255,
+     "autor": "Tomás",
+     "nota": "Protocolo del 13-ago: aviso claro, plazo de reacción; a los 7 días sin plan sube a Tomás"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 37,
+     "autor": "RO",
+     "nota": "Primero preguntar si el sistema le dio lo que necesitaba"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 65,
+     "autor": "RO",
+     "nota": "Plantilla A de aviso (adaptada)"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Plantilla B: estándar, consecuencia y pregunta"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 410,
+     "autor": "Tomás",
+     "nota": "Primero el dato objetivo, después la valoración"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_alerta"
+    ],
+    "alertas": [
+     "rrhh_alerta"
+    ],
+    "indicadores": [
+     "rrhh.personas_en_alerta_sin_plan"
+    ],
+    "palabras_clave": [
+     "alerta sin plan",
+     "más de 7 días",
+     "nadie ha hablado con",
+     "sin conversación",
+     "se nos pasó",
+     "número de Cecilia",
+     "en rojo en personas"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A la jefa, cuando el plan no está anotado",
+     "texto": "{jefa}, {nombre} lleva {dias} días en alerta por {motivo} y no veo plan anotado. ¿Lo habéis hablado? Si sí, apúntalo hoy en su tarjeta; si no, ¿lo hablas tú hoy o lo hago yo?"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso asíncrono a Tomás, si toca subir",
+     "texto": "Tomás: {nombre} lleva {dias} días en alerta sin plan. Motivo: {motivo}. Lo que he hecho: {accion}. Propongo: {propuesta}. Te lo dejo para decidir."
+    }
+   ],
+   "reglas_relacionadas": [
+    "revision_personas_escalera"
+   ],
+   "id": "personas_admin_alerta_sin_plan_7_dias",
+   "titulo": "Alguien lleva más de 7 días en alerta sin conversación ni plan",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "En Personas, «En alerta sin plan (+7 días)» marca 1 o más. Es el número que manda de RRHH: verde 0, ámbar 1, rojo 2 o más.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Confirma que de verdad no hay plan anotado (no solo hablado).",
+     "donde": "Personas › En alerta, filtro «Sin plan»",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Pregunta a la jefa si ya habló y no lo apuntó.",
+     "donde": "Mensaje directo a la jefa",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira si la persona estuvo ausente esos días.",
+     "donde": "Personas › Ausencias",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Mira si quien debía hablar estaba saturado o ausente.",
+     "donde": "Ausencias y carga de la jefa",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Revisa si el motivo es de sistema y nadie lo corrigió.",
+     "donde": "Motivos de la tarjeta + ClickUp",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Se habló pero no se anotó",
+     "como_confirmar": "La jefa confirma la conversación",
+     "solucion": [
+      "Anota hoy la conversación y el plan con fecha de revisión.",
+      "Recuerda a la jefa que lo hablado sin apuntar no existe."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La persona estaba ausente",
+     "como_confirmar": "Ausencia registrada en esos días",
+     "solucion": [
+      "Anota la ausencia como causa y fija la conversación para su vuelta."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Nadie es dueño de la conversación",
+     "como_confirmar": "No hay jefa clara o está fuera",
+     "solucion": [
+      "Asume tú la conversación hoy o asígnala con fecha.",
+      "Revisa el jefe de la persona en Ajustes."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "El motivo es de sistema y quedó en limbo",
+     "como_confirmar": "La alerta viene de tareas mal asignadas",
+     "solucion": [
+      "Corrige la causa con operaciones y anótalo como sistema."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Habla hoy con la persona o con su jefa; no esperes a la ronda.",
+    "Anota el plan en la app antes de terminar el día.",
+    "Si no puedes hablar hoy, sube el caso a Tomás con el motivo."
+   ],
+   "que_no_hacer": [
+    "No borres ni reinicies la alerta para que no cuente.",
+    "No conviertas el retraso en una bronca a la persona: el retraso es nuestro.",
+    "No subas a Tomás sin propuesta."
+   ],
+   "escalar": {
+    "cuando": "A los 7 días sin conversación ni plan",
+    "a": "direccion"
+   },
+   "exito": "0 personas en alerta sin plan a 7 días durante 4 semanas seguidas.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 2,
+     "autor": "RO",
+     "nota": "Número que manda de RRHH: en alerta sin plan en 7 días (verde 0, ámbar 1, rojo 2+)"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 158,
+     "autor": "RO",
+     "nota": "Tarjeta «En alerta sin plan (+7 días)»"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 255,
+     "autor": "Tomás",
+     "nota": "A los 7 días sin conversación ni plan, sube a Tomás"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1514,
+     "autor": "RO",
+     "nota": "Indicador rrhh.personas_en_alerta_sin_plan"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_no_imputa"
+    ],
+    "alertas": [
+     "rrhh_no_imputa"
+    ],
+    "indicadores": [
+     "rrhh.imputacion_del_dia_aviso_de_disciplina"
+    ],
+    "palabras_clave": [
+     "no imputó",
+     "no ha imputado",
+     "sin horas",
+     "imputar horas",
+     "menos de 8 horas",
+     "pocas horas",
+     "horas incompletas",
+     "clickup horas",
+     "olvidó imputar"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Recordatorio privado del día",
+     "texto": "{saludo} {nombre}, ayer {dia} {cuanto}. ¿Lo puedes dejar imputado hoy? Si no trabajaste, dímelo y lo apunto como ausencia."
+    }
+   ],
+   "reglas_relacionadas": [
+    "horas_solo_aviso"
+   ],
+   "id": "personas_admin_no_imputa_horas",
+   "titulo": "Alguien no imputó horas ayer o imputó menos del mínimo",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "Aviso (no alerta): 0 h imputadas el último día laborable o por debajo del mínimo diario (referencia: 8 h). Sin plazo ni rojo.",
+   "gravedad": "baja",
+   "plazo": "Hoy (un recordatorio)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Comprueba si ese día tenía ausencia registrada o era festivo en su zona horaria.",
+     "donde": "Personas › Ausencias y zona de la persona",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Mira si el dato está al día (corte de ClickUp).",
+     "donde": "Horas › frescura del dato",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira si su puesto imputa horas o está excluido.",
+     "donde": "Ficha de la persona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Mira si es la primera vez o se repite en la semana.",
+     "donde": "Horas › Quién imputa (semana)",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si es nueva, comprueba que sabe imputar.",
+     "donde": "Primera semana de la persona",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Ausencia o festivo no registrado",
+     "como_confirmar": "La persona confirma que no trabajó",
+     "solucion": [
+      "Registra la ausencia con fecha.",
+      "Descarta el aviso."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Dato atrasado o puesto que no imputa",
+     "como_confirmar": "El corte de ClickUp es anterior o el puesto está excluido",
+     "solucion": [
+      "No mandes recordatorio.",
+      "Si el puesto no imputa, corrígelo en la ficha."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Olvido puntual",
+     "como_confirmar": "Primera vez en la semana",
+     "solucion": [
+      "Manda el recordatorio corto solo a esa persona."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "No sabe o la herramienta le falla",
+     "como_confirmar": "Persona nueva o error de ClickUp",
+     "solucion": [
+      "Enséñale a imputar o abre incidencia de sistemas."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Manda un recordatorio privado y corto solo a quien no imputó.",
+    "Si se repite tras el aviso, pasa a la ficha «sigue sin imputar»."
+   ],
+   "que_no_hacer": [
+    "No lo uses para valorar rendimiento: es solo disciplina.",
+    "No lo publiques en un canal general.",
+    "No escales el primer día: el aviso no tiene rojo."
+   ],
+   "escalar": {
+    "cuando": "Sigue sin imputar ese día tras el recordatorio",
+    "a": "operaciones"
+   },
+   "exito": "Las horas del día quedan imputadas en ClickUp el mismo día del recordatorio.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 218,
+     "autor": "Tomás",
+     "nota": "rrhh_no_imputa: aviso, no alerta; las horas no escalan ni ponen nada en rojo"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1361,
+     "autor": "Tomás",
+     "nota": "Horas solo como aviso de disciplina (11_DECISIONES, no está en repo)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1558,
+     "autor": "RO",
+     "nota": "Referencia de 8 h al día; mide disciplina, no rendimiento"
+    },
+    {
+     "fichero": "ro-app:avisos_programados.py",
+     "linea": 347,
+     "autor": "RO",
+     "nota": "Texto del recordatorio: «no imputaste horas» o «solo imputaste X h»"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 313,
+     "autor": "RO",
+     "nota": "Mandar el recordatorio solo a quien no imputó"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_no_imputa"
+    ],
+    "alertas": [
+     "rrhh_no_imputa"
+    ],
+    "indicadores": [
+     "rrhh.imputacion_del_dia_aviso_de_disciplina"
+    ],
+    "palabras_clave": [
+     "sigue sin imputar",
+     "ya se lo dije",
+     "no hace caso",
+     "reincide horas",
+     "otra vez sin horas",
+     "escalado horas",
+     "nunca imputa"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "La jefa, en privado",
+     "texto": "{nombre}, este mes llevas {n} días sin imputar aunque te llegó el aviso. No es para valorarte: sin horas no sabemos la carga real ni podemos protegerte. ¿Qué te lo impide? ¿Lo dejamos en {momento} cada día?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "horas_solo_aviso"
+   ],
+   "id": "personas_admin_sigue_sin_imputar",
+   "titulo": "Alguien sigue sin imputar aunque se le recordó",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "El aviso de horas escala a la jefa: la persona sigue sin imputar el día aunque se le recordó, o se repite varias veces en el mes.",
+   "gravedad": "baja",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuenta cuántos días sin imputar lleva este mes.",
+     "donde": "Horas › Por persona",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Pregunta si hay un motivo: carga, herramienta, zona horaria.",
+     "donde": "Conversación breve",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira si además está en alerta por motivos del panel.",
+     "donde": "Personas › En alerta",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Comprueba si tiene la regla clara por escrito.",
+     "donde": "Guía de su puesto",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Hábito: lo deja para final de mes",
+     "como_confirmar": "Patrón de días sueltos sin imputar",
+     "solucion": [
+      "Acuerda un momento fijo del día para imputar.",
+      "Revisa en una semana."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Sobrecarga: no le da tiempo",
+     "como_confirmar": "Carga > 100 % o muchas tareas abiertas",
+     "solucion": [
+      "Trátalo como sobrecarga, no como disciplina."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Señal de un problema mayor",
+     "como_confirmar": "También está en alerta por plazos o revisiones",
+     "solucion": [
+      "Junta el tema en la conversación de alerta con plan."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "No conoce o no comparte la regla",
+     "como_confirmar": "No sabe por qué se imputa",
+     "solucion": [
+      "Explica para qué sirve (capacidad y precio por hora) y fija la norma por escrito."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "La jefa habla con la persona en privado en 48 h.",
+    "Si coincide con una alerta, se trata dentro de esa conversación."
+   ],
+   "que_no_hacer": [
+    "No lo conviertas en motivo de alerta o de valoración.",
+    "No lo saques en la retro delante del equipo."
+   ],
+   "escalar": {
+    "cuando": "Más de una semana con días sin imputar tras la conversación, o si se suma a una alerta",
+    "a": "rrhh"
+   },
+   "exito": "Una semana completa imputada tras la conversación.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos_programados.py",
+     "linea": 353,
+     "autor": "RO",
+     "nota": "Texto escalado: «sigue sin imputar aunque se le recordó», escala al jefe"
+    },
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 218,
+     "autor": "Tomás",
+     "nota": "Las horas no ponen a nadie en alerta"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "Los peldaños siempre en privado"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.horas_raras_revisadas"
+    ],
+    "palabras_clave": [
+     "horas raras",
+     "imputación rara",
+     "horas extrañas",
+     "anomalía horas",
+     "imputó de más",
+     "horas duplicadas",
+     "horas en tarea equivocada"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A la persona, cuando el registro parece un error",
+     "texto": "{nombre}, en ClickUp sale un registro de {horas} h el {fecha} en {tarea}. ¿Se quedó el temporizador encendido? Si es error, corrígelo cuando puedas; si fue trabajo real, dime qué fue y lo marco como correcto."
+    }
+   ],
+   "reglas_relacionadas": [
+    "horas_solo_aviso"
+   ],
+   "id": "personas_admin_horas_raras",
+   "titulo": "Hay imputaciones raras sin revisar",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "En Horas › Horas raras quedan registros sin marcar como Correcto, Hablar o Error. Verde 100 % revisadas en la semana; rojo menos del 50 %.",
+   "gravedad": "baja",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Abre la lista de horas raras de los últimos 30 días.",
+     "donde": "Horas › Horas raras",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Para cada una, mira tarea, duración y cliente.",
+     "donde": "Detalle del registro en ClickUp",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Separa errores de imputación de trabajo real largo.",
+     "donde": "Conversación con la persona si dudas",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Busca si el mismo patrón se repite en varias personas.",
+     "donde": "Horas raras por persona",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Error de imputación: temporizador olvidado o tarea equivocada",
+     "como_confirmar": "Registro de muchas horas seguidas o en tarea cerrada",
+     "solucion": [
+      "Marca «Error» y pide a la persona que lo corrija en ClickUp."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Trabajo real fuera de lo normal",
+     "como_confirmar": "La persona lo explica con entregable",
+     "solucion": [
+      "Marca «Correcto».",
+      "Si es recurrente en un cliente, avisa a operaciones por posible exceso de horas."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Fallo del sistema o de la plantilla de tareas",
+     "como_confirmar": "Mismo patrón en varias personas",
+     "solucion": [
+      "Marca «Hablar» y pásalo a sistemas para corregir la plantilla."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Revisa las horas raras una vez por semana, siempre el mismo día."
+   ],
+   "que_no_hacer": [
+    "No saques conclusiones de productividad de una hora rara.",
+    "No la comentes con otras personas del equipo."
+   ],
+   "escalar": {
+    "cuando": "Patrón de exceso de horas en un mismo cliente",
+    "a": "operaciones"
+   },
+   "exito": "100 % de horas raras revisadas cada semana.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1602,
+     "autor": "RO",
+     "nota": "Indicador horas raras revisadas: 100 % / > 50 % / < 50 %"
+    },
+    {
+     "fichero": "ro-app:_ESTADO_horas.md",
+     "linea": 6,
+     "autor": "RO",
+     "nota": "Pestaña Horas raras: Correcto / Hablar / Error"
+    },
+    {
+     "fichero": "ro-app:_ESTADO_horas.md",
+     "linea": 52,
+     "autor": "RO",
+     "nota": "Horas raras de los últimos 30 días"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.carga_frente_a_capacidad",
+     "rrhh.carteras_por_encima_de_capacidad"
+    ],
+    "palabras_clave": [
+     "sobrecarga",
+     "no da abasto",
+     "saturado",
+     "quemado",
+     "demasiados clientes",
+     "por encima de capacidad",
+     "burnout",
+     "va reventado",
+     "carga de trabajo"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Abrir la conversación de carga",
+     "texto": "{nombre}, los datos dicen que vas por encima de lo que cabe: {dato}. Antes de nada, ¿cómo estás tú? Quiero quitarte producción, no repartir tus cuentas. ¿Qué tareas te sobran y quién o qué podría hacerlas?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "carga_por_puesto",
+    "sobrecarga_account",
+    "contratar_por_restriccion"
+   ],
+   "id": "personas_admin_sobrecarga",
+   "titulo": "Alguien va sobrecargado (más del 100 % de capacidad o más carteras del tope)",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "Carga > 100 % dos semanas seguidas (horas planificadas frente a 128 h al mes), o cartera por encima del tope: 12 proyectos por account, 16 por trafficker y por CRM.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Cuenta proyectos por silla frente al tope del puesto.",
+     "donde": "Personas › Carga (verdad única de carteras)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Mira la carga planificada y si las tareas tienen estimación.",
+     "donde": "Personas › Carga",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira qué parte de su trabajo es producción o compilación que podría hacer otro o la IA.",
+     "donde": "Tareas abiertas de la persona",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Busca un cliente que consume horas fuera de ficha.",
+     "donde": "Horas por cliente de la persona",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Pregunta a la persona cómo está, no solo qué tiene.",
+     "donde": "1:1 o conversación breve",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cartera por encima del tope",
+     "como_confirmar": "Más de 12 (account) o 16 (trafficker, CRM) proyectos",
+     "solucion": [
+      "Avisa a operaciones antes de asignar nada más.",
+      "No asignes clientes nuevos a esa silla."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Dato de carga poco fiable",
+     "como_confirmar": "Pocas tareas con estimación",
+     "solucion": [
+      "Trata la cifra como señal, no como verdad, y confirma con la persona."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Infradelegación: hace producción que no le toca",
+     "como_confirmar": "Mucho tiempo en compilar, maquetar o producir",
+     "solucion": [
+      "Quita producción y compilación al rol antes de repartir cuentas."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Un cliente fuera de ficha se come las horas",
+     "como_confirmar": "Un cliente concentra el exceso",
+     "solucion": [
+      "Pasa el caso a operaciones para clasificarlo por horas (ficha, bolsa o add-on)."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Desgaste personal",
+     "como_confirmar": "La persona lo verbaliza o baja su ánimo",
+     "solucion": [
+      "Agenda un 1:1 y anota el plan de alivio con fecha."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Congela nuevas asignaciones a esa persona hasta resolver.",
+    "Habla con ella esta semana y con operaciones para decidir qué se le quita."
+   ],
+   "que_no_hacer": [
+    "No resuelvas la sobrecarga repartiendo cuentas: se quita producción.",
+    "No propongas contratar como primera respuesta.",
+    "No esperes a que la persona lo pida: un sobrecargado deja de aparecer igual que uno que se va."
+   ],
+   "escalar": {
+    "cuando": "Sigue > 100 % tras dos semanas de plan, o la solución exige mover cartera o contratar",
+    "a": "operaciones"
+   },
+   "exito": "Carga entre 70 y 90 % y cartera dentro del tope durante dos semanas seguidas.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1580,
+     "autor": "RO",
+     "nota": "Carga frente a capacidad: 128 h/mes; 70-90 % verde, > 100 % dos semanas rojo"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1492,
+     "autor": "RO",
+     "nota": "Carteras: account > 12; trafficker y CRM > 16"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 26,
+     "autor": "RO",
+     "nota": "Topes de cartera en la app"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 382,
+     "autor": "Tomás",
+     "nota": "La sobrecarga se resuelve quitando producción, no repartiendo cuentas"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 375,
+     "autor": "Tomás",
+     "nota": "Contratar va detrás del margen y tras agotar proceso e IA"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 424,
+     "autor": "Tomás",
+     "nota": "Un sobrecargado deja de aparecer como uno que se va"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.nota_1_10_del_mes_hecha"
+    ],
+    "palabras_clave": [
+     "nota del mes",
+     "nota 1-10",
+     "puntuar al equipo",
+     "falta la nota",
+     "evaluación mensual",
+     "valoración del mes",
+     "día 5"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Recordatorio a la jefa",
+     "texto": "{jefa}, te faltan las notas de {mes} de {personas}. Es un número del 1 al 10 con un hecho y una acción. ¿Las dejas hoy? Aquí la tabla: {enlace}."
+    }
+   ],
+   "reglas_relacionadas": [
+    "nota_y_1a1",
+    "revision_personas_escalera"
+   ],
+   "id": "personas_admin_nota_mensual_sin_hacer",
+   "titulo": "El día 5 falta la nota 1-10 del mes de alguna persona",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "Pasado el día 5, Personas › Nota del mes muestra personas sin puntuar. Verde 100 % el día 5; rojo si falta más del 20 %.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista quién falta y quién debía puntuarle.",
+     "donde": "Personas › Nota del mes",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Comprueba si la jefa estuvo ausente.",
+     "donde": "Personas › Ausencias",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira si la nota está hecha pero sin hecho y acción.",
+     "donde": "Tabla de notas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Revisa si la persona cambió de jefe ese mes.",
+     "donde": "Ajustes › jefe",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "La jefa no lo hizo a tiempo",
+     "como_confirmar": "Nota vacía con jefa activa",
+     "solucion": [
+      "Recuérdale hoy con el enlace a la tabla."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "La jefa estuvo ausente",
+     "como_confirmar": "Ausencia registrada a primeros de mes",
+     "solucion": [
+      "Pide la nota a operaciones como suplente."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Nota sin hecho ni acción",
+     "como_confirmar": "Hay número pero no explicación",
+     "solucion": [
+      "Pide que añada un hecho concreto y una acción: sin eso la nota no vale."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Jefe mal asignado",
+     "como_confirmar": "La persona no tiene jefe vigente",
+     "solucion": [
+      "Corrige el jefe en Ajustes."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Manda el recordatorio a cada jefa con su lista, no un mensaje general."
+   ],
+   "que_no_hacer": [
+    "No pongas tú la nota en lugar de la jefa.",
+    "No compartas notas de una persona con otra: cada una ve solo las suyas.",
+    "No aceptes una nota sin hecho ni acción."
+   ],
+   "escalar": {
+    "cuando": "Siguen faltando notas 3 días después del día 5",
+    "a": "operaciones"
+   },
+   "exito": "100 % de personas con nota, hecho y acción el día 5 de cada mes.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1536,
+     "autor": "RO",
+     "nota": "Nota 1-10: 100 % el día 5 / falta alguna / falta > 20 %"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 453,
+     "autor": "RO",
+     "nota": "Puntúan Mili y las jefas; Cecilia consolida y vigila el día 5; cada persona ve solo las suyas"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1605,
+     "autor": "RO",
+     "nota": "Puntúan Mili y las jefas; RRHH consolida (11_DECISIONES, no está en repo)"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.1_1_hechos"
+    ],
+    "palabras_clave": [
+     "1:1",
+     "uno a uno",
+     "one to one",
+     "individual",
+     "reunión individual",
+     "sin 1:1",
+     "hace mucho que no hablo con",
+     "trimestre sin 1:1"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Convocatoria (para que no suene a examen)",
+     "texto": "{nombre}, te pongo 15 minutos el {fecha} para nuestro 1:1 del trimestre. No es una evaluación: es para ver cómo estás y qué te frena. Trae dos cosas: algo que no funcione y algo en lo que te pueda ayudar."
+    },
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Guion del 1:1 (15 minutos)",
+     "texto": "1) ¿Cómo estás tú, fuera del trabajo? 2) ¿Qué te está costando más ahora mismo? 3) De lo que hablamos la última vez, {pendiente}: ¿cómo quedó? 4) ¿Qué necesitas de mí o del equipo? 5) ¿Algo que deba saber de cómo lo hago yo? Cierre: «Me apunto {acuerdo} para el {fecha}»."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Si detectas riesgo de fuga o conflicto",
+     "texto": "Mili, del 1:1 con {nombre} sale una señal que no puede esperar: {senal}. Te lo paso hoy como dice el protocolo."
+    }
+   ],
+   "reglas_relacionadas": [
+    "nota_y_1a1"
+   ],
+   "id": "personas_admin_uno_a_uno",
+   "titulo": "Toca un 1:1 o una persona lleva un trimestre sin él",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "Personas › 1:1 y ronda pone arriba a quien no ha tenido 1:1 este trimestre. Mínimo: uno por persona al trimestre. Verde 100 %; rojo < 80 %.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista quién no tiene 1:1 este trimestre.",
+     "donde": "Personas › 1:1 y ronda",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Decide quién lo lleva: producción, RRHH; accounts y personas clave, operaciones.",
+     "donde": "Ficha de la persona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Lee los puntos pendientes del 1:1 anterior.",
+     "donde": "Historial de 1:1",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Mira sus datos del trimestre: alertas, carga, ausencias, nota.",
+     "donde": "Ficha de la persona",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No está en el calendario",
+     "como_confirmar": "No hay 1:1 agendado",
+     "solucion": [
+      "Agenda 15 minutos esta semana."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "No está claro quién lo lleva",
+     "como_confirmar": "Nadie se siente dueño",
+     "solucion": [
+      "Producción: RRHH. Accounts y personas clave: operaciones."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se hace pero no se anota",
+     "como_confirmar": "La persona dice que habló",
+     "solucion": [
+      "Anota fecha y puntos en la app al terminar."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Agenda los 1:1 que faltan antes de que cierre el trimestre.",
+    "Pide a la persona que traiga 2 temas: qué no funciona y en qué necesita ayuda."
+   ],
+   "que_no_hacer": [
+    "No uses el 1:1 como evaluación encubierta: si se vive como examen, la persona contará lo que conviene.",
+    "No hables de sueldo en el 1:1: si sale, se deriva a dirección.",
+    "No lo canceles sin reagendar."
+   ],
+   "escalar": {
+    "cuando": "Señal de fuga o conflicto en un 1:1 (ese mismo día), o 1:1 celebrados < 70 % a los 2 meses",
+    "a": "operaciones"
+   },
+   "exito": "100 % de personas con al menos un 1:1 anotado en el trimestre.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1605,
+     "autor": "RO",
+     "nota": "1:1 trimestral mínimo (11_DECISIONES, no está en repo)"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 67,
+     "autor": "RO",
+     "nota": "1:1 de producción 15 min, ~1 por trimestre; operaciones lleva accounts y personas clave; revisar si < 70 %"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 91,
+     "autor": "RO",
+     "nota": "No usar los 1:1 como evaluación encubierta"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 98,
+     "autor": "RO",
+     "nota": "Señal de fuga o conflicto: a operaciones el mismo día; retribución a dirección"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1668,
+     "autor": "RO",
+     "nota": "1:1 hechos: 100 % / 80-99 % / < 80 %; Cole recomienda semanal"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 3619,
+     "autor": "Cole Gordon",
+     "nota": "Estructura del 1:1: cómo estás, qué te cuesta, qué necesitas, feedback para mí; manda la cadencia trimestral de RO sobre la semanal de Cole"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 404,
+     "autor": "RO",
+     "nota": "Los puntos pendientes pasan al siguiente 1:1"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.ronda_con_las_jefas"
+    ],
+    "palabras_clave": [
+     "ronda con las jefas",
+     "ronda quincenal",
+     "hablar con las heads",
+     "ronda de rendimiento",
+     "repaso con las jefas",
+     "no hemos hecho la ronda"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "Tres preguntas a cada jefa",
+     "texto": "1) ¿Quién de tu equipo va mejor de lo esperado y por qué? 2) ¿Quién te preocupa, con qué dato? 3) ¿Qué necesitas para hablarlo tú con esa persona esta semana?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "nota_y_1a1"
+   ],
+   "id": "personas_admin_ronda_jefas_tarde",
+   "titulo": "La ronda quincenal con las jefas va con retraso",
+   "puestos": [
+    "rrhh"
+   ],
+   "sintoma": "Han pasado más de 15 días desde la última ronda con las jefas sobre el rendimiento de sus equipos. Ámbar 1 semana tarde; rojo más.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Mira la fecha de la última ronda anotada.",
+     "donde": "Personas › 1:1 y ronda",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Comprueba si alguna jefa estuvo ausente.",
+     "donde": "Personas › Ausencias",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Revisa si la ronda se hace pero sin dejar registro.",
+     "donde": "Anotaciones de la ronda",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No hay hueco fijo en el calendario",
+     "como_confirmar": "Cada ronda se agenda a mano",
+     "solucion": [
+      "Fija un hueco recurrente cada 15 días con cada jefa."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Una jefa ausente",
+     "como_confirmar": "Ausencia registrada",
+     "solucion": [
+      "Haz la ronda con operaciones para ese equipo."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se habla pero no se anota",
+     "como_confirmar": "No hay registro",
+     "solucion": [
+      "Anota tras cada ronda: personas en riesgo, acción y fecha."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Agenda esta semana la ronda con cada jefa pendiente."
+   ],
+   "que_no_hacer": [
+    "No sustituyas a la jefa en la conversación con su equipo: el encargo es que ellas detecten, hablen y eleven.",
+    "No dejes la ronda sin acción y fecha."
+   ],
+   "escalar": {
+    "cuando": "Más de una semana tarde por segunda vez",
+    "a": "operaciones"
+   },
+   "exito": "Ronda hecha y anotada cada 15 días con todas las jefas.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1646,
+     "autor": "RO",
+     "nota": "Ronda con las jefas cada 15 días; no se mide aún"
+    },
+    {
+     "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
+     "linea": 55,
+     "autor": "Tomás",
+     "nota": "Encargo del 13-ago: ronda fija cada 15 días con las heads y empoderarlas para detectar, conversar y elevar"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_aniversario"
+    ],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "reconocer",
+     "reconocimiento",
+     "felicitar",
+     "buen trabajo",
+     "dar las gracias",
+     "ejemplo de cómo se hace",
+     "lo ha clavado",
+     "premiar"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "En la retro del viernes",
+     "texto": "{nombre}: {comportamiento_exacto} está impecable. Así se tiene que trabajar. Lo cuento como ejemplo de cómo se hace."
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Mensaje privado, si lo ha mencionado un cliente",
+     "texto": "{nombre}, {cliente} nos ha dicho {frase_cliente}. Es por {comportamiento_exacto}. Gracias: así se gana la confianza."
+    }
+   ],
+   "reglas_relacionadas": [
+    "nota_y_1a1"
+   ],
+   "id": "personas_admin_reconocimiento",
+   "titulo": "Alguien ha hecho algo bien y hay que reconocerlo",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo",
+    "direccion"
+   ],
+   "sintoma": "Un comportamiento concreto merece refuerzo: plazo cumplido en una cuenta difícil, cliente que lo menciona, mejora clara tras un plan.",
+   "gravedad": "baja",
+   "plazo": "Esta semana (en la retro del viernes)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Identifica el comportamiento exacto, no el resultado general.",
+     "donde": "Hecho concreto con fecha",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Decide el formato: refuerzo en la retro, ejemplo público o prioridad en el reparto.",
+     "donde": "Retro / Semanal",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Comprueba que no prometes nada económico.",
+     "donde": "Extras pendientes de Tomás",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Reconocimiento genérico que no enseña nada",
+     "como_confirmar": "La frase sirve para cualquiera",
+     "solucion": [
+      "Nombra el comportamiento exacto y por qué importa al cliente."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Solo se reconoce a los de siempre",
+     "como_confirmar": "Las menciones se repiten",
+     "solucion": [
+      "Rota: un refuerzo por retro como mínimo, cada vez a alguien distinto."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Se promete un extra que no está aprobado",
+     "como_confirmar": "Se habla de bonus o dinero",
+     "solucion": [
+      "No prometas extras hasta que Tomás los ratifique."
+     ],
+     "quien": "direccion",
+     "plazo": "—"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Escribe el reconocimiento con el hecho concreto y llévalo a la retro del viernes."
+   ],
+   "que_no_hacer": [
+    "No hagas rankings entre personas.",
+    "No prometas bonus ni extras que no estén aprobados.",
+    "No reconozcas solo resultados: reconoce conductas que se pueden repetir."
+   ],
+   "escalar": {
+    "cuando": "Se plantea un extra económico",
+    "a": "direccion"
+   },
+   "exito": "Al menos un refuerzo concreto por retro, rotando entre personas.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 77,
+     "autor": "RO",
+     "nota": "El reconocimiento, misma cadencia: refuerzo específico, ejemplo público, prioridad en reparto"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "Extras solo cuando Tomás ratifique: no prometer antes"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 3851,
+     "autor": "Cole Gordon",
+     "nota": "Reconocer cada semana lo que va más allá; manda RO: sin clasificaciones"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 3826,
+     "autor": "Hormozi",
+     "nota": "La gente hace más por estatus que por dinero"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_alerta"
+    ],
+    "alertas": [
+     "rrhh_alerta"
+    ],
+    "indicadores": [
+     "rrhh.personas_en_alerta_sin_plan"
+    ],
+    "palabras_clave": [
+     "conversación difícil",
+     "llamada de atención",
+     "toque de atención",
+     "no rinde",
+     "bajo rendimiento",
+     "actitud",
+     "reincide",
+     "plan de mejora",
+     "PIP",
+     "ultimátum"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Convocatoria (sin sorpresa ni alarma innecesaria)",
+     "texto": "{nombre}, te he puesto 30 minutos mañana a las {hora}. Quiero hablar de {tema}: hay algo que tiene que cambiar y prefiero verlo contigo con calma. No es una conversación cómoda, pero tiene salida."
+    },
+    {
+     "canal": "reunion",
+     "para": "equipo",
+     "cuando": "1:1 formal (peldaño 2)",
+     "texto": "1) Igual no lo dejé claro, así que lo fijamos: cuando digo {X}, entiendo {Y}. 2) Lo que necesito es {estandar}, porque si no {consecuencia}. 3) He visto {hecho_1} el {fecha_1} y {hecho_2} el {fecha_2}. 4) ¿Qué te lo está impidiendo? ¿Qué necesitas de mí? 5) Si se repite, {siguiente_paso}. ¿Lo ves? Lo dejo por escrito con fecha {fecha_revision}."
+    },
+    {
+     "canal": "correo",
+     "para": "equipo",
+     "cuando": "Escrito formal (peldaño 3), tras incumplir lo pactado",
+     "texto": "{nombre}: el {fecha_1a1} acordamos {expectativa} antes del {plazo}. Desde entonces no veo {conducta_1} ni {conducta_2} ({fechas}). Te doy hasta el {margen_final} para corregirlo. Si no cambia, el siguiente paso será trasladarlo a dirección para decidir. Cuenta conmigo para lo que necesites hasta entonces."
+    }
+   ],
+   "reglas_relacionadas": [
+    "revision_personas_escalera",
+    "sistemas_no_personas"
+   ],
+   "id": "personas_admin_conversacion_dificil",
+   "titulo": "Hay que tener una conversación difícil con alguien (bajo rendimiento o conducta)",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "Una persona repite un incumplimiento: segunda semana seguida con el mismo fallo, 3 avisos en 4 semanas, evidencia sin sustancia o una conducta contra los valores.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Reúne el dato: qué obligación, qué fechas, cuántas veces.",
+     "donde": "Panel, alertas y anotaciones previas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Descarta fallo del sistema antes de nada.",
+     "donde": "Recordatorios, asignación y evidencia",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira en qué peldaño está: aviso, 1:1 formal, escrito, escalado.",
+     "donde": "Registro de avisos de la persona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Comprueba si hay causa personal o de carga.",
+     "donde": "1:1 y carga",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Si es conducta (falta de respeto, conflicto), sepárala del rendimiento.",
+     "donde": "Hechos con fecha",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fallo del sistema",
+     "como_confirmar": "El recordatorio no llegó o la tarea no estaba cableada",
+     "solucion": [
+      "Retira el aviso, corrige el sistema y el contador no avanza."
+     ],
+     "quien": "operaciones",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Incumplimiento que se repite",
+     "como_confirmar": "Mismo fallo tras el aviso",
+     "solucion": [
+      "Sube un peldaño: aviso registrado → 1:1 formal con expectativas por escrito → escrito formal con aviso a Tomás → escalado."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Problema personal o sobrecarga detrás",
+     "como_confirmar": "Lo cuenta en la conversación o la carga lo confirma",
+     "solucion": [
+      "Ofrece recursos concretos y fecha de revisión antes de subir de peldaño."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Conducta contra los valores o conflicto con otra persona",
+     "como_confirmar": "Hechos con fecha, testigos",
+     "solucion": [
+      "Habla pronto y en privado; si es entre dos personas, junta a ambas para aclararlo.",
+      "Documenta los hechos."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Prepara la conversación con el dato escrito delante.",
+    "Hazla en privado y esta semana.",
+    "Cierra siempre con expectativas por escrito y plazo, guardadas en el registro confidencial."
+   ],
+   "que_no_hacer": [
+    "No ataques a la persona: habla de la conducta y los hechos.",
+    "No saltes peldaños ni dejes a nadie en riesgo sin decírselo.",
+    "No lo hagas delante del equipo ni por un canal público.",
+    "No apliques el «córtalo rápido» de Cole: manda la escalera de Tomás.",
+    "No guardes valoraciones en documentos compartidos: van al registro confidencial."
+   ],
+   "escalar": {
+    "cuando": "Persiste tras el escrito formal (peldaño 4) o hay falta grave de conducta",
+    "a": "direccion"
+   },
+   "exito": "La conducta se corrige en el plazo pactado y se mantiene 4 semanas; o, si no, el caso llega a dirección con la escalera completa documentada.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 56,
+     "autor": "RO",
+     "nota": "Peldaños 0-4 con disparadores objetivos"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 67,
+     "autor": "RO",
+     "nota": "Plantilla B del 1:1 formal"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 73,
+     "autor": "RO",
+     "nota": "Plantilla C del escrito formal: conductas, expectativa incumplida, consecuencia, margen"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 75,
+     "autor": "RO",
+     "nota": "Peldaños siempre en privado; 3+ tipos a la vez = problema de rol"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 410,
+     "autor": "Tomás",
+     "nota": "Escalera: gap, qué necesita, recursos, ultimátum documentado, terminar"
+    },
+    {
+     "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
+     "linea": 55,
+     "autor": "Tomás",
+     "nota": "Aviso contundente, plazo de reacción y solo después la decisión"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 3768,
+     "autor": "Cole Gordon",
+     "nota": "Atacar la conducta, no a la persona"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 4143,
+     "autor": "Cole Gordon",
+     "nota": "Marco de siete pasos y acuerdos; su «cortar sin perder tiempo» no aplica: manda C-D4-09 sobre Cole"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "despido",
+     "despedir",
+     "salida",
+     "prescindir",
+     "baja voluntaria",
+     "se va",
+     "dimite",
+     "fin de contrato",
+     "periodo de prueba",
+     "quitar accesos"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A Tomás, para pedir la decisión",
+     "texto": "Tomás: propongo valorar la salida de {nombre}. Escalera: aviso {fecha_1}, 1:1 formal {fecha_2}, escrito {fecha_3}, plazo vencido {fecha_4}. Cobertura de sus clientes: {plan}. Decides tú la forma."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Aviso al cliente cuando cambia su interlocutor (lo envía quien entra, tras la presentación)",
+     "texto": "Buenos días {nombre_cliente},\n\nDesde hoy llevo yo vuestra cuenta junto a {nombre_saliente}, que me ha pasado todo el detalle. Todo sigue igual: mismas fechas y mismo buzón.\n\nCualquier cosa, me tienes aquí.\n\nUn abrazo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "revision_personas_escalera"
+   ],
+   "id": "personas_admin_salida_de_persona",
+   "titulo": "Se plantea la salida de una persona del equipo",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "direccion"
+   ],
+   "sintoma": "Alguien propone que una persona salga, o la persona anuncia que se va.",
+   "gravedad": "alta",
+   "plazo": "Esta semana (sin precipitarse)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Es salida voluntaria o propuesta de la empresa?",
+     "donde": "Conversación con quien lo plantea",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Si la propone la empresa: ¿está la escalera completa y documentada?",
+     "donde": "Registro confidencial de la persona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Qué relación tiene con RO (contrato laboral en España, colaborador por factura, otro país)? Decide qué ley aplica.",
+     "donde": "Expediente de la persona (fuera de la app)",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Qué clientes y tareas lleva y quién los cubre?",
+     "donde": "Ajustes › Asignaciones y carteras",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Qué accesos tiene?",
+     "donde": "Personas › Lista de salida",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Salida voluntaria",
+     "como_confirmar": "La persona lo comunica",
+     "solucion": [
+      "Agradece y pide una conversación de salida: causa, señales que no vimos, qué mejorar.",
+      "Activa el traspaso de sus cuentas con los tres documentos."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Propuesta sin escalera completa",
+     "como_confirmar": "Falta algún peldaño (aviso, 1:1 formal, escrito, plazo)",
+     "solucion": [
+      "No hay salida: vuelve a la escalera y completa lo que falta."
+     ],
+     "quien": "rrhh",
+     "plazo": "—"
+    },
+    {
+     "id": "c3",
+     "causa": "Duda sobre la forma de salida",
+     "como_confirmar": "No está claro el tipo de relación o la causa",
+     "solucion": [
+      "La forma de la salida la ve siempre Tomás, internamente, antes de decir nada a la persona.",
+      "Decide solo Tomás."
+     ],
+     "quien": "direccion",
+     "plazo": "Antes de comunicar"
+    },
+    {
+     "id": "c4",
+     "causa": "Clientes sin cubrir",
+     "como_confirmar": "Cuentas sin suplente ni traspaso",
+     "solucion": [
+      "Planifica el traspaso con brief, log de errores y mapa de interlocutores firmados por el entrante."
+     ],
+     "quien": "operaciones",
+     "plazo": "Antes del último día"
+    },
+    {
+     "id": "c5",
+     "causa": "Accesos abiertos tras la salida",
+     "como_confirmar": "Sigue entrando en herramientas",
+     "solucion": [
+      "Quita acceso herramienta por herramienta el último día, con la lista de salida."
+     ],
+     "quien": "rrhh",
+     "plazo": "Último día"
+    }
+   ],
+   "acciones_inmediatas": [
+    "No comuniques nada a la persona hasta que Tomás lo vea y decida.",
+    "Prepara en paralelo el plan de cobertura de sus clientes.",
+    "Si la salida es voluntaria, agradece y abre el traspaso."
+   ],
+   "que_no_hacer": [
+    "No apliques el despido rápido de Cole o Hormozi: en RO manda la escalera completa y, por encima, la ley laboral aplicable.",
+    "No dejes que la persona se entere el último día de que estaba en riesgo.",
+    "No cuentes el motivo al resto del equipo ni a clientes.",
+    "No dejes accesos abiertos ni clientes sin interlocutor un solo día."
+   ],
+   "escalar": {
+    "cuando": "Siempre: la salida es nivel 3; la ve siempre Tomás, internamente",
+    "a": "direccion"
+   },
+   "exito": "Salida decidida por Tomás con escalera documentada; 0 días de cliente sin interlocutor; accesos cerrados el último día.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 62,
+     "autor": "Tomás",
+     "nota": "Peldaño 4: la salida es N3, solo Tomás, con jurídico"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 410,
+     "autor": "Tomás",
+     "nota": "Ninguna salida sin la escalera completa registrada"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 424,
+     "autor": "Tomás",
+     "nota": "Rotar personas es rotar clientes: manda sobre el keeper test y el despido rápido"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 396,
+     "autor": "Tomás",
+     "nota": "Un traspaso son tres documentos firmados"
+    },
+    {
+     "fichero": "central:memoria/project_decisiones_organizativas_tomas.md",
+     "linea": 55,
+     "autor": "Tomás",
+     "nota": "Que nadie se entere de que está en la cuerda floja el día del despido"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 591,
+     "autor": "RO",
+     "nota": "Lista de salida: el acceso se quita en cada herramienta"
+    },
+    {
+     "fichero": "ro-app:altas_personas.py",
+     "linea": 11,
+     "autor": "RO",
+     "nota": "Baja en Ajustes: tarea de quitar acceso y propuesta de reparto de cartera"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 4022,
+     "autor": "Hormozi",
+     "nota": "Despedir sin sorpresas; recuerda el riesgo legal; manda la ley española y C-D4-09"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/17_OPERACIONES_Y_ESCALADO.md",
+     "linea": 4095,
+     "autor": "Hormozi",
+     "nota": "RR. HH. es reducir el riesgo de demanda; fuera de EE. UU., la figura equivalente"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "RO",
+     "nota": "Distinguir contrato laboral de colaboración mercantil (ley española). La forma de la salida la ve siempre Tomás internamente; la asesoría laboral no se consulta por defecto (4-oct)."
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 54: la salida de una persona la ve siempre Tomás, internamente."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.ausencias_registradas_con_suplente"
+    ],
+    "palabras_clave": [
+     "ausencia",
+     "vacaciones",
+     "baja médica",
+     "estará fuera",
+     "sin suplente",
+     "quién le cubre",
+     "cubrir a",
+     "suplencia",
+     "se va de viaje"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "El suplente, el mismo día",
+     "texto": "Buenos días {nombre_cliente},\n\nEstos días te atiendo yo mientras {nombre} está fuera. Todo sigue igual: mismas fechas, mismo buzón y mismo plan.\n\nSi necesitas algo urgente, escríbeme por aquí y te digo plazo hoy mismo.\n\nUn abrazo,\n{firma}"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A la persona que se ausenta (si es planificada)",
+     "texto": "{nombre}, antes de irte deja al día la card de cada cliente y dime qué urgencias quedan abiertas. {suplente} te cubre del {desde} al {hasta}."
+    }
+   ],
+   "reglas_relacionadas": [
+    "carga_por_puesto"
+   ],
+   "id": "personas_admin_ausencia_sin_suplente",
+   "titulo": "Alguien va a estar ausente y no tiene suplente",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "Una ausencia de alguien que lleva clientes no tiene suplente asignado antes de empezar. Rojo si empieza sin suplente.",
+   "gravedad": "alta",
+   "plazo": "Antes de que empiece la ausencia (si es imprevista, hoy)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuántos días? Más de 2 o imprevista sin fecha de vuelta activa la suplencia el mismo día.",
+     "donde": "Personas › Ausencias",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene compañero designado en el mapa de suplentes?",
+     "donde": "Mapa de suplentes de operaciones",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Qué clientes y urgencias tiene abiertas?",
+     "donde": "Ajustes › Asignaciones y Mi día de la persona",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El suplente tiene carga para asumirlo?",
+     "donde": "Personas › Carga del suplente",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Ausencia corta sin impacto",
+     "como_confirmar": "2 días o menos y sin urgencias",
+     "solucion": [
+      "Regístrala igualmente y avisa a su jefa."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "No hay compañero designado",
+     "como_confirmar": "El mapa de suplentes no lo incluye",
+     "solucion": [
+      "Asigna suplente hoy en Asignaciones (la suplencia caduca sola).",
+      "Actualiza el mapa de suplentes."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Urgencias en vuelo",
+     "como_confirmar": "Peticiones con plazo en los días de ausencia",
+     "solucion": [
+      "El suplente da plazo a toda urgencia el mismo día, aunque la resolución tarde."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "El suplente también va al límite",
+     "como_confirmar": "Carga > 100 %",
+     "solucion": [
+      "Reparte por cliente entre dos suplentes o pide a operaciones que cubra."
+     ],
+     "quien": "operaciones",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Registra la ausencia con suplente en la app.",
+    "El suplente avisa hoy a los clientes tocados desde el buzón de siempre.",
+    "Si es de dirección de operaciones, preside Producto y QC y las excepciones de ficha se congelan."
+   ],
+   "que_no_hacer": [
+    "No esperes «a ver si vuelve mañana»: más de 2 días activa la suplencia el mismo día.",
+    "No cambies fechas ni buzón al cliente: solo cambia la firma.",
+    "No anotes el motivo médico ni personal en la app: solo fechas y suplente."
+   ],
+   "escalar": {
+    "cuando": "Nadie puede cubrir o la ausencia se alarga y se convierte en salida",
+    "a": "operaciones"
+   },
+   "exito": "100 % de ausencias de quien lleva clientes con suplente asignado antes de empezar; 0 urgencias sin plazo durante la ausencia.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1712,
+     "autor": "RO",
+     "nota": "Ausencias con suplente: 100 % / suplente el mismo día / sin suplente (propuesta sin firmar; no hay módulo de ausencias)"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 339,
+     "autor": "RO",
+     "nota": "Quien lleva clientes necesita suplente antes de empezar; la suplencia caduca sola"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 8,
+     "autor": "RO",
+     "nota": "Rama B: ausencia > 2 días o imprevista, se activa el mismo día"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Aviso a clientes desde el buzón único: «estos días te atiendo yo»"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-06_traspaso-suplencia-memoria.md",
+     "linea": 70,
+     "autor": "RO",
+     "nota": "Urgencias con plazo en < 24 h siguen vigentes en suplencia"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Suplencia de dirección de operaciones: preside Producto y QC, excepciones congeladas"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 389,
+     "autor": "Tomás",
+     "nota": "Nadie es punto único de fallo; segundo responsable desde el día 1"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "RO",
+     "nota": "No registrar motivo médico o personal: solo fechas (RGPD)"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "alta de persona",
+     "nueva incorporación",
+     "entra alguien",
+     "primer día",
+     "primera semana",
+     "onboarding equipo",
+     "nuevo fichaje",
+     "bienvenida",
+     "accesos nuevo"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Bienvenida en #general",
+     "texto": "Damos la bienvenida a {nombre}, que entra en {puesto}. Su compañero de apoyo estas semanas es {buddy}. ¡Bienvenido/a a RO!"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Mensaje a la persona el día 1",
+     "texto": "{nombre}, bienvenido/a. Hoy tienes: {accesos}. En la app verás «Tu primera semana» con 5 pasos de tu puesto. Apunta cada duda en tu log en vez de preguntar suelto: el viernes lo repasamos y lo que falte lo arreglamos en el método."
+    }
+   ],
+   "reglas_relacionadas": [
+    "acceso_delegado_minimo"
+   ],
+   "id": "personas_admin_incorporacion_primera_semana",
+   "titulo": "Entra una persona nueva: accesos, tareas y primera semana",
+   "puestos": [
+    "rrhh",
+    "operaciones"
+   ],
+   "sintoma": "Aviso «Alta de persona» en #avisos-rrhh: alguien entra o entró en los últimos 14 días. La app le muestra «Tu primera semana» con los pasos de su puesto.",
+   "gravedad": "media",
+   "plazo": "Antes del primer día y durante 14 días",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Está dada de alta en Ajustes con puesto, jefe, zona y fecha de entrada?",
+     "donde": "Ajustes › Altas y bajas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene accesos a las herramientas el primer día (correo, ClickUp, app)?",
+     "donde": "Tareas de alta en Ajustes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Tiene compañero de apoyo y primeras tareas asignadas?",
+     "donde": "Primera semana › pasos del puesto",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Si lleva clientes: ¿empieza con cuentas tranquilas y sin ninguna en rojo?",
+     "donde": "Asignaciones",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Ha pasado por su jefa y por la presentación al equipo?",
+     "donde": "Canal #general",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Alta incompleta en la app",
+     "como_confirmar": "Falta puesto, jefe o fecha",
+     "solucion": [
+      "Completa el alta en Ajustes (solo nombre, puesto, jefe, zona, fechas y cumpleaños día y mes)."
+     ],
+     "quien": "rrhh",
+     "plazo": "Antes del día 1"
+    },
+    {
+     "id": "c2",
+     "causa": "Accesos no listos",
+     "como_confirmar": "Primer día sin correo o sin ClickUp",
+     "solucion": [
+      "Monta la tarjeta de incorporación con todos los accesos antes del día 1.",
+      "Pide a Tomás el acceso a la app (tarea automática)."
+     ],
+     "quien": "rrhh",
+     "plazo": "Antes del día 1"
+    },
+    {
+     "id": "c3",
+     "causa": "Sin compañero ni plan",
+     "como_confirmar": "La persona pregunta a todos",
+     "solucion": [
+      "Asigna compañero de apoyo y fecha cada paso de la primera semana."
+     ],
+     "quien": "operaciones",
+     "plazo": "Día 1"
+    },
+    {
+     "id": "c4",
+     "causa": "Hereda cuentas delicadas",
+     "como_confirmar": "Le asignan un cliente en rojo",
+     "solucion": [
+      "Retíralo: ninguna cuenta en rojo en su primer trimestre."
+     ],
+     "quien": "operaciones",
+     "plazo": "Inmediato"
+    },
+    {
+     "id": "c5",
+     "causa": "Nadie le presenta",
+     "como_confirmar": "No hay mensaje de bienvenida",
+     "solucion": [
+      "Publica la bienvenida en #general con su puesto."
+     ],
+     "quien": "rrhh",
+     "plazo": "Día 1"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Antes del día 1: alta en Ajustes, accesos y compañero de apoyo.",
+    "Día 1: bienvenida en #general y repaso de herramientas (grábalo para futuras altas).",
+    "Semana 1: que anote sus dudas en un log; cada duda es o algo que el método ya responde o un agujero del método."
+   ],
+   "que_no_hacer": [
+    "No le des cuentas en rojo «para que aprenda rápido».",
+    "No guardes teléfonos, direcciones ni correos personales en la app.",
+    "No gradúes por tiempo («lleva dos meses»): se gradúa con prueba objetiva.",
+    "No lo dejes aprender persiguiendo gente: si necesita preguntar, falla el método."
+   ],
+   "escalar": {
+    "cuando": "Llega el día 1 sin accesos o un cliente falta al respeto a la persona nueva",
+    "a": "direccion"
+   },
+   "exito": "Día 1 con todos los accesos; 5 pasos de la primera semana marcados antes del día 14; cero cuentas en rojo en su primer trimestre.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos.py",
+     "linea": 684,
+     "autor": "RO",
+     "nota": "Aviso «Alta de persona» en #avisos-rrhh con accesos y tareas en Ajustes"
+    },
+    {
+     "fichero": "ro-app:avisos.py",
+     "linea": 682,
+     "autor": "RO",
+     "nota": "Bienvenida en #general"
+    },
+    {
+     "fichero": "ro-app:altas_personas.py",
+     "linea": 6,
+     "autor": "RO",
+     "nota": "Alta en Ajustes: puesto, jefe, zona, fechas, cumpleaños; tarea de acceso y guía del puesto"
+    },
+    {
+     "fichero": "ro-app:altas_personas.py",
+     "linea": 17,
+     "autor": "RO",
+     "nota": "Solo datos mínimos; nunca teléfonos, direcciones ni correos personales"
+    },
+    {
+     "fichero": "ro-app:modulos/primera_semana.js",
+     "linea": 2,
+     "autor": "RO",
+     "nota": "Tu primera semana: 5 pasos del puesto, jefe, clientes, durante 14 días"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-18_onboarding-am-nuevo.md",
+     "linea": 19,
+     "autor": "RO",
+     "nota": "Tarjeta de incorporación con accesos, calendario y compañero"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-18_onboarding-am-nuevo.md",
+     "linea": 38,
+     "autor": "RO",
+     "nota": "El nuevo no hereda cuentas en rojo en su primer trimestre"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-18_onboarding-am-nuevo.md",
+     "linea": 54,
+     "autor": "RO",
+     "nota": "Log de dudas: o lo responde el método o se corrige el SOP"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-18_onboarding-am-nuevo.md",
+     "linea": 84,
+     "autor": "Tomás",
+     "nota": "Falta de respeto de un cliente al nuevo: a Tomás, siempre"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 2003,
+     "autor": "Cole Gordon",
+     "nota": "Altas técnicas y administrativas primero; repaso grabado de herramientas"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [
+     "rrhh_cumple"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "cumpleaños",
+     "cumple",
+     "felicitar",
+     "regalo",
+     "tarta",
+     "fecha de nacimiento",
+     "celebración"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Felicitación en #general",
+     "texto": "¡Feliz cumpleaños, {nombre}! Que tengas un gran día."
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_cumpleanos",
+   "titulo": "Se acerca el cumpleaños de alguien del equipo",
+   "puestos": [
+    "rrhh",
+    "direccion"
+   ],
+   "sintoma": "Aviso a RRHH y a Tomás 7 días antes y el mismo día del cumpleaños.",
+   "gravedad": "baja",
+   "plazo": "El día",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Confirma la fecha (solo día y mes) en la ficha.",
+     "donde": "Personas › Cumpleaños y aniversarios",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Mira si ese día está ausente o en otra zona horaria.",
+     "donde": "Ausencias y zona",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Comprueba si la persona prefiere discreción.",
+     "donde": "Lo que haya dicho a su jefa",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fecha mal cargada",
+     "como_confirmar": "La persona dice otra fecha",
+     "solucion": [
+      "Corrige día y mes en Ajustes."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Ausente o en otra zona",
+     "como_confirmar": "Vacaciones o huso distinto",
+     "solucion": [
+      "Felicita en su hora local o a la vuelta."
+     ],
+     "quien": "rrhh",
+     "plazo": "El día"
+    },
+    {
+     "id": "c3",
+     "causa": "Prefiere que no se haga público",
+     "como_confirmar": "Lo ha pedido",
+     "solucion": [
+      "Felicita en privado."
+     ],
+     "quien": "rrhh",
+     "plazo": "El día"
+    }
+   ],
+   "acciones_inmediatas": [
+    "El día, felicita en #general o en privado, en su hora local."
+   ],
+   "que_no_hacer": [
+    "No guardes el año de nacimiento: solo día y mes.",
+    "No lo hagas público si la persona no quiere."
+   ],
+   "escalar": {
+    "cuando": "Nunca: es un gesto, no una tarea con riesgo",
+    "a": "rrhh"
+   },
+   "exito": "Nadie del equipo pasa su cumpleaños sin felicitación.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 220,
+     "autor": "RO",
+     "nota": "rrhh_cumple: aviso a Cecilia y a Tomás 7 días antes y el día"
+    },
+    {
+     "fichero": "ro-app:altas_personas.py",
+     "linea": 17,
+     "autor": "RO",
+     "nota": "Cumpleaños solo día y mes"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "rrhh_aniversario"
+    ],
+    "alertas": [
+     "rrhh_aniversario"
+    ],
+    "indicadores": [],
+    "palabras_clave": [
+     "aniversario",
+     "un año en RO",
+     "años en la empresa",
+     "fecha de entrada",
+     "cumple un año con nosotros",
+     "antigüedad",
+     "años con nosotros"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Felicitación en #general",
+     "texto": "Hoy {nombre} cumple {n} año(s) en RO. Este año: {hecho_1} y {hecho_2}. Gracias por cómo lo haces."
+    }
+   ],
+   "reglas_relacionadas": [
+    "nota_y_1a1"
+   ],
+   "id": "personas_admin_aniversario",
+   "titulo": "Se acerca el aniversario de entrada de alguien",
+   "puestos": [
+    "rrhh",
+    "direccion",
+    "operaciones"
+   ],
+   "sintoma": "Aviso a RRHH y a Tomás 7 días antes y el mismo día del aniversario de entrada.",
+   "gravedad": "baja",
+   "plazo": "El día (prepáralo con 7 días)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Confirma años cumplidos y puesto.",
+     "donde": "Personas › Cumpleaños y aniversarios",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Busca uno o dos hechos concretos de su año para nombrarlos.",
+     "donde": "Notas del mes y reconocimientos anteriores",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira si tiene 1:1 pendiente este trimestre: aprovecha.",
+     "donde": "Personas › 1:1 y ronda",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fecha de entrada incorrecta",
+     "como_confirmar": "No cuadra con lo que dice la persona",
+     "solucion": [
+      "Corrígela en Ajustes."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Felicitación genérica",
+     "como_confirmar": "No nombra nada de su trabajo",
+     "solucion": [
+      "Nombra un logro concreto del año."
+     ],
+     "quien": "rrhh",
+     "plazo": "El día"
+    },
+    {
+     "id": "c3",
+     "causa": "Oportunidad perdida de conversación",
+     "como_confirmar": "Sin 1:1 en el trimestre",
+     "solucion": [
+      "Agenda el 1:1 cerca del aniversario."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Prepara con su jefa uno o dos hechos concretos de su año.",
+    "Felicita el día en #general y, si toca, abre el 1:1 del trimestre."
+   ],
+   "que_no_hacer": [
+    "No prometas subidas ni extras en la felicitación.",
+    "No compares con otras personas."
+   ],
+   "escalar": {
+    "cuando": "La persona plantea en ese momento retribución o salida",
+    "a": "direccion"
+   },
+   "exito": "Felicitación con hechos concretos el día del aniversario.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 222,
+     "autor": "RO",
+     "nota": "rrhh_aniversario: aviso 7 días antes y el día"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 81,
+     "autor": "RO",
+     "nota": "Refuerzo específico sobre comportamiento exacto"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 3904,
+     "autor": "Cole Gordon",
+     "nota": "Retener es más fácil que reemplazar: comunicar su importancia"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.tiempo_de_contratacion",
+     "rrhh.fichajes_del_plan"
+    ],
+    "palabras_clave": [
+     "contratación",
+     "vacante abierta",
+     "selección",
+     "no encontramos",
+     "fichaje",
+     "candidatos",
+     "entrevistas",
+     "plan de fichajes"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Pedir decisión a dirección",
+     "texto": "Tomás: la vacante de {puesto} lleva {dias} días. Tenemos a {candidato} en la final. Recomiendo {recomendacion} porque {motivo}. ¿Decides antes del {fecha}?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "contratar_por_restriccion"
+   ],
+   "id": "personas_admin_contratacion_lenta",
+   "titulo": "Una contratación lleva más de 30 días abierta",
+   "puestos": [
+    "rrhh",
+    "direccion",
+    "operaciones"
+   ],
+   "sintoma": "Una vacante lleva más de 30 días desde que se abrió sin oferta aceptada, o el plan de fichajes va más de un mes tarde. Verde < 14 días.",
+   "gravedad": "media",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿La vacante responde a una restricción real (carteras al tope, campañas que habría que frenar)?",
+     "donde": "Carga y carteras por puesto",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Pasó las dos preguntas previas: proceso e IA?",
+     "donde": "Propuesta de fichaje escrita",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Cuántos candidatos entran por semana y de qué fuente?",
+     "donde": "Registro de vacantes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Dónde se atascan: cribado, entrevista, decisión?",
+     "donde": "Registro de vacantes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Quién decide y está disponible?",
+     "donde": "Calendario de dirección",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Vacante sin restricción clara",
+     "como_confirmar": "No hay dato de carga que la justifique",
+     "solucion": [
+      "Vuelve a las dos preguntas: ¿lo cubre el proceso? ¿lo cubre la IA?",
+      "Si ambas son no, documenta la restricción."
+     ],
+     "quien": "direccion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Pocos candidatos",
+     "como_confirmar": "Menos de 5 por semana",
+     "solucion": [
+      "Amplía fuentes y revisa el anuncio."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Proceso lento",
+     "como_confirmar": "Días entre fases",
+     "solucion": [
+      "Entrevista en 24-48 h desde la candidatura y decide en una semana."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Decisión atascada en dirección",
+     "como_confirmar": "Candidato final esperando",
+     "solucion": [
+      "Pide la decisión con fecha y una recomendación."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Revisa en qué fase está cada candidato y fija la siguiente fecha."
+   ],
+   "que_no_hacer": [
+    "No contrates por sensación de carga: solo por una restricción real.",
+    "No bajes el criterio para cerrar antes.",
+    "No hables de sueldo de otras personas con el candidato."
+   ],
+   "escalar": {
+    "cuando": "Más de 30 días o el retraso obliga a frenar campañas",
+    "a": "direccion"
+   },
+   "exito": "Vacante cerrada en menos de 30 días (objetivo < 14) y fichajes del plan en fecha.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1690,
+     "autor": "Cole Gordon",
+     "nota": "Tiempo de contratación < 14 / 14-30 / > 30 (Cole/Mitchell; no se mide aún)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1624,
+     "autor": "RO",
+     "nota": "Fichajes del plan: en fecha / 1 mes tarde / > 1 mes"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 375,
+     "autor": "Tomás",
+     "nota": "Contratar detrás del margen y tras agotar proceso e IA"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 473,
+     "autor": "Cole Gordon",
+     "nota": "Contratar solo para aliviar una restricción"
+    },
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+     "linea": 98,
+     "autor": "RO",
+     "nota": "Si no se fichan perfiles, el cuello será operaciones y habrá que frenar campañas"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "sueldo",
+     "coste por área",
+     "se puede deducir",
+     "cuánto cobra",
+     "masa salarial",
+     "coste del equipo",
+     "nómina",
+     "privacidad sueldos"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A quien preparó el dato",
+     "texto": "{nombre}, en {documento} el coste de {area} permite deducir un sueldo: el área tiene menos de 3 personas. Agrúpala con {otra_area} antes de que circule, por favor."
+    }
+   ],
+   "reglas_relacionadas": [
+    "coste_agregado_minimo_3"
+   ],
+   "id": "personas_admin_dato_sueldo_deducible",
+   "titulo": "Un coste agregado permitiría deducir el sueldo de alguien",
+   "puestos": [
+    "rrhh",
+    "finanzas_direccion",
+    "direccion"
+   ],
+   "sintoma": "Un informe, panel o mensaje muestra el coste de un área de menos de 3 personas, o un dato que permite saber lo que cobra alguien.",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Cuántas personas tiene el área del dato?",
+     "donde": "Informe o panel donde aparece",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Quién lo ha visto o recibido?",
+     "donde": "Destinatarios y permisos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Sale de una fórmula que no agrupa?",
+     "donde": "Origen del cálculo",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Área de menos de 3 personas sin agrupar",
+     "como_confirmar": "El área tiene 1 o 2 personas",
+     "solucion": [
+      "Agrúpala con otra área antes de enseñar el coste."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Se compartió con quien no debía",
+     "como_confirmar": "Lo ve alguien sin permiso de sueldos",
+     "solucion": [
+      "Retira el documento o el acceso hoy.",
+      "Avisa a Tomás."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "La fórmula del panel no agrupa",
+     "como_confirmar": "El panel calcula por área sin mínimo",
+     "solucion": [
+      "Pide a sistemas que aplique el mínimo de 3 personas."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Retira o agrupa el dato hoy.",
+    "Avisa a Tomás si alguien sin permiso lo vio."
+   ],
+   "que_no_hacer": [
+    "No copies sueldos a documentos compartidos, a Drive del equipo ni a la app fuera de su pestaña.",
+    "No respondas a «¿cuánto cobra X?»: se deriva a dirección.",
+    "No metas cuentas bancarias en la app."
+   ],
+   "escalar": {
+    "cuando": "Alguien sin permiso ha visto un sueldo",
+    "a": "direccion"
+   },
+   "exito": "Ningún coste de área con menos de 3 personas visible fuera de dirección.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 522,
+     "autor": "RO",
+     "nota": "Áreas de menos de 3 personas se agrupan (11_DECISIONES, no está en repo)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 4,
+     "autor": "RO",
+     "nota": "Equipo solo agregado por áreas de 3 o más personas (D-89)"
+    },
+    {
+     "fichero": "ro-app:modulos/personas.js",
+     "linea": 602,
+     "autor": "RO",
+     "nota": "Sueldos solo dirección y RRHH, con rastro; cuentas bancarias nunca en la app"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "subida de sueldo",
+     "aumento",
+     "cobrar más",
+     "bonus",
+     "extra",
+     "revisión salarial",
+     "me pagan poco",
+     "retribución"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Respuesta a la persona",
+     "texto": "{nombre}, gracias por decírmelo claro. Esto lo decide dirección, así que se lo traslado hoy y te digo algo antes del {fecha}. Mientras, si hay algo más que te preocupe, cuéntamelo."
+    }
+   ],
+   "reglas_relacionadas": [
+    "coste_agregado_minimo_3"
+   ],
+   "id": "personas_admin_peticion_sueldo",
+   "titulo": "Alguien del equipo pregunta por su sueldo, una subida o un extra",
+   "puestos": [
+    "rrhh",
+    "operaciones",
+    "jefa_publicidad",
+    "jefa_crm",
+    "jefa_seo"
+   ],
+   "sintoma": "Una persona plantea su retribución en un 1:1, por mensaje o en una conversación de pasillo.",
+   "gravedad": "media",
+   "plazo": "48 h (respuesta de recibido)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Es una petición formal o un comentario de desgaste?",
+     "donde": "Lo que ha dicho y cómo",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Hay señal de fuga detrás?",
+     "donde": "1:1 y contexto",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se le prometió algo antes?",
+     "donde": "Registro confidencial",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Petición formal de revisión",
+     "como_confirmar": "Lo pide expresamente",
+     "solucion": [
+      "Agradece, di que lo trasladas a dirección y da una fecha de respuesta."
+     ],
+     "quien": "rrhh",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Riesgo de salida",
+     "como_confirmar": "Menciona otras ofertas o desánimo",
+     "solucion": [
+      "Avisa a operaciones el mismo día."
+     ],
+     "quien": "rrhh",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Promesa previa sin cumplir",
+     "como_confirmar": "Hay un compromiso anterior",
+     "solucion": [
+      "Llévalo a Tomás con el compromiso escrito."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "No respondas sobre cifras: traslada a dirección con fecha de respuesta."
+   ],
+   "que_no_hacer": [
+    "No prometas nada ni des cifras.",
+    "No compares con lo que cobra otra persona.",
+    "No lo anotes en un documento compartido."
+   ],
+   "escalar": {
+    "cuando": "Siempre",
+    "a": "direccion"
+   },
+   "exito": "La persona recibe respuesta de dirección en la fecha dicha.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/TRANSVERSAL/SOP-TR-20_semanal-operaciones-y-gobierno.md",
+     "linea": 98,
+     "autor": "RO",
+     "nota": "Si toca retribución, a administración o dirección"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 113,
+     "autor": "RO",
+     "nota": "El sistema de control no decide salidas, sueldos ni bonus (N3)"
+    },
+    {
+     "fichero": "ro-equipo:20_METODO/METODO_ENTREGA_RO/12_ANTIFALLO_ACCOUNTS/03_SISTEMA_DE_MILI.md",
+     "linea": 85,
+     "autor": "RO",
+     "nota": "No prometer extras antes de que Tomás los ratifique"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "rrhh.satisfaccion_del_equipo",
+     "rrhh.rotacion_no_deseada_a_12_meses"
+    ],
+    "palabras_clave": [
+     "mal ambiente",
+     "equipo desmotivado",
+     "satisfacción",
+     "quejas del equipo",
+     "se van",
+     "rotación",
+     "clima",
+     "quemados"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Pregunta trimestral",
+     "texto": "Del 0 al 10, ¿recomendarías a un amigo trabajar en RO? ¿Qué es lo primero que cambiarías? Es anónimo y lo leemos todo."
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_satisfaccion_baja",
+   "titulo": "La satisfacción del equipo cae",
+   "puestos": [
+    "rrhh",
+    "direccion"
+   ],
+   "sintoma": "La nota a «¿recomendarías trabajar aquí?» baja de 0 (eNPS), o se juntan bajas voluntarias y quejas. Hoy no hay encuesta ni tabla: es señal cualitativa.",
+   "gravedad": "alta",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Junta las señales: 1:1, bajas voluntarias, ausencias, quejas al buzón de mejoras.",
+     "donde": "Personas y buzón de mejoras",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Mira si la caída se concentra en un equipo o jefa.",
+     "donde": "Señales por equipo",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Mira carga y carteras del periodo.",
+     "donde": "Personas › Carga",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Revisa si hubo cambios recientes (procesos, cadencias, herramientas).",
+     "donde": "Actas de gobierno",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Sin dato fiable",
+     "como_confirmar": "No hay encuesta",
+     "solucion": [
+      "Lanza una pregunta trimestral corta y anónima (0-10 y por qué)."
+     ],
+     "quien": "rrhh",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c2",
+     "causa": "Problema de un equipo concreto",
+     "como_confirmar": "Las señales vienen de un solo equipo",
+     "solucion": [
+      "Ronda con esa jefa y 1:1 con su equipo."
+     ],
+     "quien": "rrhh",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Sobrecarga general",
+     "como_confirmar": "Varias personas > 100 %",
+     "solucion": [
+      "Trátalo como capacidad con operaciones."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Demasiadas cadencias o cambios a la vez",
+     "como_confirmar": "Reuniones nuevas sin que salga ninguna",
+     "solucion": [
+      "Propón quitar una cadencia por cada una que entre."
+     ],
+     "quien": "operaciones",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Escucha antes de proponer: ronda de 1:1 con las personas afectadas."
+   ],
+   "que_no_hacer": [
+    "No trates la rotación como higiene: rotar personas es rotar clientes.",
+    "No respondas a quejas de preferencia como si fueran principios: si es una sola persona, considera la fuente; si es todo el equipo, atiende.",
+    "No añadas reuniones para arreglarlo."
+   ],
+   "escalar": {
+    "cuando": "Dos bajas voluntarias no deseadas en un trimestre o eNPS negativo",
+    "a": "direccion"
+   },
+   "exito": "eNPS por encima de 0 y sin bajas voluntarias no deseadas en el trimestre.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1756,
+     "autor": "RO",
+     "nota": "Satisfacción del equipo: > 10 / 0-10 / < 0 (umbral de mercado, sin firmar; no se mide aún)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 1734,
+     "autor": "RO",
+     "nota": "Rotación no deseada a 12 meses: sin cifra RO"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 424,
+     "autor": "Tomás",
+     "nota": "Rotar personas es rotar clientes"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 431,
+     "autor": "Tomás",
+     "nota": "Ninguna cadencia nueva entra sin que salga otra"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/14_EQUIPO_COMERCIAL.md",
+     "linea": 4161,
+     "autor": "Cole Gordon",
+     "nota": "Las opiniones no son principios; si todos dicen lo mismo, atiende"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_sin_alta"
+    ],
+    "alertas": [
+     "adm_sin_alta"
+    ],
+    "indicadores": [
+     "administracion.altas_en_facturacion_antes_del_dia_0"
+    ],
+    "palabras_clave": [
+     "alta en facturación",
+     "sin alta",
+     "firmado sin facturar",
+     "no tiene línea en Airtable",
+     "sin fecha de alta",
+     "mandato SEPA",
+     "primera factura",
+     "cliente nuevo facturar"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Pedir datos fiscales o mandato (desde administración)",
+     "texto": "Buenos días {nombre},\n\nPara dejar lista vuestra facturación necesito {lo_que_falta}. Te adjunto el mandato SEPA para firmar.\n\nCon esto queda todo en marcha antes del arranque.\n\nMuchas gracias,\n{firma}"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A quien lleva el alta, si falta la fecha",
+     "texto": "{nombre}, {cliente} está firmado pero sin fecha de día 0 en la app. ¿Me la dices hoy para darlo de alta en facturación?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "cobro_sepa",
+    "encargo_rgpd_antes",
+    "airtable_solo_lectura"
+   ],
+   "id": "personas_admin_alta_facturacion",
+   "titulo": "Un cliente firmado no está dado de alta en facturación (o no tiene fecha de alta)",
+   "puestos": [
+    "administracion",
+    "tecnico_altas"
+   ],
+   "sintoma": "Contrato firmado sin su línea en el Airtable de facturación, o sin fecha de alta (día 0). Objetivo: 100 % dados de alta antes de la reunión de arranque.",
+   "gravedad": "alta",
+   "plazo": "48 h (antes del día 0)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Está firmado el contrato y el mandato SEPA?",
+     "donde": "Zoho Sign",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Tiene fecha de día 0 en Clientes nuevos?",
+     "donde": "Finanzas › Sin fecha de alta",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Tiene los datos fiscales completos?",
+     "donde": "Contrato y ficha de cliente en Holded",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El primer mes se cobra con tarjeta (Método)?",
+     "donde": "Protocolo de lanzamiento",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "¿Su línea está en Airtable?",
+     "donde": "Airtable de facturación (lectura)",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Falta el mandato SEPA",
+     "como_confirmar": "Contrato firmado sin anexo de mandato",
+     "solucion": [
+      "Pide el mandato SEPA firmado como anexo del acuerdo."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Sin fecha de día 0",
+     "como_confirmar": "Finanzas marca «Sin fecha de alta»",
+     "solucion": [
+      "Pide la fecha a quien lleva el alta del cliente."
+     ],
+     "quien": "administracion",
+     "plazo": "24 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Datos fiscales incompletos o erróneos",
+     "como_confirmar": "Falta CIF, razón social o dirección",
+     "solucion": [
+      "Pide los datos al cliente desde el buzón de administración antes de emitir."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Primer cobro con tarjeta no gestionado",
+     "como_confirmar": "Cliente del Método sin cobro del mes 1",
+     "solucion": [
+      "Cobra el primer mes con tarjeta; desde el segundo, SEPA."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del día 0"
+    },
+    {
+     "id": "c5",
+     "causa": "Línea pendiente en Airtable",
+     "como_confirmar": "No aparece su fila",
+     "solucion": [
+      "Da de alta la línea (solo administración edita Airtable)."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Revisa hoy la lista de firmados sin alta y ponles fecha.",
+    "No pidas accesos ni arranques nada sin el encargo RGPD firmado (lo vigila altas)."
+   ],
+   "que_no_hacer": [
+    "No emitas desde la app: la emisión es en Holded.",
+    "No ofrezcas transferencia o pago aplazado como alternativa al SEPA.",
+    "No dejes pasar el día 0 sin alta: así se acumulan meses sin cobrar."
+   ],
+   "escalar": {
+    "cuando": "Llega el día 0 sin alta en facturación, o el cliente pide otra forma de pago",
+    "a": "direccion"
+   },
+   "exito": "100 % de firmados con línea en Airtable y mandato antes del día 0.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 212,
+     "autor": "RO",
+     "nota": "adm_sin_alta: contrato firmado sin línea en Airtable, plazo 48 h"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 455,
+     "autor": "RO",
+     "nota": "Altas en facturación antes del día 0 (caso de 4 meses sin cobrar)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 95,
+     "autor": "RO",
+     "nota": "Finanzas marca «Sin fecha de alta»"
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/feedback_cobros_sepa.md",
+     "linea": 16,
+     "autor": "Tomás",
+     "nota": "Mandato SEPA como anexo al acuerdo"
+    },
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+     "linea": 78,
+     "autor": "Tomás",
+     "nota": "Primer pago con tarjeta (28-sep): manda sobre C-D3-17 para el mes 1; confirmado por Tomás el 4-oct"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 82,
+     "autor": "RO",
+     "nota": "Buzón de administración para corrección de datos fiscales"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 9,
+     "autor": "RO",
+     "nota": "Emitir, cobrar o tocar Airtable: nunca desde la app"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 997,
+     "autor": "RO",
+     "nota": "Sin encargo RGPD no se pide ningún acceso"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_impago"
+    ],
+    "alertas": [
+     "adm_impago"
+    ],
+    "indicadores": [
+     "administracion.impagos_abiertos_sin_plan"
+    ],
+    "palabras_clave": [
+     "factura vencida",
+     "no ha pagado",
+     "impago",
+     "recibo vencido",
+     "sin plan de cobro",
+     "reclamar factura",
+     "pendiente de cobro",
+     "deuda cliente"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Primera reclamación (desde administración)",
+     "texto": "Buenos días {nombre},\n\nRevisando la contabilidad vemos que la factura {numero} de {mes} sigue pendiente. Te la adjunto por si no os llegó.\n\n¿Me confirmas cuándo podréis abonarla?\n\nMuchas gracias,\n{firma}"
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Si no contesta en una semana (objeción de la incomodidad)",
+     "texto": "{nombre},\n\nSé que estos correos incomodan, así que voy al grano.\n\nQueda la factura {numero} de {mes}. Te la adjunto de nuevo.\n\n¿Me dices una fecha aproximada y lo cierro por mi parte?\n\nMuchas gracias,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "impago_corte",
+    "cobro_sepa"
+   ],
+   "id": "personas_admin_factura_vencida",
+   "titulo": "Una factura de cliente está vencida (0 a 30 días) o sin plan de cobro",
+   "puestos": [
+    "administracion"
+   ],
+   "sintoma": "Holded marca una factura vencida sin cobrar. Finanzas la lista en «Impagos por antigüedad» y en «Recibos vencidos sin plan».",
+   "gravedad": "media",
+   "plazo": "72 h (reclamada hoy)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿El recibo se pasó por SEPA y volvió, o nunca se pasó?",
+     "donde": "Holded y banco",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿La factura le llegó al cliente y es correcta (importe, datos)?",
+     "donde": "Holded › envío y PDF",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Es un cliente con historial de impago o primera vez?",
+     "donde": "Finanzas › Impagos",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay alguna queja o incidencia abierta con ese cliente?",
+     "donde": "Ficha de cliente y bandeja",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Recibo SEPA devuelto",
+     "como_confirmar": "El banco devolvió el cargo",
+     "solucion": [
+      "Pasa a la ficha de SEPA devuelto."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Factura no recibida o con error",
+     "como_confirmar": "El cliente no la tiene o tiene datos mal",
+     "solucion": [
+      "Reenvíala; si tiene error, ficha de factura mal emitida."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Olvido del cliente",
+     "como_confirmar": "Primera vez, sin incidencias",
+     "solucion": [
+      "Reclama con el correo corto y anota «reclamado»."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Impago como señal de descontento",
+     "como_confirmar": "Hay queja o silencio con el account",
+     "solucion": [
+      "Reclama igual y avisa a operaciones: es riesgo de baja."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reclama hoy y pulsa «Reclamado» en Finanzas.",
+    "Anota un plan de cobro con fecha (aunque sea «reintento el día X»)."
+   ],
+   "que_no_hacer": [
+    "No pongas ultimátums ni recargos por mora en el correo: si escala, se llama.",
+    "No pidas al account que hable de dinero.",
+    "No inventes excusas («cambiamos de plataforma») que no sean ciertas.",
+    "No ofrezcas descuentos para cobrar."
+   ],
+   "escalar": {
+    "cuando": "A los 30 días sin cobrar: aviso al account (ficha de impago a 30 días)",
+    "a": "account"
+   },
+   "exito": "Factura cobrada o con plan anotado; 0 impagos sin plan.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 208,
+     "autor": "RO",
+     "nota": "adm_impago: alta si pasa de 30 días; a los 60 decide Tomás"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 74,
+     "autor": "RO",
+     "nota": "Botón «Reclamado»"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 143,
+     "autor": "RO",
+     "nota": "Recibos vencidos sin plan"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 410,
+     "autor": "Tomás",
+     "nota": "Impagos abiertos sin plan: D-21 firmada el 2-oct"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/ejemplos/admin.md",
+     "linea": 171,
+     "autor": "RO",
+     "nota": "Ejemplo real de primera reclamación"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/CAPA_MENSAJE.md",
+     "linea": 104,
+     "autor": "RO",
+     "nota": "Objeción de la incomodidad en el correo de deuda"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 501,
+     "autor": "RO",
+     "nota": "Nunca ultimátums ni recargos en el correo; si escala, llamada"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 488,
+     "autor": "RO",
+     "nota": "La plantilla 3.12 sugiere culpar a un cambio de plataforma: no usar si no es cierto"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 1974,
+     "autor": "Hormozi",
+     "nota": "Preguntar antes de suponer y dar el beneficio de la duda"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_impago"
+    ],
+    "alertas": [
+     "adm_impago"
+    ],
+    "indicadores": [
+     "administracion.impagos_abiertos_sin_plan"
+    ],
+    "palabras_clave": [
+     "30 días sin pagar",
+     "avisar al account",
+     "impago 30",
+     "un mes sin cobrar",
+     "sigue sin pagar",
+     "segunda reclamación",
+     "llamar para cobrar"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Aviso al account (lo genera la app)",
+     "texto": "Impago de {cliente}: {importe} ({dias} días). No le hables de dinero: lo lleva administración. Solo dime si ves algo en la cuenta que lo explique."
+    },
+    {
+     "canal": "llamada",
+     "para": "cliente",
+     "cuando": "Llamada de administración",
+     "texto": "Hola {nombre}, soy {firma}, de administración de Ranking Online. Te llamo por la factura de {mes}, que sigue pendiente. No quiero darle vueltas: ¿qué necesitas para cerrarla y qué fecha te va bien? Te lo dejo anotado y te mando confirmación por correo."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Confirmación tras la llamada",
+     "texto": "Buenas tardes {nombre},\n\nGracias por la llamada. Como hemos hablado, queda el pago de la factura {numero} para el {fecha}.\n\nCualquier cosa, me dices.\n\nUn abrazo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "impago_corte",
+    "muro_direccion"
+   ],
+   "id": "personas_admin_impago_30_dias",
+   "titulo": "Un impago llega a 30 días: hay que avisar al account",
+   "puestos": [
+    "administracion",
+    "account"
+   ],
+   "sintoma": "La factura pasa de 30 días vencida. La alerta sube a alta y Finanzas ofrece «Avisar al account».",
+   "gravedad": "alta",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Se reclamó por escrito al vencer y hay respuesta?",
+     "donde": "Finanzas › historial del impago",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El cliente está en riesgo o con queja abierta?",
+     "donde": "Semáforo del cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Va camino de acumular dos cuotas?",
+     "donde": "Finanzas › Impagos por antigüedad",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay un interlocutor de pagos distinto del decisor?",
+     "donde": "Ficha de cliente",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "No hubo reclamación o no se siguió",
+     "como_confirmar": "Sin «Reclamado» anotado",
+     "solucion": [
+      "Reclama hoy por escrito y llama en 48 h."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Descontento con el servicio",
+     "como_confirmar": "Cliente en ámbar o rojo",
+     "solucion": [
+      "Avisa al account para que revise la cuenta; el cobro lo sigue llevando administración."
+     ],
+     "quien": "account",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Problema de caja del cliente",
+     "como_confirmar": "Lo dice o pide aplazar",
+     "solucion": [
+      "Recoge su propuesta de fechas y llévala a Tomás: un plan de pago solo lo aprueba Tomás."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "El correo llega a quien no paga",
+     "como_confirmar": "Responde alguien que no es de pagos",
+     "solucion": [
+      "Pide el contacto de administración del cliente."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pulsa «Avisar al account»: le llega a su Mi día sin pedirle que hable de dinero.",
+    "Llama al cliente en horario laboral para fijar una fecha de pago.",
+    "Anota estado y fecha en el impago."
+   ],
+   "que_no_hacer": [
+    "No pidas al account que reclame el dinero.",
+    "No acuerdes un plan de pago ni una quita sin Tomás.",
+    "No llames fuera de horario laboral.",
+    "No amenaces con cortar el servicio por correo."
+   ],
+   "escalar": {
+    "cuando": "Llega a 60 días o a dos cuotas acumuladas",
+    "a": "direccion"
+   },
+   "exito": "Fecha de pago comprometida y cumplida antes de los 60 días.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 76,
+     "autor": "RO",
+     "nota": "Avisar al account: «No le hables de dinero: lo lleva administración»; manda RO sobre Cole (CSM cobra)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 82,
+     "autor": "Tomás",
+     "nota": "Aviso al account a 30 días, decisión de Tomás a 60, nunca más de 2 cuotas"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1378,
+     "autor": "Tomás",
+     "nota": "Escalera 30/60/2 cuotas (11_DECISIONES, no está en repo)"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 501,
+     "autor": "RO",
+     "nota": "Si escala, se gestiona por llamada"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 2084,
+     "autor": "Cole Gordon",
+     "nota": "Cole duda entre que cobre el CSM o finanzas; en RO, administración"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 136,
+     "autor": "Tomás",
+     "nota": "Condiciones sobre un cliente concreto: Tomás"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 23: impago: con 2 cuotas la app propone la pausa ese mismo día y decide Tomás; un plan de pago solo lo aprueba Tomás."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [
+     "adm_impago"
+    ],
+    "alertas": [
+     "adm_impago"
+    ],
+    "indicadores": [
+     "administracion.impagos_abiertos_sin_plan"
+    ],
+    "palabras_clave": [
+     "60 días",
+     "dos cuotas",
+     "cortar el servicio",
+     "monitorio",
+     "dar por perdida",
+     "plan de pago",
+     "pausar campañas por impago",
+     "corte"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Resumen para Tomás",
+     "texto": "Tomás: {cliente} debe {importe} ({cuotas} cuotas, {dias} días). Reclamado el {fecha_1}, llamada el {fecha_2}, aviso al account el {fecha_3}. Contexto: {contexto}. Opciones: cortar, plan de pago ({propuesta}), monitorio o darla por perdida. Recomiendo {opcion} porque {motivo}."
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Comunicación de la decisión (solo tras el OK de Tomás; lo firma quien él diga)",
+     "texto": "Buenos días {nombre},\n\nSeguimos sin poder cerrar las facturas de {meses}. Hemos intentado encontrar una fecha contigo por correo y por teléfono.\n\nA partir del {fecha} {decision}. Si quieres que lo hablemos antes, llámame y lo vemos.\n\nUn saludo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "impago_corte",
+    "muro_direccion"
+   ],
+   "id": "personas_admin_impago_60_dias_corte",
+   "titulo": "Impago a 60 días o dos cuotas acumuladas: decide Tomás (escalera hasta el corte)",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion",
+    "direccion"
+   ],
+   "sintoma": "Un recibo pasa de 60 días o el cliente acumula dos cuotas sin pagar. A partir de aquí no se reclama más: decide Tomás entre cortar, plan de pago, monitorio o darla por perdida. Al llegar a 2 cuotas, la app propone la pausa ese mismo día.",
+   "gravedad": "alta",
+   "plazo": "Esta semana",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Confirma importe, cuotas y fechas de cada reclamación y llamada.",
+     "donde": "Finanzas › Impagos (historial)",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El cliente respondió con una propuesta de fechas?",
+     "donde": "Correos y notas de llamada",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El impago viene de descontento o de caja?",
+     "donde": "Account y semáforo",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Cuánto trabajo se sigue entregando cada mes sin cobrar?",
+     "donde": "Operaciones",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Escalera incompleta",
+     "como_confirmar": "Falta reclamación escrita, llamada o aviso al account",
+     "solucion": [
+      "Complétala en 48 h y documenta antes de pedir la decisión."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cliente con voluntad pero sin caja",
+     "como_confirmar": "Propone fechas",
+     "solucion": [
+      "Lleva a Tomás la propuesta de plan de pago con fechas."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Cliente descontento que deja de pagar",
+     "como_confirmar": "Queja o silencio prolongado",
+     "solucion": [
+      "Lleva el caso con el contexto del account; la baja se clasifica por causa."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Se sigue trabajando gratis",
+     "como_confirmar": "Producción activa con dos cuotas impagadas",
+     "solucion": [
+      "Pide a Tomás decisión de pausa o corte esta semana."
+     ],
+     "quien": "finanzas_direccion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Prepara un resumen de una página para Tomás con las cuatro opciones y tu recomendación.",
+    "Marca el impago como «decide Tomás».",
+    "No acumules una tercera cuota: la decisión es esta semana."
+   ],
+   "que_no_hacer": [
+    "No decidas tú cortar, pausar ni perdonar: decide Tomás.",
+    "No dejes que se acumule una tercera cuota.",
+    "No anuncies el corte sin la decisión escrita de Tomás.",
+    "No inicies un monitorio por tu cuenta: es una vía judicial que decide dirección.",
+    "No retengas por precio: un descuento para no perder al cliente no es retener."
+   ],
+   "escalar": {
+    "cuando": "Siempre a los 60 días o con dos cuotas",
+    "a": "direccion"
+   },
+   "exito": "Decisión de Tomás registrada en la semana y ejecutada; nunca más de dos cuotas acumuladas.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1378,
+     "autor": "Tomás",
+     "nota": "Decisión a 60 días; nunca más de 2 cuotas (11_DECISIONES, no está en repo)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 366,
+     "autor": "Tomás",
+     "nota": "A 60 días decide Tomás: cortar, plan de pago, monitorio o darla por perdida"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 344,
+     "autor": "RO",
+     "nota": "Estados del impago: aviso al account, reclamado, plan de pago, monitorio, decide Tomás, baja"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 385,
+     "autor": "RO",
+     "nota": "Pasar a monitorio lo decide Tomás"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "Retener por precio no es retener"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 332,
+     "autor": "Tomás",
+     "nota": "Baja por liquidez ≠ insatisfacción; offboarding por escrito"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 521,
+     "autor": "RO",
+     "nota": "Tope legal de 60 días entre empresas (Ley 15/2010)"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 2026,
+     "autor": "Cole Gordon",
+     "nota": "Congelar el servicio tras no responder; en RO lo decide Tomás"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 23: impago: con 2 cuotas la app propone la pausa ese mismo día y decide Tomás; un plan de pago solo lo aprueba Tomás."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [
+     "adm_sepa"
+    ],
+    "indicadores": [
+     "administracion.recibos_sepa_y_tarjetas_devueltos"
+    ],
+    "palabras_clave": [
+     "recibo devuelto",
+     "SEPA devuelto",
+     "devolución del banco",
+     "domiciliación rechazada",
+     "remesa devuelta",
+     "cargo devuelto",
+     "tarjeta rechazada"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Recibo devuelto (fondos o cuenta)",
+     "texto": "Buenos días {nombre},\n\nEl banco nos ha devuelto el recibo de {mes} ({motivo}). Lo volvemos a pasar el {fecha_reintento}.\n\nSi habéis cambiado de cuenta, dímelo y te mando el mandato nuevo para firmar.\n\nMuchas gracias,\n{firma}"
+    },
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Si el fallo es nuestro (solo con OK de Tomás para otra vía)",
+     "texto": "Buenos días {nombre},\n\nHemos tenido una incidencia con nuestra entidad y no hemos podido pasar el recibo de {mes}. {instruccion_aprobada}\n\nDisculpa las molestias.\n\nUn saludo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "cobro_sepa",
+    "impago_corte"
+   ],
+   "id": "personas_admin_sepa_devuelto",
+   "titulo": "El banco devuelve un recibo SEPA",
+   "puestos": [
+    "administracion"
+   ],
+   "sintoma": "El banco devuelve el cargo de la remesa SEPA (o falla la tarjeta del primer mes). Objetivo: reintento en 5 días; rojo si no hay reintento.",
+   "gravedad": "alta",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lee el motivo de la devolución que da el banco.",
+     "donde": "Banco / Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿El mandato SEPA está firmado y vigente con esa cuenta?",
+     "donde": "Zoho Sign / ficha del cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Es la primera devolución o se repite?",
+     "donde": "Finanzas › devueltos",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿El fallo es nuestro (límite SEPA, remesa mal generada)?",
+     "donde": "Banco de RO",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Fondos insuficientes",
+     "como_confirmar": "Motivo del banco",
+     "solucion": [
+      "Avisa al cliente y reintenta en la siguiente fecha acordada (dentro de 5 días)."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Cuenta cambiada o mandato inválido",
+     "como_confirmar": "Motivo de cuenta o mandato",
+     "solucion": [
+      "Pide nuevo mandato con la cuenta actual."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Devolución deliberada",
+     "como_confirmar": "El cliente ordenó devolverlo o se repite",
+     "solucion": [
+      "Trátalo como impago y avisa a operaciones: puede ser señal de baja."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c4",
+     "causa": "Incidencia de nuestro banco",
+     "como_confirmar": "Límite de cobros SEPA alcanzado o error de remesa",
+     "solucion": [
+      "Avisa a Tomás; cualquier cobro por otra vía lo autoriza él."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Escribe al cliente hoy con el motivo y la fecha de reintento.",
+    "Marca el estado «recibo devuelto» y la fecha de reintento."
+   ],
+   "que_no_hacer": [
+    "No pidas transferencia por defecto: otra vía de pago la autoriza Tomás.",
+    "No dejes pasar 5 días sin reintento.",
+    "No pongas datos bancarios en la app ni en el repositorio."
+   ],
+   "escalar": {
+    "cuando": "Segunda devolución del mismo cliente, devolución ordenada por el cliente o fallo de nuestro banco",
+    "a": "direccion"
+   },
+   "exito": "Recibo cobrado en el reintento dentro de 5 días.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_alertas/generar_alertas.py",
+     "linea": 210,
+     "autor": "RO",
+     "nota": "adm_sepa: alta, 48 h; se resuelve cobrando por otra vía o en la remesa siguiente"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 433,
+     "autor": "RO",
+     "nota": "0 devueltos / reintento en 5 días / sin reintento; Hormozi: se recupera un tercio reintentando (por verificar)"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 325,
+     "autor": "Tomás",
+     "nota": "Tarjeta el primer cobro y luego SEPA; otra vía, Tomás"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/ejemplos/admin.md",
+     "linea": 193,
+     "autor": "RO",
+     "nota": "Ejemplo real de incidencia SEPA propia (el cobro por transferencia exige OK de Tomás)"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 82,
+     "autor": "RO",
+     "nota": "Cobros con incidencia bancaria desde el buzón de administración"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 2026,
+     "autor": "Cole Gordon",
+     "nota": "Mensaje por causa y siempre con fecha de reintento"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/01_FUNDAMENTOS_NUMEROS.md",
+     "linea": 8160,
+     "autor": "Hormozi",
+     "nota": "Reintentar: los cobros fallidos son churn involuntario"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "transferencia",
+     "no quiero domiciliar",
+     "pagar con tarjeta",
+     "otra forma de pago",
+     "aplazar",
+     "pagar a 60 días",
+     "sin SEPA",
+     "pago trimestral"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Respuesta mientras decide Tomás",
+     "texto": "Buenos días {nombre},\n\nNuestra forma de cobro es la domiciliación SEPA: es lo que nos permite no perseguir facturas y tener el trabajo centrado en vuestras campañas. Lo consulto internamente y te digo algo antes del {fecha}.\n\nUn abrazo,\n{firma}"
+    },
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Escalado a Tomás",
+     "texto": "Tomás: {cliente} pide pagar por {via} porque {motivo}. ¿Aceptamos la excepción o mantenemos SEPA?"
+    }
+   ],
+   "reglas_relacionadas": [
+    "cobro_sepa"
+   ],
+   "id": "personas_admin_cliente_pide_otra_via_pago",
+   "titulo": "Un cliente pide pagar por transferencia, tarjeta o con aplazamiento en vez de SEPA",
+   "puestos": [
+    "administracion",
+    "ventas_ro",
+    "account"
+   ],
+   "sintoma": "El cliente no quiere firmar el mandato SEPA o pide otra forma o plazo de pago.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Es el primer mes del Método (que va con tarjeta) o la cuota recurrente?",
+     "donde": "Contrato y protocolo de lanzamiento",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Por qué lo pide: política interna, desconfianza, caja?",
+     "donde": "Respuesta del cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay ya una excepción aprobada por Tomás para este cliente?",
+     "donde": "Registro de decisiones",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Confusión con el primer pago",
+     "como_confirmar": "Le pedimos tarjeta para el mes 1",
+     "solucion": [
+      "Explica: el primer mes, tarjeta; desde el segundo, domiciliación."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Preferencia o política de su empresa",
+     "como_confirmar": "Lo dice expresamente",
+     "solucion": [
+      "No ofrezcas alternativas: escala a Tomás con el motivo."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Excepción ya aprobada",
+     "como_confirmar": "Consta OK de Tomás",
+     "solucion": [
+      "Aplícala tal cual y anótala en la ficha."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Responde que lo consultas y escala a Tomás en el día."
+   ],
+   "que_no_hacer": [
+    "No ofrezcas transferencia, tarjeta ni plazo largo por tu cuenta.",
+    "No metas la excepción en el contrato sin OK de Tomás."
+   ],
+   "escalar": {
+    "cuando": "Siempre que se pida otra vía distinta de SEPA (salvo el primer mes con tarjeta)",
+    "a": "direccion"
+   },
+   "exito": "Mandato SEPA firmado o excepción aprobada por Tomás y anotada.",
+   "fuentes": [
+    {
+     "fichero": "ro-equipo:40_MEMORIA/feedback_cobros_sepa.md",
+     "linea": 17,
+     "autor": "Tomás",
+     "nota": "No ofrecer alternativas (línea 17); si el cliente pide otra vía, se escala a Tomás (línea 18)"
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/feedback_cobros_sepa.md",
+     "linea": 12,
+     "autor": "Tomás",
+     "nota": "Por qué SEPA: caja, morosidad, menos reclamación"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 325,
+     "autor": "Tomás",
+     "nota": "C-D3-17, enmendada el 4-oct: primer cobro con tarjeta, luego SEPA"
+    },
+    {
+     "fichero": "ro-equipo:15_NUEVOS_CLIENTES/_lanzamiento/01_PROTOCOLO_LANZAMIENTO_v3.md",
+     "linea": 78,
+     "autor": "Tomás",
+     "nota": "Primer pago con tarjeta, no por domiciliación"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 24: cobro: primero con tarjeta, luego SEPA."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "factura mal",
+     "factura errónea",
+     "error en la factura",
+     "rectificativa",
+     "abono",
+     "datos fiscales mal",
+     "cobrado de más",
+     "importe equivocado",
+     "factura duplicada"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Error que toca su dinero",
+     "texto": "Buenos días {nombre},\n\nTienes razón: en la factura {numero} os cobramos {importe_mal} en lugar de {importe_bien}. El error es nuestro.\n\nTe propongo dos opciones: devolvemos la diferencia esta semana o la descontamos en la factura de {mes_siguiente}. Dime cuál prefieres.\n\nTe enviaré la factura rectificativa en cuanto me digas.\n\nUn abrazo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "muro_direccion"
+   ],
+   "id": "personas_admin_factura_mal_emitida",
+   "titulo": "Una factura se emitió mal (importe, datos fiscales o concepto)",
+   "puestos": [
+    "administracion"
+   ],
+   "sintoma": "El cliente o administración detecta una factura con importe, datos fiscales, concepto o fecha incorrectos, o un cargo de más.",
+   "gravedad": "alta",
+   "plazo": "Hoy (si toca dinero del cliente)",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué está mal exactamente: importe, datos, concepto, duplicado?",
+     "donde": "PDF de Holded y contrato",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Ya se cobró por SEPA?",
+     "donde": "Holded y banco",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿El error viene de Airtable, de un cambio de cuota no reflejado o de la emisión?",
+     "donde": "Airtable (lectura) y cambios del mes",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Afecta a más clientes (error de lote)?",
+     "donde": "Facturas del mismo día",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Datos fiscales erróneos",
+     "como_confirmar": "CIF, razón social o dirección mal",
+     "solucion": [
+      "Emite la rectificativa con los datos correctos.",
+      "Corrige la ficha para el mes siguiente."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Importe de más ya cobrado",
+     "como_confirmar": "Cargo SEPA por encima de lo pactado",
+     "solucion": [
+      "Admite el error sin matices y propón dos formas de compensar (devolución o descuento en la siguiente).",
+      "Que decida el cliente."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c3",
+     "causa": "Cambio de cuota no reflejado",
+     "como_confirmar": "La cuota del mes no recoge el cambio pactado",
+     "solucion": [
+      "Rectifica y añade el cambio al documento del mes y a Airtable."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Error de lote",
+     "como_confirmar": "Varias facturas con el mismo fallo",
+     "solucion": [
+      "Para la emisión, revisa el lote entero y avisa a Tomás."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Si ya se cobró de más, escribe hoy al cliente admitiendo el error.",
+    "No borres la factura: se corrige con rectificativa; la gestoría confirma el tratamiento."
+   ],
+   "que_no_hacer": [
+    "No expliques por qué pasó antes de admitir que pasó.",
+    "No borres ni edites una factura emitida: rectificativa.",
+    "No decidas un gesto económico extra: en error grave, dirección."
+   ],
+   "escalar": {
+    "cuando": "Error de lote, cliente molesto o compensación por encima de la diferencia (se habla primero con Coti)",
+    "a": "direccion"
+   },
+   "exito": "Rectificativa emitida y diferencia devuelta o descontada en la fecha que eligió el cliente; causa corregida en origen.",
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 284,
+     "autor": "Tomás",
+     "nota": "Admitir sin matices, dos formas de compensación, decide el cliente; en error grave, Dirección"
+    },
+    {
+     "fichero": "ro-equipo:30_SKILLS/redacta-mail-ro/PLAYBOOK.md",
+     "linea": 82,
+     "autor": "RO",
+     "nota": "Correcciones de datos fiscales desde administración"
+    },
+    {
+     "fichero": "hormozi-cole-gordon:CEREBRO/15_ENTREGA_RETENCION_Y_UPSELLS.md",
+     "linea": 1960,
+     "autor": "Hormozi",
+     "nota": "Facturar bien todos los contratos: se pierde mucho dinero por no hacerlo"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+     "linea": 78,
+     "autor": "RO",
+     "nota": "Tratamiento contable: la gestoría (Octoedro)"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "RO",
+     "nota": "Factura rectificativa en vez de borrar: normativa española de facturación; sin SOP interno"
+    },
+    {
+     "fichero": "decision_tomas_2026-10-04",
+     "autor": "Tomás",
+     "nota": "Respuesta n.º 22: compensaciones: si hay que solventar algo, primero se habla con Coti."
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.puente_de_la_cuota"
+    ],
+    "palabras_clave": [
+     "cambio de cuota",
+     "subir la cuota",
+     "bajar la cuota",
+     "descuento",
+     "pausa",
+     "baja de cliente",
+     "add-on",
+     "extra este mes",
+     "prorrateo"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Al account que trae un cambio sin aprobación",
+     "texto": "{nombre}, para aplicar el cambio de cuota de {cliente} necesito el OK por escrito de {aprobador}, con importe y mes desde el que aplica. Con eso lo dejo en la facturación de {mes}."
+    }
+   ],
+   "reglas_relacionadas": [
+    "precio_coti_tomas",
+    "muro_direccion",
+    "airtable_solo_lectura"
+   ],
+   "id": "personas_admin_cambio_de_cuota",
+   "titulo": "Cambia la cuota de un cliente (subida, bajada, extra, pausa o baja)",
+   "puestos": [
+    "administracion",
+    "account",
+    "direccion"
+   ],
+   "sintoma": "Un cliente pasa a pagar distinto: alta de un extra, rebaja, pausa o baja. Finanzas lo lista en «Bajas y cambios de cuota» para reflejarlo en la facturación del mes.",
+   "gravedad": "media",
+   "plazo": "Antes del cierre de facturación del mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Quién lo aprobó y dónde consta por escrito?",
+     "donde": "Registro de decisiones / correo de Tomás o Coti",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Desde qué mes aplica y si hay prorrateo?",
+     "donde": "Acuerdo con el cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Está en el documento del mes y en Airtable?",
+     "donde": "Finanzas › Bajas y cambios de cuota",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Coincide en el mismo mes con otra mala noticia para ese cliente?",
+     "donde": "Historial del cliente",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Cambio sin aprobación escrita",
+     "como_confirmar": "Solo hay un acuerdo verbal del account",
+     "solucion": [
+      "No lo apliques: pide el OK por escrito (precio, Coti; excepción, Tomás)."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Fecha o prorrateo sin definir",
+     "como_confirmar": "No dice desde cuándo",
+     "solucion": [
+      "Pide la fecha exacta y si se prorratea."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "No reflejado en facturación",
+     "como_confirmar": "No está en el documento ni en Airtable",
+     "solucion": [
+      "Añádelo antes del cierre para que el puente de la cuota cuadre."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del cierre"
+    },
+    {
+     "id": "c4",
+     "causa": "Dos malas noticias el mismo mes",
+     "como_confirmar": "Subida o recorte coincide con otro ajuste",
+     "solucion": [
+      "Avisa a dirección para separar los ajustes en meses distintos."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Comprueba la aprobación escrita antes de tocar nada.",
+    "Refleja el cambio en el documento del mes y en Airtable antes del día 28."
+   ],
+   "que_no_hacer": [
+    "No fijes ni negocies precio: administración factura, no decide.",
+    "No apliques una bajada para retener: no es retener.",
+    "No juntes una subida con otro ajuste desfavorable el mismo mes.",
+    "No edites Airtable si no eres administración."
+   ],
+   "escalar": {
+    "cuando": "No hay aprobación escrita, o la baja es por insatisfacción",
+    "a": "direccion"
+   },
+   "exito": "Cambio aprobado por escrito, reflejado en la factura del mes y puente de la cuota cuadrado al euro.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 102,
+     "autor": "RO",
+     "nota": "Bajas y cambios de cuota a reflejar en la facturación del mes (documento + Airtable)"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 136,
+     "autor": "Tomás",
+     "nota": "Precio, Coti; excepción, Tomás; administración nunca"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 339,
+     "autor": "Tomás",
+     "nota": "Dos malas noticias no comparten mes"
+    },
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 298,
+     "autor": "Tomás",
+     "nota": "Retener por precio no es retener"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 19,
+     "autor": "RO",
+     "nota": "Proceso P7 baja o modificación de cliente (documento en carpeta confidencial, no en repo)"
+    },
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 543,
+     "autor": "RO",
+     "nota": "Puente de la cuota: anterior + altas − bajas ± cambios, al euro"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "cierre de facturación",
+     "fin de mes",
+     "emitir facturas",
+     "remesa SEPA",
+     "día 28",
+     "día 2",
+     "facturación del mes",
+     "automatización de facturas"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Seguimiento a Tomás (días 29, 30 y 1)",
+     "texto": "Tomás: facturación de {mes} lista para emitir el día 2. Cambios: {cambios}. Alertas para revisar: {alertas}. Si no me dices nada, el día 2 se emite igual que el mes anterior con estos cambios."
+    }
+   ],
+   "reglas_relacionadas": [
+    "airtable_solo_lectura",
+    "cobro_sepa"
+   ],
+   "id": "personas_admin_cierre_facturacion_fin_mes",
+   "titulo": "Llegan los últimos días del mes: toca el cierre de facturación",
+   "puestos": [
+    "administracion",
+    "direccion"
+   ],
+   "sintoma": "Aviso programado a administración el 3.er laborable antes de fin de mes, con altas del mes, altas previstas, diferencias Airtable-Holded e incongruencias abiertas.",
+   "gravedad": "alta",
+   "plazo": "Antes del último laborable del mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Están todas las altas del mes en Airtable?",
+     "donde": "Aviso de cierre y Finanzas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Están reflejados los cambios y bajas del mes?",
+     "donde": "Finanzas › Bajas y cambios",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Quedan diferencias entre Airtable y lo emitido en Holded?",
+     "donde": "Finanzas › Diferencias con lo emitido",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Tomás ha revisado la columna de alertas?",
+     "donde": "Escalera de seguimiento 29/30/1",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Altas sin dar de alta",
+     "como_confirmar": "Firmados sin línea",
+     "solucion": [
+      "Dalas de alta antes de la automatización del día 28."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del 28"
+    },
+    {
+     "id": "c2",
+     "causa": "Cambios no reflejados",
+     "como_confirmar": "Cambio aprobado que no está",
+     "solucion": [
+      "Añádelo al documento del mes y a Airtable."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del 28"
+    },
+    {
+     "id": "c3",
+     "causa": "Diferencias sin explicar",
+     "como_confirmar": "Lista de diferencias no vacía",
+     "solucion": [
+      "Explica cada una o corrígela; ver ficha de cuota que no cuadra."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del 30"
+    },
+    {
+     "id": "c4",
+     "causa": "Falta la validación de Tomás",
+     "como_confirmar": "Sin respuesta a la columna de alertas",
+     "solucion": [
+      "Sigue la escalera: recordatorio el 29, el 30 y el 1.",
+      "Si no hay cambios, se emite el día 2 igual que el mes anterior."
+     ],
+     "quien": "administracion",
+     "plazo": "Del 29 al 2"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Revisa el resumen del aviso y resuelve cada línea.",
+    "Pulsa «Ya lo he hecho» cuando el cierre esté listo; si no, escala a Tomás."
+   ],
+   "que_no_hacer": [
+    "No emitas antes de revisar diferencias e incongruencias.",
+    "No esperes al día 2 para descubrir altas sin línea.",
+    "No emitas ni toques Airtable desde la app."
+   ],
+   "escalar": {
+    "cuando": "El último laborable el cierre sigue sin marcarse como hecho",
+    "a": "direccion"
+   },
+   "exito": "Facturas emitidas el día 2 sin diferencias abiertas y remesa SEPA pasada.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:avisos_programados.py",
+     "linea": 470,
+     "autor": "RO",
+     "nota": "Aviso de cierre de facturación: 3 últimos laborables, resumen de altas, diferencias e incongruencias; escala a Tomás"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 92,
+     "autor": "RO",
+     "nota": "Automatización el día 28, revisión de alertas por Tomás, emisión el día 2 si no hay cambios"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 25,
+     "autor": "Tomás",
+     "nota": "Escalera de follow-up 29/30/1 y emisión igual al mes anterior el día 2"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 39,
+     "autor": "Tomás",
+     "nota": "D6 activa desde agosto"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 206,
+     "autor": "RO",
+     "nota": "El cargo SEPA del mes entra el día 2"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.puente_de_la_cuota"
+    ],
+    "palabras_clave": [
+     "no cuadra",
+     "diferencias Airtable Holded",
+     "puente de la cuota",
+     "descuadre",
+     "lo facturado no coincide",
+     "falta facturar",
+     "facturado de más"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A Tomás, si queda diferencia sin explicar",
+     "texto": "Tomás: el puente de {mes} no cierra por {importe}. Explicado: {explicado}. Sin explicar: {sin_explicar}. Propongo {propuesta}."
+    }
+   ],
+   "reglas_relacionadas": [
+    "airtable_solo_lectura"
+   ],
+   "id": "personas_admin_cuota_no_cuadra",
+   "titulo": "La cuota no cuadra: Airtable no coincide con Holded o el puente no cierra",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "sintoma": "Finanzas muestra «Diferencias con lo emitido en Holded», o el puente (cuota anterior + altas − bajas ± cambios) no cierra al euro. Ámbar: diferencia < 100 € explicada.",
+   "gravedad": "media",
+   "plazo": "Antes del cierre del mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Lista las diferencias cliente a cliente.",
+     "donde": "Finanzas › Airtable frente a Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Separa extras, prorrateos y cambios que Airtable no recoge.",
+     "donde": "Documento de cambios del mes",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Busca facturas emitidas dos veces o sin emitir.",
+     "donde": "Holded",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Busca firmados sin ficha en Airtable.",
+     "donde": "Finanzas › firmados sin alta",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Extra o prorrateo puntual",
+     "como_confirmar": "Diferencia que explica un extra del mes",
+     "solucion": [
+      "Anota la explicación; si < 100 €, queda en ámbar explicado."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del cierre"
+    },
+    {
+     "id": "c2",
+     "causa": "Cambio de cuota no recogido",
+     "como_confirmar": "Cambio aprobado que no está en Airtable",
+     "solucion": [
+      "Refléjalo en Airtable y en el documento del mes."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del cierre"
+    },
+    {
+     "id": "c3",
+     "causa": "Factura duplicada u omitida",
+     "como_confirmar": "Dos facturas o ninguna para un cliente",
+     "solucion": [
+      "Corrige con rectificativa o emite la que falta."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Cliente firmado sin ficha",
+     "como_confirmar": "Factura en Holded sin línea en Airtable",
+     "solucion": [
+      "Da de alta la línea."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Explica cada diferencia por escrito antes del cierre; lo que no tenga explicación va a Tomás."
+   ],
+   "que_no_hacer": [
+    "No ajustes Airtable para que cuadre a la fuerza.",
+    "No des por buena una diferencia sin explicación escrita."
+   ],
+   "escalar": {
+    "cuando": "Diferencia sin explicar de 100 € o más, o incongruencia de gravedad alta",
+    "a": "direccion"
+   },
+   "exito": "Puente que cierra al euro o diferencia < 100 € explicada.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 543,
+     "autor": "RO",
+     "nota": "Puente de la cuota: cierra / < 100 € explicada / no cierra"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 173,
+     "autor": "RO",
+     "nota": "Diferencias con lo emitido en Holded"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 437,
+     "autor": "RO",
+     "nota": "Extras, prorrateos y cambios que Airtable no recoge"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 409,
+     "autor": "RO",
+     "nota": "Incongruencias para decidir: decide Tomás"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.movimientos_sin_conciliar"
+    ],
+    "palabras_clave": [
+     "sin conciliar",
+     "conciliación",
+     "movimientos pendientes",
+     "gasto sin factura",
+     "a quién le pido esta factura",
+     "justificante",
+     "factura de proveedor",
+     "extracto"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Petición de factura por ClickUp",
+     "texto": "Necesito la factura de {proveedor} de {mes}, importe {importe} {divisa}. Se deja en la carpeta del mes: {enlace}. Fecha: {dia}. Si no existe factura, dímelo y la marco como tal."
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_movimientos_sin_conciliar",
+   "titulo": "Quedan movimientos sin conciliar o gastos sin factura",
+   "puestos": [
+    "administracion",
+    "operaciones"
+   ],
+   "sintoma": "Movimientos de banco sin casar con documento. Verde 0 al cierre; rojo 50 o más.",
+   "gravedad": "media",
+   "plazo": "Semanal, y 0 al cierre",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Separa por divisa antes de ordenar por importe.",
+     "donde": "Listado de pendientes de Holded",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Clasifica cada gasto por familia y dueño (manda el proveedor, no el importe).",
+     "donde": "Mapa de enrutado de gastos",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Revisa alias de pago y proveedores mal catalogados.",
+     "donde": "Tabla de alias del mapa",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "Mira si el pago ya tiene factura en Holded sin casar (transferencia ≠ factura).",
+     "donde": "Holded",
+     "si_falla": "c4"
+    },
+    {
+     "paso": 5,
+     "comprueba": "Comprueba que el dueño sigue en el equipo.",
+     "donde": "ClickUp workspace",
+     "si_falla": "c5"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Factura no pedida a su dueño",
+     "como_confirmar": "Nadie se la pidió a quien provocó el gasto",
+     "solucion": [
+      "Pide la factura al responsable por ClickUp, agrupado por persona, máximo cinco por persona y semana."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c2",
+     "causa": "Factura ya en Holded sin casar",
+     "como_confirmar": "Hay factura del proveedor pero el movimiento va como transferencia",
+     "solucion": [
+      "Casa movimiento y factura; no persigas lo que ya tienes."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Gasto que no tendrá factura",
+     "como_confirmar": "El dueño confirma que no existe",
+     "solucion": [
+      "Márcalo «NO SE VA A APORTAR» para que la gestoría le dé tratamiento."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Dueño que ya no está",
+     "como_confirmar": "Persona fuera del workspace",
+     "solucion": [
+      "Pásalo a su jefa de célula."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c5",
+     "causa": "Nadie prioriza las peticiones",
+     "como_confirmar": "Las tareas de facturas se arrastran",
+     "solucion": [
+      "Avisa a operaciones para que lo priorice en los dailies; no insistas por correo."
+     ],
+     "quien": "operaciones",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Reparte el listado por persona, no por gasto.",
+    "El último barrido, y solo ese, va a Tomás."
+   ],
+   "que_no_hacer": [
+    "No mandes el primer barrido a Tomás.",
+    "No pidas facturas al equipo por correo: por ClickUp.",
+    "No des por hecho «se la pedí»: hecho es la factura subida a la carpeta.",
+    "No crees tareas en lote sin el visto bueno."
+   ],
+   "escalar": {
+    "cuando": "Más de 50 movimientos sin conciliar a una semana del cierre",
+    "a": "operaciones"
+   },
+   "exito": "0 movimientos sin conciliar al cierre del mes.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 609,
+     "autor": "RO",
+     "nota": "Movimientos sin conciliar: 0 al cierre / < 50 / ≥ 50 (propuesta sin firmar)"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+     "linea": 14,
+     "autor": "RO",
+     "nota": "El primer barrido nunca es Tomás; ante duda, operaciones"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+     "linea": 18,
+     "autor": "RO",
+     "nota": "Sin documento no hay movimiento; «NO SE VA A APORTAR»"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+     "linea": 46,
+     "autor": "RO",
+     "nota": "Manda el proveedor; ojo con la divisa"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/SKILL.md",
+     "linea": 66,
+     "autor": "RO",
+     "nota": "Mensaje por ClickUp, corto; más de cinco por persona, a la semana siguiente"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 73,
+     "autor": "RO",
+     "nota": "Transferencia ≠ factura"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 79,
+     "autor": "RO",
+     "nota": "Circuito y criterio de hecho: factura subida a la carpeta del mes"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 17,
+     "autor": "RO",
+     "nota": "Sin documento no hay movimiento"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.facturas_de_meta_en_la_contabilidad"
+    ],
+    "palabras_clave": [
+     "facturas de Meta",
+     "Meta sin factura",
+     "Facebook factura",
+     "gasto publicidad sin factura",
+     "administrador de anuncios facturas",
+     "facturas de anuncios",
+     "gasto de Meta"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "A la responsable de publicidad",
+     "texto": "{nombre}, necesito las facturas de Meta de {mes} para la contabilidad. Se dejan en la carpeta del mes: {enlace}. ¿Las tienes antes del {fecha}?"
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_facturas_meta",
+   "titulo": "Hay gasto de Meta sin su factura en la contabilidad",
+   "puestos": [
+    "administracion",
+    "jefa_publicidad"
+   ],
+   "sintoma": "El gasto de Meta contabilizado no llega al gasto real. Verde 100 %; rojo < 90 %.",
+   "gravedad": "media",
+   "plazo": "Antes del cierre del mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "Pide a dirección la cifra de gasto real de Meta del mes (administración no la ve).",
+     "donde": "Finanzas › Facturas de Meta",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "Descarga las facturas del administrador de anuncios.",
+     "donde": "Meta Business › facturación",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "Recuerda que Meta cobra a cuenta: un movimiento no es una factura.",
+     "donde": "Holded",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Facturas sin descargar",
+     "como_confirmar": "No están en Holded",
+     "solucion": [
+      "Descárgalas del administrador de anuncios y súbelas a Holded."
+     ],
+     "quien": "administracion",
+     "plazo": "Antes del cierre"
+    },
+    {
+     "id": "c2",
+     "causa": "Sin acceso a la facturación de Meta",
+     "como_confirmar": "No puedes entrar",
+     "solucion": [
+      "Pide las facturas a la responsable de publicidad (dueña de la familia)."
+     ],
+     "quien": "jefa_publicidad",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Casado 1 a 1 por error",
+     "como_confirmar": "Se busca factura por cada cargo",
+     "solucion": [
+      "Casa por totales de la factura de Meta, no cargo a cargo."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Pide la cifra a Tomás y las facturas a publicidad si no tienes acceso."
+   ],
+   "que_no_hacer": [
+    "No intentes casar cada cargo de Meta con una factura.",
+    "No pidas el importe al equipo: lo da dirección."
+   ],
+   "escalar": {
+    "cuando": "Menos del 90 % al cierre",
+    "a": "direccion"
+   },
+   "exito": "100 % del gasto de Meta con factura en Holded al cierre.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 587,
+     "autor": "RO",
+     "nota": "Facturas de Meta: 100 % / 90-99 % / < 90 % (bandas sin firmar)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 211,
+     "autor": "RO",
+     "nota": "El importe de Meta lo ve dirección; Meta factura por tarjeta: bajar facturas y subirlas a Holded"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 25,
+     "autor": "RO",
+     "nota": "Publicidad: responsable la jefa de paid; suplente operaciones"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Meta no casa 1:1: cobra a cuenta y emite factura con totales"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.cierre_del_mes"
+    ],
+    "palabras_clave": [
+     "cierre del mes",
+     "cierre mensual",
+     "cierre tarde",
+     "día 10",
+     "presentar el cierre",
+     "cierre contable"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Presentación del cierre con pendientes",
+     "texto": "Tomás: cierre de {mes} presentado. Pendiente: {pendientes}, con dueño y fecha. Necesito de ti: {decision}."
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_cierre_mes_tarde",
+   "titulo": "El cierre del mes pasa del día 10",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "sintoma": "El cierre del mes no se ha presentado a Tomás el día 10. Ámbar días 11-12; rojo después del 12.",
+   "gravedad": "media",
+   "plazo": "Antes del día 12",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Llegaron las facturas de colaboradores en su fecha?",
+     "donde": "Buzón de facturas",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Cuántos movimientos quedan sin conciliar?",
+     "donde": "Holded",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Faltan facturas de Meta o de herramientas?",
+     "donde": "Finanzas",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Hay decisiones de Tomás pendientes que bloquean?",
+     "donde": "Incongruencias abiertas",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Facturas de colaboradores tarde",
+     "como_confirmar": "Llegaron después de la fecha fija",
+     "solucion": [
+      "Recuerda la fecha fija con el aviso programado y persigue a quien falte."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Conciliación atrasada",
+     "como_confirmar": "Muchos movimientos pendientes",
+     "solucion": [
+      "Ve a la ficha de movimientos sin conciliar."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Faltan facturas de gasto",
+     "como_confirmar": "Meta o herramientas sin factura",
+     "solucion": [
+      "Pide por ClickUp a cada dueño."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c4",
+     "causa": "Bloqueo de decisión",
+     "como_confirmar": "Incongruencia esperando a Tomás",
+     "solucion": [
+      "Pide la decisión con fecha y presenta el cierre con la nota de lo pendiente."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Presenta el cierre en cuanto puedas, con lo pendiente señalado, antes que esperar a tenerlo perfecto."
+   ],
+   "que_no_hacer": [
+    "No retrases el cierre por un dato que puede ir marcado como pendiente.",
+    "No conviertas el cierre en anual y reactivo."
+   ],
+   "escalar": {
+    "cuando": "Pasa del día 12",
+    "a": "direccion"
+   },
+   "exito": "Cierre presentado el día 10 o antes tres meses seguidos.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 565,
+     "autor": "RO",
+     "nota": "Cierre del mes: día 10 o antes / 11-12 / después del 12"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 91,
+     "autor": "RO",
+     "nota": "Cierre mensual presentado el día 10 como máximo (1-sep): manda sobre los «5 días» del diseño de julio"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 17,
+     "autor": "RO",
+     "nota": "Diseño de julio: cierre mensual en 5 días (superado por la fecha fija del 1-sep)"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 15,
+     "autor": "RO",
+     "nota": "El cierre anual y reactivo es una de las causas raíz"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [
+     "administracion.dias_de_cobro"
+    ],
+    "palabras_clave": [
+     "días de cobro",
+     "tardamos en cobrar",
+     "periodo medio de cobro",
+     "cobramos tarde",
+     "DSO",
+     "cobros lentos"
+    ]
+   },
+   "guiones": [],
+   "reglas_relacionadas": [
+    "cobro_sepa",
+    "impago_corte"
+   ],
+   "id": "personas_admin_dias_cobro_altos",
+   "titulo": "Se tarda demasiado en cobrar (días medios de cobro altos)",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion"
+   ],
+   "sintoma": "Días medios desde la factura al cobro por encima de 15 (ámbar) o de 60 (rojo, tope legal entre empresas).",
+   "gravedad": "media",
+   "plazo": "Este mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Qué clientes tiran de la media?",
+     "donde": "Finanzas › Cobros por antigüedad",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Esos clientes tienen mandato SEPA?",
+     "donde": "Ficha de cliente",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay recibos devueltos sin reintento?",
+     "donde": "Finanzas › devueltos",
+     "si_falla": "c3"
+    },
+    {
+     "paso": 4,
+     "comprueba": "¿Las facturas viejas son pequeñas y deforman la media?",
+     "donde": "Antigüedad media por importe",
+     "si_falla": "c4"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Clientes sin SEPA",
+     "como_confirmar": "Pagan por transferencia",
+     "solucion": [
+      "Pide el mandato y escala a Tomás si se niegan."
+     ],
+     "quien": "administracion",
+     "plazo": "Este mes"
+    },
+    {
+     "id": "c2",
+     "causa": "Devueltos sin reintentar",
+     "como_confirmar": "Recibos devueltos parados",
+     "solucion": [
+      "Reintenta en 5 días (ficha SEPA devuelto)."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c3",
+     "causa": "Impagos viejos sin decisión",
+     "como_confirmar": "Recibos de más de 60 días",
+     "solucion": [
+      "Llévalos a Tomás para decidir (ficha impago a 60 días)."
+     ],
+     "quien": "administracion",
+     "plazo": "Esta semana"
+    },
+    {
+     "id": "c4",
+     "causa": "Media deformada por restos pequeños",
+     "como_confirmar": "La media ponderada por importe es mucho menor",
+     "solucion": [
+      "Explícalo en el informe y limpia los restos con decisión de Tomás."
+     ],
+     "quien": "administracion",
+     "plazo": "Este mes"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Lista los cinco clientes que más suben la media y su acción."
+   ],
+   "que_no_hacer": [
+    "No aceptes plazos de pago largos para ganar un cliente.",
+    "No mezcles la media con las facturas del día 1."
+   ],
+   "escalar": {
+    "cuando": "Más de 60 días de media",
+    "a": "finanzas_direccion"
+   },
+   "exito": "Días de cobro ≤ 15 de media.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:indicadores.json",
+     "linea": 521,
+     "autor": "RO",
+     "nota": "Días de cobro ≤ 15 / 16-60 / > 60; tope legal 60 días (Ley 15/2010)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 365,
+     "autor": "RO",
+     "nota": "Antigüedad media por importe: las facturas viejas son pequeñas"
+    },
+    {
+     "fichero": "ro-equipo:40_MEMORIA/feedback_cobros_sepa.md",
+     "linea": 12,
+     "autor": "Tomás",
+     "nota": "SEPA para controlar caja y evitar morosidad"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "Airtable",
+     "cambiar Airtable",
+     "editar facturación",
+     "tocar la tabla",
+     "corregir la cuota en Airtable",
+     "ajuste de facturación"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Respuesta a quien quiere editar",
+     "texto": "{nombre}, el Airtable de facturación solo lo toca administración. Pásame el cambio con la aprobación por escrito y lo dejo en la hoja de ajustes para el cierre."
+    }
+   ],
+   "reglas_relacionadas": [
+    "airtable_solo_lectura"
+   ],
+   "id": "personas_admin_ajuste_airtable",
+   "titulo": "Alguien quiere cambiar el Airtable de facturación",
+   "puestos": [
+    "administracion",
+    "finanzas_direccion",
+    "account",
+    "operaciones"
+   ],
+   "sintoma": "Alguien que no es administración pide o intenta editar el Airtable de facturación.",
+   "gravedad": "media",
+   "plazo": "Hoy",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Quién pide el cambio y por qué?",
+     "donde": "Mensaje recibido",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Es un cambio de cuota aprobado?",
+     "donde": "Aprobación escrita",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Se ha editado ya sin permiso?",
+     "donde": "Historial de Airtable",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Necesita reflejar un cambio",
+     "como_confirmar": "Trae un cambio de cuota",
+     "solucion": [
+      "Que lo pase a administración con la aprobación; el ajuste va en la hoja aparte."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    },
+    {
+     "id": "c2",
+     "causa": "Cambio sin aprobar",
+     "como_confirmar": "No hay OK escrito",
+     "solucion": [
+      "Ficha de cambio de cuota."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Edición sin permiso",
+     "como_confirmar": "El historial muestra a otra persona",
+     "solucion": [
+      "Revierte, avisa a dirección y revisa permisos."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Recuerda que Airtable es de solo lectura salvo para administración."
+   ],
+   "que_no_hacer": [
+    "No edites Airtable si no eres administración.",
+    "No conectes automatizaciones que escriban en él."
+   ],
+   "escalar": {
+    "cuando": "Edición sin permiso detectada",
+    "a": "direccion"
+   },
+   "exito": "Airtable solo editado por administración; ajustes en hoja aparte.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 69,
+     "autor": "RO",
+     "nota": "Airtable de solo lectura salvo administración; ajustes en hoja aparte (fuente original no está en repo)"
+    },
+    {
+     "fichero": "ro-app:modulos/finanzas.js",
+     "linea": 9,
+     "autor": "RO",
+     "nota": "La app nunca toca Airtable"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "descuento",
+     "rebaja",
+     "precio especial",
+     "me hacéis precio",
+     "condiciones",
+     "aplazar cuota",
+     "pagar menos",
+     "regalo de un mes"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "correo",
+     "para": "cliente",
+     "cuando": "Respuesta neutra",
+     "texto": "Buenos días {nombre},\n\nGracias por escribirme. Esto no lo decido yo: se lo paso hoy a {responsable} y te contestamos antes del {fecha}.\n\nUn abrazo,\n{firma}"
+    }
+   ],
+   "reglas_relacionadas": [
+    "precio_coti_tomas",
+    "muro_direccion",
+    "no_bajar_precio_por_silencio"
+   ],
+   "id": "personas_admin_cliente_pide_precio",
+   "titulo": "Un cliente pide a administración un precio, descuento o condición",
+   "puestos": [
+    "administracion"
+   ],
+   "sintoma": "Un cliente escribe o llama a administración pidiendo precio, descuento, mes gratis o una condición especial.",
+   "gravedad": "media",
+   "plazo": "48 h",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Es precio de catálogo o excepción sobre su contrato?",
+     "donde": "Mensaje del cliente",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿Va ligado a un impago o a una queja?",
+     "donde": "Finanzas e historial",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay ya una excepción aprobada?",
+     "donde": "Registro de decisiones",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Pregunta de precio o alcance",
+     "como_confirmar": "Pide cuánto cuesta algo",
+     "solucion": [
+      "Deriva a Coti."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c2",
+     "causa": "Excepción o descuento",
+     "como_confirmar": "Pide rebaja o condición",
+     "solucion": [
+      "Deriva a Tomás con el contexto."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Descuento para pagar una deuda",
+     "como_confirmar": "Lo pide junto a un impago",
+     "solucion": [
+      "No negocies: sigue la escalera de impago y lleva la petición a Tomás."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Responde que lo trasladas, sin dar ninguna cifra."
+   ],
+   "que_no_hacer": [
+    "No des ninguna cifra, ni siquiera orientativa.",
+    "No prometas que se estudiará favorablemente."
+   ],
+   "escalar": {
+    "cuando": "Siempre: precio a Coti, excepción a Tomás",
+    "a": "direccion"
+   },
+   "exito": "Petición trasladada en el día y respondida por quien decide.",
+   "fuentes": [
+    {
+     "fichero": "central:skills/criterio-tomas-ro/LEYES.md",
+     "linea": 136,
+     "autor": "Tomás",
+     "nota": "Administración no fija precio; precio, Coti; excepción, Tomás"
+    },
+    {
+     "fichero": "ro-app:fuentes_consejos/conocimiento/reglas.json",
+     "linea": 1797,
+     "autor": "RO",
+     "nota": "Regla precio_coti_tomas"
+    },
+    {
+     "fichero": "criterio",
+     "autor": "RO",
+     "nota": "Hoy hay precio único fijado por Tomás (mapa §13 n.º 17): ante duda, a Tomás"
+    }
+   ]
+  },
+  {
+   "disparadores": {
+    "tipos_consejo": [],
+    "alertas": [],
+    "indicadores": [],
+    "palabras_clave": [
+     "factura del equipo",
+     "facturas de colaboradores",
+     "mandar factura",
+     "pago al equipo",
+     "día 5",
+     "día 25",
+     "factura freelance"
+    ]
+   },
+   "guiones": [
+    {
+     "canal": "interno",
+     "para": "equipo",
+     "cuando": "Recordatorio",
+     "texto": "{nombre}, me falta tu factura de {mes}. Mándala a facturas@ antes del {fecha} para que entre en el pago del {dia_pago}. Gracias."
+    }
+   ],
+   "reglas_relacionadas": [],
+   "id": "personas_admin_factura_del_equipo",
+   "titulo": "Toca recordar al equipo que mande su factura del mes",
+   "puestos": [
+    "administracion",
+    "rrhh"
+   ],
+   "sintoma": "Aviso programado fijo «factura del equipo»: los colaboradores deben mandar su factura a facturas@ en la fecha fija.",
+   "gravedad": "media",
+   "plazo": "Fecha fija del mes",
+   "diagnostico": [
+    {
+     "paso": 1,
+     "comprueba": "¿Quién falta por mandar factura?",
+     "donde": "Buzón facturas@",
+     "si_falla": "c1"
+    },
+    {
+     "paso": 2,
+     "comprueba": "¿La factura tiene los datos correctos y el importe esperado?",
+     "donde": "Factura recibida",
+     "si_falla": "c2"
+    },
+    {
+     "paso": 3,
+     "comprueba": "¿Hay alias de pago (cobra a un nombre y factura a otro)?",
+     "donde": "Tabla de alias",
+     "si_falla": "c3"
+    }
+   ],
+   "causas": [
+    {
+     "id": "c1",
+     "causa": "Olvido",
+     "como_confirmar": "No ha llegado",
+     "solucion": [
+      "Recordatorio privado con la fecha."
+     ],
+     "quien": "administracion",
+     "plazo": "Fecha fija"
+    },
+    {
+     "id": "c2",
+     "causa": "Factura con error",
+     "como_confirmar": "Datos o importe no cuadran",
+     "solucion": [
+      "Devuélvela pidiendo la corrección concreta."
+     ],
+     "quien": "administracion",
+     "plazo": "48 h"
+    },
+    {
+     "id": "c3",
+     "causa": "Nombre distinto",
+     "como_confirmar": "Cobra y factura con nombres distintos",
+     "solucion": [
+      "Consulta la tabla de alias antes de reclamar."
+     ],
+     "quien": "administracion",
+     "plazo": "Hoy"
+    }
+   ],
+   "acciones_inmediatas": [
+    "Manda el recordatorio solo a quien falta."
+   ],
+   "que_no_hacer": [
+    "No comentes importes de una persona con otra.",
+    "No pagues sin factura: sin documento no hay movimiento."
+   ],
+   "escalar": {
+    "cuando": "Falta la factura el día del lote de pagos",
+    "a": "direccion"
+   },
+   "exito": "100 % de facturas del equipo recibidas antes del lote de pagos.",
+   "fuentes": [
+    {
+     "fichero": "ro-app:_ESTADO_avisos.md",
+     "linea": 12,
+     "autor": "RO",
+     "nota": "Aviso programado «factura del equipo» (reglas no versionadas)"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 90,
+     "autor": "RO",
+     "nota": "Facturas de colaboradores a facturas@ el día 5"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 94,
+     "autor": "RO",
+     "nota": "Pagos al equipo el día 25; facturas antes del 20 (choca con el día 5: punto abierto)"
+    },
+    {
+     "fichero": "skills-compartidas:enrutado-gastos-ro/references/mapa_enrutado.md",
+     "linea": 45,
+     "autor": "RO",
+     "nota": "Alias: colaboradores que cobran a un nombre y facturan a otro"
+    },
+    {
+     "fichero": "central:memoria/project_sistema_admin_2026.md",
+     "linea": 21,
+     "autor": "RO",
+     "nota": "El proceso de pagos a equipo es el molde: fechas fijas, entrada única, doble validación"
+    }
+   ]
+  }
+ ]
+}

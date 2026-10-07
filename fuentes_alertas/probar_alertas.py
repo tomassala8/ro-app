@@ -139,7 +139,8 @@ def permisos():
         st3, _ = get(PUERTO, "modulo/alertas/alertas", p)
         ok((st3 == 200) == (p in ("tomas", "mili")), f"{p}: alertas.json completo {'sí' if st3 == 200 else 'no'} (solo Mili y Tomás)")
         per = personas[p]
-        cp = P.contexto(per, {"asignaciones": asig, "personas": list(personas.values())})
+        cp = P.contexto(per, {"asignaciones": asig, "personas": list(personas.values()),
+                             "clientes": json.loads((AQUI / "data/clientes.json").read_text())})
         todo = bool(set(per["puestos"]) & {"direccion", "operaciones"})
         malas = [a["id"] for a in d["alertas"] if not (todo or a["dueno_id"] == p or a.get("responsable_ahora") == p or a["departamento"] in jefes.get(p, set())
                                                       or (a["departamento"] == "rrhh" and "rrhh" in per["puestos"]))]

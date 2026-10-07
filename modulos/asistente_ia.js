@@ -1,3 +1,4 @@
+import { alcanceAsistente333, listaAsistente333 } from './_alcance_asistente_333.js';
 // modulos/asistente_ia.js · N3 «Asistente IA» (2-oct-2026). Ruta #/asistente-ia y #/asistente-ia/<cliente>.
 // Dos pestañas: «Qué haría hoy» (copiloto del account por cliente) y «Borradores de correo» (Desk).
 // Todo sale de /api/ia/* (ia.py): el servidor arma el contexto con lo que ve esta persona y deja rastro.
@@ -5,7 +6,7 @@
 // Los mismos componentes (modulos/ia_componentes.js) son los que usan la Bandeja, la ficha y Mi día.
 
 import { h, fmt, icono, tile, tiles, chipEstado, chipsFiltro, pestanas, vacio, panel, logoCliente, iniciales, esqueleto } from '../componentes.js';
-import { iaDe, botonIA, panelCopiloto, estilos as estilosIA } from './ia_componentes.js';
+import { iaDe, botonIA, panelCopiloto, panelCerebro, estilos as estilosIA } from './ia_componentes.js';
 
 // Revisión 44 (textos cortados): lo que la pantalla corta con «…» (una línea o el límite de líneas) lleva el texto entero
 // en el title, para que la regla de la tarjeta o el nombre largo no se pierdan. Mira el contenedor mientras se pinta.
@@ -26,6 +27,33 @@ const _MES3 = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'o
 const _fechaDe = iso => (iso ? new Date(String(iso).length <= 10 ? `${iso}T12:00:00` : String(iso).replace(' ', 'T')) : null);
 const fDiaRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}`; };
 const fDiaHoraRO = iso => { const d = _fechaDe(iso); return !d ? '—' : Number.isNaN(+d) ? String(iso) : `${d.getDate()}-${_MES3[d.getMonth()]}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`; };
+
+function fechaListado604(valor) {
+  if (typeof valor !== 'string') return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(valor);
+  if (!m) return null;
+  const [y, mo, dia] = m.slice(1, 4).map(Number), d = new Date(Date.UTC(y, mo - 1, dia));
+  if (d.getUTCFullYear() !== y || d.getUTCMonth() !== mo - 1 || d.getUTCDate() !== dia || Number(m[4] || 0) > 23 || Number(m[5] || 0) > 59 || Number(m[6] || 0) > 59) return null;
+  const zona = m[7];
+  if (zona && zona !== 'Z') {
+    const zh = Number(zona.slice(1, 3)), zm = Number(zona.slice(4));
+    if (zh > 14 || zm > 59 || (zh === 14 && zm !== 0)) return null;
+  }
+  if (!zona) return `${dia}-${_MES3[mo - 1]}${m[4] ? `, ${m[4]}:${m[5]} (zona no declarada)` : ''}`;
+  const instante = new Date(valor.replace(' ', 'T'));
+  if (!Number.isFinite(+instante)) return null;
+  const partes = Object.fromEntries(new Intl.DateTimeFormat('es-ES', { timeZone: 'Europe/Madrid', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(instante).map(p => [p.type, p.value]));
+  return `${partes.day}-${_MES3[Number(partes.month) - 1]}, ${partes.hour}:${partes.minute} (Madrid)`;
+}
+
+function resumenListado604(L) {
+  const conectada = L.estado?.conectada === true;
+  const conexion = conectada ? 'Proveedor disponible según el servidor' : L.estado?.conectada === false ? 'Propuestas disponibles de la copia' : 'Estado del proveedor sin confirmar';
+  const valores = L.borradores.map(b => b.huecos);
+  const total = valores.reduce((s, n) => s + (Number.isSafeInteger(n) && n >= 0 ? n : 0), 0);
+  const huecos = valores.length && valores.every(n => Number.isSafeInteger(n) && n >= 0) && Number.isSafeInteger(total) ? total : null;
+  return { conectada, conexion, huecos, fecha: fechaListado604(L.generado) };
+}
 
 // Diseño (auditoría 30, N6): sin hoja propia. Maquetación en línea con tokens; letra y color, de las clases comunes.
 const DOS = { display: 'flex', flexWrap: 'wrap', gap: 'var(--s-4)', alignItems: 'flex-start' };
@@ -57,45 +85,52 @@ export default {
       raiz.replaceChildren(vacio({ icono: 'spark', tono: 'aviso', titulo: 'La IA necesita el servidor', texto: 'La IA solo funciona con la app servida desde el servidor, que arma el contexto con tus permisos. Avisa a Tomás.' }));
       return;
     }
+    const inicial333=alcanceAsistente333(ctx);
+    const vigente333=()=>raiz.isConnected&&inicial333!==null&&alcanceAsistente333(ctx)===inicial333;
+    if(!inicial333){raiz.replaceChildren(vacio({titulo:'Vista no disponible',texto:'Revisa tu sesión y los accesos actuales.'}));return;}
     let L;
-    try { L = await iaDe(ctx).lista(); }
-    catch (e) { raiz.replaceChildren(vacio({ icono: 'candado', titulo: 'No disponible', texto: e.message })); return; }
+    try { const recibido=await iaDe(ctx).lista();if(!vigente333()){raiz.replaceChildren();return;}L=listaAsistente333(ctx,recibido);if(!L)throw Error('Lista no disponible con el formato esperado.'); }
+    catch (e) { if(!vigente333()){raiz.replaceChildren();return;}raiz.replaceChildren(vacio({ icono: 'candado', titulo: 'No disponible', texto: e.message })); return; }
 
     const est = L.estado || {};
+    const resumen604 = resumenListado604(L);
     const quejas = L.borradores.filter(b => b.queja).length;
     const rojos = L.copiloto.filter(c => c.color === 'rojo').length;
-    const huecos = L.borradores.reduce((s, b) => s + (b.huecos || 0), 0);
-    const cab = tiles([
-      tile({ icono: 'spark', etiqueta: 'La IA', valor: est.conectada ? 'Conectada' : 'Sin conectar', estado: est.conectada ? 'verde' : 'ambar',
-        contexto: est.conectada ? `Modelo ${est.modelo}: genera al momento` : 'Se ven los borradores precalculados del 2-oct; falta la clave de Anthropic (Tomás)' }),
-      tile({ icono: 'medidor', etiqueta: 'Clientes con propuesta', valor: L.copiloto.length, estado: rojos ? 'rojo' : 'verde',
-        contexto: `${rojos} en crítico · ${L.copiloto.filter(c => c.color === 'ambar').length} en atención (la gravedad de la verdad única)`, alPulsar: () => tabs.elegir('copiloto'), ir: 'Ver propuestas' }),
-      tile({ icono: 'mail', etiqueta: 'Borradores listos', valor: L.borradores.length, estado: quejas ? 'rojo' : 'gris',
-        contexto: `${quejas} de quejas · ${huecos} datos por completar antes de enviar`, alPulsar: () => tabs.elegir('borradores'), ir: 'Ver borradores' }),
-    ]);
+    const cab = h('div',{class:'sub',role:'status','data-resumen-asistente':'333'},
+      resumen604.conexion,
+      ` · Lista disponible: ${L.copiloto.length} clientes · ${rojos} críticos · ${L.borradores.length} borradores · ${quejas} marcados como queja`,
+      h('details',{},h('summary',{},'Fuente y revisión'),h('p',{},resumen604.conectada?`Modelo ${est.modelo||'sin identificar'}. Disponibilidad no acredita una llamada nueva.`:'No se acredita generación nueva en esta lista.'),
+        h('p',{},`${resumen604.huecos === null ? 'Datos por completar: sin recuento acreditado' : `${resumen604.huecos} datos por completar en los borradores`}. Recuento de propuestas de esta lista autorizada; no es el total de correos pendientes. Son propuestas para revisar; su ausencia no acredita que todo esté resuelto.`)));
+
 
     const elegido = ctx.params[0] ? decodeURIComponent(ctx.params[0]) : null;
+    // 4-oct · #/asistente-ia?ficha=<id> abre «Qué hago si…» con esa ficha de los cerebros de área
+    const fichaPedida = new URLSearchParams((location.hash.split('?')[1] || '')).get('ficha');
     const tabs = pestanas({
-      clave: 'asistente-ia', activa: elegido ? 'copiloto' : (L.copiloto.length ? 'copiloto' : 'borradores'),
+      clave: 'asistente-ia', activa: fichaPedida ? 'que-hago' : elegido ? 'copiloto' : (L.copiloto.length ? 'copiloto' : 'borradores'),
       pestanas: [
         { id: 'copiloto', texto: 'Qué haría hoy', icono: 'medidor', cuenta: rojos, cuentaEstado: 'rojo' },
         { id: 'borradores', texto: 'Borradores de correo', icono: 'mail', cuenta: quejas, cuentaEstado: 'rojo' },
+        { id: 'que-hago', texto: 'Qué hago si…', icono: 'libro' },
       ],
-      pintar: (id, z) => id === 'copiloto' ? pintarCopiloto(z, ctx, L, elegido) : pintarBorradores(z, ctx, L),
+      pintar: (id, z) => id === 'copiloto' ? pintarCopiloto(z, ctx, L, elegido, vigente333)
+        : id === 'que-hago' ? (vigente333() ? z.append(panelCerebro(ctx, { fichaInicial: fichaPedida, clienteId: elegido })) : z.replaceChildren())
+        : pintarBorradores(z, ctx, L, vigente333),
     });
-    if (elegido) tabs.elegir('copiloto');
+    if (fichaPedida) tabs.elegir('que-hago');
+    else if (elegido) tabs.elegir('copiloto');
     raiz.replaceChildren(cab, tabs,
-      h('p', { class: 'sub', style: { marginTop: 'var(--s-4)' } }, icono('info', { clase: 's' }),
-        ` ${L.generado ? `Propuestas generadas el ${fDiaHoraRO(String(L.generado).slice(0, 16))}. ` : ''}Cada propuesta y cada borrador quedan en el rastro. Solo ves los clientes que puedes abrir.`));
+      h('p', { class: 'sub', title: resumen604.fecha ? L.generado : null, style: { marginTop: 'var(--s-4)' } }, icono('info', { clase: 's' }),
+        ` Fecha declarada del listado: ${resumen604.fecha || 'sin fecha acreditada'}. Cada propuesta conserva su propio corte en el detalle. Cada propuesta y cada borrador quedan en el rastro. Solo ves los clientes que puedes abrir.`));
   },
 };
 
 // V2-B (A1): el color es la gravedad de la verdad única y se nombra igual que en En rojo y la ficha.
 const COLOR = { rojo: ['rojo', 'Crítico', 0], ambar: ['ambar', 'Atención', 1], verde: ['verde', 'Bien', 2] };
 
-function pintarCopiloto(z, ctx, L, elegido) {
+function pintarCopiloto(z, ctx, L, elegido, vigente) {
   if (!L.copiloto.length) {
-    z.append(vacio({ icono: 'spark', titulo: 'Sin propuestas para tus clientes', texto: L.estado?.conectada ? 'Abre un cliente en su ficha y pide «Qué haría hoy».' : 'Hoy hay propuestas precalculadas para los 11 clientes críticos y la cartera de Lucía. Con la clave de Anthropic, salen para cualquiera al momento.', quien: L.estado?.conectada ? null : 'Tomás' }));
+    z.append(vacio({ icono: 'spark', titulo: 'Sin propuestas para tus clientes', texto: L.estado?.conectada === true ? 'Abre un cliente en su ficha y pide «Qué haría hoy».' : 'La copia autorizada no contiene propuestas para esta vista. No acredita que todos los pendientes estén resueltos.', quien: L.estado?.conectada === true ? null : 'Tomás' }));
     return;
   }
   const porId = Object.fromEntries((ctx.clientes || []).map(c => [c.id, c]));
@@ -108,6 +143,7 @@ function pintarCopiloto(z, ctx, L, elegido) {
   ], alCambiar: () => pintarLista() });
   const lista = h('nav', { 'aria-label': 'Clientes', style: { display: 'grid' } });
   function pintarLista() {
+    if(!vigente()){z.replaceChildren();return;}
     const f = filtro.valor?.() || '';
     botones.length = 0;
     lista.replaceChildren(...L.copiloto.filter(c => !f || c.color === f).map(c => {
@@ -122,6 +158,7 @@ function pintarCopiloto(z, ctx, L, elegido) {
     }));
   }
   function elegir(id) {
+    if(!vigente()){z.replaceChildren();return;}
     actual = id;
     marcar(botones, id);
     history.replaceState(null, '', `#/asistente-ia/${encodeURIComponent(id)}`);
@@ -131,7 +168,7 @@ function pintarCopiloto(z, ctx, L, elegido) {
         h('div', { class: 'meta-linea' }, c?.account ? h('span', {}, icono('persona', { clase: 's' }), ` ${c.account}`) : null,
           ctx.veModulo('ficha') ? h('a', { class: 'bt mini', href: `#/ficha/${encodeURIComponent(id)}/resumen` }, icono('cli', { clase: 's' }), 'Abrir la ficha') : null,
           ctx.veModulo('bandeja') ? h('a', { class: 'bt mini', href: '#/bandeja' }, icono('inbox', { clase: 's' }), 'Sus correos en la Bandeja') : null)),
-      panelCopiloto(ctx, id));
+      panelCopiloto(ctx, id, {vigente}));
     if (window.matchMedia('(max-width: 900px)').matches) det.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   pintarLista();
@@ -140,9 +177,9 @@ function pintarCopiloto(z, ctx, L, elegido) {
   elegir(actual);
 }
 
-function pintarBorradores(z, ctx, L) {
+function pintarBorradores(z, ctx, L, vigente) {
   if (!L.borradores.length) {
-    z.append(vacio({ icono: 'mail', tono: 'celebrar', titulo: 'Ningún correo tuyo con borrador', texto: 'Hoy hay borradores para los 40 correos más urgentes de la Bandeja. Si no ves ninguno, es que no son de tu cartera.' }));
+    z.append(vacio({ icono: 'mail', titulo: 'Sin borradores disponibles', texto: 'Esta copia autorizada no contiene borradores para tu vista. Consulta la Bandeja para ver los correos pendientes.' }));
     return;
   }
   let actual = L.borradores[0].ticket;
@@ -158,6 +195,7 @@ function pintarBorradores(z, ctx, L) {
     return bt;
   }));
   function elegir(t) {
+    if(!vigente()){z.replaceChildren();return;}
     actual = t;
     marcar(botones, t);
     const b = L.borradores.find(x => x.ticket === t);
@@ -168,7 +206,7 @@ function pintarBorradores(z, ctx, L) {
           b.account ? h('span', {}, icono('persona', { clase: 's' }), ` ${b.account}`) : null,
           h('span', {}, icono('clock', { clase: 's' }), ` ${b.dias ?? '—'} días laborables sin contestar`),
           b.url ? h('a', { class: 'bt mini', href: b.url, target: '_blank', rel: 'noopener noreferrer' }, icono('ext', { clase: 's' }), 'Abrir en Desk') : null)),
-      botonIA(ctx, { ticket: b.ticket, abierto: true }))));
+      botonIA(ctx, { ticket: b.ticket, abierto: true, vigente }))));
     if (window.matchMedia('(max-width: 900px)').matches) det.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
   det.style.cssText = 'flex: 999 1 480px; min-width: 0';

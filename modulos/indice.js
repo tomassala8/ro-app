@@ -14,13 +14,27 @@
 const TODOS = { '*': 'todo' };
 const DIR = { direccion: 'todo', finanzas_direccion: 'todo', operaciones: 'todo', proyectos: 'todo' };
 
-export const GRUPOS = ['Hoy', 'Clientes', 'Captación y CRM', 'SEO, web y redes', 'Equipo', 'Ventas de RO', 'Dinero', 'Sistema'];
+export const GRUPOS = ['Operaciones', 'Hoy', 'Clientes', 'Captación y CRM', 'SEO, web y redes', 'Equipo', 'Ventas de RO', 'Dinero', 'Sistema'];
 
 export const MODULOS = [
+  { id: 'operaciones', num: 'OP1', titulo: 'Dirección de operaciones', grupo: 'Operaciones', fase: 1, estado: 'hecho', fichero: './operaciones.js',
+    puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', account: 'suyo' },
+    resumen: 'Los 17 apartados del panel original, con control macro para Operaciones y cartera propia para accounts.' },
+  { id: 'prioridades-cliente', num: 'C01', titulo: 'Prioridades por cliente', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './prioridades_cliente.js',
+    puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo', proyectos: 'todo', account: 'suyo', trafficker: 'suyo', jefa_publicidad: 'todo', especialista_ghl: 'suyo', jefa_crm: 'todo', seo: 'suyo', jefa_seo: 'todo' },
+    resumen: 'Evidencia, recomendaciones y mediciones pendientes por cliente. Primera entrega Paid y CRM, sin ejecutar cambios externos.' },
+  { id: 'uso-app', num: 'U01', titulo: 'Uso y mejoras', grupo: 'Equipo', fase: 1, estado: 'hecho', fichero: './uso_app.js',
+    puestos_que_lo_ven: { direccion: 'todo', operaciones: 'todo' }, resumen: 'Pantallas, acciones y tiempo activo para mejorar la facilidad de uso.' },
   // M1 (2-oct): orquestador. Bloques por puesto en data/mi_dia/config.json; datos de los demás módulos ya recortados
   // (ctx.datosModulo) + data/mi_dia/cambios.json y ronda_mili.json (fuentes_mi_dia/generar_mi_dia.py). Ruta #/mi-dia/<puesto>.
   { id: 'mi-dia', num: 'M1', titulo: 'Mi día', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './mi_dia.js', puestos_que_lo_ven: { ...TODOS, setters: null },   // ronda 9 (D-P-MID2): los setters van directos a #/setters
     resumen: 'Lo primero que hacer hoy según el puesto: el número que manda, lo primero hoy (máx. 3) y hasta 7 bloques, cliente primero.' },
+  // Mi trabajo (3-oct, encargo de Tomás «que el equipo deje de usar ClickUp en el día a día»): sus tareas hoy, semana y mes,
+  // actuar sin salir (estado, hecha, fecha, comentario) e imputar horas. Todo a la copia segura de sincronia.py (mi_trabajo.py).
+  // Datos: data/mi_trabajo/mi_trabajo.json (fuentes_mi_trabajo/generar_mi_trabajo.py). Lo ven quienes tienen tareas o imputan horas.
+  { id: 'mi-trabajo', num: 'MT1', titulo: 'Mi trabajo', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './mi_trabajo.js',
+    puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', rrhh: 'todo', proyectos: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', setters: null, administracion: null },
+    resumen: 'Tus tareas de ClickUp de hoy, la semana y el mes: cambiar estado, marcar hecha, cambiar fecha, comentar e imputar horas con cronómetro, sin salir de la app. Se pasa a ClickUp cuando se active la sincronía.' },
   { id: 'en-rojo', num: 'M2', titulo: 'En rojo', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './en_rojo.js', puestos_que_lo_ven: TODOS,
     resumen: 'Clientes en rojo con motivo y responsable; detalle solo para quien lo lleva.' },
   { id: 'bandeja', num: 'M3', titulo: 'Bandeja', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './bandeja.js',
@@ -43,6 +57,13 @@ export const MODULOS = [
   { id: 'alertas', num: 'N4', titulo: 'Alertas del departamento', grupo: 'Hoy', fase: 1, estado: 'hecho', fichero: './alertas.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', proyectos: 'todo', rrhh: 'todo', administracion: 'todo', tecnico_altas: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo', setters: null },
     resumen: 'Cada alerta con su departamento, dueño, motivo, plazo, gravedad y escalado (dueño → jefe → Mili): web, SEO, CRM, publicidad, redes, accounts, altas, administración, RRHH y dirección. Lo tengo, resuelta (se comprueba con el dato siguiente) y no aplica, con rastro.' },
+
+  // Producto (3-oct, encargo de Tomás): pantalla de inicio de Coti (directora de producto, puesto proyectos). Talleres de la
+  // oferta, semáforo ESTRATÉGICO (resultados frente al objetivo del cliente) y avance. Datos: data/verdad/objetivos_clientes.json
+  // (fuentes_verdad/generar_objetivos_clientes.py). Lo operativo (plazos, correos, reuniones) sigue en «En rojo» / Operaciones.
+  { id: 'producto', num: 'P1', titulo: 'Dirección de producto', grupo: 'Clientes', fase: 1, estado: 'hecho', fichero: './producto.js',
+    puestos_que_lo_ven: { direccion: 'todo', proyectos: 'todo', operaciones: 'resumen' },
+    resumen: 'Talleres de la oferta de cada cliente nuevo, semáforo estratégico de todos los clientes por resultados frente a su objetivo, avance hacia el objetivo, renovaciones y la recomendación del cerebro para cada crítico.' },
 
   // M4 (2-oct): la ficha v3 de «Panel de operaciones para Mili» como módulo. Ruta #/ficha/<cliente>/<pestaña>.
   // Datos: data/clientes/<id>.json (E1, /api/cliente) + data/ficha/ (fuentes_ficha/generar_ficha.py; contactos y chat en _privado/).
@@ -92,7 +113,7 @@ export const MODULOS = [
   // E7 (2-oct): M10 y M11. Datos en data/produccion/ y data/horas/ (fuentes_produccion/ y fuentes_horas/, ClickUp con la llave propia).
   { id: 'produccion', num: 'M10', titulo: 'Producción', grupo: 'Equipo', fase: 1, estado: 'hecho', fichero: './produccion.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', proyectos: 'todo', rrhh: 'resumen', setters: null, administracion: null },
-    resumen: 'Cola de cada persona por fecha y prioridad, revisión del account y técnica en 48 h, bloqueadas, devueltas, a la primera, no planificado, carga frente a 12/16 y piezas en Meta en índice, sin euros.' },
+    resumen: 'Tareas de tu equipo, revisiones pendientes y plazos por cliente.' },
   { id: 'horas', num: 'M11', titulo: 'Horas y productividad', grupo: 'Equipo', fase: 1, estado: 'hecho', fichero: './horas.js',
     puestos_que_lo_ven: { '*': 'suyo', direccion: 'todo', operaciones: 'todo', rrhh: 'todo', jefa_publicidad: 'todo', jefa_seo: 'todo', jefa_crm: 'todo' },
     resumen: 'Cada uno ve lo suyo; la comparación, solo jefes, Mili, Cecilia y Tomás. Las horas, solo como aviso (D-27).' },

@@ -1,0 +1,32 @@
+---
+description: API en Nest (v2/apps/api) y base con Prisma (v2/packages/db)
+globs: v2/apps/api/**,v2/packages/db/**,v2/packages/permisos/**
+alwaysApply: false
+---
+# Backend
+
+- **Estrangulador**: lo que Nest no atiende lo pasa `src/legado/proxy.ts` tal cual a `servir.py` (8771). Una ruta pasa a Nest añadiéndola a `src/legado/rutas-en-nest.ts`, y solo se queda ahí si `bash migracion/puerta.sh f5` sale VERDE (contrato de lectura y de escritura). Si no, se quita y vuelve al proxy. No toques el proxy para «arreglar» una diferencia de una ruta de Nest.
+
+- Un módulo de Nest por dominio (tabla §2.2 del plan). Controlador fino; la lógica en el servicio; la base solo a través de `PrismaService` (`this.prisma.db`). Un módulo no lee tablas de otro: llama a su servicio.
+- **Mismo contrato que `servir.py`**: método, ruta, código, mensaje de error, claves JSON en `snake_case`, cabeceras (`ETag`, `Cache-Control`, `Vary`) y fechas en texto `AAAA-MM-DD HH:MM:SS` UTC. Antes de escribir una ruta, abre su código en Python (línea en `migracion/inventario/rutas_api.json` o el fichero en `enchufes.json`) y tradúcelo, no lo reinventes.
+- Al portar Python: `@ro/compat` para round, f-strings, json.dumps, la huella del rastro, cortes de texto, // y %, sorted y el reloj (guía al final de `migracion/PROMPTS_CURSOR.md`).
+- Permisos: siempre con `@ro/permisos` (el mismo motor que la web). Nunca un `if puesto === …` suelto en un controlador.
+- Cada método de un controlador declara `@Permiso({ modulo | tipo })` o `@Publico('motivo')` (`src/permisos/declarar.ts`). La guarda y el recorte globales hacen el resto: todo se recorta (salvo `sinRecorte: motivo`), todo lo que no es GET es escritura y «ver como» no escribe (salvo `lecturaPorPost: motivo`), y «ver como» siempre deja rastro. `src/permisos/rutas-declaradas.spec.ts` vigila las dos reglas: no se relaja.
+- Identidad: guarda global. `RO_IDENTIDAD=local` (cabecera `X-RO-Yo`, `?yo=`, galleta `ro_yo`) o `access` (solo el JWT de Cloudflare Access). Inactivos fuera. «Ver como» = solo lectura y mínimo de las dos personas, con rastro.
+- POST: exige `X-RO-App: 1` y JSON, como hoy. DTOs con `class-validator` que acepten exactamente lo que acepta hoy.
+- Rastro, historial, acciones y recargas son imborrables: lo garantiza la base (disparadores de la migración `0_base`). No los «arregles» con UPDATE/DELETE: crea una anulación.
+- Nada de hilos ni `setInterval` de negocio dentro de la API: los bucles siguen en el legado (Python, una sola copia).
+- **Prisma 7, no 6** (los tutoriales viejos fallan): el adaptador `PrismaPg` es obligatorio (`packages/db/src/index.ts`), la configuración vive en `prisma.config.ts`, el cliente se genera en `src/generated` (output obligatorio), `.env` no se carga solo y todo es ESM. Un solo cliente por proceso (`PrismaService`).
+- **Base:** nunca `migrate dev`, `db push` ni `migrate reset` contra una base con datos. Solo `migrate deploy`. Si una base ya tiene el esquema sin el registro de Prisma: `prisma migrate resolve --applied 0_base` y luego `deploy`. `prisma migrate diff` (base ↔ `schema.prisma`) tiene que salir vacío; si propone `DROP TRIGGER`, `DROP VIEW` o `DROP FUNCTION`, NO se aplica (son los disparadores del rastro y de lo imborrable, que Prisma no ve).
+- `schema.prisma` sale de `packages/db/scripts/rehacer_base.sh`. `fuente_lectura` (N-01) ya entra en F2.2: en N-01 no se crea otra vez, solo se conecta `fuentes/lectura.py`. Si hace falta OTRA tabla nueva: carpeta de migración escrita a mano (`prisma/migrations/<AAAAMMDDHHMMSS>_<nombre>/migration.sql`, solo `CREATE TABLE`/`ALTER … ADD`), su modelo a mano al final de `schema.prisma` con el comentario `// añadido la noche del 5-oct: <id>`, y `pnpm db:deploy` + `pnpm --filter @ro/db exec prisma generate`. **Nunca** `pnpm db:migrate` (`migrate dev`) ni `db push`: piden terminal y, con los disparadores de `0_base`, proponen borrar la base.
+- Esta noche los tipos se quedan como hoy (texto en fechas, 0/1 en booleanos): la app de hoy (legado) escribe en las mismas tablas.
+- Si `despliegue/base.py` no traduce algo (la app de hoy sobre Postgres falla), se arregla la traducción en `base.py`, de forma general, nunca la consulta en `servir.py`.
+- Tests: Vitest. Un e2e por ruta (`test/*.e2e-spec.ts`, lo lanza `puerta.sh`) que compruebe 200 y 403 con dos personas distintas.
+- Si una prueba de `src/permisos/` deja de valer porque portaste el motor (F4.1) o el rastro (F5.1), no se relaja: se le mete a mano lo que probaba (`overrideProvider(...).useClass(MotorSinPortar)`), y la prueba sigue diciendo lo mismo.
+- Cada ruta: la vista como argumento obligatorio del servicio y la cartera dentro del `where` (404 si no es suyo); escritura y rastro en la misma transacción; `src/permisos/rutas-permisos.txt` al día (`test -u`, diff revisado).
+- Rastro: Nest y el legado escriben a la vez. Cada alta, en `$transaction` con `pg_advisory_xact_lock(7262)` primero, `creada` la pone la base (su `@default`, texto UTC con segundos): se lee de vuelta y ESE texto entra en la huella; `id`/`anula_a` a `Number` antes de la huella. Prueba de F5.1: 50 altas mezcladas y `/api/rastro/verificar` → «ok».
+- Cabeceras: `/api` sale con `Cache-Control: no-store` por defecto (main.ts), como `servir.py`. Nada de `use cache`, `revalidate` ni caché compartida con datos de una persona, ni en Nest ni en Next.
+- Errores: el filtro global (`src/permisos/errores.filter.ts`) ya responde `{"error": "…"}` como `servir.py`. Lanza `HttpException` con el texto EXACTO de `servir.py`.
+- Versiones congeladas: `pnpm install --frozen-lockfile`. Nunca `pnpm up`, ni cambiar una versión de `package.json`, ni regenerar `pnpm-lock.yaml` a mano. Prisma se queda en 7.10.0 exacto (la 8 está en RC: no). Una dependencia nueva solo si el paso la nombra (p. ej. shadcn en F6.1), con versión exacta.
+- Nunca definas `PRISMA_USER_CONSENT_FOR_DANGEROUS_AI_ACTION` (desbloquea `migrate reset --force` y borra la base).
+- Validación: nada de `ValidationPipe` con `forbidNonWhitelisted`, `whitelist` ni `disableErrorMessages`. servir.py acepta y ignora campos de más y da sus propios textos de error; esas opciones cambian códigos y mensajes y rompen el contrato. Se valida a mano, como servir.py, con su mismo texto.

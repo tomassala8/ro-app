@@ -63,7 +63,7 @@ export function botonDeshacer(o = {}) {
   const cls = `bt${o.mini === false ? '' : ' mini'}${o.pri ? ' pri' : ''}`;
   const anular = o.alAnular || o.alDeshacer;
   const inicial = () => {
-    const b = h('button', { type: 'button', class: `${cls}${o.texto === '' && o.icono ? ' icono' : ''}`, 'aria-label': o.texto === '' ? (o.titulo || o.hecho || null) : null, 'data-atajo': o.atajo || null, title: o.soloLectura ? 'Estás en «ver como»: solo lectura' : (o.titulo || null),
+    const b = h('button', { type: 'button', class: `${cls}${o.texto === '' && o.icono ? ' icono' : ''}`, 'aria-label': o.etiqueta || (o.texto === '' ? (o.titulo || o.hecho || null) : null), 'data-atajo': o.atajo || null, title: o.soloLectura ? 'Estás en «ver como»: solo lectura' : (o.titulo || null),
       'aria-disabled': o.soloLectura ? 'true' : null, on: { click: () => { if (o.soloLectura) return; const mal = validar(); if (!mal) hacer(); } } },
     o.icono ? ico(o.icono, { clase: 's' }) : null, o.texto ?? 'Hecho');   // texto '' + icono = solo icono
     caja.replaceChildren(b);
@@ -81,7 +81,7 @@ export function botonDeshacer(o = {}) {
   const hacer = () => {
     const txtHecho = o.hecho || 'Hecho';
     const cuenta = h('span', { class: 'sub' }, `(${Math.ceil(plazo / 1000)})`);
-    const des = h('button', { type: 'button', class: 'bt mini', 'aria-label': `Deshacer: ${txtHecho}`, on: { click: () => {
+    const des = h('button', { type: 'button', class: 'bt mini', 'aria-label': `Deshacer: ${o.etiqueta || txtHecho}`, on: { click: () => {
       if (t.anular()) { try { anular?.(); } catch { /* nada */ } inicial().focus(); }
     } } }, 'Deshacer', cuenta);
     caja.replaceChildren(h('span', { class: 'estado', role: 'status' }, `✓ ${txtHecho}`), des);

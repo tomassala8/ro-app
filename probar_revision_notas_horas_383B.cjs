@@ -1,0 +1,18 @@
+// Independiente: fuente real y DTO362 sintético existente, sin API externa ni mutación.
+const fs=require('fs'),base=fs.readFileSync(__dirname+'/probar_notas_horas_383.cjs','utf8').split('(async()=>{')[0];
+new Function('require','__dirname',base+`
+(async()=>{
+let groups=0;
+for(const mutate of [c=>{for(const actor of [c.real,c.persona,c.datos.personas[0]])actor.puestos=['operaciones','operaciones'];},c=>{for(const actor of [c.real,c.persona,c.datos.personas[0]])actor.puestos=[7];},c=>c.real.activo=false,c=>c.persona.estado='baja',c=>c.datos.personas.push({...a})]){const c=ctx();mutate(c);let calls=0;c.api=async()=>{calls++;return dto();};assert.equal(s.ambitoNotasHoras383(c,rows),null);assert.equal(await s.cargarNotasHoras383(c,rows),null);assert.equal(calls,0);}groups++;
+for(const mutate of [c=>c.ver=q=>({ok:q.tipo!=='notas_persona'}),c=>c.ver=q=>({ok:q.tipo!=='horas_persona'}),c=>c.datos.personas[1].estado='baja']){const c=ctx();mutate(c);assert.equal(s.ambitoNotasHoras383(c,rows),null);}assert.equal(s.ambitoNotasHoras383(ctx(),[...rows,{...rows[0]}]),null);groups++;
+for(const mutate of [z=>z.dias.pop(),z=>z.dias.push(z.dias[0]),z=>z.dias[1].fecha=z.dias[0].fecha,z=>z.desde=z.dias[1].fecha,z=>z.hasta=z.dias.at(-2).fecha,z=>z.dias[88].horas=true,z=>z.dias[88].entradas=0.5,z=>z.dias[0].estado='observado']){const z=serie();mutate(z);assert.equal(s.serieNota383(z,'2026-10-04'),null);}groups++;
+let z=serie();z.dias[88].horas=0;assert.equal(s.semanaNota383(z,'2026-10-04').valor,0);z=serie();z.dias[88]={...z.dias[88],estado:'sin_dato',horas:null,entradas:null};assert.equal(s.semanaNota383(z,'2026-10-04'),null);groups++;
+z=serie();z.dias[88].horas=1e308;Object.assign(z.dias[87],{estado:'observado',horas:1e308,entradas:1});assert(s.serieNota383(z,'2026-10-04'));assert.equal(s.semanaNota383(z,'2026-10-04'),null);groups++;
+const c=ctx();c.api=async()=>{const d=dto();d.personas.push({persona_id:'ajeno',historial_diario:raw()});return d;};assert.equal(await s.cargarNotasHoras383(c,rows),null);groups++;
+for(const mutate of [c=>c.ver=()=>({ok:false}),c=>c.datos.personas[1].estado='baja',c=>c.real.id='otro',c=>c.veModulo=q=>q!=='horas']){const c=ctx();c.api=async()=>{mutate(c);return dto();};const r=await s.cargarNotasHoras383(c,rows);assert(r===null||r.denegado===true);}groups++;
+for(const evento of ['mouseenter','actualizarHistoria383']){const c=ctx(),root=h('main',{});root.root=true;await s.panelEquipoNotas281(root,c,rows,{hoy:c.hoy}).listo;assert(all(root).some(x=>x.attrs['data-horas-nota-383']===''));c.ver=q=>({ok:q.tipo!=='horas_persona'});if(evento==='mouseenter')all(root).find(x=>x.events?.mouseenter).events.mouseenter();else all(root).find(x=>x.actualizarHistoria383).actualizarHistoria383(serie());assert(!all(root).some(x=>x.attrs['data-horas-nota-383']===''));}groups++;
+z=serie();z.dias[88].horas=1e-8;let chart=s.graficoNota383(h,s.serieNota383(z,'2026-10-04'));assert(chart.children.some(x=>x.attrs.title.includes('<0,001 h observadas')));assert(!chart.children.some(x=>x.attrs.title.includes(': 0 h observadas')));z.dias[88].horas=0;chart=s.graficoNota383(h,s.serieNota383(z,'2026-10-04'));assert(chart.children.some(x=>x.attrs.title.includes(': 0 h observadas')));groups++;
+const out=s.semanaNota383(serie(),'2026-10-04');assert.equal(out.desde,'2026-09-28');assert.equal(out.hasta,'2026-10-04');assert.equal(out.dias_observados,1);assert.equal(out.cobertura,'parcial');assert(!('cumplimiento' in out));groups++;
+console.log(groups+' grupos383B independientes PASS: roles/grants/90fechas/overflow/unknown/await/lazy.');
+})().catch(e=>{console.error(e);process.exitCode=1;});
+`)(require,__dirname);
