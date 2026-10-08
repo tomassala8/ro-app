@@ -1,4 +1,6 @@
+GET /acciones  →  {"soloIdentidad":"toda persona activa lee las acciones de su ámbito, como servir.py › GET /api/acciones","sinRecorte":"fila a fila con filaVisible, recortarVistas y recorteImportesLectura588 como servir.py:2854-2863"}
 GET /ajustes  →  {"tipo":"ajustes_editar","oPuesto":"rrhh","mensaje":"Ajustes es de Mili y Tomás (RRHH, en resumen).","sinRecorte":"recorte por nivel_ok con PERSONA_PUBLICA como servir.py:2850"}
+GET /avisos  →  {"tipo":"recargar","sinRecorte":"avisos de la app: sin clientes ni importes; filas enteras como servir.py:2884"}
 GET /cliente/:cid  →  {"soloIdentidad":"toda persona activa pide una ficha; la puerta del cliente decide si es suya","sinRecorte":"recortar(persona) y recortarFicha hacen el recorte como servir.py:2709,2735"}
 GET /decisiones  →  {"soloIdentidad":"toda persona activa lee las decisiones de su ámbito","sinRecorte":"recorte por fila con recorteImportesLectura588 y filtroDecisiones como servir.py:2893-2894"}
 GET /indicadores  →  {"soloIdentidad":"toda persona activa pide el catálogo; el recorte es por sus puestos","sinRecorte":"recorte por puestos y sinImportes como servir.py:2749-2759"}
@@ -13,6 +15,7 @@ GET /respuestas_mili  →  {"tipo":"ajustes_editar","mensaje":"Solo Mili y Tomá
 GET /sesion  →  {"soloIdentidad":"toda persona activa recibe su sesión, como servir.py › /api/sesion","sinRecorte":"la sesión ya sale recortada por recortar(persona, crudo), igual que servir.py › /api/sesion"}
 GET /vivo  →  público (comprobación de vida, sin datos)
 POST /ajustes/*resto  →  {"tipo":"ajustes_editar","sinRecorte":"la respuesta es ok, sin datos de clientes"}
+POST /avisos/visto  →  {"tipo":"recargar","sinRecorte":"la respuesta es ok, sin datos de clientes"}
 POST /decisiones  →  {"soloIdentidad":"toda persona activa puede subir o contestar; «ver como» no escribe","sinRecorte":"la respuesta es ok e id, sin datos de clientes"}
 POST /opinion  →  {"soloIdentidad":"toda persona activa manda un aviso; «ver como» no escribe","sinRecorte":"la respuesta es ok, id y avisado, sin el texto"}
 POST /opiniones/estado  →  {"tipo":"opiniones_ver","sinRecorte":"la respuesta es ok, sin el texto de la opinión"}

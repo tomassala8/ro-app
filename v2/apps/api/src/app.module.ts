@@ -14,7 +14,9 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ClientesModule } from './clientes/clientes.module.js';
 import { IndicadoresModule } from './indicadores/indicadores.module.js';
 import { PerfilModule } from './perfil/perfil.module.js';
+import { AccionesModule } from './acciones/acciones.module.js';
 import { AjustesModule } from './ajustes/ajustes.module.js';
+import { AvisosModule } from './avisos/avisos.module.js';
 import { DecisionesModule } from './decisiones/decisiones.module.js';
 import { OpinionesModule } from './opiniones/opiniones.module.js';
 import { VerDatoModule } from './ver-dato/ver-dato.module.js';
@@ -27,7 +29,7 @@ import { SesionModule } from './sesion/sesion.module.js';
 // clientes, rastro, acciones, decisiones, ajustes, avisos, perfil, opiniones, recarga, buscar, indicadores…
 // IdentidadModule va antes que PermisosModule: su guarda tiene que correr primero.
 @Module({
-  imports: [PrismaModule, RastroModule, IdentidadModule, PermisosModule, SesionModule, DatosModule, ClientesModule, IndicadoresModule, PerfilModule, DecisionesModule, OpinionesModule, AjustesModule, VerDatoModule],
+  imports: [PrismaModule, RastroModule, IdentidadModule, PermisosModule, SesionModule, DatosModule, ClientesModule, IndicadoresModule, PerfilModule, DecisionesModule, OpinionesModule, AjustesModule, VerDatoModule, AccionesModule, AvisosModule],
   controllers: [SaludController],
 })
 export class AppModule implements NestModule, OnApplicationBootstrap {
