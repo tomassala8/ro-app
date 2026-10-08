@@ -1,0 +1,243 @@
+# v2/render.yaml · blueprint de la app nueva (F7.2). El de hoy sigue en despliegue/render.yaml
+# y se despliega solo: es la vuelta atrás (servir.py directo). Los nombres no chocan con ro-app:
+# si Tomás abre los dos blueprints, conviven. Este fichero no está en la raíz: al crear el
+# Blueprint hay que indicar la ruta v2/render.yaml. Nada de esto está creado todavía.
+# Referencia: https://render.com/docs/blueprint-spec
+#
+#   ro-web             Next, público (Cloudflare Access delante). El navegador solo habla con él.
+#   ro-api             Nest, privado (pserv). Sin llaves de herramientas.
+#   ro-legado          servir.py, privado, una sola copia: tubería de avisos y bucles encendidos.
+#   ro-copias          cada hora: copia de la Postgres, leída entera, a R2; se guardan 7 días (RO_COPIAS_DIAS).
+#   ro-ligera          cada hora de 7 a 23 h de España: tubería ligera (la de hoy, sin cambios)
+#   ro-completa        6:00 y 14:00: tubería completa
+#   ro-noche           3:00: copia de la base (+ R2) y batería nocturna; el día 1, prueba de restauración
+#   La base es Supabase (Postgres, Frankfurt; Tomás, 4-oct), no una base de Render: DATABASE_URL va en ro-base.
+#   dockerContext es la raíz del repo (los Dockerfiles copian v2/ y ficheros de la raíz). Sin rootDir.
+#
+# Horarios en UTC (Render no admite zona horaria). Con horario de verano (UTC+2) caen a su hora; en invierno (UTC+1)
+# una hora antes. La ligera cubre de 5 a 22 UTC para tapar los dos casos. Render no lanza dos vueltas del MISMO
+# cron a la vez; entre crons distintos manda el bloqueo de la base (la segunda sale bien sin hacer nada).
+#
+# vigía (N-18): no hay cron ro-vigia ni rama vigia) en entrada.sh. El disco de un cron arranca de cero
+# y episodios.json no sobreviviría. No va dentro de ro-legado. Pendiente.
+
+previews:
+  generation: manual            # entornos de vista previa por cambio (plan Pro), a petición
+
+envVarGroups:
+  - name: ro-base
+    envVars:
+      # Supabase › Connect › «Session pooler» (puerto 5432, IPv4, SSL). NO el «Transaction pooler» (6543): rompe los
+      # candados de sesión y las sentencias preparadas de psycopg. Formato:
+      # postgresql://postgres.<proyecto>:<clave>@aws-0-eu-central-1.pooler.supabase.com:5432/postgres?sslmode=require
+      - { key: DATABASE_URL, sync: false }
+      # certificado SSL de Supabase (Database › SSL › Download), en texto; lo exige @ro/db (packages/db/src/index.ts:14-16) y entorno.ts:23
+      - { key: RO_PG_CA, sync: false }
+  - name: ro-comun
+    envVars:
+      - key: RO_ENTORNO
+        value: produccion
+      - key: TZ
+        value: Europe/Madrid
+  - name: ro-llaves             # se rellenan a mano en el panel (sync: false = nunca en el repositorio)
+    envVars:
+      - { key: CLICKUP_API_TOKEN, sync: false }
+      - { key: ZOHO_CLIENT_ID, sync: false }
+      - { key: ZOHO_CLIENT_SECRET, sync: false }
+      - { key: ZOHO_REFRESH_TOKEN, sync: false }
+      - { key: GHL_APP_CLIENT_ID, sync: false }
+      - { key: GHL_APP_CLIENT_SECRET, sync: false }
+      # ghl_app_refresh_token NO va aquí: rota en cada uso y vive en la base con bloqueo (llave_ghl.py sembrar, T6)
+      - { key: GHL_AGENCY_PIT, sync: false }
+      - { key: GHL_PIT_NEW, sync: false }
+      - { key: META_TOKEN, sync: false }          # el de USUARIO DE SISTEMA (T5), sin caducidad
+      - { key: META_APP_SECRET, sync: false }
+      - { key: GOOGLE_CLIENT_ID, sync: false }
+      - { key: GOOGLE_CLIENT_SECRET, sync: false }
+      - { key: GOOGLE_REFRESH_TOKEN, sync: false }
+      - { key: METRICOOL_TOKEN, sync: false }
+      - { key: METRICOOL_USER_ID, sync: false }
+      - { key: ZOOM_ACCOUNT_ID, sync: false }
+      - { key: ZOOM_CLIENT_ID, sync: false }
+      - { key: ZOOM_CLIENT_SECRET, sync: false }
+      - { key: SNOV_CLIENT_ID, sync: false }
+      - { key: SNOV_CLIENT_SECRET, sync: false }
+      - { key: SERANKING_PROJECT_KEY, sync: false }
+      - { key: SERANKING_DATA_KEY, sync: false }
+      - { key: WINDSOR_API_KEY, sync: false }
+      - { key: HOLDED_API_KEY, sync: false }
+      - { key: AIRTABLE_TOKEN, sync: false }
+      - { key: ZADARMA_KEY, sync: false }
+      - { key: ZADARMA_SECRET, sync: false }
+      # N-16 · las que faltaban (la tubería las lee; la web, no: `ro-app` sigue sin este grupo)
+      # IA (solo con RO_IA_REAL y el interruptor de Tomás; sin las dos, la IA sigue apagada)
+      - { key: ANTHROPIC_API_KEY, sync: false }
+      - { key: ANTHROPIC_API_KEY_RESPALDO, sync: false }
+      # Google Ads, Business Profile y PageSpeed
+      - { key: GOOGLE_ADS_DEVELOPER_TOKEN, sync: false }
+      - { key: GOOGLE_ADS_LOGIN_CUSTOMER_ID, sync: false }
+      - { key: GOOGLE_ADS_REFRESH_TOKEN, sync: false }
+      - { key: GOOGLE_GBP_REFRESH_TOKEN, sync: false }
+      - { key: GOOGLE_API_KEY, sync: false }
+      # webs y dominios
+      - { key: HOSTINGER_API_TOKEN, sync: false }
+      - { key: MODULARDS_API_KEY, sync: false }
+      - { key: MODULARDS_ACCESO_KEY, sync: false }
+      - { key: CLOUDFLARE_API_TOKEN, sync: false }
+      # escritura: solo con interruptor, nunca por defecto
+      - { key: CLICKUP_TOKEN_SERVICIO, sync: false }
+      - { key: GHL_PIT_WRITE, sync: false }
+      - { key: ZOHO_REFRESH_TOKEN_ESCRITURA, sync: false }
+      - { key: ZOHO_SHEET_REFRESH_TOKEN, sync: false }
+  - name: ro-vigilancia
+    envVars:
+      - { key: SENTRY_DSN, sync: false }          # DSN de errores de Better Stack (SDK de Sentry). Vacío = sin envío
+      - { key: RO_LATIDO_URL, sync: false }       # latido de Better Stack de la tubería (si falta, avisa)
+      - { key: RO_AVISOS_WEBHOOK, sync: false }   # opcional: avisos «para avisar» hacia correo/ClickUp
+      - { key: RO_R2_ENDPOINT, sync: false }      # https://<cuenta>.eu.r2.cloudflarestorage.com (jurisdicción UE)
+      - { key: RO_R2_BUCKET, sync: false }
+      - { key: RO_R2_KEY_ID, sync: false }
+      - { key: RO_R2_SECRET, sync: false }
+      - { key: RO_B2_ENDPOINT, sync: false }      # Backblaze B2, región UE (https://s3.eu-central-003.backblazeb2.com)
+      - { key: RO_B2_BUCKET, sync: false }        # bucket con Object Lock «compliance» 30 días por defecto
+      - { key: RO_B2_KEY_ID, sync: false }        # llave «solo escribir» de ese bucket
+      - { key: RO_B2_SECRET, sync: false }
+
+services:
+  - type: web
+    name: ro-web
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./v2/apps/web/Dockerfile
+    dockerContext: .
+    healthCheckPath: /vivo
+    autoDeploy: false           # se publica a mano tras la batería en verde en la vista previa (DESPLIEGUE.md)
+    envVars:
+      - { key: HOSTNAME, value: 0.0.0.0 }
+      - { key: PORT, value: "3000" }
+      # Se lee en el next build (Dockerfile ARG): Render inyecta las envVars del servicio en el build de Docker; confirmar en la vista previa del Blueprint (Duda 35 a).
+      - { key: RO_API_URL, value: "http://ro-api:4000" }
+      - fromGroup: ro-comun
+    # Sin RO_CARCASA: la carcasa queda encendida por defecto. Para apagarla, RO_CARCASA=0 aquí y redeploy.
+    # Sin ro-llaves: el navegador no lleva las llaves de las herramientas.
+
+  - type: pserv
+    name: ro-api
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./v2/apps/api/Dockerfile
+    dockerContext: .
+    # Duda 35 (b): prisma es devDependency y pnpm deploy --prod no lo mete en /out. Este comando fallará
+    # en Render hasta que la imagen traiga el CLI. No se cambia el Dockerfile esta noche.
+    preDeployCommand: pnpm --filter @ro/db migrate:deploy
+    autoDeploy: false
+    envVars:
+      - { key: HOST, value: 0.0.0.0 }
+      - { key: PORT, value: "4000" }
+      - { key: RO_IDENTIDAD, value: access }
+      - { key: RO_CF_EQUIPO, sync: false }        # nombre del equipo de Zero Trust (<equipo>.cloudflareaccess.com)
+      - { key: RO_CF_AUD, sync: false }           # etiqueta AUD de la aplicación de Access
+      # Ronda 11 (A8, auditoría 35): el Origin que manda el navegador en los POST. Sin esto, todos los botones dan
+      # 403 «Origen no permitido». Varios, separados por comas. El mismo valor que ro-app de hoy.
+      - { key: RO_ORIGEN_APP, value: "https://app.rankingonline.app" }
+      # fromService hostport no lleva esquema (entorno.ts:25); Duda 35 (c)
+      - { key: RO_LEGADO_URL, value: "http://ro-legado:10000" }
+      # reglas.ts busca el JSON junto al paquete (/app/…). En la imagen está en /reglas_permisos.json (Dockerfile:19).
+      - { key: RO_REGLAS_PERMISOS, value: "/reglas_permisos.json" }
+      # RO_MODULOS_DIR no se pone: la imagen no copia modulos/ (Duda 18). Sin RO_RELOJ (entorno.ts:13).
+      - fromGroup: ro-base       # DATABASE_URL y RO_PG_CA de Supabase
+      - fromGroup: ro-comun      # RO_ENTORNO=produccion
+    # Sin ro-llaves. Privado: no recibe tráfico de internet. RO_IDENTIDAD=access valida el sello que Next reenvía
+    # (los rewrites de next.config.ts pasan las cabeceras de la petición).
+
+  - type: pserv
+    name: ro-legado
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    dockerfilePath: ./despliegue/Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh web
+    autoDeploy: false
+    envVars:
+      - { key: RO_MODO, value: servidor }
+      - { key: RO_CF_EQUIPO, sync: false }
+      - { key: RO_CF_AUD, sync: false }
+      - { key: RO_ORIGEN_APP, value: "https://app.rankingonline.app" }
+      - fromGroup: ro-base
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves
+      - fromGroup: ro-vigilancia
+    # Fuentes privadas (N-23, despliegue/empaquetado.py): NO vienen en la imagen. Se montan aparte (disco privado o secreto de fichero de Render) en la ruta que decida Tomás; hasta entonces este servicio arranca sin ellas y la tubería lo dirá en /api/salud.
+    # Una sola copia: los bucles de avisos.py viven aquí (escalados).
+    # Privado. Cloudflare Access va delante de ro-web solamente.
+
+  - type: cron
+    name: ro-copias
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    schedule: "0 * * * *"         # cada hora (Tomás, 4-oct). Sin R2 sale en rojo: el disco de un cron se pierde
+    dockerfilePath: ./despliegue/Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh copias
+    autoDeploy: false
+    envVars:
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
+      - key: RO_COPIAS_DIAS
+        value: "7"                # cuántos días se guardan las copias de cada hora; se cambia aquí
+      - fromGroup: ro-comun
+      - fromGroup: ro-vigilancia   # RO_R2_* y RO_B2_*
+
+  # tubería de hoy, sin cambios (publica en datos_version/datos_fichero)
+  # dockerfilePath es ./despliegue/Dockerfile: el contexto es la raíz del repo, no el paquete de preparar_contexto.sh.
+
+  - type: cron
+    name: ro-ligera
+    runtime: docker
+    region: frankfurt
+    plan: standard              # 1 CPU y 2 GB (Chrome sin cabeza solo en «noche»)
+    schedule: "30 5-22 * * *"
+    dockerfilePath: ./despliegue/Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh ligera
+    autoDeploy: false
+    envVars:
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves
+      - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-completa
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    schedule: "0 4,12 * * *"
+    dockerfilePath: ./despliegue/Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh completa
+    autoDeploy: false
+    envVars:
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves
+      - fromGroup: ro-vigilancia
+
+  - type: cron
+    name: ro-noche
+    runtime: docker
+    region: frankfurt
+    plan: standard
+    schedule: "0 1 * * *"
+    dockerfilePath: ./despliegue/Dockerfile
+    dockerContext: .
+    dockerCommand: despliegue/entrada.sh noche
+    autoDeploy: false
+    envVars:
+      - fromGroup: ro-base       # DATABASE_URL de Supabase
+      - fromGroup: ro-comun
+      - fromGroup: ro-llaves     # comprobar.py lee Meta (3 lecturas)
+      - fromGroup: ro-vigilancia
