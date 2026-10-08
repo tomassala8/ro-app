@@ -1,0 +1,20 @@
+# Contexto de build = raíz del repo (v2/docker-compose.yml, context: ..). Solo entra lo que copia el Dockerfile.
+# Nada privado (data/, _privado/, local.db, capturas/, .git) llega al daemon; node_modules, .next y dist se hacen dentro.
+*
+!v2
+!reglas_permisos.json
+!estilos.css
+!componentes.js
+!datos.js
+!permisos.js
+!ayudas.js
+!carcasa.js
+!app.js
+!sw.js
+!modulos
+!fuentes_web
+**/node_modules
+**/.next
+**/dist
+**/.env*
+**/*.tsbuildinfo
