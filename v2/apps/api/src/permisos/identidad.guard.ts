@@ -7,8 +7,13 @@ import { declaracionDe } from './declarar.js';
 import type { VistaConContexto } from './motor-ro.js';
 import { recargarSiCambian } from './recarga.js';
 
-/** Rutas sin identidad (hoy, /vivo no tiene). Un @Publico fuera de esta lista salta el permiso, no la identidad. */
+/** Rutas sin identidad (hoy, /vivo). Un @Publico fuera de esta lista salta el permiso, no la identidad. */
 export const SIN_IDENTIDAD = ['/vivo'];
+
+/** /vivo y /logos/<fichero>: servir.py no pide identidad (do_GET → estatico). El fichero varía, no cabe en la lista fija. */
+export function rutaSinIdentidad(ruta: string): boolean {
+  return SIN_IDENTIDAD.includes(ruta) || ruta.startsWith('/logos/');
+}
 
 const SIN_IDENTIFICAR = 'Sin identificar. En el prototipo, elige quién eres; en el servidor, entra por Cloudflare Access.';
 const PEERS_LOCALES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
@@ -106,7 +111,7 @@ export class IdentidadGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<Peticion>();
     const ruta = (req.originalUrl ?? req.url ?? '').split('?')[0] ?? '';
     const { publico } = declaracionDe(ctx.getHandler(), ctx.getClass());
-    if (publico && SIN_IDENTIDAD.includes(ruta)) return true;
+    if (publico && rutaSinIdentidad(ruta)) return true;
     req.vista = await this.vista(req, ruta);
     return true;
   }

@@ -92,6 +92,8 @@ export const RUTAS_EN_NEST: ReadonlyArray<readonly [Metodo, RegExp]> = [
   ['POST', /^\/api\/rastro$/],
   ['GET', /^\/api\/rastro$/],
   ['GET', MODULOS_RE],
+  ['GET', /^\/api\/cliente\/[\w-]+$/],
+  ['GET', /^\/logos\/[\w-]+\.(?:jpg|png|webp|gif)$/],
 ];
 
 export function atiendeNest(metodo: string, ruta: string): boolean {

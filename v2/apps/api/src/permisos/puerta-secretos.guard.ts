@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, HttpException, Injectable } from '@nestjs/common';
 import { tokenDe } from './access-jwt.js';
 import { declaracionDe } from './declarar.js';
-import { SIN_IDENTIDAD } from './identidad.guard.js';
+import { rutaSinIdentidad } from './identidad.guard.js';
 import type { VistaConContexto } from './motor-ro.js';
 import { PuertaSecretosService } from './puerta-secretos.service.js';
 
@@ -24,7 +24,7 @@ export class PuertaSecretosGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<Peticion>();
     const ruta = (req.originalUrl ?? req.url ?? '').split('?')[0] ?? '';
     const { publico } = declaracionDe(ctx.getHandler(), ctx.getClass());
-    if (publico && SIN_IDENTIDAD.includes(ruta)) return true;
+    if (publico && rutaSinIdentidad(ruta)) return true;
     const e = await this.puerta.estado(this.identidad(req));
     if (!e.abierta) throw new HttpException(e.error, e.status);
     return true;

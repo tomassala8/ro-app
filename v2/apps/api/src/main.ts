@@ -24,8 +24,8 @@ async function bootstrap() {
   });
   // Al parar (despliegue, reinicio) termina lo que está en marcha y cierra las conexiones a Postgres.
   app.enableShutdownHooks();
-  // Mismas rutas que servir.py: todo bajo /api, salvo /vivo.
-  app.setGlobalPrefix('api', { exclude: ['vivo'] });
+  // Mismas rutas que servir.py: todo bajo /api, salvo /vivo y /logos/<fichero> (no lleva el prefijo).
+  app.setGlobalPrefix('api', { exclude: ['vivo', 'logos/:fichero'] });
   // Solo 127.0.0.1 en local (regla de 2-oct: nunca a la wifi). En la nube, HOST=0.0.0.0 dentro del contenedor.
   await app.listen(Number(process.env.PORT ?? 4000), process.env.HOST ?? '127.0.0.1');
 }

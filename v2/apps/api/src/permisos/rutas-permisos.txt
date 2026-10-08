@@ -1,3 +1,5 @@
+GET /cliente/:cid  →  {"soloIdentidad":"toda persona activa pide una ficha; la puerta del cliente decide si es suya","sinRecorte":"recortar(persona) y recortarFicha hacen el recorte como servir.py:2709,2735"}
+GET /logos/:fichero  →  público (logo común de un cliente activo: servir.py lo sirve sin identidad (:2641); ningún dato más que la imagen)
 GET /modulo/*rel  →  {"soloIdentidad":"toda persona activa pide un fichero; la puerta del módulo decide si es de su puesto","sinRecorte":"el recorte lo hace recortarModulo + quitarBajas línea a línea como servir.py:3020"}
 GET /rastro  →  {"soloIdentidad":"toda persona activa lee su rastro, como servir.py › GET /api/rastro","sinRecorte":"el recorte lo hace fila_visible/recortar_vistas, línea a línea como servir.py:2808-2813"}
 GET /rastro/verificar  →  {"tipo":"rastro_todo","mensaje":"Solo dirección.","sinRecorte":"no lleva datos de clientes: estado de la cadena"}
