@@ -7,6 +7,7 @@ import {
   sinImportes,
   soloFilasDe,
   soloSuCartera,
+  puestosDe,
   ver,
   type Contexto,
   type Persona,
@@ -43,9 +44,17 @@ export class MotorRo implements MotorPermisos {
         if (!mapa || !nivelModulo(persona, mapa)) return { ok: false, status: 403, mensaje: PANTALLA_AJENA };
         return { ok: true };
       }
-      if (d.tipo !== undefined) {
-        const r = ver(persona, { tipo: d.tipo }, vista.cp ?? {});
-        return r.ok ? { ok: true } : { ok: false, status: 403, mensaje: d.mensaje ?? (r.motivo || 'No visible para tu puesto.') };
+      if (d.tipo !== undefined || d.oPuesto) {
+        let ok = false;
+        let motivo = d.mensaje ?? 'No visible para tu puesto.';
+        if (d.tipo !== undefined) {
+          const r = ver(persona, { tipo: d.tipo }, vista.cp ?? {});
+          if (r.ok) ok = true;
+          else if (!d.mensaje) motivo = r.motivo || 'No visible para tu puesto.';
+        }
+        // En «ver como», puestosDe es la intersección de las dos personas.
+        if (!ok && d.oPuesto && puestosDe(persona).has(d.oPuesto)) ok = true;
+        return ok ? { ok: true } : { ok: false, status: 403, mensaje: motivo };
       }
       return { ok: false, status: 403, mensaje: 'Sin permiso.' };
     };

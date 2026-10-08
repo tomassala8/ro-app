@@ -34,6 +34,8 @@ export interface DeclaracionPermiso {
   soloIdentidad?: string;
   /** Texto exacto de servir.py cuando la declaración deniega (si no, el motivo de la matriz). */
   mensaje?: string;
+  /** O quien tenga este puesto, como servir.py:2847 (GET /api/ajustes: ajustes_editar o rrhh). */
+  oPuesto?: string;
 }
 
 export const Permiso = (declaracion: DeclaracionPermiso) => SetMetadata(CLAVE_PERMISO, declaracion);

@@ -69,6 +69,34 @@ describe('MotorRo', () => {
     expect(salida).toEqual({ filas: [{ cliente_id: 'c1', x: 1 }], nota: 'Cuota' });
   });
 
+  it('oPuesto deja entrar a RRHH aunque el tipo no, y a un account no', () => {
+    const rrhh: Persona = { id: 'rh', nombre: 'R', puestos: ['rrhh'] };
+    const decl = {
+      tipo: 'ajustes_editar',
+      oPuesto: 'rrhh',
+      mensaje: 'Ajustes es de Mili y Tomás (RRHH, en resumen).',
+    };
+    expect(motor.entrar({ real: rrhh, cp }, decl)).toEqual({ ok: true });
+    expect(motor.entrar({ real: account, cp }, decl)).toEqual({
+      ok: false,
+      status: 403,
+      mensaje: 'Ajustes es de Mili y Tomás (RRHH, en resumen).',
+    });
+  });
+
+  it('en «ver como» oPuesto usa la intersección: dirección viendo como RRHH no entra', () => {
+    const rrhh: Persona = { id: 'rh', nombre: 'R', puestos: ['rrhh'] };
+    const r = motor.entrar(
+      { real: direccion, como: rrhh, cp, cpReal: cp },
+      { tipo: 'ajustes_editar', oPuesto: 'rrhh', mensaje: 'Ajustes es de Mili y Tomás (RRHH, en resumen).' },
+    );
+    expect(r).toEqual({
+      ok: false,
+      status: 403,
+      mensaje: 'Ajustes es de Mili y Tomás (RRHH, en resumen).',
+    });
+  });
+
   it('ver como usa el mínimo: un account no abre el panel de dirección', () => {
     const r = motor.entrar(
       { real: direccion, como: account, cp, cpReal: cp },

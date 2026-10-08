@@ -52,6 +52,6 @@ export {
 } from './importes.js';
 export type { QuitaClave } from './importes.js';
 export { cargarModulos, nivelModulo } from './modulos.js';
-export { directorio, recortar, soloFilasDe } from './recortar.js';
+export { PERSONA_PUBLICA, directorio, recortar, soloFilasDe } from './recortar.js';
 export { contexto, soloSuCartera, ver } from './ver.js';
 export { conVista, mirandoComo, puestosDe, vistaActiva } from './vista.js';

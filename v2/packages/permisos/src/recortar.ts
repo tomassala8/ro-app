@@ -5,7 +5,8 @@ import { contexto, soloSuCartera, ver } from './ver.js';
 
 const COMUNES = ['id', 'nombre', 'responsable_id', 'responsable_texto', 'salud', 'salud_fuente', 'semaforo', 'nuevo', 'sin_account', 'tipo_negocio', 'activo_confirmado'] as const;
 const DETALLE = ['web', 'descripcion', 'descripcion_completa', 'alta', 'tickets_abiertos', 'pend_horas', 'dias_sin_reunion', 'ult_reunion', 'prox_reunion', 'informe_anterior', 'revision48', 'enlace_clickup', 'equipo', 'servicios'] as const;
-const PERSONA_PUBLICA = ['id', 'nombre', 'alias', 'puestos', 'prueba', 'estado', 'activo', 'jefe', 'zona', 'rol', 'pais', 'fecha_ingreso', 'cumple_dia_mes', 'etiquetas'] as const;
+/** permisos.py › PERSONA_PUBLICA. Lo único de una persona que sale sin permiso de edición. */
+export const PERSONA_PUBLICA = ['id', 'nombre', 'alias', 'puestos', 'prueba', 'estado', 'activo', 'jefe', 'zona', 'rol', 'pais', 'fecha_ingreso', 'cumple_dia_mes', 'etiquetas'] as const;
 
 export function directorio(personas: Persona[]): Record<string, unknown>[] {
   return personas.map((p) => {
