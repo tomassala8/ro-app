@@ -1,7 +1,7 @@
 # Imagen de la API (Nest). Contexto: la raíz del repo.  docker build -f v2/apps/api/Dockerfile .
 FROM node:22-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH
-RUN corepack enable
+RUN npm install -g pnpm@10.28.0
 WORKDIR /repo
 
 FROM base AS build

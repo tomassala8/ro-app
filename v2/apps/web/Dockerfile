@@ -1,7 +1,7 @@
 # Imagen de la web (Next, salida «standalone»). Contexto: la raíz del repo.  docker build -f v2/apps/web/Dockerfile .
 FROM node:22-slim AS base
 ENV PNPM_HOME=/pnpm PATH=/pnpm:$PATH NEXT_TELEMETRY_DISABLED=1
-RUN corepack enable
+RUN npm install -g pnpm@10.28.0
 WORKDIR /repo
 
 FROM base AS build
