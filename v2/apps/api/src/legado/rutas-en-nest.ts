@@ -94,6 +94,8 @@ export const RUTAS_EN_NEST: ReadonlyArray<readonly [Metodo, RegExp]> = [
   ['GET', MODULOS_RE],
   ['GET', /^\/api\/cliente\/[\w-]+$/],
   ['GET', /^\/api\/indicadores$/],
+  ['GET', /^\/api\/preferencias$/],
+  ['POST', /^\/api\/preferencias$/],
   ['GET', /^\/logos\/[\w-]+\.(?:jpg|png|webp|gif)$/],
 ];
 

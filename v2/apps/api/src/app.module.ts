@@ -13,6 +13,7 @@ import { PermisosModule } from './permisos/permisos.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { ClientesModule } from './clientes/clientes.module.js';
 import { IndicadoresModule } from './indicadores/indicadores.module.js';
+import { PerfilModule } from './perfil/perfil.module.js';
 import { DatosModule } from './datos/datos.module.js';
 import { RastroModule } from './rastro/rastro.module.js';
 import { SaludController } from './salud/salud.controller.js';
@@ -22,7 +23,7 @@ import { SesionModule } from './sesion/sesion.module.js';
 // clientes, rastro, acciones, decisiones, ajustes, avisos, perfil, opiniones, recarga, buscar, indicadores…
 // IdentidadModule va antes que PermisosModule: su guarda tiene que correr primero.
 @Module({
-  imports: [PrismaModule, RastroModule, IdentidadModule, PermisosModule, SesionModule, DatosModule, ClientesModule, IndicadoresModule],
+  imports: [PrismaModule, RastroModule, IdentidadModule, PermisosModule, SesionModule, DatosModule, ClientesModule, IndicadoresModule, PerfilModule],
   controllers: [SaludController],
 })
 export class AppModule implements NestModule, OnApplicationBootstrap {

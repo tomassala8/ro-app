@@ -44,6 +44,9 @@ describe('proxy de legado', () => {
     expect(atiendeNest('POST', '/api/rastro')).toBe(true);
     expect(atiendeNest('GET', '/api/rastro/verificar')).toBe(true);
     expect(atiendeNest('GET', '/api/clientes')).toBe(false);
+    expect(atiendeNest('GET', '/api/preferencias')).toBe(true);
+    expect(atiendeNest('POST', '/api/preferencias')).toBe(true);
+    expect(atiendeNest('GET', '/api/perfil')).toBe(false);
   });
 
   it('pasa método, ruta, consulta, cabeceras, cuerpo, código y cabeceras de vuelta sin tocarlos', async () => {
@@ -51,14 +54,14 @@ describe('proxy de legado', () => {
     const app = express();
     app.use(proxyLegado(legado.url));
     const r = await request(app)
-      .post('/api/preferencias?x=1')
+      .post('/api/perfil?x=1')
       .set('Host', '127.0.0.1:3000')
       .set('X-RO-Yo', 'mili')
       .set('Content-Type', 'application/json')
       .send('{"accion":"evento"}');
     expect(r.status).toBe(200);
     expect(r.headers.etag).toBe('"x1"');
-    expect(r.body).toEqual({ metodo: 'POST', url: '/api/preferencias?x=1', host: new URL(legado.url).host, yo: 'mili', cuerpo: '{"accion":"evento"}' });
+    expect(r.body).toEqual({ metodo: 'POST', url: '/api/perfil?x=1', host: new URL(legado.url).host, yo: 'mili', cuerpo: '{"accion":"evento"}' });
     const p = await request(app).get('/api/prohibido').set('Host', 'localhost:3000');
     expect(p.status).toBe(403);
     legado.cerrar();
@@ -110,7 +113,7 @@ describe('proxy de legado', () => {
     const legado = await legadoFalso();
     const app = express();
     app.use(proxyLegado(legado.url, { cuerpoMax: 10 }));
-    const r = await request(app).post('/api/preferencias').set('Host', '127.0.0.1:3000').set('Content-Type', 'application/json').send('{"mucho":"texto de más"}');
+    const r = await request(app).post('/api/perfil').set('Host', '127.0.0.1:3000').set('Content-Type', 'application/json').send('{"mucho":"texto de más"}');
     expect(r.status).toBe(413);
     expect(r.body).toEqual({ error: 'Petición demasiado grande.' });
     legado.cerrar();
