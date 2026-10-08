@@ -192,7 +192,8 @@ services:
       - fromGroup: ro-vigilancia   # RO_R2_* y RO_B2_*
 
   # tubería de hoy, sin cambios (publica en datos_version/datos_fichero)
-  # dockerfilePath es ./despliegue/Dockerfile: el contexto es la raíz del repo, no el paquete de preparar_contexto.sh.
+  # ⚠ Duda 35 (g): despliegue/Dockerfile copia app/ y herramientas/ (:25,33-34), que solo existen en el paquete de preparar_contexto.sh.
+  # Con dockerContext: . (raíz del repo) ro-legado y los crons NO construyen hasta que Tomás decida el repo de despliegue.
 
   - type: cron
     name: ro-ligera
